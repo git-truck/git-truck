@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc && node ./dist"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^17.0.16",
     "typescript": "^4.5.5"
   },
   "dependencies": {
