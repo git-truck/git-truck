@@ -30,8 +30,7 @@ function App() {
     let root = d3
       .hierarchy(data)
       // TODO: Derrive size from file/folder size
-      .sum(() => 10 + Math.random() * 20)
-      // .sum(() => 10)
+      .sum(() => 10)
       .sort((a, b) => b.value - a.value)
 
     let partition = d3
@@ -88,6 +87,8 @@ function App() {
       // .attr("textLength", (d) => d.data.name.length * 7)
       .attr("xlink:href", (d) => `#${d.data.hash}`)
       .text((d) => d.data.name)
+      .style("font-size", "0.8em")
+      .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
 
     return () => {
       rootRef.current.remove()
