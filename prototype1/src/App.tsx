@@ -3,6 +3,7 @@ import "./App.css"
 import { data } from "./data"
 import * as d3 from "d3"
 import { useWindowSize } from "react-use"
+import { GitTreeObject } from "./model"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -13,7 +14,6 @@ function App() {
 
 function BubbleChart({ data }: { data: GitTreeObject }) {
   let svgRef = useRef<SVGSVGElement>(null)
-  let rootRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null)
   let sizeProps = useWindowSize(0, 0)
   let paddedSizeProps = {
     height: sizeProps.height - padding * 2,
@@ -23,7 +23,7 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
   useEffect(() => {
     let svg = d3.select(svgRef.current)
 
-    let root = d3
+    let hiearchy = d3
       .hierarchy(data)
       // TODO: Derrive size from file/folder size
       .sum(() => 10)
@@ -34,13 +34,13 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
       .size([paddedSizeProps.width, paddedSizeProps.height])
       .padding(padding)
 
-    partition(root)
+    partition(hiearchy)
 
-    rootRef.current = svg.append("g")
+    const root = svg.append("g")
 
-    const group = rootRef.current
+    const group = root
       .selectAll("circle.node")
-      .data(root.descendants())
+      .data(hiearchy.descendants())
       .enter()
       .append("g")
 
@@ -62,7 +62,7 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
       .classed("node", true)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
-      .attr("r", (d: Circle) => d.r)
+      .attr("r", (d) => d.r)
       .style("fill", "transparent")
       .style("opacity", 0.3)
 
@@ -86,7 +86,7 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
       .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
 
     return () => {
-      rootRef.current?.remove()
+      root.remove()
     }
   }, [paddedSizeProps])
 
