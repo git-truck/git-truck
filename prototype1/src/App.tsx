@@ -59,15 +59,15 @@ function drawBubbleChart(
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
 
-  let partition = pack()
+  let partition = pack<GitTreeObject>()
     .size([paddedSizeProps.width, paddedSizeProps.height])
     .padding(padding)
 
-  partition(hiearchy)
+  let partitionedHiearchy = partition(hiearchy)
 
   const group = root
     .selectAll("circle.node")
-    .data(hiearchy.descendants())
+    .data(partitionedHiearchy)
     .enter()
     .append("g")
 
