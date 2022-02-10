@@ -74,6 +74,11 @@ function App() {
 
       // .style("stroke", "black")
       .attr("id", (d) => d.data.hash)
+
+    if (new URL(window.location.toString()).searchParams.get("debug") === "true") {
+      path.style("stroke", "black")
+      path.style("stroke-dasharray", "5,5")
+    }
     // .attr("marker-end", "url(#arrowhead)")
 
     const text = group.append("text")
