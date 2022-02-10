@@ -111,10 +111,19 @@ function drawBubbleChart(
     .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
 }
 
+
 // a rx ry angle large-arc-flag sweep-flag dx dy
 // rx and ry are the two radii of the ellipse
 // angle represents a rotation (in degrees) of the ellipse relative to the x-axis;
 // large-arc-flag and sweep-flag allows to chose which arc must be drawn as 4 possible arcs can be drawn out of the other parameters.
+
+/**
+ * This function generates a path for a circle with a given radius and center
+ * @param x x-coordinate of circle center
+ * @param y y-coordinate of circle center
+ * @param r radius of circle
+ * @returns A string meant to be passed as the d attribute to a path element
+ */
 
 function circlePathFromCircle(x: number, y: number, r: number) {
   return `M${x},${y}
