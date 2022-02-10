@@ -11,7 +11,7 @@ async function parseFile(path: string) {
 }
 
 async function parseGitObjects(directory: string) {
-    let gitObjects = new Map<string, string>();
+    const gitObjects = new Map<string, string>();
     const gitObjectsPath = directory + '/.git/objects'
 
     let entries = readdirSync(gitObjectsPath);
@@ -19,7 +19,7 @@ async function parseGitObjects(directory: string) {
 
     entries.forEach(entry => {
         const dir = gitObjectsPath + "/" + entry
-        let fileNames = readdirSync(dir);
+        const fileNames = readdirSync(dir);
         Promise.all(fileNames.map(async fileName => {
             const fileContent = await parseFile(dir + "/" + fileName);
             console.log(fileContent);
@@ -31,7 +31,7 @@ async function parseGitObjects(directory: string) {
 }
 
 async function runAsCli() {
-    var io = createInterface({
+    const io = createInterface({
       input: process.stdin,
       output: process.stdout
     });
