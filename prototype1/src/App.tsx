@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react"
 import "./App.css"
 import { data } from "./data"
-import * as d3 from "d3"
 import { useWindowSize } from "react-use"
 import { GitTreeObject } from "./model"
+import { hierarchy, pack, select, Selection } from "d3"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -21,7 +21,7 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
   }
 
   useEffect(() => {
-    let svg = d3.select(svgRef.current)
+    let svg = select(svgRef.current)
     const root = svg.append("g")
 
     drawBubbleChart(data, paddedSizeProps, root)
@@ -50,18 +50,16 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
 function drawBubbleChart(
   data: GitTreeObject,
   paddedSizeProps: { height: number; width: number },
-  root: d3.Selection<SVGGElement, unknown, null, undefined>
+  root: Selection<SVGGElement, unknown, null, undefined>
 ) {
-  let hiearchy = d3
-    .hierarchy(data)
+  let hiearchy = hierarchy(data)
     // TODO: Derrive size from file/folder size
     .sum(() => 10)
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
 
-  let partition = d3
-    .pack()
+  let partition = pack()
     .size([paddedSizeProps.width, paddedSizeProps.height])
     .padding(padding)
 
