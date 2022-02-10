@@ -1,6 +1,7 @@
 import { unzip } from 'zlib';
-import { readFileSync, readdirSync, stat } from 'fs'
+import { readFileSync, readdirSync } from 'fs'
 import { promisify } from 'util';
+import  { createInterface } from "readline";
 
 async function parseFile(path: string) {
     const buffer = readFileSync(path);
@@ -29,4 +30,16 @@ async function parseGitObjects(directory: string) {
     console.log(gitObjects);
 }
 
-parseGitObjects('../../bprd');
+async function runAsCli() {
+    var io = createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    io.question("Input path to directory: ", (input) => {
+        parseGitObjects(input);
+        io.close();
+    });
+}
+
+runAsCli();

@@ -11,3 +11,5 @@ To transpile the typescript and run the parser
 ```
 npm start
 ```
+
+Then input the path to the git repo to be parsed (relative or absolute)
