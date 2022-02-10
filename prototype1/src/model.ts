@@ -1,13 +1,19 @@
 
-type GitObject = GitBlobObject | GitTreeObject
+export type GitObject = GitBlobObject | GitTreeObject
 
-export interface GitBlobObject {
+interface Circle {
+  x: number
+  y: number
+  r: number
+}
+
+export interface GitBlobObject extends Circle {
   hash: string;
   name: string;
   content: string;
 }
 
-export interface GitTreeObject {
+export interface GitTreeObject extends Circle {
   hash: string;
   name: string;
   children: GitObject[];

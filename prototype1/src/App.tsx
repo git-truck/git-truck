@@ -4,20 +4,16 @@ import { data } from "./data"
 import * as d3 from "d3"
 import { useWindowSize } from "react-use"
 
-let { children } = data
-let id = (x: any) => x
-
-function useMount(fn: Function) {
-  useEffect(() => fn(), [])
-}
-
 const padding = 30
 const textSpacingFromCircle = 5
 
 function App() {
+  return <BubbleChart data={data} />
+}
+
+function BubbleChart({ data }: { data: GitTreeObject }) {
   let svgRef = useRef<SVGSVGElement>(null)
-  let rootRef =
-    useRef<d3.Selection<SVGGElement, unknown, null, undefined>>(null)
+  let rootRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null)
   let sizeProps = useWindowSize(0, 0)
   let paddedSizeProps = {
     height: sizeProps.height - padding * 2,
@@ -31,7 +27,7 @@ function App() {
       .hierarchy(data)
       // TODO: Derrive size from file/folder size
       .sum(() => 10)
-      .sort((a, b) => b.value - a.value)
+      .sort((a, b) => b.value !== undefined && a.value !== undefined ? b.value - a.value : 0)
 
     let partition = d3
       .pack()
@@ -51,7 +47,6 @@ function App() {
     const circle = group.append("circle")
 
     circle
-      // .attr("d", d => circlePathFromCircle(d.x, d.y, d.r))
       .classed("node", true)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
@@ -59,27 +54,24 @@ function App() {
       .style("fill", (d) => (d.data.children ? "none" : "cadetblue"))
       .style("opacity", 0.3)
       .style("stroke", "black")
-    // .attr("id", (d) => d.data.hash)
 
     const path = group.append("path")
 
     path
-      .attr("d", (d) => circlePathFromCircle(d.x, d.y, d.r + padding / 10))
+      .attr("d", (d) => circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle))
       .classed("node", true)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
-      .attr("r", (d) => d.r)
+      .attr("r", (d: Circle) => d.r)
       .style("fill", "transparent")
       .style("opacity", 0.3)
 
-      // .style("stroke", "black")
       .attr("id", (d) => d.data.hash)
 
     if (new URL(window.location.toString()).searchParams.get("debug") === "true") {
       path.style("stroke", "black")
       path.style("stroke-dasharray", "5,5")
     }
-    // .attr("marker-end", "url(#arrowhead)")
 
     const text = group.append("text")
 
@@ -88,15 +80,13 @@ function App() {
       .attr("startOffset", "25%")
       .attr("dominant-baseline", "bottom")
       .attr("text-anchor", "middle")
-
-      // .attr("textLength", (d) => d.data.name.length * 7)
       .attr("xlink:href", (d) => `#${d.data.hash}`)
       .text((d) => d.data.name)
       .style("font-size", "0.8em")
       .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
 
     return () => {
-      rootRef.current.remove()
+      rootRef.current?.remove()
     }
   }, [paddedSizeProps])
 
@@ -115,12 +105,87 @@ function App() {
     </div>
   )
 }
+
+function drawBubbleChart(options: {
+  data: GitTreeObject
+  root: d3.Selection<SVGGElement, unknown, null, undefined>
+  paddedSizeProps: { height: number; width: number }
+}) {
+  let {
+    data,
+    root,
+    paddedSizeProps,
+  } = options
+  let hiearchy = d3
+    .hierarchy(data)
+    // TODO: Derrive size from file/folder size
+    .sum(() => 10)
+    .sort((a, b) =>
+      b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
+    )
+
+  let partition = d3
+    .pack<GitTreeObject>()
+    .size([paddedSizeProps.width, paddedSizeProps.height])
+    .padding(padding)
+
+  partition(hiearchy)
+
+
+
+  const group = root.selectAll("circle.node").enter().append("g").data(hiearchy.descendants())
+
+  const circle = group.append("circle")
+
+  circle
+    .classed("node", true)
+    .attr("cx", (d) => d.x)
+    .attr("cy", (d) => d.y)
+    .attr("r", (d) => d.r)
+    .style("fill", (d) => (d.data.children ? "none" : "cadetblue"))
+    .style("opacity", 0.3)
+    .style("stroke", "black")
+
+  const path = group.append("path")
+
+  path
+    .attr("d", (d) =>
+      circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
+    )
+    .classed("node", true)
+    .attr("cx", (d) => d.x)
+    .attr("cy", (d) => d.y)
+    .attr("r", (d) => d.r)
+    .style("fill", "transparent")
+    .style("opacity", 0.3)
+
+    .attr("id", (d) => d.data.hash)
+
+  if (
+    new URL(window.location.toString()).searchParams.get("debug") === "true"
+  ) {
+    path.style("stroke", "black")
+    path.style("stroke-dasharray", "5,5")
+  }
+
+  const text = group.append("text")
+
+  text
+    .append("textPath")
+    .attr("startOffset", "25%")
+    .attr("dominant-baseline", "bottom")
+    .attr("text-anchor", "middle")
+    .attr("xlink:href", (d) => `#${d.data.hash}`)
+    .text((d) => d.data.name)
+    .style("font-size", "0.8em")
+    .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
+}
 // a rx ry angle large-arc-flag sweep-flag dx dy
 // rx and ry are the two radii of the ellipse
 // angle represents a rotation (in degrees) of the ellipse relative to the x-axis;
 // large-arc-flag and sweep-flag allows to chose which arc must be drawn as 4 possible arcs can be drawn out of the other parameters.
 
-function circlePathFromCircle(x, y, r) {
+function circlePathFromCircle(x: number, y: number, r: number) {
   return `M${x},${y}
           m${-r},0
           a${r},${r} 0 1,1 ${r * 2},0
