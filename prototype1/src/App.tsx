@@ -22,68 +22,9 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
 
   useEffect(() => {
     let svg = d3.select(svgRef.current)
-
-    let hiearchy = d3
-      .hierarchy(data)
-      // TODO: Derrive size from file/folder size
-      .sum(() => 10)
-      .sort((a, b) => b.value !== undefined && a.value !== undefined ? b.value - a.value : 0)
-
-    let partition = d3
-      .pack()
-      .size([paddedSizeProps.width, paddedSizeProps.height])
-      .padding(padding)
-
-    partition(hiearchy)
-
     const root = svg.append("g")
 
-    const group = root
-      .selectAll("circle.node")
-      .data(hiearchy.descendants())
-      .enter()
-      .append("g")
-
-    const circle = group.append("circle")
-
-    circle
-      .classed("node", true)
-      .attr("cx", (d) => d.x)
-      .attr("cy", (d) => d.y)
-      .attr("r", (d) => d.r)
-      .style("fill", (d) => (d.data.children ? "none" : "cadetblue"))
-      .style("opacity", 0.3)
-      .style("stroke", "black")
-
-    const path = group.append("path")
-
-    path
-      .attr("d", (d) => circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle))
-      .classed("node", true)
-      .attr("cx", (d) => d.x)
-      .attr("cy", (d) => d.y)
-      .attr("r", (d) => d.r)
-      .style("fill", "transparent")
-      .style("opacity", 0.3)
-
-      .attr("id", (d) => d.data.hash)
-
-    if (new URL(window.location.toString()).searchParams.get("debug") === "true") {
-      path.style("stroke", "black")
-      path.style("stroke-dasharray", "5,5")
-    }
-
-    const text = group.append("text")
-
-    text
-      .append("textPath")
-      .attr("startOffset", "25%")
-      .attr("dominant-baseline", "bottom")
-      .attr("text-anchor", "middle")
-      .attr("xlink:href", (d) => `#${d.data.hash}`)
-      .text((d) => d.data.name)
-      .style("font-size", "0.8em")
-      .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
+    drawBubbleChart(data, paddedSizeProps, root)
 
     return () => {
       root.remove()
@@ -106,16 +47,11 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
   )
 }
 
-function drawBubbleChart(options: {
-  data: GitTreeObject
+function drawBubbleChart(
+  data: GitTreeObject,
+  paddedSizeProps: { height: number; width: number },
   root: d3.Selection<SVGGElement, unknown, null, undefined>
-  paddedSizeProps: { height: number; width: number }
-}) {
-  let {
-    data,
-    root,
-    paddedSizeProps,
-  } = options
+) {
   let hiearchy = d3
     .hierarchy(data)
     // TODO: Derrive size from file/folder size
@@ -125,15 +61,17 @@ function drawBubbleChart(options: {
     )
 
   let partition = d3
-    .pack<GitTreeObject>()
+    .pack()
     .size([paddedSizeProps.width, paddedSizeProps.height])
     .padding(padding)
 
   partition(hiearchy)
 
-
-
-  const group = root.selectAll("circle.node").enter().append("g").data(hiearchy.descendants())
+  const group = root
+    .selectAll("circle.node")
+    .data(hiearchy.descendants())
+    .enter()
+    .append("g")
 
   const circle = group.append("circle")
 
@@ -180,6 +118,7 @@ function drawBubbleChart(options: {
     .style("font-size", "0.8em")
     .style("font-weight", (d) => (d.data.children ? "bold" : "normal"))
 }
+
 // a rx ry angle large-arc-flag sweep-flag dx dy
 // rx and ry are the two radii of the ellipse
 // angle represents a rotation (in degrees) of the ellipse relative to the x-axis;
