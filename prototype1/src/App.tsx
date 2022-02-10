@@ -81,8 +81,6 @@ function drawBubbleChart(
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
     .style("fill", (d) => (d.data.children ? "none" : "cadetblue"))
-    .style("opacity", 0.3)
-    .style("stroke", "black")
 
   const path = group.append("path")
 
@@ -90,20 +88,16 @@ function drawBubbleChart(
     .attr("d", (d) =>
       circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
     )
-    .classed("node", true)
+    .classed("name-path", true)
     .attr("cx", (d) => d.x)
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
-    .style("fill", "transparent")
-    .style("opacity", 0.3)
-
     .attr("id", (d) => d.data.hash)
 
   if (
     new URL(window.location.toString()).searchParams.get("debug") === "true"
   ) {
-    path.style("stroke", "black")
-    path.style("stroke-dasharray", "5,5")
+    path.classed("name-path debug", true)
   }
 
   const text = group.append("text")

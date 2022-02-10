@@ -40,3 +40,18 @@
 button {
   font-size: calc(10px + 2vmin);
 }
+
+.node {
+  stroke: black;
+}
+
+.node, .name-path {
+  fill: transparent;
+  opacity: 0.3;
+}
+
+
+.name-path.debug {
+  stroke: black;
+  stroke-dasharray: 5,5;
+}
