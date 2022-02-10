@@ -1,5 +1,5 @@
 # Git Parser
-Parses a git objects
+Parses git objects
 
 # How to run
 In /parser folder, to install dependencies run
