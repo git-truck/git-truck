@@ -1,0 +1,32 @@
+name: Auto Assign to Project
+
+on:
+  issues:
+    types: [opened, labeled, assigned, unassigned]
+  pull_request:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  assign_one_project:
+    runs-on: ubuntu-latest
+    name: Assign to One Project
+    steps:
+      - name: Assign opened issues to Git Visual
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        if: github.event.issue && (github.event.action == 'opened' || github.event.action == 'unassigned')
+        with:
+          project: Git Visual
+          column: Backlog
+          repo-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Assign issues with assignees and opened pull requests to Git Visual
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        if: (github.event.pull_request && github.event.action == 'opened' ) || (github.event.issue && github.event.action == 'assigned' )
+        with:
+          project: Git Visual
+          column: In progress
+          repo-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
