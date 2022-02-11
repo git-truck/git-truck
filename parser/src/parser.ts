@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import  { createInterface } from "readline";
 import path from "path"
 
-async function parseFile(path: string) {
+export async function parseFile(path: string) {
   const buffer = await fs.readFile(path)
   const unzipPromise = promisify(unzip)
   const res = await unzipPromise(buffer)
