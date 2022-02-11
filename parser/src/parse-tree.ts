@@ -25,28 +25,49 @@ export async function findBranchHead(repoDir: string, branch: string) {
   if (type !== "commit") {
     throw Error("Expected commit object, got " + type)
   }
+
+  return parseCommit(branchHead, content)
 }
 
 // return parseCommit(branchHead, content)
-function parseCommit(hash: string, rawCommit: string)
-// : GitCommitObject
-{
-  const items = rawCommit.split("\n", 4)
+// function parseCommit(hash: string, rawCommit: string)
+// // : GitCommitObject
+// {
+//   const items = rawCommit.split("\n", 4)
 
-  const [tree, parent, author, committer] = items
-  console.log({ tree, parent, author, committer})
-  //   .slice(0)
-  //   .reverse()
-  //   .map((x) => x.split(/(?:tree|parent|author|committer) (.*)/)[1])
-  // return { hash, tree, parent, author, committer, message }
-  // const commitRegex = /^tree (?<tree>[0-9a-f]{40})\nparent (?<parent>[0-9a-f]{40})\nauthor (?<author>.*)\ncommitter (?<commiter>.*)\n+(?<message>.*)$/gm
+//   const [tree, parent, author, committer] = items
+//   console.log({ tree, parent, author, committer})
+//   //   .slice(0)
+//   //   .reverse()
+//   //   .map((x) => x.split(/(?:tree|parent|author|committer) (.*)/)[1])
+//   // return { hash, tree, parent, author, committer, message }
+//   // const commitRegex = /^tree (?<tree>[0-9a-f]{40})\nparent (?<parent>[0-9a-f]{40})\nauthor (?<author>.*)\ncommitter (?<commiter>.*)\n+(?<message>.*)$/gm
 
-  const messageRegex = /^\n\n(?<message>.*)$/gm
-  const groups = rawCommit.match(messageRegex)?.groups
-  if (groups) console.log(groups["message"] )
+//   const messageRegex = /^\n\n(?<message>.*)$/gm
+//   const groups = rawCommit.match(messageRegex)?.groups
+//   if (groups) console.log(groups["message"] )
 
-  // const x = rawCommit.match(commitRegex)
-  // return x?.groups
+//   // const x = rawCommit.match(commitRegex)
+//   // return x?.groups
+// }
+
+function parseCommit(hash: string, rawContent: string): GitCommitObject {
+  let split = rawContent.split("\n", 6)
+  let tree = split[0].split(" ", 2)[1]
+  let parent = split[1].split(" ", 2)[1]
+  let author = split[2].substring(7)
+  let committer = split[3].substring(10)
+  let message = split[5]
+
+  return {
+    hash,
+    tree,
+    parent,
+    author,
+    committer,
+    message
+  }
+
 }
 
 async function generateTree(content: string) {
