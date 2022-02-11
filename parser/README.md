@@ -9,7 +9,7 @@ npm i
 
 To transpile the typescript and run the parser
 ```
-npm start
+npm start <repository> [branch = main]
 ```
 
 Then input the path to the git repo to be parsed (relative or absolute)
