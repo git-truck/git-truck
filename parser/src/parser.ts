@@ -11,6 +11,10 @@ export async function parseFile(path: string) {
   return res.toString()
 }
 
+export async function lookupHash(repo: string, hash: string) {
+  return await parseFile(path.join(repo, ".git", "objects", hash.substring(0, 2), hash.substring(2)))
+}
+
 export async function parseGitObjects(directory: string) {
   const gitObjectsPath = path.join(directory, ".git/objects")
 
