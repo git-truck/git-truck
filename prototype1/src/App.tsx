@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import "./App.css"
 import { data } from "./data"
 import { useWindowSize } from "react-use"
-import { GitTreeObject } from "./model"
+import { GitTreeObject } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
 
 const padding = 30
