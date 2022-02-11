@@ -1,4 +1,4 @@
-import { GitTreeObject } from "./model";
+import { GitTreeObject } from "./../../parser/src/model";
 
 export const data: GitTreeObject = {
   name: "root",
