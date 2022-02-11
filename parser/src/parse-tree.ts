@@ -1,23 +1,17 @@
 import path from "path"
 import { promises as fs } from "fs"
-import { parseFile } from "./parser.js"
-import { GitCommitObject } from "./model.js"
+import { lookupAndDecompressFromHash } from "./parser.js"
+import { GitCommitObject, GitTreeObject } from "./model.js"
 
-export async function findBranchHead(repoDir: string, branch: string) {
-  const gitFolder = path.join(repoDir, ".git")
-  const objectsFolder = path.join(gitFolder, "objects")
+export async function findBranchHead(repo: string, branch: string) {
+  const gitFolder = path.join(repo, ".git")
 
   // Find file containing the branch head
   const branchPath = path.join(gitFolder, "refs/heads/" + branch)
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
 
-  // Read the commit at the branch head
-  const commitObjectPath = path.join(
-    objectsFolder,
-    branchHead.substring(0, 2),
-    branchHead.substring(2)
-  )
-  const rawObject = await parseFile(commitObjectPath)
+  // const rawObject = await parseFile(commitObjectPath)
+  const rawObject = await lookupAndDecompressFromHash(repo, branchHead)
 
   const [objectHeader, content] = rawObject.split("\u0000", 2)
   let [type] = objectHeader.split(" ")
@@ -26,7 +20,7 @@ export async function findBranchHead(repoDir: string, branch: string) {
     throw Error("Expected commit object, got " + type)
   }
 
-  return parseCommit(branchHead, content)
+  return await parseCommit(repo, branchHead, content)
 }
 
 // return parseCommit(branchHead, content)
@@ -51,7 +45,7 @@ export async function findBranchHead(repoDir: string, branch: string) {
 //   // return x?.groups
 // }
 
-function parseCommit(hash: string, rawContent: string): GitCommitObject {
+async function parseCommit(_repo: string, hash: string, rawContent: string): Promise<GitCommitObject> {
   let split = rawContent.split("\n", 6)
   let tree = split[0].split(" ", 2)[1]
   let parent = split[1].split(" ", 2)[1]
@@ -61,7 +55,8 @@ function parseCommit(hash: string, rawContent: string): GitCommitObject {
 
   return {
     hash,
-    tree,
+    tree: "",
+    // tree: (await generateTree(repo, tree)) as unknown as GitTreeObject,
     parent,
     author,
     committer,

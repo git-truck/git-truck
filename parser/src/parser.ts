@@ -1,18 +1,20 @@
-import { unzip } from 'zlib';
+import { unzip as unzipSync } from 'zlib';
 import { promises as fs } from 'fs'
 import { promisify } from 'util';
-import  { createInterface } from "readline";
 import path from "path"
 
-export async function parseFile(path: string) {
+// const unzip = promisify(unzipSync)
+const unzip = promisify(unzipSync)
+
+export async function deflateGitObject(path: string) {
   const buffer = await fs.readFile(path)
-  const unzipPromise = promisify(unzip)
-  const res = await unzipPromise(buffer)
+  const res = await unzip(buffer)
   return res.toString()
 }
 
-export async function lookupHash(repo: string, hash: string) {
-  return await parseFile(path.join(repo, ".git", "objects", hash.substring(0, 2), hash.substring(2)))
+export async function lookupAndDecompressFromHash(repo: string, hash: string) {
+  const result = await deflateGitObject(path.join(repo, ".git", "objects", hash.substring(0, 2), hash.substring(2)))
+  return result
 }
 
 export async function parseGitObjects(directory: string) {
@@ -26,7 +28,7 @@ export async function parseGitObjects(directory: string) {
     const fileNames = await fs.readdir(dir)
     for (let fileName of fileNames) {
       const hash = folder + fileName
-      const rawObject = await parseFile(path.join(dir, fileName))
+      const rawObject = await deflateGitObject(path.join(dir, fileName))
 
 
       gitObjects.set(hash, rawObject)
@@ -35,15 +37,3 @@ export async function parseGitObjects(directory: string) {
   return gitObjects
 }
 
-export async function runAsCli() {
-    const io = createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    io.question("Input path to directory: ", async (input) => {
-        const result = await parseGitObjects(input);
-        console.log(Array.from(result.entries()))
-        io.close();
-    });
-}
