@@ -8,7 +8,7 @@ export async function findBranchHead(repoDir: string, branch: string) {
   const objectsFolder = path.join(gitFolder, "objects")
 
   // Find file containing the branch head
-  const branchPath = path.resolve(gitFolder, "refs/heads/" + branch)
+  const branchPath = path.join(gitFolder, "refs/heads/" + branch)
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
 
   // Read the commit at the branch head
