@@ -12,7 +12,7 @@ export async function parseFile(path: string) {
 }
 
 export async function parseGitObjects(directory: string) {
-  const gitObjectsPath = directory + "/.git/objects"
+  const gitObjectsPath = path.join(directory, ".git/objects")
 
   let folderPaths = await fs.readdir(gitObjectsPath)
   const gitObjects = new Map<string, string>()
