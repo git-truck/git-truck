@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import "./App.css"
 import { data } from "./data"
 import { useWindowSize } from "react-use"
-import { GitTreeObject } from "./../../parser/src/model"
+import { GitBlobObject, GitObject, GitTreeObject } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
 
 const padding = 30
@@ -48,18 +48,18 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
 }
 
 function drawBubbleChart(
-  data: GitTreeObject,
+  data: GitObject,
   paddedSizeProps: { height: number; width: number },
   root: Selection<SVGGElement, unknown, null, undefined>
 ) {
   let hiearchy = hierarchy(data)
     // TODO: Derrive size from file/folder size
-    .sum(() => 10)
+    .sum((d) => (d as GitBlobObject).noLines)
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
 
-  let partition = pack<GitTreeObject>()
+  let partition = pack<GitObject>()
     .size([paddedSizeProps.width, paddedSizeProps.height])
     .padding(padding)
 
@@ -78,7 +78,7 @@ function drawBubbleChart(
     .attr("cx", (d) => d.x)
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
-    .style("fill", (d) => (d.data.children ? "none" : "cadetblue"))
+    .style("fill", (d) => ((d.data as GitTreeObject)?.children ? "none" : "cadetblue"))
 
   const path = group.append("path")
 
