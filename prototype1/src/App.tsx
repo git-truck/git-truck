@@ -9,7 +9,7 @@ const padding = 30
 const textSpacingFromCircle = 5
 
 function App() {
-  return <BubbleChart data={data} />
+  return <BubbleChart data={data.tree} />
 }
 
 function BubbleChart({ data }: { data: GitTreeObject }) {
