@@ -1,6 +1,6 @@
 import "dotenv/config"
 import { findBranchHead, parseCommit } from "./parse.js"
-import { writeTreeToFile as writeCommitTreeToFile } from "./util.js"
+import { writeCommitObjectToFile } from "./util.js"
 
 if (process.argv.length < 3) {
   console.log("Usage: <path to git repository> [branch=main] [outfile=.temp/{repo}{branch}.json")
@@ -13,8 +13,8 @@ try {
   const branchHead = await findBranchHead(dir, branch)
   const parsedCommit = await parseCommit(branchHead)
   await process.argv.length < 5 ?
-  writeCommitTreeToFile(parsedCommit, dir, branch, process.argv[4]) :
-  writeCommitTreeToFile(parsedCommit, dir, branch)
+  writeCommitObjectToFile(parsedCommit, dir, branch, process.argv[4]) :
+  writeCommitObjectToFile(parsedCommit, dir, branch)
 } catch (e) {
   console.error(e)
 }
