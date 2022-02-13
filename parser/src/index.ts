@@ -1,13 +1,20 @@
-import { findBranchHead } from "./parse-tree.js"
-
+import "dotenv/config"
+import { findBranchHead, parseCommit } from "./parse.js"
+import { writeTreeToFile as writeCommitTreeToFile } from "./util.js"
 
 if (process.argv.length < 3) {
-  console.log("Usage: <path to git repository> [branch=main]")
+  console.log("Usage: <path to git repository> [branch=main] [outfile=.temp/{repo}{branch}.json")
   process.exit(0)
 }
 
 const dir = process.argv[2]
 const branch = process.argv.length < 4 ? "main" : process.argv[3]
-const result = await findBranchHead(dir, branch)
-console.log(result);
-
+try {
+  const branchHead = await findBranchHead(dir, branch)
+  const parsedCommit = await parseCommit(branchHead)
+  await process.argv.length < 5 ?
+  writeCommitTreeToFile(parsedCommit, dir, branch, process.argv[4]) :
+  writeCommitTreeToFile(parsedCommit, dir, branch)
+} catch (e) {
+  console.error(e)
+}

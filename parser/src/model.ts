@@ -14,8 +14,7 @@ export interface GitTreeObject {
 
 export interface GitCommitObject {
   hash: string
-  // tree: GitTreeObject
-  tree: string
+  tree: GitTreeObject
   parent: string
   author: string
   committer: string
