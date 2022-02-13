@@ -13,3 +13,10 @@ npm start <repository> [branch = main]
 ```
 
 Then input the path to the git repo to be parsed (relative or absolute)
+
+To enable debugLog output, set the NODE_DEBUG variable to any value. This can be done in the command line, or by adding a `.env` file, for example:
+
+```
+DEBUG=true
+```
+
