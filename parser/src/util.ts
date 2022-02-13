@@ -11,7 +11,7 @@ export function runProcess(command: string, args: string[]) {
   })
 }
 
-export async function writeTreeToFile(
+export async function writeCommitObjectToFile(
   commitObject: GitCommitObject,
   dir: string,
   branch: string,
