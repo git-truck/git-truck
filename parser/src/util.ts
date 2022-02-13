@@ -1,7 +1,8 @@
 import { spawn } from "child_process"
 import { promises as fs } from "fs"
 import { resolve, sep } from "path"
-import { GitCommitObject } from "./model"
+import { debugLog } from "./debug.js"
+import { GitCommitObject } from "./model.js"
 
 export function runProcess(command: string, args: string[]) {
   return new Promise((resolve, reject) => {
@@ -22,8 +23,11 @@ export async function writeCommitObjectToFile(
   if (outFile) {
     outPath = outFile
   }
-  const [repo] = dir.split(sep).slice().reverse()
+  const [repo] = resolve(dir).split(sep).slice().reverse()
 
   await fs.mkdir(outPath, { recursive: true })
-  await fs.writeFile(resolve(outPath, `${repo}_${branch}.json`), data)
+  const filename = `${repo}_${branch}.json`
+  const path = resolve(outPath, filename)
+  await fs.writeFile(path, data)
+  console.log(`[${commitObject.hash}] -> ${path}`)
 }
