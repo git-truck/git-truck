@@ -4,6 +4,7 @@ export interface GitBlobObject {
   hash: string
   name: string
   content: string
+  noLines: number
 }
 
 export interface GitTreeObject {

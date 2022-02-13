@@ -73,7 +73,8 @@ async function parseBlob(name: string, hash: string) {
   const blob: GitBlobObject = {
     hash,
     name,
-    content
+    content,
+    noLines: content.split("\n").length,
   }
   return blob
 }
