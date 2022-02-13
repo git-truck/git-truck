@@ -13,16 +13,13 @@ export function runProcess(command: string, args: string[]) {
 
 export async function writeRepoToFile(
   commitObject: GitCommitObject,
-  dir: string,
+  repoDir: string,
   branch: string,
-  outFile?: string | undefined
+  outDir: string
 ) {
   const data = JSON.stringify(commitObject)
-  let outPath = resolve(".temp")
-  if (outFile) {
-    outPath = outFile
-  }
-  const [repo] = resolve(dir).split(sep).slice().reverse()
+  let outPath = resolve(outDir, ".temp")
+  const [repo] = resolve(repoDir).split(sep).slice().reverse()
 
   await fs.mkdir(outPath, { recursive: true })
   const filename = `${repo}_${branch}.json`

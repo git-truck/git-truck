@@ -9,10 +9,12 @@ npm i
 
 To transpile the typescript and run the parser
 ```
-npm start <repository> [branch = main] [output = .temp/{repo}_{branch}.json]
+npm start <repository> [branch = main] [outDir = .]
 ```
 
-For example, if run in the parser folder, `npm start .. ` will analyze the git-visual repository and output the result to `.temp/git-visual_main.json`
+For example, if run in the parser folder, `npm start ..` will analyze the git-visual repository and output the result to `.temp/git-visual_main.json`
+
+
 
 Then input the path to the git repo to be parsed (relative or absolute)
 
