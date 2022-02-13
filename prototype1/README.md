@@ -14,3 +14,7 @@ Then, use `yarn dev` or `npm run dev` to start the development server.
 ## Debug mode
 
 A debug mode can be enabled by adding `?debug=true` to the URL.
+
+## Generating data from the parser
+
+To generate data from the parser to use in the visualization, run `npm start .. main ../prototype1` in the `parser` directory.
