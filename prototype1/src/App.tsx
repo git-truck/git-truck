@@ -54,7 +54,7 @@ function drawBubbleChart(
 ) {
   let hiearchy = hierarchy(data)
     // TODO: Derrive size from file/folder size
-    .sum((d) => d.)
+    .sum(() => 10)
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
