@@ -1,7 +1,6 @@
 import { spawn } from "child_process"
 import { promises as fs } from "fs"
 import { resolve, sep } from "path"
-import { debugLog } from "./debug.js"
 import { GitCommitObject } from "./model.js"
 
 export function runProcess(command: string, args: string[]) {
