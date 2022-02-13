@@ -11,7 +11,7 @@ export function runProcess(command: string, args: string[]) {
   })
 }
 
-export async function writeCommitObjectToFile(
+export async function writeRepoToFile(
   commitObject: GitCommitObject,
   dir: string,
   branch: string,
