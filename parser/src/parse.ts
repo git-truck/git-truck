@@ -79,7 +79,7 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
         case "tree":
           return await parseTree(name, hash)
           case "blob":
-          return await parseBlob(name, hash)
+          return await parseBlob(name, hash, true)
           default:
             throw new Error(` type ${type}`)
       }
@@ -94,13 +94,13 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
 }
 
 
-async function parseBlob(name: string, hash: string) {
+async function parseBlob(name: string, hash: string, light = false): Promise<GitBlobObject> {
   const content = await deflateGitObject(hash)
   const blob: GitBlobObject = {
     type: "blob",
     hash,
     name,
-    content,
+    content: light ? "" : content,
     noLines: content.split("\n").length,
     authors: {}
   }
