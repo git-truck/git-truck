@@ -25,9 +25,9 @@ export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
   let stuff = entries
     .filter((x) => x.trim().length > 0)
     .map((x) => x.split(/\t+/))
-    .map(([pos, neg, file]) => ({
-      pos: parseInt(pos),
+    .map(([neg, pos, file]) => ({
       neg: parseInt(neg),
+      pos: parseInt(pos),
       file,
     }))
   return stuff
