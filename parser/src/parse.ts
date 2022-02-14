@@ -1,6 +1,6 @@
 import path from "path"
 import { promises as fs } from "fs"
-import { GitBlobObject, GitCommitObject, GitTreeObject, Person } from "./model.js"
+import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject } from "./model.js"
 import { debugLog } from "./debug.js"
 import { runProcess } from "./util.js"
 
@@ -23,7 +23,8 @@ export async function deflateGitObject(hash: string) {
   return result as string
 }
 
-export async function parseCommit(hash: string): Promise<GitCommitObject> {
+
+export async function parseCommitLight(hash: string): Promise<GitCommitObjectLight> {
   // ^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$
   const commitRegex = /^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$/gm
   const rawContent = await deflateGitObject(hash)
@@ -49,12 +50,20 @@ export async function parseCommit(hash: string): Promise<GitCommitObject> {
 
   return {
     hash,
-    tree: await parseTree("?", tree),
+    tree,
     parent,
     parent2,
     author,
     committer,
     message,
+  }
+}
+
+export async function parseCommit(hash: string): Promise<GitCommitObject> {
+  const {tree, ...commit} = await parseCommitLight(hash)
+  return {
+    ...commit,
+    tree: await parseTree(".", tree),
   }
 }
 
@@ -77,6 +86,7 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
     })
   )
   return {
+    type: "tree",
     name,
     hash,
     children,
@@ -87,13 +97,12 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
 async function parseBlob(name: string, hash: string) {
   const content = await deflateGitObject(hash)
   const blob: GitBlobObject = {
+    type: "blob",
     hash,
     name,
     content,
     noLines: content.split("\n").length,
-    authors: {
-      [name]: 0
-    }
+    authors: {}
   }
   return blob
 }
