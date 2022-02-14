@@ -1,7 +1,12 @@
 import { spawn } from "child_process"
 import { promises as fs } from "fs"
 import { resolve, sep } from "path"
-import { GitCommitObject } from "./model.js"
+import { debugLog } from "./debug.js"
+import {
+  GitBlobObject,
+  GitCommitObject,
+  GitTreeObject,
+} from "./model.js"
 
 export function runProcess(command: string, args: string[]) {
   return new Promise((resolve, reject) => {
@@ -9,6 +14,51 @@ export function runProcess(command: string, args: string[]) {
     prcs.stdout.once("data", (data) => resolve(data.toString()))
     prcs.stderr.once("data", (data) => reject(data.toString()))
   })
+}
+
+export async function gitDiffNumStatParsed(a: string, b: string) {
+  let diff = await gitDiffNumStat(a, b)
+  let entries = diff.split("\n")
+  let stuff = entries
+    .filter((x) => x.trim().length > 0)
+    .map((x) => x.split(/\t+/))
+    .map(([pos, neg, file]) => ({
+      pos: parseInt(pos),
+      neg: parseInt(neg),
+      file,
+    }))
+  return stuff
+}
+
+export async function lookupFileInTree(
+  tree: GitTreeObject,
+  path: string
+): Promise<GitBlobObject | undefined> {
+  debugLog(path)
+  let dirs = path.split("/")
+  if (dirs.length === 2) {
+    // We have reached the end of the tree, look for the blob
+    const [,file] = dirs
+    const result = tree.children.find(
+      (x) => x.name === file && x.type === "blob"
+    )
+    if (!result) return
+    if (result.type === "tree") return undefined
+    return result
+  }
+  let subtree = tree.children.find((x) => x.name === dirs[0])
+  if (!subtree || subtree.type === "blob") return
+  return lookupFileInTree(subtree, dirs.slice(1).join("/"))
+}
+
+export async function gitDiffNumStat(a: string, b: string) {
+  const result = await runProcess("git", ["diff", "--numstat", a, b])
+  return result as string
+}
+
+export async function deflateGitObject(hash: string) {
+  const result = await runProcess("git", ["cat-file", "-p", hash])
+  return result as string
 }
 
 export async function writeRepoToFile(

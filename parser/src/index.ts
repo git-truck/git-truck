@@ -1,4 +1,5 @@
 import "dotenv/config"
+import { hydrateTreeWithAuthorship } from "./authorship.js"
 import { findBranchHead, parseCommit } from "./parse.js"
 import { writeRepoToFile } from "./util.js"
 
@@ -15,8 +16,9 @@ const outDir = process.argv.length < 5 ? "." : process.argv[4]
 
 try {
   const branchHead = await findBranchHead(repoDir, branch)
-  const parsedCommit = await parseCommit(branchHead)
-  await writeRepoToFile(parsedCommit, repoDir, branch, outDir)
+  let repoTree = await parseCommit(branchHead)
+  repoTree = await hydrateTreeWithAuthorship(repoTree)
+  await writeRepoToFile(repoTree, repoDir, branch, outDir)
 } catch (e) {
   console.error(e)
 }
