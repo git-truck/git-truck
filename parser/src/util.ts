@@ -10,16 +10,18 @@ import {
 
 const last = (r: unknown[]) => r[r.length - 1]
 
-export function runProcess(command: string, args: string[]) {
+export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
-    const prcs = spawn(command, args)
+    const prcs = spawn(command, args, {
+      cwd: dir,
+    })
     prcs.stdout.once("data", (data) => resolve(data.toString()))
     prcs.stderr.once("data", (data) => reject(data.toString()))
   })
 }
 
-export async function gitDiffNumStatParsed(a: string, b: string) {
-  let diff = await gitDiffNumStat(a, b)
+export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
+  let diff = await gitDiffNumStat(repo, a, b)
   let entries = diff.split("\n")
   let stuff = entries
     .filter((x) => x.trim().length > 0)
@@ -53,13 +55,13 @@ export async function lookupFileInTree(
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
-export async function gitDiffNumStat(a: string, b: string) {
-  const result = await runProcess("git", ["diff", "--numstat", a, b])
+export async function gitDiffNumStat(repoDir: string, a: string, b: string) {
+  const result = await runProcess(repoDir, "git", ["diff", "--numstat", a, b])
   return result as string
 }
 
-export async function deflateGitObject(hash: string) {
-  const result = await runProcess("git", ["cat-file", "-p", hash])
+export async function deflateGitObject(repo: string, hash: string) {
+  const result = await runProcess(repo, "git", ["cat-file", "-p", hash])
   return result as string
 }
 

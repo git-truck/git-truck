@@ -18,16 +18,16 @@ export async function findBranchHead(repo: string, branch: string) {
   return branchHead
 }
 
-export async function deflateGitObject(hash: string) {
-  const result = await runProcess("git", ["cat-file", "-p", hash])
+export async function deflateGitObject(repo: string, hash: string) {
+  const result = await runProcess(repo, "git", ["cat-file", "-p", hash])
   return result as string
 }
 
 
-export async function parseCommitLight(hash: string): Promise<GitCommitObjectLight> {
+export async function parseCommitLight(repo: string, hash: string): Promise<GitCommitObjectLight> {
   // ^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$
   const commitRegex = /^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$/gm
-  const rawContent = await deflateGitObject(hash)
+  const rawContent = await deflateGitObject(repo, hash)
   const match = commitRegex.exec(rawContent)
   let groups = match?.groups ?? {}
 
@@ -59,16 +59,16 @@ export async function parseCommitLight(hash: string): Promise<GitCommitObjectLig
   }
 }
 
-export async function parseCommit(hash: string): Promise<GitCommitObject> {
-  const {tree, ...commit} = await parseCommitLight(hash)
+export async function parseCommit(repo: string, hash: string): Promise<GitCommitObject> {
+  const {tree, ...commit} = await parseCommitLight(repo, hash)
   return {
     ...commit,
-    tree: await parseTree(".", tree),
+    tree: await parseTree(repo, ".", tree),
   }
 }
 
-async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
-  const rawContent = await deflateGitObject(hash)
+async function parseTree(repo: string, name: string, hash: string): Promise<GitTreeObject> {
+  const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
   const children = await Promise.all(
@@ -77,9 +77,9 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
 
       switch (type) {
         case "tree":
-          return await parseTree(name, hash)
+          return await parseTree(repo, name, hash)
           case "blob":
-          return await parseBlob(name, hash, true)
+          return await parseBlob(repo, name, hash, true)
           default:
             throw new Error(` type ${type}`)
       }
@@ -94,8 +94,8 @@ async function parseTree(name: string, hash: string): Promise<GitTreeObject> {
 }
 
 
-async function parseBlob(name: string, hash: string, light = false): Promise<GitBlobObject> {
-  const content = await deflateGitObject(hash)
+async function parseBlob(repo: string, name: string, hash: string, light = false): Promise<GitBlobObject> {
+  const content = await deflateGitObject(repo, hash)
   const blob: GitBlobObject = {
     type: "blob",
     hash,
