@@ -17,7 +17,7 @@ const outDir = process.argv.length < 5 ? "." : process.argv[4]
 try {
   const branchHead = await findBranchHead(repoDir, branch)
   let repoTree = await parseCommit(branchHead)
-  repoTree = await hydrateTreeWithAuthorship(repoTree)
+  repoTree = await hydrateTreeWithAuthorship(repoTree.tree, repoTree)
   await writeRepoToFile(repoTree, repoDir, branch, outDir)
 } catch (e) {
   console.error(e)
