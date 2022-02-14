@@ -15,7 +15,7 @@ export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, com
 
     let parentCommit = await parseCommit(parent)
     let { author, ...restof } = parentCommit
-    console.log(`hydrating tree changes for commit [${restof.message.split("\n").filter(x => x.trim().length > 0)[0]}]`)
+    debugLog(`[${restof.message.split("\n").filter(x => x.trim().length > 0)[0]}]`)
     // Diff newer with current
     debugLog(`comparing [${child}] -> [${parent}]`)
 
@@ -27,11 +27,9 @@ export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, com
       if (blob) {
         let current = blob.authors[author.name] ?? 0
         blob.authors[author.name] = current + pos + neg
-        // console.log(`[${file}].${author.name} += ${blob.authors[author.name]}`)
       }
     }
     child = parent
     parent = parentCommit.parent
-    // hydrateTreeWithAuthorship(originalTree, parentCommit)
   }
 }
