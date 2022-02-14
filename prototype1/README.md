@@ -3,7 +3,7 @@
 This is a folder visualization prototype.
 
 
-This project uses npm to install dependencies and `package-lock.json` as a lockfile, so please do not commit `package-lock.json` to this folder. When adding new dependencies, please use `npm install <package>` instead of `yarn add <package>`.`
+This project uses npm to install dependencies and `package-lock.json` as a lockfile, so please do not commit `yarn.lock` to this folder. When adding new dependencies, please use `npm install <package>` instead of `yarn add <package>`.`
 
 ## Running
 
