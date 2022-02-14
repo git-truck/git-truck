@@ -3,7 +3,7 @@ import { GitCommitObject, GitTreeObject } from "./model.js"
 import { parseCommit } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
 
-export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, commit: GitCommitObject) {
+export async function hydrateTreeWithAuthorship(repo: string, originalTree: GitTreeObject, commit: GitCommitObject) {
   let { hash: child, parent } = commit
 
   // eslint-disable-next-line no-constant-condition
@@ -14,7 +14,7 @@ export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, com
     }
 
 
-    let parentCommit = await parseCommit(parent)
+    let parentCommit = await parseCommit(repo, parent)
     if (parentCommit.parent2 !== undefined) {
       // TODO: Handle merges
     }
@@ -23,7 +23,7 @@ export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, com
     // Diff newer with current
     debugLog(`comparing [${child}] -> [${parent}]`)
 
-    let results = await gitDiffNumStatParsed(child, parent)
+    let results = await gitDiffNumStatParsed(repo, child, parent)
 
     for (const { pos, neg, file } of results) {
       const blob = await lookupFileInTree(originalTree, file)
