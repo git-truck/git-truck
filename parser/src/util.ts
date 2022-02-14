@@ -1,14 +1,13 @@
 import { spawn } from "child_process"
 import { promises as fs } from "fs"
 import { resolve, sep } from "path"
-import { debugLog } from "./debug.js"
 import {
   GitBlobObject,
   GitCommitObject,
   GitTreeObject,
 } from "./model.js"
 
-const last = (r: unknown[]) => r[r.length - 1]
+export const last = (r: unknown[]) => r[r.length - 1]
 
 export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
@@ -38,11 +37,11 @@ export async function lookupFileInTree(
   tree: GitTreeObject,
   path: string
 ): Promise<GitBlobObject | undefined> {
-  debugLog(path)
   let dirs = path.split("/")
-  if (dirs.length === 2) {
+
+  if (dirs.length < 2) {
     // We have reached the end of the tree, look for the blob
-    const [,file] = dirs
+    const file = last(dirs)
     const result = tree.children.find(
       (x) => x.name === file && x.type === "blob"
     )
@@ -52,7 +51,7 @@ export async function lookupFileInTree(
   }
   let subtree = tree.children.find((x) => x.name === dirs[0])
   if (!subtree || subtree.type === "blob") return
-  return lookupFileInTree(subtree, dirs.slice(1).join("/"))
+  return await lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
 export async function gitDiffNumStat(repoDir: string, a: string, b: string) {
