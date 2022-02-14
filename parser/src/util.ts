@@ -41,7 +41,7 @@ export async function lookupFileInTree(
 
   if (dirs.length < 2) {
     // We have reached the end of the tree, look for the blob
-    const file = last(dirs)
+    const [file] = dirs
     const result = tree.children.find(
       (x) => x.name === file && x.type === "blob"
     )
