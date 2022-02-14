@@ -1,6 +1,6 @@
 import path from "path"
 import { promises as fs } from "fs"
-import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
+import { GitBlobObject, GitCommitObject, GitTreeObject, Person } from "./model.js"
 import { debugLog } from "./debug.js"
 import { runProcess } from "./util.js"
 
@@ -24,18 +24,34 @@ export async function deflateGitObject(hash: string) {
 }
 
 export async function parseCommit(hash: string): Promise<GitCommitObject> {
+  // ^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$
+  const commitRegex = /^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$/gm
   const rawContent = await deflateGitObject(hash)
-  let split = rawContent.split("\n", 6)
-  let tree = split[0].split(" ", 2)[1]
-  let parent = split[1].split(" ", 2)[1]
-  let author = split[2].substring(7)
-  let committer = split[3].substring(10)
-  let message = split[5]
+  const match = commitRegex.exec(rawContent)
+  let groups = match?.groups ?? {}
+
+  let tree = groups["tree"]
+  let parent = groups["parent"]
+  let parent2 = groups["parent2"]
+  let author = {
+    name: groups["authorName"],
+    email: groups["authorEmail"],
+    timestamp: Number(groups["authorTimeStamp"]),
+    timezone: groups["authorTimeZone"]
+  }
+  let committer = {
+    name: groups["committerName"],
+    email: groups["committerEmail"],
+    timestamp: Number(groups["committerTimeStamp"]),
+    timezone: groups["committerTimeZone"]
+  }
+  let message = groups["message"]
 
   return {
     hash,
     tree: await parseTree("?", tree),
     parent,
+    parent2,
     author,
     committer,
     message,
