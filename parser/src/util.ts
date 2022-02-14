@@ -69,7 +69,7 @@ export async function writeRepoToFile(
   branch: string,
   outDir: string
 ) {
-  const data = JSON.stringify(commitObject)
+  const data = JSON.stringify(commitObject, null, 2)
   let outPath = resolve(outDir, ".temp")
   const [repo] = resolve(repoDir).split(sep).slice().reverse()
 
