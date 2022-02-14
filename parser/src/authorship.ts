@@ -13,7 +13,11 @@ export async function hydrateTreeWithAuthorship(originalTree: GitTreeObject, com
       return {...commit, tree: originalTree}
     }
 
+
     let parentCommit = await parseCommit(parent)
+    if (parentCommit.parent2 !== undefined) {
+      // TODO: Handle merges
+    }
     let { author, ...restof } = parentCommit
     debugLog(`[${restof.message.split("\n").filter(x => x.trim().length > 0)[0]}]`)
     // Diff newer with current
