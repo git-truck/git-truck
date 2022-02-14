@@ -5,16 +5,9 @@ import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
 
 export async function hydrateTreeWithAuthorship(commit: GitCommitObject) {
   let { hash: child, parent, author, tree, ...rest } = commit
-  console.log(`hydrating [${rest.message}]`)
-  let i = 0
+  console.log(`hydrating [${rest.message.split("\n").filter(x => x.trim().length > 0)[0]}]`)
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    if (i % 10 === 0) {
-      console.log(child);
-
-      console.log(i)
-    }
-    i++
     if (parent === undefined) {
       // We have reached the root of the tree, so we are done
       return { hash: child, parent, author, tree, ...rest }
@@ -32,7 +25,7 @@ export async function hydrateTreeWithAuthorship(commit: GitCommitObject) {
       if (blob) {
         let current = blob.authors[author.name] ?? 0
         blob.authors[author.name] = current + pos + neg
-        console.log(blob.authors[author.name])
+        console.log(`Crediting ${blob.authors[author.name]} to ${author.name} for ${file}`)
       }
     }
     child = parent
