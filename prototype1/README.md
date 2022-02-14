@@ -3,13 +3,13 @@
 This is a folder visualization prototype.
 
 
-This project uses yarn to install dependencies and `yarn.lock` as a lockfile, so please do not commit `package-lock.json` to this folder. When adding new dependencies, please use `yarn add <package>` instead of `npm install <package>`.`
+This project uses npm to install dependencies and `package-lock.json` as a lockfile, so please do not commit `package-lock.json` to this folder. When adding new dependencies, please use `npm install <package>` instead of `yarn add <package>`.`
 
 ## Running
 
-Start by running `yarn` or `npm install` in the root of this folder.
+Start by running `npm install` in the root of this folder.
 
-Then, use `yarn dev` or `npm run dev` to start the development server.
+Then, use `npm run dev` to start the development server.
 
 ## Debug mode
 
@@ -17,4 +17,4 @@ A debug mode can be enabled by adding `?debug=true` to the URL.
 
 ## Generating data from the parser
 
-To generate data from the parser to use in the visualization, run `yarn parse`
+To generate data from the parser to use in the visualization, run `npm run parse`
