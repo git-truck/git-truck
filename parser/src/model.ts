@@ -5,6 +5,8 @@ export interface GitBlobObject {
   name: string
   content: string
   noLines: number
+               // author  lines-changed
+  authors: Record<string, number>
 }
 
 export interface GitTreeObject {

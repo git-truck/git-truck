@@ -91,6 +91,9 @@ async function parseBlob(name: string, hash: string) {
     name,
     content,
     noLines: content.split("\n").length,
+    authors: {
+      [name]: 0
+    }
   }
   return blob
 }
