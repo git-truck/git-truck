@@ -27,15 +27,7 @@ export interface GitCommitObject {
   message: string
 }
 
-export interface GitCommitObjectLight {
-  hash: string
-  tree: string
-  parent: string | undefined
-  parent2: string | undefined
-  author: Person
-  committer: Person
-  message: string
-}
+export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: string }
 
 export interface Person {
   name: string
