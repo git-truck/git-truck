@@ -1,27 +1,31 @@
 import { debugLog } from "./debug.js"
-import { GitCommitObject, GitTreeObject } from "./model.js"
-import { parseCommit } from "./parse.js"
+import { GitCommitObject } from "./model.js"
+import { parseCommit, parseCommitLight } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
+
+const emptyGitTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 export async function hydrateTreeWithAuthorship(
   repo: string,
-  originalTree: GitTreeObject,
   commit: GitCommitObject
 ) {
   let { hash: child, parent } = commit
 
   // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let isDone = false
+  while (isDone === false) {
     if (parent === undefined) {
-      // We have reached the root of the tree, so we are done
-      return { ...commit, tree: originalTree }
+      // We have reached the root of the tree, so we need to compare the initial commit to the empty git tree
+      isDone = true
+      console.log(parent)
+      parent = emptyGitTree
     }
 
-    let parentCommit = await parseCommit(repo, parent)
-    if (parentCommit.parent2 !== undefined) {
+    let childCommit = await parseCommit(repo, child)
+    if (childCommit.parent2 !== undefined) {
       // TODO: Handle merges
     }
-    let { author, ...restof } = parentCommit
+    let { author, ...restof } = childCommit
     debugLog(
       `[${restof.message.split("\n").filter((x) => x.trim().length > 0)[0]}]`
     )
@@ -32,7 +36,7 @@ export async function hydrateTreeWithAuthorship(
     let numTimesCredited = 0
 
     for (const { pos, neg, file } of results) {
-      const blob = await lookupFileInTree(originalTree, file)
+      const blob = await lookupFileInTree(commit.tree, file)
       if (file === "dev/null") continue
       if (blob) {
         numTimesCredited++
@@ -44,15 +48,20 @@ export async function hydrateTreeWithAuthorship(
             author.name
           } +${pos} -${neg})`
         )
-      } else {
-        debugger
       }
     }
     if (numTimesCredited === 0) {
-      console.error("[WARN] Commit has no authorship")
-      debugger
+      console.error(
+        "[WARN] Commit has no authorship (file probably does no longer exist"
+      )
     }
-    child = parent
-    parent = parentCommit.parent
+    if (!isDone) {
+      child = parent
+      parent = childCommit.parent
+        ? (await parseCommitLight(repo, childCommit.parent)).parent
+        : undefined
+    }
   }
+
+  return commit
 }
