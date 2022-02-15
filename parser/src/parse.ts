@@ -1,7 +1,7 @@
 import path from "path"
 import { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject } from "./model.js"
-import { debugLog } from "./debug.js"
+import { log } from "./log.js"
 import { runProcess } from "./util.js"
 
 export async function findBranchHead(repo: string, branch: string) {
@@ -10,10 +10,10 @@ export async function findBranchHead(repo: string, branch: string) {
   // Find file containing the branch head
   const branchPath = path.join(gitFolder, "refs/heads/" + branch)
   const absolutePath = path.join(process.cwd(), branchPath)
-  debugLog("Looking for branch head at " + absolutePath)
+  log.debug("Looking for branch head at " + absolutePath)
 
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
-  debugLog(`${branch} -> [commit]${branchHead}`)
+  log.debug(`${branch} -> [commit]${branchHead}`)
 
   return branchHead
 }
