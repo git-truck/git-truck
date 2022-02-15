@@ -1,5 +1,6 @@
 import "dotenv/config"
 import { hydrateTreeWithAuthorship } from "./authorship.js"
+import { log } from "./log.js"
 import { findBranchHead, parseCommit } from "./parse.js"
 import { writeRepoToFile } from "./util.js"
 
@@ -20,7 +21,7 @@ try {
   repoTree = await hydrateTreeWithAuthorship(repoDir, repoTree)
   await writeRepoToFile(repoTree, repoDir, branch, outDir)
 } catch (e) {
-  console.error(e)
+  log.error(e)
 }
 
 function getCurrentBranch() {

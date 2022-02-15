@@ -1,4 +1,4 @@
-import { debugLog } from "./debug.js"
+import { log } from "./log.js"
 import { GitCommitObject } from "./model.js"
 import { parseCommit, parseCommitLight } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
@@ -17,7 +17,6 @@ export async function hydrateTreeWithAuthorship(
     if (parent === undefined) {
       // We have reached the root of the tree, so we need to compare the initial commit to the empty git tree
       isDone = true
-      console.log(parent)
       parent = emptyGitTree
     }
 
@@ -26,11 +25,11 @@ export async function hydrateTreeWithAuthorship(
       // TODO: Handle merges
     }
     let { author, ...restof } = childCommit
-    debugLog(
+    log.debug(
       `[${restof.message.split("\n").filter((x) => x.trim().length > 0)[0]}]`
     )
     // Diff newer with current
-    debugLog(`comparing [${child}] -> [${parent}]`)
+    log.debug(`comparing [${child}] -> [${parent}]`)
 
     let results = await gitDiffNumStatParsed(repo, child, parent)
     let numTimesCredited = 0
@@ -43,7 +42,7 @@ export async function hydrateTreeWithAuthorship(
         let current = blob.authors[author.name] ?? 0
         blob.authors[author.name] = current + pos + neg
         // Log out the authorship
-        debugLog(
+        log.debug(
           `${file} ${blob.authors[author.name]} (${
             author.name
           } +${pos} -${neg})`
@@ -51,9 +50,7 @@ export async function hydrateTreeWithAuthorship(
       }
     }
     if (numTimesCredited === 0) {
-      console.error(
-        "[WARN] Commit has no authorship (file probably does no longer exist"
-      )
+      log.debug("Commit has no authorship (file probably does no longer exist)")
     }
     if (!isDone) {
       child = parent

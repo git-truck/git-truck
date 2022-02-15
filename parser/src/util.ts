@@ -1,6 +1,7 @@
 import { spawn } from "child_process"
 import { promises as fs } from "fs"
 import { resolve, sep } from "path"
+import { log } from "./log.js"
 import {
   GitBlobObject,
   GitCommitObject,
@@ -79,6 +80,6 @@ export async function writeRepoToFile(
   const filename = `${repo}_${branchName}.json`
   const path = resolve(outPath, filename)
   await fs.writeFile(path, data)
-  console.log(`[${commitObject.hash}] -> ${path}`)
+  log.info(`[${commitObject.hash}] -> ${path}`)
 }
 
