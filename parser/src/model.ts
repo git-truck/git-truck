@@ -20,8 +20,8 @@ export interface GitTreeObject {
 export interface GitCommitObject {
   hash: string
   tree: GitTreeObject
-  parent: string | undefined
-  parent2: string | undefined
+  parent: string
+  parent2: string | null
   author: Person
   committer: Person
   message: string

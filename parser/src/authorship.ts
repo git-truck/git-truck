@@ -1,9 +1,8 @@
+import { emptyGitTree } from "./constants.js"
 import { log } from "./log.js"
 import { GitCommitObject } from "./model.js"
 import { parseCommit, parseCommitLight } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
-
-const emptyGitTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 export async function hydrateTreeWithAuthorship(
   repo: string,
@@ -12,15 +11,14 @@ export async function hydrateTreeWithAuthorship(
   let { hash: child, parent } = commit
 
   let isDone = false
-  while (isDone === false) {
-    if (parent === undefined) {
+  while (!isDone) {
+    if (parent === emptyGitTree) {
       // We have reached the root of the tree, so we need to compare the initial commit to the empty git tree
       isDone = true
-      parent = emptyGitTree
     }
 
     let childCommit = await parseCommit(repo, child)
-    if (childCommit.parent2 !== undefined) {
+    if (childCommit.parent2 !== null) {
       // TODO: Handle merges
     }
     let { author, ...restof } = childCommit
@@ -53,9 +51,7 @@ export async function hydrateTreeWithAuthorship(
     }
     if (!isDone) {
       child = parent
-      parent = childCommit.parent
-        ? (await parseCommitLight(repo, childCommit.parent)).parent
-        : undefined
+      parent = (await parseCommitLight(repo, childCommit.parent)).parent
     }
   }
 
