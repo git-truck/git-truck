@@ -126,10 +126,6 @@ function drawBubbleChart(
  */
 
 function circlePathFromCircle(x: number, y: number, r: number) {
-  // return `M${x},${y}
-  //         m${-r},0
-  //         a${r},${r} 0 1,1 ${r * 2},0
-  //         a${r},${r} 0 1,1 ${-r * 2},0`
   return `M${x},${y}
           m0,${r}
           a${r},${r} 0 1,1 0,${-r * 2}
