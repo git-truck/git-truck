@@ -102,7 +102,7 @@ function drawBubbleChart(
 
   text
     .append("textPath")
-    .attr("startOffset", "25%")
+    .attr("startOffset", "50%")
     .attr("dominant-baseline", "bottom")
     .attr("text-anchor", "middle")
     .attr("xlink:href", (d) => `#${d.data.hash}`)
@@ -126,10 +126,14 @@ function drawBubbleChart(
  */
 
 function circlePathFromCircle(x: number, y: number, r: number) {
+  // return `M${x},${y}
+  //         m${-r},0
+  //         a${r},${r} 0 1,1 ${r * 2},0
+  //         a${r},${r} 0 1,1 ${-r * 2},0`
   return `M${x},${y}
-          m${-r},0
-          a${r},${r} 0 1,1 ${r * 2},0
-          a${r},${r} 0 1,1 ${-r * 2},0`
+          m0,${r}
+          a${r},${r} 0 1,1 0,${-r * 2}
+          a${r},${r} 0 1,1 0,${r * 2}`
 }
 
 export default App
