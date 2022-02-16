@@ -11,7 +11,6 @@ export async function hydrateTreeWithAuthorship(
 ) {
   let { hash: child, parent } = commit
 
-  // eslint-disable-next-line no-constant-condition
   let isDone = false
   while (isDone === false) {
     if (parent === undefined) {
