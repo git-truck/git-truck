@@ -17,7 +17,7 @@ export async function hydrateTreeWithAuthorship(
       isDone = true
     }
 
-    let childCommit = await parseCommit(repo, child)
+    let childCommit = await parseCommitLight(repo, child)
     if (childCommit.parent2 !== null) {
       // TODO: Handle merges
     }
