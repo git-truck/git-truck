@@ -3,6 +3,7 @@ import { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject } from "./model.js"
 import { log } from "./log.js"
 import { runProcess } from "./util.js"
+import { emptyGitTree } from "./constants.js"
 
 export async function findBranchHead(repo: string, branch: string) {
   const gitFolder = path.join(repo, ".git")
@@ -32,8 +33,8 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
   let groups = match?.groups ?? {}
 
   let tree = groups["tree"]
-  let parent = groups["parent"]
-  let parent2 = groups["parent2"]
+  let parent = groups["parent"] ?? emptyGitTree
+  let parent2 = groups["parent2"] ?? null
   let author = {
     name: groups["authorName"],
     email: groups["authorEmail"],
