@@ -1,6 +1,6 @@
 import path from "path"
 import { promises as fs } from "fs"
-import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject } from "./model.js"
+import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
 import { log } from "./log.js"
 import { runProcess } from "./util.js"
 import { emptyGitTree } from "./constants.js"
@@ -26,8 +26,7 @@ export async function deflateGitObject(repo: string, hash: string) {
 
 
 export async function parseCommitLight(repo: string, hash: string): Promise<GitCommitObjectLight> {
-  const commitRegex = /^tree (?<tree>.*)\n(parent (?<parent>.*)\n)?(parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(gpgsig (.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>(?:.|\n)*)$/gm
-
+  const commitRegex = /^tree (?<tree>.*)\n(?:parent (?<parent>.*)\n)?(?:parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(?:gpgsig (?:.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>.*)\n*(?<description>(.|\n)*)/g;
   const rawContent = await deflateGitObject(repo, hash)
   const match = commitRegex.exec(rawContent)
   let groups = match?.groups ?? {}
@@ -48,6 +47,8 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
     timezone: groups["committerTimeZone"]
   }
   let message = groups["message"]
+  let description = groups["description"]
+  let coauthors = getCoAuthors(description)
 
   return {
     hash,
@@ -57,6 +58,8 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
     author,
     committer,
     message,
+    description,
+    coauthors
   }
 }
 
@@ -66,6 +69,25 @@ export async function parseCommit(repo: string, hash: string): Promise<GitCommit
     ...commit,
     tree: await parseTree(repo, ".", tree),
   }
+}
+
+function getCoAuthors(description: string) {
+  let coauthorRegex = /^.*Co-authored-by: (?<name>.*) <(?<email>.*)>$/gm
+  let coauthermatches = description.matchAll(coauthorRegex)
+
+  let next = coauthermatches.next()
+  let coauthors: Person[] = []
+
+  while (next.value !== undefined) {
+    coauthors.push(
+      {
+        name: next.value.groups["name"], 
+        email: next.value.groups["email"]
+      }
+    )
+    next = coauthermatches.next()
+  }
+  return coauthors
 }
 
 async function parseTree(repo: string, name: string, hash: string): Promise<GitTreeObject> {

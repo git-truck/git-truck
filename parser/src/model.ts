@@ -22,9 +22,11 @@ export interface GitCommitObject {
   tree: GitTreeObject
   parent: string
   parent2: string | null
-  author: Person
-  committer: Person
+  author: PersonWithTime
+  committer: PersonWithTime
   message: string
+  description: string
+  coauthors: Person[]
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: string }
@@ -32,6 +34,9 @@ export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: strin
 export interface Person {
   name: string
   email: string
+}
+
+export type PersonWithTime = Person & {
   timestamp: number
   timezone: string
 }
