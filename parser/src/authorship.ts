@@ -37,6 +37,11 @@ export async function hydrateTreeWithAuthorship(
       if (blob) {
         numTimesCredited++
         let current = blob.authors[author.name] ?? 0
+
+        for (let coauthor of childCommit.coauthors) {
+          blob.authors[coauthor.name] = current + pos + neg
+        }
+
         blob.authors[author.name] = current + pos + neg
         // Log out the authorship
         log.debug(
