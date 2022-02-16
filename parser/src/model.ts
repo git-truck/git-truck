@@ -6,7 +6,7 @@ export interface GitBlobObject {
   name: string
   content: string
   noLines: number
-               // author  lines-changed
+  //              author  lines-changed
   authors: Record<string, number>
 }
 
