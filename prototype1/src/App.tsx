@@ -39,6 +39,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
   }
 
   function clickHandler(e: MouseEvent) {
+    //@ts-ignore
     let data = e.target["__data__"].data
     if (data && data.type === "blob") {
       setCurrentBlob(data)
