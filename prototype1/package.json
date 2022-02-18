@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "parse": "cd ../parser && npm start .. prototype1/src/data.json && cd ../prototype1",
+    "parseAndBuild": "npm run parse && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
