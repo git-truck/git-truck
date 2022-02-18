@@ -10,13 +10,13 @@ export interface GitBlobObject extends GitBaseObject {
   name : string
   path : string
   content: string
-  
+
 }
 
 export interface HydratedGitBlobObject extends GitBlobObject {
   noLines: number,
   authors: Record<string, number>,
-  // noCommits: number;
+  noCommits: number;
 }
 
 export interface GitTreeObject extends GitBaseObject {

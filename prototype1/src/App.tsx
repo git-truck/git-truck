@@ -9,7 +9,7 @@ import {
   HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
-import { ColdMapTranslator, getExtensionColor, unionAuthors, HeatMapTranslator, getDominanceColor } from "./colors"
+import { ColdMapTranslator, unionAuthors } from "./colors"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -184,18 +184,6 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           m0,${r}
           a${r},${r} 0 1,1 0,${-r * 2}
           a${r},${r} 0 1,1 0,${r * 2}`
-}
-
-function unionAuthors(o: HydratedGitBlobObject) {
-  return Object.entries(o.authors).reduce((newAuthorOject, [author, stuff]) => {
-    const authors = users.find((x) => x.includes(author))
-    if (!authors) throw Error("Author not found: " + author)
-    const [name] = authors
-    delete newAuthorOject[author]
-    newAuthorOject[name] = newAuthorOject[name] || 0
-    newAuthorOject[name] += stuff
-    return newAuthorOject
-  }, o.authors)
 }
 
 function makePercentResponsibilityDistribution(
