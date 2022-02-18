@@ -54,7 +54,7 @@ export async function hydrateTreeWithAuthorship(
           noCommits: noCommits
         } as HydratedGitBlobObject
 
-        let current = hydratedBlob.authors[author.name] ?? 0
+        let current = hydratedBlob.authors?.[author.name] ?? 0
 
         for (let coauthor of childCommit.coauthors) {
           hydratedBlob.authors[coauthor.name] = current + pos + neg
@@ -78,6 +78,7 @@ export async function hydrateTreeWithAuthorship(
       parent = (await parseCommitLight(repo, childCommit.parent)).parent
     }
   }
+  discardContentField(hydratedCommit.tree)
 
   return hydratedCommit
 }
@@ -88,6 +89,16 @@ function addAuthorsField(tree: HydratedGitTreeObject) {
       child.authors = {}
     } else {
       addAuthorsField(child)
+    }
+  }
+}
+
+function discardContentField(tree: HydratedGitTreeObject) {
+  for (let child of tree.children) {
+    if (child.type === "blob") {
+      child.content = ""
+    } else {
+      discardContentField(child)
     }
   }
 }
