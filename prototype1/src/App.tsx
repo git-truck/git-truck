@@ -5,9 +5,11 @@ import { useWindowSize } from "react-use"
 import {
   GitObject,
   HydratedGitBlobObject,
+  HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
+import { HeatMapTranslator } from "./colors"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -15,7 +17,7 @@ const textSpacingFromCircle = 5
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
 function App() {
-  return <BubbleChart data={data.tree} />
+  return <BubbleChart data={data} />
 }
 
 const users = [
@@ -25,7 +27,7 @@ const users = [
   ["emiljapelt", "Emil Jäpelt"],
 ]
 
-function BubbleChart({ data }: { data: HydratedGitTreeObject }) {
+function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
   const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(null)
 
   let legendRef = useRef<HTMLDivElement>(null)
@@ -91,11 +93,12 @@ function BubbleChart({ data }: { data: HydratedGitTreeObject }) {
 }
 
 function drawBubbleChart(
-  data: GitObject,
+  data: HydratedGitCommitObject,
   paddedSizeProps: { height: number; width: number },
   root: Selection<SVGGElement, unknown, null, undefined>
 ) {
-  let hiearchy = hierarchy(data)
+  let castedTree = data.tree as GitObject
+  let hiearchy = hierarchy(castedTree)
     // TODO: Derrive size from file/folder size
     .sum((d) => Math.log((d as HydratedGitBlobObject).noLines))
     .sort((a, b) =>
@@ -117,16 +120,20 @@ function drawBubbleChart(
 
   const circle = group.append("circle")
 
+  const heatTrans = new HeatMapTranslator(data.minNoCommits, data.maxNoCommits);
+
   circle
     .classed("node", true)
     .attr("cx", (d) => d.x)
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
-    .style("fill", (d) =>
-      d.data.type === "tree"
-        ? "none"
-        : getColorFromData(d.data as HydratedGitBlobObject)
-    )
+    .style("fill", (d) => {
+      let blah = d.data.type === "blob"
+      ? heatTrans.GetColor(d.data as HydratedGitBlobObject)
+      : "none"
+
+      return blah
+    })
     .enter()
 
   const path = group.append("path")

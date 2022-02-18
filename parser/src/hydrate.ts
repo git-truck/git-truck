@@ -8,7 +8,7 @@ export async function hydrateTreeWithAuthorship(
   repo: string,
   commit: GitCommitObject
 ): Promise<HydratedGitCommitObject> {
-  let hydratedCommit = commit as HydratedGitCommitObject
+  let hydratedCommit = { ...commit, minNoCommits: Number.MAX_VALUE, maxNoCommits: Number.MIN_VALUE } as HydratedGitCommitObject
   let { hash: child, parent } = hydratedCommit
 
   let isDone = false
@@ -37,10 +37,14 @@ export async function hydrateTreeWithAuthorship(
       if (file === "dev/null") continue
       if (blob) {
         numTimesCredited++
+        const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
+        if (noCommits < hydratedCommit.minNoCommits) hydratedCommit.minNoCommits = noCommits
+        if (noCommits > hydratedCommit.maxNoCommits) hydratedCommit.maxNoCommits = noCommits
         let hydratedBlob = {
           ...blob,
           authors: (blob as HydratedGitBlobObject).authors ?? {},
-          noLines: blob.content.split("\n").length
+          noLines: blob.content.split("\n").length,
+          noCommits: noCommits
         } as HydratedGitBlobObject
 
         let current = hydratedBlob.authors[author.name] ?? 0
@@ -56,7 +60,7 @@ export async function hydrateTreeWithAuthorship(
           } +${pos} -${neg})`
         )
         Object.assign(blob, hydratedBlob)
-        }
+      }
     }
     if (numTimesCredited === 0) {
       log.debug("Commit has no authorship (file probably does no longer exist)")

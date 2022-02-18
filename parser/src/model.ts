@@ -1,15 +1,16 @@
 export type GitObject = GitBlobObject | GitTreeObject
 
 export interface GitBaseObject {
-  type : "blob" | "tree"
+  type : "blob" | "tree" | "commit"
   hash : string
-  name : string
-  path : string
 }
 
 export interface GitBlobObject extends GitBaseObject {
   type: "blob"
+  name : string
+  path : string
   content: string
+  
 }
 
 export interface HydratedGitBlobObject extends GitBlobObject {
@@ -20,6 +21,8 @@ export interface HydratedGitBlobObject extends GitBlobObject {
 
 export interface GitTreeObject extends GitBaseObject {
   type: "tree"
+  name : string
+  path : string
   children: (GitTreeObject | GitBlobObject)[]
 }
 
@@ -27,8 +30,8 @@ export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
   children: (HydratedGitTreeObject | HydratedGitBlobObject)[];
 }
 
-export interface GitCommitObject {
-  hash: string
+export interface GitCommitObject extends GitBaseObject {
+  type: "commit"
   tree: GitTreeObject
   parent: string
   parent2: string | null
@@ -41,6 +44,8 @@ export interface GitCommitObject {
 
 export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
   tree: HydratedGitTreeObject
+  minNoCommits: number
+  maxNoCommits: number
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: string }
