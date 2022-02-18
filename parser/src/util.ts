@@ -1,6 +1,6 @@
 import { spawn } from "child_process"
-import { promises as fs } from "fs"
-import { resolve, sep } from "path"
+import { existsSync, promises as fs } from "fs"
+import { dirname, join, resolve, sep } from "path"
 import { log } from "./log.js"
 import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
 
@@ -65,15 +65,19 @@ export async function deflateGitObject(repo: string, hash: string) {
 
 export async function writeRepoToFile(
   commitObject: GitCommitObject,
-  outDir: string,
+  repoDir: string,
   outFileName: string
 ) {
   const data = JSON.stringify(commitObject, null, 2)
-  let outPath = resolve(outDir, ".temp")
-  await fs.mkdir(outPath, { recursive: true })
-  const path = resolve(outPath, outFileName)
-  await fs.writeFile(path, data)
-  log.info(`[${commitObject.hash}] -> ${path}`)
+  let outPath = join(repoDir, outFileName)
+  let dir = dirname(outPath)
+  console.log(dir)
+  if (!existsSync(dir)) {
+    await fs.mkdir(dir, { recursive: true })
+  }
+  console.log(outPath)
+  await fs.writeFile(outPath, data)
+  log.info(`[${commitObject.hash}] -> ${outPath}`)
 }
 
 export function getRepoName(repoDir: string) {
@@ -81,9 +85,10 @@ export function getRepoName(repoDir: string) {
 }
 
 export async function getCurrentBranch(dir: string) {
-  return (await runProcess(dir, "git", [
+  const result = (await runProcess(dir, "git", [
     "rev-parse",
     "--abbrev-ref",
     "HEAD",
   ])) as string
+  return result.trim()
 }

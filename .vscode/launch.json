@@ -8,7 +8,7 @@
             "name": "Launch Parser on git-visual",
             "program": "${workspaceFolder}/parser/dist/index.js",
             "request": "launch",
-            "args": ["."],
+            "args": [".", "prototype1/src/data.json"],
             "skipFiles": [
                 "<node_internals>/**"
             ],

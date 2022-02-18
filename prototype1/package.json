@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "parse": "cd ../parser && npm start .. main ../prototype1 && cd ../prototype1",
+    "parse": "cd ../parser && npm start .. prototype1/src/data.json && cd ../prototype1",
     "preview": "vite preview"
   },
   "dependencies": {
