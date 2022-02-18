@@ -1,12 +1,45 @@
 //@ts-ignore
 import gitcolors from 'github-colors';
+import { useMouseHovered } from 'react-use';
 import {
     HydratedGitBlobObject,
   } from "./../../parser/src/model"
 
 
-export function GetFileColor(blob : HydratedGitBlobObject) : string {
-    return gitcolors.ext(blob.name.substring(blob.name.lastIndexOf('.')+1));
+export function getExtensionColor(blob : HydratedGitBlobObject) : string {
+    let lookup = gitcolors.ext(blob.name.substring(blob.name.lastIndexOf('.')+1));
+    let color = (typeof lookup === 'undefined') ? "grey" : lookup.color;
+    return color;
+}
+
+const users = [
+    ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
+    ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
+    ["hojelse", "Kristoffer Højelse"],
+    ["emiljapelt", "Emil Jäpelt"],
+]
+
+export function unionAuthors(blob: HydratedGitBlobObject) {
+    return Object.entries(blob.authors).reduce((newAuthorOject, [author, stuff]) => {
+      const authors = users.find((x) => x.includes(author))
+      if (!authors) throw Error("Author not found: " + author)
+      const [name] = authors
+      delete newAuthorOject[author]
+      newAuthorOject[name] = newAuthorOject[name] || 0
+      newAuthorOject[name] += stuff
+      return newAuthorOject
+    }, blob.authors)
+  }
+
+export function getDominanceColor(blob : HydratedGitBlobObject) : string {
+    console.log(blob);
+    
+  switch (Object.keys(unionAuthors(blob)).length) {
+    case 1:
+      return "red";
+    default:
+      return "cadetblue";
+  }
 }
 
 class SpectrumTranslator {
@@ -22,43 +55,40 @@ class SpectrumTranslator {
         this.target_min = target_min;
     }
 
-    Translate(input : number) {
-        console.log((input * this.scale) - this.offset);
+    translate(input : number) {
         return (input * this.scale) - this.offset;
     }
 
-    InverseTranslate(input : number) {
-        (this.target_max - (this.Translate(input))) + this.target_min;
+    inverseTranslate(input : number) {
+        return (this.target_max - (this.translate(input))) + this.target_min;
     }
 }
 
 export class ColdMapTranslator {
     readonly translator : SpectrumTranslator;
-    readonly min_lightness = 50;
-    readonly max_lightness = 80;
+    readonly min_lightness = 35;
+    readonly max_lightness = 90;
 
     constructor(min : number, max : number) {
         this.translator = new SpectrumTranslator(min, max, this.min_lightness, this.max_lightness);
     }
 
-    GetColor(blob : HydratedGitBlobObject) : string {
-        console.log(`hsl(230,65%,${this.translator.Translate(blob.noCommits)}%)`);
-        
-        return `hsl(230,65%,${this.translator.Translate(blob.noCommits)}%)`;
+    getColor(blob : HydratedGitBlobObject) : string {           
+        return `hsl(240,100%,${this.translator.translate(blob.noCommits)}%)`;
     }
 }
 
 export class HeatMapTranslator {
     readonly translator : SpectrumTranslator;
-    readonly min_lightness = 50;
-    readonly max_lightness = 80;
+    readonly min_lightness = 30;
+    readonly max_lightness = 95;
 
     constructor(min : number, max : number) {
         this.translator = new SpectrumTranslator(min, max, this.min_lightness, this.max_lightness);
     }
 
-    GetColor(blob : HydratedGitBlobObject) : string {
-        return `hsl(3,65%,${this.translator.InverseTranslate(blob.noCommits)}%)`;
+    getColor(blob : HydratedGitBlobObject) : string {
+        return `hsl(0,100%,${this.translator.inverseTranslate(blob.noCommits)}%)`;
     }
 }
 

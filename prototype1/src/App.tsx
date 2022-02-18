@@ -9,7 +9,7 @@ import {
   HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
-import { HeatMapTranslator } from "./colors"
+import { ColdMapTranslator, getExtensionColor, unionAuthors, HeatMapTranslator, getDominanceColor } from "./colors"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -120,7 +120,7 @@ function drawBubbleChart(
 
   const circle = group.append("circle")
 
-  const heatTrans = new HeatMapTranslator(data.minNoCommits, data.maxNoCommits);
+  const colormap = new ColdMapTranslator(data.minNoCommits, data.maxNoCommits);
 
   circle
     .classed("node", true)
@@ -129,7 +129,7 @@ function drawBubbleChart(
     .attr("r", (d) => d.r)
     .style("fill", (d) => {
       let blah = d.data.type === "blob"
-      ? heatTrans.GetColor(d.data as HydratedGitBlobObject)
+      ? colormap.getColor(d.data as HydratedGitBlobObject)
       : "none"
 
       return blah
@@ -187,18 +187,6 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           a${r},${r} 0 1,1 0,${r * 2}`
 }
 
-function unionAuthors(o: HydratedGitBlobObject) {
-  return Object.entries(o.authors).reduce((newAuthorOject, [author, stuff]) => {
-    const authors = users.find((x) => x.includes(author))
-    if (!authors) throw Error("Author not found: " + author)
-    const [name] = authors
-    delete newAuthorOject[author]
-    newAuthorOject[name] = newAuthorOject[name] || 0
-    newAuthorOject[name] += stuff
-    return newAuthorOject
-  }, o.authors)
-}
-
 function makePercentResponsibilityDistribution(d: HydratedGitBlobObject): Record<string, number> {
   // const unionedAuthors = d.authors
   const unionedAuthors = unionAuthors(d)
@@ -219,15 +207,6 @@ function makePercentResponsibilityDistribution(d: HydratedGitBlobObject): Record
   )
 
   return newAuthorsEntries
-}
-
-function getColorFromData(d: HydratedGitBlobObject) {
-  const unionedAuthors = unionAuthors(d)
-
-  if (Object.keys(unionedAuthors).length > 1) {
-    return "cadetblue"
-  }
-  return "red"
 }
 
 export default App
