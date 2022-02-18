@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { hydrateTreeWithAuthorship } from "./authorship.js"
+import { hydrateTreeWithAuthorship } from "./hydrate.js"
 import { log } from "./log.js"
 import { findBranchHead, parseCommit } from "./parse.js"
 import { writeRepoToFile } from "./util.js"

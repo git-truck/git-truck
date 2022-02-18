@@ -3,9 +3,9 @@ import "./App.css"
 import { data } from "./data"
 import { useWindowSize } from "react-use"
 import {
-  GitBlobObject,
   GitObject,
-  GitTreeObject,
+  HydratedGitBlobObject,
+  HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
 
@@ -25,8 +25,8 @@ const users = [
   ["emiljapelt", "Emil Jäpelt"],
 ]
 
-function BubbleChart({ data }: { data: GitTreeObject }) {
-  const [currentBlob, setCurrentBlob] = useState<GitBlobObject | null>(null)
+function BubbleChart({ data }: { data: HydratedGitTreeObject }) {
+  const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(null)
 
   let legendRef = useRef<HTMLDivElement>(null)
   let svgRef = useRef<SVGSVGElement>(null)
@@ -37,7 +37,6 @@ function BubbleChart({ data }: { data: GitTreeObject }) {
   }
 
   function clickHandler(e: MouseEvent) {
-    // if (e.target)
     let data = e.target["__data__"].data
     if (data && data.type === "blob") {
       setCurrentBlob(data)
@@ -98,7 +97,7 @@ function drawBubbleChart(
 ) {
   let hiearchy = hierarchy(data)
     // TODO: Derrive size from file/folder size
-    .sum((d) => Math.log((d as GitBlobObject).noLines))
+    .sum((d) => Math.log((d as HydratedGitBlobObject).noLines))
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
@@ -126,7 +125,7 @@ function drawBubbleChart(
     .style("fill", (d) =>
       d.data.type === "tree"
         ? "none"
-        : getColorFromData(d.data as GitBlobObject)
+        : getColorFromData(d.data as HydratedGitBlobObject)
     )
     .enter()
 
@@ -181,7 +180,7 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           a${r},${r} 0 1,1 0,${r * 2}`
 }
 
-function unionAuthors(o: GitBlobObject) {
+function unionAuthors(o: HydratedGitBlobObject) {
   return Object.entries(o.authors).reduce((newAuthorOject, [author, stuff]) => {
     const authors = users.find((x) => x.includes(author))
     if (!authors) throw Error("Author not found: " + author)
@@ -193,7 +192,7 @@ function unionAuthors(o: GitBlobObject) {
   }, o.authors)
 }
 
-function makePercentResponsibilityDistribution(d: GitBlobObject) {
+function makePercentResponsibilityDistribution(d: HydratedGitBlobObject): Record<string, number> {
   // const unionedAuthors = d.authors
   const unionedAuthors = unionAuthors(d)
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
@@ -215,7 +214,7 @@ function makePercentResponsibilityDistribution(d: GitBlobObject) {
   return newAuthorsEntries
 }
 
-function getColorFromData(d: GitBlobObject) {
+function getColorFromData(d: HydratedGitBlobObject) {
   const unionedAuthors = unionAuthors(d)
 
   if (Object.keys(unionedAuthors).length > 1) {

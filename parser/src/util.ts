@@ -8,7 +8,9 @@ import {
   GitTreeObject,
 } from "./model.js"
 
-export const last = (r: unknown[]) => r[r.length - 1]
+export function last<T>(array: T[]) { 
+  return array[array.length - 1]
+}
 
 export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
@@ -73,7 +75,7 @@ export async function writeRepoToFile(
 ) {
   const data = JSON.stringify(commitObject, null, 2)
   let outPath = resolve(outDir, ".temp")
-  const [repo] = resolve(repoDir).split(sep).slice().reverse()
+  const repo = getRepoName(repoDir)
 
   await fs.mkdir(outPath, { recursive: true })
   const branchName = last(branch.split(/[\\/]/))
@@ -83,3 +85,6 @@ export async function writeRepoToFile(
   log.info(`[${commitObject.hash}] -> ${path}`)
 }
 
+export function getRepoName(repoDir: string) {
+  return resolve(repoDir).split(sep).slice().reverse()[0]
+}

@@ -1,4 +1,4 @@
-import { GitCommitObject } from "./../../parser/src/model";
+import { HydratedGitCommitObject } from "./../../parser/src/model";
 import jsonData from "./../.temp/git-visual_main.json";
 
-export const data: GitCommitObject = jsonData
+export const data: HydratedGitCommitObject = jsonData
