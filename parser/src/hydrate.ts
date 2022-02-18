@@ -1,7 +1,12 @@
 import { emptyGitTree } from "./constants.js"
 import { log } from "./log.js"
-import { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject } from "./model.js"
-import { parseCommit, parseCommitLight } from "./parse.js"
+import {
+  GitCommitObject,
+  HydratedGitBlobObject,
+  HydratedGitCommitObject,
+  HydratedGitTreeObject,
+} from "./model.js"
+import { parseCommitLight } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
 
 export async function hydrateTreeWithAuthorship(
@@ -10,6 +15,8 @@ export async function hydrateTreeWithAuthorship(
 ): Promise<HydratedGitCommitObject> {
   let hydratedCommit = { ...commit, minNoCommits: Number.MAX_VALUE, maxNoCommits: Number.MIN_VALUE } as HydratedGitCommitObject
   let { hash: child, parent } = hydratedCommit
+
+  addAuthorsField(hydratedCommit.tree)
 
   let isDone = false
   while (!isDone) {
@@ -56,7 +63,8 @@ export async function hydrateTreeWithAuthorship(
         hydratedBlob.authors[author.name] = current + pos + neg
         // Log out the authorship
         log.debug(
-          `${file} ${hydratedBlob.authors[author.name]} (${author.name
+          `${file} ${hydratedBlob.authors[author.name]} (${
+            author.name
           } +${pos} -${neg})`
         )
         Object.assign(blob, hydratedBlob)
@@ -72,4 +80,14 @@ export async function hydrateTreeWithAuthorship(
   }
 
   return hydratedCommit
+}
+
+function addAuthorsField(tree: HydratedGitTreeObject) {
+  for (let child of tree.children) {
+    if (child.type === "blob") {
+      child.authors = {}
+    } else {
+      addAuthorsField(child)
+    }
+  }
 }

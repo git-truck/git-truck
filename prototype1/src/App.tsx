@@ -42,8 +42,6 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
     let data = e.target["__data__"].data
     if (data && data.type === "blob") {
       setCurrentBlob(data)
-
-      // console.log(makePercentResponsibilityDistribution(data))
     }
   }
 
@@ -63,9 +61,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
   }, [paddedSizeProps])
 
   return (
-    <div
-      className="container"
-    >
+    <div className="container">
       <svg
         className="visualization"
         {...paddedSizeProps}
@@ -75,7 +71,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
       />
       {currentBlob !== null ? (
         <div ref={legendRef} className="legend">
-          <b style={{fontSize: "1.5rem"}}>{currentBlob.name}</b>
+          <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
           <br />
@@ -189,8 +185,21 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           a${r},${r} 0 1,1 0,${r * 2}`
 }
 
-function makePercentResponsibilityDistribution(d: HydratedGitBlobObject): Record<string, number> {
-  // const unionedAuthors = d.authors
+function unionAuthors(o: HydratedGitBlobObject) {
+  return Object.entries(o.authors).reduce((newAuthorOject, [author, stuff]) => {
+    const authors = users.find((x) => x.includes(author))
+    if (!authors) throw Error("Author not found: " + author)
+    const [name] = authors
+    delete newAuthorOject[author]
+    newAuthorOject[name] = newAuthorOject[name] || 0
+    newAuthorOject[name] += stuff
+    return newAuthorOject
+  }, o.authors)
+}
+
+function makePercentResponsibilityDistribution(
+  d: HydratedGitBlobObject
+): Record<string, number> {
   const unionedAuthors = unionAuthors(d)
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 
