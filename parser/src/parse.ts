@@ -51,6 +51,7 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
   let coauthors = getCoAuthors(description)
 
   return {
+    type: "commit",
     hash,
     tree,
     parent,
