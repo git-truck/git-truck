@@ -1,16 +1,16 @@
-import path from "path"
 import { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
 import { log } from "./log.js"
-import { runProcess } from "./util.js"
+import { getRepoName, runProcess } from "./util.js"
 import { emptyGitTree } from "./constants.js"
+import { join } from "path"
 
 export async function findBranchHead(repo: string, branch: string) {
-  const gitFolder = path.join(repo, ".git")
+  const gitFolder = join(repo, ".git")
 
   // Find file containing the branch head
-  const branchPath = path.join(gitFolder, "refs/heads/" + branch)
-  const absolutePath = path.join(process.cwd(), branchPath)
+  const branchPath = join(gitFolder, "refs/heads/" + branch)
+  const absolutePath = join(process.cwd(), branchPath)
   log.debug("Looking for branch head at " + absolutePath)
 
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
@@ -64,10 +64,10 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
 }
 
 export async function parseCommit(repo: string, hash: string): Promise<GitCommitObject> {
-  const {tree, ...commit} = await parseCommitLight(repo, hash)
+  const { tree, ...commit } = await parseCommitLight(repo, hash)
   return {
     ...commit,
-    tree: await parseTree(repo, ".", tree),
+    tree: await parseTree(getRepoName(repo), repo, ".", tree),
   }
 }
 
@@ -80,7 +80,7 @@ function getCoAuthors(description: string) {
   while (next.value !== undefined) {
     coauthors.push(
       {
-        name: next.value.groups["name"].trimEnd(), 
+        name: next.value.groups["name"].trimEnd(),
         email: next.value.groups["email"]
       }
     )
@@ -89,41 +89,44 @@ function getCoAuthors(description: string) {
   return coauthors
 }
 
-async function parseTree(repo: string, name: string, hash: string): Promise<GitTreeObject> {
+async function parseTree(path: string, repo: string, name: string, hash: string): Promise<GitTreeObject> {
   const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
   const children = await Promise.all(
     entries.map(async (line) => {
       const [_, type, hash, name] = line.split(/\s+/)
+      const newPath = [path, name].join("/")
+      log.debug(`Path: ${newPath}`)
 
       switch (type) {
         case "tree":
-          return await parseTree(repo, name, hash)
-          case "blob":
-          return await parseBlob(repo, name, hash, true)
-          default:
-            throw new Error(` type ${type}`)
+          return await parseTree(newPath, repo, name, hash)
+        case "blob":
+          return await parseBlob(newPath, repo, name, hash)
+        default:
+          throw new Error(` type ${type}`)
       }
     })
   )
+
   return {
     type: "tree",
+    path: path,
     name,
     hash,
     children,
   }
 }
 
-async function parseBlob(repo: string, name: string, hash: string, light = false): Promise<GitBlobObject> {
+async function parseBlob(path: string, repo: string, name: string, hash: string): Promise<GitBlobObject> {
   const content = await deflateGitObject(repo, hash)
   const blob: GitBlobObject = {
     type: "blob",
     hash,
+    path,
     name,
-    content: light ? "" : content,
-    noLines: content.split("\n").length,
-    authors: {}
+    content,
   }
   return blob
 }

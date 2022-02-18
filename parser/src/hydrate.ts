@@ -1,14 +1,15 @@
 import { emptyGitTree } from "./constants.js"
 import { log } from "./log.js"
-import { GitCommitObject } from "./model.js"
+import { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject } from "./model.js"
 import { parseCommit, parseCommitLight } from "./parse.js"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
 
 export async function hydrateTreeWithAuthorship(
   repo: string,
   commit: GitCommitObject
-) {
-  let { hash: child, parent } = commit
+): Promise<HydratedGitCommitObject> {
+  let hydratedCommit = commit as HydratedGitCommitObject
+  let { hash: child, parent } = hydratedCommit
 
   let isDone = false
   while (!isDone) {
@@ -32,24 +33,30 @@ export async function hydrateTreeWithAuthorship(
     let numTimesCredited = 0
 
     for (const { pos, neg, file } of results) {
-      const blob = await lookupFileInTree(commit.tree, file)
+      let blob = await lookupFileInTree(hydratedCommit.tree, file)
       if (file === "dev/null") continue
       if (blob) {
         numTimesCredited++
-        let current = blob.authors[author.name] ?? 0
+        let hydratedBlob = {
+          ...blob,
+          authors: (blob as HydratedGitBlobObject).authors ?? {},
+          noLines: blob.content.split("\n").length
+        } as HydratedGitBlobObject
+
+        let current = hydratedBlob.authors[author.name] ?? 0
 
         for (let coauthor of childCommit.coauthors) {
-          blob.authors[coauthor.name] = current + pos + neg
+          hydratedBlob.authors[coauthor.name] = current + pos + neg
         }
 
-        blob.authors[author.name] = current + pos + neg
+        hydratedBlob.authors[author.name] = current + pos + neg
         // Log out the authorship
         log.debug(
-          `${file} ${blob.authors[author.name]} (${
-            author.name
+          `${file} ${hydratedBlob.authors[author.name]} (${author.name
           } +${pos} -${neg})`
         )
-      }
+        Object.assign(blob, hydratedBlob)
+        }
     }
     if (numTimesCredited === 0) {
       log.debug("Commit has no authorship (file probably does no longer exist)")
@@ -60,5 +67,5 @@ export async function hydrateTreeWithAuthorship(
     }
   }
 
-  return commit
+  return hydratedCommit
 }

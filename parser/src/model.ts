@@ -39,6 +39,10 @@ export interface GitCommitObject {
   coauthors: Person[]
 }
 
+export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
+  tree: HydratedGitTreeObject
+}
+
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: string }
 
 export interface Person {
