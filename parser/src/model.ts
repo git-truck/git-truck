@@ -14,9 +14,9 @@ export interface GitBlobObject extends GitBaseObject {
 }
 
 export interface HydratedGitBlobObject extends GitBlobObject {
-  noLines: number, 
-  authors: Record<string, number>, 
-  noCommits: number;
+  noLines: number,
+  authors: Record<string, number>,
+  // noCommits: number;
 }
 
 export interface GitTreeObject extends GitBaseObject {
