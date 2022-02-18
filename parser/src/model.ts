@@ -1,20 +1,30 @@
 export type GitObject = GitBlobObject | GitTreeObject
 
-export interface GitBlobObject {
-  type: "blob"
-  hash: string
-  name: string
-  content: string
-  noLines: number
-  //              author  lines-changed
-  authors: Record<string, number>
+export interface GitBaseObject {
+  type : "blob" | "tree"
+  hash : string
+  name : string
+  path : string
 }
 
-export interface GitTreeObject {
+export interface GitBlobObject extends GitBaseObject {
+  type: "blob"
+  content: string
+}
+
+export interface HydratedGitBlobObject extends GitBlobObject {
+  noLines: number, 
+  authors: Record<string, number>, 
+  noCommits: number;
+}
+
+export interface GitTreeObject extends GitBaseObject {
   type: "tree"
-  hash: string
-  name: string
   children: (GitTreeObject | GitBlobObject)[]
+}
+
+export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
+  children: (HydratedGitTreeObject | HydratedGitBlobObject)[];
 }
 
 export interface GitCommitObject {
