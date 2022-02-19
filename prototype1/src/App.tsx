@@ -79,13 +79,15 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
           <br />
-          {Object.entries(
-            makePercentResponsibilityDistribution(currentBlob)
-          ).map(([author, contrib]) => (
-            <div>
-              <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-            </div>
-          ))}
+          {
+            Object.entries(makePercentResponsibilityDistribution(currentBlob))
+              .sort((a, b) => a[1] < b[1] ? 1 : -1)
+              .map(([author, contrib]) => (
+                <div>
+                  <b>{author}:</b> {(contrib * 100).toFixed(2)}%
+                </div>
+              ))
+          }
         </div>
       ) : null}
     </div>
