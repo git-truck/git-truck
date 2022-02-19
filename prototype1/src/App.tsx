@@ -98,8 +98,7 @@ function drawBubbleChart(
 ) {
   let castedTree = data.tree as GitObject
   let hiearchy = hierarchy(castedTree)
-    // TODO: Derrive size from file/folder size
-    .sum((d) => Math.log((d as HydratedGitBlobObject).noLines))
+    .sum((d) => (d as HydratedGitBlobObject).noLines)
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
