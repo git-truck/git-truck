@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/gitignore-parser": "0.0.0",
     "@types/node": "^17.0.17",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.0",
+    "gitignore-parser": "0.0.2",
     "promisify": "0.0.3",
     "zlib": "^1.0.5"
   }

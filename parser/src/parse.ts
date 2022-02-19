@@ -4,6 +4,7 @@ import { log } from "./log.js"
 import { getRepoName, runProcess } from "./util.js"
 import { emptyGitTree } from "./constants.js"
 import { join } from "path"
+import TruckIgnore from "./TruckIgnore.js"
 
 export async function findBranchHead(repo: string, branch: string) {
   const gitFolder = join(repo, ".git")
@@ -66,9 +67,10 @@ export async function parseCommitLight(repo: string, hash: string): Promise<GitC
 
 export async function parseCommit(repo: string, hash: string): Promise<GitCommitObject> {
   const { tree, ...commit } = await parseCommitLight(repo, hash)
+  const truckignore = new TruckIgnore(repo)
   return {
     ...commit,
-    tree: await parseTree(getRepoName(repo), repo, ".", tree),
+    tree: await parseTree(getRepoName(repo), repo, ".", tree, truckignore),
   }
 }
 
@@ -90,26 +92,28 @@ function getCoAuthors(description: string) {
   return coauthors
 }
 
-async function parseTree(path: string, repo: string, name: string, hash: string): Promise<GitTreeObject> {
+async function parseTree(path: string, repo: string, name: string, hash: string, truckignore: TruckIgnore): Promise<GitTreeObject> {
   const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
-
-  const children = await Promise.all(
-    entries.map(async (line) => {
-      const [_, type, hash, name] = line.split(/\s+/)
-      const newPath = [path, name].join("/")
-      log.debug(`Path: ${newPath}`)
-
-      switch (type) {
-        case "tree":
-          return await parseTree(newPath, repo, name, hash)
-        case "blob":
-          return await parseBlob(newPath, repo, name, hash)
-        default:
-          throw new Error(` type ${type}`)
-      }
-    })
-  )
+  
+  let children: (GitTreeObject | GitBlobObject)[] = []
+  for await(let line of entries) {
+    const [_, type, hash, name] = line.split(/\s+/)
+    if (!truckignore.isAccepted(name)) continue
+    const newPath = [path, name].join("/")
+    log.debug(`Path: ${newPath}`)
+    
+    switch (type) {
+      case "tree":
+        children.push(await parseTree(newPath, repo, name, hash, truckignore))
+        break;
+      case "blob":
+        children.push(await parseBlob(newPath, repo, name, hash))
+        break;
+      default:
+        throw new Error(` type ${type}`)
+    }
+  }
 
   return {
     type: "tree",
