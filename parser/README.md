@@ -13,20 +13,21 @@ npm start -- --help
 ```
 
 
-To transpile the typescript and run the parser
+To run the parser on a repository
 ```
-npm start [path to git repository = .] [outFileName = ./.temp/{repo}_{branch}.json] [branch = main]
-```
+npm run start -- <args>
 
-For example, if run in the parser folder, `npm start ..` will analyze the git-visual repository and output the result to `.temp/git-visual_main.json`
-
-
-
-Then input the path to the git repo to be parsed (relative or absolute)
-
-To enable debugLog output, set the NODE_DEBUG variable to any value. This can be done in the command line, or by adding a `.env` file, for example:
-
-```
-DEBUG=true
+  --path <path to git repository> (default: current directory)
+  --out <output path for json file> (default: ./.temp/{repo}_{branch}.json)
+  --branch <branch name> (default: current branch)
 ```
 
+For example, if run from the parser folder, `npm start --path ..` will analyze the git-visual repository and output the result to `.temp/git-visual_main.json`
+
+To enable detalied loging output, set the LOG_LEVEL variable to any of these values: SILENT, ERROR, WARN, INFO, DEBUG. This can be done in the command line, or by adding a `.env` file, for example:
+
+```
+LOG_LEVEL=DEBUG
+```
+
+The default log level is INFO.

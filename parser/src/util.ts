@@ -1,7 +1,6 @@
-import { spawn } from "child_process"
+import { spawn, spawnSync } from "child_process"
 import { existsSync, promises as fs } from "fs"
 import { dirname, join, resolve, sep } from "path"
-import { log } from "./log.js"
 import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
 
 export function last<T>(array: T[]) {
@@ -10,11 +9,15 @@ export function last<T>(array: T[]) {
 
 export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
-    const prcs = spawn(command, args, {
-      cwd: dir,
-    })
-    prcs.stdout.once("data", (data) => resolve(data.toString()))
-    prcs.stderr.once("data", (data) => reject(data.toString()))
+    try {
+      const prcs = spawn(command, args, {
+        cwd: dir,
+      })
+      prcs.stderr.once("data", buf => reject(buf.toString().trim()))
+      prcs.stdout.once("data", buf => resolve(buf.toString().trim()))
+    } catch(e) {
+      reject(e)
+    }
   })
 }
 
@@ -71,13 +74,11 @@ export async function writeRepoToFile(
   const data = JSON.stringify(commitObject, null, 2)
   let outPath = join(repoDir, outFileName)
   let dir = dirname(outPath)
-  console.log(dir)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })
   }
-  console.log(outPath)
   await fs.writeFile(outPath, data)
-  log.info(`[${commitObject.hash}] -> ${outPath}`)
+  return outPath
 }
 
 export function getRepoName(repoDir: string) {
@@ -91,4 +92,12 @@ export async function getCurrentBranch(dir: string) {
     "HEAD",
   ])) as string
   return result.trim()
+}
+
+export const formatMs = (ms: number) => {
+  if (ms < 1000) {
+    return `${Math.round(ms)}ms`
+  } else {
+    return `${(ms / 1000).toFixed(2)}s`
+  }
 }

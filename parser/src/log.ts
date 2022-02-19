@@ -26,7 +26,7 @@ const {
   ERROR
 } = LOG_LEVEL_LABEL
 
-function getLogLevel() {
+export function getLogLevel() {
   if (typeof process.env.LOG_LEVEL === "string") return map[process.env.LOG_LEVEL.toUpperCase()]
   if (typeof process.env.LOG_LEVEL === "number") return process.env.LOG_LEVEL
   return LOG_LEVEL.INFO
@@ -36,6 +36,12 @@ export function debug(message: unknown) {
   if (getLogLevel() >= LOG_LEVEL.DEBUG) {
     const messageString = `[${DEBUG}] ${message}`
     console.debug(messageString)
+  }
+}
+
+export function logNoPrefix(message: unknown) {
+  if (getLogLevel() >= LOG_LEVEL.INFO) {
+    console.info(message)
   }
 }
 
@@ -62,7 +68,8 @@ export function error(message: unknown) {
 
 export const log = {
   debug,
+  log: logNoPrefix,
   info,
   warn,
-  error
+  error,
 }
