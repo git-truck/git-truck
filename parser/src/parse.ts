@@ -1,14 +1,19 @@
-import { promises as fs } from "fs"
+import fsSync, { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
 import { log } from "./log.js"
-import { getRepoName, runProcess } from "./util.js"
+import { getCurrentBranch, getRepoName, runProcess } from "./util.js"
 import { emptyGitTree } from "./constants.js"
 import { join } from "path"
 import TruckIgnore from "./TruckIgnore.js"
 
-export async function findBranchHead(repo: string, branch: string) {
-  const gitFolder = join(repo, ".git")
+export async function findBranchHead(repo: string, branch: string | null) {
+  if (branch === null) branch = (await getCurrentBranch(repo))
 
+  const gitFolder = join(repo, ".git")
+  if (!(fsSync.existsSync(gitFolder))) {
+
+    throw Error(`${repo} is not a git repository`)
+  }
   // Find file containing the branch head
   const branchPath = join(gitFolder, "refs/heads/" + branch)
   const absolutePath = join(process.cwd(), branchPath)
@@ -17,7 +22,7 @@ export async function findBranchHead(repo: string, branch: string) {
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
   log.debug(`${branch} -> [commit]${branchHead}`)
 
-  return branchHead
+  return [branchHead, branch]
 }
 
 export async function deflateGitObject(repo: string, hash: string) {
