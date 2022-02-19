@@ -15,7 +15,7 @@ npm start -- --help
 
 To transpile the typescript and run the parser
 ```
-npm start [path to git repository = .] [outFileName = ./.temp/{repo}_{branch}.json] [branch = main]
+npm start [path to git repository = .] [branch = main] [outFileName = ./.temp/{repo}_{branch}.json]
 ```
 
 For example, if run in the parser folder, `npm start ..` will analyze the git-visual repository and output the result to `.temp/git-visual_main.json`
