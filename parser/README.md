@@ -30,3 +30,7 @@ To enable debugLog output, set the NODE_DEBUG variable to any value. This can be
 DEBUG=true
 ```
 
+# Ignoring files
+Files or folders can be hidden by adding the name to the .truckignore file in the root of the project (each entry separated by newline).
+You can also ignore file-extensions by writing an asterix followed by the extension, for example:
+> *.md
