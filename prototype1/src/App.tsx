@@ -9,7 +9,7 @@ import {
   HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
-import { ColdMapTranslator, unionAuthors } from "./colors"
+import { ColdMapTranslator, HeatMapTranslator, getDominanceColor, unionAuthors } from "./colors"
 
 const padding = 30
 const textSpacingFromCircle = 5
@@ -118,7 +118,28 @@ function drawBubbleChart(
 
   const circle = group.append("circle")
 
-  const colormap = new ColdMapTranslator(data.minNoCommits, data.maxNoCommits);
+  const VIEW = {
+    TRUCKFACTOR: 1,
+    FILETYPE: 2,
+    HEATMAP: 3,
+    COLDMAP: 4,
+  }
+
+  function getColorOfBlobDepedentOnViewAdapter(blob: HydratedGitBlobObject, view: number): string {
+    switch (view) {
+      case VIEW.TRUCKFACTOR:
+        return getDominanceColor(blob)
+      case VIEW.FILETYPE:
+        // TODO implement filetype color function
+        throw new Error(`Color function for view: VIEW.FILETYPE is not yet implemented`);
+      case VIEW.HEATMAP:
+        return new HeatMapTranslator(data.minNoCommits, data.maxNoCommits).getColor(blob)
+      case VIEW.COLDMAP:
+        return new ColdMapTranslator(data.minNoCommits, data.maxNoCommits).getColor(blob)
+      default:
+        throw new Error(`View option is invalid: ${view}`);
+    }
+  }
 
   circle
     .classed("node", true)
@@ -126,11 +147,9 @@ function drawBubbleChart(
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
     .style("fill", (d) => {
-      let blah = d.data.type === "blob"
-      ? colormap.getColor(d.data as HydratedGitBlobObject)
-      : "none"
-
-      return blah
+      return (d.data.type === "blob")
+        ? getColorOfBlobDepedentOnViewAdapter(d.data as HydratedGitBlobObject, VIEW.HEATMAP)
+        : "none"
     })
     .enter()
 
