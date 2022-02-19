@@ -32,8 +32,6 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
   }
 
 export function getDominanceColor(blob : HydratedGitBlobObject) : string {
-    console.log(blob);
-    
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
       return "red";

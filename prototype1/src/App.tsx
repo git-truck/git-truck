@@ -191,15 +191,9 @@ function makePercentResponsibilityDistribution(
   const unionedAuthors = unionAuthors(d)
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 
-  // console.log("sum: ", sum)
-  // console.log("", Object.entries(unionedAuthors))
-
-  // console.log("obj entries unionedAuthors: ", Object.entries(unionedAuthors))
-
   const newAuthorsEntries = Object.entries(unionedAuthors).reduce(
     (newAuthorOject, [author, contrib]) => {
       const fraction: number = contrib / sum
-      // console.log("fraction:", fraction)
       return { ...newAuthorOject, [author]: fraction }
     },
     {}
