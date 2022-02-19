@@ -16,7 +16,7 @@ if (process.argv[2] === "--help") {
 
 const repoDir = process.argv.length < 3 ? "." : process.argv[2]
 const branch = process.argv.length < 4 ? await getCurrentBranch(repoDir) : process.argv[3]
-const outFileName = process.argv.length < 5 ? `./.temp/${getRepoName(repoDir)}_${branch}.json` : process.argv[3]
+const outFileName = process.argv.length < 5 ? `./.temp/${getRepoName(repoDir)}_${branch}.json` : process.argv[4]
 
 
 try {
