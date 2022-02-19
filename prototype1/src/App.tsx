@@ -145,7 +145,7 @@ function drawBubbleChart(
     .attr("cx", (d) => d.x)
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
-    .attr("id", (d) => d.data.hash)
+    .attr("id", (d) => d.data.path)
 
   if (
     new URL(window.location.toString()).searchParams.get("debug") === "true"
@@ -160,7 +160,7 @@ function drawBubbleChart(
     .attr("startOffset", "50%")
     .attr("dominant-baseline", "bottom")
     .attr("text-anchor", "middle")
-    .attr("xlink:href", (d) => `#${d.data.hash}`)
+    .attr("xlink:href", (d) => `#${d.data.path}`)
     .text((d) => d.data.name)
     .style("font-size", "0.8em")
     .style("font-weight", (d) => (d.data.type === "tree" ? "bold" : "normal"))
