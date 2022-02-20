@@ -63,7 +63,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
         viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
       />
       {currentBlob !== null ? (
-        <div ref={legendRef} className="legend">
+        <div ref={legendRef} className="legend box">
           <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
