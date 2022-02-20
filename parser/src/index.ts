@@ -63,7 +63,6 @@ async function describeAsyncJob<T>(
     let success = (text: string, final = false) => {
       if (getLogLevel() === LOG_LEVEL.SILENT) return
       if (spinner === null) return log.info(text)
-      // if (final) spinner.stop()
       spinner.success({ text })
       if (!final) spinner.start()
     }
@@ -85,7 +84,6 @@ async function describeAsyncJob<T>(
       }
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const repoDir = args.path ?? "."
 let branch = args.branch ?? null
