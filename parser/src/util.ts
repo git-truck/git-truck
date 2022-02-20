@@ -1,7 +1,8 @@
 import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
+import { createSpinner } from "nanospinner"
 import { dirname, join, resolve, sep } from "path"
-import { log } from "./log.js"
+import { getLogLevel, log, LOG_LEVEL } from "./log.js"
 import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
 
 export function last<T>(array: T[]) {
@@ -10,11 +11,15 @@ export function last<T>(array: T[]) {
 
 export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
-    const prcs = spawn(command, args, {
-      cwd: dir,
-    })
-    prcs.stdout.once("data", (data) => resolve(data.toString()))
-    prcs.stderr.once("data", (data) => reject(data.toString()))
+    try {
+      const prcs = spawn(command, args, {
+        cwd: dir,
+      })
+      prcs.stderr.once("data", buf => reject(buf.toString().trim()))
+      prcs.stdout.once("data", buf => resolve(buf.toString().trim()))
+    } catch(e) {
+      reject(e)
+    }
   })
 }
 
@@ -71,13 +76,11 @@ export async function writeRepoToFile(
   const data = JSON.stringify(commitObject, null, 2)
   let outPath = join(repoDir, outFileName)
   let dir = dirname(outPath)
-  console.log(dir)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })
   }
-  console.log(outPath)
   await fs.writeFile(outPath, data)
-  log.info(`[${commitObject.hash}] -> ${outPath}`)
+  return outPath
 }
 
 export function getRepoName(repoDir: string) {
@@ -92,3 +95,65 @@ export async function getCurrentBranch(dir: string) {
   ])) as string
   return result.trim()
 }
+
+export const formatMs = (ms: number) => {
+  if (ms < 1000) {
+    return `${Math.round(ms)}ms`
+  } else {
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+}
+
+export function generateTruckFrames(length: number) {
+  let frames = []
+  for (let i = 0; i < length; i++) {
+    let prefix = " ".repeat(length - i - 1)
+    const frame = `${prefix}🚛\n`
+    frames.push(frame)
+  }
+  return frames
+}
+
+export function createTruckSpinner() {
+  return getLogLevel() <= LOG_LEVEL.INFO
+    ? createSpinner("", {
+      interval: 1000 / 20,
+      frames: generateTruckFrames(20),
+    })
+    : null
+}
+
+const spinner = createTruckSpinner()
+
+export async function describeAsyncJob<T>(
+  job: () => Promise<T>,
+  beforeMsg: string,
+  afterMsg: string,
+  errorMsg: string
+) {
+
+    let success = (text: string, final = false) => {
+      if (getLogLevel() === LOG_LEVEL.SILENT) return
+      if (spinner === null) return log.info(text)
+      spinner.success({ text })
+      if (!final) spinner.start()
+    }
+    let error = (text: string) =>
+      spinner === null ? log.error(text) : spinner.error({ text })
+
+    spinner?.update({ text: beforeMsg, frames: generateTruckFrames(beforeMsg.length) })
+    spinner?.start()
+    try {
+      const startTime = performance.now()
+      const result = await job()
+      const stopTime = performance.now()
+      const suffix = `[${formatMs(stopTime - startTime)}]`
+      success(`${afterMsg} ${suffix}`, true)
+      return result
+    } catch(e) {
+        error(errorMsg)
+        log.error(e)
+        process.exit(1)
+      }
+}
+

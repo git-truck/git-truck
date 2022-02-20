@@ -1,14 +1,23 @@
-import { promises as fs } from "fs"
+import fsSync, { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
 import { log } from "./log.js"
-import { getRepoName, runProcess } from "./util.js"
+import { describeAsyncJob, formatMs, writeRepoToFile, getCurrentBranch, getRepoName, runProcess } from "./util.js"
 import { emptyGitTree } from "./constants.js"
 import { join } from "path"
 import TruckIgnore from "./TruckIgnore.js"
+import { resolve } from "path";
+import { performance } from "perf_hooks";
+import yargsParser from "yargs-parser";
+import { hydrateTreeWithAuthorship } from "./hydrate.js";
 
-export async function findBranchHead(repo: string, branch: string) {
+export async function findBranchHead(repo: string, branch: string | null) {
+  if (branch === null) branch = (await getCurrentBranch(repo))
+
   const gitFolder = join(repo, ".git")
+  if (!(fsSync.existsSync(gitFolder))) {
 
+    throw Error(`${repo} is not a git repository`)
+  }
   // Find file containing the branch head
   const branchPath = join(gitFolder, "refs/heads/" + branch)
   const absolutePath = join(process.cwd(), branchPath)
@@ -17,7 +26,7 @@ export async function findBranchHead(repo: string, branch: string) {
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
   log.debug(`${branch} -> [commit]${branchHead}`)
 
-  return branchHead
+  return [branchHead, branch]
 }
 
 export async function deflateGitObject(repo: string, hash: string) {
@@ -95,14 +104,14 @@ function getCoAuthors(description: string) {
 async function parseTree(path: string, repo: string, name: string, hash: string, truckignore: TruckIgnore): Promise<GitTreeObject> {
   const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
-  
+
   let children: (GitTreeObject | GitBlobObject)[] = []
   for await(let line of entries) {
     const [_, type, hash, name] = line.split(/\s+/)
     if (!truckignore.isAccepted(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
-    
+
     switch (type) {
       case "tree":
         children.push(await parseTree(newPath, repo, name, hash, truckignore))
@@ -134,4 +143,54 @@ async function parseBlob(path: string, repo: string, name: string, hash: string)
     content,
   }
   return blob
+}
+
+export async function parse(rawArgs: string[]) {
+const args = yargsParser(rawArgs)
+
+  if (args.help || args.h) {
+    console.log(`Git Visual
+
+  Usage: npm run start -- <args>
+
+  Options:
+    --path <path to git repository> (default: current directory)
+    --out <output path for json file> (default: ./.temp/{repo}_{branch}.json)
+    --branch <branch name> (default: current branch)
+    --help, -h: Show this help message`)
+    return
+  }
+
+  const repoDir = args.path ?? ".";
+  let branch = args.branch ?? null;
+
+  const start = performance.now();
+  const [branchHead, branchName] = await describeAsyncJob(
+    () => findBranchHead(repoDir, branch),
+    "Finding branch head",
+    "Found branch head",
+    "Error finding branch head"
+  );
+  const outFileName = args.out ?? `./.temp/${getRepoName(repoDir)}_${branchName}.json`;
+  let repoTree = await describeAsyncJob(
+    () => parseCommit(repoDir, branchHead),
+    "Parsing commit tree",
+    "Commit tree parsed",
+    "Error parsing commit tree"
+  );
+  repoTree = await describeAsyncJob(
+    () => hydrateTreeWithAuthorship(repoDir, repoTree),
+    "Hydrating commit tree with authorship data",
+    "Commit tree hydrated",
+    "Error hydrating commit tree"
+  );
+  await describeAsyncJob(
+    () => writeRepoToFile(repoTree, repoDir, outFileName),
+    "Writing data to file",
+    `Wrote data to ${resolve(outFileName)}`,
+    `Error writing data to file ${outFileName}`
+  );
+  const stop = performance.now();
+
+  log.log(`\nDone in ${formatMs(stop - start)}`);
 }

@@ -6,7 +6,6 @@ import {
   GitObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
-  HydratedGitTreeObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
 import { ColdMapTranslator, HeatMapTranslator, getDominanceColor, unionAuthors } from "./colors"
@@ -19,13 +18,6 @@ document.documentElement.style.setProperty("--padding", `${padding}px`)
 function App() {
   return <BubbleChart data={data} />
 }
-
-const users = [
-  ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
-  ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
-  ["hojelse", "Kristoffer Højelse"],
-  ["emiljapelt", "Emil Jäpelt"],
-]
 
 function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
   const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(null)

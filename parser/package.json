@@ -13,6 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^17.0.17",
+    "@types/yargs-parser": "^20.2.1",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "eslint": "^8.8.0",
@@ -22,7 +23,9 @@
     "@types/gitignore-parser": "0.0.0",
     "dotenv": "^16.0.0",
     "gitignore-parser": "0.0.2",
+    "nanospinner": "^1.0.0",
     "promisify": "0.0.3",
+    "yargs-parser": "^21.0.0",
     "zlib": "^1.0.5"
   }
 }
