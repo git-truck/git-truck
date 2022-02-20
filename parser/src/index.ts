@@ -2,7 +2,7 @@ import "dotenv/config"
 import { createSpinner } from "nanospinner"
 import { resolve } from "path"
 import { performance } from "perf_hooks"
-import parser from "yargs-parser"
+import yargsParser from "yargs-parser"
 import { hydrateTreeWithAuthorship } from "./hydrate.js"
 import { getLogLevel, log, LOG_LEVEL } from "./log.js"
 import { findBranchHead, parseCommit } from "./parse.js"
@@ -10,7 +10,7 @@ import { formatMs, getRepoName, writeRepoToFile } from "./util.js"
 
 const rawRargs = process.argv.slice(2)
 
-const args = parser(rawRargs)
+const args = yargsParser(rawRargs)
 
 if (args.help || args.h) {
   console.log(`Git Visual
@@ -27,7 +27,7 @@ Options:
 const spinner =
   getLogLevel() <= LOG_LEVEL.INFO
     ? createSpinner("", {
-        interval: 100,
+        interval: 1000/30,
         frames: [
           "                   🚛",
           "                  🚛 ",
