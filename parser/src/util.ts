@@ -104,32 +104,21 @@ export const formatMs = (ms: number) => {
   }
 }
 
+export function generateTruckFrames(length: number) {
+  let frames = []
+  for (let i = 0; i < length; i++) {
+    let prefix = " ".repeat(length - i - 1)
+    const frame = `${prefix}🚛\n`
+    frames.push(frame)
+  }
+  return frames
+}
+
 export function createTruckSpinner() {
   return getLogLevel() <= LOG_LEVEL.INFO
     ? createSpinner("", {
       interval: 1000 / 20,
-      frames: [
-        "                   🚛",
-        "                  🚛 ",
-        "                 🚛  ",
-        "                🚛   ",
-        "               🚛    ",
-        "              🚛     ",
-        "             🚛      ",
-        "            🚛       ",
-        "           🚛        ",
-        "          🚛         ",
-        "         🚛          ",
-        "        🚛           ",
-        "       🚛            ",
-        "      🚛             ",
-        "     🚛              ",
-        "    🚛               ",
-        "   🚛                ",
-        "  🚛                 ",
-        " 🚛                  ",
-        "🚛                   ",
-      ],
+      frames: generateTruckFrames(20),
     })
     : null
 }
@@ -152,7 +141,8 @@ export async function describeAsyncJob<T>(
     let error = (text: string) =>
       spinner === null ? log.error(text) : spinner.error({ text })
 
-    spinner?.start({ text: beforeMsg })
+    spinner?.update({ text: beforeMsg, frames: generateTruckFrames(beforeMsg.length) })
+    spinner?.start()
     try {
       const startTime = performance.now()
       const result = await job()
