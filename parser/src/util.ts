@@ -4,6 +4,7 @@ import { createSpinner } from "nanospinner"
 import { dirname, join, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.js"
 import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
+import { performance } from "perf_hooks";
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
