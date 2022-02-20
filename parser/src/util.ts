@@ -1,6 +1,8 @@
-import { spawn, spawnSync } from "child_process"
+import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
+import { createSpinner } from "nanospinner"
 import { dirname, join, resolve, sep } from "path"
+import { getLogLevel, log, LOG_LEVEL } from "./log.js"
 import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
 
 export function last<T>(array: T[]) {
@@ -101,3 +103,67 @@ export const formatMs = (ms: number) => {
     return `${(ms / 1000).toFixed(2)}s`
   }
 }
+
+export function createTruckSpinner() {
+  return getLogLevel() <= LOG_LEVEL.INFO
+    ? createSpinner("", {
+      interval: 1000 / 20,
+      frames: [
+        "                   🚛",
+        "                  🚛 ",
+        "                 🚛  ",
+        "                🚛   ",
+        "               🚛    ",
+        "              🚛     ",
+        "             🚛      ",
+        "            🚛       ",
+        "           🚛        ",
+        "          🚛         ",
+        "         🚛          ",
+        "        🚛           ",
+        "       🚛            ",
+        "      🚛             ",
+        "     🚛              ",
+        "    🚛               ",
+        "   🚛                ",
+        "  🚛                 ",
+        " 🚛                  ",
+        "🚛                   ",
+      ],
+    })
+    : null
+}
+
+const spinner = createTruckSpinner()
+
+export async function describeAsyncJob<T>(
+  job: () => Promise<T>,
+  beforeMsg: string,
+  afterMsg: string,
+  errorMsg: string
+) {
+
+    let success = (text: string, final = false) => {
+      if (getLogLevel() === LOG_LEVEL.SILENT) return
+      if (spinner === null) return log.info(text)
+      spinner.success({ text })
+      if (!final) spinner.start()
+    }
+    let error = (text: string) =>
+      spinner === null ? log.error(text) : spinner.error({ text })
+
+    spinner?.start({ text: beforeMsg })
+    try {
+      const startTime = performance.now()
+      const result = await job()
+      const stopTime = performance.now()
+      const suffix = `[${formatMs(stopTime - startTime)}]`
+      success(`${afterMsg} ${suffix}`, true)
+      return result
+    } catch(e) {
+        error(errorMsg)
+        log.error(e)
+        process.exit(1)
+      }
+}
+
