@@ -27,7 +27,7 @@ Options:
 const spinner =
   getLogLevel() <= LOG_LEVEL.INFO
     ? createSpinner("", {
-        interval: 1000/30,
+        interval: 1000/20,
         frames: [
           "                   🚛",
           "                  🚛 ",
