@@ -14,7 +14,7 @@ const args = yargsParser(rawRargs)
 if (args.help || args.h) {
   console.log(`Git Visual
 
-Usage: npm run start <args>
+Usage: npm run start -- <args>
 
 Options:
   --path <path to git repository> (default: current directory)
