@@ -1,6 +1,6 @@
 export enum Metric {
-    Extension = "Extension",
-    HeatMap = "HeatMap",
-    ColdMap = "ColdMap",
-    Dominated = "Dominated"
+    FileExtension = "File extension",
+    HeatMap = "Heat map",
+    ColdMap = "Cold map",
+    Dominated = "Dominated files"
 }

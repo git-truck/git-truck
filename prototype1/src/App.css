@@ -35,6 +35,17 @@
   left: 16px;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-text {
+  padding-bottom: 8px;
+  font-weight: bold;
+  font-size: 0.8em;
+}
+
 .legend {
   z-index: 1;
   position: absolute;
