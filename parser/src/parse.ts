@@ -1,14 +1,14 @@
 import fsSync, { promises as fs } from "fs"
-import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
-import { log } from "./log.js"
-import { describeAsyncJob, formatMs, writeRepoToFile, getCurrentBranch, getRepoName, deflateGitObject } from "./util.js"
-import { emptyGitTree } from "./constants.js"
+import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model"
+import { log } from "./log"
+import { describeAsyncJob, formatMs, writeRepoToFile, getCurrentBranch, getRepoName, deflateGitObject } from "./util"
+import { emptyGitTree } from "./constants"
 import { join } from "path"
-import TruckIgnore from "./TruckIgnore.js"
+import TruckIgnore from "./TruckIgnore"
 import { resolve } from "path";
 import { performance } from "perf_hooks";
 import yargsParser from "yargs-parser";
-import { hydrateTreeWithAuthorship } from "./hydrate.js";
+import { hydrateTreeWithAuthorship } from "./hydrate";
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = (await getCurrentBranch(repo))

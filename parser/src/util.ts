@@ -2,8 +2,8 @@ import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
 import { createSpinner } from "nanospinner"
 import { dirname, join, resolve, sep } from "path"
-import { getLogLevel, log, LOG_LEVEL } from "./log.js"
-import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
+import { getLogLevel, log, LOG_LEVEL } from "./log"
+import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model"
 import { performance } from "perf_hooks";
 
 export function last<T>(array: T[]) {
