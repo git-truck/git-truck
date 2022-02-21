@@ -1,12 +1,15 @@
-.node {
+.folder {
   stroke: black;
-}
-
-.node, .name-path {
-  fill: transparent;
   opacity: 0.3;
 }
 
+.file {
+  stroke-width: 0;
+}
+
+.name-path {
+  fill: transparent;
+}
 
 .name-path.debug {
   stroke: black;

@@ -96,7 +96,8 @@ export function BubbleChart(props: BubbleChartProps) {
     }
 
     circle
-      .classed("node", true)
+      .classed("file", (d) => d.data.type === "blob")
+      .classed("folder", (d) => d.data.type === "tree")
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
       .attr("r", (d) => d.r)
