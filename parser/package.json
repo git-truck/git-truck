@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
