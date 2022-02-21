@@ -29,5 +29,5 @@ jobs:
         with:
           repository-name: git-visual/git-visual.github.io
           branch: gh-pages # The branch the action should deploy to.
-          folder: ../prototype1/dist # The folder the action should deploy.
+          folder: ./prototype1/dist # The folder the action should deploy.
           token: ${{ secrets.TOKEN }}
