@@ -10,7 +10,7 @@ export function last<T>(array: T[]) {
   return array[array.length - 1]
 }
 
-export function runProcess(dir: string, command: string, args: string[]) {
+function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {

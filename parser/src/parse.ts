@@ -1,7 +1,7 @@
 import fsSync, { promises as fs } from "fs"
 import { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, Person } from "./model.js"
 import { log } from "./log.js"
-import { describeAsyncJob, formatMs, writeRepoToFile, getCurrentBranch, getRepoName, runProcess } from "./util.js"
+import { describeAsyncJob, formatMs, writeRepoToFile, getCurrentBranch, getRepoName, deflateGitObject } from "./util.js"
 import { emptyGitTree } from "./constants.js"
 import { join } from "path"
 import TruckIgnore from "./TruckIgnore.js"
@@ -28,12 +28,6 @@ export async function findBranchHead(repo: string, branch: string | null) {
 
   return [branchHead, branch]
 }
-
-export async function deflateGitObject(repo: string, hash: string) {
-  const result = await runProcess(repo, "git", ["cat-file", "-p", hash])
-  return result as string
-}
-
 
 export async function parseCommitLight(repo: string, hash: string): Promise<GitCommitObjectLight> {
   const commitRegex = /^tree (?<tree>.*)\n(?:parent (?<parent>.*)\n)?(?:parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(?:gpgsig (?:.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>.*)\n*(?<description>(.|\n|\r)*)/g;
