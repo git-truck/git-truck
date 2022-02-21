@@ -73,16 +73,8 @@ export async function deflateGitObject(repo: string, hash: string) {
   return result as string
 }
 
-export async function writeRepoToFile(
-  commitObject: HydratedGitCommitObject,
-  repoName: string,
-  branchName: string,
-  repoDir: string,
-  outFileName: string
-) {
-  const aggregatedData: ParserData = {repo: repoName, branch: branchName, commit: commitObject}
-  const data = JSON.stringify(aggregatedData, null, 2)
-  let outPath = join(repoDir, outFileName)
+export async function writeRepoToFile(outPath: string, parsedData: ParserData) {
+  const data = JSON.stringify(parsedData, null, 2)
   let dir = dirname(outPath)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })

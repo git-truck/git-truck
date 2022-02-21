@@ -179,10 +179,11 @@ const args = yargsParser(rawArgs)
     "Commit tree hydrated",
     "Error hydrating commit tree"
   );
+  const outPath = join(repoDir, outFileName)
   await describeAsyncJob(
-    () => writeRepoToFile(hydratedRepoTree, repoName, branchName, repoDir, outFileName),
+    () => writeRepoToFile(outPath, {repo: repoName, branch: branchName, commit: hydratedRepoTree}),
     "Writing data to file",
-    `Wrote data to ${resolve(join(repoDir, outFileName))}`,
+    `Wrote data to ${resolve(outPath)}`,
     `Error writing data to file ${outFileName}`
   );
   const stop = performance.now();
