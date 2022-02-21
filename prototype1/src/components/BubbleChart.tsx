@@ -164,7 +164,7 @@ export function BubbleChart(props: BubbleChartProps) {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`} />
       {currentBlob !== null ? (
-        <div ref={legendRef} className="legend box">
+        <div ref={legendRef} className="file-details box">
           <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
