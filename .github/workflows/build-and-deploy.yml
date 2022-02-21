@@ -2,8 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches:
-      - main
+  
 jobs:
   build:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
