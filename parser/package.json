@@ -8,7 +8,7 @@
     "test:watch": "jest --watch",
     "start": "tsc && node ./dist",
     "lint": "eslint",
-    "prepare": "husky install"
+    "prepare": "cd .. && husky install"
   },
   "author": "",
   "license": "ISC",
