@@ -44,7 +44,7 @@
     "src/**/*.{ts,tsx}": [
       "eslint --cache --fix",
       "tsc-files --noEmit",
-      "yarn test"
+      "npm run test"
     ]
   },
   "eslintConfig": {

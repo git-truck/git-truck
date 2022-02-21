@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-  
+
 jobs:
   build:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
@@ -17,17 +17,17 @@ jobs:
         working-directory: parser
         run: npm ci
       - name: Install visualization dependencies
-        working-directory: prototype1
+        working-directory: app
         run: npm ci
       - name: Run parser and build visualization
-        working-directory: prototype1
+        working-directory: app
         run: npm run pb
-        
+
       - name: Deploy 🚀
         if: github.ref == 'refs/heads/main'
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           repository-name: git-visual/git-visual.github.io
           branch: gh-pages # The branch the action should deploy to.
-          folder: ./prototype1/dist # The folder the action should deploy.
+          folder: ./app/build # The folder the action should deploy.
           token: ${{ secrets.TOKEN }}
