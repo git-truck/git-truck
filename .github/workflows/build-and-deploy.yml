@@ -5,7 +5,7 @@ on:
     branches:
       - main
 jobs:
-  build-and-deploy:
+  build:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
     runs-on: ubuntu-latest
     steps:
@@ -14,15 +14,20 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Install and Build 🔧
+      - name: Install parser dependencies
         run: |
           cd parser
           npm ci
-          cd ..
-          cd prototype1
+      - name: Install visualization dependencies
+        run: |
+          cd ../prototype1
           npm ci
-          npm run pb
-
+      - name: Run parser and build visualization
+        run: npm run pb
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
