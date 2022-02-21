@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "parse": "cd ./../parser && npm start -- --path .. --out ./prototype1/src/data.json --branch main",
+    "parse": "cd ./../parser && npm start -- --path .. --out ./prototype1/src/data.json",
     "pd": "npm run parse && npm run dev",
     "pb": "npm run parse && npm run build",
     "preview": "vite preview"
