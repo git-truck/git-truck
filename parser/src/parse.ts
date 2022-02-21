@@ -165,21 +165,22 @@ const args = yargsParser(rawArgs)
     "Found branch head",
     "Error finding branch head"
   );
-  const outFileName = args.out ?? `./.temp/${getRepoName(repoDir)}_${branchName}.json`;
-  let repoTree = await describeAsyncJob(
+  const repoName = getRepoName(repoDir)
+  const outFileName = args.out ?? `./.temp/${repoName}_${branchName}.json`;
+  const repoTree = await describeAsyncJob(
     () => parseCommit(repoDir, branchHead),
     "Parsing commit tree",
     "Commit tree parsed",
     "Error parsing commit tree"
   );
-  repoTree = await describeAsyncJob(
+  const hydratedRepoTree = await describeAsyncJob(
     () => hydrateTreeWithAuthorship(repoDir, repoTree),
     "Hydrating commit tree with authorship data",
     "Commit tree hydrated",
     "Error hydrating commit tree"
   );
   await describeAsyncJob(
-    () => writeRepoToFile(repoTree, repoDir, outFileName),
+    () => writeRepoToFile(hydratedRepoTree, repoName, branchName, repoDir, outFileName),
     "Writing data to file",
     `Wrote data to ${resolve(join(repoDir, outFileName))}`,
     `Error writing data to file ${outFileName}`

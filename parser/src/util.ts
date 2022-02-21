@@ -3,7 +3,7 @@ import { existsSync, promises as fs } from "fs"
 import { createSpinner } from "nanospinner"
 import { dirname, join, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.js"
-import { GitBlobObject, GitCommitObject, GitTreeObject } from "./model.js"
+import { ParserData, GitBlobObject, GitCommitObject, GitTreeObject, HydratedGitCommitObject } from "./model.js"
 import { performance } from "perf_hooks";
 
 export function last<T>(array: T[]) {
@@ -74,11 +74,14 @@ export async function deflateGitObject(repo: string, hash: string) {
 }
 
 export async function writeRepoToFile(
-  commitObject: GitCommitObject,
+  commitObject: HydratedGitCommitObject,
+  repoName: string,
+  branchName: string,
   repoDir: string,
   outFileName: string
 ) {
-  const data = JSON.stringify(commitObject, null, 2)
+  const aggregatedData: ParserData = {repo: repoName, branch: branchName, commit: commitObject}
+  const data = JSON.stringify(aggregatedData, null, 2)
   let outPath = join(repoDir, outFileName)
   let dir = dirname(outPath)
   if (!existsSync(dir)) {

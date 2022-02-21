@@ -12,7 +12,7 @@ function App() {
   const [metric, setMetric] = useState<Metric>(Metric.FileExtension)
   return (
     <>
-      <BubbleChart data={data} metric={metric} />
+      <BubbleChart data={data.commit} metric={metric} />
       <div className="box options">
         <MetricSelect
           onChange={(metric: Metric) => setMetric(metric)}
