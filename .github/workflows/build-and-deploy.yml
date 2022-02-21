@@ -25,12 +25,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           repository-name: git-visual/git-visual.github.io
           branch: gh-pages # The branch the action should deploy to.
-          folder: prototype1/dist # The folder the action should deploy.
+          folder: git-visual/prototype1/dist # The folder the action should deploy.
           token: ${{ secrets.TOKEN }}
