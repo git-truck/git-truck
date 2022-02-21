@@ -14,14 +14,13 @@ jobs:
           fetch-depth: '0'
 
       - name: Install parser dependencies
-        run: |
-          cd parser
-          npm ci
+        working-directory: parser
+        run: npm ci
       - name: Install visualization dependencies
-        run: |
-          cd ../prototype1
-          npm ci
+        working-directory: prototype1
+        run: npm ci
       - name: Run parser and build visualization
+        working-directory: prototype1
         run: npm run pb
   deploy:
     runs-on: ubuntu-latest
