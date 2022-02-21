@@ -22,13 +22,34 @@
   top: var(--padding)
 }
 
+.box {
+  border: 1px hsl(0, 0%, 50%) solid;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 16px;
+}
+
+.options {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-text {
+  padding-bottom: 8px;
+  font-weight: bold;
+  font-size: 0.8em;
+}
+
 .legend {
   z-index: 1;
   position: absolute;
   bottom: 16px;
   left: 16px;
-  border: 1px hsl(0, 0%, 50%) solid;
-  border-radius: 8px;
-  padding: 16px;
 }
 

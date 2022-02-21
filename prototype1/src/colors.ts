@@ -40,7 +40,7 @@ export function getDominanceColor(blob : HydratedGitBlobObject) : string {
   }
 }
 
-class SpectrumTranslator {
+class SpectrumTranslater {
     readonly scale : number;
     readonly offset : number;
     readonly target_max : number;
@@ -62,13 +62,13 @@ class SpectrumTranslator {
     }
 }
 
-export class ColdMapTranslator {
-    readonly translator : SpectrumTranslator;
+export class ColdMapTranslater {
+    readonly translator : SpectrumTranslater;
     readonly min_lightness = 35;
     readonly max_lightness = 90;
 
     constructor(min : number, max : number) {
-        this.translator = new SpectrumTranslator(min, max, this.min_lightness, this.max_lightness);
+        this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness);
     }
 
     getColor(blob : HydratedGitBlobObject) : string {           
@@ -76,13 +76,13 @@ export class ColdMapTranslator {
     }
 }
 
-export class HeatMapTranslator {
-    readonly translator : SpectrumTranslator;
+export class HeatMapTranslater {
+    readonly translator : SpectrumTranslater;
     readonly min_lightness = 30;
     readonly max_lightness = 95;
 
     constructor(min : number, max : number) {
-        this.translator = new SpectrumTranslator(min, max, this.min_lightness, this.max_lightness);
+        this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness);
     }
 
     getColor(blob : HydratedGitBlobObject) : string {

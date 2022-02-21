@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-aria/utils": "^3.11.2",
     "@types/d3": "^7.1.0",
     "d3": "^7.3.0",
     "github-colors": "^2.2.20",
