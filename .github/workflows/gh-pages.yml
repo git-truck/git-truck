@@ -1,8 +1,9 @@
 name: Build and Deploy
 
-on: 
- - push
- - workflow_dispatch
+on:
+  push:
+    branches:
+      - main
 jobs:
   build-and-deploy:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
