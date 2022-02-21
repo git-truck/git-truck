@@ -1,13 +1,13 @@
-import { emptyGitTree } from "./constants.js"
-import { log } from "./log.js"
+import { emptyGitTree } from "./constants"
+import { log } from "./log"
 import {
   GitCommitObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
-} from "./model.js"
-import { parseCommitLight } from "./parse.js"
-import { gitDiffNumStatParsed, lookupFileInTree } from "./util.js"
+} from "./model"
+import { parseCommitLight } from "./parse"
+import { gitDiffNumStatParsed, lookupFileInTree } from "./util"
 
 export async function hydrateTreeWithAuthorship(
   repo: string,
