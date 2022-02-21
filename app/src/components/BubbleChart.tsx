@@ -10,11 +10,11 @@ import {
   ColdMapTranslater,
   HeatMapTranslater,
   getDominanceColor,
-  unionAuthors,
   getExtensionColor,
 } from "../colors"
 import { Metric } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
+import { unionAuthors } from "../util"
 
 interface BubbleChartProps {
   data: HydratedGitCommitObject
@@ -39,7 +39,6 @@ export function BubbleChart(props: BubbleChartProps) {
   let legendRef = useRef<HTMLDivElement>(null)
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
-  let paddedSizeProps = getPaddedSizeProps(sizeProps)
 
   function clickHandler(e: MouseEvent) {
     //@ts-ignore
@@ -49,8 +48,10 @@ export function BubbleChart(props: BubbleChartProps) {
     }
   }
 
+  const paddedSizeProps = getPaddedSizeProps(sizeProps)
+
   const drawBubbleChart = useCallback(
-    function drawBubbleChart(
+    function (
       data: HydratedGitCommitObject,
       paddedSizeProps: { height: number; width: number },
       root: Selection<SVGGElement, unknown, null, undefined>,
@@ -97,7 +98,8 @@ export function BubbleChart(props: BubbleChartProps) {
       }
 
       circle
-        .classed("node", true)
+        .classed("file", (d) => d.data.type === "blob")
+        .classed("folder", (d) => d.data.type === "tree")
         .attr("cx", (d) => d.x)
         .attr("cy", (d) => d.y)
         .attr("r", (d) => d.r)
@@ -150,7 +152,12 @@ export function BubbleChart(props: BubbleChartProps) {
     let svg = select(svgRef.current)
     const root = svg.append("g")
 
-    drawBubbleChart(props.data, paddedSizeProps, root, props.metric)
+    drawBubbleChart(
+      props.data,
+      getPaddedSizeProps(sizeProps),
+      root,
+      props.metric
+    )
 
     let node = root.node()
     if (node) node.addEventListener("click", clickHandler)
@@ -159,7 +166,7 @@ export function BubbleChart(props: BubbleChartProps) {
       if (node) node.removeEventListener("click", clickHandler)
       root.remove()
     }
-  }, [drawBubbleChart, paddedSizeProps, props.data, props.metric])
+  }, [drawBubbleChart, sizeProps, props.data, props.metric])
 
   return (
     <div className="container">
@@ -171,7 +178,7 @@ export function BubbleChart(props: BubbleChartProps) {
         viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
       />
       {currentBlob !== null ? (
-        <div ref={legendRef} className="legend box">
+        <div ref={legendRef} className="file-details box">
           <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
@@ -224,7 +231,7 @@ function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-function getPaddedSizeProps(sizeProps: { width: number; height: number }) {
+function getPaddedSizeProps(sizeProps: { height: number; width: number }) {
   return {
     height: sizeProps.height - padding * 2,
     width: sizeProps.width - padding * 2,
