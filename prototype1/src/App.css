@@ -29,6 +29,12 @@
   padding: 16px;
 }
 
+.options {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}
+
 .legend {
   z-index: 1;
   position: absolute;

@@ -8,7 +8,13 @@ import {
   HydratedGitCommitObject,
 } from "./../../parser/src/model"
 import { hierarchy, pack, select, Selection } from "d3"
-import { ColdMapTranslator, HeatMapTranslator, getDominanceColor, unionAuthors } from "./colors"
+import {
+  ColdMapTranslator,
+  HeatMapTranslator,
+  getDominanceColor,
+  unionAuthors,
+  getExtensionColor,
+} from "./colors"
 import { Metric } from "./metrics"
 
 const padding = 30
@@ -17,11 +23,28 @@ const textSpacingFromCircle = 5
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
 function App() {
-  return <BubbleChart data={data} />
+  const [metric, setMetric] = useState<Metric>(Metric.Extension)
+  return (
+    <>
+      <BubbleChart data={data} metric={metric} />
+      <div className="box options">
+        <MetricSelect
+          onChange={(metric: Metric) => setMetric(metric)}
+        ></MetricSelect>
+      </div>
+    </>
+  )
 }
 
-function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
-  const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(null)
+interface BubbleChartProps {
+  data: HydratedGitCommitObject
+  metric: Metric
+}
+
+function BubbleChart(props: BubbleChartProps) {
+  const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
+    null
+  )
 
   let legendRef = useRef<HTMLDivElement>(null)
   let svgRef = useRef<SVGSVGElement>(null)
@@ -43,7 +66,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
     let svg = select(svgRef.current)
     const root = svg.append("g")
 
-    drawBubbleChart(data, paddedSizeProps, root)
+    drawBubbleChart(props.data, paddedSizeProps, root, props.metric)
 
     let node = root.node()
     if (node) node.addEventListener("click", clickHandler)
@@ -52,7 +75,7 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
       if (node) node.removeEventListener("click", clickHandler)
       root.remove()
     }
-  }, [paddedSizeProps])
+  }, [paddedSizeProps, props.metric])
 
   return (
     <div className="container">
@@ -69,25 +92,38 @@ function BubbleChart({ data }: { data: HydratedGitCommitObject }) {
           <div>Number of lines: {currentBlob.noLines}</div>
           <div>Author distribution:</div>
           <br />
-          {
-            Object.entries(makePercentResponsibilityDistribution(currentBlob))
-              .sort((a, b) => a[1] < b[1] ? 1 : -1)
-              .map(([author, contrib]) => (
-                <div>
-                  <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-                </div>
-              ))
-          }
+          {Object.entries(makePercentResponsibilityDistribution(currentBlob))
+            .sort((a, b) => (a[1] < b[1] ? 1 : -1))
+            .map(([author, contrib]) => (
+              <div>
+                <b>{author}:</b> {(contrib * 100).toFixed(2)}%
+              </div>
+            ))}
         </div>
       ) : null}
     </div>
   )
 }
 
+interface ViewSelectProps {
+  onChange: (metric: Metric) => void
+}
+
+function MetricSelect(props: ViewSelectProps) {
+  return (
+    <select onChange={(event) => props.onChange(event.target.value as Metric)}>
+      {Object.keys(Metric).map((metric) => (
+        <option value={metric}>{metric}</option>
+      ))}
+    </select>
+  )
+}
+
 function drawBubbleChart(
   data: HydratedGitCommitObject,
   paddedSizeProps: { height: number; width: number },
-  root: Selection<SVGGElement, unknown, null, undefined>
+  root: Selection<SVGGElement, unknown, null, undefined>,
+  metric: Metric
 ) {
   let castedTree = data.tree as GitObject
   let hiearchy = hierarchy(castedTree)
@@ -111,19 +147,27 @@ function drawBubbleChart(
 
   const circle = group.append("circle")
 
-  function getColorOfBlobDepedentOnViewAdapter(blob: HydratedGitBlobObject, view: Metric): string {
+  function getColorOfBlobDepedentOnViewAdapter(
+    blob: HydratedGitBlobObject,
+    view: Metric
+  ): string {
     switch (view) {
       case Metric.Dominated:
         return getDominanceColor(blob)
       case Metric.Extension:
-        // TODO implement filetype color function
-        throw new Error(`Color function for view: VIEW.FILETYPE is not yet implemented`);
+        return getExtensionColor(blob)
       case Metric.HeatMap:
-        return new HeatMapTranslator(data.minNoCommits, data.maxNoCommits).getColor(blob)
+        return new HeatMapTranslator(
+          data.minNoCommits,
+          data.maxNoCommits
+        ).getColor(blob)
       case Metric.ColdMap:
-        return new ColdMapTranslator(data.minNoCommits, data.maxNoCommits).getColor(blob)
+        return new ColdMapTranslator(
+          data.minNoCommits,
+          data.maxNoCommits
+        ).getColor(blob)
       default:
-        throw new Error(`View option is invalid: ${view}`);
+        throw new Error(`View option is invalid: ${view}`)
     }
   }
 
@@ -133,8 +177,11 @@ function drawBubbleChart(
     .attr("cy", (d) => d.y)
     .attr("r", (d) => d.r)
     .style("fill", (d) => {
-      return (d.data.type === "blob")
-        ? getColorOfBlobDepedentOnViewAdapter(d.data as HydratedGitBlobObject, Metric.HeatMap)
+      return d.data.type === "blob"
+        ? getColorOfBlobDepedentOnViewAdapter(
+            d.data as HydratedGitBlobObject,
+            metric
+          )
         : "none"
     })
     .enter()

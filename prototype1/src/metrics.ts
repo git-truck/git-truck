@@ -1,6 +1,6 @@
 export enum Metric {
-    HeatMap,
-    ColdMap,
-    Extension,
-    Dominated
+    Extension = "Extension",
+    HeatMap = "HeatMap",
+    ColdMap = "ColdMap",
+    Dominated = "Dominated"
 }
