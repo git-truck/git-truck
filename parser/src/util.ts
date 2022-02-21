@@ -4,7 +4,7 @@ import { createSpinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log"
 import { GitBlobObject, GitTreeObject, ParserData } from "./model"
-import { performance } from "perf_hooks";
+import { performance } from "perf_hooks"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -16,22 +16,22 @@ function runProcess(dir: string, command: string, args: string[]) {
       const prcs = spawn(command, args, {
         cwd: dir,
       })
-      let chunks: Uint8Array[] = []
-      prcs.stderr.once("data", buf => reject(buf.toString().trim()))
-      prcs.stdout.on("data", buf => chunks.push(buf))
+      const chunks: Uint8Array[] = []
+      prcs.stderr.once("data", (buf) => reject(buf.toString().trim()))
+      prcs.stdout.on("data", (buf) => chunks.push(buf))
       prcs.stdout.on("end", () => {
         if (chunks.length > 0) resolve(Buffer.concat(chunks).toString().trim())
       })
-    } catch(e) {
+    } catch (e) {
       reject(e)
     }
   })
 }
 
 export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
-  let diff = await gitDiffNumStat(repo, a, b)
-  let entries = diff.split("\n")
-  let stuff = entries
+  const diff = await gitDiffNumStat(repo, a, b)
+  const entries = diff.split("\n")
+  const stuff = entries
     .filter((x) => x.trim().length > 0)
     .map((x) => x.split(/\t+/))
     .map(([neg, pos, file]) => ({
@@ -46,7 +46,7 @@ export async function lookupFileInTree(
   tree: GitTreeObject,
   path: string
 ): Promise<GitBlobObject | undefined> {
-  let dirs = path.split("/")
+  const dirs = path.split("/")
 
   if (dirs.length < 2) {
     // We have reached the end of the tree, look for the blob
@@ -58,7 +58,7 @@ export async function lookupFileInTree(
     if (result.type === "tree") return undefined
     return result
   }
-  let subtree = tree.children.find((x) => x.name === dirs[0])
+  const subtree = tree.children.find((x) => x.name === dirs[0])
   if (!subtree || subtree.type === "blob") return
   return await lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
@@ -75,7 +75,7 @@ export async function deflateGitObject(repo: string, hash: string) {
 
 export async function writeRepoToFile(outPath: string, parsedData: ParserData) {
   const data = JSON.stringify(parsedData, null, 2)
-  let dir = dirname(outPath)
+  const dir = dirname(outPath)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })
   }
@@ -105,9 +105,9 @@ export const formatMs = (ms: number) => {
 }
 
 export function generateTruckFrames(length: number) {
-  let frames = []
+  const frames = []
   for (let i = 0; i < length; i++) {
-    let prefix = " ".repeat(length - i - 1)
+    const prefix = " ".repeat(length - i - 1)
     const frame = `${prefix}🚛\n`
     frames.push(frame)
   }
@@ -117,9 +117,9 @@ export function generateTruckFrames(length: number) {
 export function createTruckSpinner() {
   return getLogLevel() <= LOG_LEVEL.INFO
     ? createSpinner("", {
-      interval: 1000 / 20,
-      frames: generateTruckFrames(20),
-    })
+        interval: 1000 / 20,
+        frames: generateTruckFrames(20),
+      })
     : null
 }
 
@@ -131,29 +131,30 @@ export async function describeAsyncJob<T>(
   afterMsg: string,
   errorMsg: string
 ) {
+  const success = (text: string, final = false) => {
+    if (getLogLevel() === LOG_LEVEL.SILENT) return
+    if (spinner === null) return log.info(text)
+    spinner.success({ text })
+    if (!final) spinner.start()
+  }
+  const error = (text: string) =>
+    spinner === null ? log.error(text) : spinner.error({ text })
 
-    let success = (text: string, final = false) => {
-      if (getLogLevel() === LOG_LEVEL.SILENT) return
-      if (spinner === null) return log.info(text)
-      spinner.success({ text })
-      if (!final) spinner.start()
-    }
-    let error = (text: string) =>
-      spinner === null ? log.error(text) : spinner.error({ text })
-
-    spinner?.update({ text: beforeMsg, frames: generateTruckFrames(beforeMsg.length) })
-    spinner?.start()
-    try {
-      const startTime = performance.now()
-      const result = await job()
-      const stopTime = performance.now()
-      const suffix = `[${formatMs(stopTime - startTime)}]`
-      success(`${afterMsg} ${suffix}`, true)
-      return result
-    } catch(e) {
-        error(errorMsg)
-        log.error(e)
-        process.exit(1)
-      }
+  spinner?.update({
+    text: beforeMsg,
+    frames: generateTruckFrames(beforeMsg.length),
+  })
+  spinner?.start()
+  try {
+    const startTime = performance.now()
+    const result = await job()
+    const stopTime = performance.now()
+    const suffix = `[${formatMs(stopTime - startTime)}]`
+    success(`${afterMsg} ${suffix}`, true)
+    return result
+  } catch (e) {
+    error(errorMsg)
+    log.error(e)
+    process.exit(1)
+  }
 }
-
