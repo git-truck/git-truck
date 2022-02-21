@@ -11,7 +11,7 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Install and Build 🔧 
+      - name: Install and Build 🔧
         run: |
           cd parser
           npm ci
@@ -23,5 +23,7 @@ jobs:
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
+          repository-name: git-visual/git-visual.github.io
           branch: gh-pages # The branch the action should deploy to.
           folder: prototype1/dist # The folder the action should deploy.
+          token: {{ secrets.TOKEN }}
