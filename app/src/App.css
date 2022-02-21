@@ -13,7 +13,7 @@
 
 .name-path.debug {
   stroke: black;
-  stroke-dasharray: 5,5;
+  stroke-dasharray: 5, 5;
 }
 
 .container {
@@ -22,7 +22,7 @@
 
 .visualization {
   position: absolute;
-  top: var(--padding)
+  top: var(--padding);
 }
 
 .box {

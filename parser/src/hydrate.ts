@@ -13,7 +13,11 @@ export async function hydrateTreeWithAuthorship(
   repo: string,
   commit: GitCommitObject
 ): Promise<HydratedGitCommitObject> {
-  let hydratedCommit = { ...commit, minNoCommits: Number.MAX_VALUE, maxNoCommits: Number.MIN_VALUE } as HydratedGitCommitObject
+  const hydratedCommit = {
+    ...commit,
+    minNoCommits: Number.MAX_VALUE,
+    maxNoCommits: Number.MIN_VALUE,
+  } as HydratedGitCommitObject
   let { hash: child, parent } = hydratedCommit
 
   addAuthorsField(hydratedCommit.tree)
@@ -25,38 +29,40 @@ export async function hydrateTreeWithAuthorship(
       isDone = true
     }
 
-    let childCommit = await parseCommitLight(repo, child)
+    const childCommit = await parseCommitLight(repo, child)
     if (childCommit.parent2 !== null) {
       // TODO: Handle merges
     }
-    let { author, ...restof } = childCommit
+    const { author, ...restof } = childCommit
     log.debug(
       `[${restof.message.split("\n").filter((x) => x.trim().length > 0)[0]}]`
     )
     // Diff newer with current
     log.debug(`comparing [${child}] -> [${parent}]`)
 
-    let results = await gitDiffNumStatParsed(repo, child, parent)
+    const results = await gitDiffNumStatParsed(repo, child, parent)
     let numTimesCredited = 0
 
     for (const { pos, neg, file } of results) {
-      let blob = await lookupFileInTree(hydratedCommit.tree, file)
+      const blob = await lookupFileInTree(hydratedCommit.tree, file)
       if (file === "dev/null") continue
       if (blob) {
         numTimesCredited++
         const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
-        if (noCommits < hydratedCommit.minNoCommits) hydratedCommit.minNoCommits = noCommits
-        if (noCommits > hydratedCommit.maxNoCommits) hydratedCommit.maxNoCommits = noCommits
-        let hydratedBlob = {
+        if (noCommits < hydratedCommit.minNoCommits)
+          hydratedCommit.minNoCommits = noCommits
+        if (noCommits > hydratedCommit.maxNoCommits)
+          hydratedCommit.maxNoCommits = noCommits
+        const hydratedBlob = {
           ...blob,
           authors: (blob as HydratedGitBlobObject).authors ?? {},
           noLines: blob.content.split("\n").length,
-          noCommits: noCommits
+          noCommits: noCommits,
         } as HydratedGitBlobObject
 
-        let current = hydratedBlob.authors?.[author.name] ?? 0
+        const current = hydratedBlob.authors?.[author.name] ?? 0
 
-        for (let coauthor of childCommit.coauthors) {
+        for (const coauthor of childCommit.coauthors) {
           hydratedBlob.authors[coauthor.name] = current + pos + neg
         }
 
@@ -84,7 +90,7 @@ export async function hydrateTreeWithAuthorship(
 }
 
 function addAuthorsField(tree: HydratedGitTreeObject) {
-  for (let child of tree.children) {
+  for (const child of tree.children) {
     if (child.type === "blob") {
       child.authors = {}
     } else {
@@ -94,7 +100,7 @@ function addAuthorsField(tree: HydratedGitTreeObject) {
 }
 
 function discardContentField(tree: HydratedGitTreeObject) {
-  for (let child of tree.children) {
+  for (const child of tree.children) {
     if (child.type === "blob") {
       child.content = ""
     } else {
