@@ -187,7 +187,7 @@ const args = yargsParser(rawArgs)
   await describeAsyncJob(
     () => writeRepoToFile(repoTree, repoDir, outFileName),
     "Writing data to file",
-    `Wrote data to ${resolve(outFileName)}`,
+    `Wrote data to ${resolve(join(repoDir, outFileName))}`,
     `Error writing data to file ${outFileName}`
   );
   const stop = performance.now();
