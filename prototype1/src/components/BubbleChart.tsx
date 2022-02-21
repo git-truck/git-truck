@@ -172,7 +172,7 @@ export function BubbleChart(props: BubbleChartProps) {
           {Object.entries(makePercentResponsibilityDistribution(currentBlob))
             .sort((a, b) => (a[1] < b[1] ? 1 : -1))
             .map(([author, contrib]) => (
-              <div>
+              <div key={`${author}${contrib}`}>
                 <b>{author}:</b> {(contrib * 100).toFixed(2)}%
               </div>
             ))}
