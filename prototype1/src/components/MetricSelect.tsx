@@ -14,7 +14,7 @@ export function MetricSelect(props: MetricSelectProps) {
         id={id}
         onChange={(event) => props.onChange(event.target.value as Metric)}
       >
-        {Object.entries(Metric).map(([key,value]) => (
+        {Object.values(Metric).map((value) => (
           <option key={value} value={value}>{value}</option>
         ))}
       </select>
