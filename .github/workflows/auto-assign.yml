@@ -21,7 +21,7 @@ jobs:
         with:
           project: Git Visual
           column: Backlog
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Assign issues with assignees and opened pull requests to Git Visual
         uses: alex-page/github-project-automation-plus@v0.8.1
@@ -29,4 +29,4 @@ jobs:
         with:
           project: Git Visual
           column: In progress
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
