@@ -1,35 +1,13 @@
 //@ts-ignore
 import gitcolors from 'github-colors';
-import { useMouseHovered } from 'react-use';
-import {
-    HydratedGitBlobObject,
-  } from "./../../parser/src/model"
-
+import { HydratedGitBlobObject } from "./../../parser/src/model"
+import { unionAuthors } from './util';
 
 export function getExtensionColor(blob : HydratedGitBlobObject) : string {
     let lookup = gitcolors.ext(blob.name.substring(blob.name.lastIndexOf('.')+1));
     let color = (typeof lookup === 'undefined') ? "grey" : lookup.color;
     return color;
 }
-
-const users = [
-    ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
-    ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
-    ["hojelse", "Kristoffer Højelse"],
-    ["emiljapelt", "Emil Jäpelt"],
-]
-
-export function unionAuthors(blob: HydratedGitBlobObject) {
-    return Object.entries(blob.authors).reduce((newAuthorOject, [author, stuff]) => {
-      const authors = users.find((x) => x.includes(author))
-      if (!authors) throw Error("Author not found: " + author)
-      const [name] = authors
-      delete newAuthorOject[author]
-      newAuthorOject[name] = newAuthorOject[name] || 0
-      newAuthorOject[name] += stuff
-      return newAuthorOject
-    }, blob.authors)
-  }
 
 export function getDominanceColor(blob : HydratedGitBlobObject) : string {
   switch (Object.keys(unionAuthors(blob)).length) {

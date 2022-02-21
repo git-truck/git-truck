@@ -10,11 +10,11 @@ import {
   ColdMapTranslater,
   HeatMapTranslater,
   getDominanceColor,
-  unionAuthors,
   getExtensionColor
 } from "../colors";
 import { Metric } from "../metrics";
 import { padding, textSpacingFromCircle } from "../const";
+import { unionAuthors } from "../util";
 
 interface BubbleChartProps {
   data: HydratedGitCommitObject;
