@@ -124,7 +124,7 @@ async function parseTree(
 
   const children: (GitTreeObject | GitBlobObject)[] = []
   for await (const line of entries) {
-    const [type, hash, name] = line.split(/\s+/).slice(-1)
+    const [,type, hash, name] = line.split(/\s+/)
     if (!truckignore.isAccepted(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
