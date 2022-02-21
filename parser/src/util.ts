@@ -16,8 +16,12 @@ export function runProcess(dir: string, command: string, args: string[]) {
       const prcs = spawn(command, args, {
         cwd: dir,
       })
+      let chunks: Uint8Array[] = []
       prcs.stderr.once("data", buf => reject(buf.toString().trim()))
-      prcs.stdout.once("data", buf => resolve(buf.toString().trim()))
+      prcs.stdout.on("data", buf => chunks.push(buf))
+      prcs.stdout.on("end", () => {
+        if (chunks.length > 0) resolve(Buffer.concat(chunks).toString().trim())
+      })
     } catch(e) {
       reject(e)
     }
