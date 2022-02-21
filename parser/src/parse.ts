@@ -165,23 +165,25 @@ const args = yargsParser(rawArgs)
     "Found branch head",
     "Error finding branch head"
   );
-  const outFileName = args.out ?? `./.temp/${getRepoName(repoDir)}_${branchName}.json`;
-  let repoTree = await describeAsyncJob(
+  const repoName = getRepoName(repoDir)
+  const outFileName = args.out ?? `./.temp/${repoName}_${branchName}.json`;
+  const repoTree = await describeAsyncJob(
     () => parseCommit(repoDir, branchHead),
     "Parsing commit tree",
     "Commit tree parsed",
     "Error parsing commit tree"
   );
-  repoTree = await describeAsyncJob(
+  const hydratedRepoTree = await describeAsyncJob(
     () => hydrateTreeWithAuthorship(repoDir, repoTree),
     "Hydrating commit tree with authorship data",
     "Commit tree hydrated",
     "Error hydrating commit tree"
   );
+  const outPath = join(repoDir, outFileName)
   await describeAsyncJob(
-    () => writeRepoToFile(repoTree, repoDir, outFileName),
+    () => writeRepoToFile(outPath, {repo: repoName, branch: branchName, commit: hydratedRepoTree}),
     "Writing data to file",
-    `Wrote data to ${resolve(join(repoDir, outFileName))}`,
+    `Wrote data to ${resolve(outPath)}`,
     `Error writing data to file ${outFileName}`
   );
   const stop = performance.now();

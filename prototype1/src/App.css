@@ -41,15 +41,17 @@
 }
 
 .option-text {
-  padding-bottom: 8px;
   font-weight: bold;
   font-size: 0.8em;
 }
 
-.legend {
+.file-details {
   z-index: 1;
   position: absolute;
   bottom: 16px;
   left: 16px;
 }
 
+.spacer {
+  padding-bottom: 10px;
+}

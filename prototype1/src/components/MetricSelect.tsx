@@ -1,5 +1,6 @@
 import { Metric } from "../metrics"
 import {useId} from '@react-aria/utils'
+import Spacer from "./Spacer";
 
 interface MetricSelectProps {
   onChange: (metric: Metric) => void
@@ -10,6 +11,7 @@ export function MetricSelect(props: MetricSelectProps) {
   return (
     <div className="stack">
       <label className="option-text" htmlFor={id}>Color metric</label>
+      <Spacer/>
       <select
         id={id}
         onChange={(event) => props.onChange(event.target.value as Metric)}

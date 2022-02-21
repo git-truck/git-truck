@@ -5,6 +5,12 @@ export interface GitBaseObject {
   hash : string
 }
 
+export interface ParserData {
+  repo: string
+  branch: string
+  commit: HydratedGitCommitObject
+}
+
 export interface GitBlobObject extends GitBaseObject {
   type: "blob"
   name : string
