@@ -37,13 +37,18 @@
     "nanospinner": "^1.0.0",
     "yargs-parser": "^21.0.0"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
+    "src/**/*.ts": [
       "eslint --cache --fix",
       "tsc-files --noEmit",
-      "jest --bail --findRelatedTests"
+      "jest --bail --findRelatedTests",
+      "prettier --write"
     ],
-    "src/**/*.{ts,tsx,css}": "prettier --write",
     "*.md": "prettier --write"
   }
 }
