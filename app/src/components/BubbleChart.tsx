@@ -16,6 +16,7 @@ import { Metric } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
+import { Spacer } from "./Spacer"
 
 interface BubbleChartProps {
   data: HydratedGitCommitObject
