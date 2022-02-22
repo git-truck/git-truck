@@ -86,13 +86,14 @@ export async function parseCommitLight(
 
 export async function parseCommit(
   repo: string,
+  repoName: string,
   hash: string
 ): Promise<GitCommitObject> {
   const { tree, ...commit } = await parseCommitLight(repo, hash)
   const truckignore = new TruckIgnore(repo)
   return {
     ...commit,
-    tree: await parseTree(getRepoName(repo), repo, ".", tree, truckignore),
+    tree: await parseTree(getRepoName(repo), repo, repoName, tree, truckignore),
   }
 }
 
@@ -124,7 +125,7 @@ async function parseTree(
 
   const children: (GitTreeObject | GitBlobObject)[] = []
   for await (const line of entries) {
-    const [,type, hash, name] = line.split(/\s+/)
+    const [, type, hash, name] = line.split(/\s+/)
     if (!truckignore.isAccepted(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
@@ -196,7 +197,7 @@ export async function parse(rawArgs: string[]) {
   const repoName = getRepoName(repoDir)
   const outFileName = args.out ?? `./.temp/${repoName}_${branchName}.json`
   const repoTree = await describeAsyncJob(
-    () => parseCommit(repoDir, branchHead),
+    () => parseCommit(repoDir, repoName, branchHead),
     "Parsing commit tree",
     "Commit tree parsed",
     "Error parsing commit tree"
