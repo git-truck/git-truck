@@ -3,7 +3,7 @@ interface LegendProps {
 }
 
 export function Legend(props: LegendProps) {
-  if (props.entries.length == 0) return <></>
+  if (props.entries.length === 0) return null
   return (
     <div className="legendbox">
       {props.entries.map((entry) => {

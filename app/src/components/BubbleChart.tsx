@@ -11,7 +11,6 @@ import {
   HeatMapTranslater,
   getDominanceColor,
   getExtensionColor,
-  getLegend,
 } from "../colors"
 import { Metric } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
@@ -21,12 +20,16 @@ import { Legend } from "./Legend"
 interface BubbleChartProps {
   data: HydratedGitCommitObject
   metric: Metric
-  updateLegend: () => void
 }
+
 export function BubbleChart(props: BubbleChartProps) {
   const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
+
+  const legendSetRef = useRef<Set<string>>(new Set())
+  const legend = legendSetRef.current
+  const [legendKey, setLegendKey] = useState(0)
 
   const heatMapTranslater = useMemo<HeatMapTranslater>(
     () =>
@@ -39,7 +42,6 @@ export function BubbleChart(props: BubbleChartProps) {
     [props.data.minNoCommits, props.data.maxNoCommits]
   )
 
-  let legendRef = useRef<HTMLDivElement>(null)
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
 
@@ -88,9 +90,9 @@ export function BubbleChart(props: BubbleChartProps) {
       ): string {
         switch (metric) {
           case Metric.Dominated:
-            return getDominanceColor(blob)
+            return getDominanceColor(legendSetRef, blob)
           case Metric.FileExtension:
-            return getExtensionColor(blob)
+            return getExtensionColor(legendSetRef, blob)
           case Metric.HeatMap:
             return heatMapTranslater.getColor(blob)
           case Metric.ColdMap:
@@ -154,18 +156,17 @@ export function BubbleChart(props: BubbleChartProps) {
   useEffect(() => {
     let svg = select(svgRef.current)
     const root = svg.append("g")
-
+    legendSetRef.current = new Set<string>()
     drawBubbleChart(
       props.data,
       getPaddedSizeProps(sizeProps),
       root,
       props.metric
     )
+    setLegendKey((prevKey) => prevKey + 1)
 
     let node = root.node()
     if (node) node.addEventListener("click", clickHandler)
-
-    props.updateLegend()
 
     return () => {
       if (node) node.removeEventListener("click", clickHandler)
@@ -184,7 +185,7 @@ export function BubbleChart(props: BubbleChartProps) {
           viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
         />
         {currentBlob !== null ? (
-          <div ref={legendRef} className="file-details box">
+          <div className="file-details box">
             <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
             <div>Number of lines: {currentBlob.noLines}</div>
             <div>Author distribution:</div>
@@ -198,6 +199,7 @@ export function BubbleChart(props: BubbleChartProps) {
               ))}
           </div>
         ) : null}
+        <Legend key={legendKey} entries={Array.from(legend.values())} />
       </div>
     </>
   )
