@@ -11,14 +11,17 @@ import {
   HeatMapTranslater,
   getDominanceColor,
   getExtensionColor,
+  getLegend,
 } from "../colors"
 import { Metric } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
+import { Legend } from "./Legend"
 
 interface BubbleChartProps {
   data: HydratedGitCommitObject
   metric: Metric
+  updateLegend: () => void
 }
 export function BubbleChart(props: BubbleChartProps) {
   const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
@@ -162,6 +165,8 @@ export function BubbleChart(props: BubbleChartProps) {
     let node = root.node()
     if (node) node.addEventListener("click", clickHandler)
 
+    props.updateLegend()
+
     return () => {
       if (node) node.removeEventListener("click", clickHandler)
       root.remove()
@@ -169,30 +174,32 @@ export function BubbleChart(props: BubbleChartProps) {
   }, [drawBubbleChart, sizeProps, props.data, props.metric])
 
   return (
-    <div className="container">
-      <svg
-        className="visualization"
-        {...paddedSizeProps}
-        ref={svgRef}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
-      />
-      {currentBlob !== null ? (
-        <div ref={legendRef} className="file-details box">
-          <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
-          <div>Number of lines: {currentBlob.noLines}</div>
-          <div>Author distribution:</div>
-          <br />
-          {Object.entries(makePercentResponsibilityDistribution(currentBlob))
-            .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-            .map(([author, contrib]) => (
-              <div key={`${author}${contrib}`}>
-                <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-              </div>
-            ))}
-        </div>
-      ) : null}
-    </div>
+    <>
+      <div className="container">
+        <svg
+          className="visualization"
+          {...paddedSizeProps}
+          ref={svgRef}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
+        />
+        {currentBlob !== null ? (
+          <div ref={legendRef} className="file-details box">
+            <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
+            <div>Number of lines: {currentBlob.noLines}</div>
+            <div>Author distribution:</div>
+            <br />
+            {Object.entries(makePercentResponsibilityDistribution(currentBlob))
+              .sort((a, b) => (a[1] < b[1] ? 1 : -1))
+              .map(([author, contrib]) => (
+                <div key={`${author}${contrib}`}>
+                  <b>{author}:</b> {(contrib * 100).toFixed(2)}%
+                </div>
+              ))}
+          </div>
+        ) : null}
+      </div>
+    </>
   )
 }
 

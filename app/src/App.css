@@ -58,3 +58,25 @@
 .spacer {
   padding-bottom: 10px;
 }
+
+.legendbox {
+  font-size: small;
+  border: 1px hsl(0, 0%, 50%) solid;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 16px;
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.legendbox p span {
+  font-size: xx-large;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.legendbox p {
+  margin-top: 2px;
+  margin-bottom: 0px;
+}

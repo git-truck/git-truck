@@ -2,12 +2,22 @@
 import gitcolors from "github-colors"
 import { HydratedGitBlobObject } from "../../parser/src/model"
 
+let legendSet = new Set<string>()
+
+export function getLegend(): string[] {
+  let copy = Object.assign([], Array.from(legendSet)) as string[]
+  legendSet.clear()
+  return copy
+}
+
 export function getExtensionColor(blob: HydratedGitBlobObject): string {
-  let lookup = gitcolors.ext(
-    blob.name.substring(blob.name.lastIndexOf(".") + 1)
-  )
-  let color = typeof lookup === "undefined" ? "grey" : lookup.color
-  return color
+  let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
+  let lookup = gitcolors.ext(extension)
+  if (typeof lookup === "undefined") return "grey"
+  else {
+    legendSet.add(`${extension}|${lookup.color}`)
+    return lookup.color
+  }
 }
 
 const users = [
@@ -35,8 +45,10 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
 export function getDominanceColor(blob: HydratedGitBlobObject): string {
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
+      legendSet.add("Dominated|red")
       return "red"
     default:
+      legendSet.add("Non-dominated|cadetblue")
       return "cadetblue"
   }
 }
