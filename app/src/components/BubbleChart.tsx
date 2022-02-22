@@ -185,24 +185,35 @@ export function BubbleChart(props: BubbleChartProps) {
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
         />
-        {currentBlob !== null ? (
-          <div className="file-details box">
-            <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
-            <div>Number of lines: {currentBlob.noLines}</div>
-            <div>Author distribution:</div>
-            <br />
-            {Object.entries(makePercentResponsibilityDistribution(currentBlob))
-              .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-              .map(([author, contrib]) => (
-                <div key={`${author}${contrib}`}>
-                  <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-                </div>
-              ))}
-          </div>
-        ) : null}
+        <Options currentBlob={currentBlob} />
         <Legend key={legendKey} entries={Array.from(legend.values())} />
       </div>
     </>
+  )
+}
+
+interface OptionsProps {
+  currentBlob: HydratedGitBlobObject | null
+}
+
+function Options({ currentBlob }: OptionsProps) {
+  if (currentBlob === null) return null
+  return (
+    <div className="file-details box">
+      <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
+      <div>Line count: {currentBlob.noLines}</div>
+      <Spacer xl />
+      <div>Author distribution:</div>
+      <Spacer />
+      <Spacer />
+      {Object.entries(makePercentResponsibilityDistribution(currentBlob))
+        .sort((a, b) => (a[1] < b[1] ? 1 : -1))
+        .map(([author, contrib]) => (
+          <div key={`${author}${contrib}`}>
+            <b>{author}:</b> {(contrib * 100).toFixed(2)}%
+          </div>
+        ))}
+    </div>
   )
 }
 
