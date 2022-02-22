@@ -3,17 +3,28 @@ import "./App.css"
 import { data } from "./data"
 import { Metric } from "./metrics"
 import { padding } from "./const"
-import { BubbleChart } from "./components/BubbleChart"
+
 import { Options } from "./components/Options"
+import { BubbleChart, Chart } from "./components/BubbleChart"
 
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
 function App() {
-  const [metric, setMetric] = useState<Metric>(Metric.FileExtension)
+  const [metricType, setMetricType] =
+    useState<keyof typeof Metric>("FILE_EXTENSION")
+  const [chartType, setChartType] = useState<keyof typeof Chart>("TREE_MAP")
   return (
     <>
-      <BubbleChart data={data.commit} metric={metric} />
-      <Options data={data} setMetric={setMetric} />
+      <BubbleChart
+        data={data.commit}
+        metricType={metricType}
+        chartType={chartType}
+      />
+      <Options
+        data={data}
+        setMetricType={setMetricType}
+        setChartType={setChartType}
+      />
     </>
   )
 }
