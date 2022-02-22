@@ -51,7 +51,7 @@ export function BubbleChart(props: BubbleChartProps) {
     let data = e.target["__data__"].data
     if (data && data.type === "blob") {
       setCurrentBlob(data)
-    }
+    } else setCurrentBlob(null)
   }
 
   const paddedSizeProps = getPaddedSizeProps(sizeProps)
@@ -185,7 +185,7 @@ export function BubbleChart(props: BubbleChartProps) {
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
         />
-        <Options currentBlob={currentBlob} />
+        <Details currentBlob={currentBlob} />
         <Legend key={legendKey} entries={Array.from(legend.values())} />
       </div>
     </>
@@ -196,7 +196,7 @@ interface OptionsProps {
   currentBlob: HydratedGitBlobObject | null
 }
 
-function Options({ currentBlob }: OptionsProps) {
+function Details({ currentBlob }: OptionsProps) {
   if (currentBlob === null) return null
   return (
     <div className="file-details box">
@@ -204,8 +204,6 @@ function Options({ currentBlob }: OptionsProps) {
       <div>Line count: {currentBlob.noLines}</div>
       <Spacer xl />
       <div>Author distribution:</div>
-      <Spacer />
-      <Spacer />
       {Object.entries(makePercentResponsibilityDistribution(currentBlob))
         .sort((a, b) => (a[1] < b[1] ? 1 : -1))
         .map(([author, contrib]) => (
