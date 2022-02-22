@@ -1,0 +1,9 @@
+.option-text {
+  font-weight: bold;
+  font-size: 0.8em;
+}
+.options {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+}

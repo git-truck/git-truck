@@ -4,9 +4,7 @@ import { data } from "./data"
 import { Metric } from "./metrics"
 import { padding } from "./const"
 import { BubbleChart } from "./components/BubbleChart"
-import { MetricSelect } from "./components/MetricSelect"
-import MetaDataInfo from "./components/MetaDataInfo"
-import { Spacer } from "./components/Spacer"
+import { Options } from "./components/Options"
 
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
@@ -15,13 +13,7 @@ function App() {
   return (
     <>
       <BubbleChart data={data.commit} metric={metric} />
-      <div className="box options">
-        <MetaDataInfo repoName={data.repo} branchName={data.branch} />
-        <Spacer />
-        <MetricSelect
-          onChange={(metric: Metric) => setMetric(metric)}
-        ></MetricSelect>
-      </div>
+      <Options data={data} setMetric={setMetric} />
     </>
   )
 }
