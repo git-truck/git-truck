@@ -1,6 +1,8 @@
-export enum Metric {
-  FileExtension = "File extension",
-  HeatMap = "Heat map",
-  ColdMap = "Cold map",
-  Dominated = "Dominated files",
+export const Metric = {
+  FILE_EXTENSION: "File extension",
+  HEAT_MAP: "Heat map",
+  COLD_MAP: "Cold map",
+  DOMINATED: "Dominated files",
 }
+
+export type MetricType = keyof typeof Metric
