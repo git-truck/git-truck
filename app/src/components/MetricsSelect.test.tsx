@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { Metric } from "../metrics"
-import { MetricSelect } from "./MetricSelect"
+import { MetricSelect } from "./Options"
 
 describe("MetricsSelect", () => {
   it("Renders x options", () => {

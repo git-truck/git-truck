@@ -1,0 +1,27 @@
+.visualization {
+  position: absolute;
+  top: var(--padding);
+}
+
+.folder {
+  stroke: var(--border-color);
+  fill: #fff;
+}
+
+.file {
+  stroke-width: 0;
+  cursor: pointer;
+  pointer-events: all;
+  position: relative;
+}
+
+.name-path {
+  fill: transparent;
+  pointer-events: none;
+}
+
+/* Add debug class to name paths, to be able to see them */
+.name-path.debug {
+  stroke: black;
+  stroke-dasharray: 5, 5;
+}

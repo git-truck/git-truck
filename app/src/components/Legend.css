@@ -1,0 +1,28 @@
+.legend {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.legend-entry {
+  font-size: small;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  place-items: center;
+  line-height: 100%;
+  margin: 0px;
+}
+
+.legend-dot {
+  height: 100%;
+  aspect-ratio: 1;
+  width: 1em;
+  border-radius: 50%;
+}
+
+.legend-label {
+  padding: 0px;
+  margin: 0px;
+  font-weight: bold;
+}

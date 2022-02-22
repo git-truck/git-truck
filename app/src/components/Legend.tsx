@@ -1,3 +1,5 @@
+import "./Legend.css"
+import { Box } from "./Box"
 import { Spacer } from "./Spacer"
 
 interface LegendProps {
@@ -7,46 +9,25 @@ interface LegendProps {
 export function Legend(props: LegendProps) {
   if (props.entries.length === 0) return null
   return (
-    <div className="legend box">
+    <Box className="legend">
       {props.entries.map((entry, i) => {
-        let [extension, color] = entry.split("|")
+        let [label, color] = entry.split("|")
         return (
           <>
-            <div
-              style={{
-                fontSize: "medium",
-                position: "relative",
-                display: "flex",
-                flexDirection: "row",
-                placeItems: "center",
-                lineHeight: "100%",
-                margin: 0,
-              }}
-            >
+            <div className="legend-entry">
               <div
+                className="legend-dot"
                 style={{
-                  height: "100%",
-                  aspectRatio: "1",
                   backgroundColor: color,
-                  width: "1em",
-                  borderRadius: "50%",
                 }}
               ></div>
               <Spacer horizontal />
-              <p
-                style={{
-                  padding: 0,
-                  margin: 0,
-                  fontWeight: "bold",
-                }}
-              >
-                .{extension}
-              </p>
+              <p className="legend-label">{label}</p>
             </div>
             {i < props.entries.length - 1 ? <Spacer /> : null}
           </>
         )
       })}
-    </div>
+    </Box>
   )
 }

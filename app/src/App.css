@@ -1,35 +1,5 @@
-.folder {
-  stroke: black;
-  opacity: 0.3;
-}
-
-.file {
-  stroke-width: 0;
-}
-
-.name-path {
-  fill: transparent;
-}
-
-.name-path.debug {
-  stroke: black;
-  stroke-dasharray: 5, 5;
-}
-
 .container {
   position: relative;
-}
-
-.visualization {
-  position: absolute;
-  top: var(--padding);
-}
-
-.box {
-  border: 1px hsl(0, 0%, 50%) solid;
-  border-radius: 8px;
-  background-color: #fff;
-  padding: 16px;
 }
 
 .stack {
@@ -42,11 +12,4 @@
   position: absolute;
   bottom: 16px;
   left: 16px;
-}
-
-.legend {
-  font-size: small;
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
 }

@@ -1,3 +1,4 @@
+import "./BubbleChart.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useWindowSize } from "react-use"
 import {
@@ -16,7 +17,7 @@ import { Metric } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
-import { Spacer } from "./Spacer"
+import { Details } from "./Details"
 
 interface BubbleChartProps {
   data: HydratedGitCommitObject
@@ -192,29 +193,6 @@ export function BubbleChart(props: BubbleChartProps) {
   )
 }
 
-interface OptionsProps {
-  currentBlob: HydratedGitBlobObject | null
-}
-
-function Details({ currentBlob }: OptionsProps) {
-  if (currentBlob === null) return null
-  return (
-    <div className="file-details box">
-      <b style={{ fontSize: "1.5rem" }}>{currentBlob.name}</b>
-      <div>Line count: {currentBlob.noLines}</div>
-      <Spacer xl />
-      <div>Author distribution:</div>
-      {Object.entries(makePercentResponsibilityDistribution(currentBlob))
-        .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-        .map(([author, contrib]) => (
-          <div key={`${author}${contrib}`}>
-            <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-          </div>
-        ))}
-    </div>
-  )
-}
-
 // a rx ry angle large-arc-flag sweep-flag dx dy
 // rx and ry are the two radii of the ellipse
 // angle represents a rotation (in degrees) of the ellipse relative to the x-axis;
@@ -233,7 +211,7 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           a${r},${r} 0 1,1 0,${r * 2}`
 }
 
-function makePercentResponsibilityDistribution(
+export function makePercentResponsibilityDistribution(
   d: HydratedGitBlobObject
 ): Record<string, number> {
   const unionedAuthors = unionAuthors(d)

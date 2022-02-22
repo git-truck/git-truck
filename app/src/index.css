@@ -1,5 +1,10 @@
 :root {
   --unit: 8px;
+  --title-color: hsl(200deg, 5%, 30%);
+  --text-color: hsl(200deg, 5%, 25%);
+  --border-color: hsl(0deg 0% 70%);
+  --surface-color: hsl(0deg 0% 90%);
+  --border-color-alpha: hsla(0deg, 0%, 0%, 30%);
 }
 
 body {
@@ -10,6 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100vh;
+  background-color: hsl(210deg 38% 95%);
 }
 
 #root {
