@@ -32,20 +32,9 @@
   padding: 16px;
 }
 
-.options {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-}
-
 .stack {
   display: flex;
   flex-direction: column;
-}
-
-.option-text {
-  font-weight: bold;
-  font-size: 0.8em;
 }
 
 .file-details {
