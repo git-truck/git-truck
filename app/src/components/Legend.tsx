@@ -13,7 +13,7 @@ export function Legend(props: LegendProps) {
       {props.entries.map((entry, i) => {
         let [label, color] = entry.split("|")
         return (
-          <>
+          <div key={`${label}${color}`}>
             <div className="legend-entry">
               <div
                 className="legend-dot"
@@ -25,7 +25,7 @@ export function Legend(props: LegendProps) {
               <p className="legend-label">{label}</p>
             </div>
             {i < props.entries.length - 1 ? <Spacer /> : null}
-          </>
+          </div>
         )
       })}
     </Box>
