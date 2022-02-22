@@ -55,22 +55,9 @@
   left: 16px;
 }
 
-.spacer {
-  padding-bottom: 10px;
-}
-
-.legendbox {
+.legend {
   font-size: small;
-  border: 1px hsl(0, 0%, 50%) solid;
-  border-radius: 8px;
-  background-color: #fff;
-  padding: 16px;
   position: absolute;
   bottom: 16px;
   right: 16px;
-}
-
-.legendbox p {
-  margin-top: 2px;
-  margin-bottom: 0px;
 }

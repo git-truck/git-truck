@@ -1,6 +1,6 @@
 import { Metric } from "../metrics"
 import { useId } from "@react-aria/utils"
-import Spacer from "./Spacer"
+import { Spacer } from "./Spacer"
 
 interface MetricSelectProps {
   onChange: (metric: Metric) => void

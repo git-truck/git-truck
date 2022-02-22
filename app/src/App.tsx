@@ -6,7 +6,7 @@ import { padding } from "./const"
 import { BubbleChart } from "./components/BubbleChart"
 import { MetricSelect } from "./components/MetricSelect"
 import MetaDataInfo from "./components/MetaDataInfo"
-import Spacer from "./components/Spacer"
+import { Spacer } from "./components/Spacer"
 
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
