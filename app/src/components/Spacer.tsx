@@ -11,6 +11,10 @@ export enum Spacing {
 type SpacerProps = { horizontal?: boolean } & {
   size?: Spacing
   /**
+   * Extra small spacing
+   */
+  xs?: boolean
+  /**
    * Small spacing
    */
   sm?: boolean
@@ -30,7 +34,9 @@ type SpacerProps = { horizontal?: boolean } & {
 
 export const Spacer = (props: SpacerProps) => {
   let spacing =
-    props.size ?? props.sm
+    props.size ?? props.xs
+      ? Spacing.xs
+      : props.sm
       ? Spacing.sm
       : props.md
       ? Spacing.md
