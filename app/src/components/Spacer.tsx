@@ -44,7 +44,7 @@ export const Spacer = (props: SpacerProps) => {
     height: props.horizontal ? "1px" : `calc(${spacing} * var(--unit))`,
     width: props.horizontal ? `calc(${spacing} * var(--unit))` : "1px",
   } as CSSProperties
-  return <div style={styles} />
+  return <div aria-hidden style={styles} />
 }
 
 Spacer.defaultProps = {
