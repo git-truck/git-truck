@@ -1,21 +1,17 @@
 //@ts-ignore
 import gitcolors from "github-colors"
+import { MutableRefObject } from "react"
 import { HydratedGitBlobObject } from "../../parser/src/model"
 
-let legendSet = new Set<string>()
-
-export function getLegend(): string[] {
-  let copy = Object.assign([], Array.from(legendSet)) as string[]
-  legendSet.clear()
-  return copy
-}
-
-export function getExtensionColor(blob: HydratedGitBlobObject): string {
+export function getExtensionColor(
+  legendSetRef: MutableRefObject<Set<string>>,
+  blob: HydratedGitBlobObject
+): string {
   let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
   let lookup = gitcolors.ext(extension)
   if (typeof lookup === "undefined") return "grey"
   else {
-    legendSet.add(`${extension}|${lookup.color}`)
+    legendSetRef.current?.add(`${extension}|${lookup.color}`)
     return lookup.color
   }
 }
@@ -42,13 +38,16 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
   )
 }
 
-export function getDominanceColor(blob: HydratedGitBlobObject): string {
+export function getDominanceColor(
+  legendSetRef: MutableRefObject<Set<string>>,
+  blob: HydratedGitBlobObject
+): string {
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
-      legendSet.add("Dominated|red")
+      legendSetRef.current.add("Dominated|red")
       return "red"
     default:
-      legendSet.add("Non-dominated|cadetblue")
+      legendSetRef.current.add("Non-dominated|cadetblue")
       return "cadetblue"
   }
 }
