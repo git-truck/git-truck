@@ -58,6 +58,7 @@ export async function hydrateTreeWithAuthorship(
           authors: (blob as HydratedGitBlobObject).authors ?? {},
           noLines: blob.content.split("\n").length,
           noCommits: noCommits,
+          newestChange: hydratedCommit.hash,
         } as HydratedGitBlobObject
 
         const current = hydratedBlob.authors?.[author.name] ?? 0
