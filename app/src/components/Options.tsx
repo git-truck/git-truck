@@ -3,7 +3,6 @@ import { Spacer } from "./Spacer"
 import { ParserData } from "../../../parser/src/model"
 import { Metric, MetricType } from "../metrics"
 import { Box } from "./Box"
-import { useId } from "@react-aria/utils"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType } from "./BubbleChart"
 
@@ -31,33 +30,6 @@ export function Options({
         onChange={(metric: MetricType) => setMetricType(metric)}
       ></EnumSelect>
     </Box>
-  )
-}
-
-interface MetricSelectProps {
-  onChange: (metric: MetricType) => void
-}
-
-export function MetricSelect(props: MetricSelectProps) {
-  let id = useId()
-  return (
-    <div className="stack">
-      <label className="option-text" htmlFor={id}>
-        Color metric
-      </label>
-      <Spacer />
-      <select
-        id={id}
-        className="metric-select"
-        onChange={(event) => props.onChange(event.target.value as MetricType)}
-      >
-        {Object.values(Metric).map((value) => (
-          <option key={value} value={value}>
-            {value}
-          </option>
-        ))}
-      </select>
-    </div>
   )
 }
 
