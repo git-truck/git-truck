@@ -1,23 +1,19 @@
 import "./Options.css"
 import { Spacer } from "./Spacer"
-import { ParserData } from "../../../parser/src/model"
 import { Metric, MetricType } from "../metrics"
 import { Box } from "./Box"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType } from "./BubbleChart"
+import { useStore } from "../StoreContext"
 
-export function Options({
-  data,
-  setMetricType,
-  setChartType,
-}: {
-  data: ParserData
-  setMetricType: (metricType: MetricType) => void
-  setChartType: (chartType: ChartType) => void
-}) {
+export function Options() {
+  const { data, setMetricType, setChartType } = useStore()
   return (
     <Box className="options" title={data.repo}>
-      <MetaDataInfo branchName={data.branch} />
+      <div>
+        <strong>Branch: </strong>
+        {data.branch}
+      </div>
       <Spacer />
       <EnumSelect
         label="Chart type"
@@ -30,20 +26,5 @@ export function Options({
         onChange={(metric: MetricType) => setMetricType(metric)}
       ></EnumSelect>
     </Box>
-  )
-}
-
-interface MetaDataProps {
-  branchName: string
-}
-
-export default function MetaDataInfo(props: MetaDataProps) {
-  return (
-    <div>
-      <label>
-        <strong>Branch: </strong>
-        {props.branchName}
-      </label>
-    </div>
   )
 }
