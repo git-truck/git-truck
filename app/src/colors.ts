@@ -58,7 +58,7 @@ export function getDominantAuthorColor(
     return "grey"
   }
 
-  let [dom, _] = sorted[0]
+  let [dom] = sorted[0]
   if (stateRef.current.cache.has(dom)) {
     let colorString = stateRef.current.cache.get(dom) ?? "grey"
     legendSetRef.current.add(`${dom}|${colorString}`)
