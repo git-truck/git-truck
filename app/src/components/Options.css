@@ -8,7 +8,7 @@
   left: 16px;
 }
 
-.metric-select {
+.enum-select {
   padding: var(--unit);
   border: 1px var(--border-color) solid;
   border-radius: calc(0.5 * var(--unit));

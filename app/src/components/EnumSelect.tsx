@@ -17,6 +17,7 @@ export function EnumSelect<T>(props: MetricSelectProps<T>) {
       <Spacer />
       <select
         id={id}
+        className="enum-select"
         onChange={(event) =>
           props.onChange(event.target.value as unknown as keyof T)
         }
