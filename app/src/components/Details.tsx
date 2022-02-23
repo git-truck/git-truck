@@ -1,5 +1,5 @@
 import { Spacer } from "./Spacer"
-import { makePercentResponsibilityDistribution } from "./BubbleChart"
+import { makePercentResponsibilityDistribution } from "./Chart"
 import { Box, BoxTitle } from "./util"
 import { useStore } from "../StoreContext"
 

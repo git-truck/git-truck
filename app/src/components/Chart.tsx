@@ -1,4 +1,4 @@
-import "./BubbleChart.css"
+import "./Chart.css"
 import { useCallback, useEffect, useRef } from "react"
 import {
   GitObject,
@@ -7,27 +7,30 @@ import {
 } from "../../../parser/src/model"
 import { hierarchy, pack, select, Selection, treemap } from "d3"
 import { MetricType } from "../metrics"
-import { padding, textSpacingFromCircle } from "../const"
+import {
+  treemapPadding,
+  textSpacingFromCircle,
+  bubblePadding,
+  textSpacingFromRect,
+} from "../const"
 import { unionAuthors } from "../util"
-import { useStore } from "../StoreContext"
+import { Legend } from "./Legend"
+import distinctColors from "distinct-colors"
+import { ChartType, useStore } from "../StoreContext"
 import styled from "styled-components"
 import { useWindowSize } from "react-use"
-
-export const Chart = {
-  TREE_MAP: "Tree map",
-  BUBBLE_CHART: "Bubble chart",
-}
 
 const SVG = styled.svg`
   width: 100%;
   height: 100%;
 `
+export interface authorColorState {
+  palette: chroma.Color[]
+  paletteIndex: number
+  cache: Map<string, string>
+}
 
-export type ChartType = keyof typeof Chart
-
-interface BubbleChartProps {}
-
-export function BubbleChart(props: BubbleChartProps) {
+export function Chart() {
   const {
     data,
     metricCaches,
@@ -42,8 +45,6 @@ export function BubbleChart(props: BubbleChartProps) {
 
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
-
-  const paddedSizeProps = getPaddedSizeProps(sizeProps)
 
   const drawChart = useCallback(
     function (
@@ -63,7 +64,7 @@ export function BubbleChart(props: BubbleChartProps) {
       if (chartType === "TREE_MAP") {
         let partition = treemap<GitObject>()
           .size([paddedSizeProps.width, paddedSizeProps.height])
-          .padding(padding)
+          .padding(treemapPadding)
 
         let partitionedHiearchy = partition(hiearchy)
 
@@ -104,7 +105,7 @@ export function BubbleChart(props: BubbleChartProps) {
         text
           .filter((d) => d.data.type === "tree")
           .attr("x", (d) => d.x0)
-          .attr("y", (d) => d.y0 - textSpacingFromCircle)
+          .attr("y", (d) => d.y0 - textSpacingFromRect)
           .text((d) => d.data.name)
           .style("font-size", "0.8em")
           .style("font-weight", (d) =>
@@ -113,7 +114,7 @@ export function BubbleChart(props: BubbleChartProps) {
       } else if (chartType === "BUBBLE_CHART") {
         let partition = pack<GitObject>()
           .size([paddedSizeProps.width, paddedSizeProps.height])
-          .padding(padding)
+          .padding(bubblePadding)
 
         let partitionedHiearchy = partition(hiearchy)
 
@@ -176,6 +177,7 @@ export function BubbleChart(props: BubbleChartProps) {
     },
     [metricCaches]
   )
+  const paddedSizeProps = getPaddedSizeProps(sizeProps, chartType)
 
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
   const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
@@ -218,7 +220,7 @@ export function BubbleChart(props: BubbleChartProps) {
     legendSetRef.current.clear()
     drawChart(
       data.commit,
-      getPaddedSizeProps(sizeProps),
+      paddedSizeProps,
       root,
       metricType,
       chartType
@@ -242,7 +244,7 @@ export function BubbleChart(props: BubbleChartProps) {
         node.removeEventListener("pointerleave", leaveHandlerRef.current)
       root.remove()
     }
-  }, [drawChart, sizeProps, data, metricType, chartType])
+  }, [chartType, data.commit, drawChart, metricType, paddedSizeProps])
 
   return (
     <>
@@ -251,7 +253,7 @@ export function BubbleChart(props: BubbleChartProps) {
         width="100%"
         height="100%"
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
+        viewBox={`0 0 ${sizeProps.width} ${sizeProps.height}`}
       />
     </>
   )
@@ -292,7 +294,21 @@ export function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-function getPaddedSizeProps(sizeProps: { height: number; width: number }) {
+function getPaddedSizeProps(
+  sizeProps: { height: number; width: number },
+  chartType: ChartType
+) {
+  let padding
+  switch (chartType) {
+    case "BUBBLE_CHART":
+      padding = bubblePadding
+      break
+    case "TREE_MAP":
+      padding = treemapPadding
+      break
+    default:
+      throw new Error("Chart type is invalid")
+  }
   return {
     height: sizeProps.height - padding * 2,
     width: sizeProps.width - padding * 2,
