@@ -81,7 +81,7 @@ class SpectrumTranslater {
 
 export class ColdMapTranslater {
   readonly translator: SpectrumTranslater
-  readonly min_lightness = 35
+  readonly min_lightness = 50
   readonly max_lightness = 90
 
   constructor(min: number, max: number) {
@@ -100,7 +100,7 @@ export class ColdMapTranslater {
 
 export class HeatMapTranslater {
   readonly translator: SpectrumTranslater
-  readonly min_lightness = 30
+  readonly min_lightness = 50
   readonly max_lightness = 95
 
   constructor(min: number, max: number) {
