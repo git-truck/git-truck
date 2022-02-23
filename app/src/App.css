@@ -1,15 +1,3 @@
 .container {
   position: relative;
 }
-
-.stack {
-  display: flex;
-  flex-direction: column;
-}
-
-.file-details {
-  z-index: 1;
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-}
