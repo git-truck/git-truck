@@ -8,8 +8,10 @@ export interface Store {
   data: ParserData
   metricType: MetricType
   chartType: ChartType
-  currentBlob: HydratedGitBlobObject | null
-  setCurrentBlob: (blob: HydratedGitBlobObject | null) => void
+  currentHoveredBlob: HydratedGitBlobObject | null
+  currentClickedBlob: HydratedGitBlobObject | null
+  setHoveredBlob: (blob: HydratedGitBlobObject | null) => void
+  setClickedBlob: (blob: HydratedGitBlobObject | null) => void
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
 }
@@ -25,9 +27,13 @@ export function getDefaultStore(): Store {
     data: getData(),
     metricType: "FILE_EXTENSION",
     chartType: "BUBBLE_CHART",
-    currentBlob: null,
-    setCurrentBlob: () => {
-      throw new Error("No currentBlobSetter provided")
+    currentHoveredBlob: null,
+    currentClickedBlob: null,
+    setHoveredBlob: () => {
+      throw new Error("No setHoveredBlob function provided")
+    },
+    setClickedBlob: () => {
+      throw new Error("No setClickedBlob function provided")
     },
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")

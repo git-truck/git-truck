@@ -35,7 +35,14 @@ export type ChartType = keyof typeof Chart
 interface BubbleChartProps {}
 
 export function BubbleChart(props: BubbleChartProps) {
-  const { data, metricType, chartType, setCurrentBlob } = useStore()
+  const {
+    data,
+    metricType,
+    chartType,
+    currentHoveredBlob,
+    setHoveredBlob,
+    setClickedBlob,
+  } = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
   const legend = legendSetRef.current
@@ -54,17 +61,6 @@ export function BubbleChart(props: BubbleChartProps) {
 
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
-
-  const clickHandler = useCallback(
-    function (e: MouseEvent) {
-      //@ts-ignore
-      let data = e.target["__data__"].data
-      if (data && data.type === "blob") {
-        setCurrentBlob(data)
-      } else setCurrentBlob(null)
-    },
-    [setCurrentBlob]
-  )
 
   const paddedSizeProps = getPaddedSizeProps(sizeProps)
 
@@ -222,6 +218,41 @@ export function BubbleChart(props: BubbleChartProps) {
     [coldMapTranslater, heatMapTranslater]
   )
 
+  const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const leaveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+
+  useEffect(() => {
+    moveHandlerRef.current = function (e) {
+      // @ts-ignore
+      let d3Data = e.target["__data__"]
+      let data = d3Data?.data
+      if (currentHoveredBlob?.path !== data.path) {
+        if (data && data.type === "blob") {
+          e.stopPropagation()
+          setHoveredBlob(data)
+        } else setHoveredBlob(null)
+      }
+    }
+  }, [currentHoveredBlob?.path, setHoveredBlob])
+
+  useEffect(() => {
+    leaveHandlerRef.current = function (e) {
+      setHoveredBlob(null)
+    }
+  }, [currentHoveredBlob, setHoveredBlob])
+
+  useEffect(() => {
+    clickHandlerRef.current = function (e) {
+      //@ts-ignore
+      let data = e.target["__data__"].data
+      if (data && data.type === "blob") {
+        setClickedBlob(data)
+        e.stopPropagation()
+      }
+    }
+  }, [setClickedBlob, setHoveredBlob])
+
   useEffect(() => {
     let svg = select(svgRef.current)
     const root = svg.append("g")
@@ -236,13 +267,24 @@ export function BubbleChart(props: BubbleChartProps) {
     setLegendKey((prevKey) => prevKey + 1)
 
     let node = root.node()
-    if (node) node.addEventListener("click", clickHandler)
+
+    if (node && clickHandlerRef.current)
+      node.addEventListener("click", clickHandlerRef.current)
+    if (node && moveHandlerRef.current)
+      node.addEventListener("pointermove", moveHandlerRef.current)
+    if (node && leaveHandlerRef.current)
+      node.addEventListener("pointerleave", leaveHandlerRef.current)
 
     return () => {
-      if (node) node.removeEventListener("click", clickHandler)
+      if (node && clickHandlerRef.current)
+        node.removeEventListener("click", clickHandlerRef.current)
+      if (node && moveHandlerRef.current)
+        node.removeEventListener("pointermove", moveHandlerRef.current)
+      if (node && leaveHandlerRef.current)
+        node.removeEventListener("pointerleave", leaveHandlerRef.current)
       root.remove()
     }
-  }, [drawChart, sizeProps, data, metricType, chartType, clickHandler])
+  }, [drawChart, sizeProps, data, metricType, chartType])
 
   return (
     <>
