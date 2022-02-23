@@ -13,7 +13,7 @@ export function EnumSelect<T>(props: EnumSelectProps<T>) {
   return (
     <div>
       <Label htmlFor={id}>{props.label}</Label>
-      <Spacer />
+      <Spacer xs />
       <Select
         id={id}
         onChange={(event) =>
