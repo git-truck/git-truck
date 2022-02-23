@@ -1,6 +1,5 @@
 import "./BubbleChart.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useWindowSize } from "react-use"
 import {
   GitObject,
   HydratedGitBlobObject,
@@ -17,23 +16,26 @@ import { MetricType } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
-import { Details } from "./Details"
 import { useStore } from "../StoreContext"
+import styled from "styled-components"
+import { useWindowSize } from "react-use"
 
 export const Chart = {
   TREE_MAP: "Tree map",
   BUBBLE_CHART: "Bubble chart",
 }
 
+const SVG = styled.svg`
+  width: 100%;
+  height: 100%;
+`
+
 export type ChartType = keyof typeof Chart
 
 interface BubbleChartProps {}
 
 export function BubbleChart(props: BubbleChartProps) {
-  const { data, metricType, chartType } = useStore()
-  const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
-    null
-  )
+  const { data, metricType, chartType, setCurrentBlob } = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
   const legend = legendSetRef.current
@@ -53,13 +55,16 @@ export function BubbleChart(props: BubbleChartProps) {
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
 
-  function clickHandler(e: MouseEvent) {
-    //@ts-ignore
-    let data = e.target["__data__"].data
-    if (data && data.type === "blob") {
-      setCurrentBlob(data)
-    } else setCurrentBlob(null)
-  }
+  const clickHandler = useCallback(
+    function (e: MouseEvent) {
+      //@ts-ignore
+      let data = e.target["__data__"].data
+      if (data && data.type === "blob") {
+        setCurrentBlob(data)
+      } else setCurrentBlob(null)
+    },
+    [setCurrentBlob]
+  )
 
   const paddedSizeProps = getPaddedSizeProps(sizeProps)
 
@@ -237,21 +242,18 @@ export function BubbleChart(props: BubbleChartProps) {
       if (node) node.removeEventListener("click", clickHandler)
       root.remove()
     }
-  }, [drawChart, sizeProps, data, metricType, chartType])
+  }, [drawChart, sizeProps, data, metricType, chartType, clickHandler])
 
   return (
     <>
-      <div className="container">
-        <svg
-          className="visualization"
-          {...paddedSizeProps}
-          ref={svgRef}
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
-        />
-        <Details currentBlob={currentBlob} />
-        <Legend key={legendKey} items={Array.from(legend.values())} />
-      </div>
+      <SVG
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
+      />
+      <Legend key={legendKey} items={Array.from(legend.values())} />
     </>
   )
 }

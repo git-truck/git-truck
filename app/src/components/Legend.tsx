@@ -1,5 +1,5 @@
 import "./Legend.css"
-import { Box } from "./Box"
+import { Box } from "./util"
 import { Spacer } from "./Spacer"
 
 interface LegendProps {

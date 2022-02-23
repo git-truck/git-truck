@@ -1,6 +1,6 @@
 .visualization {
-  position: absolute;
-  top: var(--padding);
+  /* position: absolute; */
+  /* top: var(--padding); */
 }
 
 .folder {

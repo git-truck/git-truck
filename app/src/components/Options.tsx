@@ -1,7 +1,6 @@
-import "./Options.css"
 import { Spacer } from "./Spacer"
 import { Metric, MetricType } from "../metrics"
-import { Box } from "./Box"
+import { Box, BoxTitle } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType } from "./BubbleChart"
 import { useStore } from "../StoreContext"
@@ -9,7 +8,9 @@ import { useStore } from "../StoreContext"
 export function Options() {
   const { data, setMetricType, setChartType } = useStore()
   return (
-    <Box className="options" title={data.repo}>
+    <Box>
+      <BoxTitle>{data.repo}</BoxTitle>
+      <Spacer />
       <div>
         <strong>Branch: </strong>
         {data.branch}
