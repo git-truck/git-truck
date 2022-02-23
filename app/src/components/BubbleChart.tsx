@@ -102,6 +102,7 @@ export function BubbleChart(props: BubbleChartProps) {
         const text = group.append("text")
 
         text
+          .filter((d) => d.data.type === "tree")
           .attr("x", (d) => d.x0)
           .attr("y", (d) => d.y0 - textSpacingFromCircle)
           .text((d) => d.data.name)
@@ -160,6 +161,7 @@ export function BubbleChart(props: BubbleChartProps) {
         const text = group.append("text")
 
         text
+          .filter((d) => d.data.type === "tree")
           .append("textPath")
           .attr("startOffset", "50%")
           .attr("dominant-baseline", "bottom")
