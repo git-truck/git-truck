@@ -187,7 +187,7 @@ export function BubbleChart(props: BubbleChartProps) {
           viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
         />
         <Details currentBlob={currentBlob} />
-        <Legend key={legendKey} entries={Array.from(legend.values())} />
+        <Legend key={legendKey} items={Array.from(legend.values())} />
       </div>
     </>
   )

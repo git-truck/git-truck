@@ -3,15 +3,15 @@ import { Box } from "./Box"
 import { Spacer } from "./Spacer"
 
 interface LegendProps {
-  entries: string[]
+  items: string[]
 }
 
 export function Legend(props: LegendProps) {
-  if (props.entries.length === 0) return null
+  if (props.items.length === 0) return null
   return (
     <Box className="legend">
-      {props.entries.map((entry, i) => {
-        let [label, color] = entry.split("|")
+      {props.items.map((legendItem, i) => {
+        let [label, color] = legendItem.split("|")
         return (
           <div key={`${label}${color}`}>
             <div className="legend-entry">
@@ -24,7 +24,7 @@ export function Legend(props: LegendProps) {
               <Spacer horizontal />
               <p className="legend-label">{label}</p>
             </div>
-            {i < props.entries.length - 1 ? <Spacer /> : null}
+            {i < props.items.length - 1 ? <Spacer /> : null}
           </div>
         )
       })}
