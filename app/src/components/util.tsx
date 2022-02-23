@@ -8,6 +8,14 @@ export const BoxTitle = styled.h2`
   color: var(--title-color);
 `
 
+export const BoxSubTitle = styled.h3`
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 0;
+  margin-top: 0;
+  color: var(--title-color);
+`
+
 export const Main = styled.main`
   /* width: calc(100vw - var(--side-panel-width)); */
 `

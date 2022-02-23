@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import "./App.css"
 import { MetricType } from "./metrics"
 import { padding } from "./const"
@@ -7,6 +7,7 @@ import { getDefaultStore, Store, StoreContext } from "./StoreContext"
 import { Container, Main } from "./components/util"
 import { SidePanel } from "./components/SidePanel"
 import { HydratedGitBlobObject } from "../../parser/src/model"
+import { Tooltip } from "./components/Tooltip"
 
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
@@ -21,13 +22,13 @@ function App() {
           setStore({ ...options, metricType }),
         setChartType: (chartType: ChartType) =>
           setStore((prevStore) => ({ ...prevStore, chartType })),
-        setCurrentBlob: (blob: HydratedGitBlobObject | null) =>
-          setStore((prevStore) => ({ ...prevStore, currentBlob: blob })),
+        setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
+          setStore((prevStore) => ({ ...prevStore, currentHoveredBlob: blob })),
+        setClickedBlob: (blob: HydratedGitBlobObject | null) =>
+          setStore((prevStore) => ({ ...prevStore, currentClickedBlob: blob })),
       } as Store),
     [options]
   )
-
-  useEffect(() => console.table(options), [options])
 
   return (
     <StoreContext.Provider value={store}>
@@ -37,6 +38,7 @@ function App() {
           <BubbleChart />
         </Main>
       </Container>
+      <Tooltip />
     </StoreContext.Provider>
   )
 }
