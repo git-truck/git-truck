@@ -1,26 +1,20 @@
-import { Spacer } from "./Spacer"
 import { Metric, MetricType } from "../metrics"
-import { Box, BoxTitle } from "./util"
+import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType } from "./BubbleChart"
 import { useStore } from "../StoreContext"
+import { Spacer } from "./Spacer"
 
 export function Options() {
-  const { data, setMetricType, setChartType } = useStore()
+  const { setMetricType, setChartType } = useStore()
   return (
     <Box>
-      <BoxTitle>{data.repo}</BoxTitle>
-      <Spacer />
-      <div>
-        <strong>Branch: </strong>
-        {data.branch}
-      </div>
-      <Spacer />
       <EnumSelect
         label="Chart type"
         enum={Chart}
         onChange={(chartType: ChartType) => setChartType(chartType)}
       />
+      <Spacer />
       <EnumSelect
         label="Color metric"
         enum={Metric}
