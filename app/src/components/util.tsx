@@ -21,6 +21,7 @@ export const Container = styled.div`
 
 export const Box = styled.div`
   /* border: 1px var(--border-color-alpha) solid; */
+  margin: var(--unit);
   color: var(--text-color);
   min-width: calc(16 * var(--unit));
   background-color: #fff;
