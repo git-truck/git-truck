@@ -16,6 +16,6 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
   )
 }
 
-export function clsx(...args: (string | undefined)[]) {
+export function classes(...args: (string | undefined)[]) {
   return args.filter((x) => x).join(" ")
 }
