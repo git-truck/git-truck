@@ -18,6 +18,7 @@ import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
 import { Details } from "./Details"
+import { useStore } from "../StoreContext"
 
 export const Chart = {
   TREE_MAP: "Tree map",
@@ -26,13 +27,10 @@ export const Chart = {
 
 export type ChartType = keyof typeof Chart
 
-interface BubbleChartProps {
-  data: HydratedGitCommitObject
-  chartType: ChartType
-  metricType: MetricType
-}
+interface BubbleChartProps {}
 
 export function BubbleChart(props: BubbleChartProps) {
+  const { data, metricType, chartType } = useStore()
   const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
@@ -43,13 +41,13 @@ export function BubbleChart(props: BubbleChartProps) {
 
   const heatMapTranslater = useMemo<HeatMapTranslater>(
     () =>
-      new HeatMapTranslater(props.data.minNoCommits, props.data.maxNoCommits),
-    [props.data.minNoCommits, props.data.maxNoCommits]
+      new HeatMapTranslater(data.commit.minNoCommits, data.commit.maxNoCommits),
+    [data.commit.minNoCommits, data.commit.maxNoCommits]
   )
   const coldMapTranslater = useMemo<ColdMapTranslater>(
     () =>
-      new ColdMapTranslater(props.data.minNoCommits, props.data.maxNoCommits),
-    [props.data.minNoCommits, props.data.maxNoCommits]
+      new ColdMapTranslater(data.commit.minNoCommits, data.commit.maxNoCommits),
+    [data.commit.minNoCommits, data.commit.maxNoCommits]
   )
 
   let svgRef = useRef<SVGSVGElement>(null)
@@ -73,7 +71,6 @@ export function BubbleChart(props: BubbleChartProps) {
       metric: MetricType,
       chartType: ChartType
     ) {
-      console.log(chartType)
       let castedTree = data.tree as GitObject
       let hiearchy = hierarchy(castedTree)
         .sum((d) => (d as HydratedGitBlobObject).noLines)
@@ -225,11 +222,11 @@ export function BubbleChart(props: BubbleChartProps) {
     const root = svg.append("g")
     legendSetRef.current = new Set<string>()
     drawChart(
-      props.data,
+      data.commit,
       getPaddedSizeProps(sizeProps),
       root,
-      props.metricType,
-      props.chartType
+      metricType,
+      chartType
     )
     setLegendKey((prevKey) => prevKey + 1)
 
@@ -240,7 +237,7 @@ export function BubbleChart(props: BubbleChartProps) {
       if (node) node.removeEventListener("click", clickHandler)
       root.remove()
     }
-  }, [drawChart, sizeProps, props.data, props.metricType, props.chartType])
+  }, [drawChart, sizeProps, data, metricType, chartType])
 
   return (
     <>
