@@ -4,7 +4,7 @@
 }
 
 .file {
-  stroke-width: 0;
+  /* stroke-width: 0; */
   cursor: pointer;
   pointer-events: all;
   position: relative;
@@ -19,4 +19,26 @@
 .name-path.debug {
   stroke: black;
   stroke-dasharray: 5, 5;
+}
+
+.search-match {
+  stroke-width: 5px;
+  stroke: black;
+  /* stroke-dasharray: 2px; */
+}
+
+.stroke-4 {
+  stroke: url(#pattern);
+  stroke-width: 10;
+}
+
+.module {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+svg {
+  fill: #333;
 }
