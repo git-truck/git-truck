@@ -2,6 +2,7 @@
 import gitcolors from "github-colors"
 import { MutableRefObject } from "react"
 import { HydratedGitBlobObject } from "../../parser/src/model"
+import { users } from "./const"
 
 export function getExtensionColor(
   legendSetRef: MutableRefObject<Set<string>>,
@@ -15,13 +16,6 @@ export function getExtensionColor(
     return lookup.color
   }
 }
-
-const users = [
-  ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
-  ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
-  ["hojelse", "Kristoffer Højelse"],
-  ["emiljapelt", "Emil Jäpelt"],
-]
 
 export function unionAuthors(blob: HydratedGitBlobObject) {
   return Object.entries(blob.authors).reduce(
