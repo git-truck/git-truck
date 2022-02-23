@@ -1,9 +1,14 @@
 import { createContext, useContext } from "react"
 import { HydratedGitBlobObject, ParserData } from "../../parser/src/model"
-import { getMetricCalcs, MetricCache, setupMetricsCache } from "./metrics"
-import { ChartType } from "./components/BubbleChart"
 import { getData } from "./data"
-import { MetricType } from "./metrics"
+import { getMetricCalcs, Metric, MetricCache, MetricType, setupMetricsCache } from "./metrics"
+
+export const Chart = {
+  BUBBLE_CHART: "Bubble chart",
+  TREE_MAP: "Tree map",
+}
+
+export type ChartType = keyof typeof Chart
 
 export interface Store {
   data: ParserData
@@ -32,8 +37,8 @@ export function getDefaultStore(): Store {
   return {
     data: d,
     metricCaches: mc,
-    metricType: "FILE_EXTENSION",
-    chartType: "BUBBLE_CHART",
+    metricType: Object.keys(Metric)[0] as MetricType,
+    chartType: Object.keys(Chart)[0] as ChartType,
     currentHoveredBlob: null,
     currentClickedBlob: null,
     setHoveredBlob: () => {

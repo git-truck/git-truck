@@ -1,5 +1,8 @@
-export const padding = 30
+export const treemapPadding = 20
+export const bubblePadding = 35
 export const textSpacingFromCircle = 5
+export const textSpacingFromRect = 6
+
 export const users = [
   ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
   ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
