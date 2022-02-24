@@ -3,6 +3,7 @@ import gitcolors from "github-colors"
 import { MutableRefObject } from "react"
 import { HydratedGitBlobObject } from "../../parser/src/model"
 import { authorColorState } from "./components/BubbleChart"
+import { unionAuthors } from "./util"
 
 export function getExtensionColor(
   legendSetRef: MutableRefObject<Set<string>>,
@@ -15,28 +16,6 @@ export function getExtensionColor(
     legendSetRef.current?.add(`${extension}|${lookup.color}`)
     return lookup.color
   }
-}
-
-const users = [
-  ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
-  ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
-  ["hojelse", "Kristoffer Højelse"],
-  ["emiljapelt", "Emil Jäpelt"],
-]
-
-export function unionAuthors(blob: HydratedGitBlobObject) {
-  return Object.entries(blob.authors).reduce(
-    (newAuthorOject, [author, stuff]) => {
-      const authors = users.find((x) => x.includes(author))
-      if (!authors) throw Error("Author not found: " + author)
-      const [name] = authors
-      delete newAuthorOject[author]
-      newAuthorOject[name] = newAuthorOject[name] || 0
-      newAuthorOject[name] += stuff
-      return newAuthorOject
-    },
-    blob.authors
-  )
 }
 
 export function getDominantAuthorColor(
