@@ -1,16 +1,18 @@
-import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { Spacer } from "./Spacer"
 import { makePercentResponsibilityDistribution } from "./BubbleChart"
-import { Box } from "./Box"
+import { Box, BoxTitle } from "./util"
+import { useStore } from "../StoreContext"
 
-export function Details({ currentBlob }: DetailsProps) {
-  if (currentBlob === null) return null
+export function Details() {
+  const { currentClickedBlob } = useStore()
+  if (currentClickedBlob === null) return null
   return (
-    <Box className="file-details" title={currentBlob.name}>
-      <div>Line count: {currentBlob.noLines}</div>
+    <Box>
+      <BoxTitle>{currentClickedBlob.name}</BoxTitle>
+      <div>Line count: {currentClickedBlob.noLines}</div>
       <Spacer xl />
       <div>Author distribution:</div>
-      {Object.entries(makePercentResponsibilityDistribution(currentBlob))
+      {Object.entries(makePercentResponsibilityDistribution(currentClickedBlob))
         .sort((a, b) => (a[1] < b[1] ? 1 : -1))
         .map(([author, contrib]) => (
           <div key={`${author}${contrib}`}>
@@ -19,7 +21,4 @@ export function Details({ currentBlob }: DetailsProps) {
         ))}
     </Box>
   )
-}
-interface DetailsProps {
-  currentBlob: HydratedGitBlobObject | null
 }

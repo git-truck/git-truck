@@ -1,31 +1,45 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import "./App.css"
-import { data } from "./data"
-import { Metric } from "./metrics"
+import { MetricType } from "./metrics"
 import { padding } from "./const"
-
-import { Options } from "./components/Options"
-import { BubbleChart, Chart } from "./components/BubbleChart"
+import { BubbleChart, ChartType } from "./components/BubbleChart"
+import { getDefaultStore, Store, StoreContext } from "./StoreContext"
+import { Container, Main } from "./components/util"
+import { SidePanel } from "./components/SidePanel"
+import { HydratedGitBlobObject } from "../../parser/src/model"
+import { Tooltip } from "./components/Tooltip"
 
 document.documentElement.style.setProperty("--padding", `${padding}px`)
 
 function App() {
-  const [metricType, setMetricType] =
-    useState<keyof typeof Metric>("FILE_EXTENSION")
-  const [chartType, setChartType] = useState<keyof typeof Chart>("TREE_MAP")
+  let [options, setStore] = useState<Store>(getDefaultStore())
+
+  const store = useMemo(
+    () =>
+      ({
+        ...options,
+        setMetricType: (metricType: MetricType) =>
+          setStore({ ...options, metricType }),
+        setChartType: (chartType: ChartType) =>
+          setStore((prevStore) => ({ ...prevStore, chartType })),
+        setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
+          setStore((prevStore) => ({ ...prevStore, currentHoveredBlob: blob })),
+        setClickedBlob: (blob: HydratedGitBlobObject | null) =>
+          setStore((prevStore) => ({ ...prevStore, currentClickedBlob: blob })),
+      } as Store),
+    [options]
+  )
+
   return (
-    <>
-      <BubbleChart
-        data={data.commit}
-        metricType={metricType}
-        chartType={chartType}
-      />
-      <Options
-        data={data}
-        setMetricType={setMetricType}
-        setChartType={setChartType}
-      />
-    </>
+    <StoreContext.Provider value={store}>
+      <Container>
+        <SidePanel />
+        <Main>
+          <BubbleChart />
+        </Main>
+      </Container>
+      <Tooltip />
+    </StoreContext.Provider>
   )
 }
 

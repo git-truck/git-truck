@@ -4,6 +4,7 @@ import { MutableRefObject } from "react"
 import { HydratedGitBlobObject } from "../../parser/src/model"
 import { authorColorState } from "./components/BubbleChart"
 import { unionAuthors } from "./util"
+import { users } from "./const"
 
 export function getExtensionColor(
   legendSetRef: MutableRefObject<Set<string>>,

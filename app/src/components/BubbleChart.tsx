@@ -1,6 +1,5 @@
 import "./BubbleChart.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useWindowSize } from "react-use"
 import {
   GitObject,
   HydratedGitBlobObject,
@@ -20,19 +19,23 @@ import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
 import { Details } from "./Details"
 import distinctColors from "distinct-colors"
+import { useStore } from "../StoreContext"
+import styled from "styled-components"
+import { useWindowSize } from "react-use"
 
 export const Chart = {
   TREE_MAP: "Tree map",
   BUBBLE_CHART: "Bubble chart",
 }
 
+const SVG = styled.svg`
+  width: 100%;
+  height: 100%;
+`
+
 export type ChartType = keyof typeof Chart
 
-interface BubbleChartProps {
-  data: HydratedGitCommitObject
-  chartType: ChartType
-  metricType: MetricType
-}
+interface BubbleChartProps {}
 
 export interface authorColorState {
   palette: chroma.Color[]
@@ -41,9 +44,14 @@ export interface authorColorState {
 }
 
 export function BubbleChart(props: BubbleChartProps) {
-  const [currentBlob, setCurrentBlob] = useState<HydratedGitBlobObject | null>(
-    null
-  )
+  const {
+    data,
+    metricType,
+    chartType,
+    currentHoveredBlob,
+    setHoveredBlob,
+    setClickedBlob,
+  } = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
   const authorColorRef = useRef<authorColorState>({
@@ -56,25 +64,17 @@ export function BubbleChart(props: BubbleChartProps) {
 
   const heatMapTranslater = useMemo<HeatMapTranslater>(
     () =>
-      new HeatMapTranslater(props.data.minNoCommits, props.data.maxNoCommits),
-    [props.data.minNoCommits, props.data.maxNoCommits]
+      new HeatMapTranslater(data.commit.minNoCommits, data.commit.maxNoCommits),
+    [data.commit.minNoCommits, data.commit.maxNoCommits]
   )
   const coldMapTranslater = useMemo<ColdMapTranslater>(
     () =>
-      new ColdMapTranslater(props.data.minNoCommits, props.data.maxNoCommits),
-    [props.data.minNoCommits, props.data.maxNoCommits]
+      new ColdMapTranslater(data.commit.minNoCommits, data.commit.maxNoCommits),
+    [data.commit.minNoCommits, data.commit.maxNoCommits]
   )
 
   let svgRef = useRef<SVGSVGElement>(null)
   let sizeProps = useWindowSize(0, 0)
-
-  function clickHandler(e: MouseEvent) {
-    //@ts-ignore
-    let data = e.target["__data__"].data
-    if (data && data.type === "blob") {
-      setCurrentBlob(data)
-    } else setCurrentBlob(null)
-  }
 
   const paddedSizeProps = getPaddedSizeProps(sizeProps)
 
@@ -86,7 +86,6 @@ export function BubbleChart(props: BubbleChartProps) {
       metric: MetricType,
       chartType: ChartType
     ) {
-      console.log(chartType)
       let castedTree = data.tree as GitObject
       let hiearchy = hierarchy(castedTree)
         .sum((d) => (d as HydratedGitBlobObject).noLines)
@@ -235,41 +234,84 @@ export function BubbleChart(props: BubbleChartProps) {
     [coldMapTranslater, heatMapTranslater]
   )
 
+  const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const leaveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+
+  useEffect(() => {
+    moveHandlerRef.current = function (e) {
+      // @ts-ignore
+      let d3Data = e.target["__data__"]
+      let data = d3Data?.data
+      if (currentHoveredBlob?.path !== data.path) {
+        if (data && data.type === "blob") {
+          e.stopPropagation()
+          setHoveredBlob(data)
+        } else setHoveredBlob(null)
+      }
+    }
+  }, [currentHoveredBlob?.path, setHoveredBlob])
+
+  useEffect(() => {
+    leaveHandlerRef.current = function (e) {
+      setHoveredBlob(null)
+    }
+  }, [currentHoveredBlob, setHoveredBlob])
+
+  useEffect(() => {
+    clickHandlerRef.current = function (e) {
+      //@ts-ignore
+      let data = e.target["__data__"].data
+      if (data && data.type === "blob") {
+        setClickedBlob(data)
+        e.stopPropagation()
+      }
+    }
+  }, [setClickedBlob, setHoveredBlob])
+
   useEffect(() => {
     let svg = select(svgRef.current)
     const root = svg.append("g")
     legendSetRef.current.clear()
     drawChart(
-      props.data,
+      data.commit,
       getPaddedSizeProps(sizeProps),
       root,
-      props.metricType,
-      props.chartType
+      metricType,
+      chartType
     )
     setLegendKey((prevKey) => prevKey + 1)
 
     let node = root.node()
-    if (node) node.addEventListener("click", clickHandler)
+
+    if (node && clickHandlerRef.current)
+      node.addEventListener("click", clickHandlerRef.current)
+    if (node && moveHandlerRef.current)
+      node.addEventListener("pointermove", moveHandlerRef.current)
+    if (node && leaveHandlerRef.current)
+      node.addEventListener("pointerleave", leaveHandlerRef.current)
 
     return () => {
-      if (node) node.removeEventListener("click", clickHandler)
+      if (node && clickHandlerRef.current)
+        node.removeEventListener("click", clickHandlerRef.current)
+      if (node && moveHandlerRef.current)
+        node.removeEventListener("pointermove", moveHandlerRef.current)
+      if (node && leaveHandlerRef.current)
+        node.removeEventListener("pointerleave", leaveHandlerRef.current)
       root.remove()
     }
-  }, [drawChart, sizeProps, props.data, props.metricType, props.chartType])
+  }, [drawChart, sizeProps, data, metricType, chartType])
 
   return (
     <>
-      <div className="container">
-        <svg
-          className="visualization"
-          {...paddedSizeProps}
-          ref={svgRef}
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
-        />
-        <Details currentBlob={currentBlob} />
-        <Legend key={legendKey} items={Array.from(legend.values())} />
-      </div>
+      <SVG
+        ref={svgRef}
+        width="100%"
+        height="100%"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
+      />
+      <Legend key={legendKey} items={Array.from(legend.values())} />
     </>
   )
 }

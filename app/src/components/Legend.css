@@ -1,7 +1,8 @@
 .legend {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
+  width: calc(var(--side-panel-width) - calc(6 * var(--unit)));
+  bottom: 0px;
+  left: 0px;
 }
 
 .legend-entry {

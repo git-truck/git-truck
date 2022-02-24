@@ -1,8 +1,3 @@
-.visualization {
-  position: absolute;
-  top: var(--padding);
-}
-
 .folder {
   stroke: var(--border-color);
   fill: #fff;
