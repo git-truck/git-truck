@@ -27,3 +27,24 @@
   margin: 0px;
   font-weight: bold;
 }
+
+.legend-toggle {
+  position: absolute;
+  top: var(--unit);
+  right: var(--unit);
+  border: none;
+  background-color: rgba(0, 0, 0, 0);
+  scale: 200%;
+  transition-duration: 0.4s;
+  color: grey;
+  transform-origin: 50% 55%;
+  transform: rotate(180deg);
+}
+
+.legend-toggle:hover {
+  scale: 180%;
+}
+
+.legend-toggle-active {
+  transform: none;
+}
