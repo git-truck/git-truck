@@ -60,7 +60,10 @@ export function getDominanceColor(
   for (let [, val] of Object.entries(blob.authors)) {
     creditsum += val
   }
-  if (creditsum === 0) return "grey"
+  if (creditsum === 0) {
+    legendSetRef.current.add("No credit|grey")
+    return "grey"
+  }
 
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
