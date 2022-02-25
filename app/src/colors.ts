@@ -56,6 +56,12 @@ export function getDominanceColor(
   legendSetRef: MutableRefObject<Set<string>>,
   blob: HydratedGitBlobObject
 ): string {
+  let creditsum = 0
+  for (let [a, val] of Object.entries(blob.authors)) {
+    creditsum += val
+  }
+  if (creditsum == 0) return "grey"
+
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
       legendSetRef.current.add("Dominated|red")
