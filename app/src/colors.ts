@@ -2,7 +2,8 @@
 import gitcolors from "github-colors"
 import { MutableRefObject } from "react"
 import { HydratedGitBlobObject } from "../../parser/src/model"
-import { users } from "./const"
+import { authorColorState } from "./components/BubbleChart"
+import { unionAuthors } from "./util"
 
 export function getExtensionColor(
   legendSetRef: MutableRefObject<Set<string>>,
@@ -17,19 +18,38 @@ export function getExtensionColor(
   }
 }
 
-export function unionAuthors(blob: HydratedGitBlobObject) {
-  return Object.entries(blob.authors).reduce(
-    (newAuthorOject, [author, stuff]) => {
-      const authors = users.find((x) => x.includes(author))
-      if (!authors) throw Error("Author not found: " + author)
-      const [name] = authors
-      delete newAuthorOject[author]
-      newAuthorOject[name] = newAuthorOject[name] || 0
-      newAuthorOject[name] += stuff
-      return newAuthorOject
-    },
-    blob.authors
-  )
+export function getDominantAuthorColor(
+  legendSetRef: MutableRefObject<Set<string>>,
+  stateRef: MutableRefObject<authorColorState>,
+  blob: HydratedGitBlobObject
+): string {
+  let sorted: [string, number][]
+  try {
+    sorted = Object.entries(unionAuthors(blob)).sort(([k1, v1], [k2, v2]) => {
+      if (v1 === 0 || v2 === 0 || k1 === undefined || k2 === undefined)
+        throw Error
+      if (v1 < v2) return 1
+      else if (v1 > v2) return -1
+      else return 0
+    })
+    if (typeof sorted[0] === "undefined") throw Error
+  } catch {
+    return "grey"
+  }
+
+  let [dom] = sorted[0]
+  if (stateRef.current.cache.has(dom)) {
+    let colorString = stateRef.current.cache.get(dom) ?? "grey"
+    legendSetRef.current.add(`${dom}|${colorString}`)
+    return colorString
+  } else {
+    let color =
+      stateRef.current.palette[stateRef.current.paletteIndex++].rgb(true)
+    let colorString = `rgb(${color[0]},${color[1]},${color[2]})`
+    stateRef.current.cache.set(dom, colorString)
+    legendSetRef.current.add(`${dom}|${colorString}`)
+    return colorString
+  }
 }
 
 export function getDominanceColor(

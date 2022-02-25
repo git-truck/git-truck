@@ -11,11 +11,13 @@ import {
   HeatMapTranslater,
   getDominanceColor,
   getExtensionColor,
+  getDominantAuthorColor,
 } from "../colors"
 import { MetricType } from "../metrics"
 import { padding, textSpacingFromCircle } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
+import distinctColors from "distinct-colors"
 import { useStore } from "../StoreContext"
 import styled from "styled-components"
 import { useWindowSize } from "react-use"
@@ -34,6 +36,12 @@ export type ChartType = keyof typeof Chart
 
 interface BubbleChartProps {}
 
+export interface authorColorState {
+  palette: chroma.Color[]
+  paletteIndex: number
+  cache: Map<string, string>
+}
+
 export function BubbleChart(props: BubbleChartProps) {
   const {
     data,
@@ -45,6 +53,11 @@ export function BubbleChart(props: BubbleChartProps) {
   } = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
+  const authorColorRef = useRef<authorColorState>({
+    palette: distinctColors({ count: 100 }),
+    paletteIndex: 0,
+    cache: new Map<string, string>(),
+  })
   const legend = legendSetRef.current
   const [legendKey, setLegendKey] = useState(0)
 
@@ -206,6 +219,8 @@ export function BubbleChart(props: BubbleChartProps) {
             return getDominanceColor(legendSetRef, blob)
           case "FILE_EXTENSION":
             return getExtensionColor(legendSetRef, blob)
+          case "DOMINANTAUTHOR":
+            return getDominantAuthorColor(legendSetRef, authorColorRef, blob)
           case "HEAT_MAP":
             return heatMapTranslater.getColor(blob)
           case "COLD_MAP":
@@ -256,7 +271,7 @@ export function BubbleChart(props: BubbleChartProps) {
   useEffect(() => {
     let svg = select(svgRef.current)
     const root = svg.append("g")
-    legendSetRef.current = new Set<string>()
+    legendSetRef.current.clear()
     drawChart(
       data.commit,
       getPaddedSizeProps(sizeProps),
