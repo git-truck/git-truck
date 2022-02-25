@@ -1,9 +1,10 @@
 import "./Chart.css"
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   GitObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
+  HydratedGitObject,
 } from "../../../parser/src/model"
 import { hierarchy, pack, select, Selection, treemap } from "d3"
 import { MetricType } from "../metrics"
@@ -15,12 +16,14 @@ import {
 } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
-import distinctColors from "distinct-colors"
 import { ChartType, useStore } from "../StoreContext"
 import styled from "styled-components"
-import { useWindowSize } from "react-use"
+import { Tooltip } from "./Tooltip"
 
-const SVG = styled.svg`
+const SVG = styled.svg<{ chartType: ChartType }>`
+  display: grid;
+  place-items: center;
+  padding: ${(props) => getPaddingFromChartType(props.chartType)}px;
   width: 100%;
   height: 100%;
 `
@@ -30,27 +33,24 @@ export interface authorColorState {
   cache: Map<string, string>
 }
 
-export function Chart() {
-  const {
-    data,
-    metricCaches,
-    metricType,
-    chartType,
-    currentHoveredBlob,
-    setHoveredBlob,
-    setClickedBlob,
-  } = useStore()
+interface ChartProps {
+  size: { width: number; height: number }
+}
+
+export function Chart(props: ChartProps) {
+  const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
+    null
+  )
+  const { data, metricCaches, metricType, chartType, setClickedBlob } = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
 
   let svgRef = useRef<SVGSVGElement>(null)
-  let sizeProps = useWindowSize(0, 0)
 
-  const drawChart = useCallback(
-    function (
+  const drawChart = useCallback(function (
       data: HydratedGitCommitObject,
       paddedSizeProps: { height: number; width: number },
-      root: Selection<SVGGElement, unknown, null, undefined>,
+      root: Selection<SVGSVGElement, unknown, null, undefined>,
       metric: MetricType,
       chartType: ChartType
     ) {
@@ -64,7 +64,7 @@ export function Chart() {
       if (chartType === "TREE_MAP") {
         let partition = treemap<GitObject>()
           .size([paddedSizeProps.width, paddedSizeProps.height])
-          .padding(treemapPadding)
+          .paddingOuter(treemapPadding)
 
         let partitionedHiearchy = partition(hiearchy)
 
@@ -104,6 +104,15 @@ export function Chart() {
 
         text
           .filter(noLinesThreshold)
+          .attr("x", (d) => d.x0 + textSpacingFromRect)
+          .attr(
+            "y",
+            (d) =>
+              d.y0 +
+              (d.data.type === "tree"
+                ? -textSpacingFromRect
+                : textSpacingFromRect * 3)
+          )
           .text((d) => d.data.name)
           .style("font-size", "0.8em")
           .style("font-weight", (d) =>
@@ -130,7 +139,7 @@ export function Chart() {
           .classed("folder", (d) => d.data.type === "tree")
           .attr("cx", (d) => d.x)
           .attr("cy", (d) => d.y)
-          .attr("r", (d) => d.r)
+          .attr("r", (d) => Math.max(d.r - 1, 0))
           .style("fill", (d) => {
             return d.data.type === "blob"
               ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
@@ -142,7 +151,11 @@ export function Chart() {
 
         path
           .attr("d", (d) =>
-            circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
+            circlePathFromCircle(
+              d.x,
+              d.y,
+              Math.max(d.r - 1, 0) + textSpacingFromCircle
+            )
           )
           .classed("name-path", true)
           .attr("cx", (d) => d.x)
@@ -160,7 +173,7 @@ export function Chart() {
         const text = group.append("text")
 
         text
-          .filter((d) => d.data.type === "tree")
+          .filter(noLinesThreshold)
           .append("textPath")
           .attr("startOffset", "50%")
           .attr("dominant-baseline", "bottom")
@@ -175,84 +188,91 @@ export function Chart() {
     },
     [metricCaches]
   )
-  const paddedSizeProps = getPaddedSizeProps(sizeProps, chartType)
 
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
-  const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
-  const leaveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const overHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  const outHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
 
   useEffect(() => {
-    moveHandlerRef.current = function (e) {
-      // @ts-ignore
-      let d3Data = e.target["__data__"]
-      let data = d3Data?.data
-      if (currentHoveredBlob?.path !== data.path) {
-        if (data && data.type === "blob") {
-          e.stopPropagation()
-          setHoveredBlob(data)
-        } else setHoveredBlob(null)
-      }
+    overHandlerRef.current = function (e) {
+      try {
+        // @ts-ignore
+        const dataProp = e.target["__data__"]
+        let data = dataProp?.data as HydratedGitObject
+        if (hoveredBlob?.path !== data.path) {
+          if (data && data.type === "blob") {
+            e.stopPropagation()
+            setHoveredBlob(data)
+          }
+        }
+      } catch (e) {}
     }
-  }, [currentHoveredBlob?.path, setHoveredBlob])
+  }, [hoveredBlob?.path, setHoveredBlob])
 
   useEffect(() => {
-    leaveHandlerRef.current = function (e) {
+    outHandlerRef.current = () => {
       setHoveredBlob(null)
     }
-  }, [currentHoveredBlob, setHoveredBlob])
+  }, [hoveredBlob, setHoveredBlob])
 
   useEffect(() => {
     clickHandlerRef.current = function (e) {
-      //@ts-ignore
-      let data = e.target["__data__"].data
-      if (data && data.type === "blob") {
-        setClickedBlob(data)
-        e.stopPropagation()
-      }
+      try {
+        // @ts-ignore
+        const dataProp = e.target["__data__"]
+        let data = dataProp?.data as HydratedGitObject
+        if (data && data.type === "blob") {
+          setClickedBlob(data)
+          e.stopPropagation()
+        } else setClickedBlob(null)
+      } catch (e) {}
     }
   }, [setClickedBlob, setHoveredBlob])
 
   useEffect(() => {
+    if (svgRef.current === null) return () => {}
     let svg = select(svgRef.current)
-    const root = svg.append("g")
+    // const root = svg.append("g")
     legendSetRef.current.clear()
+
     drawChart(
       data.commit,
-      paddedSizeProps,
-      root,
+      getPaddedSizeProps(props.size, chartType),
+      svg,
       metricType,
       chartType
     )
 
-    let node = root.node()
+    let node = svg.node()
 
     if (node && clickHandlerRef.current)
       node.addEventListener("click", clickHandlerRef.current)
-    if (node && moveHandlerRef.current)
-      node.addEventListener("pointermove", moveHandlerRef.current)
-    if (node && leaveHandlerRef.current)
-      node.addEventListener("pointerleave", leaveHandlerRef.current)
+    if (node && overHandlerRef.current)
+      node.addEventListener("mouseover", overHandlerRef.current)
+    if (node && outHandlerRef.current)
+      node.addEventListener("mouseout", outHandlerRef.current)
 
     return () => {
       if (node && clickHandlerRef.current)
         node.removeEventListener("click", clickHandlerRef.current)
-      if (node && moveHandlerRef.current)
-        node.removeEventListener("pointermove", moveHandlerRef.current)
-      if (node && leaveHandlerRef.current)
-        node.removeEventListener("pointerleave", leaveHandlerRef.current)
-      root.remove()
+      if (node && overHandlerRef.current)
+        node.removeEventListener("mouseover", overHandlerRef.current)
+      if (node && outHandlerRef.current)
+        node.removeEventListener("mouseout", outHandlerRef.current)
+      svg.selectAll("*").remove()
     }
-  }, [chartType, data.commit, drawChart, metricType, paddedSizeProps])
+  }, [chartType, drawChart, metricType, data.commit, props.size])
 
   return (
     <>
       <SVG
         ref={svgRef}
-        width="100%"
-        height="100%"
+        chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${sizeProps.width} ${sizeProps.height}`}
+        viewBox={`0 0 ${props.size.width} ${props.size.height}`}
       />
+      <Legend />
+      <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
 }
@@ -296,21 +316,24 @@ function getPaddedSizeProps(
   sizeProps: { height: number; width: number },
   chartType: ChartType
 ) {
-  let padding
-  switch (chartType) {
-    case "BUBBLE_CHART":
-      padding = bubblePadding
-      break
-    case "TREE_MAP":
-      padding = treemapPadding
-      break
-    default:
-      throw new Error("Chart type is invalid")
-  }
+  const padding = getPaddingFromChartType(chartType)
   return {
     height: sizeProps.height - padding * 2,
     width: sizeProps.width - padding * 2,
   }
+}
+
+function getPaddingFromChartType(chartType: ChartType) {
+  switch (chartType) {
+    case "BUBBLE_CHART":
+      return bubblePadding
+    case "TREE_MAP":
+      return treemapPadding
+    default:
+      throw new Error("Chart type is invalid")
+  }
+}
+
 function noLinesThreshold(d: { data: GitObject }) {
   return (
     d.data.type === "tree" || (d.data as HydratedGitBlobObject).noLines >= 40

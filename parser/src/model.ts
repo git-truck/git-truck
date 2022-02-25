@@ -1,8 +1,8 @@
 export type GitObject = GitBlobObject | GitTreeObject
 
 export interface GitBaseObject {
-  type : "blob" | "tree" | "commit"
-  hash : string
+  type: "blob" | "tree" | "commit"
+  hash: string
 }
 
 export interface ParserData {
@@ -13,27 +13,28 @@ export interface ParserData {
 
 export interface GitBlobObject extends GitBaseObject {
   type: "blob"
-  name : string
-  path : string
+  name: string
+  path: string
   content: string
-
 }
 
+export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
+
 export interface HydratedGitBlobObject extends GitBlobObject {
-  noLines: number,
-  authors: Record<string, number>,
-  noCommits: number;
+  noLines: number
+  authors: Record<string, number>
+  noCommits: number
 }
 
 export interface GitTreeObject extends GitBaseObject {
   type: "tree"
-  name : string
-  path : string
+  name: string
+  path: string
   children: (GitTreeObject | GitBlobObject)[]
 }
 
 export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
-  children: (HydratedGitTreeObject | HydratedGitBlobObject)[];
+  children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
 }
 
 export interface GitCommitObject extends GitBaseObject {
@@ -54,7 +55,9 @@ export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
   maxNoCommits: number
 }
 
-export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & { tree: string }
+export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {
+  tree: string
+}
 
 export interface Person {
   name: string

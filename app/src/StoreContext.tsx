@@ -15,9 +15,7 @@ export interface Store {
   metricCaches: Map<MetricType, MetricCache>
   metricType: MetricType
   chartType: ChartType
-  currentHoveredBlob: HydratedGitBlobObject | null
-  currentClickedBlob: HydratedGitBlobObject | null
-  setHoveredBlob: (blob: HydratedGitBlobObject | null) => void
+  clickedBlob: HydratedGitBlobObject | null
   setClickedBlob: (blob: HydratedGitBlobObject | null) => void
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
@@ -39,11 +37,7 @@ export function getDefaultStore(): Store {
     metricCaches: mc,
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
-    currentHoveredBlob: null,
-    currentClickedBlob: null,
-    setHoveredBlob: () => {
-      throw new Error("No setHoveredBlob function provided")
-    },
+    clickedBlob: null,
     setClickedBlob: () => {
       throw new Error("No setClickedBlob function provided")
     },
