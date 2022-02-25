@@ -103,9 +103,7 @@ export function Chart() {
         const text = group.append("text")
 
         text
-          .filter((d) => d.data.type === "tree")
-          .attr("x", (d) => d.x0)
-          .attr("y", (d) => d.y0 - textSpacingFromRect)
+          .filter(noLinesThreshold)
           .text((d) => d.data.name)
           .style("font-size", "0.8em")
           .style("font-weight", (d) =>
@@ -313,4 +311,8 @@ function getPaddedSizeProps(
     height: sizeProps.height - padding * 2,
     width: sizeProps.width - padding * 2,
   }
+function noLinesThreshold(d: { data: GitObject }) {
+  return (
+    d.data.type === "tree" || (d.data as HydratedGitBlobObject).noLines >= 40
+  )
 }
