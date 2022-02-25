@@ -16,8 +16,14 @@ export const BoxSubTitle = styled.h3`
   color: var(--title-color);
 `
 
-export const Main = styled.main`
-  /* width: calc(100vw - var(--side-panel-width)); */
+export const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: larger;
+  position: absolute;
+  top: calc(var(--unit));
+  right: calc(var(--unit));
+  cursor: pointer;
 `
 
 export const Container = styled.div`
@@ -35,6 +41,7 @@ export const Box = styled.div`
   background-color: #fff;
   border-radius: var(--unit);
   padding: calc(2 * var(--unit));
+  position: relative;
   /* Generated with: https://shadows.brumm.af/ */
   box-shadow: 0.9px 0.9px 2.7px rgba(0, 0, 0, 0.07),
     2.2px 2.2px 6.9px rgba(0, 0, 0, 0.048),
