@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "esbenp.prettier-vscode",
-    "styled-components.vscode-styled-components"
+    "styled-components.vscode-styled-components",
+    "Orta.vscode-jest"
   ]
 }
