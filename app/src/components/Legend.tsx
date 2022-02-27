@@ -1,16 +1,16 @@
 import "./Legend.css"
 import { Box } from "./util"
 import { Spacer } from "./Spacer"
+import { useStore } from "../StoreContext"
 
-interface LegendProps {
-  items: string[]
-}
+export function Legend() {
+  const store = useStore()
+  const items = Array.from(store.cache.get(store.metricType)?.legend ?? [])
 
-export function Legend(props: LegendProps) {
-  if (props.items.length === 0) return null
+  if (items.length === 0) return null
   return (
     <Box className="legend">
-      {props.items.map((legendItem, i) => {
+      {items.map((legendItem, i) => {
         let [label, color] = legendItem.split("|")
         return (
           <div key={`${label}${color}`}>
@@ -24,7 +24,7 @@ export function Legend(props: LegendProps) {
               <Spacer horizontal />
               <p className="legend-label">{label}</p>
             </div>
-            {i < props.items.length - 1 ? <Spacer /> : null}
+            {i < items.length - 1 ? <Spacer /> : null}
           </div>
         )
       })}
