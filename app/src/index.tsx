@@ -1,5 +1,4 @@
 import type {} from "styled-components/cssprop"
-import type {} from "react/experimental"
 import React from "react"
 import ReactDOM from "react-dom"
 import "./vars.css"
