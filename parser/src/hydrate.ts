@@ -1,3 +1,4 @@
+import { isText } from "istextorbinary"
 import { emptyGitTree } from "./constants"
 import { log } from "./log"
 import {
@@ -45,7 +46,7 @@ export async function hydrateTreeWithAuthorship(
 
     for (const { pos, neg, file } of results) {
       const blob = await lookupFileInTree(hydratedCommit.tree, file)
-      if (file === "dev/null") continue
+      if (file === "dev/null" || !isText(blob?.name)) continue
       if (blob) {
         numTimesCredited++
         const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)

@@ -45,9 +45,10 @@ export async function parseCommitLight(
   repo: string,
   hash: string
 ): Promise<GitCommitObjectLight> {
-  const commitRegex =
-    /^tree (?<tree>.*)\n(?:parent (?<parent>.*)\n)?(?:parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(?:gpgsig (?:.|\n)*-----END PGP SIGNATURE-----)?\n*(?<message>.*)\n*(?<description>(.|\n|\r)*)/g
   const rawContent = await deflateGitObject(repo, hash)
+  const commitRegex =
+    /tree (?<tree>.*)\n(?:parent (?<parent>.*)\n)?(?:parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(?:gpgsig (?:.|\n)*-----END PGP SIGNATURE-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
+
   const match = commitRegex.exec(rawContent)
   const groups = match?.groups ?? {}
 
@@ -68,7 +69,7 @@ export async function parseCommitLight(
   }
   const message = groups["message"]
   const description = groups["description"]
-  const coauthors = getCoAuthors(description)
+  const coauthors = description ? getCoAuthors(description) : []
 
   return {
     type: "commit",
