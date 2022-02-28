@@ -27,11 +27,6 @@ const SVG = styled.svg<{ chartType: ChartType }>`
   width: 100%;
   height: 100%;
 `
-export interface authorColorState {
-  palette: chroma.Color[]
-  paletteIndex: number
-  cache: Map<string, string>
-}
 
 interface ChartProps {
   size: { width: number; height: number }
