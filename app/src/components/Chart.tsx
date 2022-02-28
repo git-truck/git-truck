@@ -1,5 +1,5 @@
 import "./Chart.css"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   GitObject,
   HydratedGitBlobObject,
@@ -7,7 +7,7 @@ import {
   HydratedGitObject,
 } from "../../../parser/src/model"
 import { hierarchy, pack, select, Selection, treemap } from "d3"
-import { MetricType } from "../metrics"
+import { MetricCache, MetricType } from "../metrics"
 import {
   treemapPadding,
   textSpacingFromCircle,
@@ -36,153 +36,12 @@ export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
-  const { data, metricCaches, metricType, chartType, setClickedBlob } = useStore()
+  const { data, metricCaches, metricType, chartType, setClickedBlob } =
+    useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
 
   let svgRef = useRef<SVGSVGElement>(null)
-
-  const drawChart = useCallback(function (
-      data: HydratedGitCommitObject,
-      paddedSizeProps: { height: number; width: number },
-      root: Selection<SVGSVGElement, unknown, null, undefined>,
-      metric: MetricType,
-      chartType: ChartType
-    ) {
-      let castedTree = data.tree as GitObject
-      let hiearchy = hierarchy(castedTree)
-        .sum((d) => (d as HydratedGitBlobObject).noLines)
-        .sort((a, b) =>
-          b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
-        )
-
-      if (chartType === "TREE_MAP") {
-        let partition = treemap<GitObject>()
-          .size([paddedSizeProps.width, paddedSizeProps.height])
-          .paddingOuter(treemapPadding)
-
-        let partitionedHiearchy = partition(hiearchy)
-
-        const group = root
-          .selectAll("circle.node")
-          .data(partitionedHiearchy)
-          .enter()
-          .append("g")
-          .classed("entry", true)
-
-        const circle = group.append("rect")
-
-        circle
-          .classed("file", (d) => d.data.type === "blob")
-          .classed("folder", (d) => d.data.type === "tree")
-          .attr("x", (d) => d.x0)
-          .attr("y", (d) => d.y0)
-          .attr("width", (d) => d.x1 - d.x0)
-          .attr("height", (d) => d.y1 - d.y0)
-          .style("fill", (d) => {
-            return d.data.type === "blob"
-              ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
-              : "none"
-          })
-          .enter()
-
-        const path = group.append("path")
-
-        if (
-          new URL(window.location.toString()).searchParams.get("debug") ===
-          "true"
-        ) {
-          path.classed("name-path debug", true)
-        }
-
-        const text = group.append("text")
-
-        text
-          .filter(noLinesThreshold)
-          .attr("x", (d) => d.x0 + textSpacingFromRect)
-          .attr(
-            "y",
-            (d) =>
-              d.y0 +
-              (d.data.type === "tree"
-                ? -textSpacingFromRect
-                : textSpacingFromRect * 3)
-          )
-          .text((d) => d.data.name)
-          .style("font-size", "0.8em")
-          .style("font-weight", (d) =>
-            d.data.type === "tree" ? "bold" : "normal"
-          )
-      } else if (chartType === "BUBBLE_CHART") {
-        let partition = pack<GitObject>()
-          .size([paddedSizeProps.width, paddedSizeProps.height])
-          .padding(bubblePadding)
-
-        let partitionedHiearchy = partition(hiearchy)
-
-        const group = root
-          .selectAll("circle.node")
-          .data(partitionedHiearchy)
-          .enter()
-          .append("g")
-          .classed("entry", true)
-
-        const circle = group.append("circle")
-
-        circle
-          .classed("file", (d) => d.data.type === "blob")
-          .classed("folder", (d) => d.data.type === "tree")
-          .attr("cx", (d) => d.x)
-          .attr("cy", (d) => d.y)
-          .attr("r", (d) => Math.max(d.r - 1, 0))
-          .style("fill", (d) => {
-            return d.data.type === "blob"
-              ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
-              : "none"
-          })
-          .enter()
-
-        const path = group.append("path")
-
-        path
-          .attr("d", (d) =>
-            circlePathFromCircle(
-              d.x,
-              d.y,
-              Math.max(d.r - 1, 0) + textSpacingFromCircle
-            )
-          )
-          .classed("name-path", true)
-          .attr("cx", (d) => d.x)
-          .attr("cy", (d) => d.y)
-          .attr("r", (d) => d.r)
-          .attr("id", (d) => d.data.path)
-
-        if (
-          new URL(window.location.toString()).searchParams.get("debug") ===
-          "true"
-        ) {
-          path.classed("name-path debug", true)
-        }
-
-        const text = group.append("text")
-
-        text
-          .filter(noLinesThreshold)
-          .append("textPath")
-          .attr("startOffset", "50%")
-          .attr("dominant-baseline", "bottom")
-          .attr("text-anchor", "middle")
-          .attr("xlink:href", (d) => `#${d.data.path}`)
-          .text((d) => d.data.name)
-          .style("font-size", "0.8em")
-          .style("font-weight", (d) =>
-            d.data.type === "tree" ? "bold" : "normal"
-          )
-      }
-    },
-    [metricCaches]
-  )
 
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
   const overHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
@@ -235,7 +94,8 @@ export function Chart(props: ChartProps) {
       getPaddedSizeProps(props.size, chartType),
       svg,
       metricType,
-      chartType
+      chartType,
+      metricCaches
     )
 
     let node = svg.node()
@@ -256,7 +116,7 @@ export function Chart(props: ChartProps) {
         node.removeEventListener("mouseout", outHandlerRef.current)
       svg.selectAll("*").remove()
     }
-  }, [chartType, drawChart, metricType, data.commit, props.size])
+  }, [chartType, metricType, data.commit, props.size, metricCaches])
 
   return (
     <>
@@ -270,6 +130,141 @@ export function Chart(props: ChartProps) {
       <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
+}
+
+function drawChart(
+  data: HydratedGitCommitObject,
+  paddedSizeProps: { height: number; width: number },
+  root: Selection<SVGSVGElement, unknown, null, undefined>,
+  metric: MetricType,
+  chartType: ChartType,
+  metricCaches: Map<MetricType, MetricCache>
+) {
+  let castedTree = data.tree as GitObject
+  let hiearchy = hierarchy(castedTree)
+    .sum((d) => (d as HydratedGitBlobObject).noLines)
+    .sort((a, b) =>
+      b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
+    )
+
+  if (chartType === "TREE_MAP") {
+    let partition = treemap<GitObject>()
+      .size([paddedSizeProps.width, paddedSizeProps.height])
+      .paddingOuter(treemapPadding)
+
+    let partitionedHiearchy = partition(hiearchy)
+
+    const group = root
+      .selectAll("circle.node")
+      .data(partitionedHiearchy)
+      .enter()
+      .append("g")
+      .classed("entry", true)
+
+    const circle = group.append("rect")
+
+    circle
+      .classed("file", (d) => d.data.type === "blob")
+      .classed("folder", (d) => d.data.type === "tree")
+      .attr("x", (d) => d.x0)
+      .attr("y", (d) => d.y0)
+      .attr("width", (d) => d.x1 - d.x0)
+      .attr("height", (d) => d.y1 - d.y0)
+      .style("fill", (d) => {
+        return d.data.type === "blob"
+          ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
+          : "none"
+      })
+      .enter()
+
+    const path = group.append("path")
+
+    if (
+      new URL(window.location.toString()).searchParams.get("debug") === "true"
+    ) {
+      path.classed("name-path debug", true)
+    }
+
+    const text = group.append("text")
+
+    text
+      .filter(noLinesThreshold)
+      .attr("x", (d) => d.x0 + textSpacingFromRect)
+      .attr(
+        "y",
+        (d) =>
+          d.y0 +
+          (d.data.type === "tree"
+            ? -textSpacingFromRect
+            : textSpacingFromRect * 3)
+      )
+      .text((d) => d.data.name)
+      .style("font-size", "0.8em")
+      .style("font-weight", (d) => (d.data.type === "tree" ? "bold" : "normal"))
+  } else if (chartType === "BUBBLE_CHART") {
+    let partition = pack<GitObject>()
+      .size([paddedSizeProps.width, paddedSizeProps.height])
+      .padding(bubblePadding)
+
+    let partitionedHiearchy = partition(hiearchy)
+
+    const group = root
+      .selectAll("circle.node")
+      .data(partitionedHiearchy)
+      .enter()
+      .append("g")
+      .classed("entry", true)
+
+    const circle = group.append("circle")
+
+    circle
+      .classed("file", (d) => d.data.type === "blob")
+      .classed("folder", (d) => d.data.type === "tree")
+      .attr("cx", (d) => d.x)
+      .attr("cy", (d) => d.y)
+      .attr("r", (d) => Math.max(d.r - 1, 0))
+      .style("fill", (d) => {
+        return d.data.type === "blob"
+          ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
+          : "none"
+      })
+      .enter()
+
+    const path = group.append("path")
+
+    path
+      .attr("d", (d) =>
+        circlePathFromCircle(
+          d.x,
+          d.y,
+          Math.max(d.r - 1, 0) + textSpacingFromCircle
+        )
+      )
+      .classed("name-path", true)
+      .attr("cx", (d) => d.x)
+      .attr("cy", (d) => d.y)
+      .attr("r", (d) => d.r)
+      .attr("id", (d) => d.data.path)
+
+    if (
+      new URL(window.location.toString()).searchParams.get("debug") === "true"
+    ) {
+      path.classed("name-path debug", true)
+    }
+
+    const text = group.append("text")
+
+    text
+      .filter(noLinesThreshold)
+      .append("textPath")
+      .attr("startOffset", "50%")
+      .attr("dominant-baseline", "bottom")
+      .attr("text-anchor", "middle")
+      .attr("xlink:href", (d) => `#${d.data.path}`)
+      .text((d) => d.data.name)
+      .style("font-size", "0.8em")
+      .style("font-weight", (d) => (d.data.type === "tree" ? "bold" : "normal"))
+  }
 }
 
 // a rx ry angle large-arc-flag sweep-flag dx dy
