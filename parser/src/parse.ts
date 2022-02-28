@@ -224,3 +224,7 @@ export async function parse(rawArgs: string[]) {
 
   log.log(`\nDone in ${formatMs(stop - start)}`)
 }
+
+export const exportForTest = {
+  getCoAuthors,
+}
