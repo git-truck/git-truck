@@ -2,31 +2,14 @@ name: Auto Assign to Project
 
 on:
   issues:
-    types: [opened, labeled, assigned, unassigned]
-  pull_request:
-    types: [opened, labeled]
-  issue_comment:
-    types: [created]
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+    types: [opened]
 jobs:
-  assign_one_project:
+  createCard:
     runs-on: ubuntu-latest
-    name: Assign to One Project
     steps:
-      - name: Assign opened issues to Git Visual
-        uses: alex-page/github-project-automation-plus@v0.8.1
-        if: github.event.issue && (github.event.action == 'opened' || github.event.action == 'unassigned')
+      - name: Create or Update Project Card
+        uses: peter-evans/create-or-update-project-card@v1
         with:
-          project: Git Visual
-          column: Backlog
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Assign issues with assignees and opened pull requests to Git Visual
-        uses: alex-page/github-project-automation-plus@v0.8.1
-        if: (github.event.pull_request && github.event.action == 'opened' ) || (github.event.issue && github.event.action == 'assigned' )
-        with:
-          project: Git Visual
-          column: In progress
-          token: ${{ secrets.GITHUB_TOKEN }}
+          project-name: Git Visual
+          column-name: My column
+          project: ${{ secrets.GITHUB_TOKEN }}
