@@ -20,10 +20,15 @@
   stroke-dasharray: 5, 5;
 }
 
+.search-match-title {
+  fill: var(--search-match-color);
+  font-weight: bold;
+}
+
 .search-match {
-  stroke-width: 2px;
-  stroke: red;
-  stroke-dasharray: 2px;
+  stroke-width: 3px;
+  stroke: var(--search-match-color);
+  stroke-dasharray: 3px;
 }
 
 .module {

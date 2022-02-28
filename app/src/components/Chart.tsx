@@ -6,7 +6,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitObject,
 } from "../../../parser/src/model"
-import { hierarchy, pack, select, Selection, treemap } from "d3"
+import { hierarchy, HierarchyNode, pack, select, Selection, treemap } from "d3"
 import { MetricCache, MetricType } from "../metrics"
 import {
   treemapPadding,
@@ -152,6 +152,10 @@ function drawChart(
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
 
+  const isSearchMatch = (d: HierarchyNode<GitObject>) =>
+    searchText !== "" &&
+    d.data.name.toLowerCase().includes(searchText.toLowerCase())
+
   if (chartType === "TREE_MAP") {
     let partition = treemap<GitObject>()
       .size([paddedSizeProps.width, paddedSizeProps.height])
@@ -172,12 +176,7 @@ function drawChart(
     rect
       .classed("file", (d) => d.data.type === "blob")
       .classed("folder", (d) => d.data.type === "tree")
-      .classed(
-        "search-match",
-        (d) =>
-          searchText !== "" &&
-          d.data.name.toLowerCase().includes(searchText.toLowerCase())
-      )
+      .classed("search-match", isSearchMatch)
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("width", (d) => d.x1 - d.x0)
@@ -201,6 +200,12 @@ function drawChart(
 
     text
       .filter(noLinesThreshold)
+      .classed(
+        "search-match-title",
+        (d) =>
+          searchText !== "" &&
+          d.data.name.toLowerCase().includes(searchText.toLowerCase())
+      )
       .attr("x", (d) => d.x0 + textSpacingFromRect)
       .attr(
         "y",
@@ -232,12 +237,7 @@ function drawChart(
     circle
       .classed("file", (d) => d.data.type === "blob")
       .classed("folder", (d) => d.data.type === "tree")
-      .classed(
-        "search-match",
-        (d) =>
-          searchText !== "" &&
-          d.data.name.toLowerCase().includes(searchText.toLowerCase())
-      )
+      .classed("search-match", isSearchMatch)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
       .attr("r", (d) => Math.max(d.r - 1, 0))
@@ -270,7 +270,9 @@ function drawChart(
       path.classed("name-path debug", true)
     }
 
-    const text = group.append("text")
+    const text = group
+      .append("text")
+      .classed("search-match-title", isSearchMatch)
 
     text
       .filter(noLinesThreshold)
@@ -281,7 +283,9 @@ function drawChart(
       .attr("xlink:href", (d) => `#${d.data.path}`)
       .text((d) => d.data.name)
       .style("font-size", "0.8em")
-      .style("font-weight", (d) => (d.data.type === "tree" ? "bold" : "normal"))
+      .style("font-weight", (d) =>
+        d.data.type === "tree" || isSearchMatch(d) ? "bold" : "normal"
+      )
   }
 }
 
