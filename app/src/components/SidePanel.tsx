@@ -1,8 +1,7 @@
-import { useRef, useState } from "react"
 import styled from "styled-components"
 import { Details } from "./Details"
 import { GlobalInfo } from "./GlobalInfo"
-import { NewLegend } from "./NewLegend"
+import { Legend } from "./Legend"
 import { Options } from "./Options"
 import { Spacer } from "./Spacer"
 
@@ -15,7 +14,7 @@ export function SidePanel() {
       <Options />
       <Spacer />
       <Details />
-      {/* <NewLegend items={["meme|red","lol|green","næver|yellow",".md|orange",".ts|cadetblue",".html|pink"]} /> */}
+      <Legend />
     </SidePanelRoot>
   )
 }
