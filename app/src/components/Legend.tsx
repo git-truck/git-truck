@@ -1,10 +1,9 @@
-import "./Legend.css"
-import { Box } from "./util"
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { LegendToggle } from "./LegendToggle"
 import { useState } from "react"
 import { useStore } from "../StoreContext"
+import { LegendBox } from "./util"
 
 export function Legend() {
   const { metricType, metricCaches } = useStore()
@@ -13,7 +12,7 @@ export function Legend() {
   const [collapse, setCollapse] = useState<boolean>(true)
   if (items.length === 0) return null
   return (
-    <Box className="legend">
+    <LegendBox>
       <LegendFragment show={true} items={items.slice(0, 3)} />
       {items.length > 3 ? (
         <>
@@ -25,6 +24,6 @@ export function Legend() {
           />
         </>
       ) : null}
-    </Box>
+    </LegendBox>
   )
 }
