@@ -18,7 +18,7 @@ export function Options() {
         label="Color metric"
         enum={Metric}
         onChange={(metric: MetricType) => setMetricType(metric)}
-      ></EnumSelect>
+      />
     </Box>
   )
 }
