@@ -32,14 +32,13 @@ interface BubbleChartProps {}
 export function BubbleChart(props: BubbleChartProps) {
   const {
     data,
+    metricCaches,
     metricType,
     chartType,
     currentHoveredBlob,
     setHoveredBlob,
     setClickedBlob,
   } = useStore()
-
-  const store = useStore()
 
   const legendSetRef = useRef<Set<string>>(new Set())
 
@@ -90,7 +89,7 @@ export function BubbleChart(props: BubbleChartProps) {
         .attr("height", (d) => d.y1 - d.y0)
         .style("fill", (d) => {
           return d.data.type === "blob"
-            ? store.cache.get(metric)?.colormap.get(d.data.name) ?? "grey"
+            ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
             : "none"
         })
         .enter()
@@ -137,7 +136,7 @@ export function BubbleChart(props: BubbleChartProps) {
         .attr("r", (d) => d.r)
         .style("fill", (d) => {
           return d.data.type === "blob"
-            ? store.cache.get(metric)?.colormap.get(d.data.name) ?? "grey"
+            ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
             : "none"
         })
         .enter()
@@ -254,7 +253,6 @@ export function BubbleChart(props: BubbleChartProps) {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${paddedSizeProps.width} ${paddedSizeProps.height}`}
       />
-      <Legend key={legendKey} />
     </>
   )
 }
