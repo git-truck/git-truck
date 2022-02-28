@@ -1,7 +1,5 @@
 import "./Legend.css"
-import { Box } from "./util"
 import { Spacer } from "./Spacer"
-import { MutableRefObject } from "react"
 
 interface LegendOtherProps {
   items: string[]

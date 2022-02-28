@@ -1,5 +1,4 @@
 import "./Legend.css"
-import { MutableRefObject, useRef } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faAngleUp } from "@fortawesome/free-solid-svg-icons"
 
