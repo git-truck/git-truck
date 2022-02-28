@@ -7,7 +7,7 @@ import { MetricType } from "./metrics"
 
 export interface Store {
   data: ParserData
-  cache: Map<string, MetricCache>
+  metricCaches: Map<MetricType, MetricCache>
   metricType: MetricType
   chartType: ChartType
   currentHoveredBlob: HydratedGitBlobObject | null
@@ -31,7 +31,7 @@ export function getDefaultStore(): Store {
 
   return {
     data: d,
-    cache: mc,
+    metricCaches: mc,
     metricType: "FILE_EXTENSION",
     chartType: "BUBBLE_CHART",
     currentHoveredBlob: null,

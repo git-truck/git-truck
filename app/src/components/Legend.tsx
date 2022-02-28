@@ -5,7 +5,9 @@ import { useStore } from "../StoreContext"
 
 export function Legend() {
   const store = useStore()
-  const items = Array.from(store.cache.get(store.metricType)?.legend ?? [])
+  const items = Array.from(
+    store.metricCaches.get(store.metricType)?.legend ?? []
+  )
 
   if (items.length === 0) return null
   return (
