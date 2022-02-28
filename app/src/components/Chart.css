@@ -4,7 +4,6 @@
 }
 
 .file {
-  /* stroke-width: 0; */
   cursor: pointer;
   pointer-events: all;
   position: relative;
@@ -22,14 +21,9 @@
 }
 
 .search-match {
-  stroke-width: 5px;
-  stroke: black;
-  /* stroke-dasharray: 2px; */
-}
-
-.stroke-4 {
-  stroke: url(#pattern);
-  stroke-width: 10;
+  stroke-width: 2px;
+  stroke: red;
+  stroke-dasharray: 2px;
 }
 
 .module {
