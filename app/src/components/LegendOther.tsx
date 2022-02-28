@@ -16,8 +16,8 @@ export function LegendOther(props: LegendOtherProps) {
         let margin = i === 0 ? 0 : -10
         return (
           <LegendDot
+            dotColor={color}
             style={{
-              backgroundColor: color,
               marginLeft: margin,
             }}
           />

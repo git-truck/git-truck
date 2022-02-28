@@ -15,11 +15,7 @@ export function LegendFragment(props: LegendFragProps) {
         return (
           <>
             <LegendEntry>
-              <LegendDot
-                style={{
-                  backgroundColor: color,
-                }}
-              />
+              <LegendDot dotColor={color} />
               <Spacer horizontal />
               <LegendLable>{label}</LegendLable>
             </LegendEntry>

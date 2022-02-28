@@ -1,23 +1,35 @@
-import { Box, BoxSubTitle } from "./util"
+import { Box, BoxSubTitle, LegendDot } from "./util"
 import { useMouse } from "react-use"
-import { useRef } from "react"
+import { useMemo, useRef } from "react"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
+import { useStore } from "../StoreContext"
+import { Spacer } from "./Spacer"
 
-const TooltipBox = styled(Box)`
-  padding: calc(0.5 * var(--unit));
+const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
+  padding: calc(0.5 * var(--unit)) var(--unit);
   min-width: 0;
   position: absolute;
   top: 0px;
   left: 0px;
   will-change: transform visibility;
+  display: flex;
+  border-radius: calc(2 * var(--unit));
+  align-items: center;
+
   pointer-events: none;
+  visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
+  transform: ${({ visible, x, y }) =>
+    visible
+      ? `translate(calc(var(--unit) + ${x}px), calc(var(--unit) + ${y}px))`
+      : "none"};
 `
 
 const TooltipContainer = styled.div`
   position: absolute;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
 `
 
 interface TooltipProps {
@@ -25,19 +37,23 @@ interface TooltipProps {
 }
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
+  const { metricCaches, metricType } = useStore()
+  const color = useMemo(() => {
+    if (!hoveredBlob) {
+      return null
+    }
+    const { colormap } = metricCaches.get(metricType)!
+    const color = colormap.get(hoveredBlob.path)
+    return color
+  }, [hoveredBlob, metricCaches, metricType])
   const ref = useRef(document.documentElement)
+
   const mouse = useMouse(ref)
   return (
     <TooltipContainer>
-      <TooltipBox
-        style={{
-          visibility: hoveredBlob === null ? "hidden" : "visible",
-          transform:
-            hoveredBlob === null
-              ? ""
-              : `translate(calc(var(--unit) + ${mouse.docX}px), calc(var(--unit) + ${mouse.docY}px))`,
-        }}
-      >
+      <TooltipBox visible={hoveredBlob !== null} x={mouse.docX} y={mouse.docY}>
+        {color ? <LegendDot dotColor={color} /> : null}
+        <Spacer horizontal />
         <BoxSubTitle>{hoveredBlob?.name}</BoxSubTitle>
       </TooltipBox>
     </TooltipContainer>
