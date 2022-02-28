@@ -1,6 +1,6 @@
-import "./Legend.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faAngleUp } from "@fortawesome/free-solid-svg-icons"
+import { LegendButton } from "./util"
 
 interface LegendProps {
   toggle: () => void
@@ -8,10 +8,9 @@ interface LegendProps {
 }
 
 export function LegendToggle(props: LegendProps) {
-  let c = props.collapse ? "" : "legend-toggle-active"
   return (
-    <button className={`legend-toggle ${c}`} onClick={() => props.toggle()}>
+    <LegendButton collapse={props.collapse} onClick={() => props.toggle()}>
       <FontAwesomeIcon icon={faAngleUp} />
-    </button>
+    </LegendButton>
   )
 }

@@ -66,3 +66,49 @@ export const Select = styled.select`
   border: 1px var(--border-color) solid;
   border-radius: calc(0.5 * var(--unit));
 `
+
+export const LegendBox = styled(Box)`
+  position: absolute;
+  width: calc(var(--side-panel-width) - calc(6 * var(--unit)));
+  bottom: 0px;
+  left: 0px;
+`
+
+export const LegendEntry = styled.div`
+  font-size: small;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  place-items: center;
+  line-height: 100%;
+  margin: 0px;
+`
+
+export const LegendDot = styled.div`
+  height: 100%;
+  aspect-ratio: 1;
+  width: 1em;
+  border-radius: 50%;
+`
+
+export const LegendLable = styled.p`
+  padding: 0px;
+  margin: 0px;
+  font-weight: bold;
+`
+
+export const LegendButton = styled.button<{ collapse: boolean }>`
+  position: absolute;
+  top: var(--unit);
+  right: var(--unit);
+  border: none;
+  background-color: rgba(0, 0, 0, 0);
+  scale: 200%;
+  transition-duration: 0.4s;
+  color: grey;
+  transform-origin: 50% 55%;
+  transform: ${(props) => (props.collapse ? "rotate(180deg)" : "none")};
+  &:hover {
+    scale: 180%;
+  }
+`

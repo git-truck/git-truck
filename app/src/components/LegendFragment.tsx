@@ -1,5 +1,5 @@
-import "./Legend.css"
 import { Spacer } from "./Spacer"
+import { LegendEntry, LegendDot, LegendLable } from "./util"
 
 interface LegendFragProps {
   items: string[]
@@ -14,16 +14,15 @@ export function LegendFragment(props: LegendFragProps) {
         let [label, color] = legendItem.split("|")
         return (
           <>
-            <div className="legend-entry">
-              <div
-                className="legend-dot"
+            <LegendEntry>
+              <LegendDot
                 style={{
                   backgroundColor: color,
                 }}
-              ></div>
+              ></LegendDot>
               <Spacer horizontal />
-              <p className="legend-label">{label}</p>
-            </div>
+              <LegendLable>{label}</LegendLable>
+            </LegendEntry>
             <Spacer />
           </>
         )

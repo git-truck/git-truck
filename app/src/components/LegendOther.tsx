@@ -1,5 +1,5 @@
-import "./Legend.css"
 import { Spacer } from "./Spacer"
+import { LegendDot, LegendEntry, LegendLable } from "./util"
 
 interface LegendOtherProps {
   items: string[]
@@ -10,22 +10,21 @@ export function LegendOther(props: LegendOtherProps) {
   if (!props.show) return null
 
   return (
-    <div className="legend-entry">
+    <LegendEntry>
       {props.items.map((legendItem, i) => {
         let [, color] = legendItem.split("|")
         let margin = i === 0 ? 0 : -10
         return (
-          <div
-            className="legend-dot"
+          <LegendDot
             style={{
               backgroundColor: color,
               marginLeft: margin,
             }}
-          ></div>
+          ></LegendDot>
         )
       })}
       <Spacer horizontal />
-      <p className="legend-label">Other</p>
-    </div>
+      <LegendLable>Other</LegendLable>
+    </LegendEntry>
   )
 }
