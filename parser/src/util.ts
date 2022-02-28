@@ -20,7 +20,7 @@ function runProcess(dir: string, command: string, args: string[]) {
       prcs.stderr.once("data", (buf) => reject(buf.toString().trim()))
       prcs.stdout.on("data", (buf) => chunks.push(buf))
       prcs.stdout.on("end", () => {
-        if (chunks.length > 0) resolve(Buffer.concat(chunks).toString().trim())
+        resolve(Buffer.concat(chunks).toString().trim())
       })
     } catch (e) {
       reject(e)
