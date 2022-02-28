@@ -37,7 +37,8 @@ export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
-  const { data, metricCaches, metricType, chartType, setClickedBlob } = useStore()
+  const { data, metricCaches, metricType, chartType, setClickedBlob } =
+    useStore()
   const { searchText } = useSearch()
   const legendSetRef = useRef<Set<string>>(new Set())
   const svgRef = useRef<SVGSVGElement>(null)
@@ -179,7 +180,7 @@ function drawChart(
       .attr("height", (d) => d.y1 - d.y0)
       .style("fill", (d) => {
         return d.data.type === "blob"
-          ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
+          ? metricCaches.get(metric)?.colormap.get(d.data.path) ?? "grey"
           : "none"
       })
       .enter()
@@ -196,10 +197,7 @@ function drawChart(
 
     text
       .filter(noLinesThreshold)
-      .classed(
-        "search-match-title",
-        isSearchMatch
-      )
+      .classed("search-match-title", isSearchMatch)
       .attr("x", (d) => d.x0 + textSpacingFromRect)
       .attr(
         "y",
@@ -237,7 +235,7 @@ function drawChart(
       .attr("r", (d) => Math.max(d.r - 1, 0))
       .style("fill", (d) => {
         return d.data.type === "blob"
-          ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
+          ? metricCaches.get(metric)?.colormap.get(d.data.path) ?? "grey"
           : "none"
       })
       .enter()

@@ -106,10 +106,10 @@ export function setupMetricsCache(
 function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
   let lookup = gitcolors.ext(extension)
-  if (typeof lookup === "undefined") cache.colormap.set(extension, "grey")
+  if (typeof lookup === "undefined") cache.colormap.set(blob.path, "grey")
   else {
     cache.legend.add(`${extension}|${lookup.color}`)
-    cache.colormap.set(blob.name, lookup.color)
+    cache.colormap.set(blob.path, lookup.color)
   }
 }
 
@@ -139,19 +139,16 @@ function setDominantAuthorColor(
   }
 
   let [dom] = sorted[0]
+  let colorString: string
   if (acs.cache.has(dom)) {
-    let colorString = acs.cache.get(dom) ?? "grey"
-    cache.colormap.set(blob.name, colorString)
-    cache.legend.add(`${dom}|${colorString}`)
-    return
+    colorString = acs.cache.get(dom) ?? "grey"
   } else {
     let color = acs.palette[acs.paletteIndex++].rgb(true)
-    let colorString = `rgb(${color[0]},${color[1]},${color[2]})`
+    colorString = `rgb(${color[0]},${color[1]},${color[2]})`
     acs.cache.set(dom, colorString)
-    cache.colormap.set(blob.name, colorString)
     cache.legend.add(`${dom}|${colorString}`)
-    return
   }
+  cache.colormap.set(blob.path, colorString)
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
@@ -162,18 +159,18 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
 
   if (creditsum === 0) {
     cache.legend.add("No credit|grey")
-    cache.colormap.set(blob.name, "grey")
+    cache.colormap.set(blob.path, "grey")
     return
   }
 
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
       cache.legend.add("Dominated|red")
-      cache.colormap.set(blob.name, "red")
+      cache.colormap.set(blob.path, "red")
       return
     default:
       cache.legend.add("Non-dominated|cadetblue")
-      cache.colormap.set(blob.name, "cadetblue")
+      cache.colormap.set(blob.path, "cadetblue")
       return
   }
 }
@@ -221,7 +218,7 @@ class ColdMapTranslater {
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     cache.colormap.set(
-      blob.name,
+      blob.path,
       `hsl(240,100%,${this.translator.translate(blob.noCommits)}%)`
     )
   }
@@ -243,7 +240,7 @@ class HeatMapTranslater {
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     cache.colormap.set(
-      blob.name,
+      blob.path,
       `hsl(0,100%,${this.translator.inverseTranslate(blob.noCommits)}%)`
     )
   }
