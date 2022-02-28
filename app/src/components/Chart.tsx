@@ -6,7 +6,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitObject,
 } from "../../../parser/src/model"
-import { hierarchy, pack, select, Selection, treemap } from "d3"
+import { hierarchy, HierarchyNode, pack, select, Selection, treemap } from "d3"
 import { MetricCache, MetricType } from "../metrics"
 import {
   treemapPadding,
@@ -19,6 +19,7 @@ import { Legend } from "./Legend"
 import { ChartType, useStore } from "../StoreContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
+import { useSearch } from "../SearchContext"
 
 const SVG = styled.svg<{ chartType: ChartType }>`
   display: grid;
@@ -36,12 +37,10 @@ export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
-  const { data, metricCaches, metricType, chartType, setClickedBlob } =
-    useStore()
-
+  const { data, metricCaches, metricType, chartType, setClickedBlob } = useStore()
+  const { searchText } = useSearch()
   const legendSetRef = useRef<Set<string>>(new Set())
-
-  let svgRef = useRef<SVGSVGElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
   const overHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
@@ -95,7 +94,8 @@ export function Chart(props: ChartProps) {
       svg,
       metricType,
       chartType,
-      metricCaches
+      metricCaches,
+      searchText
     )
 
     let node = svg.node()
@@ -116,7 +116,7 @@ export function Chart(props: ChartProps) {
         node.removeEventListener("mouseout", outHandlerRef.current)
       svg.selectAll("*").remove()
     }
-  }, [chartType, metricType, data.commit, props.size, metricCaches])
+  }, [chartType, metricType, data.commit, props.size, metricCaches, searchText])
 
   return (
     <>
@@ -138,7 +138,8 @@ function drawChart(
   root: Selection<SVGSVGElement, unknown, null, undefined>,
   metric: MetricType,
   chartType: ChartType,
-  metricCaches: Map<MetricType, MetricCache>
+  metricCaches: Map<MetricType, MetricCache>,
+  searchText: string
 ) {
   let castedTree = data.tree as GitObject
   let hiearchy = hierarchy(castedTree)
@@ -147,9 +148,14 @@ function drawChart(
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )
 
+  const isSearchMatch = (d: HierarchyNode<GitObject>) =>
+    searchText !== "" &&
+    d.data.name.toLowerCase().includes(searchText.toLowerCase())
+
   if (chartType === "TREE_MAP") {
     let partition = treemap<GitObject>()
       .size([paddedSizeProps.width, paddedSizeProps.height])
+      .paddingInner(1)
       .paddingOuter(treemapPadding)
 
     let partitionedHiearchy = partition(hiearchy)
@@ -161,11 +167,12 @@ function drawChart(
       .append("g")
       .classed("entry", true)
 
-    const circle = group.append("rect")
+    const rect = group.append("rect")
 
-    circle
+    rect
       .classed("file", (d) => d.data.type === "blob")
       .classed("folder", (d) => d.data.type === "tree")
+      .classed("search-match", isSearchMatch)
       .attr("x", (d) => d.x0)
       .attr("y", (d) => d.y0)
       .attr("width", (d) => d.x1 - d.x0)
@@ -189,6 +196,10 @@ function drawChart(
 
     text
       .filter(noLinesThreshold)
+      .classed(
+        "search-match-title",
+        isSearchMatch
+      )
       .attr("x", (d) => d.x0 + textSpacingFromRect)
       .attr(
         "y",
@@ -220,6 +231,7 @@ function drawChart(
     circle
       .classed("file", (d) => d.data.type === "blob")
       .classed("folder", (d) => d.data.type === "tree")
+      .classed("search-match", isSearchMatch)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
       .attr("r", (d) => Math.max(d.r - 1, 0))
@@ -252,7 +264,9 @@ function drawChart(
       path.classed("name-path debug", true)
     }
 
-    const text = group.append("text")
+    const text = group
+      .append("text")
+      .classed("search-match-title", isSearchMatch)
 
     text
       .filter(noLinesThreshold)
@@ -263,7 +277,9 @@ function drawChart(
       .attr("xlink:href", (d) => `#${d.data.path}`)
       .text((d) => d.data.name)
       .style("font-size", "0.8em")
-      .style("font-weight", (d) => (d.data.type === "tree" ? "bold" : "normal"))
+      .style("font-weight", (d) =>
+        d.data.type === "tree" || isSearchMatch(d) ? "bold" : "normal"
+      )
   }
 }
 

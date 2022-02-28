@@ -67,6 +67,13 @@ export const Select = styled.select`
   border-radius: calc(0.5 * var(--unit));
 `
 
+export const SearchField = styled.input`
+  border: 0;
+  flex-grow: 1;
+  border-radius: 3px;
+  padding: var(--unit);
+`
+
 export const LegendBox = styled(Box)`
   position: absolute;
   width: calc(var(--side-panel-width) - calc(6 * var(--unit)));

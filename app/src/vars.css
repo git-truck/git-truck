@@ -6,4 +6,6 @@
   --border-color: hsl(0deg 0% 70%);
   --surface-color: hsl(0deg 0% 90%);
   --border-color-alpha: hsla(0deg, 0%, 0%, 30%);
+  --search-match-color: red;
+  --focused-outline-color: rgb(76, 141, 238);
 }

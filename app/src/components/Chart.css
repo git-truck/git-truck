@@ -4,7 +4,6 @@
 }
 
 .file {
-  stroke-width: 0;
   cursor: pointer;
   pointer-events: all;
   position: relative;
@@ -19,4 +18,26 @@
 .name-path.debug {
   stroke: black;
   stroke-dasharray: 5, 5;
+}
+
+.search-match-title {
+  fill: var(--search-match-color);
+  font-weight: bold;
+}
+
+.search-match {
+  stroke-width: 3px;
+  stroke: var(--search-match-color);
+  stroke-dasharray: 3px;
+}
+
+.module {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+svg {
+  fill: #333;
 }
