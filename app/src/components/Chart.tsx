@@ -202,9 +202,7 @@ function drawChart(
       .filter(noLinesThreshold)
       .classed(
         "search-match-title",
-        (d) =>
-          searchText !== "" &&
-          d.data.name.toLowerCase().includes(searchText.toLowerCase())
+        isSearchMatch
       )
       .attr("x", (d) => d.x0 + textSpacingFromRect)
       .attr(
