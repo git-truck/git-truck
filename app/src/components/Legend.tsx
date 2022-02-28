@@ -1,35 +1,34 @@
-import "./Legend.css"
-import { Box } from "./util"
-import { Spacer } from "./Spacer"
+import { LegendFragment } from "./LegendFragment"
+import { LegendOther } from "./LegendOther"
+import { LegendToggle } from "./LegendToggle"
+import { useState } from "react"
 import { useStore } from "../StoreContext"
+import { LegendBox } from "./util"
+
+const cutoff = 3
 
 export function Legend() {
-  const store = useStore()
-  const items = Array.from(
-    store.metricCaches.get(store.metricType)?.legend ?? []
-  )
+  const { metricType, metricCaches } = useStore()
+  let items = Array.from(metricCaches.get(metricType)?.legend ?? [])
 
+  const [collapse, setCollapse] = useState<boolean>(true)
   if (items.length === 0) return null
-  return (
-    <Box className="legend">
-      {items.map((legendItem, i) => {
-        let [label, color] = legendItem.split("|")
-        return (
-          <div key={`${label}${color}`}>
-            <div className="legend-entry">
-              <div
-                className="legend-dot"
-                style={{
-                  backgroundColor: color,
-                }}
-              ></div>
-              <Spacer horizontal />
-              <p className="legend-label">{label}</p>
-            </div>
-            {i < items.length - 1 ? <Spacer /> : null}
-          </div>
-        )
-      })}
-    </Box>
-  )
+  if (items.length <= cutoff + 1)
+    return (
+      <LegendBox>
+        <LegendFragment show={true} items={items}></LegendFragment>
+      </LegendBox>
+    )
+  else
+    return (
+      <LegendBox>
+        <LegendFragment show={true} items={items.slice(0, cutoff)} />
+        <LegendFragment show={!collapse} items={items.slice(cutoff)} />
+        <LegendOther show={collapse} items={items.slice(cutoff)} />
+        <LegendToggle
+          collapse={collapse}
+          toggle={() => setCollapse(!collapse)}
+        />
+      </LegendBox>
+    )
 }
