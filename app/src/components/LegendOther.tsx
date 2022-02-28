@@ -20,7 +20,7 @@ export function LegendOther(props: LegendOtherProps) {
               backgroundColor: color,
               marginLeft: margin,
             }}
-          ></LegendDot>
+          />
         )
       })}
       <Spacer horizontal />
