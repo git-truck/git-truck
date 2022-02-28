@@ -13,7 +13,7 @@ export default function SearchBar(props: {
 }) {
   const [value, setValue] = useState("")
 
-  const [isPending] = useDebounce(
+  useDebounce(
     () => {
       props.setSearchText(value)
     },
@@ -31,7 +31,6 @@ export default function SearchBar(props: {
           setValue(event.target.value)
         }}
       />
-      {!isPending() ? <div>Searching...</div> : null}
     </StyledBox>
   )
 }
