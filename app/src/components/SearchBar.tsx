@@ -1,11 +1,9 @@
-import { Box } from "./util"
+import { SearchField, Box } from "./util"
 import styled from "styled-components"
 import { Dispatch, SetStateAction, useState } from "react"
 
-const SearchField = styled.input`
-  border: 0;
-  width: 100%;
-  border-radius: 3px;
+const StyledBox = styled(Box)`
+  display: flex;
 `
 
 export default function SearchBar(props: {
@@ -13,7 +11,7 @@ export default function SearchBar(props: {
 }) {
   const [value, setValue] = useState("")
   return (
-    <Box>
+    <StyledBox>
       <SearchField
         value={value}
         type="text"
@@ -23,6 +21,6 @@ export default function SearchBar(props: {
           props.setSearchText(event.target.value)
         }}
       />
-    </Box>
+    </StyledBox>
   )
 }
