@@ -19,7 +19,7 @@ export function LegendFragment(props: LegendFragProps) {
                 style={{
                   backgroundColor: color,
                 }}
-              ></LegendDot>
+              />
               <Spacer horizontal />
               <LegendLable>{label}</LegendLable>
             </LegendEntry>

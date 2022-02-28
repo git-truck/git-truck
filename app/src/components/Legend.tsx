@@ -16,7 +16,7 @@ export function Legend() {
   if (items.length <= cutoff + 1)
     return (
       <LegendBox>
-        <LegendFragment show={true} items={items}></LegendFragment>
+        <LegendFragment show={true} items={items} />
       </LegendBox>
     )
   else
