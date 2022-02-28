@@ -11,11 +11,7 @@ export function Details() {
       <BoxTitle>
         {clickedBlob.name}
         <CloseButton
-          onClick={() => {
-            setClickedBlob(null)
-
-            console.log("clickety clooty i'm coming for that close button")
-          }}
+          onClick={() => {setClickedBlob(null)}}
         >
           &times;
         </CloseButton>
