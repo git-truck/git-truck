@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useStore } from "../StoreContext"
 import { LegendBox } from "./util"
 
-const cutoff = 5
+const cutoff = 3
 
 export function Legend() {
   const { metricType, metricCaches } = useStore()
