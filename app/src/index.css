@@ -21,3 +21,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+button:focus,
+input:focus,
+select:focus {
+  outline-color: var(--focused-outline-color);
+}
