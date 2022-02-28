@@ -37,14 +37,10 @@ export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
-  const { data, metricCaches, metricType, chartType, setClickedBlob } =
-    useStore()
-
+  const { data, metricCaches, metricType, chartType, setClickedBlob } = useStore()
   const { searchText } = useSearch()
-
   const legendSetRef = useRef<Set<string>>(new Set())
-
-  let svgRef = useRef<SVGSVGElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   const clickHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
   const overHandlerRef = useRef<((e: MouseEvent) => void) | null>(null)
