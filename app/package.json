@@ -59,7 +59,8 @@
       "react-app/jest"
     ],
     "rules": {
-      "no-console": "warn"
+      "no-console": "warn",
+      "react/self-closing-comp": "warn"
     }
   },
   "browserslist": {
