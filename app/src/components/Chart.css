@@ -1,6 +1,5 @@
 .folder {
   stroke: var(--border-color);
-  fill: #fff;
 }
 
 .file {
@@ -20,15 +19,21 @@
   stroke-dasharray: 5, 5;
 }
 
-.search-match-title {
-  fill: var(--search-match-color);
-  font-weight: bold;
+.search-match ~ path {
+  stroke-width: 2px;
+  stroke: var(--search-match-color);
+  stroke-linecap: round;
+  animation: 1s ease-in-out alternate infinite marching_dashes;
 }
 
-.search-match {
-  stroke-width: 3px;
-  stroke: var(--search-match-color);
-  stroke-dasharray: 3px;
+.search-match-title {}
+
+.search-match {}
+
+@keyframes marching_dashes {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .module {

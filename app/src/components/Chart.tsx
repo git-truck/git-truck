@@ -215,7 +215,7 @@ function drawChart(
   } else if (chartType === "BUBBLE_CHART") {
     let partition = pack<GitObject>()
       .size([paddedSizeProps.width, paddedSizeProps.height])
-      .padding(bubblePadding)
+      .padding(10)
 
     let partitionedHiearchy = partition(hiearchy)
 
@@ -234,7 +234,7 @@ function drawChart(
       .classed("search-match", isSearchMatch)
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
-      .attr("r", (d) => Math.max(d.r - 1, 0))
+      .attr("r", (d) => d.r)
       .style("fill", (d) => {
         return d.data.type === "blob"
           ? metricCaches.get(metric)?.colormap.get(d.data.name) ?? "grey"
@@ -249,13 +249,12 @@ function drawChart(
         circlePathFromCircle(
           d.x,
           d.y,
-          Math.max(d.r - 1, 0) + textSpacingFromCircle
+          d.r
         )
       )
       .classed("name-path", true)
-      .attr("cx", (d) => d.x)
-      .attr("cy", (d) => d.y)
-      .attr("r", (d) => d.r)
+      .attr("stroke-dasharray", (d) => 0.5 * d.r * Math.PI) // used for search match animation; marching_dashes
+      .attr("stroke-dashoffset", (d) => 1 * d.r * Math.PI)
       .attr("id", (d) => d.data.path)
 
     if (
@@ -269,10 +268,10 @@ function drawChart(
       .classed("search-match-title", isSearchMatch)
 
     text
-      .filter(noLinesThreshold)
+      .filter(isTree)
       .append("textPath")
       .attr("startOffset", "50%")
-      .attr("dominant-baseline", "bottom")
+      .attr("dominant-baseline", "central")
       .attr("text-anchor", "middle")
       .attr("xlink:href", (d) => `#${d.data.path}`)
       .text((d) => d.data.name)
@@ -344,4 +343,8 @@ function noLinesThreshold(d: { data: GitObject }) {
   return (
     d.data.type === "tree" || (d.data as HydratedGitBlobObject).noLines >= 40
   )
+}
+
+function isTree(d: { data: GitObject }) {
+  return d.data.type === "tree"
 }
