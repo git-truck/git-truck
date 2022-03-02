@@ -1,11 +1,26 @@
 #!/bin/bash
 
 cd ./parser
-npm i
-npm run build
-cd ..
-node ./parser/dist/index.js --path $1 --out ./app/src/data.json
-cd ./app
-npm i
-npm run start
+clear
+# Print "installing dependencies"
+echo "Installing parser dependencies..."
+npm install --silent
+clear
+
+echo "Building parser..."
+npm run build --silent
+clear
+
+
+
+# Pass all arguments to index.js
+cd .. && node ./parser/dist/index.js --out ./app/src/data.json $@
+clear
+
+echo "Installing app dependencies..."
+cd ./app && npm install --silent
+clear
+
+echo "Running app..."
+npm run start --silent
 
