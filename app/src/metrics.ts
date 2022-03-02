@@ -120,7 +120,7 @@ export function setupMetricsCache(
 function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
   let lookup = gitcolors.ext(extension)
-  if (typeof lookup === "undefined") {
+  if (!lookup) {
     cache.colormap.set(blob.path, "grey")
   } else {
     if (cache.legend.has(extension)) {
@@ -152,7 +152,7 @@ function setDominantAuthorColor(
       else if (v1 > v2) return -1
       else return 0
     })
-    if (typeof sorted[0] === "undefined") throw Error
+    if (!sorted[0]) throw Error
   } catch {
     return
   }
