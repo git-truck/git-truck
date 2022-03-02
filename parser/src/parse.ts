@@ -15,13 +15,13 @@ import {
   getRepoName,
   deflateGitObject,
 } from "./util"
-import { emptyGitTree } from "./constants"
+import { emptyGitCommitHash } from "./constants"
 import { join } from "path"
 import TruckIgnore from "./TruckIgnore"
 import { resolve } from "path"
 import { performance } from "perf_hooks"
 import yargsParser from "yargs-parser"
-import { hydrateTreeWithAuthorship } from "./hydrate"
+import { hydrateData } from "./hydrate"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -52,7 +52,7 @@ export async function parseCommitLight(
   const groups = match?.groups ?? {}
 
   const tree = groups["tree"]
-  const parent = groups["parent"] ?? emptyGitTree
+  const parent = groups["parent"] ?? emptyGitCommitHash
   const parent2 = groups["parent2"] ?? null
   const author = {
     name: groups["authorName"],
@@ -203,7 +203,7 @@ export async function parse(rawArgs: string[]) {
     "Error parsing commit tree"
   )
   const hydratedRepoTree = await describeAsyncJob(
-    () => hydrateTreeWithAuthorship(repoDir, repoTree),
+    () => hydrateData(repoDir, repoTree),
     "Hydrating commit tree with authorship data",
     "Commit tree hydrated",
     "Error hydrating commit tree"
