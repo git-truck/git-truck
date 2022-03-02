@@ -18,8 +18,16 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
+export class LegendInfo {
+  constructor(public readonly color: string, public weight: number) {}
+
+  incr() {
+    this.weight++
+  }
+}
+
 export interface MetricCache {
-  legend: Set<string>
+  legend: Map<string, LegendInfo>
   colormap: Map<string, string>
 }
 
@@ -87,13 +95,13 @@ export function setupMetricsCache(
         for (let [metricType, metricFunc] of metricCalcs) {
           if (!acc.has(metricType))
             acc.set(metricType, {
-              legend: new Set<string>(),
+              legend: new Map<string, LegendInfo>(),
               colormap: new Map<string, string>(),
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
-              legend: new Set<string>(),
+              legend: new Map<string, LegendInfo>(),
               colormap: new Map<string, string>(),
             }
           )
@@ -106,9 +114,14 @@ export function setupMetricsCache(
 function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
   let lookup = gitcolors.ext(extension)
-  if (typeof lookup === "undefined") cache.colormap.set(blob.path, "grey")
-  else {
-    cache.legend.add(`${extension}|${lookup.color}`)
+  if (!lookup) {
+    cache.colormap.set(blob.path, "grey")
+  } else {
+    if (cache.legend.has(extension)) {
+      cache.legend.get(extension)?.incr()
+    } else {
+      cache.legend.set(extension, new LegendInfo(lookup.color, 1))
+    }
     cache.colormap.set(blob.path, lookup.color)
   }
 }
@@ -133,7 +146,7 @@ function setDominantAuthorColor(
       else if (v1 > v2) return -1
       else return 0
     })
-    if (typeof sorted[0] === "undefined") throw Error
+    if (!sorted[0]) throw Error
   } catch {
     return
   }
@@ -142,11 +155,12 @@ function setDominantAuthorColor(
   let colorString: string
   if (acs.cache.has(dom)) {
     colorString = acs.cache.get(dom) ?? "grey"
+    cache.legend.get(dom)?.incr()
   } else {
     let color = acs.palette[acs.paletteIndex++].rgb(true)
     colorString = `rgb(${color[0]},${color[1]},${color[2]})`
     acs.cache.set(dom, colorString)
-    cache.legend.add(`${dom}|${colorString}`)
+    cache.legend.set(dom, new LegendInfo(colorString, 1))
   }
   cache.colormap.set(blob.path, colorString)
 }
@@ -158,18 +172,18 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   }
 
   if (creditsum === 0) {
-    cache.legend.add("No credit|grey")
+    cache.legend.set("No credit", new LegendInfo("grey", 0))
     cache.colormap.set(blob.path, "grey")
     return
   }
 
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
-      cache.legend.add("Dominated|red")
+      cache.legend.set("Dominated", new LegendInfo("red", 2))
       cache.colormap.set(blob.path, "red")
       return
     default:
-      cache.legend.add("Non-dominated|cadetblue")
+      cache.legend.set("Non-dominated", new LegendInfo("cadetblue", 1))
       cache.colormap.set(blob.path, "cadetblue")
       return
   }

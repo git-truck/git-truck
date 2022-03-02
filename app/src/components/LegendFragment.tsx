@@ -1,8 +1,9 @@
+import { LegendInfo } from "../metrics"
 import { Spacer } from "./Spacer"
 import { LegendEntry, LegendDot, LegendLable } from "./util"
 
 interface LegendFragProps {
-  items: string[]
+  items: [string, LegendInfo][]
   show: boolean
 }
 
@@ -11,13 +12,13 @@ export function LegendFragment(props: LegendFragProps) {
   return (
     <div>
       {props.items.map((legendItem, i) => {
-        let [label, color] = legendItem.split("|")
+        let [label, info] = legendItem
         return (
           <>
             <LegendEntry>
               <LegendDot
                 style={{
-                  backgroundColor: color,
+                  backgroundColor: info.color,
                 }}
               />
               <Spacer horizontal />

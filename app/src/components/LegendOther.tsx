@@ -1,8 +1,9 @@
+import { LegendInfo } from "../metrics"
 import { Spacer } from "./Spacer"
 import { LegendDot, LegendEntry, LegendLable } from "./util"
 
 interface LegendOtherProps {
-  items: string[]
+  items: [string, LegendInfo][]
   show: boolean
 }
 
@@ -12,12 +13,12 @@ export function LegendOther(props: LegendOtherProps) {
   return (
     <LegendEntry>
       {props.items.map((legendItem, i) => {
-        let [, color] = legendItem.split("|")
+        let [, info] = legendItem
         let margin = i === 0 ? 0 : -10
         return (
           <LegendDot
             style={{
-              backgroundColor: color,
+              backgroundColor: info.color,
               marginLeft: margin,
             }}
           />
