@@ -19,13 +19,7 @@ export const Metric = {
 export type MetricType = keyof typeof Metric
 
 export class LegendInfo {
-  readonly color: string
-  weight: number
-
-  constructor(c: string, w: number) {
-    this.color = c
-    this.weight = w
-  }
+  constructor(public readonly color: string, public weight: number) {}
 
   incr() {
     this.weight++
