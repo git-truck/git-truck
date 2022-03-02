@@ -11,16 +11,12 @@ export function LegendFragment(props: LegendFragProps) {
   if (!props.show) return null
   return (
     <div>
-      {props.items.map((legendItem, i) => {
+      {props.items.map((legendItem) => {
         let [label, info] = legendItem
         return (
           <>
             <LegendEntry>
-              <LegendDot
-                style={{
-                  backgroundColor: info.color,
-                }}
-              />
+              <LegendDot dotColor={info.color} />
               <Spacer horizontal />
               <LegendLable>{label}</LegendLable>
             </LegendEntry>
