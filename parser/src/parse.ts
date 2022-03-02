@@ -209,7 +209,7 @@ export async function parse(rawArgs: string[]) {
     "Commit tree hydrated",
     "Error hydrating commit tree"
   )
-  const outPath = join(repoDir, outFileName)
+  const outPath = join(process.cwd(), outFileName)
   await describeAsyncJob(
     () =>
       writeRepoToFile(outPath, {
