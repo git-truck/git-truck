@@ -1,7 +1,14 @@
 # git-visual
 Visualizing a Git repository
 
-## Usage:
+## Usage
+
+
+### Prerequisites
+
+Node.js, npm, and git.
+
+### Running the tool
 
 From the root of this repository, run:
 
@@ -22,11 +29,17 @@ where args can be:
 For example, if you cloned this repository to `/home/user/git-visual`, run:
 
 ```
-./index.sh --path ../<repo i want to visualize>
+./start.sh --path ../<repo i want to visualize>
 ```
 
-To run the tool against `git-visual` it self, run `./index.sh` without any arguments.
+To run the tool against `git-visual` it self, run `./start.sh` without any arguments.
 
-## Prerequisites:
+### Development
 
-Node.js, npm, and git.
+To run the tool in development mode with hot reloading, run:
+
+```
+dev.sh <args>
+```
+
+It takes the same arguments as `start.sh`.
