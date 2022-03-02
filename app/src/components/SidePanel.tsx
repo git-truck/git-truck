@@ -8,7 +8,9 @@ import { Options } from "./Options"
 import SearchBar from "./SearchBar"
 import { Spacer } from "./Spacer"
 
-const SidePanelRoot = styled.aside``
+const SidePanelRoot = styled.aside`
+  overflow-y: auto;
+`
 
 export function SidePanel() {
   const { setSearchText: onSearchChange } = useSearch()

@@ -4,8 +4,13 @@
   --title-color: hsl(200deg, 5%, 30%);
   --text-color: hsl(200deg, 5%, 25%);
   --border-color: hsl(0deg 0% 70%);
+  --border-width: 1px;
   --surface-color: hsl(0deg 0% 90%);
   --border-color-alpha: hsla(0deg, 0%, 0%, 30%);
-  --search-match-color: red;
   --focused-outline-color: rgb(76, 141, 238);
+  --shadow: 0.9px 0.9px 2.7px rgba(0, 0, 0, 0.07),
+    2.2px 2.2px 6.9px rgba(0, 0, 0, 0.048),
+    4.4px 4.4px 14.2px rgba(0, 0, 0, 0.039),
+    9.1px 9.1px 29.2px rgba(0, 0, 0, 0.031), 25px 25px 80px rgba(0, 0, 0, 0.022);
+  --small-shadow: 0.9px 0.9px 1.7px hsla(0, 0%, 0%, 0.5);
 }
