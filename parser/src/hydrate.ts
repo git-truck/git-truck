@@ -1,7 +1,9 @@
-import { isText } from "istextorbinary"
+import isBinaryPath from "is-binary-path"
+import { join } from "path"
 import { emptyGitTree } from "./constants"
 import { log } from "./log"
 import {
+  GitBlobObject,
   GitCommitObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -46,8 +48,10 @@ export async function hydrateTreeWithAuthorship(
 
     for (const { pos, neg, file } of results) {
       const blob = await lookupFileInTree(hydratedCommit.tree, file)
-      if (file === "dev/null" || !isText(blob?.name)) continue
+
+      if (file === "dev/null") continue
       if (blob) {
+        if (isBinaryFile(blob)) continue
         numTimesCredited++
         const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
         if (noCommits < hydratedCommit.minNoCommits)
@@ -88,6 +92,10 @@ export async function hydrateTreeWithAuthorship(
   discardContentField(hydratedCommit.tree)
 
   return hydratedCommit
+}
+
+function isBinaryFile(blob: GitBlobObject) {
+  return isBinaryPath(join(blob.path, blob.name))
 }
 
 function addAuthorsField(tree: HydratedGitTreeObject) {

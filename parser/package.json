@@ -34,7 +34,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "gitignore-parser": "0.0.2",
-    "istextorbinary": "^6.0.0",
+    "is-binary-path": "^2.1.0",
     "nanospinner": "^1.0.0",
     "yargs-parser": "^21.0.0"
   },
