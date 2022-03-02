@@ -9,7 +9,13 @@ const cutoff = 3
 
 export function Legend() {
   const { metricType, metricCaches } = useStore()
-  let items = Array.from(metricCaches.get(metricType)?.legend ?? [])
+  let items = Array.from(metricCaches.get(metricType)?.legend ?? []).sort(
+    ([, info1], [, info2]) => {
+      if (info1.weight < info2.weight) return 1
+      if (info1.weight > info2.weight) return -1
+      return 0
+    }
+  )
 
   const [collapse, setCollapse] = useState<boolean>(true)
   if (items.length === 0) return null
