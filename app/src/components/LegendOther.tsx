@@ -1,9 +1,9 @@
-import { LegendInfo } from "../metrics"
+import { PointInfo } from "../metrics"
 import { Spacer } from "./Spacer"
 import { LegendDot, LegendEntry, LegendLable } from "./util"
 
 interface LegendOtherProps {
-  items: [string, LegendInfo][]
+  items: [string, PointInfo][]
   show: boolean
 }
 
