@@ -45,10 +45,7 @@ export const Box = styled.div`
   padding: calc(2 * var(--unit));
   position: relative;
   /* Generated with: https://shadows.brumm.af/ */
-  box-shadow: 0.9px 0.9px 2.7px rgba(0, 0, 0, 0.07),
-    2.2px 2.2px 6.9px rgba(0, 0, 0, 0.048),
-    4.4px 4.4px 14.2px rgba(0, 0, 0, 0.039),
-    9.1px 9.1px 29.2px rgba(0, 0, 0, 0.031), 25px 25px 80px rgba(0, 0, 0, 0.022);
+  box-shadow: var(--shadow);
 `
 
 export const Stack = styled.div`
@@ -57,6 +54,7 @@ export const Stack = styled.div`
 `
 
 export const Label = styled.label`
+  padding-left: calc(var(--unit) + var(--border-width));
   font-weight: bold;
   font-size: 0.8em;
 `
@@ -70,17 +68,14 @@ export const Select = styled.select`
 `
 
 export const SearchField = styled.input`
-  border: 0;
+  border: 1px var(--border-color) solid;
   flex-grow: 1;
-  border-radius: 3px;
+  border-radius: calc(0.5 * var(--unit));
   padding: var(--unit);
 `
 
 export const LegendBox = styled(Box)`
-  position: absolute;
   width: calc(var(--side-panel-width) - calc(6 * var(--unit)));
-  bottom: 0px;
-  left: 0px;
 `
 
 export const LegendEntry = styled.div`
@@ -99,6 +94,7 @@ export const LegendDot = styled.div<{ dotColor: string }>`
   width: 1em;
   border-radius: 50%;
   background-color: ${({ dotColor }) => dotColor};
+  box-shadow: var(--small-shadow);
 `
 
 export const LegendLable = styled.p`

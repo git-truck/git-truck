@@ -1,12 +1,23 @@
-.folder {
-  stroke: var(--border-color);
-  fill: #fff;
+.tree,
+.blob {
+  position: relative;
 }
 
-.file {
+.tree {
+  stroke: var(--border-color);
+  fill: transparent;
+}
+
+.blob {
   cursor: pointer;
   pointer-events: all;
   position: relative;
+}
+
+.object-name {
+  font-weight: bold;
+  font-size: 0.8rem;
+  fill: "#333";
 }
 
 .name-path {
@@ -21,7 +32,6 @@
 }
 
 .search-match-title {
-  fill: var(--search-match-color);
   font-weight: bold;
 }
 
@@ -38,6 +48,6 @@
   align-items: center;
 }
 
-svg {
+.name-text {
   fill: #333;
 }

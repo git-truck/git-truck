@@ -1,3 +1,4 @@
+import { HierarchyRectangularNode } from "d3"
 import { HydratedGitBlobObject } from "../../parser/src/model"
 import { users } from "./const"
 
@@ -16,6 +17,9 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
   )
 }
 
-export function classes(...args: (string | undefined)[]) {
-  return args.filter((x) => x).join(" ")
+export function diagonal(d: HierarchyRectangularNode<unknown>) {
+  const dx = d.x1 - d.x0
+  const dy = d.y1 - d.y0
+
+  return Math.sqrt(dx ** 2 + dy ** 2)
 }
