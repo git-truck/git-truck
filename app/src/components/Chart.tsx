@@ -145,8 +145,7 @@ function Circle({
     cy: d.y,
     r: Math.max(d.r - 1, 0),
     stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: isSearchMatch ? "2px" : "1px",
-    strokeDasharray: isSearchMatch && isBlob(d.data) && d.r > 10 ? "2px" : "0",
+    strokeWidth: isSearchMatch ? "4px" : "1px",
     fill: metricCaches.get(metricType)?.colormap.get(d.data.path) ?? "grey",
   })
 
