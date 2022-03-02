@@ -68,7 +68,7 @@ export async function parseCommitLight(
   }
   const message = groups["message"]
   const description = groups["description"]
-  const coauthors = getCoAuthors(description)
+  const coauthors = description ? getCoAuthors(description) : []
 
   return {
     type: "commit",
