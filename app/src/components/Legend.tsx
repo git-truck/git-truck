@@ -10,9 +10,9 @@ const cutoff = 3
 export function Legend() {
   const { metricType, metricCaches } = useStore()
   let items = Array.from(metricCaches.get(metricType)?.legend ?? []).sort(
-    ([, [, weight1]], [, [, weight2]]) => {
-      if (weight1 < weight2) return 1
-      else if (weight1 > weight2) return -1
+    ([, info1], [, info2]) => {
+      if (info1.weight < info2.weight) return 1
+      else if (info1.weight > info2.weight) return -1
       return 0
     }
   )
