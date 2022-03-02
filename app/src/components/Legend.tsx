@@ -3,7 +3,12 @@ import { LegendOther } from "./LegendOther"
 import { LegendToggle } from "./LegendToggle"
 import { useState } from "react"
 import { useStore } from "../StoreContext"
-import { GradientLegendDiv, LegendBox, LegendGradient } from "./util"
+import {
+  GradientLegendDiv,
+  LegendBox,
+  LegendGradient,
+  LegendLable,
+} from "./util"
 import { GradLegendData, PointLegendData } from "../metrics"
 
 const cutoff = 3
@@ -47,9 +52,9 @@ export function Legend() {
     return (
       <LegendBox>
         <GradientLegendDiv>
-          <span>{minValue}</span>
+          <LegendLable>{minValue}</LegendLable>
           <LegendGradient min={minColor} max={maxColor} />
-          <span>{maxValue}</span>
+          <LegendLable>{maxValue}</LegendLable>
         </GradientLegendDiv>
       </LegendBox>
     )
