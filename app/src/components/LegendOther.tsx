@@ -2,7 +2,7 @@ import { Spacer } from "./Spacer"
 import { LegendDot, LegendEntry, LegendLable } from "./util"
 
 interface LegendOtherProps {
-  items: string[]
+  items: [string, [string, number]][]
   show: boolean
 }
 
@@ -12,7 +12,7 @@ export function LegendOther(props: LegendOtherProps) {
   return (
     <LegendEntry>
       {props.items.map((legendItem, i) => {
-        let [, color] = legendItem.split("|")
+        let [, [color]] = legendItem
         let margin = i === 0 ? 0 : -10
         return (
           <LegendDot
