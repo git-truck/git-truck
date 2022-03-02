@@ -9,14 +9,14 @@ export function Details() {
   if (clickedBlob === null) return null
   return (
     <Box>
-      <BoxTitle>
-        {clickedBlob.name}
-        <CloseButton
-          onClick={() => {setClickedBlob(null)}}
-        >
-          &times;
-        </CloseButton>
-      </BoxTitle>
+      <CloseButton
+        onClick={() => {
+          setClickedBlob(null)
+        }}
+      >
+        &times;
+      </CloseButton>
+      <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
       <LineCountDiv lineCount={clickedBlob.noLines} />
       <Spacer xl />
       <AuthorDistribution currentClickedBlob={clickedBlob} />
