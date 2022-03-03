@@ -18,11 +18,11 @@ export async function hydrateData(
   commit: GitCommitObject
 ): Promise<HydratedGitCommitObject> {
 
-  let data = commit as HydratedGitCommitObject
+  const data = commit as HydratedGitCommitObject
 
   initially_mut(data)
 
-  let { hash: first } = data
+  const { hash: first } = data
 
   await bfs(first, repo, data)
 
@@ -49,22 +49,22 @@ function addAuthorsField_mut(tree: HydratedGitTreeObject) {
 }
 
 async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
-  let marked = new Set<string>()
-  let queue = new Queue<string>()
+  const marked = new Set<string>()
+  const queue = new Queue<string>()
 
   marked.add(first)
   queue.enqueue(first)
 
   while (!queue.isEmpty()) {
-    let currHash = queue.dequeue()
+    const currHash = queue.dequeue()
     marked.add(currHash)
 
     // don't compare the empty commit to it's parent
     if (currHash == emptyGitCommitHash) continue
 
-    let currCommit = await parseCommitLight(repo, currHash)
+    const currCommit = await parseCommitLight(repo, currHash)
 
-    let parentsOfCurr = parents(currCommit)
+    const parentsOfCurr = parents(currCommit)
 
     for (const parentHash of parentsOfCurr) {
       if (marked.has(parentHash)) continue
@@ -86,7 +86,7 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
 }
 
 function parents(obj : GitCommitObject|GitCommitObjectLight) : Set<string> {
-  let parents = new Set<string>()
+  const parents = new Set<string>()
 
   if (obj.parent !== null)
     parents.add(obj.parent)
@@ -99,7 +99,7 @@ function parents(obj : GitCommitObject|GitCommitObjectLight) : Set<string> {
 async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitCommitObjectLight, parentHash: string, repo: string) {
     const { author, ...restof } = currCommit
 
-    let currHash = currCommit.hash
+    const currHash = currCommit.hash
 
     log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
@@ -107,7 +107,7 @@ async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitC
 
     for (const fileChange of fileChanges) {
 
-      let { pos, neg, file } = fileChange
+      const { pos, neg, file } = fileChange
 
       const blob = await lookupFileInTree(data.tree, file)
 

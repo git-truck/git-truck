@@ -57,7 +57,7 @@ export class Queue<T> {
    * @param  item the item to add
    */
   enqueue(item: T) {
-      let oldlast = this.last
+      const oldlast = this.last
       this.last = new QueueNode<T>(item)
       this.last.next = null
       if (this.isEmpty()) this.first = this.last
@@ -73,7 +73,7 @@ export class Queue<T> {
    */
   dequeue() : T {
       if (this.isEmpty()) throw new Error("Queue underflow")
-      let item = this.first!.item
+      const item = this.first!.item
       this.first = this.first!.next
       this.n--
       if (this.isEmpty()) this.last = null   // to avoid loitering
