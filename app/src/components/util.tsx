@@ -136,4 +136,8 @@ export const LegendGradient = styled.div<{ min: string; max: string }>`
 export const GradientLegendDiv = styled.div`
   display: flex;
   flex-direction: row;
+  & > ${LegendLable} {
+    /* wrap date string on every space */
+    width: min-content;
+  }
 `

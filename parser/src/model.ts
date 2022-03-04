@@ -24,6 +24,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   noLines: number
   authors: Record<string, number>
   noCommits: number
+  lastChangeEpoch?: number
 }
 
 export interface GitTreeObject extends GitBaseObject {
@@ -53,6 +54,8 @@ export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
   tree: HydratedGitTreeObject
   minNoCommits: number
   maxNoCommits: number
+  newestLatestChangeEpoch: number
+  oldestLatestChangeEpoch: number
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {
