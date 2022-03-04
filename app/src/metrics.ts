@@ -11,7 +11,7 @@ import distinctColors from "distinct-colors"
 export const Metric = {
   FILE_EXTENSION: "File extension",
   HEAT_MAP: "Most commits",
-  COLD_MAP: "Fewest commits",
+  COLD_MAP: "Last changed",
   DOMINATED: "Dominated files",
   DOMINANTAUTHOR: "Dominant author",
 }
@@ -42,8 +42,8 @@ export class PointInfo {
 
 export type PointLegendData = Map<string, PointInfo>
 export type GradLegendData = [
-  minValue: number,
-  maxValue: number,
+  minValue: string,
+  maxValue: string,
   minColor: string,
   maxColor: string
 ]
@@ -60,7 +60,7 @@ export function getMetricCalcs(
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
 ][] {
   let heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
-  let coldmap = new ColdMapTranslater(commit.minNoCommits, commit.maxNoCommits)
+  let coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
   let authorColorState = {
     palette: distinctColors({ count: 100 }),
     paletteIndex: 0,
@@ -86,8 +86,8 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            commit.minNoCommits,
-            commit.maxNoCommits,
+            `${commit.minNoCommits}`,
+            `${commit.maxNoCommits}`,
             heatmap.getColor(commit.minNoCommits),
             heatmap.getColor(commit.maxNoCommits),
           ]
@@ -100,10 +100,10 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            commit.minNoCommits,
-            commit.maxNoCommits,
-            coldmap.getColor(commit.minNoCommits),
-            coldmap.getColor(commit.maxNoCommits),
+            new Date(commit.oldestLatestChangeEpoch*1000).toLocaleString('en-gb', {day: '2-digit', month:'short', year: 'numeric'}),
+            new Date(commit.newestLatestChangeEpoch*1000).toLocaleString('en-gb', {day: '2-digit', month:'short', year: 'numeric'}),
+            coldmap.getColor(commit.oldestLatestChangeEpoch),
+            coldmap.getColor(commit.newestLatestChangeEpoch),
           ]
         }
         coldmap.setColor(blob, cache)
@@ -279,7 +279,7 @@ class ColdMapTranslater {
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-    cache.colormap.set(blob.path, this.getColor(blob.noCommits))
+    cache.colormap.set(blob.path, this.getColor(blob.lastChangeEpoch ?? 0))
   }
 }
 

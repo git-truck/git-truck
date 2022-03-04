@@ -36,6 +36,8 @@ export async function hydrateData(
 function initially_mut(data: HydratedGitCommitObject) {
   data.minNoCommits = Number.MAX_VALUE
   data.maxNoCommits = Number.MIN_VALUE
+  data.oldestLatestChangeEpoch = Number.MAX_VALUE
+  data.newestLatestChangeEpoch = Number.MIN_VALUE
   
   addAuthorsField_mut(data.tree)
 }
@@ -154,6 +156,17 @@ function updateBlob_mut(
   }
 
   hydratedBlob.authors[author.name] = current + pos + neg
+
+  if (!hydratedBlob.lastChangeEpoch) {
+    const epoch = currCommit.author.timestamp
+    hydratedBlob.lastChangeEpoch = epoch
+
+    if (epoch > data.newestLatestChangeEpoch)
+      data.newestLatestChangeEpoch = epoch
+
+    if (epoch < data.oldestLatestChangeEpoch)
+      data.oldestLatestChangeEpoch = epoch
+  }
 
   Object.assign(blob, hydratedBlob)
 }
