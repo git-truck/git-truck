@@ -137,14 +137,20 @@ export async function describeAsyncJob<T>(
     spinner.success({ text })
     if (!final) spinner.start()
   }
+  const output = (text: string) => {
+    if (spinner) {
+      spinner.update({
+        text,
+        frames: generateTruckFrames(text.length),
+      })
+      spinner.start()
+    } else log.info(text)
+  }
+
   const error = (text: string) =>
     spinner === null ? log.error(text) : spinner.error({ text })
 
-  spinner?.update({
-    text: beforeMsg,
-    frames: generateTruckFrames(beforeMsg.length),
-  })
-  spinner?.start()
+  output(beforeMsg)
   try {
     const startTime = performance.now()
     const result = await job()

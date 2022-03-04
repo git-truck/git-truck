@@ -122,3 +122,18 @@ export const LegendButton = styled.button<{ collapse: boolean }>`
     scale: 180%;
   }
 `
+
+export const LegendGradient = styled.div<{ min: string; max: string }>`
+  background-image: linear-gradient(
+    to right,
+    ${(props) => `${props.min},${props.max}`}
+  );
+  width: 90%;
+  margin-left: 10px;
+  margin-right: 10px;
+`
+
+export const GradientLegendDiv = styled.div`
+  display: flex;
+  flex-direction: row;
+`

@@ -10,24 +10,46 @@ import distinctColors from "distinct-colors"
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
-  HEAT_MAP: "Heat map",
-  COLD_MAP: "Cold map",
+  HEAT_MAP: "Most commits",
+  COLD_MAP: "Fewest commits",
   DOMINATED: "Dominated files",
   DOMINANTAUTHOR: "Dominant author",
 }
 
 export type MetricType = keyof typeof Metric
 
-export class LegendInfo {
-  constructor(public readonly color: string, public weight: number) {}
-
-  incr() {
-    this.weight++
+export function isGradientMetric(metric: MetricType) {
+  switch (metric) {
+    case "FILE_EXTENSION":
+    case "DOMINANTAUTHOR":
+    case "DOMINATED":
+      return false
+    case "COLD_MAP":
+    case "HEAT_MAP":
+      return true
+    default:
+      throw new Error("Uknown metric type: " + metric)
   }
 }
 
+export class PointInfo {
+  constructor(public readonly color: string, public weight: number) {}
+
+  add(value: number) {
+    this.weight += value
+  }
+}
+
+export type PointLegendData = Map<string, PointInfo>
+export type GradLegendData = [
+  minValue: number,
+  maxValue: number,
+  minColor: string,
+  maxColor: string
+]
+
 export interface MetricCache {
-  legend: Map<string, LegendInfo>
+  legend: PointLegendData | GradLegendData | undefined
   colormap: Map<string, string>
 }
 
@@ -48,30 +70,49 @@ export function getMetricCalcs(
     [
       "FILE_EXTENSION",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setExtensionColor(blob, cache)
       },
     ],
     [
       "DOMINATED",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache)
       },
     ],
     [
       "HEAT_MAP",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) {
+          cache.legend = [
+            commit.minNoCommits,
+            commit.maxNoCommits,
+            heatmap.getColor(commit.minNoCommits),
+            heatmap.getColor(commit.maxNoCommits),
+          ]
+        }
         heatmap.setColor(blob, cache)
       },
     ],
     [
       "COLD_MAP",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) {
+          cache.legend = [
+            commit.minNoCommits,
+            commit.maxNoCommits,
+            coldmap.getColor(commit.minNoCommits),
+            coldmap.getColor(commit.maxNoCommits),
+          ]
+        }
         coldmap.setColor(blob, cache)
       },
     ],
     [
       "DOMINANTAUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColorState, blob, cache)
       },
     ],
@@ -95,13 +136,13 @@ export function setupMetricsCache(
         for (let [metricType, metricFunc] of metricCalcs) {
           if (!acc.has(metricType))
             acc.set(metricType, {
-              legend: new Map<string, LegendInfo>(),
+              legend: undefined,
               colormap: new Map<string, string>(),
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
-              legend: new Map<string, LegendInfo>(),
+              legend: undefined,
               colormap: new Map<string, string>(),
             }
           )
@@ -117,10 +158,11 @@ function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   if (!lookup) {
     cache.colormap.set(blob.path, "grey")
   } else {
-    if (cache.legend.has(extension)) {
-      cache.legend.get(extension)?.incr()
+    const legend = cache.legend as PointLegendData
+    if (legend.has(extension)) {
+      legend.get(extension)?.add(1)
     } else {
-      cache.legend.set(extension, new LegendInfo(lookup.color, 1))
+      legend.set(extension, new PointInfo(lookup.color, 1))
     }
     cache.colormap.set(blob.path, lookup.color)
   }
@@ -140,8 +182,7 @@ function setDominantAuthorColor(
   let sorted: [string, number][]
   try {
     sorted = Object.entries(unionAuthors(blob)).sort(([k1, v1], [k2, v2]) => {
-      if (v1 === 0 || v2 === 0 || k1 === undefined || k2 === undefined)
-        throw Error
+      if (v1 === 0 || v2 === 0 || !k1 || !k2) throw Error
       if (v1 < v2) return 1
       else if (v1 > v2) return -1
       else return 0
@@ -153,14 +194,15 @@ function setDominantAuthorColor(
 
   let [dom] = sorted[0]
   let colorString: string
+  const legend = cache.legend as PointLegendData
   if (acs.cache.has(dom)) {
     colorString = acs.cache.get(dom) ?? "grey"
-    cache.legend.get(dom)?.incr()
+    legend.get(dom)?.add(1)
   } else {
     let color = acs.palette[acs.paletteIndex++].rgb(true)
     colorString = `rgb(${color[0]},${color[1]},${color[2]})`
     acs.cache.set(dom, colorString)
-    cache.legend.set(dom, new LegendInfo(colorString, 1))
+    legend.set(dom, new PointInfo(colorString, 1))
   }
   cache.colormap.set(blob.path, colorString)
 }
@@ -171,19 +213,21 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     creditsum += val
   }
 
+  const legend = cache.legend as PointLegendData
+
   if (creditsum === 0) {
-    cache.legend.set("No credit", new LegendInfo("grey", 0))
+    legend.set("No credit", new PointInfo("grey", 0))
     cache.colormap.set(blob.path, "grey")
     return
   }
 
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
-      cache.legend.set("Dominated", new LegendInfo("red", 2))
+      legend.set("Dominated", new PointInfo("red", 2))
       cache.colormap.set(blob.path, "red")
       return
     default:
-      cache.legend.set("Non-dominated", new LegendInfo("cadetblue", 1))
+      legend.set("Non-dominated", new PointInfo("cadetblue", 1))
       cache.colormap.set(blob.path, "cadetblue")
       return
   }
@@ -230,11 +274,12 @@ class ColdMapTranslater {
     )
   }
 
+  getColor(value: number): string {
+    return `hsl(240,100%,${this.translator.translate(value)}%)`
+  }
+
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-    cache.colormap.set(
-      blob.path,
-      `hsl(240,100%,${this.translator.translate(blob.noCommits)}%)`
-    )
+    cache.colormap.set(blob.path, this.getColor(blob.noCommits))
   }
 }
 
@@ -252,10 +297,11 @@ class HeatMapTranslater {
     )
   }
 
+  getColor(value: number): string {
+    return `hsl(0,100%,${this.translator.inverseTranslate(value)}%)`
+  }
+
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-    cache.colormap.set(
-      blob.path,
-      `hsl(0,100%,${this.translator.inverseTranslate(blob.noCommits)}%)`
-    )
+    cache.colormap.set(blob.path, this.getColor(blob.noCommits))
   }
 }
