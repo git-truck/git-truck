@@ -9,7 +9,7 @@ import {
   LegendGradient,
   LegendLable,
 } from "./util"
-import { GradLegendData, PointLegendData } from "../metrics"
+import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
 
 const cutoff = 3
 
@@ -17,7 +17,7 @@ export function Legend() {
   const { metricType, metricCaches } = useStore()
   const [collapse, setCollapse] = useState<boolean>(true)
 
-  if ("set" in (metricCaches.get(metricType)?.legend ?? [])) {
+  if (!isGradientMetric(metricType)) {
     let items = Array.from(
       metricCaches.get(metricType)?.legend as PointLegendData
     ).sort(([, info1], [, info2]) => {
