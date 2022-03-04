@@ -1,3 +1,7 @@
+// Adapted from algs4 Implementation of Queue.java
+// https://algs4.cs.princeton.edu/code/edu/princeton/cs/algs4/Queue.java.html
+// algs4, Robert Sedgewick and Kevin Wayne
+
 // helper linked list class
 class QueueNode<T> {
   item: T
