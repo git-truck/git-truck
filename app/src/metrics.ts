@@ -18,6 +18,20 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
+export function isGradientMetric(metric: MetricType) {
+  switch (metric) {
+    case "FILE_EXTENSION":
+    case "DOMINANTAUTHOR":
+    case "DOMINATED":
+      return false
+    case "COLD_MAP":
+    case "HEAT_MAP":
+      return true
+    default:
+      throw new Error("Uknown metric type: " + metric)
+  }
+}
+
 export class PointInfo {
   constructor(public readonly color: string, public weight: number) {}
 
