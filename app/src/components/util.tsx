@@ -6,6 +6,8 @@ export const BoxTitle = styled.h2`
   margin-bottom: 0;
   margin-top: 0;
   color: var(--title-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 export const BoxSubTitle = styled.h3`
@@ -91,11 +93,12 @@ export const LegendEntry = styled.div`
   margin: 0px;
 `
 
-export const LegendDot = styled.div`
+export const LegendDot = styled.div<{ dotColor: string }>`
   height: 100%;
   aspect-ratio: 1;
   width: 1em;
   border-radius: 50%;
+  background-color: ${({ dotColor }) => dotColor};
 `
 
 export const LegendLable = styled.p`

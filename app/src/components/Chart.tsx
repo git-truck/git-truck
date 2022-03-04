@@ -144,7 +144,10 @@ function drawChart(
 ) {
   let castedTree = data.tree as GitObject
   let hiearchy = hierarchy(castedTree)
-    .sum((d) => (d as HydratedGitBlobObject).noLines)
+    .sum((d) => {
+      const lineCount = (d as HydratedGitBlobObject).noLines
+      return lineCount ? lineCount : 1
+    })
     .sort((a, b) =>
       b.value !== undefined && a.value !== undefined ? b.value - a.value : 0
     )

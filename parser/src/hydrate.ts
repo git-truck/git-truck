@@ -1,4 +1,6 @@
 import { emptyGitCommitHash } from "./constants"
+import isBinaryPath from "is-binary-path"
+import { join } from "path"
 import { log } from "./log"
 import {
   GitBlobObject,
@@ -97,7 +99,7 @@ function parents(obj : GitCommitObject|GitCommitObjectLight) : Set<string> {
 }
 
 async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitCommitObjectLight, parentHash: string, repo: string) {
-    const { author, ...restof } = currCommit
+    const { author } = currCommit
 
     const currHash = currCommit.hash
 
@@ -113,9 +115,14 @@ async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitC
 
       if (file === "dev/null") continue
       if (blob) {
+        if (isBinaryFile(blob)) continue
         updateBlob_mut(blob, data, author, currCommit, pos, neg)
       }
     }
+}
+
+function isBinaryFile(blob: GitBlobObject) {
+  return isBinaryPath(join(blob.path, blob.name))
 }
 
 function updateBlob_mut(
