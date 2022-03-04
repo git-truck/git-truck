@@ -70,23 +70,21 @@ export function getMetricCalcs(
     [
       "FILE_EXTENSION",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (cache.legend === undefined)
-          cache.legend = new Map<string, PointInfo>()
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setExtensionColor(blob, cache)
       },
     ],
     [
       "DOMINATED",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (cache.legend === undefined)
-          cache.legend = new Map<string, PointInfo>()
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache)
       },
     ],
     [
       "HEAT_MAP",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (cache.legend === undefined) {
+        if (!cache.legend) {
           cache.legend = [
             commit.minNoCommits,
             commit.maxNoCommits,
@@ -100,7 +98,7 @@ export function getMetricCalcs(
     [
       "COLD_MAP",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (cache.legend === undefined) {
+        if (!cache.legend) {
           cache.legend = [
             commit.minNoCommits,
             commit.maxNoCommits,
@@ -114,8 +112,7 @@ export function getMetricCalcs(
     [
       "DOMINANTAUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (cache.legend === undefined)
-          cache.legend = new Map<string, PointInfo>()
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColorState, blob, cache)
       },
     ],
@@ -185,8 +182,7 @@ function setDominantAuthorColor(
   let sorted: [string, number][]
   try {
     sorted = Object.entries(unionAuthors(blob)).sort(([k1, v1], [k2, v2]) => {
-      if (v1 === 0 || v2 === 0 || k1 === undefined || k2 === undefined)
-        throw Error
+      if (v1 === 0 || v2 === 0 || !k1 || !k2) throw Error
       if (v1 < v2) return 1
       else if (v1 > v2) return -1
       else return 0
