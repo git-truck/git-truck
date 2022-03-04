@@ -49,15 +49,17 @@ function addAuthorsField_mut(tree: HydratedGitTreeObject) {
 }
 
 async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
-  const marked = new Set<string>()
+  const expandedHashes = new Set<string>()
   const queue = new Queue<string>()
 
-  marked.add(first)
   queue.enqueue(first)
 
   while (!queue.isEmpty()) {
     const currHash = queue.dequeue()
-    marked.add(currHash)
+
+    if (expandedHashes.has(currHash)) continue
+
+    expandedHashes.add(currHash)
 
     // don't compare the empty commit to it's parent
     if (currHash == emptyGitCommitHash) continue
@@ -67,8 +69,6 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     const parentsOfCurr = parents(currCommit)
 
     for (const parentHash of parentsOfCurr) {
-      if (marked.has(parentHash)) continue
-
       switch (parentsOfCurr.size) {
         case 2: // curr is a merge commit
           queue.enqueue(parentHash)
