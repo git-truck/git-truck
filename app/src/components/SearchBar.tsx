@@ -22,7 +22,8 @@ export default function SearchBar(props: {
         props.setSearchText(value)
       })
     },
-    1,
+    // 1,
+    100,
     [value]
   )
 
