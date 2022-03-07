@@ -76,11 +76,9 @@ function ColorMetricDependentInfo(props: {
 }) {
   switch (props.metric) {
     case "HEAT_MAP":
-      return <>changed in {props.hoveredBlob?.noCommits} commits</>
+      return <>{props.hoveredBlob?.noCommits} commits</>
     case "COLD_MAP":
-      return (
-        <>last changed {dateFormatShort(props.hoveredBlob?.lastChangeEpoch)}</>
-      )
+      return <>{dateFormatShort(props.hoveredBlob?.lastChangeEpoch)}</>
     case "DOMINATED":
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.authors)
@@ -89,9 +87,9 @@ function ColorMetricDependentInfo(props: {
         case 0:
           return <></>
         case 1:
-          return <>dominated by {authors[0][0]}</>
+          return <>{authors[0][0]} dominates</>
         default:
-          return <>has {authors.length} authors</>
+          return <>{authors.length} authors</>
       }
     default:
       return <></>
