@@ -39,7 +39,7 @@ export const Box = styled.div`
   /* border: 1px var(--border-color-alpha) solid; */
   margin: var(--unit);
   color: var(--text-color);
-  min-width: calc(16 * var(--unit));
+  width: var(--side-panel-width) - calc(6 * var(--unit)));
   background-color: #fff;
   border-radius: var(--unit);
   padding: calc(2 * var(--unit));
@@ -72,10 +72,6 @@ export const SearchField = styled.input`
   flex-grow: 1;
   border-radius: calc(0.5 * var(--unit));
   padding: var(--unit);
-`
-
-export const LegendBox = styled(Box)`
-  width: calc(var(--side-panel-width) - calc(6 * var(--unit)));
 `
 
 export const LegendEntry = styled.div`
