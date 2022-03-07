@@ -3,7 +3,7 @@ import { makePercentResponsibilityDistribution } from "./Chart"
 import { Box, BoxTitle, CloseButton } from "./util"
 import { useOptions } from "../OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
-import { dateFormat } from "../util"
+import { dateFormatLong } from "../util"
 
 export function Details() {
   const { setClickedBlob, clickedBlob } = useOptions()
@@ -27,7 +27,8 @@ export function Details() {
         {clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}
       </div>
       <div>
-        <strong>Last changed:</strong> {dateFormat(clickedBlob.lastChangeEpoch)}
+        <strong>Last changed:</strong>{" "}
+        {dateFormatLong(clickedBlob.lastChangeEpoch)}
       </div>
       <Spacer xl />
       <AuthorDistribution currentClickedBlob={clickedBlob} />
