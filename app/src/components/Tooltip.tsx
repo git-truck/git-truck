@@ -10,6 +10,7 @@ import { useMetricCaches } from "../MetricContext"
 const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
   padding: calc(0.5 * var(--unit)) var(--unit);
   min-width: 0;
+  width: max-content;
   position: absolute;
   top: 0px;
   left: 0px;
