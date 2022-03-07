@@ -3,6 +3,7 @@ import { makePercentResponsibilityDistribution } from "./Chart"
 import { Box, BoxTitle, CloseButton } from "./util"
 import { useOptions } from "../OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
+import { dateFormat } from "../util"
 
 export function Details() {
   const { setClickedBlob, clickedBlob } = useOptions()
@@ -17,7 +18,17 @@ export function Details() {
         &times;
       </CloseButton>
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
+      <>
+        <strong>Path:</strong> {clickedBlob.path}
+      </>
       <LineCountDiv lineCount={clickedBlob.noLines} />
+      <div>
+        <strong>Number of commits:</strong>{" "}
+        {clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}
+      </div>
+      <div>
+        <strong>Last changed:</strong> {dateFormat(clickedBlob.lastChangeEpoch)}
+      </div>
       <Spacer xl />
       <AuthorDistribution currentClickedBlob={clickedBlob} />
     </Box>
@@ -30,7 +41,9 @@ function AuthorDistribution(props: {
   if (Object.values(props.currentClickedBlob.authors).length === 0) return <></>
   return (
     <>
-      <div>Author distribution:</div>
+      <div>
+        <strong>Author distribution:</strong>
+      </div>
       {Object.entries(
         makePercentResponsibilityDistribution(props.currentClickedBlob)
       )
@@ -46,5 +59,9 @@ function AuthorDistribution(props: {
 
 function LineCountDiv(props: { lineCount: number }) {
   if (!props.lineCount) return <div>No lines (likely a binary file)</div>
-  return <div>Line count: {props.lineCount}</div>
+  return (
+    <div>
+      <strong>Line count:</strong> {props.lineCount}
+    </div>
+  )
 }

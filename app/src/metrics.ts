@@ -5,7 +5,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "../../parser/src/model"
-import { unionAuthors } from "./util"
+import { dateFormat as dateFormatLong, unionAuthors } from "./util"
 import distinctColors from "distinct-colors"
 
 export const Metric = {
@@ -60,7 +60,10 @@ export function getMetricCalcs(
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
 ][] {
   let heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
-  let coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
+  let coldmap = new ColdMapTranslater(
+    commit.oldestLatestChangeEpoch,
+    commit.newestLatestChangeEpoch
+  )
   let authorColorState = {
     palette: distinctColors({ count: 100 }),
     paletteIndex: 0,
@@ -100,8 +103,8 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            new Date(commit.oldestLatestChangeEpoch*1000).toLocaleString('en-gb', {day: '2-digit', month:'short', year: 'numeric'}),
-            new Date(commit.newestLatestChangeEpoch*1000).toLocaleString('en-gb', {day: '2-digit', month:'short', year: 'numeric'}),
+            dateFormatLong(commit.oldestLatestChangeEpoch),
+            dateFormatLong(commit.newestLatestChangeEpoch),
             coldmap.getColor(commit.oldestLatestChangeEpoch),
             coldmap.getColor(commit.newestLatestChangeEpoch),
           ]
