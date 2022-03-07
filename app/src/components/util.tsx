@@ -10,7 +10,7 @@ export const BoxTitle = styled.h2`
   text-overflow: ellipsis;
 `
 
-export const BoxSubTitle = styled.h3`
+export const BoxSubTitle = styled.h2`
   font-size: 1em;
   font-weight: bold;
   margin-bottom: 0;
