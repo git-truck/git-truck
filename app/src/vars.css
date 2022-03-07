@@ -1,6 +1,6 @@
 :root {
   --unit: 8px;
-  --side-panel-width: calc(36 * var(--unit));
+  --side-panel-width: calc(46 * var(--unit));
   --title-color: hsl(200deg, 5%, 30%);
   --text-color: hsl(200deg, 5%, 25%);
   --border-color: hsl(0deg 0% 70%);
