@@ -93,7 +93,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
     if (errorMessage === null) {
       return <div>Loading...</div>
     } else {
-      return <div>{dataState.errorMessage}</div>
+      return (
+        <div>
+          <h1>An unexpected error occured:</h1>
+          <pre>
+            <code>{dataState.errorMessage}</code>
+          </pre>
+          Verify the data in{" "}
+          <code>
+            {process.env.NODE_ENV === "development"
+              ? "git-visual/app/public/data.json"
+              : "git-visual/app/build/data.json"}
+          </code>{" "}
+          is correct.
+        </div>
+      )
     }
   }
 
