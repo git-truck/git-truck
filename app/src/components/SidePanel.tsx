@@ -1,6 +1,4 @@
-import { SetStateAction } from "react"
 import styled from "styled-components"
-import { useSearch } from "../SearchContext"
 import { Details } from "./Details"
 import { GlobalInfo } from "./GlobalInfo"
 import { Legend } from "./Legend"
@@ -10,19 +8,15 @@ import { Spacer } from "./Spacer"
 
 const SidePanelRoot = styled.aside`
   overflow-y: auto;
+  overflow-x: hidden;
 `
 
 export function SidePanel() {
-  const { setSearchText: onSearchChange } = useSearch()
   return (
     <SidePanelRoot>
       <GlobalInfo />
       <Options />
-      <SearchBar
-        setSearchText={(searchString: SetStateAction<string>) =>
-          onSearchChange(searchString)
-        }
-      />
+      <SearchBar />
       <Spacer />
       <Details />
       <Legend />
