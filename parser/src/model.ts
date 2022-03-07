@@ -15,7 +15,7 @@ export interface GitBlobObject extends GitBaseObject {
   type: "blob"
   name: string
   path: string
-  content: string
+  content: string | undefined
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
@@ -25,7 +25,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   authors: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
-  dominantAuthor?: [string | undefined, number]
+  dominantAuthor?: [string, number]
 }
 
 export interface GitTreeObject extends GitBaseObject {

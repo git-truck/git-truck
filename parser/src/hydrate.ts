@@ -19,7 +19,6 @@ export async function hydrateData(
   repo: string,
   commit: GitCommitObject
 ): Promise<HydratedGitCommitObject> {
-
   const data = commit as HydratedGitCommitObject
 
   initially_mut(data)
@@ -38,7 +37,7 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.maxNoCommits = Number.MIN_VALUE
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
-  
+
   addAuthorsField_mut(data.tree)
 }
 
@@ -76,51 +75,54 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
       switch (parentsOfCurr.size) {
         case 2: // curr is a merge commit
           queue.enqueue(parentHash)
-          break;
+          break
         case 1: // curr is a linear commit
           diffAndUpdate_mut(data, currCommit, parentHash, repo)
           queue.enqueue(parentHash)
-          break;
-        default: // curr is the root commit
+          break
+        default:
+          // curr is the root commit
           diffAndUpdate_mut(data, currCommit, emptyGitCommitHash, repo)
-          break;
+          break
       }
     }
   }
 }
 
-function parents(obj : GitCommitObject|GitCommitObjectLight) : Set<string> {
+function parents(obj: GitCommitObject | GitCommitObjectLight): Set<string> {
   const parents = new Set<string>()
 
-  if (obj.parent !== null)
-    parents.add(obj.parent)
-  if (obj.parent2 !== null)
-    parents.add(obj.parent2)
+  if (obj.parent !== null) parents.add(obj.parent)
+  if (obj.parent2 !== null) parents.add(obj.parent2)
 
   return parents
 }
 
-async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitCommitObjectLight, parentHash: string, repo: string) {
-    const { author } = currCommit
+async function diffAndUpdate_mut(
+  data: HydratedGitCommitObject,
+  currCommit: GitCommitObjectLight,
+  parentHash: string,
+  repo: string
+) {
+  const { author } = currCommit
 
-    const currHash = currCommit.hash
+  const currHash = currCommit.hash
 
-    log.debug(`comparing [${currHash}] -> [${parentHash}]`)
+  log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
-    const fileChanges = await gitDiffNumStatParsed(repo, currHash, parentHash)
+  const fileChanges = await gitDiffNumStatParsed(repo, currHash, parentHash)
 
-    for (const fileChange of fileChanges) {
+  for (const fileChange of fileChanges) {
+    const { pos, neg, file } = fileChange
 
-      const { pos, neg, file } = fileChange
+    const blob = await lookupFileInTree(data.tree, file)
 
-      const blob = await lookupFileInTree(data.tree, file)
-
-      if (file === "dev/null") continue
-      if (blob) {
-        if (isBinaryFile(blob)) continue
-        updateBlob_mut(blob, data, author, currCommit, pos, neg)
-      }
+    if (file === "dev/null") continue
+    if (blob) {
+      if (isBinaryFile(blob)) continue
+      updateBlob_mut(blob, data, author, currCommit, pos, neg)
     }
+  }
 }
 
 function isBinaryFile(blob: GitBlobObject) {
@@ -137,15 +139,13 @@ function updateBlob_mut(
 ) {
   const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
 
-  if (noCommits < data.minNoCommits)
-    data.minNoCommits = noCommits
-  if (noCommits > data.maxNoCommits)
-    data.maxNoCommits = noCommits
+  if (noCommits < data.minNoCommits) data.minNoCommits = noCommits
+  if (noCommits > data.maxNoCommits) data.maxNoCommits = noCommits
 
   const hydratedBlob = {
     ...blob,
     authors: (blob as HydratedGitBlobObject).authors ?? {},
-    noLines: blob.content.split("\n").length,
+    noLines: blob.content?.split("\n").length,
     noCommits: noCommits,
   } as HydratedGitBlobObject
 
@@ -171,14 +171,14 @@ function updateBlob_mut(
   Object.assign(blob, hydratedBlob)
 }
 
-function finally_mut(data : HydratedGitCommitObject) {
+function finally_mut(data: HydratedGitCommitObject) {
   discardContentField_mut(data.tree)
 }
 
 function discardContentField_mut(tree: HydratedGitTreeObject) {
   for (const child of tree.children) {
     if (child.type === "blob") {
-      child.content = ""
+      child.content = undefined
     } else {
       discardContentField_mut(child)
     }
