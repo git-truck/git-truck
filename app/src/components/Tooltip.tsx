@@ -76,9 +76,13 @@ function ColorMetricDependentInfo(props: {
 }) {
   switch (props.metric) {
     case "HEAT_MAP":
-      return <>{props.hoveredBlob?.noCommits} commits</>
+      const noCommits = props.hoveredBlob?.noCommits
+      if (!noCommits) return <></>
+      return <>{noCommits} commits</>
     case "COLD_MAP":
-      return <>{dateFormatShort(props.hoveredBlob?.lastChangeEpoch)}</>
+      const epoch = props.hoveredBlob?.lastChangeEpoch
+      if (!epoch) return <></>
+      return <>{dateFormatShort(epoch)}</>
     case "DOMINATED":
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.authors)
