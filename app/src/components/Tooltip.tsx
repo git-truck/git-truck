@@ -6,6 +6,8 @@ import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { useOptions } from "../OptionsContext"
 import { Spacer } from "./Spacer"
 import { useMetricCaches } from "../MetricContext"
+import { MetricType } from "../metrics"
+import { dateFormatShort } from "../util"
 
 const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
   padding: calc(0.5 * var(--unit)) var(--unit);
@@ -58,7 +60,40 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
         {color ? <LegendDot dotColor={color} /> : null}
         <Spacer horizontal />
         <BoxSubTitle>{hoveredBlob?.name}</BoxSubTitle>
+        <Spacer horizontal />
+        <ColorMetricDependentInfo
+          metric={metricType}
+          hoveredBlob={hoveredBlob}
+        />
       </TooltipBox>
     </TooltipContainer>
   )
+}
+
+function ColorMetricDependentInfo(props: {
+  metric: MetricType
+  hoveredBlob: HydratedGitBlobObject | null
+}) {
+  switch (props.metric) {
+    case "HEAT_MAP":
+      return <>changed in {props.hoveredBlob?.noCommits} commits</>
+    case "COLD_MAP":
+      return (
+        <>last changed {dateFormatShort(props.hoveredBlob?.lastChangeEpoch)}</>
+      )
+    case "DOMINATED":
+      const authors = props.hoveredBlob
+        ? Object.entries(props.hoveredBlob?.authors)
+        : []
+      switch (authors.length) {
+        case 0:
+          return <></>
+        case 1:
+          return <>dominated by {authors[0][0]}</>
+        default:
+          return <>has {authors.length} authors</>
+      }
+    default:
+      return <></>
+  }
 }
