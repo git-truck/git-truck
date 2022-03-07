@@ -9,14 +9,14 @@ import {
   LegendLable,
 } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
-import { useMetricCache } from "../MetricContext"
+import { useMetricCaches } from "../MetricContext"
 import { useOptions } from "../OptionsContext"
 
 const cutoff = 3
 
 export function Legend() {
   const { metricType } = useOptions()
-  const metricCaches = useMetricCache()
+  const metricCaches = useMetricCaches()
   const [collapse, setCollapse] = useState<boolean>(true)
 
   if (!isGradientMetric(metricType)) {

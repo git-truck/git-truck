@@ -5,7 +5,7 @@ import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { useOptions } from "../OptionsContext"
 import { Spacer } from "./Spacer"
-import { useMetricCache } from "../MetricContext"
+import { useMetricCaches } from "../MetricContext"
 
 const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
   padding: calc(0.5 * var(--unit)) var(--unit);
@@ -39,7 +39,7 @@ interface TooltipProps {
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
   const { metricType } = useOptions()
-  const metricCaches = useMetricCache()
+  const metricCaches = useMetricCaches()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null

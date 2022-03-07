@@ -20,7 +20,7 @@ import { ChartType, useOptions } from "../OptionsContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
 import { useSearch } from "../SearchContext"
-import { useMetricCache } from "../MetricContext"
+import { useMetricCaches } from "../MetricContext"
 import { useData } from "./DataContext"
 
 const SVG = styled.svg<{ chartType: ChartType }>`
@@ -40,7 +40,7 @@ export function Chart(props: ChartProps) {
     null
   )
   const data = useData()
-  const metricCaches = useMetricCache()
+  const metricCaches = useMetricCaches()
   const { metricType, chartType, setClickedBlob } = useOptions()
   const { searchText } = useSearch()
   const legendSetRef = useRef<Set<string>>(new Set())
