@@ -24,26 +24,3 @@
   fill: transparent;
   pointer-events: none;
 }
-
-/* Add debug class to name paths, to be able to see them */
-.name-path.debug {
-  stroke: black;
-  stroke-dasharray: 5, 5;
-}
-
-.search-match {
-  stroke-width: 3px;
-  stroke: var(--search-match-color);
-  stroke-dasharray: 3px;
-}
-
-.module {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.name-text {
-  fill: #333;
-}
