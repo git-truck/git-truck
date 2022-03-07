@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build app if app/build directory does not exists
-if [ ! -d "./app/build" ]; then
+if [ ! -d "./app/build/" ]; then
     echo "Installing app dependencies..."
     cd ./app && npm install --silent
     clear

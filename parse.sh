@@ -5,7 +5,7 @@ rm -f ./app/build/data.json
 # Print "installing dependencies"
 
 # Build parser if parser/dist directory does not exists
-if [ ! -d "./parser/dist" ]; then
+if [ ! -d "./parser/dist/" ]; then
     cd ./parser
     clear
     echo "Installing parser dependencies..."
