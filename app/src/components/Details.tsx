@@ -95,7 +95,7 @@ function AuthorDistribution(props: {
         .map(([author, contrib]) => (
           <DetailsEntry key={`${author}${contrib}`}>
             <DetailsLabel grow>{author}:</DetailsLabel>{" "}
-            {(contrib * 100).toFixed(2)}%
+            {Math.round(contrib * 100)}%
           </DetailsEntry>
         ))}
     </>
