@@ -208,6 +208,7 @@ function setDominantAuthorColor(
     legend.set(dom, new PointInfo(colorString, 1))
   }
   cache.colormap.set(blob.path, colorString)
+  blob.dominantAuthor = sorted[0]
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
