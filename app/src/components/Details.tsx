@@ -63,6 +63,7 @@ const PathSpan = styled.div`
   flex-wrap: wrap;
   font-family: monospace;
   font-size: calc(var(--unit) * 1.75);
+  justify-content: right;
 `
 
 function Path(props: { path: string }) {
