@@ -74,7 +74,7 @@
   "devDependencies": {
     "@types/d3": "^7.1.0",
     "@types/jest": "^27.4.0",
-    "@types/node": "^16.11.25",
+    "@types/node": "^16.11.26",
     "@types/react": "^17.0.39",
     "@types/react-dom": "^17.0.13",
     "@types/styled-components": "^5.1.23",
