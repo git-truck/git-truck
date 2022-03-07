@@ -39,7 +39,7 @@ export const Box = styled.div`
   /* border: 1px var(--border-color-alpha) solid; */
   margin: var(--unit);
   color: var(--text-color);
-  width: var(--side-panel-width) - calc(6 * var(--unit)));
+  width: calc(var(--side-panel-width) - 6 * var(--unit));
   background-color: #fff;
   border-radius: var(--unit);
   padding: calc(2 * var(--unit));
