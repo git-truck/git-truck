@@ -128,12 +128,13 @@ export const LegendGradient = styled.div<{ min: string; max: string }>`
     to right,
     ${(props) => `${props.min},${props.max}`}
   );
-  width: 90%;
-  margin-left: 10px;
-  margin-right: 10px;
+  width: 100%;
+  height: 20px;
+  border-radius: calc(var(--unit) * 0.5);
 `
 
 export const GradientLegendDiv = styled.div`
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 `

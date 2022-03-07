@@ -53,9 +53,9 @@ export function Legend() {
       <LegendBox>
         <GradientLegendDiv>
           <LegendLable>{minValue}</LegendLable>
-          <LegendGradient min={minColor} max={maxColor} />
           <LegendLable>{maxValue}</LegendLable>
         </GradientLegendDiv>
+        <LegendGradient min={minColor} max={maxColor} />
       </LegendBox>
     )
   }
