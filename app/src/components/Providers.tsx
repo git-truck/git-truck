@@ -22,7 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     metricCaches: Map<MetricType, MetricCache> | null
     errorMessage: string | null
   }>({ data: null, metricCaches: null, errorMessage: null })
-  const [store, setStore] = useState<Options | null>(null)
+  const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
 
   useEffect(() => {
@@ -50,41 +50,41 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!dataState) {
-      setStore(null)
+      setOptions(null)
       return
     }
-    setStore((prevStore) => ({
-      ...(prevStore ?? getDefaultOptions()),
+    setOptions((prevOptions) => ({
+      ...(prevOptions ?? getDefaultOptions()),
       ...dataState,
     }))
   }, [dataState])
 
-  const storeValue = useMemo(
+  const optionsValue = useMemo(
     () => ({
       ...getDefaultOptions(),
-      ...store,
+      ...options,
       setMetricType: (metricType: MetricType) =>
-        setStore((prevStore) => ({
-          ...(prevStore ?? getDefaultOptions()),
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
           metricType,
         })),
       setChartType: (chartType: ChartType) =>
-        setStore((prevStore) => ({
-          ...(prevStore ?? getDefaultOptions()),
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
           chartType,
         })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
-        setStore((prevStore) => ({
-          ...(prevStore ?? getDefaultOptions()),
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
           hoveredBlob: blob,
         })),
       setClickedBlob: (blob: HydratedGitBlobObject | null) =>
-        setStore((prevStore) => ({
-          ...(prevStore ?? getDefaultOptions()),
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
           clickedBlob: blob,
         })),
     }),
-    [store]
+    [options]
   )
 
   const { data, metricCaches, errorMessage } = dataState
@@ -114,7 +114,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <DataContext.Provider value={data}>
       <MetricContext.Provider value={metricCaches}>
-        <OptionsContext.Provider value={storeValue}>
+        <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider value={{ searchText, setSearchText }}>
             {children}
           </SearchContext.Provider>
