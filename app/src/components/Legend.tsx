@@ -4,13 +4,13 @@ import { LegendToggle } from "./LegendToggle"
 import { useState } from "react"
 import {
   GradientLegendDiv,
-  LegendBox,
   LegendGradient,
   LegendLable,
 } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
 import { useMetricCaches } from "../MetricContext"
 import { useOptions } from "../OptionsContext"
+import { Box } from "./util"
 
 const cutoff = 3
 
@@ -31,13 +31,13 @@ export function Legend() {
     if (items.length === 0) return null
     if (items.length <= cutoff + 1)
       return (
-        <LegendBox>
+        <Box>
           <LegendFragment show={true} items={items} />
-        </LegendBox>
+        </Box>
       )
     else
       return (
-        <LegendBox>
+        <Box>
           <LegendFragment show={true} items={items.slice(0, cutoff)} />
           <LegendFragment show={!collapse} items={items.slice(cutoff)} />
           <LegendOther show={collapse} items={items.slice(cutoff)} />
@@ -45,20 +45,20 @@ export function Legend() {
             collapse={collapse}
             toggle={() => setCollapse(!collapse)}
           />
-        </LegendBox>
+        </Box>
       )
   } else {
     let [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
     return (
-      <LegendBox>
+      <Box>
         <GradientLegendDiv>
           <LegendLable>{minValue}</LegendLable>
           <LegendLable>{maxValue}</LegendLable>
         </GradientLegendDiv>
         <LegendGradient min={minColor} max={maxColor} />
-      </LegendBox>
+      </Box>
     )
   }
 }
