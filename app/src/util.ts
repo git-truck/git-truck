@@ -5,8 +5,8 @@ export function unionAuthors(blob: HydratedGitBlobObject) {
   return Object.entries(blob.authors).reduce(
     (newAuthorOject, [author, contributionCount]) => {
       const authors = users.find((x) => x.includes(author))
-      if (!authors) throw Error("Author not found: " + author)
-      const [name] = authors
+
+      const [name] = authors ?? [author]
       delete newAuthorOject[author]
       newAuthorOject[name] = newAuthorOject[name] || 0
       newAuthorOject[name] += contributionCount

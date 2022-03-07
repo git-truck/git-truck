@@ -1,11 +1,11 @@
 import { Metric, MetricType } from "../metrics"
 import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
-import { Chart, ChartType, useStore } from "../StoreContext"
+import { Chart, ChartType, useOptions } from "../OptionsContext"
 import { Spacer } from "./Spacer"
 
 export function Options() {
-  const { setMetricType, setChartType } = useStore()
+  const { setMetricType, setChartType } = useOptions()
   return (
     <Box>
       <EnumSelect

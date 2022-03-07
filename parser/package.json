@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "start": "tsc && node ./dist",
+    "build": "tsc",
+    "start": "npm run build && node ./dist",
     "lint": "eslint",
     "lint-staged": "lint-staged",
     "prepare": "cd .. && husky install"

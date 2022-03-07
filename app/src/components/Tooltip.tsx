@@ -3,8 +3,9 @@ import { useMouse } from "react-use"
 import { useMemo, useRef } from "react"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
-import { useStore } from "../StoreContext"
+import { useOptions } from "../OptionsContext"
 import { Spacer } from "./Spacer"
+import { useMetricCaches } from "../MetricContext"
 
 const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
   padding: calc(0.5 * var(--unit)) var(--unit);
@@ -37,7 +38,8 @@ interface TooltipProps {
 }
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
-  const { metricCaches, metricType } = useStore()
+  const { metricType } = useOptions()
+  const metricCaches = useMetricCaches()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null

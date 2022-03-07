@@ -34,7 +34,7 @@
     "build": "react-scripts build",
     "test": "cross-env CI=true react-scripts test --env=jsdom --passWithNoTests",
     "eject": "react-scripts eject",
-    "parse": "cd ./../parser && npm start -- --path .. --out ./app/src/data.json",
+    "parse": "cd ./../parser && npm start -- --path .. --out ./../app/public/data.json",
     "ps": "npm run parse && npm run start",
     "pb": "npm run parse && npm run build"
   },
