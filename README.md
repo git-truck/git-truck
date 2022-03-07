@@ -3,6 +3,11 @@ Visualizing a Git repository
 
 ## Usage
 
+To display usage information, run
+
+```
+./start.sh --help
+```
 
 ### Prerequisites
 
