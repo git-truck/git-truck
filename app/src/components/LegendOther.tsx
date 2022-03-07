@@ -13,10 +13,11 @@ export function LegendOther(props: LegendOtherProps) {
   return (
     <LegendEntry>
       {props.items.map((legendItem, i) => {
-        let [, info] = legendItem
+        let [label, info] = legendItem
         let margin = i === 0 ? 0 : -10
         return (
           <LegendDot
+            key={`dot${label}`}
             dotColor={info.color}
             style={{
               marginLeft: margin,
