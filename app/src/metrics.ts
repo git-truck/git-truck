@@ -5,7 +5,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "../../parser/src/model"
-import { dateFormat as dateFormatLong, unionAuthors } from "./util"
+import { dateFormatLong, unionAuthors } from "./util"
 import distinctColors from "distinct-colors"
 
 export const Metric = {

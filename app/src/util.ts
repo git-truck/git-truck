@@ -24,7 +24,7 @@ export function diagonal(d: HierarchyRectangularNode<unknown>) {
   return Math.sqrt(dx ** 2 + dy ** 2)
 }
 
-export function dateFormat(epochTime: number | undefined) {
+export function dateFormatLong(epochTime: number | undefined) {
   if (!epochTime) return "Invalid date"
   return new Date(epochTime * 1000).toLocaleString("en-gb", {
     day: "2-digit",
