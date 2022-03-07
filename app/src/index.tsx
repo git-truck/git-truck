@@ -1,6 +1,6 @@
 import type {} from "react/next"
 import { StrictMode } from "react"
-import { createRoot } from "react-dom"
+import { createRoot } from "react-dom/client"
 import "./vars.css"
 import "./index.css"
 import App from "./App"
