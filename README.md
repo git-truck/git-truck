@@ -27,7 +27,7 @@ or
 where args can be:
 ```
   --path <path to git repository> (default: current directory)
-  --branch <branch name> (default: current branch)
+  --branch <branch name> (default: checked out branch)
   --out <output path for json file> (default: ./app/public/data.json)
 ```
 
