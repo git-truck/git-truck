@@ -22,8 +22,7 @@ export default function SearchBar() {
         setSearchText(value)
       })
     },
-    // 1,
-    100,
+    200,
     [value]
   )
 
