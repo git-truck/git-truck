@@ -2,7 +2,6 @@
 
 rm -f ./app/public/data.json
 rm -f ./app/build/data.json
-# Print "installing dependencies"
 
 # Build parser if parser/dist directory does not exists
 if [ ! -d "./parser/dist/" ]; then
