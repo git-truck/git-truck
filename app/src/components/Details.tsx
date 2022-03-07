@@ -4,6 +4,30 @@ import { Box, BoxTitle, CloseButton } from "./util"
 import { useOptions } from "../OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
+import styled from "styled-components"
+
+const DetailsEntry = styled.div`
+  display: flex;
+  align-items: baseline;
+`
+
+const DetailsSectionHeading = styled.h3`
+  font-size: calc(var(--unit) * 2);
+  letter-spacing: calc(var(--unit) / 6);
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding-top: calc(var(--unit));
+  padding-bottom: calc(var(--unit) / 2);
+  border-bottom: 1px solid var(--border-color);
+`
+
+const DetailsLabel = styled.span<{ grow?: boolean }>`
+  ${({ grow }) => (grow ? "flex-grow: 1" : "")};
+  font-weight: bold;
+  opacity: 0.75;
+  margin-right: var(--unit);
+  white-space: pre;
+`
 
 export function Details() {
   const { setClickedBlob, clickedBlob } = useOptions()
@@ -18,21 +42,40 @@ export function Details() {
         &times;
       </CloseButton>
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
-      <>
-        <strong>Path:</strong> {clickedBlob.path}
-      </>
       <LineCountDiv lineCount={clickedBlob.noLines} />
-      <div>
-        <strong>Number of commits:</strong>{" "}
-        {clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}
-      </div>
-      <div>
-        <strong>Last changed:</strong>{" "}
+      <DetailsEntry>
+        <DetailsLabel grow>Commits:</DetailsLabel>
+        <span>{clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}</span>
+      </DetailsEntry>
+      <DetailsEntry>
+        <DetailsLabel grow>Last changed:</DetailsLabel>{" "}
         {dateFormatLong(clickedBlob.lastChangeEpoch)}
-      </div>
+      </DetailsEntry>
+      <Path path={clickedBlob.path} />
       <Spacer xl />
       <AuthorDistribution currentClickedBlob={clickedBlob} />
     </Box>
+  )
+}
+
+const PathSpan = styled.div`
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-family: monospace;
+  font-size: calc(var(--unit) * 1.75);
+`
+
+function Path(props: { path: string }) {
+  const parts = props.path.split("/").slice(1)
+  return (
+    <DetailsEntry>
+      <DetailsLabel>Located at:</DetailsLabel>{" "}
+      <PathSpan>
+        {parts.map((part, index) => (
+          <span>{index === parts.length - 1 ? part : `${part}/`}</span>
+        ))}
+      </PathSpan>
+    </DetailsEntry>
   )
 }
 
@@ -42,17 +85,17 @@ function AuthorDistribution(props: {
   if (Object.values(props.currentClickedBlob.authors).length === 0) return <></>
   return (
     <>
-      <div>
-        <strong>Author distribution:</strong>
-      </div>
+      <DetailsSectionHeading>Author distribution</DetailsSectionHeading>
+      <Spacer xs />
       {Object.entries(
         makePercentResponsibilityDistribution(props.currentClickedBlob)
       )
         .sort((a, b) => (a[1] < b[1] ? 1 : -1))
         .map(([author, contrib]) => (
-          <div key={`${author}${contrib}`}>
-            <b>{author}:</b> {(contrib * 100).toFixed(2)}%
-          </div>
+          <DetailsEntry key={`${author}${contrib}`}>
+            <DetailsLabel grow>{author}:</DetailsLabel>{" "}
+            {(contrib * 100).toFixed(2)}%
+          </DetailsEntry>
         ))}
     </>
   )
@@ -61,8 +104,8 @@ function AuthorDistribution(props: {
 function LineCountDiv(props: { lineCount: number }) {
   if (!props.lineCount) return <div>No lines (likely a binary file)</div>
   return (
-    <div>
-      <strong>Line count:</strong> {props.lineCount}
-    </div>
+    <DetailsEntry>
+      <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount}
+    </DetailsEntry>
   )
 }
