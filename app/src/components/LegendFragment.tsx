@@ -10,20 +10,20 @@ interface LegendFragProps {
 export function LegendFragment(props: LegendFragProps) {
   if (!props.show) return null
   return (
-    <div>
+    <>
       {props.items.map((legendItem) => {
         let [label, info] = legendItem
         return (
-          <>
+          <div key={label}>
             <LegendEntry>
               <LegendDot dotColor={info.color} />
               <Spacer horizontal />
               <LegendLable>{label}</LegendLable>
             </LegendEntry>
             <Spacer />
-          </>
+          </div>
         )
       })}
-    </div>
+    </>
   )
 }
