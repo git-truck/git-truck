@@ -31,10 +31,6 @@
   stroke-dasharray: 5, 5;
 }
 
-.search-match-title {
-  font-weight: bold;
-}
-
 .search-match {
   stroke-width: 3px;
   stroke: var(--search-match-color);
