@@ -1,30 +1,20 @@
 #!/bin/bash
 
-cd ./parser
-clear
-# Print "installing dependencies"
-echo "Installing parser dependencies..."
-npm install --silent
-clear
+# Build app if app/build directory does not exists
+if [ ! -d "./app/build" ]; then
+    echo "Installing app dependencies..."
+    cd ./app && npm install --silent
+    clear
+    echo "Building app..."
+    npm run build --silent
+    cd ..
+    clear
+fi
 
-echo "Building parser..."
-npm run build --silent
-clear
+# Run parser with arguments
+./parse.sh --out ./app/build/data.json $@
 
-
-
-# Pass all arguments to index.js
-cd .. && node ./parser/dist/index.js --out ./app/src/data.json $@
-clear
-
-echo "Installing app dependencies..."
-cd ./app && npm install --silent
-clear
-
-echo "Building app..."
-npm run build --silent
-clear
-npm_config_yes=true
 echo "Serving app..."
-cd build && npx serve -y
-
+# Set npm_config_yes=true
+export npm_config_yes=true
+cd ./app/build && npx serve@latest

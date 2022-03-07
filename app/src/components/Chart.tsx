@@ -16,10 +16,12 @@ import {
 } from "../const"
 import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
-import { ChartType, useStore } from "../StoreContext"
+import { ChartType, useOptions } from "../OptionsContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
 import { useSearch } from "../SearchContext"
+import { useMetricCache } from "../MetricContext"
+import { useData } from "./DataContext"
 
 const SVG = styled.svg<{ chartType: ChartType }>`
   display: grid;
@@ -37,8 +39,9 @@ export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
-  const { data, metricCaches, metricType, chartType, setClickedBlob } =
-    useStore()
+  const data = useData()
+  const metricCaches = useMetricCache()
+  const { metricType, chartType, setClickedBlob } = useOptions()
   const { searchText } = useSearch()
   const legendSetRef = useRef<Set<string>>(new Set())
   const svgRef = useRef<SVGSVGElement>(null)

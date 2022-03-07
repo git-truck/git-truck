@@ -1,11 +1,11 @@
 import { Spacer } from "./Spacer"
 import { makePercentResponsibilityDistribution } from "./Chart"
 import { Box, BoxTitle, CloseButton } from "./util"
-import { useStore } from "../StoreContext"
+import { useOptions } from "../OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 
 export function Details() {
-  const { setClickedBlob, clickedBlob } = useStore()
+  const { setClickedBlob, clickedBlob } = useOptions()
   if (clickedBlob === null) return null
   return (
     <Box>
@@ -48,4 +48,3 @@ function LineCountDiv(props: { lineCount: number }) {
   if (!props.lineCount) return <div>No lines (likely a binary file)</div>
   return <div>Line count: {props.lineCount}</div>
 }
-

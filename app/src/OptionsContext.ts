@@ -1,13 +1,6 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject, ParserData } from "../../parser/src/model"
-import { getData } from "./data"
-import {
-  getMetricCalcs,
-  Metric,
-  MetricCache,
-  MetricType,
-  setupMetricsCache,
-} from "./metrics"
+import { HydratedGitBlobObject } from "../../parser/src/model"
+import { Metric, MetricType } from "./metrics"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -16,9 +9,7 @@ export const Chart = {
 
 export type ChartType = keyof typeof Chart
 
-export interface Store {
-  data: ParserData
-  metricCaches: Map<MetricType, MetricCache>
+export interface Options {
   metricType: MetricType
   chartType: ChartType
   clickedBlob: HydratedGitBlobObject | null
@@ -27,24 +18,18 @@ export interface Store {
   setChartType: (chartType: ChartType) => void
 }
 
-export const StoreContext = createContext<Store | undefined>(undefined)
+export const OptionsContext = createContext<Options | undefined>(undefined)
 
-export function useStore() {
-  const context = useContext(StoreContext)
+export function useOptions() {
+  const context = useContext(OptionsContext)
   if (!context) {
     throw new Error("useSearch must be used within a SearchProvider")
   }
   return context
 }
 
-export function getDefaultStore(): Store {
-  let d = getData()
-  let mc = new Map<MetricType, MetricCache>()
-  setupMetricsCache(d.commit.tree, getMetricCalcs(d.commit), mc)
-
+export function getDefaultOptions() {
   return {
-    data: d,
-    metricCaches: mc,
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
     clickedBlob: null,

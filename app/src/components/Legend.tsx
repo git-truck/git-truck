@@ -2,7 +2,6 @@ import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { LegendToggle } from "./LegendToggle"
 import { useState } from "react"
-import { useStore } from "../StoreContext"
 import {
   GradientLegendDiv,
   LegendBox,
@@ -10,11 +9,14 @@ import {
   LegendLable,
 } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
+import { useMetricCache } from "../MetricContext"
+import { useOptions } from "../OptionsContext"
 
 const cutoff = 3
 
 export function Legend() {
-  const { metricType, metricCaches } = useStore()
+  const { metricType } = useOptions()
+  const metricCaches = useMetricCache()
   const [collapse, setCollapse] = useState<boolean>(true)
 
   if (!isGradientMetric(metricType)) {
