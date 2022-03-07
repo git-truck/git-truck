@@ -113,13 +113,14 @@ export const LegendButton = styled.button<{ collapse: boolean }>`
   right: var(--unit);
   border: none;
   background-color: rgba(0, 0, 0, 0);
-  scale: 200%;
   transition-duration: 0.4s;
   color: grey;
   transform-origin: 50% 55%;
   transform: ${(props) => (props.collapse ? "rotate(180deg)" : "none")};
+  font-size: large;
   &:hover {
-    scale: 180%;
+    color: #606060;
+    cursor: pointer;
   }
 `
 
