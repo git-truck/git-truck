@@ -1,17 +1,17 @@
 import { SearchField, Box, Label } from "./util"
 import styled from "styled-components"
-import { Dispatch, SetStateAction, useId, useState, useTransition } from "react"
+import { useId, useState, useTransition } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
+import { useSearch } from "../SearchContext"
 
 const StyledBox = styled(Box)`
   display: flex;
   flex-direction: column;
 `
 
-export default function SearchBar(props: {
-  setSearchText: Dispatch<SetStateAction<string>>
-}) {
+export default function SearchBar() {
+  const { setSearchText } = useSearch()
   const [value, setValue] = useState("")
   const id = useId()
   const [, startTransition] = useTransition()
@@ -19,7 +19,7 @@ export default function SearchBar(props: {
   useDebounce(
     () => {
       startTransition(() => {
-        props.setSearchText(value)
+        setSearchText(value)
       })
     },
     // 1,
