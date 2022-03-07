@@ -19,4 +19,4 @@ fi
 
 # Pass all arguments to parser
 node ./parser/dist/index.js $@
-# clear
+clear

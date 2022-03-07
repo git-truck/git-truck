@@ -15,6 +15,7 @@ fi
 ./parse.sh --out ./app/build/data.json $@
 
 echo "Serving app..."
+
 # Set npm_config_yes=true
 export npm_config_yes=true
 cd ./app/build && npx serve@latest

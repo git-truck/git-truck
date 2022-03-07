@@ -6,7 +6,7 @@ echo "Running parser"
 
 echo "Installing app dependencies..."
 cd ./app && npm install --silent
-# clear
+clear
 
 echo "Running app..."
 npm run start --silent
