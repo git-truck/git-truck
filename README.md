@@ -34,6 +34,14 @@ For example, if you cloned this repository to `/home/user/git-visual`, run:
 
 To run the tool against `git-visual` it self, run `./start.sh` without any arguments.
 
+If you are unable to run the script on *nix systems, make sure that you have set the correct permissions.
+```
+chmod +x ./start.sh
+chmod +x ./parse.sh
+chmod +x ./clean.sh
+chmod +x ./dev.sh
+```
+
 ### Development
 
 To run the tool in development mode with hot reloading, run:
