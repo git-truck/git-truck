@@ -91,6 +91,10 @@ function ColorMetricDependentInfo(props: {
         default:
           return <>{authors.length} authors</>
       }
+    case "DOMINANTAUTHOR":
+      const dominant = props.hoveredBlob?.dominantAuthor![0]
+      if (!dominant) return <></>
+      return <>{dominant}</>
     default:
       return <></>
   }

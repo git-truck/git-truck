@@ -25,6 +25,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   authors: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
+  dominantAuthor?: [string | undefined, number]
 }
 
 export interface GitTreeObject extends GitBaseObject {
