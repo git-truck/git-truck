@@ -115,7 +115,7 @@ export function generateTruckFrames(length: number) {
 }
 
 export function createTruckSpinner() {
-  return getLogLevel() <= LOG_LEVEL.INFO
+  return getLogLevel() === null
     ? createSpinner("", {
         interval: 1000 / 20,
         frames: generateTruckFrames(20),
