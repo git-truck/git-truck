@@ -33,6 +33,7 @@ where args can be:
 ```
 
 **Note:** The app expects `data.json` to be present in the `app/build` directory (or `app/public` when `dev.sh` is run).
+**Note:** If the parser and app are already built, the build is reused. To start fresh, run the `clean.sh` script prior to `start.sh` and `dev.sh`
 
 For example, if you cloned this repository to `/home/user/git-visual`, run:
 
