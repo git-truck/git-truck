@@ -182,7 +182,7 @@ export async function parse(rawArgs: string[]) {
     --out <output path for json file> (default: ./.temp/{repo}_{branch}.json)
     --branch <branch name> (default: current branch)
     --help, -h: Show this help message`)
-    return
+    process.exit(1)
   }
 
   const repoDir = args.path ?? "."
