@@ -175,12 +175,12 @@ export async function parse(rawArgs: string[]) {
   if (args.help || args.h) {
     console.log(`Git Visual
 
-  Usage: npm run start -- <args>
+  Usage: ./start.sh <args> or ./dev.sh <args>
 
   Options:
     --path <path to git repository> (default: current directory)
-    --out <output path for json file> (default: ./.temp/{repo}_{branch}.json)
-    --branch <branch name> (default: current branch)
+    --branch <branch name> (default: checked out branch)
+    --out <output path for json file> (default: ./app/build/data.json)
     --help, -h: Show this help message`)
     process.exit(1)
   }
