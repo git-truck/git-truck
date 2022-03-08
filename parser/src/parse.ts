@@ -223,7 +223,7 @@ export async function parse(rawArgs: string[]) {
   )
   const stop = performance.now()
 
-  log.log(`\nDone in ${formatMs(stop - start)}`)
+  log.raw(`\nDone in ${formatMs(stop - start)}`)
 }
 
 export const exportForTest = {

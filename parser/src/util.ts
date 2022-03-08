@@ -160,7 +160,7 @@ export async function describeAsyncJob<T>(
     return result
   } catch (e) {
     error(errorMsg)
-    log.error(e)
+    log.error(e as Error)
     process.exit(1)
   }
 }
