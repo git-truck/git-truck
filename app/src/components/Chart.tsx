@@ -185,20 +185,16 @@ function CircleText({
   d: HierarchyCircularNode<HydratedGitObject>
   isSearchMatch: boolean
 }) {
-  const pathProps = useSpring({
-    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle),
-  })
-
-  const textProps = {
-    fill: isSearchMatch ? searchMatchColor : "#333",
-  }
-
   return (
     <>
-      <animated.path id={d.data.path} className="name-path" {...pathProps} />
-      <animated.text>
+      <path
+        id={d.data.path}
+        className="name-path"
+        d={circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)}
+      />
+      <text>
         <textPath
-          {...textProps}
+          fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
           dominantBaseline="bottom"
@@ -207,7 +203,7 @@ function CircleText({
         >
           {d.data.name}
         </textPath>
-      </animated.text>
+      </text>
     </>
   )
 }
