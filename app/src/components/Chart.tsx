@@ -23,7 +23,6 @@ import {
   searchMatchColor,
 } from "../const"
 import { unionAuthors } from "../util"
-import { Legend } from "./Legend"
 import { ChartType, useOptions } from "../OptionsContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
@@ -94,7 +93,6 @@ export function Chart(props: ChartProps) {
           )
         })}
       </SVG>
-      <Legend />
       <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
