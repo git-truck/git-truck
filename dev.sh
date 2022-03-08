@@ -10,7 +10,6 @@ exit_code=$?
 
 # Exit script if exit code is not 0
 if [ $exit_code -ne 0 ]; then
-  echo "Parser failed with exit code $exit_code"
   exit $exit_code
 fi
 
