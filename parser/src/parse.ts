@@ -1,4 +1,4 @@
-import fsSync, { promises as fs } from "fs"
+import fsSync, { promises as fs, readFileSync } from "fs"
 import {
   GitBlobObject,
   GitCommitObject,
@@ -169,6 +169,22 @@ async function parseBlob(
   return blob
 }
 
+interface truckConfigResponse {
+  unionedAuthors: string[][]
+}
+
+export async function loadTruckConfig(repoDir: string) {
+  try {
+    const truckConfig = JSON.parse(
+      readFileSync(join(repoDir, "truckconfig.json"), "utf-8")
+    ) as truckConfigResponse
+    return truckConfig.unionedAuthors
+  } catch (e) {
+    log.info("No truckignore found: " + e)
+  }
+  return []
+}
+
 export async function parse(rawArgs: string[]) {
   const args = yargsParser(rawArgs)
 
@@ -210,12 +226,14 @@ export async function parse(rawArgs: string[]) {
     "Error hydrating commit tree"
   )
   const outPath = join(process.cwd(), outFileName)
+  const authorUnions = await loadTruckConfig(repoDir)
   await describeAsyncJob(
     () =>
       writeRepoToFile(outPath, {
         repo: repoName,
         branch: branchName,
         commit: hydratedRepoTree,
+        authorUnions: authorUnions,
       }),
     "Writing data to file",
     `Wrote data to ${resolve(outPath)}`,

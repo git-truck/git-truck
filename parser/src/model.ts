@@ -9,6 +9,7 @@ export interface ParserData {
   repo: string
   branch: string
   commit: HydratedGitCommitObject
+  authorUnions: string[][]
 }
 
 export interface GitBlobObject extends GitBaseObject {
