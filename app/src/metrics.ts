@@ -214,6 +214,10 @@ function setDominantAuthorColor(
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+  let dominatedColor = "red";
+  let defaultColor = "hsl(210, 38%, 85%)";
+  let nocreditColor = "teal";
+
   let creditsum = 0
   for (let [, val] of Object.entries(blob.authors)) {
     creditsum += val
@@ -222,19 +226,19 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   const legend = cache.legend as PointLegendData
 
   if (creditsum === 0) {
-    legend.set("No credit", new PointInfo("grey", 0))
-    cache.colormap.set(blob.path, "grey")
+    legend.set("No credit", new PointInfo(nocreditColor, 0))
+    cache.colormap.set(blob.path, nocreditColor)
     return
   }
 
   switch (Object.keys(unionAuthors(blob)).length) {
     case 1:
-      legend.set("Dominated", new PointInfo("red", 2))
-      cache.colormap.set(blob.path, "red")
+      legend.set("Dominated", new PointInfo(dominatedColor, 2))
+      cache.colormap.set(blob.path, dominatedColor)
       return
     default:
-      legend.set("Non-dominated", new PointInfo("cadetblue", 1))
-      cache.colormap.set(blob.path, "cadetblue")
+      legend.set("Non-dominated", new PointInfo(defaultColor, 1))
+      cache.colormap.set(blob.path, defaultColor)
       return
   }
 }
