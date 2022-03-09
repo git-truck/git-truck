@@ -2,14 +2,10 @@ import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { LegendToggle } from "./LegendToggle"
 import { useState } from "react"
-import {
-  GradientLegendDiv,
-  LegendGradient,
-  LegendLable,
-} from "./util"
+import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
-import { useMetricCaches } from "../MetricContext"
-import { useOptions } from "../OptionsContext"
+import { useMetricCaches } from "../contexts/MetricContext"
+import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
 
 const cutoff = 3
