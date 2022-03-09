@@ -12,9 +12,31 @@ import {
   OptionsContext,
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
+import {
+  HydratedGitBlobObject,
+  HydratedGitTreeObject,
+  ParserData,
+} from "../../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
+
+export function unionAuthors(
+  blob: HydratedGitBlobObject,
+  authorUnions: string[][]
+) {
+  return Object.entries(blob.authors).reduce(
+    (newAuthorOject, [author, contributionCount]) => {
+      const authors = authorUnions.find((x) => x.includes(author))
+
+      const [name] = authors ?? [author]
+      delete newAuthorOject[author]
+      newAuthorOject[name] = newAuthorOject[name] || 0
+      newAuthorOject[name] += contributionCount
+      return newAuthorOject
+    },
+    blob.authors
+  )
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [dataState, setData] = useState<{
@@ -25,11 +47,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
 
+  function addAuthorUnion(
+    tree: HydratedGitTreeObject,
+    authorUnions: string[][]
+  ) {
+    for (const child of tree.children) {
+      if (child.type === "blob") {
+        child.unionedAuthors = unionAuthors(child, authorUnions)
+      } else {
+        addAuthorUnion(child, authorUnions)
+      }
+    }
+  }
+
   useEffect(() => {
     async function getData() {
       try {
-        const response = await fetch(`./data.json?cache_bust${Date.now()}`)
+        const response = await fetch(`./data.json?cache_bust=${Date.now()}`)
         const data = (await response.json()) as ParserData
+        addAuthorUnion(data.commit.tree, data.authorUnions)
         const metricCaches = new Map<MetricType, MetricCache>()
         setupMetricsCache(
           data.commit.tree,

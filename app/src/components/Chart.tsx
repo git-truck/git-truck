@@ -22,7 +22,6 @@ import {
   textSpacingFromRect,
   searchMatchColor,
 } from "../const"
-import { unionAuthors } from "../util"
 import { Legend } from "./Legend"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
 import styled from "styled-components"
@@ -290,7 +289,8 @@ function circlePathFromCircle(x: number, y: number, r: number) {
 export function makePercentResponsibilityDistribution(
   d: HydratedGitBlobObject
 ): Record<string, number> {
-  const unionedAuthors = unionAuthors(d)
+  const unionedAuthors = d.unionedAuthors
+  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 
   const newAuthorsEntries = Object.entries(unionedAuthors).reduce(

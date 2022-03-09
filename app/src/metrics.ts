@@ -5,7 +5,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "../../parser/src/model"
-import { dateFormatLong, unionAuthors } from "./util"
+import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
 
 export const Metric = {
@@ -184,7 +184,8 @@ function setDominantAuthorColor(
 ) {
   let sorted: [string, number][]
   try {
-    sorted = Object.entries(unionAuthors(blob)).sort(([k1, v1], [k2, v2]) => {
+    if (!blob.unionedAuthors) throw Error
+    sorted = Object.entries(blob.unionedAuthors).sort(([k1, v1], [k2, v2]) => {
       if (v1 === 0 || v2 === 0 || !k1 || !k2) throw Error
       if (v1 < v2) return 1
       else if (v1 > v2) return -1
@@ -225,7 +226,8 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     return
   }
 
-  switch (Object.keys(unionAuthors(blob)).length) {
+  if (!blob.unionedAuthors) throw Error("No unioned authors found")
+  switch (Object.keys(blob.unionedAuthors).length) {
     case 1:
       legend.set("Dominated", new PointInfo("red", 2))
       cache.colormap.set(blob.path, "red")
