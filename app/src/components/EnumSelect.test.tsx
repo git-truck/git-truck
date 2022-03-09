@@ -8,7 +8,7 @@ describe("EnumSelect", () => {
 
     render(
       <EnumSelect
-        label="Color metric"
+        label="Metric"
         enum={Metric}
         onChange={(t: keyof typeof Metric) => {}}
       />
