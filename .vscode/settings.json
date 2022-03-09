@@ -1,4 +1,5 @@
 {
   "editor.formatOnSave": false,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}"
 }
