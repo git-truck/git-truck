@@ -22,7 +22,6 @@ import {
   textSpacingFromRect,
   searchMatchColor,
 } from "../const"
-import { Legend } from "./Legend"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
@@ -194,7 +193,7 @@ function CircleText({
       />
       <text
         style={{
-          stroke: "var(--global-bg-color)"
+          stroke: "var(--global-bg-color)",
         }}
         strokeWidth="7"
         strokeLinecap="round"
