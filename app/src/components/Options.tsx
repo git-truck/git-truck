@@ -15,7 +15,7 @@ export function Options() {
       />
       <Spacer />
       <EnumSelect
-        label="Color metric"
+        label="Metric"
         enum={Metric}
         onChange={(metric: MetricType) => setMetricType(metric)}
       />
