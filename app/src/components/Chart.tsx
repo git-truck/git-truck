@@ -93,7 +93,6 @@ export function Chart(props: ChartProps) {
           )
         })}
       </SVG>
-      <Legend />
       <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
@@ -110,10 +109,10 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
       return (
         <>
+          <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
             <CircleText d={circleDatum} isSearchMatch={match} />
           ) : null}
-          <Circle d={circleDatum} isSearchMatch={match} />
         </>
       )
     case "TREE_MAP":
@@ -186,29 +185,43 @@ function CircleText({
   d: HierarchyCircularNode<HydratedGitObject>
   isSearchMatch: boolean
 }) {
-  const pathProps = useSpring({
-    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle),
-  })
-
-  const textProps = {
-    fill: isSearchMatch ? searchMatchColor : "#333",
-  }
-
   return (
     <>
-      <animated.path id={d.data.path} className="name-path" {...pathProps} />
-      <animated.text>
+      <path
+        id={d.data.path}
+        className="name-path"
+        d={circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)}
+      />
+      <text
+        style={{
+          stroke: "var(--global-bg-color)"
+        }}
+        strokeWidth="7"
+        strokeLinecap="round"
+      >
         <textPath
-          {...textProps}
+          fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
-          dominantBaseline="bottom"
+          dominantBaseline="central"
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >
           {d.data.name}
         </textPath>
-      </animated.text>
+      </text>
+      <text>
+        <textPath
+          fill={isSearchMatch ? searchMatchColor : "#333"}
+          className="object-name"
+          startOffset="50%"
+          dominantBaseline="central"
+          textAnchor="middle"
+          xlinkHref={`#${d.data.path}`}
+        >
+          {d.data.name}
+        </textPath>
+      </text>
     </>
   )
 }

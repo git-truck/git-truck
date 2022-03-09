@@ -1,3 +1,4 @@
 .temp
 *.log
 .eslintcache
+.env

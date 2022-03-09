@@ -1,5 +1,3 @@
-//@ts-ignore
-import gitcolors from "github-colors"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -7,6 +5,7 @@ import {
 } from "../../parser/src/model"
 import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
+import { getColorFromExtension } from "./extension-color"
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
@@ -73,7 +72,10 @@ export function getMetricCalcs(
     [
       "FILE_EXTENSION",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
+        if (!cache.legend) {
+          cache.legend = new Map<string, PointInfo>()
+          cache.legend.set("Other", new PointInfo("grey", 0))
+        }
         setExtensionColor(blob, cache)
       },
     ],
@@ -157,17 +159,17 @@ export function setupMetricsCache(
 
 function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
-  let lookup = gitcolors.ext(extension)
-  if (!lookup) {
-    cache.colormap.set(blob.path, "grey")
-  } else {
+  let color = getColorFromExtension(extension)
+  if (color) {
     const legend = cache.legend as PointLegendData
     if (legend.has(extension)) {
       legend.get(extension)?.add(1)
     } else {
-      legend.set(extension, new PointInfo(lookup.color, 1))
+      legend.set(extension, new PointInfo(color, 1))
     }
-    cache.colormap.set(blob.path, lookup.color)
+    cache.colormap.set(blob.path, color)
+  } else {
+    cache.colormap.set(blob.path, "grey")
   }
 }
 
@@ -213,6 +215,10 @@ function setDominantAuthorColor(
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+  let dominatedColor = "red";
+  let defaultColor = "hsl(210, 38%, 85%)";
+  let nocreditColor = "teal";
+
   let creditsum = 0
   for (let [, val] of Object.entries(blob.authors)) {
     creditsum += val
@@ -221,20 +227,20 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   const legend = cache.legend as PointLegendData
 
   if (creditsum === 0) {
-    legend.set("No credit", new PointInfo("grey", 0))
-    cache.colormap.set(blob.path, "grey")
+    legend.set("No credit", new PointInfo(nocreditColor, 0))
+    cache.colormap.set(blob.path, nocreditColor)
     return
   }
 
   if (!blob.unionedAuthors) throw Error("No unioned authors found")
   switch (Object.keys(blob.unionedAuthors).length) {
     case 1:
-      legend.set("Dominated", new PointInfo("red", 2))
-      cache.colormap.set(blob.path, "red")
+      legend.set("Dominated", new PointInfo(dominatedColor, 2))
+      cache.colormap.set(blob.path, dominatedColor)
       return
     default:
-      legend.set("Non-dominated", new PointInfo("cadetblue", 1))
-      cache.colormap.set(blob.path, "cadetblue")
+      legend.set("Non-dominated", new PointInfo(defaultColor, 1))
+      cache.colormap.set(blob.path, defaultColor)
       return
   }
 }
