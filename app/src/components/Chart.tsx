@@ -109,10 +109,10 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
       return (
         <>
+          <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
             <CircleText d={circleDatum} isSearchMatch={match} />
           ) : null}
-          <Circle d={circleDatum} isSearchMatch={match} />
         </>
       )
     case "TREE_MAP":
@@ -192,12 +192,30 @@ function CircleText({
         className="name-path"
         d={circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)}
       />
+      <text
+        style={{
+          stroke: "var(--global-bg-color)"
+        }}
+        strokeWidth="7"
+        strokeLinecap="round"
+      >
+        <textPath
+          fill={isSearchMatch ? searchMatchColor : "#333"}
+          className="object-name"
+          startOffset="50%"
+          dominantBaseline="central"
+          textAnchor="middle"
+          xlinkHref={`#${d.data.path}`}
+        >
+          {d.data.name}
+        </textPath>
+      </text>
       <text>
         <textPath
           fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
-          dominantBaseline="bottom"
+          dominantBaseline="central"
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >

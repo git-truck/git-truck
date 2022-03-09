@@ -12,7 +12,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100vh;
-  background-color: hsl(210deg 38% 95%);
+  background-color: var(--global-bg-color);
 }
 
 #root {
