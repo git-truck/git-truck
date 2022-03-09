@@ -3,7 +3,7 @@ import styled from "styled-components"
 import { useId, useState, useTransition } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
-import { useSearch } from "../SearchContext"
+import { useSearch } from "../contexts/SearchContext"
 
 const StyledBox = styled(Box)`
   display: flex;

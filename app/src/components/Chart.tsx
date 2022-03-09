@@ -22,14 +22,13 @@ import {
   textSpacingFromRect,
   searchMatchColor,
 } from "../const"
-import { unionAuthors } from "../util"
-import { ChartType, useOptions } from "../OptionsContext"
+import { ChartType, useOptions } from "../contexts/OptionsContext"
 import styled from "styled-components"
 import { Tooltip } from "./Tooltip"
-import { useSearch } from "../SearchContext"
-import { useData } from "./DataContext"
+import { useSearch } from "../contexts/SearchContext"
+import { useData } from "../contexts/DataContext"
 import { animated, useSpring } from "@react-spring/web"
-import { useMetricCaches } from "../MetricContext"
+import { useMetricCaches } from "../contexts/MetricContext"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -194,7 +193,7 @@ function CircleText({
       />
       <text
         style={{
-          stroke: "var(--global-bg-color)"
+          stroke: "var(--global-bg-color)",
         }}
         strokeWidth="7"
         strokeLinecap="round"
@@ -302,7 +301,8 @@ function circlePathFromCircle(x: number, y: number, r: number) {
 export function makePercentResponsibilityDistribution(
   d: HydratedGitBlobObject
 ): Record<string, number> {
-  const unionedAuthors = unionAuthors(d)
+  const unionedAuthors = d.unionedAuthors
+  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 
   const newAuthorsEntries = Object.entries(unionedAuthors).reduce(

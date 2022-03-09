@@ -10,11 +10,12 @@ import {
   getDefaultOptions,
   Options,
   OptionsContext,
-} from "../OptionsContext"
-import { SearchContext } from "./../SearchContext"
+} from "../contexts/OptionsContext"
+import { SearchContext } from "../contexts/SearchContext"
 import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
-import { MetricContext } from "../MetricContext"
-import { DataContext } from "./DataContext"
+import { MetricContext } from "../contexts/MetricContext"
+import { DataContext } from "../contexts/DataContext"
+import { addAuthorUnion } from "../authorUnionUtil"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [dataState, setData] = useState<{
@@ -28,8 +29,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function getData() {
       try {
-        const response = await fetch(`./data.json?cache_bust${Date.now()}`)
+        const response = await fetch(`./data.json?cache_bust=${Date.now()}`)
         const data = (await response.json()) as ParserData
+        addAuthorUnion(data.commit.tree, data.authorUnions)
         const metricCaches = new Map<MetricType, MetricCache>()
         setupMetricsCache(
           data.commit.tree,

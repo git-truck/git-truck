@@ -1,7 +1,7 @@
 import { Spacer } from "./Spacer"
 import { makePercentResponsibilityDistribution } from "./Chart"
 import { Box, BoxTitle, CloseButton } from "./util"
-import { useOptions } from "../OptionsContext"
+import { useOptions } from "../contexts/OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
 import styled from "styled-components"

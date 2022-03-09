@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject } from "../../parser/src/model"
-import { Metric, MetricType } from "./metrics"
+import { HydratedGitBlobObject } from "../../../parser/src/model"
+import { Metric, MetricType } from "../metrics"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",

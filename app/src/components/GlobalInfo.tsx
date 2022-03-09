@@ -1,4 +1,4 @@
-import { useData } from "./DataContext"
+import { useData } from "../contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { Box, BoxTitle } from "./util"
 

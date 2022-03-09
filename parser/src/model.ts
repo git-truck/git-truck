@@ -9,6 +9,7 @@ export interface ParserData {
   repo: string
   branch: string
   commit: HydratedGitCommitObject
+  authorUnions: string[][]
 }
 
 export interface GitBlobObject extends GitBaseObject {
@@ -23,6 +24,7 @@ export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
 export interface HydratedGitBlobObject extends GitBlobObject {
   noLines: number
   authors: Record<string, number>
+  unionedAuthors?: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
   dominantAuthor?: [string, number]
