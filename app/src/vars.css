@@ -1,5 +1,6 @@
 :root {
   --unit: 8px;
+  --global-bg-color: hsl(210deg 38% 95%);
   --side-panel-width: calc(46 * var(--unit));
   --title-color: hsl(200deg, 5%, 30%);
   --text-color: hsl(200deg, 5%, 25%);
