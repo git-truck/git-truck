@@ -40,6 +40,7 @@ export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
         neg: parseInt(neg),
         pos: parseInt(pos),
         file: newFile,
+        hasBeenMoved: file.includes("=>"),
       }
     })
   return stuff
