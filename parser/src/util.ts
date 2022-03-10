@@ -34,11 +34,14 @@ export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
   const stuff = entries
     .filter((x) => x.trim().length > 0)
     .map((x) => x.split(/\t+/))
-    .map(([neg, pos, file]) => ({
-      neg: parseInt(neg),
-      pos: parseInt(pos),
-      file,
-    }))
+    .map(([neg, pos, file]) => {
+      const newFile = file.replace("{", "").replace(/\s*=>.*}/, "")
+      return {
+        neg: parseInt(neg),
+        pos: parseInt(pos),
+        file: newFile,
+      }
+    })
   return stuff
 }
 
