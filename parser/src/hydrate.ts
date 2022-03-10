@@ -113,14 +113,14 @@ async function diffAndUpdate_mut(
   const fileChanges = await gitDiffNumStatParsed(repo, currHash, parentHash)
 
   for (const fileChange of fileChanges) {
-    const { pos, neg, file } = fileChange
+    const { pos, neg, file, hasBeenMoved } = fileChange
 
     const blob = await lookupFileInTree(data.tree, file)
 
     if (file === "dev/null") continue
     if (blob) {
       if (isBinaryFile(blob)) continue
-      updateBlob_mut(blob, data, author, currCommit, pos, neg)
+      updateBlob_mut(blob, data, author, currCommit, pos, neg, hasBeenMoved)
     }
   }
 }
@@ -135,7 +135,8 @@ function updateBlob_mut(
   author: PersonWithTime,
   currCommit: GitCommitObjectLight,
   pos: number,
-  neg: number
+  neg: number,
+  hasBeenMoved: boolean
 ) {
   const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
 
@@ -151,11 +152,15 @@ function updateBlob_mut(
 
   const current = hydratedBlob.authors?.[author.name] ?? 0
 
+  const newValue = current + pos + neg
   for (const coauthor of currCommit.coauthors) {
-    hydratedBlob.authors[coauthor.name] = current + pos + neg
+    hydratedBlob.authors[coauthor.name] = hasBeenMoved
+      ? hydratedBlob.noLines
+      : newValue
   }
-
-  hydratedBlob.authors[author.name] = current + pos + neg
+  hydratedBlob.authors[author.name] = hasBeenMoved
+    ? hydratedBlob.noLines
+    : newValue
 
   if (!hydratedBlob.lastChangeEpoch) {
     const epoch = currCommit.author.timestamp
