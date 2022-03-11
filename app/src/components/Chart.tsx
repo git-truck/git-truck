@@ -98,13 +98,15 @@ export function Chart(props: ChartProps) {
 
 function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
-  const showLabel = !isRoot && isTree(d.data)
+  let showLabel = !isRoot && isTree(d.data)
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+      if (circleDatum.r * Math.PI < d.data.name.length * 7) showLabel = false
+
       return (
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
@@ -115,6 +117,9 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
+      if (rectDatum.x1 - rectDatum.x0 < d.data.name.length * 7)
+        showLabel = false
+
       return (
         <>
           {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
