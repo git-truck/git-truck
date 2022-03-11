@@ -8,6 +8,7 @@ export const BoxTitle = styled.h2`
   color: var(--title-color);
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 export const BoxSubTitle = styled.h2`

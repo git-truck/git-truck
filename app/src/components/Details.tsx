@@ -6,27 +6,37 @@ import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
 import styled from "styled-components"
 
-const DetailsEntry = styled.div`
-  display: flex;
-  align-items: baseline;
-`
-
-const DetailsSectionHeading = styled.h3`
+const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
-  letter-spacing: calc(var(--unit) / 6);
-  text-transform: uppercase;
-  opacity: 0.6;
   padding-top: calc(var(--unit));
-  padding-bottom: calc(var(--unit) / 2);
-  border-bottom: 1px solid var(--border-color);
+  padding-bottom: calc(var(--unit) * 0.5);
+  font-size: 1.1em;
 `
 
-const DetailsLabel = styled.span<{ grow?: boolean }>`
-  ${({ grow }) => (grow ? "flex-grow: 1" : "")};
-  font-weight: bold;
-  opacity: 0.75;
-  margin-right: var(--unit);
+const DetailsEntries = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 calc(var(--unit) * 3);
+`
+
+const StyledDetailsEntries = styled(DetailsEntries)`
+  gap: var(--unit) calc(var(--unit) * 3);
+  & > p {
+    text-align: left;
+  }
+`
+
+const DetailsKey = styled.span<{ grow?: boolean }>`
   white-space: pre;
+  font-size: 0.9em;
+  font-weight: 500;
+  opacity: 0.7;
+`
+
+const DetailsValue = styled.p`
+  overflow-wrap: anywhere;
+  font-size: 0.9em;
+  text-align: right;
 `
 
 function hasZeroContributions(authors: Record<string, number>) {
@@ -42,27 +52,18 @@ export function Details() {
   if (clickedBlob === null) return null
   return (
     <Box>
-      <CloseButton
-        onClick={() => {
-          setClickedBlob(null)
-        }}
-      >
+      <CloseButton onClick={() => { setClickedBlob(null) }}>
         &times;
       </CloseButton>
+      <Spacer xl />
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
-      <LineCountDiv
-        lineCount={clickedBlob.noLines}
-        isBinary={clickedBlob.isBinary}
-      />
-      <DetailsEntry>
-        <DetailsLabel grow>Commits:</DetailsLabel>
-        <span>{clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}</span>
-      </DetailsEntry>
-      <DetailsEntry>
-        <DetailsLabel grow>Last changed:</DetailsLabel>{" "}
-        {dateFormatLong(clickedBlob.lastChangeEpoch)}
-      </DetailsEntry>
-      <Path path={clickedBlob.path} />
+      <Spacer xl />
+      <StyledDetailsEntries>
+        <LineCountEntry lineCount={clickedBlob.noLines} isBinary={clickedBlob.isBinary} />
+        <CommitsEntry clickedBlob={clickedBlob} />
+        <LastchangedEntry clickedBlob={clickedBlob} />
+        <PathEntry path={clickedBlob.path} />
+      </StyledDetailsEntries>
       <Spacer xl />
       {clickedBlob.isBinary ||
       hasZeroContributions(clickedBlob.authors) ? null : (
@@ -72,25 +73,44 @@ export function Details() {
   )
 }
 
-const PathSpan = styled.div`
-  display: inline-flex;
-  flex-wrap: wrap;
-  font-family: monospace;
-  font-size: calc(var(--unit) * 1.75);
-  justify-content: right;
-`
-
-function Path(props: { path: string }) {
-  const parts = props.path.split("/").slice(1)
+function CommitsEntry(props: {clickedBlob: HydratedGitBlobObject}) {
   return (
-    <DetailsEntry>
-      <DetailsLabel>Located at:</DetailsLabel>{" "}
-      <PathSpan>
-        {parts.map((part, index) => (
-          <span>{index === parts.length - 1 ? part : `${part}/`}</span>
-        ))}
-      </PathSpan>
-    </DetailsEntry>
+    <>
+      <DetailsKey grow>Commits</DetailsKey>
+      <DetailsValue>
+        {props.clickedBlob.noCommits > 0 ? props.clickedBlob.noCommits : 0}
+      </DetailsValue>
+    </>
+  )
+}
+
+function LastchangedEntry(props: {clickedBlob: HydratedGitBlobObject}) {
+  return (
+    <>
+      <DetailsKey grow>Last changed</DetailsKey>
+      <DetailsValue>
+        {dateFormatLong(props.clickedBlob.lastChangeEpoch)}
+      </DetailsValue>
+    </>
+  )
+}
+
+function PathEntry(props: { path: string }) {
+  return (
+    <>
+      <DetailsKey>Located at</DetailsKey>
+      <DetailsValue title={props.path}>{props.path}</DetailsValue>
+    </>
+  )
+}
+
+function LineCountEntry(props: { lineCount: number, isBinary?: boolean }) {
+  if (!props.lineCount) return <div style={{ gridColumn: "span 2" }}>No lines (likely a binary file)</div>
+  return (
+    <>
+      <DetailsKey grow>Line count</DetailsKey>
+      <DetailsValue>{props.lineCount ?? 0} {props.isBinary ? <> (Likely a binary file)</> : null}</DetailsValue>
+    </>
   )
 }
 
@@ -99,29 +119,22 @@ function AuthorDistribution(props: {
 }) {
   return (
     <>
-      <DetailsSectionHeading>Author distribution</DetailsSectionHeading>
+      <DetailsHeading>Author distribution</DetailsHeading>
       <Spacer xs />
-      {Object.entries(
-        makePercentResponsibilityDistribution(props.currentClickedBlob)
-      )
-        .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-        .map(([author, contrib]) => (
-          <DetailsEntry key={`${author}${contrib}`}>
-            <DetailsLabel grow>{author}:</DetailsLabel>{" "}
-            {Math.round(contrib * 100)}%
-          </DetailsEntry>
-        ))}
+      <DetailsEntries>
+        {
+          Object.entries(
+            makePercentResponsibilityDistribution(props.currentClickedBlob)
+          )
+          .sort((a, b) => (a[1] < b[1] ? 1 : -1))
+          .map(([author, contrib]) => (
+            <>
+              <DetailsKey grow>{author}</DetailsKey>
+              <DetailsValue>{Math.round(contrib * 100)}%</DetailsValue>
+            </>
+          ))
+        }
+      </DetailsEntries>
     </>
-  )
-}
-
-function LineCountDiv(props: { lineCount: number; isBinary?: boolean }) {
-  return (
-    <DetailsEntry>
-      <>
-        <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount ?? 0}
-        {props.isBinary ? <> (Likely a binary file)</> : null}
-      </>
-    </DetailsEntry>
   )
 }
