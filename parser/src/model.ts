@@ -28,6 +28,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   noCommits: number
   lastChangeEpoch?: number
   dominantAuthor?: [string, number]
+  isBinary?: boolean
 }
 
 export interface GitTreeObject extends GitBaseObject {
