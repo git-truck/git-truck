@@ -234,7 +234,7 @@ function RectText({
 }) {
   const props = useSpring({
     x: d.x0 + textSpacingFromRect,
-    y: d.y0 - textSpacingFromRect,
+    y: d.y0 + 3 * textSpacingFromRect,
     fill: isSearchMatch ? searchMatchColor : "#333",
   })
 
