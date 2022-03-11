@@ -20,6 +20,7 @@ import {
   textSpacingFromCircle,
   bubblePadding,
   searchMatchColor,
+  estimatedLetterWidth,
 } from "../const"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
 import styled from "styled-components"
@@ -105,7 +106,8 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      if (circleDatum.r * Math.PI < d.data.name.length * 7) showLabel = false
+      if (circleDatum.r * Math.PI < d.data.name.length * estimatedLetterWidth)
+        showLabel = false
 
       return (
         <>
@@ -117,7 +119,10 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      if (rectDatum.x1 - rectDatum.x0 < d.data.name.length * 7)
+      if (
+        rectDatum.x1 - rectDatum.x0 <
+        d.data.name.length * estimatedLetterWidth
+      )
         showLabel = false
 
       return (
