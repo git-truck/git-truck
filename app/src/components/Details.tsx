@@ -29,6 +29,14 @@ const DetailsLabel = styled.span<{ grow?: boolean }>`
   white-space: pre;
 `
 
+function hasZeroContributions(authors: Record<string, number>) {
+  const authorsList = Object.entries(authors)
+  for (const [, contribution] of authorsList) {
+    if (contribution > 0) return false
+  }
+  return true
+}
+
 export function Details() {
   const { setClickedBlob, clickedBlob } = useOptions()
   if (clickedBlob === null) return null
@@ -42,7 +50,10 @@ export function Details() {
         &times;
       </CloseButton>
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
-      <LineCountDiv lineCount={clickedBlob.noLines} />
+      <LineCountDiv
+        lineCount={clickedBlob.noLines}
+        isBinary={clickedBlob.isBinary}
+      />
       <DetailsEntry>
         <DetailsLabel grow>Commits:</DetailsLabel>
         <span>{clickedBlob.noCommits > 0 ? clickedBlob.noCommits : 0}</span>
@@ -53,7 +64,10 @@ export function Details() {
       </DetailsEntry>
       <Path path={clickedBlob.path} />
       <Spacer xl />
-      <AuthorDistribution currentClickedBlob={clickedBlob} />
+      {clickedBlob.isBinary ||
+      hasZeroContributions(clickedBlob.authors) ? null : (
+        <AuthorDistribution currentClickedBlob={clickedBlob} />
+      )}
     </Box>
   )
 }
@@ -83,7 +97,6 @@ function Path(props: { path: string }) {
 function AuthorDistribution(props: {
   currentClickedBlob: HydratedGitBlobObject
 }) {
-  if (Object.values(props.currentClickedBlob.authors).length === 0) return <></>
   return (
     <>
       <DetailsSectionHeading>Author distribution</DetailsSectionHeading>
@@ -102,11 +115,16 @@ function AuthorDistribution(props: {
   )
 }
 
-function LineCountDiv(props: { lineCount: number }) {
-  if (!props.lineCount) return <div>No lines (likely a binary file)</div>
+function LineCountDiv(props: { lineCount: number; isBinary?: boolean }) {
   return (
     <DetailsEntry>
-      <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount}
+      {props.isBinary ? (
+        <DetailsLabel grow>This is a binary file</DetailsLabel>
+      ) : (
+        <>
+          <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount ?? 0}
+        </>
+      )}
     </DetailsEntry>
   )
 }

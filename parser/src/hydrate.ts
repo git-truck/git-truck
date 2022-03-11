@@ -119,7 +119,6 @@ async function diffAndUpdate_mut(
 
     if (file === "dev/null") continue
     if (blob) {
-      if (isBinaryFile(blob)) continue
       updateBlob_mut(blob, data, author, currCommit, pos, neg, hasBeenMoved)
     }
   }
@@ -143,24 +142,29 @@ function updateBlob_mut(
   if (noCommits < data.minNoCommits) data.minNoCommits = noCommits
   if (noCommits > data.maxNoCommits) data.maxNoCommits = noCommits
 
+  const isBinary = isBinaryFile(blob)
+
   const hydratedBlob = {
     ...blob,
     authors: (blob as HydratedGitBlobObject).authors ?? {},
-    noLines: blob.content?.split("\n").length,
+    noLines: isBinary ? 1 : blob.content?.split("\n").length,
     noCommits: noCommits,
+    isBinary: isBinary,
   } as HydratedGitBlobObject
 
-  const current = hydratedBlob.authors?.[author.name] ?? 0
+  if (!isBinary) {
+    const current = hydratedBlob.authors?.[author.name] ?? 0
 
-  const newValue = current + pos + neg
-  for (const coauthor of currCommit.coauthors) {
-    hydratedBlob.authors[coauthor.name] = hasBeenMoved
+    const newValue = current + pos + neg
+    for (const coauthor of currCommit.coauthors) {
+      hydratedBlob.authors[coauthor.name] = hasBeenMoved
+        ? hydratedBlob.noLines
+        : newValue
+    }
+    hydratedBlob.authors[author.name] = hasBeenMoved
       ? hydratedBlob.noLines
       : newValue
   }
-  hydratedBlob.authors[author.name] = hasBeenMoved
-    ? hydratedBlob.noLines
-    : newValue
 
   if (!hydratedBlob.lastChangeEpoch) {
     const epoch = currCommit.author.timestamp
