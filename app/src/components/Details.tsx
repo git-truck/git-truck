@@ -104,12 +104,15 @@ function PathEntry(props: { path: string }) {
   )
 }
 
+const StyledSpan = styled.span`
+  opacity: 0.5;
+`
+
 function LineCountEntry(props: { lineCount: number, isBinary?: boolean }) {
-  if (!props.lineCount) return <div style={{ gridColumn: "span 2" }}>No lines (likely a binary file)</div>
   return (
     <>
       <DetailsKey grow>Line count</DetailsKey>
-      <DetailsValue>{props.lineCount ?? 0} {props.isBinary ? <> (Likely a binary file)</> : null}</DetailsValue>
+      <DetailsValue>{props.lineCount ?? 0} <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan></DetailsValue>
     </>
   )
 }
