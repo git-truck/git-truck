@@ -1,5 +1,5 @@
 # git-visual
-Visualizing a Git repository
+This tool helps you get an overview over your git repo. You can see your folder-structure, which users have contributed most to which files, and more.
 
 ## [Prerequisites](#prerequisites)
 
@@ -66,6 +66,23 @@ You can also ignore file-extensions by writing an asterix followed by the extens
 ```
 *.md
 ```
+
+### [Aggregating users](#aggregating-users)
+If you have a user that goes under multiple aliases in git, you can add them together, by adding a *truckconfig.json* file to the root of the project to be analyzed.
+
+An example could be:
+```json
+{
+    "unionedAuthors": [
+        ["Bob", "Bobby", "Bob The Cool"],
+        ["Alice", "Alililili"]
+      ]
+}
+```
+
+In this case, all commits made by either Bob, Bobby or Bob The Cool will be credited to Bob. And commits by Alice and Alililili will be credited to Alice.
+
+If a name is not in the truckconfig, then all names will be shown separately.
 
 ### [Development](#development)
 
