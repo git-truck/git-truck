@@ -16,7 +16,7 @@ export interface GitBlobObject extends GitBaseObject {
   type: "blob"
   name: string
   path: string
-  content: string | undefined
+  content?: string
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject

@@ -15,7 +15,7 @@ import { SearchContext } from "../contexts/SearchContext"
 import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
-import { addAuthorUnion } from "../authorUnionUtil"
+import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [dataState, setData] = useState<{
@@ -31,7 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       try {
         const response = await fetch(`./data.json?cache_bust=${Date.now()}`)
         const data = (await response.json()) as ParserData
-        addAuthorUnion(data.commit.tree, data.authorUnions)
+        const authorAliasMap = makeDupeMap(data.authorUnions)
+        addAuthorUnion(data.commit.tree, authorAliasMap)
         const metricCaches = new Map<MetricType, MetricCache>()
         setupMetricsCache(
           data.commit.tree,
