@@ -5,10 +5,9 @@ import {
 
 export const makeDupeMap = (authors: string[][]) => {
   const dupeMap = new Map<string, string>()
-  for (const [author, ...aliases] of authors) {
-    dupeMap.set(author, author)
+  for (const aliases of authors) {
     for (const alias of aliases) {
-      dupeMap.set(alias, author)
+      dupeMap.set(alias, aliases[0])
     }
   }
   return dupeMap
