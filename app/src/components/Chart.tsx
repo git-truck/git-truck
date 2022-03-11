@@ -19,7 +19,6 @@ import {
   treemapPadding,
   textSpacingFromCircle,
   bubblePadding,
-  textSpacingFromRect,
   searchMatchColor,
 } from "../const"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
@@ -233,8 +232,8 @@ function RectText({
   isSearchMatch: boolean
 }) {
   const props = useSpring({
-    x: d.x0 + textSpacingFromRect,
-    y: d.y0 + 3 * textSpacingFromRect,
+    x: d.x0 + 4,
+    y: d.y0 + 12,
     fill: isSearchMatch ? searchMatchColor : "#333",
   })
 
