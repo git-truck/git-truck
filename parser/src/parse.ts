@@ -186,7 +186,11 @@ export async function loadTruckConfig(repoDir: string) {
 }
 
 export async function parse(rawArgs: string[]) {
-  const args = yargsParser(rawArgs)
+  const args = yargsParser(rawArgs, {
+    configuration: {
+      "duplicate-arguments-array": false,
+    },
+  })
 
   if (args.help || args.h) {
     console.log(`Git Visual
