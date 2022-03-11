@@ -27,7 +27,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
-          repository-name: git-visual/git-visual.github.io
+          repository-name: git-truck/git-truck.github.io
           branch: gh-pages # The branch the action should deploy to.
           folder: ./app/build # The folder the action should deploy.
           token: ${{ secrets.TOKEN }}
