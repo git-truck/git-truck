@@ -118,13 +118,10 @@ function AuthorDistribution(props: {
 function LineCountDiv(props: { lineCount: number; isBinary?: boolean }) {
   return (
     <DetailsEntry>
-      {props.isBinary ? (
-        <DetailsLabel grow>This is a binary file</DetailsLabel>
-      ) : (
-        <>
-          <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount ?? 0}
-        </>
-      )}
+      <>
+        <DetailsLabel grow>Line count:</DetailsLabel> {props.lineCount ?? 0}
+        {props.isBinary ? <> (Likely a binary file)</> : null}
+      </>
     </DetailsEntry>
   )
 }
