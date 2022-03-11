@@ -55,6 +55,7 @@ export function Chart(props: ChartProps) {
   const { chartType, setClickedBlob } = useOptions()
 
   useEffect(() => {
+    setHoveredBlob(null)
     setNodes(
       createPartitionedHiearchy(
         data.commit,
