@@ -78,7 +78,11 @@ function ColorMetricDependentInfo(props: {
     case "HEAT_MAP":
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
-      return <>{noCommits} commits</>
+      return (
+        <>
+          {noCommits} commit{noCommits > 1 ? <>s</> : null}
+        </>
+      )
     case "COLD_MAP":
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
