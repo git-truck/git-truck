@@ -147,7 +147,7 @@ function updateBlob_mut(
   const hydratedBlob = {
     ...blob,
     authors: (blob as HydratedGitBlobObject).authors ?? {},
-    noLines: isBinary ? 1 : blob.content?.split("\n").length,
+    noLines: isBinary ? 0 : blob.content?.split("\n").length,
     noCommits: noCommits,
     isBinary: isBinary,
   } as HydratedGitBlobObject
