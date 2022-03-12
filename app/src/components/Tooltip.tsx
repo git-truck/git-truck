@@ -1,6 +1,6 @@
 import { Box, BoxSubTitle, LegendDot } from "./util"
-import { useMouse } from "react-use"
-import { useMemo, useRef } from "react"
+import { useMouse, useDebounce } from "react-use"
+import { useMemo, useRef, useState } from "react"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { useOptions } from "../contexts/OptionsContext"
@@ -9,7 +9,12 @@ import { useMetricCaches } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
 import { dateFormatShort } from "../util"
 
-const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
+const TooltipBox = styled(Box)<{
+  x: number
+  y: number
+  visible: boolean
+  right: boolean
+}>`
   padding: calc(0.5 * var(--unit)) var(--unit);
   min-width: 0;
   width: max-content;
@@ -23,10 +28,13 @@ const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
 
   pointer-events: none;
   visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
-  transform: ${({ visible, x, y }) =>
-    visible
-      ? `translate(calc(var(--unit) + ${x}px), calc(var(--unit) + ${y}px))`
-      : "none"};
+  transform: ${({ right, visible, x, y }) => {
+    if (!visible) return "none"
+    const Offset = right ? 0 : 180
+    return `translate(calc(var(--unit) + ${
+      x - Offset
+    }px), calc(var(--unit) + ${y}px))`
+  }};
 `
 
 const TooltipContainer = styled.div`
@@ -52,11 +60,29 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     return color
   }, [hoveredBlob, metricCaches, metricType])
   const ref = useRef(document.documentElement)
-
   const mouse = useMouse(ref)
+  const [right, setRight] = useState(true)
+
+  useDebounce(
+    () => {
+      if (mouse.docX < 46 * 6 + 0.2 * window.innerWidth) {
+        setRight(true)
+      } else if (mouse.docX > 0.8 * window.innerWidth) {
+        setRight(false)
+      }
+    },
+    50,
+    [mouse]
+  )
+
   return (
     <TooltipContainer>
-      <TooltipBox visible={hoveredBlob !== null} x={mouse.docX} y={mouse.docY}>
+      <TooltipBox
+        right={right}
+        visible={hoveredBlob !== null}
+        x={mouse.docX}
+        y={mouse.docY}
+      >
         {color ? <LegendDot dotColor={color} /> : null}
         <Spacer horizontal />
         <BoxSubTitle>{hoveredBlob?.name}</BoxSubTitle>

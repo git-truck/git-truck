@@ -1,5 +1,5 @@
 import "./Chart.css"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
