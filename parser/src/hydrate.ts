@@ -15,6 +15,8 @@ import { parseCommitLight } from "./parse"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util"
 import { Queue } from "./queue"
 
+const renamedFiles = new Map<string, string>()
+
 export async function hydrateData(
   repo: string,
   commit: GitCommitObject
@@ -110,16 +112,21 @@ async function diffAndUpdate_mut(
 
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
-  const fileChanges = await gitDiffNumStatParsed(repo, currHash, parentHash)
+  const fileChanges = await gitDiffNumStatParsed(
+    repo,
+    parentHash,
+    currHash,
+    renamedFiles
+  )
 
   for (const fileChange of fileChanges) {
-    const { pos, neg, file, hasBeenMoved } = fileChange
+    const { pos, neg, file } = fileChange
 
     const blob = await lookupFileInTree(data.tree, file)
 
     if (file === "dev/null") continue
     if (blob) {
-      updateBlob_mut(blob, data, author, currCommit, pos, neg, hasBeenMoved)
+      updateBlob_mut(blob, data, author, currCommit, pos, neg)
     }
   }
 }
@@ -134,8 +141,7 @@ function updateBlob_mut(
   author: PersonWithTime,
   currCommit: GitCommitObjectLight,
   pos: number,
-  neg: number,
-  hasBeenMoved: boolean
+  neg: number
 ) {
   const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
 
@@ -157,13 +163,9 @@ function updateBlob_mut(
 
     const newValue = current + pos + neg
     for (const coauthor of currCommit.coauthors) {
-      hydratedBlob.authors[coauthor.name] = hasBeenMoved
-        ? hydratedBlob.noLines
-        : newValue
+      hydratedBlob.authors[coauthor.name] = newValue
     }
-    hydratedBlob.authors[author.name] = hasBeenMoved
-      ? hydratedBlob.noLines
-      : newValue
+    hydratedBlob.authors[author.name] = newValue
   }
 
   if (!hydratedBlob.lastChangeEpoch) {

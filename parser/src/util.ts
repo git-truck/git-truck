@@ -28,22 +28,70 @@ function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export async function gitDiffNumStatParsed(repo: string, a: string, b: string) {
+export async function gitDiffNumStatParsed(
+  repo: string,
+  a: string,
+  b: string,
+  renamedFiles: Map<string, string>
+) {
   const diff = await gitDiffNumStat(repo, a, b)
   const entries = diff.split("\n")
   const stuff = entries
     .filter((x) => x.trim().length > 0)
     .map((x) => x.split(/\t+/))
     .map(([neg, pos, file]) => {
-      const newFile = file.replace("{", "").replace(/\s*=>.*}/, "")
+      let newestPath = file
+      const hasBeenMoved = file.includes("=>")
+      if (hasBeenMoved) {
+        newestPath = parseRenamedFile(newestPath, renamedFiles)
+      }
+
+      newestPath = findNewestVersion(newestPath, renamedFiles)
+
       return {
         neg: parseInt(neg),
         pos: parseInt(pos),
-        file: newFile,
-        hasBeenMoved: file.includes("=>"),
+        file: newestPath,
       }
     })
   return stuff
+}
+
+function parseRenamedFile(file: string, renamedFiles: Map<string, string>) {
+  const movedFileRegex =
+    /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
+  const replaceRegex = /{.*}/gm
+  const match = movedFileRegex.exec(file)
+  const groups = match?.groups ?? {}
+
+  let oldPath: string
+  let newPath: string
+
+  if (groups["oldPath"] || groups["newPath"]) {
+    const oldP = groups["oldPath"] ?? ""
+    const newP = groups["newPath"] ?? ""
+    oldPath = file.replace(replaceRegex, oldP).replace("//", "/")
+    newPath = file.replace(replaceRegex, newP).replace("//", "/")
+  } else {
+    oldPath = groups["oldPath2"] ?? ""
+    newPath = groups["newPath2"] ?? ""
+  }
+
+  renamedFiles.set(oldPath, newPath)
+  log.debug(
+    "renamedFiles inner: " + JSON.stringify(Array.from(renamedFiles.entries()))
+  )
+  return newPath
+}
+
+function findNewestVersion(path: string, renamedFiles: Map<string, string>) {
+  let newestPath = path
+  let next = renamedFiles.get(newestPath)
+  while (next) {
+    newestPath = next
+    next = renamedFiles.get(newestPath)
+  }
+  return newestPath
 }
 
 export async function lookupFileInTree(
