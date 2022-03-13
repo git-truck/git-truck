@@ -162,10 +162,12 @@ function updateBlob_mut(
     const current = hydratedBlob.authors?.[author.name] ?? 0
 
     const newValue = current + pos + neg
-    for (const coauthor of currCommit.coauthors) {
-      hydratedBlob.authors[coauthor.name] = newValue
+    if (newValue > 0) {
+      for (const coauthor of currCommit.coauthors) {
+        hydratedBlob.authors[coauthor.name] = newValue
+      }
+      hydratedBlob.authors[author.name] = newValue
     }
-    hydratedBlob.authors[author.name] = newValue
   }
 
   if (!hydratedBlob.lastChangeEpoch) {

@@ -78,9 +78,6 @@ function parseRenamedFile(file: string, renamedFiles: Map<string, string>) {
   }
 
   renamedFiles.set(oldPath, newPath)
-  log.debug(
-    "renamedFiles inner: " + JSON.stringify(Array.from(renamedFiles.entries()))
-  )
   return newPath
 }
 
