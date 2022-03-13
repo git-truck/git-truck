@@ -5,6 +5,7 @@ import { useOptions } from "../contexts/OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
 import styled from "styled-components"
+import { Fragment } from "react"
 
 const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
@@ -52,14 +53,21 @@ export function Details() {
   if (clickedBlob === null) return null
   return (
     <Box>
-      <CloseButton onClick={() => { setClickedBlob(null) }}>
+      <CloseButton
+        onClick={() => {
+          setClickedBlob(null)
+        }}
+      >
         &times;
       </CloseButton>
       <Spacer xl />
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
       <Spacer xl />
       <StyledDetailsEntries>
-        <LineCountEntry lineCount={clickedBlob.noLines} isBinary={clickedBlob.isBinary} />
+        <LineCountEntry
+          lineCount={clickedBlob.noLines}
+          isBinary={clickedBlob.isBinary}
+        />
         <CommitsEntry clickedBlob={clickedBlob} />
         <LastchangedEntry clickedBlob={clickedBlob} />
         <PathEntry path={clickedBlob.path} />
@@ -73,7 +81,7 @@ export function Details() {
   )
 }
 
-function CommitsEntry(props: {clickedBlob: HydratedGitBlobObject}) {
+function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Commits</DetailsKey>
@@ -84,7 +92,7 @@ function CommitsEntry(props: {clickedBlob: HydratedGitBlobObject}) {
   )
 }
 
-function LastchangedEntry(props: {clickedBlob: HydratedGitBlobObject}) {
+function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Last changed</DetailsKey>
@@ -108,11 +116,14 @@ const StyledSpan = styled.span`
   opacity: 0.5;
 `
 
-function LineCountEntry(props: { lineCount: number, isBinary?: boolean }) {
+function LineCountEntry(props: { lineCount: number; isBinary?: boolean }) {
   return (
     <>
       <DetailsKey grow>Line count</DetailsKey>
-      <DetailsValue>{props.lineCount ?? 0} <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan></DetailsValue>
+      <DetailsValue>
+        {props.lineCount ?? 0}{" "}
+        <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
+      </DetailsValue>
     </>
   )
 }
@@ -125,18 +136,21 @@ function AuthorDistribution(props: {
       <DetailsHeading>Author distribution</DetailsHeading>
       <Spacer xs />
       <DetailsEntries>
-        {
-          Object.entries(
-            makePercentResponsibilityDistribution(props.currentClickedBlob)
-          )
+        {Object.entries(
+          makePercentResponsibilityDistribution(props.currentClickedBlob)
+        )
           .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-          .map(([author, contrib]) => (
-            <>
-              <DetailsKey grow>{author}</DetailsKey>
-              <DetailsValue>{Math.round(contrib * 100)}%</DetailsValue>
-            </>
-          ))
-        }
+          .map(([author, contrib]) => {
+            const roundedContrib = Math.round(contrib * 100)
+            return (
+              <Fragment key={author + contrib}>
+                <DetailsKey grow>{author}</DetailsKey>
+                <DetailsValue>
+                  {roundedContrib === 0 ? "<1" : roundedContrib}%
+                </DetailsValue>
+              </Fragment>
+            )
+          })}
       </DetailsEntries>
     </>
   )
