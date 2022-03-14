@@ -76,7 +76,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
       <TooltipBox
         ref={tooltipContainerRef}
         right={right}
-        visible={true}
+        visible={visible}
         style={transformStyles}
       >
         {color ? <LegendDot dotColor={color} /> : null}
