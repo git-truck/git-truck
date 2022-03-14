@@ -1,4 +1,7 @@
-.temp
-*.log
-.eslintcache
+node_modules
+
+/.cache
+/build
+/public/build
 .env
+data.json
