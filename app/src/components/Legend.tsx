@@ -1,6 +1,6 @@
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
-import { LegendToggle } from "./LegendToggle"
+import { Toggle } from "./Toggle"
 import { useState } from "react"
 import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
@@ -8,7 +8,7 @@ import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
 
-const cutoff = 3
+const legendCutoff = 3
 
 export function Legend() {
   const { metricType } = useOptions()
@@ -25,7 +25,7 @@ export function Legend() {
     })
 
     if (items.length === 0) return null
-    if (items.length <= cutoff + 1)
+    if (items.length <= legendCutoff + 1)
       return (
         <Box>
           <LegendFragment show={true} items={items} />
@@ -34,10 +34,15 @@ export function Legend() {
     else
       return (
         <Box>
-          <LegendFragment show={true} items={items.slice(0, cutoff)} />
-          <LegendFragment show={!collapse} items={items.slice(cutoff)} />
-          <LegendOther show={collapse} items={items.slice(cutoff)} />
-          <LegendToggle
+          <LegendFragment show={true} items={items.slice(0, legendCutoff)} />
+          <LegendFragment show={!collapse} items={items.slice(legendCutoff)} />
+          <LegendOther
+            show={collapse}
+            items={items.slice(legendCutoff)}
+            toggle={() => setCollapse(!collapse)}
+          />
+          <Toggle
+            relative={false}
             collapse={collapse}
             toggle={() => setCollapse(!collapse)}
           />

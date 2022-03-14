@@ -5,7 +5,10 @@ import { useOptions } from "../contexts/OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
 import styled from "styled-components"
-import { Fragment } from "react"
+import { Fragment, useState } from "react"
+import { AuthorDistFragment } from "./AuthorDistFragment"
+import { AuthorDistOther } from "./AuthorDistOther"
+import { Toggle } from "./Toggle"
 
 const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
@@ -128,29 +131,59 @@ function LineCountEntry(props: { lineCount: number; isBinary?: boolean }) {
   )
 }
 
+const AuthorDistHeader = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+`
+
+const authorCutoff = 2
+
 function AuthorDistribution(props: {
   currentClickedBlob: HydratedGitBlobObject
 }) {
+  const [collapse, setCollapse] = useState<boolean>(true)
+  const contribDist = Object.entries(
+    makePercentResponsibilityDistribution(props.currentClickedBlob)
+  ).sort((a, b) => (a[1] < b[1] ? 1 : -1))
+
+  if (contribDist.length === 0) return null
+  if (contribDist.length <= authorCutoff + 1) {
+    return (
+      <>
+        <DetailsHeading>Author distribution</DetailsHeading>
+        <Spacer xs />
+        <DetailsEntries>
+          <AuthorDistFragment show={true} items={contribDist} />
+        </DetailsEntries>
+      </>
+    )
+  }
   return (
     <>
-      <DetailsHeading>Author distribution</DetailsHeading>
+      <AuthorDistHeader>
+        <DetailsHeading>Author distribution</DetailsHeading>
+        <Toggle
+          relative={true}
+          collapse={collapse}
+          toggle={() => setCollapse(!collapse)}
+        />
+      </AuthorDistHeader>
       <Spacer xs />
       <DetailsEntries>
-        {Object.entries(
-          makePercentResponsibilityDistribution(props.currentClickedBlob)
-        )
-          .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-          .map(([author, contrib]) => {
-            const roundedContrib = Math.round(contrib * 100)
-            return (
-              <Fragment key={author + contrib}>
-                <DetailsKey grow>{author}</DetailsKey>
-                <DetailsValue>
-                  {roundedContrib === 0 ? "<1" : roundedContrib}%
-                </DetailsValue>
-              </Fragment>
-            )
-          })}
+        <AuthorDistFragment
+          show={true}
+          items={contribDist.slice(0, authorCutoff)}
+        />
+        <AuthorDistFragment
+          show={!collapse}
+          items={contribDist.slice(authorCutoff)}
+        />
+        <AuthorDistOther
+          show={collapse}
+          items={contribDist.slice(authorCutoff)}
+          toggle={() => setCollapse(!collapse)}
+        />
       </DetailsEntries>
     </>
   )
