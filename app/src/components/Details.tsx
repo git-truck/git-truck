@@ -1,11 +1,11 @@
 import { Spacer } from "./Spacer"
 import { makePercentResponsibilityDistribution } from "./Chart"
-import { Box, BoxTitle, CloseButton } from "./util"
+import { Box, BoxTitle, CloseButton, DetailsKey, DetailsValue } from "./util"
 import { useOptions } from "../contexts/OptionsContext"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { dateFormatLong } from "../util"
 import styled from "styled-components"
-import { Fragment, useState } from "react"
+import { useState } from "react"
 import { AuthorDistFragment } from "./AuthorDistFragment"
 import { AuthorDistOther } from "./AuthorDistOther"
 import { Toggle } from "./Toggle"
@@ -28,19 +28,6 @@ const StyledDetailsEntries = styled(DetailsEntries)`
   & > p {
     text-align: left;
   }
-`
-
-const DetailsKey = styled.span<{ grow?: boolean }>`
-  white-space: pre;
-  font-size: 0.9em;
-  font-weight: 500;
-  opacity: 0.7;
-`
-
-const DetailsValue = styled.p`
-  overflow-wrap: anywhere;
-  font-size: 0.9em;
-  text-align: right;
 `
 
 function hasZeroContributions(authors: Record<string, number>) {
