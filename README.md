@@ -44,3 +44,11 @@ For arguments, see [Arguments](#arguments).
 
 
 This starts the app in development mode, rebuilding assets on file changes.
+
+## Clean up
+
+To clean up build artefacts, etc. run:
+
+```
+npm run clean
+```
