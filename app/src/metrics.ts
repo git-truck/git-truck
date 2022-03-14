@@ -9,10 +9,10 @@ import { getColorFromExtension } from "./extension-color"
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
-  HEAT_MAP: "Most commits",
-  COLD_MAP: "Last changed",
-  DOMINATED: "Dominated files",
-  DOMINANTAUTHOR: "Dominant author",
+  MOST_COMMITS: "Most commits",
+  LAST_CHANGED: "Time of last change",
+  SINGLE_AUTHOR: "Single author",
+  TOP_CONTRIBUTOR: "Top contributor",
 }
 
 export type MetricType = keyof typeof Metric
@@ -20,11 +20,11 @@ export type MetricType = keyof typeof Metric
 export function isGradientMetric(metric: MetricType) {
   switch (metric) {
     case "FILE_EXTENSION":
-    case "DOMINANTAUTHOR":
-    case "DOMINATED":
+    case "TOP_CONTRIBUTOR":
+    case "SINGLE_AUTHOR":
       return false
-    case "COLD_MAP":
-    case "HEAT_MAP":
+    case "LAST_CHANGED":
+    case "MOST_COMMITS":
       return true
     default:
       throw new Error("Uknown metric type: " + metric)
@@ -80,14 +80,14 @@ export function getMetricCalcs(
       },
     ],
     [
-      "DOMINATED",
+      "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache)
       },
     ],
     [
-      "HEAT_MAP",
+      "MOST_COMMITS",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
@@ -101,7 +101,7 @@ export function getMetricCalcs(
       },
     ],
     [
-      "COLD_MAP",
+      "LAST_CHANGED",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
@@ -115,7 +115,7 @@ export function getMetricCalcs(
       },
     ],
     [
-      "DOMINANTAUTHOR",
+      "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColorState, blob, cache)
@@ -215,9 +215,9 @@ function setDominantAuthorColor(
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-  let dominatedColor = "red";
-  let defaultColor = "hsl(210, 38%, 85%)";
-  let nocreditColor = "teal";
+  let dominatedColor = "red"
+  let defaultColor = "hsl(210, 38%, 85%)"
+  let nocreditColor = "teal"
 
   let creditsum = 0
   for (let [, val] of Object.entries(blob.authors)) {
@@ -227,7 +227,7 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   const legend = cache.legend as PointLegendData
 
   if (creditsum === 0) {
-    legend.set("No credit", new PointInfo(nocreditColor, 0))
+    legend.set("No authors", new PointInfo(nocreditColor, 0))
     cache.colormap.set(blob.path, nocreditColor)
     return
   }
@@ -235,11 +235,11 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   if (!blob.unionedAuthors) throw Error("No unioned authors found")
   switch (Object.keys(blob.unionedAuthors).length) {
     case 1:
-      legend.set("Dominated", new PointInfo(dominatedColor, 2))
+      legend.set("Single author", new PointInfo(dominatedColor, 2))
       cache.colormap.set(blob.path, dominatedColor)
       return
     default:
-      legend.set("Non-dominated", new PointInfo(defaultColor, 1))
+      legend.set("Multiple authors", new PointInfo(defaultColor, 1))
       cache.colormap.set(blob.path, defaultColor)
       return
   }
