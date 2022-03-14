@@ -100,10 +100,13 @@ export const LegendLable = styled.p`
   font-weight: bold;
 `
 
-export const LegendButton = styled.button<{ collapse: boolean }>`
-  position: absolute;
-  top: var(--unit);
-  right: var(--unit);
+export const ToggleButton = styled.button<{
+  collapse: boolean
+  relative: boolean
+}>`
+  position: ${(props) => (props.relative ? "relative" : "absolute")};
+  top: ${(props) => (props.relative ? "unset" : "var(--unit)")};
+  right: ${(props) => (props.relative ? "unset" : "var(--unit)")};
   border: none;
   background-color: rgba(0, 0, 0, 0);
   transition-duration: 0.4s;
