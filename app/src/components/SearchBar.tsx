@@ -1,9 +1,10 @@
 import { SearchField, Box, Label } from "./util"
 import styled from "styled-components"
-import { useId, useState, useTransition } from "react"
+import { useState } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
+import { useId } from "@react-aria/utils"
 
 const StyledBox = styled(Box)`
   display: flex;
@@ -14,17 +15,8 @@ export default function SearchBar() {
   const { setSearchText } = useSearch()
   const [value, setValue] = useState("")
   const id = useId()
-  const [, startTransition] = useTransition()
 
-  useDebounce(
-    () => {
-      startTransition(() => {
-        setSearchText(value)
-      })
-    },
-    200,
-    [value]
-  )
+  useDebounce(() => setSearchText(value), 200, [value])
 
   return (
     <StyledBox>

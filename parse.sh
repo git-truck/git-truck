@@ -23,4 +23,4 @@ if [ ! -d "./parser/dist/" ]; then
 fi
 
 # Pass all arguments to parser
-node ./parser/dist/index.js $@
+node ./parser/dist/index.js $@ --out ./data.json

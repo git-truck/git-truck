@@ -2,7 +2,14 @@
  * @type {import('@remix-run/dev').AppConfig}
  */
 module.exports = {
-  ignoredRouteFiles: [".*"],
+  ignoredRouteFiles: [".*"
+  ,"components/*"
+],
+  serverDependenciesToBundle: [
+    "styled-components",
+    "d3-hierarchy",
+    "@react-aria/utils"
+  ]
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",

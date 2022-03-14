@@ -11,20 +11,33 @@
     "start": "npx cross-env NODE_ENV=production remix-serve build"
   },
   "dependencies": {
+    "@fortawesome/free-solid-svg-icons": "^6.0.0",
+    "@fortawesome/react-fontawesome": "^0.1.17",
+    "@react-aria/utils": "^3.11.3",
+    "@react-spring/web": "^9.4.4",
     "@remix-run/react": "^1.2.3",
     "@remix-run/serve": "^1.2.3",
     "cross-env": "^7.0.3",
+    "d3-hierarchy": "^3.1.1",
+    "distinct-colors": "^3.0.0",
+    "github-colors": "github:ozh/github-colors",
+    "lang-map": "^0.4.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "remix": "^1.2.3"
+    "react-use": "^17.3.2",
+    "react-use-size": "^2.0.4",
+    "remix": "^1.2.3",
+    "styled-components": "^5.3.3"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.2.3",
     "@remix-run/eslint-config": "^1.2.3",
-    "@types/react": "^17.0.24",
+    "@types/d3-hierarchy": "^3.0.2",
+    "@types/react": "^17.0.40",
     "@types/react-dom": "^17.0.9",
+    "@types/styled-components": "^5.1.24",
     "eslint": "^8.9.0",
-    "typescript": "^4.5.5"
+    "typescript": "^4.6.2"
   },
   "engines": {
     "node": ">=14"

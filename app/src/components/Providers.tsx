@@ -4,7 +4,7 @@ import {
   MetricCache,
   MetricType,
   setupMetricsCache,
-} from "./../metrics"
+} from "../metrics"
 import {
   ChartType,
   getDefaultOptions,
@@ -17,50 +17,49 @@ import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  const [dataState, setData] = useState<{
-    data: ParserData | null
+interface ProvidersProps {
+  children: React.ReactNode
+  data: ParserData
+}
+
+export function Providers({ children, data }: ProvidersProps) {
+  const [metricState, setMetricState] = useState<{
     metricCaches: Map<MetricType, MetricCache> | null
     errorMessage: string | null
-  }>({ data: null, metricCaches: null, errorMessage: null })
+  }>({ metricCaches: null, errorMessage: null })
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
 
   useEffect(() => {
-    async function getData() {
-      try {
-        const response = await fetch(`./data.json?cache_bust=${Date.now()}`)
-        const data = (await response.json()) as ParserData
-        const authorAliasMap = makeDupeMap(data.authorUnions)
-        addAuthorUnion(data.commit.tree, authorAliasMap)
-        const metricCaches = new Map<MetricType, MetricCache>()
-        setupMetricsCache(
-          data.commit.tree,
-          getMetricCalcs(data.commit),
-          metricCaches
-        )
-        setData({ data, metricCaches, errorMessage: null })
-      } catch (e) {
-        setData({
-          data: null,
-          metricCaches: null,
-          errorMessage: (e as Error).message,
-        })
-      }
+    try {
+      // TODO: Move this to index.tsx loader function
+      const authorAliasMap = makeDupeMap(data.authorUnions)
+      addAuthorUnion(data.commit.tree, authorAliasMap)
+      const metricCaches = new Map<MetricType, MetricCache>()
+      setupMetricsCache(
+        data.commit.tree,
+        getMetricCalcs(data.commit),
+        metricCaches
+      )
+      setMetricState({ metricCaches, errorMessage: null })
+    } catch (e) {
+      setMetricState({
+        metricCaches: null,
+        errorMessage: (e as Error).message,
+      })
     }
-    getData()
-  }, [])
+  }, [data])
 
   useEffect(() => {
-    if (!dataState) {
+    if (!metricState) {
       setOptions(null)
       return
     }
     setOptions((prevOptions) => ({
       ...(prevOptions ?? getDefaultOptions()),
-      ...dataState,
+      ...metricState,
     }))
-  }, [dataState])
+  }, [metricState])
 
   const optionsValue = useMemo(
     () => ({
@@ -90,7 +89,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     [options]
   )
 
-  const { data, metricCaches, errorMessage } = dataState
+  const { metricCaches, errorMessage } = metricState
 
   if (data === null || metricCaches === null) {
     if (errorMessage === null) {
@@ -100,7 +99,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <div>
           <h1>An unexpected error occured:</h1>
           <pre>
-            <code>{dataState.errorMessage}</code>
+            <code>{metricState.errorMessage}</code>
           </pre>
           Verify the data in{" "}
           <code>
