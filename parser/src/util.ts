@@ -40,13 +40,13 @@ export async function gitDiffNumStatParsed(
     .filter((x) => x.trim().length > 0)
     .map((x) => x.split(/\t+/))
     .map(([neg, pos, file]) => {
-      let newestPath = file
+      let filePath = file
       const hasBeenMoved = file.includes("=>")
       if (hasBeenMoved) {
-        newestPath = parseRenamedFile(newestPath, renamedFiles)
+        filePath = parseRenamedFile(filePath, renamedFiles)
       }
 
-      newestPath = findNewestVersion(newestPath, renamedFiles)
+      const newestPath = findNewestVersion(filePath, renamedFiles)
 
       return {
         neg: parseInt(neg),

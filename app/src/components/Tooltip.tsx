@@ -7,8 +7,8 @@ import { useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
-import { dateFormatShort } from "../util"
 import { useCSSVar } from "../hooks"
+import { dateFormatRelative } from "../util"
 
 const TooltipBox = styled(Box)<{
   visible: boolean
@@ -97,7 +97,7 @@ function ColorMetricDependentInfo(props: {
   hoveredBlob: HydratedGitBlobObject | null
 }) {
   switch (props.metric) {
-    case "HEAT_MAP":
+    case "MOST_COMMITS":
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
       return (
@@ -105,11 +105,11 @@ function ColorMetricDependentInfo(props: {
           {noCommits} commit{noCommits > 1 ? <>s</> : null}
         </>
       )
-    case "COLD_MAP":
+    case "LAST_CHANGED":
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
-      return <>{dateFormatShort(epoch)}</>
-    case "DOMINATED":
+      return <>{dateFormatRelative(epoch)}</>
+    case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.authors)
         : []
@@ -121,7 +121,7 @@ function ColorMetricDependentInfo(props: {
         default:
           return <>{authors.length} authors</>
       }
-    case "DOMINANTAUTHOR":
+    case "TOP_CONTRIBUTOR":
       const dominant = props.hoveredBlob?.dominantAuthor
       if (!dominant) return null
       return <>{dominant[0]}</>
