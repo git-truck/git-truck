@@ -9,7 +9,7 @@ export function diagonal(d: HierarchyRectangularNode<unknown>) {
 
 const format = navigator.language
 
-export function dateFormatLong(epochTime: number | undefined) {
+export function dateFormatLong(epochTime?: number) {
   if (!epochTime) return "Invalid date"
   return new Date(epochTime * 1000).toLocaleString("en-gb", {
     day: "2-digit",
@@ -18,9 +18,18 @@ export function dateFormatLong(epochTime: number | undefined) {
   })
 }
 
-export function dateFormatShort(epochTime: number | undefined) {
-  if (!epochTime) return "Invalid date"
-  return new Date(epochTime * 1000).toLocaleString(format, {
-    dateStyle: "short",
-  })
+export function dateFormatRelative(epochTime: number) {
+  const now = Date.now()
+  const hourMillis = 60 * 60 * 1000
+  const dayMillis = 24 * hourMillis
+  const difference = now - epochTime * 1000
+  if (difference < 0) return "Unknown time ago"
+  if (difference > dayMillis) {
+    const days = Math.floor(difference / dayMillis)
+    return `${days} day${days > 1 ? "s" : ""} ago`
+  }
+  const hours = Math.floor(difference / hourMillis)
+  if (hours > 1) return `${hours} hours ago`
+  if (hours === 1) return "1 hour ago"
+  return "<1 hour ago"
 }

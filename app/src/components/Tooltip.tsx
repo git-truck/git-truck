@@ -7,7 +7,7 @@ import { useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
-import { dateFormatShort } from "../util"
+import { dateFormatRelative } from "../util"
 
 const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
   padding: calc(0.5 * var(--unit)) var(--unit);
@@ -86,7 +86,7 @@ function ColorMetricDependentInfo(props: {
     case "LAST_CHANGED":
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
-      return <>{dateFormatShort(epoch)}</>
+      return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.authors)
