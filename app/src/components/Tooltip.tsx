@@ -7,9 +7,13 @@ import { useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
+import { useCSSVar } from "../hooks"
 import { dateFormatRelative } from "../util"
 
-const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
+const TooltipBox = styled(Box)<{
+  visible: boolean
+  right: boolean
+}>`
   padding: calc(0.5 * var(--unit)) var(--unit);
   min-width: 0;
   width: max-content;
@@ -23,10 +27,6 @@ const TooltipBox = styled(Box)<{ x: number; y: number; visible: boolean }>`
 
   pointer-events: none;
   visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
-  transform: ${({ visible, x, y }) =>
-    visible
-      ? `translate(calc(var(--unit) + ${x}px), calc(var(--unit) + ${y}px))`
-      : "none"};
 `
 
 const TooltipContainer = styled.div`
@@ -41,7 +41,12 @@ interface TooltipProps {
 }
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
+  const tooltipContainerRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
+  const documentElementRef = useRef(document.documentElement)
+  const mouse = useMouse(documentElementRef)
+  const unitRaw = useCSSVar("--unit")
+  const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
   const metricCaches = useMetricCaches()
   const color = useMemo(() => {
     if (!hoveredBlob) {
@@ -51,12 +56,29 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     const color = colormap.get(hoveredBlob.path)
     return color
   }, [hoveredBlob, metricCaches, metricType])
-  const ref = useRef(document.documentElement)
+  const toolTipWidth = tooltipContainerRef.current
+    ? tooltipContainerRef.current.getBoundingClientRect().width
+    : 0
 
-  const mouse = useMouse(ref)
+  const right = mouse.docX + toolTipWidth < window.innerWidth - 3 * unit
+
+  const visible = hoveredBlob !== null
+  const transformStyles = { transform: "none" }
+  if (visible) {
+    if (right)
+      transformStyles.transform = `translate(calc(var(--unit) + ${mouse.docX}px), calc(var(--unit) + ${mouse.docY}px))`
+    else
+      transformStyles.transform = `translate(calc(var(--unit) * -1 + ${mouse.docX}px - 100%), calc(var(--unit) + ${mouse.docY}px))`
+  }
+
   return (
     <TooltipContainer>
-      <TooltipBox visible={hoveredBlob !== null} x={mouse.docX} y={mouse.docY}>
+      <TooltipBox
+        ref={tooltipContainerRef}
+        right={right}
+        visible={true}
+        style={transformStyles}
+      >
         {color ? <LegendDot dotColor={color} /> : null}
         <Spacer horizontal />
         <BoxSubTitle>{hoveredBlob?.name}</BoxSubTitle>

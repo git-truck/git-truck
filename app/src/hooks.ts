@@ -11,3 +11,7 @@ export function useComponentSize() {
   )
   return size
 }
+
+export function useCSSVar(varName: string) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName)
+}
