@@ -1,6 +1,6 @@
 import { Box, BoxSubTitle, LegendDot } from "./util"
-import { useMouse, useDebounce, useThrottleFn } from "react-use"
-import { useMemo, useRef, useState } from "react"
+import { useMouse } from "react-use"
+import { useMemo, useRef } from "react"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
 import { useOptions } from "../contexts/OptionsContext"
@@ -59,7 +59,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
   const toolTipWidth = tooltipContainerRef.current
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
-  console.log(unit)
+
   const right = mouse.docX + toolTipWidth < window.innerWidth - 3 * unit
 
   const visible = hoveredBlob !== null
