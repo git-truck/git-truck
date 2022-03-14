@@ -1,5 +1,5 @@
 import { Box, BoxSubTitle, LegendDot } from "./util"
-import { useMouse, useDebounce } from "react-use"
+import { useMouse, useDebounce, useThrottleFn } from "react-use"
 import { useMemo, useRef, useState } from "react"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "../../../parser/src/model"
@@ -8,10 +8,9 @@ import { Spacer } from "./Spacer"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
 import { dateFormatShort } from "../util"
+import { useCSSVar } from "../hooks"
 
 const TooltipBox = styled(Box)<{
-  x: number
-  y: number
   visible: boolean
   right: boolean
 }>`
@@ -28,13 +27,6 @@ const TooltipBox = styled(Box)<{
 
   pointer-events: none;
   visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
-  transform: ${({ right, visible, x, y }) => {
-    if (!visible) return "none"
-    const Offset = right ? 0 : 180
-    return `translate(calc(var(--unit) + ${
-      x - Offset
-    }px), calc(var(--unit) + ${y}px))`
-  }};
 `
 
 const TooltipContainer = styled.div`
@@ -49,7 +41,12 @@ interface TooltipProps {
 }
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
+  const tooltipContainerRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
+  const documentElementRef = useRef(document.documentElement)
+  const mouse = useMouse(documentElementRef)
+  const unitRaw = useCSSVar("--unit")
+  const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
   const metricCaches = useMetricCaches()
   const color = useMemo(() => {
     if (!hoveredBlob) {
@@ -59,29 +56,28 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     const color = colormap.get(hoveredBlob.path)
     return color
   }, [hoveredBlob, metricCaches, metricType])
-  const ref = useRef(document.documentElement)
-  const mouse = useMouse(ref)
-  const [right, setRight] = useState(true)
+  const toolTipWidth = tooltipContainerRef.current
+    ? tooltipContainerRef.current.getBoundingClientRect().width
+    : 0
+  console.log(unit)
+  const right = mouse.docX + toolTipWidth < window.innerWidth - 3 * unit
 
-  useDebounce(
-    () => {
-      if (mouse.docX < 46 * 6 + 0.2 * window.innerWidth) {
-        setRight(true)
-      } else if (mouse.docX > 0.8 * window.innerWidth) {
-        setRight(false)
-      }
-    },
-    50,
-    [mouse]
-  )
+  const visible = hoveredBlob !== null
+  const transformStyles = { transform: "none" }
+  if (visible) {
+    if (right)
+      transformStyles.transform = `translate(calc(var(--unit) + ${mouse.docX}px), calc(var(--unit) + ${mouse.docY}px))`
+    else
+      transformStyles.transform = `translate(calc(var(--unit) * -1 + ${mouse.docX}px - 100%), calc(var(--unit) + ${mouse.docY}px))`
+  }
 
   return (
     <TooltipContainer>
       <TooltipBox
+        ref={tooltipContainerRef}
         right={right}
-        visible={hoveredBlob !== null}
-        x={mouse.docX}
-        y={mouse.docY}
+        visible={true}
+        style={transformStyles}
       >
         {color ? <LegendDot dotColor={color} /> : null}
         <Spacer horizontal />
