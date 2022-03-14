@@ -1,53 +1,46 @@
-# Welcome to Remix!
+# Git Truck 🚛
 
-- [Remix Docs](https://remix.run/docs)
+*Visualizing a Git repository*
 
-## Development
+Get an overview over your git repo. See your folder-structure, which users have contributed most to which files, and more.
 
-From your terminal:
+## [Prerequisites](#prerequisites)
 
-```sh
-npm run dev
-```
+This projected is tested to work with:
 
-This starts your app in development mode, rebuilding assets on file changes.
+- Node.js 14.18
+- npm 6.14
+- git 2.35
 
-## Deployment
+## [Usage](#usage)
 
-First, build your app for production:
-
-```sh
-npm run build
-```
-
-Then run the app in production mode:
+1. Install dependencies with `npm install`
+2. Build the project with `npm run build`
+3. Then run the app in production mode:
 
 ```sh
-npm start
+npm start -- [--path <path>] [--branch <name>] [--out <path>]
 ```
+#### [Arguments](#arguments)
+| arg       | default value      | description                 |
+|:-:        |:-:                 | :-:                         |
+| `--path`  | current directory  | path to git repository      |
+| `--branch`| checked out branch | branch name                 |
+| `--out`   | ./data.json        | output path for data file   |
 
-Now you'll need to pick a host to deploy it to.
+*or using yarn:* `yarn start <args>`
 
-### DIY
 
-If you're familiar with deploying node applications, the built-in Remix app server is production-ready.
+## [Development](#development)
 
-Make sure to deploy the output of `remix build`
-
-- `build/`
-- `public/build/`
-
-### Using a Template
-
-When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over your `app/` folder to the new project that's pre-configured for your target server.
+In the root of the project, run the following from your terminal:
 
 ```sh
-cd ..
-# create a new project, and pick a pre-configured host
-npx create-remix@latest
-cd my-new-remix-app
-# remove the new project's app (not the old one!)
-rm -rf app
-# copy your app over
-cp -R ../my-old-remix-app/app app
+npm run dev -- <args>
 ```
+*or using yarn:* `yarn dev <args>`
+
+For arguments, see [Arguments](#arguments).
+
+
+This starts the app in development mode, rebuilding assets on file changes.
