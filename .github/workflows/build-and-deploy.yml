@@ -16,12 +16,17 @@ jobs:
       - name: Install parser dependencies
         working-directory: parser
         run: npm ci
+
       - name: Install visualization dependencies
-        working-directory: app
+        working-directory: .
         run: npm ci
-      - name: Run parser and build visualization
+
+      - name: Run parser
         working-directory: app
-        run: npm run pb
+        run: npm run parse
+
+      - name: Build visualization
+        run: npm run build
 
       - name: Deploy 🚀
         if: github.ref == 'refs/heads/main'
