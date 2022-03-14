@@ -1,8 +1,0 @@
-{
-  "name": "app",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "parse": "cd ./../parser && npm start -- --path .. --out ./../app/data.json"
-  }
-}
