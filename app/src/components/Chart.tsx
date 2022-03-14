@@ -1,4 +1,3 @@
-import "./Chart.css"
 import { useEffect, useState } from "react"
 import {
   HydratedGitBlobObject,
@@ -6,14 +5,11 @@ import {
   HydratedGitObject,
   HydratedGitTreeObject,
 } from "../../../parser/src/model"
-import {
-  hierarchy,
+import type {
   HierarchyCircularNode,
   HierarchyRectangularNode,
   HierarchyNode,
-  pack,
-  treemap,
-} from "d3"
+} from "d3-hierarchy"
 
 import {
   treemapPadding,
@@ -29,6 +25,12 @@ import { useSearch } from "../contexts/SearchContext"
 import { useData } from "../contexts/DataContext"
 import { animated, useSpring } from "@react-spring/web"
 import { useMetricCaches } from "../contexts/MetricContext"
+
+import {
+  hierarchy,
+  pack,
+  treemap,
+} from "d3-hierarchy"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -68,15 +70,15 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-          onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
-          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
+        onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+        onMouseOut: () => setHoveredBlob(null),
+      }
       : {
-          onClick: () => setClickedBlob(null),
-          onMouseOver: () => setHoveredBlob(null),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => setClickedBlob(null),
+        onMouseOver: () => setHoveredBlob(null),
+        onMouseOut: () => setHoveredBlob(null),
+      }
 
   return (
     <>

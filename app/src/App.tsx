@@ -1,12 +1,16 @@
-import "./App.css"
 import { Main } from "./components/Main"
 import { Container } from "./components/util"
 import { SidePanel } from "./components/SidePanel"
 import { Providers } from "./components/Providers"
+import { ParserData } from "parser/src/model"
 
-function App() {
+function App(
+  props: { data: ParserData }
+) {
   return (
-    <Providers>
+    <Providers
+      data={props.data}
+    >
       <Container>
         <SidePanel />
         <Main />

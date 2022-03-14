@@ -1,32 +1,31 @@
+import { json, LoaderFunction, useLoaderData } from "remix";
+import App from "~/src/App";
+import fs from "fs"
+import { ParserData } from "parser/src/model";
+import appStyles from "~/styles/App.css"
+import varsStyles from "~/styles/vars.css"
+import indexStyles from "~/styles/index.css"
+import chartStyles from "~/styles/Chart.css"
+
+export function links() {
+  return [appStyles,
+    varsStyles,
+    indexStyles,
+    chartStyles].map(x => (
+      {
+        rel: "stylesheet",
+        href: x
+      }))
+}
+
+export const loader: LoaderFunction = async () => {
+  const jsonData = fs.readFileSync("./data.json", "utf8");
+  return json(JSON.parse(jsonData));
+}
+
 export default function Index() {
+  const data = useLoaderData<ParserData>()
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
+    <App data={data} />
   );
 }

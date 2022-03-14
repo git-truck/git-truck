@@ -1,4 +1,4 @@
-import { HierarchyRectangularNode } from "d3"
+import type { HierarchyRectangularNode } from "d3-hierarchy"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
