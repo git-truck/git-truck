@@ -22,6 +22,7 @@ import { resolve } from "path"
 import { performance } from "perf_hooks"
 import yargsParser from "yargs-parser"
 import { hydrateData } from "./hydrate"
+import path from "path/posix"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -205,7 +206,12 @@ export async function parse(rawArgs: string[]) {
     process.exit(1)
   }
 
-  const repoDir = args.path ?? "."
+  const truckroot_or_cwd = args.gittruckroot ?? process.cwd()
+
+  let repoDir = args.path ?? "."
+  if (!path.isAbsolute(repoDir))
+    repoDir = path.resolve(truckroot_or_cwd, repoDir)
+
   const branch = args.branch ?? null
 
   const start = performance.now()
@@ -216,7 +222,6 @@ export async function parse(rawArgs: string[]) {
     "Error finding branch head"
   )
   const repoName = getRepoName(repoDir)
-  const outFileName = args.out ?? `./.temp/${repoName}_${branchName}.json`
   const repoTree = await describeAsyncJob(
     () => parseCommit(repoDir, repoName, branchHead),
     "Parsing commit tree",
@@ -229,7 +234,11 @@ export async function parse(rawArgs: string[]) {
     "Commit tree hydrated",
     "Error hydrating commit tree"
   )
-  const outPath = join(process.cwd(), outFileName)
+
+  let outPath = args.out ?? `${repoName}_${branchName}.json`
+  if (!path.isAbsolute(outPath))
+    outPath = path.resolve(truckroot_or_cwd, outPath)
+
   const authorUnions = await loadTruckConfig(repoDir)
   await describeAsyncJob(
     () =>
@@ -241,7 +250,7 @@ export async function parse(rawArgs: string[]) {
       }),
     "Writing data to file",
     `Wrote data to ${resolve(outPath)}`,
-    `Error writing data to file ${outFileName}`
+    `Error writing data to file ${outPath}`
   )
   const stop = performance.now()
 

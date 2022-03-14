@@ -6,11 +6,13 @@
   "sideEffects": false,
   "scripts": {
     "build": "npx cross-env NODE_ENV=production remix build",
-    "dev": "npm run parse && npx cross-env NODE_ENV=development remix dev",
+    "dev": "npm run parse --",
+    "postdev": "npx cross-env NODE_ENV=development remix dev",
     "postinstall": "remix setup node",
-    "start": "npm run parse && npx cross-env NODE_ENV=production remix-serve build",
+    "start": "npm run parse --",
+    "poststart": "npx cross-env NODE_ENV=production remix-serve build",
     "clean": "npx rimraf -rf ./parser/dist data.json build",
-    "parse": "cd parser && npm install && npm run build && node . --path .. --out ../data.json && cd .."
+    "parse": "npm --prefix ./parser/ install && npm --prefix ./parser/ run build && npm --prefix ./parser/ start -- --gittruckroot .. --path . --out ./data.json"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.3.0",
