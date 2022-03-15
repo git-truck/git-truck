@@ -8,6 +8,8 @@ module.exports = {
   serverDependenciesToBundle: [
     "styled-components",
     "d3-hierarchy",
+    "d3-shape",
+    "d3-path",
     "@react-aria/utils"
   ]
   // appDirectory: "app",

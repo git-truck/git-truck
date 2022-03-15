@@ -5,6 +5,7 @@ import { Metric, MetricType } from "../metrics"
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
   TREE_MAP: "Tree map",
+  TREE: "Tree"
 }
 
 export type ChartType = keyof typeof Chart

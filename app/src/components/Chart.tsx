@@ -5,10 +5,13 @@ import {
   HydratedGitObject,
   HydratedGitTreeObject,
 } from "../../../parser/src/model"
-import type {
+import {
   HierarchyCircularNode,
   HierarchyRectangularNode,
   HierarchyNode,
+  tree,
+  HierarchyPointNode,
+  HierarchyPointLink,
 } from "d3-hierarchy"
 
 import {
@@ -32,9 +35,14 @@ import {
   treemap,
 } from "d3-hierarchy"
 
-type CircleOrRectHiearchyNode =
+import {
+  linkHorizontal
+} from "d3-shape"
+
+type SupportedHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
   | HierarchyRectangularNode<HydratedGitObject>
+  | HierarchyPointNode<HydratedGitObject>
 
 const SVG = styled.svg<{ chartType: ChartType }>`
   display: grid;
@@ -49,7 +57,7 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
-  const [nodes, setNodes] = useState<CircleOrRectHiearchyNode>()
+  const [nodes, setNodes] = useState<SupportedHiearchyNode>()
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
@@ -67,7 +75,7 @@ export function Chart(props: ChartProps) {
     )
   }, [chartType, data.commit, props.size])
 
-  const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
+  const createGroupHandlers = (d: SupportedHiearchyNode) =>
     isBlob(d.data)
       ? {
         onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
@@ -87,6 +95,9 @@ export function Chart(props: ChartProps) {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${props.size.width} ${props.size.height}`}
       >
+        {nodes?.links().map((d) => (
+          <Link key={`${chartType}${d.source.data.path}-${d.target.data.path}`} d={d} />
+        ))}
         {nodes?.descendants().map((d, i) => {
           return (
             <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
@@ -94,13 +105,14 @@ export function Chart(props: ChartProps) {
             </g>
           )
         })}
+
       </SVG>
       <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
 }
 
-function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+function Node({ d, isRoot }: { d: SupportedHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = !isRoot && isTree(d.data)
   const { searchText } = useSearch()
@@ -134,6 +146,15 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
           <Rect d={rectDatum} isSearchMatch={match} />
         </>
       )
+    case "TREE":
+      const datum = d as HierarchyPointNode<HydratedGitObject>
+      return (
+        <>
+          <Point d={datum} isSearchMatch={match} />
+          {showLabel ? <PointText d={datum} isSearchMatch={match} /> : null}
+        </>
+      )
+
     default:
       throw Error("Unknown chart type")
   }
@@ -257,6 +278,60 @@ function RectText({
   )
 }
 
+function Point({ d, isSearchMatch }: { d: HierarchyPointNode<HydratedGitObject>, isSearchMatch: boolean }) {
+  const metricCaches = useMetricCaches()
+  const { metricType } = useOptions()
+  const props = useSpring({
+    cx: d.x,
+    cy: d.y,
+    r: 10,
+    fill: isBlob(d.data) ?
+    metricCaches.get(metricType)?.colormap.get(d.data.path) ?? "grey" : "transparent",
+  })
+  return (<animated.circle
+    {...props}
+  />)
+}
+
+function PointText({ d, isSearchMatch }: { d: HierarchyPointNode<HydratedGitObject>, isSearchMatch: boolean }) {
+  const props = useSpring({
+    x: d.x,
+    y: d.y,
+  })
+  return <animated.text {...props}>
+    {d.data.name}
+  </animated.text>
+}
+
+const linkGenerator = linkHorizontal()
+  .source(d => d.source)
+  .target(d => d.target)
+
+function Link({ d }: { d: HierarchyPointLink<HydratedGitObject> }) {
+  const defaultLinkObject = {
+    source: [
+      d.source.x,
+      d.source.y,
+    ] as [number, number],
+    target: [
+      d.target.x,
+      d.target.y,
+    ] as [number, number]
+  }
+  const dProp = linkGenerator(defaultLinkObject)
+
+  const props = {
+    stroke: "#ccc",
+    fill: "none",
+    d: dProp
+  }
+  return (
+    <animated.path
+      {...props}
+      />
+  )
+}
+
 function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
   paddedSizeProps: { height: number; width: number },
@@ -287,6 +362,10 @@ function createPartitionedHiearchy(
         .padding(bubblePadding)
 
       return bubbleChartPartition(hiearchy)
+    case "TREE":
+      const treePartition = tree<HydratedGitObject>()
+        .size([paddedSizeProps.width, paddedSizeProps.height])
+      return treePartition(hiearchy)
     default:
       throw Error("Invalid chart type")
   }
@@ -344,6 +423,8 @@ function getPaddingFromChartType(chartType: ChartType) {
     case "BUBBLE_CHART":
       return bubblePadding
     case "TREE_MAP":
+      return treemapPadding
+    case "TREE":
       return treemapPadding
     default:
       throw new Error("Chart type is invalid")
