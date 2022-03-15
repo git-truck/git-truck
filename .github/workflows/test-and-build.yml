@@ -28,7 +28,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+
+    - name: Install depdendencies
     - run: npm ci
+
+    - name: Run tests
     - run: npm test
 
     - name: Upload coverage to Codecov
@@ -36,10 +40,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
+    - name: Build
     - run: npm run build
 
 
