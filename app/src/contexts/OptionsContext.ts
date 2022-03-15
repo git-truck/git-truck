@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject } from "../../../parser/src/model"
+import { HydratedGitBlobObject } from "../../parser/src/model"
 import { Metric, MetricType } from "../metrics"
 
 export const Chart = {

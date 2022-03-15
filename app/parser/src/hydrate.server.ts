@@ -1,7 +1,7 @@
 import { emptyGitCommitHash } from "./constants"
 import isBinaryPath from "is-binary-path"
 import { join } from "path"
-import { log } from "./log"
+import { log } from "./log.server"
 import {
   GitBlobObject,
   GitCommitObject,
@@ -11,7 +11,7 @@ import {
   HydratedGitTreeObject,
   PersonWithTime,
 } from "./model"
-import { parseCommitLight } from "./parse"
+import { parseCommitLight } from "./parse.server"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util"
 import { Queue } from "./queue"
 

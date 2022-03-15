@@ -1,6 +1,6 @@
 import { readFileSync } from "fs"
 import { compile } from "gitignore-parser"
-import { warn } from "./log"
+import { warn } from "./log.server"
 
 export default class TruckIgnore {
   private truckignore

@@ -6,7 +6,7 @@ import {
   GitTreeObject,
   Person,
 } from "./model"
-import { log } from "./log"
+import { log } from "./log.server"
 import {
   describeAsyncJob,
   formatMs,
@@ -20,7 +20,9 @@ import TruckIgnore from "./TruckIgnore"
 import { resolve , isAbsolute, join} from "path"
 import { performance } from "perf_hooks"
 import yargsParser from "yargs-parser"
-import { hydrateData } from "./hydrate"
+import { hydrateData } from "./hydrate.server"
+
+import { } from "@remix-run/node"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -244,14 +246,15 @@ export async function parse(rawArgs: string[]) {
     outPath = resolve(truckroot_or_cwd, outPath)
 
   const authorUnions = await loadTruckConfig(repoDir)
+  const data = {
+    repo: repoName,
+    branch: branchName,
+    commit: hydratedRepoTree,
+    authorUnions: authorUnions,
+  }
   await describeAsyncJob(
     () =>
-      writeRepoToFile(outPath, {
-        repo: repoName,
-        branch: branchName,
-        commit: hydratedRepoTree,
-        authorUnions: authorUnions,
-      }),
+      writeRepoToFile(outPath, data),
     "Writing data to file",
     `Wrote data to ${resolve(outPath)}`,
     `Error writing data to file ${outPath}`
@@ -259,6 +262,8 @@ export async function parse(rawArgs: string[]) {
   const stop = performance.now()
 
   log.raw(`\nDone in ${formatMs(stop - start)}`)
+
+  return data
 }
 
 export const exportForTest = {

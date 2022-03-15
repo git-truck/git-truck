@@ -12,7 +12,7 @@ import {
   OptionsContext,
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
+import { HydratedGitBlobObject, ParserData } from "../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
@@ -101,13 +101,7 @@ export function Providers({ children, data }: ProvidersProps) {
           <pre>
             <code>{metricState.errorMessage}</code>
           </pre>
-          Verify the data in{" "}
-          <code>
-            {process.env.NODE_ENV === "development"
-              ? "git-visual/app/public/data.json"
-              : "git-visual/app/build/data.json"}
-          </code>{" "}
-          is correct.
+          Verify the data is correct.
         </div>
       )
     }

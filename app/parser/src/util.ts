@@ -2,7 +2,7 @@ import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
 import { createSpinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
-import { getLogLevel, log, LOG_LEVEL } from "./log"
+import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import { GitBlobObject, GitTreeObject, ParserData } from "./model"
 import { performance } from "perf_hooks"
 
