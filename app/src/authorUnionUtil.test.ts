@@ -1,4 +1,4 @@
-import { HydratedGitBlobObject } from "../../parser/src/model"
+import { HydratedGitBlobObject } from "../parser/src/model"
 import { makeDupeMap, unionAuthors } from "./authorUnionUtil"
 
 const authorUnions = [["author1", "author1Dupe"]]
