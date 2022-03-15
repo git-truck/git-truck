@@ -8,7 +8,7 @@ Get an overview over your git repo. See your folder-structure, which users have 
 
 This projected is tested to work with:
 
-- Node.js 14.18
+- Node.js 16.13
 - npm 6.14
 - git 2.35
 
