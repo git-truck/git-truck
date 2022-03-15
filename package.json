@@ -27,7 +27,7 @@
     "distinct-colors": "^3.0.0",
     "dotenv": "^16.0.0",
     "fs-extra": "^10.0.1",
-    "github-colors": "git+https://github.com/ozh/github-colors",
+    "github-colors": "github:ozh/github-colors",
     "gitignore-parser": "^0.0.2",
     "is-binary-path": "^2.1.0",
     "lang-map": "^0.4.0",
