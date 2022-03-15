@@ -29,18 +29,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
 
-    - name: Install depdendencies
     - run: npm ci
-
-    - name: Run tests
     - run: npm test
+    - run: npm run build
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-
-    - name: Build
-    - run: npm run build
-
-
