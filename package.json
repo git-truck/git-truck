@@ -10,7 +10,7 @@
     "dev": "npm run parse --",
     "postdev": "npx cross-env NODE_ENV=development remix dev",
     "postinstall": "remix setup node",
-    "start": "cross-env NODE_ENVs=production node ./build/index.js",
+    "start": "cross-env NODE_ENVs=production remix-serve build",
     "prepare": "husky install"
   },
   "dependencies": {
