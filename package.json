@@ -1,18 +1,17 @@
 {
-  "name": "remix-app-template",
+  "name": "git-truck",
   "private": true,
   "description": "",
   "license": "",
   "sideEffects": false,
   "scripts": {
+    "test": "jest --coverage",
     "build": "npx cross-env NODE_ENV=production remix build",
     "dev": "npm run parse --",
     "postdev": "npx cross-env NODE_ENV=development remix dev",
     "postinstall": "remix setup node",
-    "start": "npm run parse --",
-    "poststart": "npx cross-env NODE_ENV=production remix-serve build",
-    "clean": "npx rimraf -rf ./parser/dist data.json build",
-    "parse": "npm --prefix ./parser/ install && npm --prefix ./parser/ run build && npm --prefix ./parser/ start -- --gittruckroot .. --path . --out ./data.json"
+    "start": "cross-env NODE_ENVs=production node ./build/index.js",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.3.0",
@@ -25,25 +24,64 @@
     "cross-env": "^7.0.3",
     "d3-hierarchy": "^3.1.1",
     "distinct-colors": "^3.0.0",
+    "dotenv": "^16.0.0",
+    "fs-extra": "^10.0.1",
     "github-colors": "github:ozh/github-colors",
+    "gitignore-parser": "^0.0.2",
+    "is-binary-path": "^2.1.0",
     "lang-map": "^0.4.0",
+    "nanospinner": "^1.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-use": "^17.3.2",
     "react-use-size": "^2.0.4",
     "remix": "^1.2.3",
-    "styled-components": "^5.3.3"
+    "styled-components": "^5.3.3",
+    "yargs-parser": "^21.0.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.2.3",
     "@remix-run/eslint-config": "^1.2.3",
     "@types/d3-hierarchy": "^3.0.2",
+    "@types/gitignore-parser": "^0.0.0",
+    "@types/jest": "^27.4.1",
     "@types/react": "^17.0.40",
     "@types/react-dom": "^17.0.9",
     "@types/styled-components": "^5.1.24",
+    "@types/yargs-parser": "^21.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "@typescript-eslint/parser": "^5.15.0",
     "eslint": "^8.9.0",
     "rimraf": "^3.0.2",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "lint-staged": "^12.3.5",
+    "ts-jest": "^27.1.3",
     "typescript": "^4.6.2"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFiles": [
+      "dotenv/config"
+    ],
+    "roots": [
+      "<rootDir>/app/"
+    ]
+  },
+  "prettier": {
+    "semi": false
+  },
+  "lint-staged": {
+    "app/**/*.css": [
+      "eslint --cache --fix"
+    ],
+    "app/**/*.ts": [
+      "eslint --cache --fix"
+    ],
+    "*.md": "eslint --cache --fix"
   },
   "engines": {
     "node": ">=14"

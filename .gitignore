@@ -5,3 +5,6 @@ node_modules
 /public/build
 .env
 data.json
+.temp
+coverage
+.eslintcache

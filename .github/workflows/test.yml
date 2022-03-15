@@ -22,9 +22,7 @@ jobs:
           node-version: 16.x
           cache: "npm"
       - run: npm ci
-        working-directory: parser
       - run: npm test
-        working-directory: parser
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

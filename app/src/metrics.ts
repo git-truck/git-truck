@@ -2,7 +2,7 @@ import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
-} from "../../parser/src/model"
+} from "../parser/src/model"
 import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
@@ -58,12 +58,12 @@ export function getMetricCalcs(
   metricType: MetricType,
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
 ][] {
-  let heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
-  let coldmap = new ColdMapTranslater(
+  const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
+  const coldmap = new ColdMapTranslater(
     commit.oldestLatestChangeEpoch,
     commit.newestLatestChangeEpoch
   )
-  let authorColorState = {
+  const authorColorState = {
     palette: distinctColors({ count: 100 }),
     paletteIndex: 0,
     cache: new Map<string, string>(),
@@ -132,13 +132,13 @@ export function setupMetricsCache(
   ][],
   acc: Map<MetricType, MetricCache>
 ) {
-  for (let child of tree.children) {
+  for (const child of tree.children) {
     switch (child.type) {
       case "tree":
         setupMetricsCache(child, metricCalcs, acc)
         break
       case "blob":
-        for (let [metricType, metricFunc] of metricCalcs) {
+        for (const [metricType, metricFunc] of metricCalcs) {
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
@@ -158,8 +158,8 @@ export function setupMetricsCache(
 }
 
 function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-  let extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
-  let color = getColorFromExtension(extension)
+  const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
+  const color = getColorFromExtension(extension)
   if (color) {
     const legend = cache.legend as PointLegendData
     if (legend.has(extension)) {
@@ -198,14 +198,14 @@ function setDominantAuthorColor(
     return
   }
 
-  let [dom] = sorted[0]
+  const [dom] = sorted[0]
   let colorString: string
   const legend = cache.legend as PointLegendData
   if (acs.cache.has(dom)) {
     colorString = acs.cache.get(dom) ?? "grey"
     legend.get(dom)?.add(1)
   } else {
-    let color = acs.palette[acs.paletteIndex++].rgb(true)
+    const color = acs.palette[acs.paletteIndex++].rgb(true)
     colorString = `rgb(${color[0]},${color[1]},${color[2]})`
     acs.cache.set(dom, colorString)
     legend.set(dom, new PointInfo(colorString, 1))
@@ -215,12 +215,12 @@ function setDominantAuthorColor(
 }
 
 function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-  let dominatedColor = "red"
-  let defaultColor = "hsl(210, 38%, 85%)"
-  let nocreditColor = "teal"
+  const dominatedColor = "red"
+  const defaultColor = "hsl(210, 38%, 85%)"
+  const nocreditColor = "teal"
 
   let creditsum = 0
-  for (let [, val] of Object.entries(blob.authors)) {
+  for (const [, val] of Object.entries(blob.authors)) {
     creditsum += val
   }
 
