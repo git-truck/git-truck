@@ -16,13 +16,11 @@ import {
   deflateGitObject,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
-import { join } from "path"
 import TruckIgnore from "./TruckIgnore"
-import { resolve } from "path"
+import { resolve , isAbsolute, join} from "path"
 import { performance } from "perf_hooks"
 import yargsParser from "yargs-parser"
 import { hydrateData } from "./hydrate"
-import path from "path/posix"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -209,8 +207,8 @@ export async function parse(rawArgs: string[]) {
   const truckroot_or_cwd = args.gittruckroot ?? process.cwd()
 
   let repoDir = args.path ?? "."
-  if (!path.isAbsolute(repoDir))
-    repoDir = path.resolve(truckroot_or_cwd, repoDir)
+  if (!isAbsolute(repoDir))
+    repoDir = resolve(truckroot_or_cwd, repoDir)
 
   const branch = args.branch ?? null
 
@@ -236,8 +234,8 @@ export async function parse(rawArgs: string[]) {
   )
 
   let outPath = args.out ?? `${repoName}_${branchName}.json`
-  if (!path.isAbsolute(outPath))
-    outPath = path.resolve(truckroot_or_cwd, outPath)
+  if (!isAbsolute(outPath))
+    outPath = resolve(truckroot_or_cwd, outPath)
 
   const authorUnions = await loadTruckConfig(repoDir)
   await describeAsyncJob(
