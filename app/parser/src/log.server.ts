@@ -78,7 +78,6 @@ export function raw(message: unknown) {
 function prefix(label: LOG_LEVEL_LABEL): string {
   const formatPrefix = (label: LOG_LEVEL_LABEL, colorFn = (s: string) => s) =>
     `${colorFn(` ${label} `)} `
-  // return `[${label}] `
   if (!supportsColor || process.env.COLOR === "0") return `[${label}] `
   switch (label) {
     case LOG_LEVEL_LABEL.ERROR:
