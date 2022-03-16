@@ -16,6 +16,7 @@ import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
+import { FolderContext } from "../contexts/FolderContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -29,6 +30,7 @@ export function Providers({ children, data }: ProvidersProps) {
   }>({ metricCaches: null, errorMessage: null })
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [path, setPath] = useState(data.repo)
 
   useEffect(() => {
     try {
@@ -118,7 +120,9 @@ export function Providers({ children, data }: ProvidersProps) {
       <MetricContext.Provider value={metricCaches}>
         <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider value={{ searchText, setSearchText }}>
-            {children}
+            <FolderContext.Provider value={{ path, setPath }}>
+              {children}
+            </FolderContext.Provider>
           </SearchContext.Provider>
         </OptionsContext.Provider>
       </MetricContext.Provider>

@@ -15,7 +15,3 @@ export function useComponentSize() {
 export function useCSSVar(varName: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName)
 }
-
-export function useZoomedTree(initial: string) {
-  return useState(initial)
-}
