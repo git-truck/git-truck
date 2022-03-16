@@ -203,10 +203,6 @@ export async function parse(rawArgs: string[]) {
     setLogLevel(args.log)
   }
 
-  const executableDir = join(__dirname, "..")
-  log.info(executableDir)
-  log.info(rawArgs[1])
-
   if (args.help || args.h) {
     console.log(`Git Visual
 
