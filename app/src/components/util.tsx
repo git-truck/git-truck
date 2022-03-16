@@ -148,3 +148,10 @@ export const DetailsValue = styled.p`
   font-size: 0.9em;
   text-align: right;
 `
+
+export const NavigationText = styled.text`
+  &:hover {
+    cursor: pointer;
+    color: darkgrey;
+  }
+`
