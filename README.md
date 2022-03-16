@@ -14,12 +14,17 @@ This projected is tested to work with:
 
 ## [Usage](#usage)
 
-1. Install dependencies with `npm install`
-2. Build the project with `npm run build`
-3. Install the tool globally by running `npm install -g .` in the root of the project
-3. Then run the app in production mode:
+Run the tool like this:
 
-**Note:** If the above fails, try running `sudo npm install -g .` instead.
+```sh
+npx git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
+```
+You can also install it globally:
+
+```sh
+npm install -g git-truck
+```
+And then run it like
 
 ```sh
 git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
