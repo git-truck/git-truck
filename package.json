@@ -9,8 +9,7 @@
   "scripts": {
     "test": "jest --coverage",
     "clean": "npx rimraf -rf ./parser/dist build public/build",
-    "prebuild": "remix setup node",
-    "build": "cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
     "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "dev:node": "cross-env NODE_ENV=development nodemon ./build/index.js --watch ./build/index.js",
