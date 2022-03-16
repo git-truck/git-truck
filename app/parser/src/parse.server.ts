@@ -245,7 +245,7 @@ export async function parse(rawArgs: string[]) {
     "Error hydrating commit tree"
   )
 
-  const defaultOutPath = resolve(__dirname, "..", "/.temp", repoName, `${branchName}.json`)
+  const defaultOutPath = resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
   let outPath = resolve(args.out ?? defaultOutPath)
   if (!isAbsolute(outPath))
     outPath = resolve(cwd, outPath)
