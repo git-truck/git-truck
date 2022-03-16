@@ -4,6 +4,7 @@
   "private": true,
   "description": "Visualizing a Git repository",
   "license": "MIT",
+  "main": "./cli.js",
   "bin": "./cli.js",
   "scripts": {
     "test": "jest --coverage",
