@@ -19,8 +19,7 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
       with:
         fetch-depth: '0'
 
@@ -29,6 +28,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+
     - run: npm ci
     - run: npm test
     - run: npm run build
