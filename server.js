@@ -4,8 +4,11 @@ import morgan from "morgan";
 import open from "open";
 import { createRequestHandler } from "@remix-run/express";
 import { join } from "path";
+import { readFileSync } from "fs";
 
 import * as serverBuild from "@remix-run/dev/server-build";
+
+const gitTruckPackage = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8"));
 
 const app = express();
 
@@ -14,7 +17,7 @@ app.use(compression());
 // http://expressjs.com/en/advanced/best-practice-security.html#at-a-minimum-disable-x-powered-by-header
 app.disable("x-powered-by");
 
-const staticAssetsPath = join(__dirname, "public/build");
+const staticAssetsPath = join(__dirname, "../public/build");
 // Remix fingerprints its assets so we can cache forever.
 app.use(
   "/build",
@@ -38,6 +41,7 @@ app.all(
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
+  console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
   console.log(`Express server listening on port ${port}`);
   open("http://localhost:" + port);
