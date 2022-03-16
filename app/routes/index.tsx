@@ -28,7 +28,7 @@ export const loader: LoaderFunction = async () => {
 
 export default function Index() {
   const data = useLoaderData<ParserData>()
-  if (process.env.NODE_ENV === "development") console.log(data)
+
   return (
     <Providers
       data={data}
