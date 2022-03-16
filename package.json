@@ -4,8 +4,8 @@
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
-  "main": "./cli.js",
-  "bin": "./cli.js",
+  "main": "./build/index.js",
+  "bin": "./build/index.js",
   "scripts": {
     "test": "jest --coverage",
     "clean": "npx rimraf -rf ./parser/dist build public/build",
