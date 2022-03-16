@@ -9,7 +9,6 @@ import { Providers } from "~/src/components/Providers";
 import { Container } from "~/src/components/util";
 import { SidePanel } from "~/src/components/SidePanel";
 import { Main } from "~/src/components/Main";
-import { log } from "~/parser/src/log.server";
 
 export function links() {
   return [appStyles,
@@ -29,7 +28,7 @@ export const loader: LoaderFunction = async () => {
 
 export default function Index() {
   const data = useLoaderData<ParserData>()
-  if (process.env.NODE_ENV === "development") log.debug(data)
+  if (process.env.NODE_ENV === "development") console.log(data)
   return (
     <Providers
       data={data}
