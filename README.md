@@ -39,6 +39,14 @@ Uninstall the tool by running `npm uninstall -g git-truck` or `sudo npm uninstal
 
 ## [Development](#development)
 
+After dependencies have been installed, run
+```
+npx remix setup node
+```
+to setup remix.
+
+Now you can run the tool in development mode:
+
 In the root of the project, run the following from your terminal:
 
 ```sh
