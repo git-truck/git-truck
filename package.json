@@ -32,7 +32,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "fs-extra": "^10.0.1",
-    "github-colors": "git+https://github.com/ozh/github-colors",
+    "github-colors": "git+https://github.com/ozh/github-colors.git",
     "gitignore-parser": "^0.0.2",
     "is-binary-path": "^2.1.0",
     "lang-map": "^0.4.0",
@@ -93,5 +93,13 @@
   },
   "engines": {
     "node": ">=14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/git-truck/git-truck.git"
+  },
+  "bugs": {
+    "url": "https://github.com/git-truck/git-truck/issues"
+  },
+  "homepage": "https://github.com/git-truck/git-truck#readme"
 }
