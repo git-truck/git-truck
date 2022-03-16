@@ -31,6 +31,7 @@ import {
   pack,
   treemap,
 } from "d3-hierarchy"
+import { useZoomedTree } from "../hooks"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -54,13 +55,16 @@ export function Chart(props: ChartProps) {
   )
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
+  const [path, setPath] = useZoomedTree(data.repo);
+
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
       data.commit,
       getPaddedSizeProps(props.size, chartType),
-      chartType
+      chartType,
+      path
     )
-  }, [chartType, data.commit, props.size])
+  }, [chartType, data.commit, props.size, path])
 
   useEffect(() => setHoveredBlob(null), [chartType, data.commit, props.size])
 
@@ -87,7 +91,7 @@ export function Chart(props: ChartProps) {
         {nodes?.descendants().map((d, i) => {
           return (
             <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
-              <Node isRoot={i === 0} d={d} />
+              <Node setPath={setPath} isRoot={i === 0} d={d} />
             </g>
           )
         })}
@@ -97,7 +101,7 @@ export function Chart(props: ChartProps) {
   )
 }
 
-const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearchyNode; isRoot: boolean, setPath: (a: string) => void }) {
   const { chartType } = useOptions()
   let showLabel = !isRoot && isTree(d.data)
   const { searchText } = useSearch()
@@ -113,7 +117,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
-            <CircleText d={circleDatum} isSearchMatch={match} />
+            <CircleText setPath={setPath} d={circleDatum} isSearchMatch={match} />
           ) : null}
         </>
       )
@@ -127,7 +131,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
       return (
         <>
-          {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
+          {showLabel ? <RectText setPath={setPath} d={rectDatum} isSearchMatch={match} /> : null}
           <Rect d={rectDatum} isSearchMatch={match} />
         </>
       )
@@ -189,9 +193,11 @@ function Rect({
 function CircleText({
   d,
   isSearchMatch,
+  setPath
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
-  isSearchMatch: boolean
+  isSearchMatch: boolean,
+  setPath: (a: string) => void
 }) {
   return (
     <>
@@ -220,6 +226,7 @@ function CircleText({
       </text>
       <text>
         <textPath
+          onClick={() => setPath(d.data.path)}
           fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
@@ -237,9 +244,11 @@ function CircleText({
 function RectText({
   d,
   isSearchMatch,
+  setPath
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
+  setPath: (a: string) => void
 }) {
   const props = useSpring({
     x: d.x0 + 4,
@@ -248,7 +257,7 @@ function RectText({
   })
 
   return (
-    <animated.text {...props} className="object-name">
+    <animated.text {...props} onClick={() => setPath(d.data.path)} className="object-name">
       {d.data.name}
     </animated.text>
   )
@@ -257,9 +266,27 @@ function RectText({
 function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
   paddedSizeProps: { height: number; width: number },
-  chartType: ChartType
+  chartType: ChartType,
+  path: string
 ) {
-  const castedTree = data.tree as HydratedGitObject
+  const root = data.tree as HydratedGitTreeObject
+
+  console.log(path);
+  let path1 = path.split("/")
+  
+  let currentTree = root
+
+  for(const step of path1) {
+    for(const child of currentTree.children) {
+      if (child.type === "tree" && child.name === step) {
+        currentTree = child
+        break;
+      }
+    }
+  }
+
+  const castedTree = currentTree as HydratedGitObject
+
   const hiearchy = hierarchy(castedTree)
     .sum((d) => {
       const lineCount = (d as HydratedGitBlobObject).noLines
