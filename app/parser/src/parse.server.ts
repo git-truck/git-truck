@@ -6,7 +6,7 @@ import {
   GitTreeObject,
   Person,
 } from "./model"
-import { log } from "./log.server"
+import { log, setLogLevel } from "./log.server"
 import {
   describeAsyncJob,
   formatMs,
@@ -199,6 +199,14 @@ export async function parse(rawArgs: string[]) {
     },
   })
 
+  if (args.log) {
+    setLogLevel(args.log)
+  }
+
+  const executableDir = join(__dirname, "..")
+  log.info(executableDir)
+  log.info(rawArgs[1])
+
   if (args.help || args.h) {
     console.log(`Git Visual
 
@@ -212,11 +220,11 @@ export async function parse(rawArgs: string[]) {
     process.exit(1)
   }
 
-  const truckroot_or_cwd = args.gittruckroot ?? process.cwd()
+  const cwd = process.cwd()
 
   let repoDir = args.path ?? "."
   if (!isAbsolute(repoDir))
-    repoDir = resolve(truckroot_or_cwd, repoDir)
+    repoDir = resolve(cwd, repoDir)
 
   const branch = args.branch ?? null
 
@@ -241,10 +249,10 @@ export async function parse(rawArgs: string[]) {
     "Error hydrating commit tree"
   )
 
-  const defaultOutPath = `.temp/${repoName}_${branchName}.json`
+  const defaultOutPath = resolve(__dirname, `../.temp/${repoName}_${branchName}.json`)
   let outPath = resolve(args.out ?? defaultOutPath)
   if (!isAbsolute(outPath))
-    outPath = resolve(truckroot_or_cwd, outPath)
+    outPath = resolve(cwd, outPath)
 
   const authorUnions = await loadTruckConfig(repoDir)
   const data = {
