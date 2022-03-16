@@ -22,14 +22,24 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
 
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
-export function getLogLevel() {
+function setIntialLogLevel() {
   if (typeof process.env.LOG_LEVEL === "string")
     return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
   if (typeof process.env.LOG_LEVEL === "number") return process.env.LOG_LEVEL
   return null
 }
 
-const logLevel = getLogLevel()
+let logLevel = setIntialLogLevel()
+
+export const getLogLevel = () => logLevel
+
+export function setLogLevel(level: string) {
+  const newLevel = stringToLevelMap[level.toUpperCase()]
+  if(!newLevel) {
+    throw new Error(`Invalid log level: ${level}`)
+  }
+  logLevel = newLevel
+}
 
 export function error(message: Error | unknown) {
   if (logLevel === null) return
