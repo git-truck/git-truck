@@ -1,4 +1,4 @@
-import { MutableRefObject, useMemo } from "react"
+import { MutableRefObject, useMemo, useState } from "react"
 import { useComponentSize as useCompSize } from "react-use-size"
 
 type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
@@ -14,4 +14,8 @@ export function useComponentSize() {
 
 export function useCSSVar(varName: string) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName)
+}
+
+export function useZoomedTree(initial: string) {
+  return useState(initial)
 }
