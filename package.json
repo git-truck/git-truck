@@ -90,8 +90,7 @@
     ],
     "app/**/*.ts": [
       "eslint --cache --fix"
-    ],
-    "*.md": "eslint --cache --fix"
+    ]
   },
   "engines": {
     "node": ">=14"
