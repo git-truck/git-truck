@@ -14,6 +14,7 @@ export enum LOG_LEVEL_LABEL {
 }
 
 const stringToLevelMap: Record<string, LOG_LEVEL> = {
+  SILENT: LOG_LEVEL.SILENT,
   ERROR: LOG_LEVEL.ERROR,
   WARN: LOG_LEVEL.WARN,
   INFO: LOG_LEVEL.INFO,
@@ -34,8 +35,8 @@ let logLevel = setIntialLogLevel()
 export const getLogLevel = () => logLevel
 
 export function setLogLevel(level: string) {
-  const newLevel = stringToLevelMap[level.toUpperCase()]
-  if(!newLevel) {
+  const newLevel = stringToLevelMap[level.trim().toUpperCase()]
+  if(typeof newLevel === "undefined") {
     throw new Error(`Invalid log level: ${level}`)
   }
   logLevel = newLevel
