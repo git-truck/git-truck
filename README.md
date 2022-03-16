@@ -16,8 +16,10 @@ This projected is tested to work with:
 
 1. Install dependencies with `npm install`
 2. Build the project with `npm run build`
-3. Install the tool globally by running `npm link` in the root of the project
+3. Install the tool globally by running `npm install -g .` in the root of the project
 3. Then run the app in production mode:
+
+**Note:** If the above fails, try running `sudo npm install -g .` instead.
 
 ```sh
 git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
@@ -33,7 +35,7 @@ git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 |  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
 
 ## [Uninstall](#uninstall)
-Uninstall the tool by running `npm uninstall -g git-truck`
+Uninstall the tool by running `npm uninstall -g git-truck` or `sudo npm uninstall -g git-truck`
 
 ## [Development](#development)
 
