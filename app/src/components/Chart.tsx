@@ -31,7 +31,8 @@ import {
   pack,
   treemap,
 } from "d3-hierarchy"
-import { useZoomedTree } from "../hooks"
+import { useFolder } from "../contexts/FolderContext"
+// import { useZoomedTree } from "../hooks"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -55,7 +56,8 @@ export function Chart(props: ChartProps) {
   )
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
-  const [path, setPath] = useZoomedTree(data.repo);
+
+  const { path, setPath } = useFolder();
 
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
@@ -91,7 +93,7 @@ export function Chart(props: ChartProps) {
         {nodes?.descendants().map((d, i) => {
           return (
             <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
-              <Node setPath={setPath} isRoot={i === 0} d={d} />
+              <Node setPath={(a: string) => setPath(a)} isRoot={i === 0} d={d} />
             </g>
           )
         })}
@@ -103,7 +105,7 @@ export function Chart(props: ChartProps) {
 
 const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearchyNode; isRoot: boolean, setPath: (a: string) => void }) {
   const { chartType } = useOptions()
-  let showLabel = !isRoot && isTree(d.data)
+  let showLabel = isTree(d.data) // && !isRoot
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
@@ -271,12 +273,8 @@ function createPartitionedHiearchy(
 ) {
   const root = data.tree as HydratedGitTreeObject
 
-  console.log(path);
-  let path1 = path.split("/")
-  
   let currentTree = root
-
-  for(const step of path1) {
+  for(const step of path.split("/")) {
     for(const child of currentTree.children) {
       if (child.type === "tree" && child.name === step) {
         currentTree = child
