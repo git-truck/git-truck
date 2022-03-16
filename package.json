@@ -23,6 +23,7 @@
     "@fortawesome/react-fontawesome": "^0.1.17",
     "@react-aria/utils": "^3.11.3",
     "@react-spring/web": "^9.4.4",
+    "@remix-run/dev": "^1.2.3",
     "@remix-run/express": "^1.2.3",
     "@remix-run/react": "^1.2.3",
     "@remix-run/serve": "^1.2.3",
@@ -49,7 +50,6 @@
     "yargs-parser": "^21.0.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.2.3",
     "@remix-run/eslint-config": "^1.2.3",
     "@types/d3-hierarchy": "^3.0.2",
     "@types/gitignore-parser": "^0.0.0",
