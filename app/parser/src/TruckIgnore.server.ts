@@ -1,6 +1,6 @@
 import { readFileSync } from "fs"
 import { compile } from "gitignore-parser"
-import { warn } from "./log.server"
+import { log } from "./log.server"
 
 export default class TruckIgnore {
   private truckignore
@@ -9,7 +9,7 @@ export default class TruckIgnore {
       const file = readFileSync(path + "/.truckignore", "utf-8")
       this.truckignore = compile(file)
     } catch (e) {
-      warn("No .truckignore found")
+      log.warn("No .truckignore found")
     }
   }
 

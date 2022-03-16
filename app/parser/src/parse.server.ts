@@ -16,8 +16,8 @@ import {
   deflateGitObject,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
-import TruckIgnore from "./TruckIgnore"
 import { resolve , isAbsolute, join} from "path"
+import TruckIgnore from "./TruckIgnore.server"
 import { performance } from "perf_hooks"
 import yargsParser from "yargs-parser"
 import { hydrateData } from "./hydrate.server"
