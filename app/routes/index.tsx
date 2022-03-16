@@ -22,7 +22,8 @@ export function links() {
 }
 
 export const loader: LoaderFunction = async () => {
-  const data = await parse(process.argv)
+  const args = process.argv.slice(2)
+  const data = await parse(args)
   return json<ParserData>(data)
 }
 
