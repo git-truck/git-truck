@@ -1,5 +1,3 @@
-import chalk, { supportsColor } from "chalk"
-
 export enum LOG_LEVEL {
   SILENT,
   ERROR,
@@ -76,21 +74,7 @@ export function raw(message: unknown) {
 }
 
 function prefix(label: LOG_LEVEL_LABEL): string {
-  const formatPrefix = (label: LOG_LEVEL_LABEL, colorFn = (s: string) => s) =>
-    `${colorFn(` ${label} `)} `
-  if (!supportsColor || process.env.COLOR === "0") return `[${label}] `
-  switch (label) {
-    case LOG_LEVEL_LABEL.ERROR:
-      return formatPrefix(LOG_LEVEL_LABEL.ERROR, chalk.bgRedBright.black)
-    case LOG_LEVEL_LABEL.WARN:
-      return formatPrefix(LOG_LEVEL_LABEL.WARN, chalk.bgYellow.black)
-    case LOG_LEVEL_LABEL.INFO:
-      return formatPrefix(LOG_LEVEL_LABEL.INFO, chalk.bgBlueBright.black)
-    case LOG_LEVEL_LABEL.DEBUG:
-      return formatPrefix(LOG_LEVEL_LABEL.DEBUG, chalk.bgGrey.white)
-    default:
-      throw Error("Invalid log level")
-  }
+  return `[${label}] `
 }
 
 export const log = {
