@@ -1,5 +1,5 @@
 import { exportForTest } from "./parse.server"
-jest.mock("./TruckIgnore")
+jest.mock("./TruckIgnore.server")
 jest.setTimeout(15000)
 
 describe("getCoAuthors", () => {
