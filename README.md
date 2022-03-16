@@ -16,10 +16,11 @@ This projected is tested to work with:
 
 1. Install dependencies with `npm install`
 2. Build the project with `npm run build`
+3. Install the tool globally by running `npm link` in the root of the project
 3. Then run the app in production mode:
 
 ```sh
-npm start -- [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
+git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 ```
 
 #### [Arguments](#arguments)
@@ -31,7 +32,8 @@ npm start -- [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 |  `--out`   |    ./data.json     |                        output path for data file                        |
 |  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
 
-_or using yarn:_ `yarn start <args>`
+## [Uninstall](#uninstall)
+Uninstall the tool by running `npm uninstall -g git-truck`
 
 ## [Development](#development)
 
