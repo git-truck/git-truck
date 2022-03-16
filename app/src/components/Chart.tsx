@@ -32,6 +32,7 @@ import {
   treemap,
 } from "d3-hierarchy"
 import { useFolder } from "../contexts/FolderContext"
+import { NavigationText } from "./util"
 // import { useZoomedTree } from "../hooks"
 
 type CircleOrRectHiearchyNode =
@@ -228,7 +229,7 @@ function CircleText({
           {d.data.name}
         </textPath>
       </text>
-      <text>
+      <NavigationText>
         <textPath
           onClick={() => setPath(d.data.path)}
           fill={isSearchMatch ? searchMatchColor : "#333"}
@@ -240,7 +241,7 @@ function CircleText({
         >
           {d.data.name}
         </textPath>
-      </text>
+      </NavigationText>
     </>
   )
 }

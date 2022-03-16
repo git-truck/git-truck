@@ -1,7 +1,7 @@
 import { useData } from "../contexts/DataContext"
 import { useFolder } from "../contexts/FolderContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle } from "./util"
+import { Box, BoxTitle, NavigationText } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
@@ -27,7 +27,7 @@ export function GlobalInfo() {
       </div>
       <div>
         <strong>Path: </strong>
-        {paths.map(([name, p]) => <text onClick={() => setPath(p)}>/{name}</text>)}
+        {paths.map(([name, p]) => <NavigationText onClick={() => setPath(p)}>/{name}</NavigationText>)}
       </div>
     </Box>
   )
