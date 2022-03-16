@@ -1,6 +1,6 @@
 import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
-import { createSpinner } from "nanospinner"
+import { createSpinner, Spinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import { GitBlobObject, GitTreeObject, ParserData } from "./model"
@@ -172,7 +172,7 @@ export function createTruckSpinner() {
     : null
 }
 
-const spinner = createTruckSpinner()
+let spinner: null | Spinner = null
 
 export async function describeAsyncJob<T>(
   job: () => Promise<T>,
@@ -180,6 +180,7 @@ export async function describeAsyncJob<T>(
   afterMsg: string,
   errorMsg: string
 ) {
+  spinner = createTruckSpinner()
   const success = (text: string, final = false) => {
     if (getLogLevel() === LOG_LEVEL.SILENT) return
     if (spinner === null) return log.info(text)
