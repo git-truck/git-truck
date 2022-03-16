@@ -51,6 +51,10 @@ For arguments, see [Arguments](#arguments).
 
 This starts the app in development mode, rebuilding assets on file changes.
 
+### [Husky](#husky)
+
+To enable husky, run `npx husky install`.
+
 ## Clean up
 
 To clean up build artefacts, etc. run:
