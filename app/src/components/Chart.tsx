@@ -33,7 +33,6 @@ import {
 } from "d3-hierarchy"
 import { useFolder } from "../contexts/FolderContext"
 import { NavigationText } from "./util"
-// import { useZoomedTree } from "../hooks"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -134,8 +133,8 @@ const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearch
 
       return (
         <>
-          {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
-          <Rect setPath={setPath} d={rectDatum} isSearchMatch={match} />
+          <Rect d={rectDatum} isSearchMatch={match} />
+          {showLabel ? <RectText setPath={setPath} d={rectDatum} isSearchMatch={match} /> : null}
         </>
       )
     default:
@@ -168,11 +167,9 @@ function Circle({
 function Rect({
   d,
   isSearchMatch,
-  setPath
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
-  setPath: (a: string) => void
 }) {
   const metricCaches = useMetricCaches()
   const { metricType } = useOptions()
@@ -192,7 +189,7 @@ function Rect({
         : "transparent",
   })
 
-  return <animated.rect onClick={() => setPath(d.data.path)} {...props} className={d.data.type} />
+  return <animated.rect {...props} className={d.data.type} />
 }
 
 function CircleText({
@@ -249,9 +246,11 @@ function CircleText({
 function RectText({
   d,
   isSearchMatch,
+  setPath
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
+  setPath: (a: string) => void
 }) {
   const props = useSpring({
     x: d.x0 + 4,
@@ -260,7 +259,7 @@ function RectText({
   })
 
   return (
-    <animated.text {...props} className="object-name">
+    <animated.text {...props} onClick={() => setPath(d.data.path)} className="object-name">
       {d.data.name}
     </animated.text>
   )
