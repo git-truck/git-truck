@@ -1,7 +1,7 @@
 import { useData } from "../contexts/DataContext"
 import { useFolder } from "../contexts/FolderContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, NavigationText } from "./util"
+import { Box, BoxTitle, NavigationText, NonNavigationText } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
@@ -33,7 +33,7 @@ export function GlobalInfo() {
       <div>
         <strong>Path: </strong>
         {paths.reverse().map(([name, p]) => {
-          if (p === "") return <text>/{name}</text>
+          if (p === "") return <NonNavigationText>/{name}</NonNavigationText>
           else return <NavigationText onClick={() => setPath(p)}>/{name}</NavigationText>
         })}
       </div>

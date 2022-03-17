@@ -155,3 +155,9 @@ export const NavigationText = styled.text`
     color: darkgrey;
   }
 `
+
+export const NonNavigationText = styled.text`
+  &:hover {
+    cursor: default;
+  }
+`
