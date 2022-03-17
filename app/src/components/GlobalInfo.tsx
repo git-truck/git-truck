@@ -10,12 +10,17 @@ export function GlobalInfo() {
   let temppath = path
   let paths : [string, string][] = []
 
-  while(temppath !== "") {
+  for(let i = 0; i < 3; i++) {
+    if (temppath === "") { break; }
     const idx = temppath.lastIndexOf("/")
     paths.push([temppath.substring(idx+1), temppath])
     temppath = temppath.substring(0,idx)
   }
-  paths.reverse()
+  if (temppath !== "") {
+    paths = paths.slice(0,paths.length-1); 
+    paths.push(["...",""]); 
+    paths.push([data.repo,data.repo])
+  }
 
   return (
     <Box>
@@ -27,7 +32,10 @@ export function GlobalInfo() {
       </div>
       <div>
         <strong>Path: </strong>
-        {paths.map(([name, p]) => <NavigationText onClick={() => setPath(p)}>/{name}</NavigationText>)}
+        {paths.reverse().map(([name, p]) => {
+          if (p === "") return <text>/{name}</text>
+          else return <NavigationText onClick={() => setPath(p)}>/{name}</NavigationText>
+        })}
       </div>
     </Box>
   )
