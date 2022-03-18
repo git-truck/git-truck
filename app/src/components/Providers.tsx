@@ -16,7 +16,7 @@ import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
-import { FolderContext } from "../contexts/FolderContext"
+import { PathContext } from "../contexts/FolderContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -120,9 +120,9 @@ export function Providers({ children, data }: ProvidersProps) {
       <MetricContext.Provider value={metricCaches}>
         <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider value={{ searchText, setSearchText }}>
-            <FolderContext.Provider value={{ path, setPath }}>
+            <PathContext.Provider value={{ path, setPath }}>
               {children}
-            </FolderContext.Provider>
+            </PathContext.Provider>
           </SearchContext.Provider>
         </OptionsContext.Provider>
       </MetricContext.Provider>

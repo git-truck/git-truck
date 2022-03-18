@@ -149,14 +149,14 @@ export const DetailsValue = styled.p`
   text-align: right;
 `
 
-export const NavigationText = styled.text`
+export const ClickableText = styled.text`
   &:hover {
     cursor: pointer;
     color: darkgrey;
   }
 `
 
-export const NonNavigationText = styled.text`
+export const NonClickableText = styled.text`
   &:hover {
     cursor: default;
   }
