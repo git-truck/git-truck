@@ -149,15 +149,19 @@ export const DetailsValue = styled.p`
   text-align: right;
 `
 
-export const ClickableText = styled.text`
+export const ClickableText = styled.button`
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
   &:hover {
-    cursor: pointer;
     color: darkgrey;
   }
 `
 
-export const NonClickableText = styled.text`
-  &:hover {
-    cursor: default;
-  }
+export const NonClickableText = styled.span`
+  cursor: default;
 `

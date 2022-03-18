@@ -18,6 +18,7 @@
   font-weight: bold;
   font-size: 0.8rem;
   fill: "#333";
+  cursor: pointer;
 }
 
 .name-path {
