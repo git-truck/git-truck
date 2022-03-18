@@ -32,7 +32,6 @@ import {
   treemap,
 } from "d3-hierarchy"
 import { usePath } from "../contexts/FolderContext"
-import { ClickableText } from "./util"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -105,7 +104,7 @@ export function Chart(props: ChartProps) {
 
 const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearchyNode; isRoot: boolean, setPath: (a: string) => void }) {
   const { chartType } = useOptions()
-  let showLabel = isTree(d.data) // && !isRoot
+  let showLabel = isTree(d.data)
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
@@ -226,7 +225,7 @@ function CircleText({
           {d.data.name}
         </textPath>
       </text>
-      <ClickableText>
+      <text>
         <textPath
           onClick={() => setPath(d.data.path)}
           fill={isSearchMatch ? searchMatchColor : "#333"}
@@ -238,7 +237,7 @@ function CircleText({
         >
           {d.data.name}
         </textPath>
-      </ClickableText>
+      </text>
     </>
   )
 }

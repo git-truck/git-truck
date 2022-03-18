@@ -32,9 +32,9 @@ export function GlobalInfo() {
       </div>
       <div>
         <strong>Path: </strong>
-        {paths.reverse().map(([name, p]) => {
-          if (p === "") return <NonClickableText>/{name}</NonClickableText>
-          else return <ClickableText onClick={() => setPath(p)}>/{name}</ClickableText>
+        {paths.reverse().map(([name, p],i) => {
+          if (p === "" || i === paths.length-1) return <NonClickableText key={p}>/{name}</NonClickableText>
+          else return <ClickableText key={p} onClick={() => setPath(p)}>/{name}</ClickableText>
         })}
       </div>
     </Box>
