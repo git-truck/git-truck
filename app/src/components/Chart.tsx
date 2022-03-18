@@ -55,7 +55,6 @@ export function Chart(props: ChartProps) {
   )
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
-
   const { path } = usePath();
 
   const nodes = useMemo(() => {
@@ -198,7 +197,7 @@ function CircleText({
   d: HierarchyCircularNode<HydratedGitObject>
   isSearchMatch: boolean,
 }) {
-  const {setPath} = usePath()
+  const { setPath } = usePath()
   return (
     <>
       <path
@@ -248,7 +247,7 @@ function RectText({
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
 }) {
-  const {setPath} = usePath()
+  const { setPath } = usePath()
   const props = useSpring({
     x: d.x0 + 4,
     y: d.y0 + 12,
@@ -271,8 +270,8 @@ function createPartitionedHiearchy(
   const root = data.tree as HydratedGitTreeObject
 
   let currentTree = root
-  for(const step of path.split("/")) {
-    for(const child of currentTree.children) {
+  for (const step of path.split("/")) {
+    for (const child of currentTree.children) {
       if (child.type === "tree" && child.name === step) {
         currentTree = child
         break;
