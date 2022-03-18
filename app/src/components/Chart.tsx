@@ -56,7 +56,7 @@ export function Chart(props: ChartProps) {
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
 
-  const { path, setPath } = usePath();
+  const { path } = usePath();
 
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
@@ -92,7 +92,7 @@ export function Chart(props: ChartProps) {
         {nodes?.descendants().map((d, i) => {
           return (
             <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
-              <Node setPath={(a: string) => setPath(a)} isRoot={i === 0} d={d} />
+              <Node isRoot={i === 0} d={d} />
             </g>
           )
         })}
@@ -102,7 +102,7 @@ export function Chart(props: ChartProps) {
   )
 }
 
-const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearchyNode; isRoot: boolean, setPath: (a: string) => void }) {
+const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = isTree(d.data)
   const { searchText } = useSearch()
@@ -118,7 +118,7 @@ const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearch
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
-            <CircleText setPath={setPath} d={circleDatum} isSearchMatch={match} />
+            <CircleText d={circleDatum} isSearchMatch={match} />
           ) : null}
         </>
       )
@@ -133,7 +133,7 @@ const Node = memo(function Node({ d, isRoot, setPath }: { d: CircleOrRectHiearch
       return (
         <>
           <Rect d={rectDatum} isSearchMatch={match} />
-          {showLabel ? <RectText setPath={setPath} d={rectDatum} isSearchMatch={match} /> : null}
+          {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
         </>
       )
     default:
@@ -194,12 +194,11 @@ function Rect({
 function CircleText({
   d,
   isSearchMatch,
-  setPath
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
   isSearchMatch: boolean,
-  setPath: (a: string) => void
 }) {
+  const {setPath} = usePath()
   return (
     <>
       <path
@@ -245,12 +244,11 @@ function CircleText({
 function RectText({
   d,
   isSearchMatch,
-  setPath
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
-  setPath: (a: string) => void
 }) {
+  const {setPath} = usePath()
   const props = useSpring({
     x: d.x0 + 4,
     y: d.y0 + 12,
