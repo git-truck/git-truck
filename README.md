@@ -14,20 +14,10 @@ This projected is tested to work with:
 
 ## [Usage](#usage)
 
-Run the tool like this:
+Run `npx git-truck` in the root of a git repository, that you want to visualize:
 
 ```sh
 npx git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
-```
-You can also install it globally:
-
-```sh
-npm install -g git-truck
-```
-And then run it like
-
-```sh
-git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 ```
 
 #### [Arguments](#arguments)
@@ -39,20 +29,10 @@ git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 |  `--out`   |    ./data.json     |                        output path for data file                        |
 |  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
 
-## [Uninstall](#uninstall)
-Uninstall the tool by running `npm uninstall -g git-truck` or `sudo npm uninstall -g git-truck`
-
 ## [Development](#development)
 
-After dependencies have been installed, run
-```
-npx remix setup node
-```
-to setup remix.
-
-Now you can run the tool in development mode:
-
-In the root of the project, run the following from your terminal:
+1. Install dependencies with `npm install`
+2. Run git-truck in development mode with:
 
 ```sh
 npm run dev -- <args>
