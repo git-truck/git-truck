@@ -12,7 +12,7 @@ import {
   OptionsContext,
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, ParserData } from "../../parser/src/model"
+import { HydratedGitBlobObject, ParserData } from "~/parser/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
