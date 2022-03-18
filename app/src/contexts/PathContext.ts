@@ -1,8 +1,8 @@
-import { createContext, useContext } from "react"
+import { createContext, Dispatch, SetStateAction, useContext } from "react"
 
 export interface Path {
   path: string
-  setPath: (path: string) => void
+  setPath: Dispatch<SetStateAction<string>>
 }
 
 export const PathContext = createContext<Path | undefined>(undefined)
