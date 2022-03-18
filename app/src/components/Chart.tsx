@@ -31,7 +31,7 @@ import {
   pack,
   treemap,
 } from "d3-hierarchy"
-import { usePath } from "../contexts/FolderContext"
+import { usePath } from "../contexts/PathContext"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
