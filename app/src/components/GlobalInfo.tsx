@@ -1,11 +1,11 @@
 import { useData } from "../contexts/DataContext"
-import { useFolder } from "../contexts/FolderContext"
+import { usePath } from "../contexts/FolderContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, NavigationText, NonNavigationText } from "./util"
+import { Box, BoxTitle, ClickableText, NonClickableText } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
-  const {path, setPath} = useFolder()
+  const {path, setPath} = usePath()
 
   let temppath = path
   let paths : [string, string][] = []
@@ -33,8 +33,8 @@ export function GlobalInfo() {
       <div>
         <strong>Path: </strong>
         {paths.reverse().map(([name, p]) => {
-          if (p === "") return <NonNavigationText>/{name}</NonNavigationText>
-          else return <NavigationText onClick={() => setPath(p)}>/{name}</NavigationText>
+          if (p === "") return <NonClickableText>/{name}</NonClickableText>
+          else return <ClickableText onClick={() => setPath(p)}>/{name}</ClickableText>
         })}
       </div>
     </Box>

@@ -31,8 +31,8 @@ import {
   pack,
   treemap,
 } from "d3-hierarchy"
-import { useFolder } from "../contexts/FolderContext"
-import { NavigationText } from "./util"
+import { usePath } from "../contexts/FolderContext"
+import { ClickableText } from "./util"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -57,7 +57,7 @@ export function Chart(props: ChartProps) {
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
 
-  const { path, setPath } = useFolder();
+  const { path, setPath } = usePath();
 
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
@@ -226,7 +226,7 @@ function CircleText({
           {d.data.name}
         </textPath>
       </text>
-      <NavigationText>
+      <ClickableText>
         <textPath
           onClick={() => setPath(d.data.path)}
           fill={isSearchMatch ? searchMatchColor : "#333"}
@@ -238,7 +238,7 @@ function CircleText({
         >
           {d.data.name}
         </textPath>
-      </NavigationText>
+      </ClickableText>
     </>
   )
 }
