@@ -182,6 +182,7 @@ function updateBlob_mut(
   }
 
   Object.assign(blob, hydratedBlob)
+  log.debug(`Updated blob ${blob.name} from commit ${currCommit.hash}`)
 }
 
 function finally_mut(data: HydratedGitCommitObject) {
