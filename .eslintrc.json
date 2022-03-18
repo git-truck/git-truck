@@ -15,6 +15,9 @@
   },
   "plugins": [
       "@typescript-eslint"
-  ]
+  ],
+  "rules": {
+      "no-case-declarations":"off"
+  }
 }
 
