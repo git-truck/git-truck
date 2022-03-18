@@ -78,7 +78,7 @@
       "dotenv/config"
     ],
     "roots": [
-      "<rootDir>/app/"
+      "<rootDir>/src/"
     ]
   },
   "prettier": {
