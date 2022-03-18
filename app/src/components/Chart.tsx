@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -49,23 +49,20 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
-  const [nodes, setNodes] = useState<CircleOrRectHiearchyNode>()
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
   const data = useData()
   const { chartType, setClickedBlob } = useOptions()
-
-  useEffect(() => {
-    setHoveredBlob(null)
-    setNodes(
-      createPartitionedHiearchy(
-        data.commit,
-        getPaddedSizeProps(props.size, chartType),
-        chartType
-      )
+  const nodes = useMemo(() => {
+    return createPartitionedHiearchy(
+      data.commit,
+      getPaddedSizeProps(props.size, chartType),
+      chartType
     )
   }, [chartType, data.commit, props.size])
+
+  useEffect(() => setHoveredBlob(null), [chartType, data.commit, props.size])
 
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
