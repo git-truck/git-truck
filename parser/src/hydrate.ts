@@ -79,12 +79,12 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
           queue.enqueue(parentHash)
           break
         case 1: // curr is a linear commit
-          diffAndUpdate_mut(data, currCommit, parentHash, repo)
+          await diffAndUpdate_mut(data, currCommit, parentHash, repo)
           queue.enqueue(parentHash)
           break
         default:
           // curr is the root commit
-          diffAndUpdate_mut(data, currCommit, emptyGitCommitHash, repo)
+          await diffAndUpdate_mut(data, currCommit, emptyGitCommitHash, repo)
           break
       }
     }
