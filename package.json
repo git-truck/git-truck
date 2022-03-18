@@ -8,8 +8,9 @@
   "bin": "./build/index.js",
   "scripts": {
     "test": "jest --coverage",
-    "clean": "npx rimraf -rf ./parser/dist build public/build",
-    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "clean": "npx rimraf -rf build public/build .cache",
+    "postinstall": "npm run build",
+    "build": "npx remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
     "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "dev:node": "cross-env NODE_ENV=development nodemon ./build/index.js --watch ./build/index.js",
