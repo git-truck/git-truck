@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -97,7 +97,7 @@ export function Chart(props: ChartProps) {
   )
 }
 
-function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = !isRoot && isTree(d.data)
   const { searchText } = useSearch()
@@ -134,7 +134,7 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
     default:
       throw Error("Unknown chart type")
   }
-}
+})
 
 function Circle({
   d,
