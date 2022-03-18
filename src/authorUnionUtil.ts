@@ -1,7 +1,7 @@
 import {
   HydratedGitBlobObject,
   HydratedGitTreeObject,
-} from "../parser/src/model"
+} from "~/parser/model"
 
 export const makeDupeMap = (authors: string[][]) => {
   const dupeMap = new Map<string, string>()

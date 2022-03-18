@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { ParserData } from "../../parser/src/model"
+import { ParserData } from "~/parser/model"
 
 export const DataContext = createContext<ParserData | undefined>(undefined)
 
