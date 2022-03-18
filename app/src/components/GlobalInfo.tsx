@@ -1,5 +1,5 @@
 import { useData } from "../contexts/DataContext"
-import { usePath } from "../contexts/FolderContext"
+import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
 import { Box, BoxTitle, ClickableText, NonClickableText } from "./util"
 
