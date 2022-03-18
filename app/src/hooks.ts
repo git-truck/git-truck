@@ -1,4 +1,4 @@
-import { MutableRefObject, useMemo, useState } from "react"
+import { MutableRefObject, useMemo } from "react"
 import { useComponentSize as useCompSize } from "react-use-size"
 
 type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
