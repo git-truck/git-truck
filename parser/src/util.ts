@@ -46,7 +46,7 @@ export async function gitDiffNumStatParsed(
         filePath = parseRenamedFile(filePath, renamedFiles)
       }
 
-      const newestPath = findNewestVersion(filePath, renamedFiles)
+      const newestPath = renamedFiles.get(filePath) ?? filePath
 
       return {
         neg: parseInt(neg),
@@ -77,18 +77,10 @@ function parseRenamedFile(file: string, renamedFiles: Map<string, string>) {
     newPath = groups["newPath2"] ?? ""
   }
 
-  renamedFiles.set(oldPath, newPath)
+  const newest = renamedFiles.get(newPath) ?? newPath
+  renamedFiles.delete(newPath)
+  renamedFiles.set(oldPath, newest)
   return newPath
-}
-
-function findNewestVersion(path: string, renamedFiles: Map<string, string>) {
-  let newestPath = path
-  let next = renamedFiles.get(newestPath)
-  while (next) {
-    newestPath = next
-    next = renamedFiles.get(newestPath)
-  }
-  return newestPath
 }
 
 export async function lookupFileInTree(
