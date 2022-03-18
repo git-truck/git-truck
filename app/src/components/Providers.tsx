@@ -16,7 +16,7 @@ import { HydratedGitBlobObject, ParserData } from "../../../parser/src/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
-import { PathContext } from "../contexts/FolderContext"
+import { PathContext } from "../contexts/PathContext"
 
 interface ProvidersProps {
   children: React.ReactNode
