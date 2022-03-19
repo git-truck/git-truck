@@ -114,6 +114,28 @@ export async function deflateGitObject(repo: string, hash: string) {
   return result as string
 }
 
+export async function getDefaultQuotePathValue(repoDir: string) {
+  const result = await runProcess(repoDir, "git", ["config", "core.quotepath"])
+  return result as string
+}
+
+export async function disableQuotePath(repoDir: string) {
+  await runProcess(repoDir, "git", ["config", "core.quotepath", "off"])
+  log.debug("Disabled quotePath")
+}
+
+export async function resetQuotePath(repoDir: string, value: string) {
+  log.debug("value: " +  value)
+  if (!value) {
+    await runProcess(repoDir, "git", ["config", "--unset", "core.quotepath"])
+    log.debug("Unset quotePath")
+  } 
+  else {
+    await runProcess(repoDir, "git", ["config", "core.quotepath", value])
+    log.debug(`Reset quotePath to ${value}`)
+  } 
+}
+
 export async function writeRepoToFile(outPath: string, parsedData: ParserData) {
   const data = JSON.stringify(parsedData, null, 2)
   const dir = dirname(outPath)
