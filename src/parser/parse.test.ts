@@ -1,4 +1,4 @@
-import { exportForTest } from "./parse.server"
+import { exportForTest } from "./Parser.server"
 jest.mock("./TruckIgnore.server")
 jest.setTimeout(15000)
 

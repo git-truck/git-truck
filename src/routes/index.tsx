@@ -8,7 +8,8 @@ import { Container } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
 import { ParserData } from "~/parser/model";
-import { parse } from "~/parser/parse.server";
+import { Parser } from "~/parser/Parser.server";
+import { handleArgs } from "~/parser/args-handler.server";
 
 export function links() {
   return [appStyles,
@@ -23,7 +24,8 @@ export function links() {
 
 export const loader: LoaderFunction = async () => {
   const args = process.argv.slice(2)
-  const data = await parse(args)
+  const [cwd, repoDir, branch, out] = handleArgs(args)
+  const data = await new Parser(cwd, repoDir, branch, out).parse()
   return json<ParserData>(data)
 }
 

@@ -11,7 +11,7 @@ import {
   HydratedGitTreeObject,
   PersonWithTime,
 } from "./model"
-import { parseCommitLight } from "./parse.server"
+import { parseCommitLight } from "./Parser.server"
 import { gitDiffNumStatParsed, lookupFileInTree } from "./util"
 import { Queue } from "./queue"
 
