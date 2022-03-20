@@ -20,6 +20,7 @@ import { resolve , isAbsolute, join} from "path"
 import TruckIgnore from "./TruckIgnore.server"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
+import { spawn } from "child_process"
 
 import { } from "@remix-run/node"
 
@@ -28,14 +29,33 @@ interface truckConfigResponse {
 }
 
 export class Parser {
+
+  private buffer: Uint8Array[] = []
+  private latestLine = ""
+
   private truckignore: TruckIgnore
+  private catFileInstance = spawn("git", ["cat-file", "--batch"], {cwd: this.repoDir})
   constructor(private cwd: string, private repoDir: string, private branch: string, private outPath?: string) {
     this.truckignore = new TruckIgnore(repoDir)
+    this.catFileInstance.stdout.on("data", (buf) => {
+      this.buffer.push(buf)
+    })
+    this.catFileInstance.stdout.on("end", () => {
+      this.latestLine = Buffer.concat(this.buffer).toString().trim()
+      log.debug("latest: " + this.latestLine)
+      this.buffer = []
+    })
+  }
+
+  deflate2(hash: string) {
+    this.catFileInstance.stdin.write(hash)
+    this.catFileInstance.stdin.emit(hash)
+    log.debug("called with: " + hash)
+    return this.latestLine
   }
 
   async findBranchHead() {
     if (this.branch === null) this.branch = await getCurrentBranch(this.repoDir)
-
     const gitFolder = join(this.repoDir, ".git")
     if (!fsSync.existsSync(gitFolder)) {
       throw Error(`${this.repoDir} is not a git repository`)
@@ -67,7 +87,7 @@ export class Parser {
     name: string,
     hash: string
   ): Promise<GitTreeObject> {
-    const rawContent = await deflateGitObject(this.repoDir, hash)
+    const rawContent = this.deflate2(hash)
     const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
     const children: (GitTreeObject | GitBlobObject)[] = []
@@ -109,7 +129,7 @@ export class Parser {
     name: string,
     hash: string
   ): Promise<GitBlobObject> {
-    const content = await deflateGitObject(this.repoDir, hash)
+    const content = this.deflate2(hash)
     const blob: GitBlobObject = {
       type: "blob",
       hash,
