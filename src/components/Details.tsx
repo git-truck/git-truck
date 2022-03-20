@@ -9,6 +9,7 @@ import { useState } from "react"
 import { AuthorDistFragment } from "./AuthorDistFragment"
 import { AuthorDistOther } from "./AuthorDistOther"
 import { Toggle } from "./Toggle"
+import { InfoTooltip } from "./InfoTooltip"
 
 const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
@@ -135,10 +136,12 @@ function AuthorDistribution(props: {
   ).sort((a, b) => (a[1] < b[1] ? 1 : -1))
 
   if (contribDist.length === 0) return null
+  const tooltip = <InfoTooltip text="Percentage of additions and deletions<br/>the user has done to file historically"/>
   if (contribDist.length <= authorCutoff + 1) {
     return (
       <>
         <DetailsHeading>Author distribution</DetailsHeading>
+        {tooltip}
         <Spacer xs />
         <DetailsEntries>
           <AuthorDistFragment show={true} items={contribDist} />
@@ -150,6 +153,7 @@ function AuthorDistribution(props: {
     <>
       <AuthorDistHeader>
         <DetailsHeading>Author distribution</DetailsHeading>
+        {tooltip}
         <Toggle
           relative={true}
           collapse={collapse}
