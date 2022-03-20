@@ -45,6 +45,7 @@ export interface GitBlobObject extends GitBaseObject {
   name: string
   path: string
   content?: string
+  blameAuthors: Record<string, number>
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject

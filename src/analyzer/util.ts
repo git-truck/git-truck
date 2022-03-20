@@ -134,6 +134,11 @@ export async function setGitSetting(repoDir: string, setting: string, value: str
   log.debug(`Set ${setting} to ${value}`)
 }
 
+export async function gitBlame(repo: string, path: string) {
+  const result = await runProcess(repo, "git", ["blame", path])
+  return result as string
+}
+
 export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
   const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)

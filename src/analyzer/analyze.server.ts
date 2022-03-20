@@ -19,6 +19,7 @@ import {
   getDefaultGitSettingValue,
   resetGitSetting,
   setGitSetting,
+  gitBlame,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, join } from "path"
@@ -159,12 +160,14 @@ async function analyzeBlob(
   hash: string
 ): Promise<GitBlobObject> {
   const content = await deflateGitObject(repo, hash)
+  const blameAuthors = await parseBlame(repo, path)
   const blob: GitBlobObject = {
     type: "blob",
     hash,
     path,
     name,
     content,
+    blameAuthors
   }
   return blob
 }
@@ -175,6 +178,22 @@ function getCommandLine() {
      case 'win32' : return 'start'; // Windows
      default : return 'xdg-open'; // Linux
   }
+}
+
+async function parseBlame(repo: string, path: string) {
+  const cutString = path.slice(path.indexOf("/") + 1)
+  const blame = await gitBlame(repo, cutString)
+  const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
+  const matches = blame.match(blameRegex)
+  const blameAuthors: Record<string, number> = {}
+  matches?.forEach(match => {
+    const author = match.slice(1).slice(0, match.length - 11).trim()
+    if (author !== "Not Committed Yet") {
+      const currentValue = blameAuthors[author] ?? 0
+      blameAuthors[author] = currentValue + 1
+    }
+  })
+  return blameAuthors
 }
 
 export function openFile(path: string) {
