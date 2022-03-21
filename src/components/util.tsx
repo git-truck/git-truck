@@ -165,3 +165,7 @@ export const ClickableText = styled.button`
 export const NonClickableText = styled.span`
   cursor: default;
 `
+
+export function getSearchbarID() {
+  return "git-truck-searchbar"
+}

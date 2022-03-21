@@ -1,10 +1,9 @@
-import { SearchField, Box, Label } from "./util"
+import { SearchField, Box, Label, getSearchbarID } from "./util"
 import styled from "styled-components"
 import { useState } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
-import { useId } from "@react-aria/utils"
 
 const StyledBox = styled(Box)`
   display: flex;
@@ -14,16 +13,15 @@ const StyledBox = styled(Box)`
 export default function SearchBar() {
   const { setSearchText } = useSearch()
   const [value, setValue] = useState("")
-  const id = useId()
 
   useDebounce(() => setSearchText(value), 200, [value])
 
   return (
     <StyledBox>
-      <Label htmlFor={id}>Search</Label>
+      <Label htmlFor={getSearchbarID()}>Search</Label>
       <Spacer xs />
       <SearchField
-        id={id}
+        id={getSearchbarID()}
         value={value}
         type="search"
         placeholder="Enter terms"
