@@ -22,8 +22,8 @@ import { emptyGitCommitHash } from "./constants"
 import { resolve , isAbsolute, join} from "path"
 import TruckIgnore from "./TruckIgnore.server"
 import { performance } from "perf_hooks"
-import yargsParser from "yargs-parser"
 import { hydrateData } from "./hydrate.server"
+import yargs from 'yargs'
 
 import { } from "@remix-run/node"
 
@@ -195,12 +195,10 @@ export async function loadTruckConfig(repoDir: string) {
   return []
 }
 
-export async function parse(rawArgs: string[]) {
-  const args = yargsParser(rawArgs, {
-    configuration: {
-      "duplicate-arguments-array": false,
-    },
-  })
+export async function parse() {
+  const args = yargs.config({
+    extends: './truckconfig.json',
+  }).argv as {[key: string]: string}
 
   if (args.log) {
     setLogLevel(args.log)
