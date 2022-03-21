@@ -14,6 +14,9 @@ import {
   getCurrentBranch,
   getRepoName,
   deflateGitObject,
+  getDefaultQuotePathValue,
+  disableQuotePath,
+  resetQuotePath,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
 import { resolve , isAbsolute, join} from "path"
@@ -224,6 +227,9 @@ export async function parse(rawArgs: string[]) {
 
   const branch = args.branch ?? null
 
+  const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
+  await disableQuotePath(repoDir)
+
   const start = performance.now()
   const [branchHead, branchName] = await describeAsyncJob(
     () => findBranchHead(repoDir, branch),
@@ -267,6 +273,8 @@ export async function parse(rawArgs: string[]) {
   const stop = performance.now()
 
   log.raw(`\nDone in ${formatMs(stop - start)}`)
+
+  await resetQuotePath(repoDir, quotePathDefaultValue)
 
   return data
 }
