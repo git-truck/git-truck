@@ -1,5 +1,4 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Metric, MetricType } from "../metrics"
 
 export const Chart = {
@@ -35,6 +34,6 @@ export function getDefaultOptions() {
     },
     setMetricType: () => {
       throw new Error("No metricTypeSetter provided")
-    },
+    }
   }
 }

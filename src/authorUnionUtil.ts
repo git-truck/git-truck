@@ -14,11 +14,10 @@ export const makeDupeMap = (authors: string[][]) => {
 }
 
 export function unionAuthors(
-  blob: HydratedGitBlobObject,
+  authors: Record<string, number>,
   authorAliasMap: Map<string, string>
 ) {
-  const authorCopy = { ...blob.authors }
-  return Object.entries(authorCopy).reduce<HydratedGitBlobObject["authors"]>(
+  return Object.entries(authors).reduce<HydratedGitBlobObject["authors"]>(
     (newAuthorObject, [authorOrAlias, contributionCount]) => {
       // Lookup the author in the dupe list
       const author = authorAliasMap.get(authorOrAlias)
@@ -44,7 +43,8 @@ export function addAuthorUnion(
 ) {
   for (const child of tree.children) {
     if (child.type === "blob") {
-      child.unionedAuthors = unionAuthors(child, authorUnions)
+      child.unionedAuthors = unionAuthors(child.authors, authorUnions)
+      child.unionedAuthorsBlame = unionAuthors(child.blameAuthors, authorUnions)
     } else {
       addAuthorUnion(child, authorUnions)
     }

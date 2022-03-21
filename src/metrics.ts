@@ -90,7 +90,6 @@ export function getMetricCalcs(
     paletteIndex: 0,
     cache: new Map<string, string>(),
   }
-
   return [
     [
       "FILE_EXTENSION",

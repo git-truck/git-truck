@@ -19,6 +19,7 @@ export function Options() {
         enum={Metric}
         onChange={(metric: MetricType) => setMetricType(metric)}
       />
+      <Spacer />
     </Box>
   )
 }

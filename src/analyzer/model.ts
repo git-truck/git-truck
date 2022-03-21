@@ -54,9 +54,11 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   noLines: number
   authors: Record<string, number>
   unionedAuthors?: Record<string, number>
+  unionedAuthorsBlame?: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
   dominantAuthor?: [string, number]
+  dominantAuthorBlame?: [string, number]
   isBinary?: boolean
 }
 

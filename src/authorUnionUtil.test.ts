@@ -16,6 +16,7 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
     author2: 50,
     author1: 25,
   },
+  blameAuthors: {},
   noCommits: 0,
   type: "blob",
   name: "",
@@ -32,7 +33,7 @@ describe("unionAuthors", () => {
   it("merges authors properly", () => {
     const hydratedGitBlobObject = makeHydratedGitBlobObject()
     const authors = unionAuthors(
-      hydratedGitBlobObject,
+      hydratedGitBlobObject.authors,
       makeDupeMap(authorUnions)
     )
     expect(authors.author1).toEqual(50)
@@ -55,12 +56,13 @@ describe("unionAuthors", () => {
         joglr: 40,
         "Jonas Røssum": 125,
       },
+      blameAuthors: {},
       noLines: 249,
       noCommits: 30,
       lastChangeEpoch: 1646818775,
     }
     const sumBefore = sumContributions(parseTS.authors)
-    const authors = unionAuthors(parseTS, makeDupeMap(authorUnionsTwo))
+    const authors = unionAuthors(parseTS.authors, makeDupeMap(authorUnionsTwo))
 
     expect(authors.joglr).toEqual(307) // Calculated by hand
     expect(authors.tjomson).toEqual(178)
@@ -73,7 +75,7 @@ describe("unionAuthors", () => {
     const hydratedGitBlobObject = makeHydratedGitBlobObject()
     const sumBefore = sumContributions(hydratedGitBlobObject.authors)
     const authors = unionAuthors(
-      hydratedGitBlobObject,
+      hydratedGitBlobObject.authors,
       makeDupeMap(authorUnions)
     )
     const sumAfter = sumContributions(authors)
