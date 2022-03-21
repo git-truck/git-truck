@@ -44,7 +44,7 @@ function printOpen(server) {
   const serverport = server.address().port
   console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
-  if (serverport !== port) console.log("Default/Specified port was used by another process");
+  if (serverport !== (process.env.PORT || 3000)) console.log("Default/Specified port was used by another process");
   console.log(`Express server listening on port ${serverport}`);
   open("http://localhost:" + serverport);
 }
