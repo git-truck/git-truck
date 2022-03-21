@@ -46,7 +46,7 @@
     "react-use-size": "^2.0.4",
     "remix": "^1.2.3",
     "styled-components": "^5.3.3",
-    "yargs-parser": "^21.0.1"
+    "yargs": "^17.4.0"
   },
   "devDependencies": {
     "@remix-run/eslint-config": "^1.2.3",
