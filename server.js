@@ -41,7 +41,7 @@ app.all(
 let port = process.env.PORT || 3000;
 
 function printOpen(server) {
-  port = server.address().port
+  const port = server.address().port
   console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
   console.log(`Express server listening on port ${port}`);
