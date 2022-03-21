@@ -3,7 +3,7 @@ import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { useState } from "react"
 import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
-import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
+import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendData, getMetricDescription, Metric } from "../metrics"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
@@ -38,64 +38,99 @@ const StyledBox = styled(Box)`
 export function Legend() {
   const { metricType } = useOptions()
   const metricCaches = useMetricCaches()
-  const [collapse, setCollapse] = useState<boolean>(true)
-  const {clickedBlob} = useClickedBlob()
 
   if (metricCaches.get(metricType)?.legend === undefined) return null
 
-  if (!isGradientMetric(metricType)) {
-    const items = Array.from(
-      metricCaches.get(metricType)?.legend as PointLegendData
-    ).sort(([, info1], [, info2]) => {
-      if (info1.weight < info2.weight) return 1
-      if (info1.weight > info2.weight) return -1
-      return 0
-    })
+  return (
+    <StyledBox>
+      <strong style={{
+        fontSize: "0.9em",
+        marginBottom: "0.5em"
+      }}>
+        {
+          Metric[metricType]
+        }
+      </strong>
+      <p style={{
+        fontSize: "0.9em",
+        opacity: "0.7",
+        marginBottom: "1em"
+      }}>
+        {getMetricDescription(metricType)}
+      </p>
+      {
+        (isGradientMetric(metricType))
+        ? <GradientMetricLegend metricType={metricType} metricCaches={metricCaches}></GradientMetricLegend>
+        : <PointMetricLegend metricType={metricType} metricCaches={metricCaches}></PointMetricLegend>
+      }
+    </StyledBox>
+  )
+}
 
-    if (items.length === 0) return null
-    if (items.length <= legendCutoff + 1)
-      return (
-        <StyledBox>
-          <LegendFragment show={true} items={items} />
-        </StyledBox>
-      )
-    else
-      return (
-        <StyledBox>
-          <LegendFragment show={true} items={items.slice(0, legendCutoff)} />
-          <LegendFragment show={!collapse} items={items.slice(legendCutoff)} />
-          <LegendOther
-            show={collapse}
-            items={items.slice(legendCutoff)}
-            toggle={() => setCollapse(!collapse)}
-          />
-          <ExpandUp
-            collapse={collapse}
-            toggle={() => setCollapse(!collapse)}
-          />
-        </StyledBox>
-      )
-  } else {
-    const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
+interface MetricLegendProps {
+  metricType: MetricType
+  metricCaches: Map<"FILE_EXTENSION" | "MOST_COMMITS" | "LAST_CHANGED" | "SINGLE_AUTHOR" | "TOP_CONTRIBUTOR", MetricCache>
+}
+
+export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
+  const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
-    const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedBlob?.path ?? "") ?? "")
-    let offset = -1
-    if (blobLightness !== -1) {
-      const min = getLightness(minColor)
-      const max = getLightness(maxColor)
-      offset = (blobLightness - min) / (max - min)
-    }
+  const {clickedBlob} = useClickedBlob()
 
+  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedBlob?.path ?? "") ?? "")
+  let offset = -1
+  if (blobLightness !== -1) {
+    const min = getLightness(minColor)
+    const max = getLightness(maxColor)
+    offset = (blobLightness - min) / (max - min)
+  }
+
+  return (
+    <>
+      <GradientLegendDiv>
+        <LegendLable>{minValue}</LegendLable>
+        <LegendLable>{maxValue}</LegendLable>
+      </GradientLegendDiv>
+      <LegendGradient min={minColor} max={maxColor} />
+      <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>
+    </>
+  )
+}
+
+export function PointMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
+  const [collapse, setCollapse] = useState<boolean>(true)
+
+  const items = Array.from(
+    metricCaches.get(metricType)?.legend as PointLegendData
+  ).sort(([, info1], [, info2]) => {
+    if (info1.weight < info2.weight) return 1
+    if (info1.weight > info2.weight) return -1
+    return 0
+  })
+
+  if (items.length === 0) return null
+  if (items.length <= legendCutoff + 1) {
     return (
-      <Box>
-        <GradientLegendDiv>
-          <LegendLable>{minValue}</LegendLable>
-          <LegendLable>{maxValue}</LegendLable>
-        </GradientLegendDiv>
-        <LegendGradient min={minColor} max={maxColor} />
-        <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>
-      </Box>
+      <>
+        <LegendFragment show={true} items={items} />
+      </>
+    )
+  } else {
+    return (
+      <>
+        <LegendFragment show={true} items={items.slice(0, legendCutoff)} />
+        <LegendFragment show={!collapse} items={items.slice(legendCutoff)} />
+        <LegendOther
+          show={collapse}
+          items={items.slice(legendCutoff)}
+          toggle={() => setCollapse(!collapse)}
+        />
+        <ExpandUp
+          collapse={collapse}
+          toggle={() => setCollapse(!collapse)}
+        />
+      </>
     )
   }
 }
