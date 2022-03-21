@@ -41,17 +41,22 @@ app.all(
 let port = process.env.PORT || 3000;
 
 function printOpen(server) {
-  const port = server.address().port
+  const serverport = server.address().port
   console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
-  console.log(`Express server listening on port ${port}`);
-  open("http://localhost:" + port);
+  if (serverport !== port) console.log("Default/Specified port was used by another process");
+  console.log(`Express server listening on port ${serverport}`);
+  open("http://localhost:" + serverport);
 }
 
-let server = app.listen(port)
-  .on('error', () => {
-    server.close(() => {
-      server = app.listen()
-        .once('listening', () => printOpen(server))});
-  })
-  .once('listening', () => printOpen(server));
+function startServer(port) {
+  let server = app.listen(port)
+    .on('error', () => {
+      server.close(() => {
+        startServer(port+1);
+      })
+    })
+    .once('listening', () => printOpen(server));
+}
+
+startServer(port);
