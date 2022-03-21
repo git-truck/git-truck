@@ -20,12 +20,13 @@ import {
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
 import { resolve , isAbsolute, join} from "path"
-import TruckIgnore from "./TruckIgnore.server"
+import { TruckIgnore } from "./model"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
 import yargs from 'yargs'
 
 import { } from "@remix-run/node"
+import { compile } from "gitignore-parser"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -92,10 +93,10 @@ export async function parseCommitLight(
 export async function parseCommit(
   repo: string,
   repoName: string,
-  hash: string
+  hash: string,
+  truckignore: TruckIgnore
 ): Promise<GitCommitObject> {
   const { tree, ...commit } = await parseCommitLight(repo, hash)
-  const truckignore = new TruckIgnore(repo)
   return {
     ...commit,
     tree: await parseTree(getRepoName(repo), repo, repoName, tree, truckignore),
@@ -137,7 +138,7 @@ async function parseTree(
     const hash = groups["hash"]
     const name = groups["name"]
 
-    if (!truckignore.isAccepted(name)) continue
+    if (!truckignore.accepts(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
 
@@ -198,11 +199,8 @@ export async function loadTruckConfig(repoDir: string) {
 export async function parse() {
   const args = yargs.config({
     extends: './truckconfig.json',
-  }).argv as {[key: string]: string}
+  }).argv as {[key: string]: string | object}
 
-  if (args.log) {
-    setLogLevel(args.log)
-  }
 
   if (args.help || args.h) {
     console.log(`Git Visual
@@ -217,13 +215,20 @@ export async function parse() {
     process.exit(1)
   }
 
+  if (args.log) {
+    setLogLevel(args.log as string)
+  }
+
   const cwd = process.cwd()
 
-  let repoDir = args.path ?? "."
+  let repoDir = (args.path ?? ".") as string
   if (!isAbsolute(repoDir))
     repoDir = resolve(cwd, repoDir)
 
-  const branch = args.branch ?? null
+  const branch = args.branch as string ?? null
+
+  const ignoredString = (args.ignoredFiles as string[] ?? []).toString().replace(/,/g, "\n")
+  const truckignore = compile(ignoredString)
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
   await disableQuotePath(repoDir)
@@ -237,7 +242,7 @@ export async function parse() {
   )
   const repoName = getRepoName(repoDir)
   const repoTree = await describeAsyncJob(
-    () => parseCommit(repoDir, repoName, branchHead),
+    () => parseCommit(repoDir, repoName, branchHead, truckignore),
     "Parsing commit tree",
     "Commit tree parsed",
     "Error parsing commit tree"
@@ -250,7 +255,7 @@ export async function parse() {
   )
 
   const defaultOutPath = resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
-  let outPath = resolve(args.out ?? defaultOutPath)
+  let outPath = resolve(args.out as string ?? defaultOutPath)
   if (!isAbsolute(outPath))
     outPath = resolve(cwd, outPath)
 
