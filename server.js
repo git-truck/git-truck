@@ -38,11 +38,16 @@ app.all(
   })
 );
 
-const port = process.env.PORT || 3000;
+let port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+function printOpen(server) {
+  port = server.address().port
   console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
   console.log(`Express server listening on port ${port}`);
   open("http://localhost:" + port);
-});
+}
+
+let server = app.listen(port).on('error', () => {
+  server.close(() => {server = app.listen().once('listening', () => printOpen(server))});
+}).once('listening', () => printOpen(server));
