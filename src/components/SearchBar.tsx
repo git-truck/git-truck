@@ -1,6 +1,6 @@
 import { SearchField, Box, Label } from "./util"
 import styled from "styled-components"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
@@ -18,10 +18,17 @@ export default function SearchBar() {
 
   useDebounce(() => setSearchText(value), 200, [value])
 
-  document.body.addEventListener("keydown", (event) => {
+  const searchOverride = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === "f") {
       event.preventDefault()
       document.getElementById(id)?.focus()
+    }
+  }
+
+  useEffect(() => {
+    document.body.addEventListener("keydown", searchOverride)
+    return () => {
+      document.body.removeEventListener("keydown", searchOverride)
     }
   })
 
