@@ -7,7 +7,6 @@ import {
   ScrollRestoration,
 } from "remix";
 import type { MetaFunction } from "remix";
-import { getSearchbarID } from "./components/util";
 
 export const meta: MetaFunction = () => {
   return { title: "Git Truck 🚛" };
@@ -25,14 +24,7 @@ export default function App() {
           ? "__STYLES__"
           : null}
       </head>
-      <body 
-        onKeyDown={(event) => {
-          if (event.keyCode === 114 || (event.ctrlKey && event.keyCode === 70)) {
-            event.preventDefault()
-            document.getElementById(getSearchbarID())?.focus()
-          }
-        }}
-        >
+      <body>
         <Outlet />
         <ScrollRestoration />
         <Scripts />
