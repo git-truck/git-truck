@@ -180,22 +180,6 @@ async function parseBlob(
   return blob
 }
 
-interface truckConfigResponse {
-  unionedAuthors: string[][]
-}
-
-export async function loadTruckConfig(repoDir: string) {
-  try {
-    const truckConfig = JSON.parse(
-      readFileSync(join(repoDir, "truckconfig.json"), "utf-8")
-    ) as truckConfigResponse
-    return truckConfig.unionedAuthors
-  } catch (e) {
-    log.info("No truckignore found: " + e)
-  }
-  return []
-}
-
 export async function parse() {
   const args = yargs.config({
     extends: './truckconfig.json',
@@ -259,7 +243,7 @@ export async function parse() {
   if (!isAbsolute(outPath))
     outPath = resolve(cwd, outPath)
 
-  const authorUnions = await loadTruckConfig(repoDir)
+  const authorUnions = args.unionedAuthors as string[][]
   const data = {
     repo: repoName,
     branch: branchName,
