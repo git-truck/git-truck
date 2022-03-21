@@ -29,6 +29,28 @@ npx git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 |  `--out`   |    ./data.json     |                        output path for data file                        |
 |  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
 
+### [Configuration](#configuration)
+You can add a `truckconfig.json` file to the root of your project, where you can define the arguments you want.
+Additionally you can define which git-aliases should be considered as the same person.
+You can also define files to ignore.
+Example:
+
+```json
+{
+  "log": "debug",
+  "branch": "main",
+  "unionedAuthors": [
+    ["Bob", "Bobby Bob"],
+    ["Alice", "aliiii", "alice alice"],
+  ],
+  "ignoredFiles": [
+    "package-lock.json", 
+    "*.bin", 
+    "*.svg"
+  ]
+}
+```
+
 ## [Development](#development)
 
 1. Install dependencies with `npm install`
