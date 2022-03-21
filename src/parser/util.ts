@@ -125,7 +125,6 @@ export async function disableQuotePath(repoDir: string) {
 }
 
 export async function resetQuotePath(repoDir: string, value: string) {
-  log.debug("value: " +  value)
   if (!value) {
     await runProcess(repoDir, "git", ["config", "--unset", "core.quotepath"])
     log.debug("Unset quotePath")
