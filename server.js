@@ -48,6 +48,10 @@ function printOpen(server) {
   open("http://localhost:" + port);
 }
 
-let server = app.listen(port).on('error', () => {
-  server.close(() => {server = app.listen().once('listening', () => printOpen(server))});
-}).once('listening', () => printOpen(server));
+let server = app.listen(port)
+  .on('error', () => {
+    server.close(() => {
+      server = app.listen()
+        .once('listening', () => printOpen(server))});
+  })
+  .once('listening', () => printOpen(server));
