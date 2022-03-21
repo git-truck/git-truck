@@ -183,21 +183,7 @@ async function parseBlob(
 export async function parse() {
   const args = yargs.config({
     extends: './truckconfig.json',
-  }).argv as {[key: string]: string | object}
-
-
-  if (args.help || args.h) {
-    console.log(`Git Visual
-
-  Usage: ./start.sh <args> or ./dev.sh <args>
-
-  Options:
-    --path <path to git repository> (default: current directory)
-    --branch <branch name> (default: checked out branch)
-    --out <output path for json file> (default: ./app/build/data.json)
-    --help, -h: Show this help message`)
-    process.exit(1)
-  }
+  }).argv as {[key: string]: unknown}
 
   if (args.log) {
     setLogLevel(args.log as string)
