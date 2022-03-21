@@ -111,13 +111,13 @@ function ColorMetricDependentInfo(props: {
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.authors)
+        ? Object.entries(props.hoveredBlob?.unionedAuthors ?? [])
         : []
       switch (authors.length) {
         case 0:
           return null
         case 1:
-          return <>{authors[0][0]} dominates</>
+          return <>{authors[0][0]} is the only author</>
         default:
           return <>{authors.length} authors</>
       }
