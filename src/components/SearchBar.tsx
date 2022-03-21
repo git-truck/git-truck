@@ -19,7 +19,6 @@ export default function SearchBar() {
   useDebounce(() => setSearchText(value), 200, [value])
 
   document.body.addEventListener("keydown", (event) => {
-    console.log("key pressed " + event.key)
     if (event.ctrlKey && event.key === "f") {
       event.preventDefault()
       document.getElementById(id)?.focus()
