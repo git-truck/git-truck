@@ -4,6 +4,7 @@ import {
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
+  ParserData,
   Person,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -210,6 +211,17 @@ export async function parse() {
     "Error finding branch head"
   )
   const repoName = getRepoName(repoDir)
+
+  const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
+  if (fsSync.existsSync(dataPath)) {
+    const path = getOutPathFromRepoAndBranch(repoName, branchName)
+    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as ParserData
+    // Check if the current branchHead matches the hash of the parsed commit from the cache
+    const branchHeadMatches = branchHead === cachedData.commit.hash
+    const truckIgnoreIsTheSame = false
+    if (branchHeadMatches && truckIgnoreIsTheSame) return cachedData
+  }
+
   const repoTree = await describeAsyncJob(
     () => parseCommit(repoDir, repoName, branchHead, truckignore),
     "Parsing commit tree",
@@ -223,7 +235,7 @@ export async function parse() {
     "Error hydrating commit tree"
   )
 
-  const defaultOutPath = resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
+  const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
   let outPath = resolve(args.out as string ?? defaultOutPath)
   if (!isAbsolute(outPath))
     outPath = resolve(process.cwd(), outPath)
@@ -253,4 +265,8 @@ export async function parse() {
 
 export const exportForTest = {
   getCoAuthors,
+}
+
+export function getOutPathFromRepoAndBranch(repoName: string, branchName: string) {
+  return resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
 }
