@@ -1,5 +1,4 @@
 {
-  "log": "debug",
   "branch": "main",
   "unionedAuthors": [
     ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
@@ -8,8 +7,8 @@
     ["emiljapelt", "Emil Jäpelt"]
   ],
   "ignoredFiles": [
-    "package-lock.json", 
-    "*.bin", 
+    "package-lock.json",
+    "*.bin",
     "*.svg"
   ]
 }
