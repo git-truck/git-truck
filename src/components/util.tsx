@@ -1,4 +1,5 @@
 import styled from "styled-components"
+import { Link } from "remix"
 
 export const BoxTitle = styled.h2`
   font-size: 1.5em;
@@ -19,9 +20,9 @@ export const BoxSubTitle = styled.h2`
   color: var(--title-color);
 `
 
-export const CloseButton = styled.button`
-  background: none;
-  border: none;
+export const NavigateBackButton = styled(Link)`
+  color: #000;
+  text-decoration: none;
   font-size: larger;
   position: absolute;
   top: calc(var(--unit));
@@ -164,4 +165,9 @@ export const ClickableText = styled.button`
 
 export const NonClickableText = styled.span`
   cursor: default;
+`
+
+export const InlineCode = styled.code`
+  display: inline-block;
+  font-family: monospace;
 `

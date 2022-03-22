@@ -14,4 +14,8 @@
     4.4px 4.4px 14.2px hsla(0, 0%, 0%, 0.039),
     9.1px 9.1px 29.2px hsla(0, 0%, 0%, 0.031), 25px 25px 80px hsla(0, 0%, 0%, 0.022);
   --small-shadow: 0.9px 0.9px 1.7px hsla(0, 0%, 0%, 0.5);
+
+  --hover-transition-duration: 200ms;
+  --button-bg: hsl(0, 0%, 80%);
+  --button-hovered-bg: hsl(0, 0%, 70%);
 }

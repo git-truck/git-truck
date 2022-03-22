@@ -189,11 +189,10 @@ export async function parse() {
     setLogLevel(args.log as string)
   }
 
-  const cwd = process.cwd()
 
   let repoDir = (args.path ?? ".") as string
   if (!isAbsolute(repoDir))
-    repoDir = resolve(cwd, repoDir)
+    repoDir = resolve(process.cwd(), repoDir)
 
   const branch = args.branch as string ?? null
 
@@ -227,7 +226,7 @@ export async function parse() {
   const defaultOutPath = resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
   let outPath = resolve(args.out as string ?? defaultOutPath)
   if (!isAbsolute(outPath))
-    outPath = resolve(cwd, outPath)
+    outPath = resolve(process.cwd(), outPath)
 
   const authorUnions = args.unionedAuthors as string[][]
   const data = {
