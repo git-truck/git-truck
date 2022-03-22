@@ -12,8 +12,6 @@ export type ChartType = keyof typeof Chart
 export interface Options {
   metricType: MetricType
   chartType: ChartType
-  clickedBlob: HydratedGitBlobObject | null
-  setClickedBlob: (blob: HydratedGitBlobObject | null) => void
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
 }
@@ -32,10 +30,6 @@ export function getDefaultOptions() {
   return {
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
-    clickedBlob: null,
-    setClickedBlob: () => {
-      throw new Error("No setClickedBlob function provided")
-    },
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
     },

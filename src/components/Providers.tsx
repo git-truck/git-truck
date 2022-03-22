@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react"
+import { SSRProvider } from "@react-aria/ssr"
 import {
   getMetricCalcs,
   MetricCache,
@@ -24,15 +25,18 @@ interface ProvidersProps {
 }
 
 export function Providers({ children, data }: ProvidersProps) {
-  const [metricState, setMetricState] = useState<{
-    metricCaches: Map<MetricType, MetricCache> | null
-    errorMessage: string | null
-  }>({ metricCaches: null, errorMessage: null })
+
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
   const [path, setPath] = useState(data.repo)
 
-  useEffect(() => {
+  const metricState: {
+    metricCaches: Map<MetricType, MetricCache> | null
+    errorMessage: string | null
+  } = useMemo(() => {
+    if (!data) {
+      return { metricCaches: null, errorMessage: null }
+    }
     try {
       // TODO: Move this to index.tsx loader function
       const authorAliasMap = makeDupeMap(data.authorUnions)
@@ -43,12 +47,12 @@ export function Providers({ children, data }: ProvidersProps) {
         getMetricCalcs(data.commit),
         metricCaches
       )
-      setMetricState({ metricCaches, errorMessage: null })
+      return ({ metricCaches, errorMessage: null })
     } catch (e) {
-      setMetricState({
+      return {
         metricCaches: null,
         errorMessage: (e as Error).message,
-      })
+      }
     }
   }, [data])
 
@@ -110,16 +114,18 @@ export function Providers({ children, data }: ProvidersProps) {
   }
 
   return (
-    <DataContext.Provider value={data}>
-      <MetricContext.Provider value={metricCaches}>
-        <OptionsContext.Provider value={optionsValue}>
-          <SearchContext.Provider value={{ searchText, setSearchText }}>
-            <PathContext.Provider value={{ path, setPath }}>
-              {children}
-            </PathContext.Provider>
-          </SearchContext.Provider>
-        </OptionsContext.Provider>
-      </MetricContext.Provider>
-    </DataContext.Provider>
+    <SSRProvider>
+      <DataContext.Provider value={data}>
+        <MetricContext.Provider value={metricCaches}>
+          <OptionsContext.Provider value={optionsValue}>
+            <SearchContext.Provider value={{ searchText, setSearchText }}>
+              <PathContext.Provider value={{ path, setPath }}>
+                {children}
+              </PathContext.Provider>
+            </SearchContext.Provider>
+          </OptionsContext.Provider>
+        </MetricContext.Provider>
+      </DataContext.Provider>
+    </SSRProvider>
   )
 }

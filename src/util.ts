@@ -31,3 +31,5 @@ export function dateFormatRelative(epochTime: number) {
   if (hours === 1) return "1 hour ago"
   return "<1 hour ago"
 }
+
+export const last = <T>(arr: T[]) => arr[arr.length - 1]

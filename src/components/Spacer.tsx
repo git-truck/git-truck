@@ -6,6 +6,7 @@ export enum Spacing {
   md = 1,
   lg = 1.5,
   xl = 2,
+  xxl = 3,
 }
 
 type SpacerProps = { horizontal?: boolean } & {
@@ -30,6 +31,10 @@ type SpacerProps = { horizontal?: boolean } & {
    * Extra large spacing
    */
   xl?: boolean
+  /**
+   * Extra extra large spacing
+   */
+  xxl?: boolean
 }
 
 export const Spacer = (props: SpacerProps) => {
@@ -44,18 +49,22 @@ export const Spacer = (props: SpacerProps) => {
       ? Spacing.lg
       : props.xl
       ? Spacing.xl
+      : props.xxl
+      ? Spacing.xxl
       : Spacing.md
 
+  const sizeProp = `calc(${spacing} * var(--unit))`
   const styles = {
-    height: props.horizontal ? "1px" : `calc(${spacing} * var(--unit))`,
-    width: props.horizontal ? `calc(${spacing} * var(--unit))` : "1px",
+    height: props.horizontal ? "1px" : sizeProp,
+    width: props.horizontal ? sizeProp : "1px",
   } as CSSProperties
   return <div aria-hidden style={styles} />
 }
 
 Spacer.defaultProps = {
+  size: null,
   sm: false,
-  md: true,
+  md: false,
   lg: false,
   xl: false,
   horizontal: false,

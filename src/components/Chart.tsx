@@ -26,6 +26,7 @@ import { useSearch } from "../contexts/SearchContext"
 import { useData } from "../contexts/DataContext"
 import { animated, useSpring } from "@react-spring/web"
 import { useMetricCaches } from "../contexts/MetricContext"
+import { useNavigate } from "remix"
 
 import {
   hierarchy,
@@ -51,11 +52,12 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
+  const navigate = useNavigate()
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
   const data = useData()
-  const { chartType, setClickedBlob } = useOptions()
+  const { chartType } = useOptions()
   const { path } = usePath();
 
   const nodes = useMemo(() => {
@@ -72,12 +74,12 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
+        onClick: () => navigate(`./details/${global.btoa(JSON.stringify(d.data))}`),
         onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
         onMouseOut: () => setHoveredBlob(null),
       }
       : {
-        onClick: () => setClickedBlob(null),
+        onClick: () => navigate("/repo"),
         onMouseOver: () => setHoveredBlob(null),
         onMouseOut: () => setHoveredBlob(null),
       }
@@ -97,7 +99,7 @@ export function Chart(props: ChartProps) {
           )
         })}
       </SVG>
-      <Tooltip hoveredBlob={hoveredBlob} />
+      {typeof document !== "undefined" ? <Tooltip hoveredBlob={hoveredBlob} /> : null}
     </>
   )
 }
