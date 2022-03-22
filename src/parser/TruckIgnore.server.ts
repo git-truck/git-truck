@@ -1,4 +1,4 @@
-import { readFileSync, openSync, writeSync, close } from "fs"
+import { appendFileSync, readFileSync, openSync, writeSync, close } from "fs"
 import { compile } from "gitignore-parser"
 import { parseArgs } from "./args.server"
 import { log } from "./log.server"
@@ -28,13 +28,6 @@ export default class TruckIgnore {
   }
 
   public addIgnoreEntry(line: string) {
-    const data = readFileSync(this.truckIgnorePath)
-    const fd = openSync(this.truckIgnorePath, "w+")
-    const insert = Buffer.from(line.trim() + "\n")
-    writeSync(fd, insert, 0, insert.length, 0)
-    writeSync(fd, data, 0, data.length, insert.length)
-    close(fd, (err) => {
-      if (err) throw err
-    })
+    appendFileSync(this.truckIgnorePath, "\n" + line.trim())
   }
 }
