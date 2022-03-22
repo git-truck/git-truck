@@ -54,7 +54,7 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       <NavigateBackButton
         to=".."
       >
-        &times;gi
+        &times;
       </NavigateBackButton>
       <Spacer xl />
       <BoxTitle title={blob.name}>{blob.name}</BoxTitle>
