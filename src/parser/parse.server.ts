@@ -197,8 +197,8 @@ export async function parse() {
 
   const branch = args.branch as string ?? null
 
-  const ignoredString = (args.ignoredFiles as string[] ?? []).toString().replace(/,/g, "\n")
-  const truckignore = compile(ignoredString)
+  const ignoredFilesString = (args.ignoredFiles as string[] ?? []).join("\n")
+  const truckignore = compile(ignoredFilesString)
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
   await disableQuotePath(repoDir)
