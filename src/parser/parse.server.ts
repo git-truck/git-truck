@@ -4,7 +4,6 @@ import {
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
-  HydratedGitTreeObject,
   ParserData,
   ParserDataInterfaceVersion,
   Person,
@@ -27,8 +26,9 @@ import { resolve, isAbsolute, join } from "path"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
-import ignore, { Ignore } from "ignore"
 import { getArgs } from "./args.server"
+import ignore from "ignore"
+import { applyIgnore, applyMetrics, initMetrics } from "./postprocessing.server"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -301,7 +301,7 @@ export async function parse(useCache = true) {
   const truckignore = ignore().add(ignoredFiles)
   data.commit.tree = applyIgnore(data.commit.tree, truckignore)
   initMetrics(data)
-  data.commit.tree = await applyMetrics(data, data.commit.tree)
+  data.commit.tree = applyMetrics(data, data.commit.tree)
 
   const stop = performance.now()
 
@@ -310,59 +310,6 @@ export async function parse(useCache = true) {
   await resetQuotePath(repoDir, quotePathDefaultValue)
 
   return data
-}
-
-function applyIgnore(
-  tree: HydratedGitTreeObject,
-  truckIgnore: Ignore
-): HydratedGitTreeObject {
-  return {
-    ...tree,
-    children: tree.children
-      .filter((child) => {
-        return !truckIgnore.ignores(child.path)
-      })
-      .map((child) => {
-        if (child.type === "tree") return applyIgnore(child, truckIgnore)
-        return child
-      }),
-  }
-}
-
-function initMetrics(data: ParserData) {
-  data.commit.minNoCommits = Number.MAX_VALUE
-  data.commit.maxNoCommits = Number.MIN_VALUE
-  data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE
-  data.commit.newestLatestChangeEpoch = Number.MIN_VALUE
-}
-
-function applyMetrics(
-  data: ParserData,
-  currentTree: HydratedGitTreeObject
-): HydratedGitTreeObject {
-  return {
-    ...currentTree,
-    children: currentTree.children.map((current) => {
-      if (current.type === "tree") return applyMetrics(data, current)
-      if (!current.lastChangeEpoch) return current
-
-      const numCommits = current.noCommits
-
-      if (numCommits < data.commit.minNoCommits)
-        data.commit.minNoCommits = numCommits
-      if (numCommits > data.commit.maxNoCommits)
-        data.commit.maxNoCommits = numCommits
-
-      if (current.lastChangeEpoch > data.commit.newestLatestChangeEpoch) {
-        data.commit.newestLatestChangeEpoch = current.lastChangeEpoch
-      }
-
-      if (current.lastChangeEpoch < data.commit.oldestLatestChangeEpoch) {
-        data.commit.oldestLatestChangeEpoch = current.lastChangeEpoch
-      }
-      return current
-    }),
-  }
 }
 
 export const exportForTest = {
