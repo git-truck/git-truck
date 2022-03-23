@@ -62,9 +62,6 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
         <AuthorDistribution currentClickedBlob={blob} />
       )}
       <Spacer lg />
-      {state === "loading" ? (<><div>Parsing... please wait</div>
-        <Spacer lg />
-      </>) : null}
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton disabled={state === "submitting"}>
