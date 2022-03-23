@@ -18,8 +18,5 @@
       "emiljapelt",
       "Emil Jäpelt"
     ]
-  ],
-  "ignoredFiles": [
-    "package-lock.json"
   ]
 }
