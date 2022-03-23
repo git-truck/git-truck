@@ -11,7 +11,7 @@ export interface TruckUserConfig {
   out?: string
   path?: string
   unionedAuthors?: string[][]
-  ignoredFiles?: string[]
+  hiddenFiles?: string[]
 }
 
 export interface TruckConfig {
@@ -20,16 +20,16 @@ export interface TruckConfig {
   branch: string
   path: string
   unionedAuthors: string[][]
-  ignoredFiles: string[]
+  hiddenFiles: string[]
 }
 
 // Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 1
+export const AnalyzerDataInterfaceVersion = 2
 
 export interface AnalyzerData {
   cached: boolean
   interfaceVersion: typeof AnalyzerDataInterfaceVersion
-  ignoredFiles: string[]
+  hiddenFiles: string[]
   repo: string
   branch: string
   commit: HydratedGitCommitObject

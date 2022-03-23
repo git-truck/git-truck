@@ -43,9 +43,9 @@ Example:
     ["Bob", "Bobby Bob"],
     ["Alice", "aliiii", "alice alice"],
   ],
-  "ignoredFiles": [
-    "package-lock.json", 
-    "*.bin", 
+  "hiddenFiles": [
+    "package-lock.json",
+    "*.bin",
     "*.svg"
   ]
 }
