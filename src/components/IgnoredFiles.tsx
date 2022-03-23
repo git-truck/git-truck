@@ -24,19 +24,23 @@ const StyledButton = styled.button`
   align-items: center;
   justify-items: center;
 
-  & > :first-child {
+  & > #eye {
     display: none;
   }
-  & > :last-child {
+  & > #eyeslash {
     opacity: 0.5;
   }
-  &:hover > :first-child  {
+  &:hover > #eye {
     display: block;
   }
-  &:hover > :last-child {
+  &:hover > #eyeslash {
     display: none;
   }
 `
+
+
+
+
 
 export function IgnoredFiles() {
   const [collapse, setCollapse] = useBoolean(false)
@@ -54,8 +58,8 @@ export function IgnoredFiles() {
         <InlineForm method="post" action="/repo/">
           <input type="hidden" name="unignore" value={ignored} />
           <StyledButton title="Show file" disabled={transitionState.state === "submitting"}>
-            <FontAwesomeIcon icon={faEyeSlash} />
-            <FontAwesomeIcon icon={faEye} />
+            <FontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
+            <FontAwesomeIcon id="eye" icon={faEye} />
           </StyledButton>
         </InlineForm>
       </li>)}
