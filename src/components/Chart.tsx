@@ -17,6 +17,7 @@ import {
   bubblePadding,
   searchMatchColor,
   estimatedLetterWidth,
+  EstimatedLetterHeightForDirText,
 } from "../const"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
 import styled from "styled-components"
@@ -86,7 +87,7 @@ export function Chart(props: ChartProps) {
       <SVG
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${props.size.width} ${props.size.height-14}`}
+        viewBox={`0 0 ${props.size.width} ${props.size.height-EstimatedLetterHeightForDirText}`}
       >
         {nodes?.descendants().map((d, i) => {
           return (
