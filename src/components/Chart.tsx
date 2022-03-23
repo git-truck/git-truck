@@ -87,7 +87,7 @@ export function Chart(props: ChartProps) {
       <SVG
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${props.size.width} ${props.size.height-EstimatedLetterHeightForDirText}`}
+        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
           return (
