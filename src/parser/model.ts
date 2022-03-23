@@ -5,7 +5,31 @@ export interface GitBaseObject {
   hash: string
 }
 
+export interface TruckUserConfig {
+  log?: string
+  branch?: string
+  out?: string
+  path?: string
+  unionedAuthors?: string[][]
+  ignoredFiles?: string[]
+}
+
+export interface TruckConfig {
+  log?: string
+  out?: string
+  branch: string
+  path: string
+  unionedAuthors: string[][]
+  ignoredFiles: string[]
+}
+
+// Bump this if ParserData interface chances
+export const ParserDataInterfaceVersion = 1
+
 export interface ParserData {
+  cached: boolean
+  interfaceVersion: typeof ParserDataInterfaceVersion
+  ignoredFiles: string[]
   repo: string
   branch: string
   commit: HydratedGitCommitObject

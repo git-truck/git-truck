@@ -2,7 +2,7 @@
  * @type {import('@remix-run/dev').AppConfig}
  */
 module.exports = {
-  server: "./server.js",
+  server: "./server.ts",
   ignoredRouteFiles: [".*", "components/*"],
   serverDependenciesToBundle: [
     "styled-components",

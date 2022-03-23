@@ -15,6 +15,7 @@ import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
 import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
+import { IgnoredFiles } from "~/components/IgnoredFiles";
 
 export function links() {
   return [appStyles,
@@ -27,9 +28,23 @@ export function links() {
       }))
 }
 
+let useCacheNextTime = false
+
 export const loader: LoaderFunction = async () => {
-  const data = await parse()
+  const useCache = useCacheNextTime
+  const data = await parse(useCache)
+  useCacheNextTime = false
   return json<ParserData>(data)
+}
+
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData()
+  const refresh = formData.get("refresh");
+
+  if (refresh) {
+    useCacheNextTime = true
+  }
+  return null
 }
 
 export default function Index() {
@@ -46,9 +61,10 @@ export default function Index() {
           <SearchBar />
           <Spacer />
           <Outlet />
+          <IgnoredFiles />
           <Legend />
         </SidePanel>
-        <Main />
+        {typeof document !== "undefined" ? <Main /> : null}
       </Container>
     </Providers>
   );

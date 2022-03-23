@@ -11,7 +11,7 @@ import { useState } from "react"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Toggle } from "~/components/Toggle"
-import TruckIgnore from "~/parser/TruckIgnore.server"
+import { getArgs, updateTruckConfig } from "~/parser/parse.server"
 
 interface DetailsData {
   blob?: HydratedGitBlobObject
@@ -30,14 +30,20 @@ export const action: ActionFunction = async ({ request }) => {
   const ignore = data.get("ignore")
 
   if (ignore && typeof ignore === "string") {
-    new TruckIgnore().addIgnoreEntry(ignore)
+    await updateTruckConfig(getArgs().path, prevConfig => {
+      const ignoredFilesSet = new Set(prevConfig?.ignoredFiles ?? [])
+      ignoredFilesSet.add(ignore)
+
+      return ({
+      ...prevConfig,
+      ignoredFiles: Array.from(ignoredFilesSet.values())
+    })})
   }
   return null
 }
 
 export default function DetailsRoute() {
   const loaderData = useLoaderData<DetailsData>()
-  const transitionState = useTransition()
 
   if (loaderData?.blob) {
     return <Details blob={loaderData.blob} />
@@ -47,7 +53,7 @@ export default function DetailsRoute() {
 
 function Details({ blob }: { blob: HydratedGitBlobObject }) {
   const extension = last(blob.name.split("."))
-  const { state, submission } = useTransition()
+  const { state } = useTransition()
 
   return (
     <Box>
