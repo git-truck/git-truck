@@ -30,7 +30,7 @@ export const action: ActionFunction = async ({ request }) => {
   const ignore = data.get("ignore")
 
   if (ignore && typeof ignore === "string") {
-    await updateTruckConfig(getArgs().path, prevConfig => {
+    await updateTruckConfig((await getArgs()).path, prevConfig => {
       const ignoredFilesSet = new Set(prevConfig?.ignoredFiles ?? [])
       ignoredFilesSet.add(ignore)
 
@@ -83,23 +83,19 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       {state === "loading" ? (<><div>Parsing... please wait</div>
         <Spacer lg />
       </>) : null}
-      <div style={{
-        display: "flex",
-      }}>
-        <Form method="post">
-          <input type="hidden" name="ignore" value={blob.name} />
-          <IgnoreButton disabled={state === "submitting"}>
-            Ignore <InlineCode>{blob.name}</InlineCode>
-          </IgnoreButton>
-        </Form>
-        <Spacer horizontal />
         <Form method="post">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton disabled={state === "submitting"}>
-            Ignore <InlineCode>.{extension}</InlineCode> files
+            Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
           </IgnoreButton>
         </Form>
-      </div>
+        <Spacer />
+        <Form method="post">
+          <input type="hidden" name="ignore" value={blob.name} />
+          <IgnoreButton disabled={state === "submitting"}>
+            Ignore this file
+          </IgnoreButton>
+        </Form>
     </Box>
   )
 }
