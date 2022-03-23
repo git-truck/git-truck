@@ -30,6 +30,11 @@ const GradArrow = styled.i<{ visible: boolean, position: number }>`
   filter: drop-shadow(0px -2px 0.5px #fff);
 `
 
+const StyledBox = styled(Box)`
+  position: sticky;
+  bottom: 0;
+`
+
 export function Legend() {
   const { metricType } = useOptions()
   const metricCaches = useMetricCaches()
@@ -48,13 +53,13 @@ export function Legend() {
     if (items.length === 0) return null
     if (items.length <= legendCutoff + 1)
       return (
-        <Box>
+        <StyledBox>
           <LegendFragment show={true} items={items} />
-        </Box>
+        </StyledBox>
       )
     else
       return (
-        <Box>
+        <StyledBox>
           <LegendFragment show={true} items={items.slice(0, legendCutoff)} />
           <LegendFragment show={!collapse} items={items.slice(legendCutoff)} />
           <LegendOther
@@ -67,7 +72,7 @@ export function Legend() {
             collapse={collapse}
             toggle={() => setCollapse(!collapse)}
           />
-        </Box>
+        </StyledBox>
       )
   } else {
     const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
