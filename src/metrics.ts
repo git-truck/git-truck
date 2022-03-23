@@ -26,9 +26,9 @@ export function getMetricDescription(metric: MetricType): string {
     case "LAST_CHANGED":
       return "Where are the most recent or least recent commits made?"
     case "SINGLE_AUTHOR":
-      return "Which files are authored by only 1 person, throughout the repository's history?"
+      return "Which files are authored by only one person, throughout the repository's history?"
     case "TOP_CONTRIBUTOR":
-      return "Which person have made the most line-changes to a file, throughout the repository's history?"
+      return "Which person has made the most line-changes to a file, throughout the repository's history?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
