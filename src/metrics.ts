@@ -10,7 +10,7 @@ import { getColorFromExtension } from "./extension-color"
 export const Metric = {
   FILE_EXTENSION: "File extension",
   MOST_COMMITS: "Most commits",
-  LAST_CHANGED: "Time of last change",
+  LAST_CHANGED: "Last changed",
   SINGLE_AUTHOR: "Single author",
   TOP_CONTRIBUTOR: "Top contributor",
 }
@@ -77,8 +77,8 @@ export function getMetricCalcs(
 ][] {
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(
-    commit.oldestLatestChangeEpoch,
-    commit.newestLatestChangeEpoch
+    commit.newestLatestChangeEpoch,
+    commit.oldestLatestChangeEpoch
   )
   const authorColorState = {
     palette: distinctColors({ count: 100 }),
@@ -122,10 +122,10 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            dateFormatLong(commit.oldestLatestChangeEpoch),
             dateFormatLong(commit.newestLatestChangeEpoch),
-            coldmap.getColor(commit.oldestLatestChangeEpoch),
+            dateFormatLong(commit.oldestLatestChangeEpoch),
             coldmap.getColor(commit.newestLatestChangeEpoch),
+            coldmap.getColor(commit.oldestLatestChangeEpoch),
           ]
         }
         coldmap.setColor(blob, cache)
