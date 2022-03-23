@@ -11,7 +11,6 @@ import { useState } from "react"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Toggle } from "~/components/Toggle"
-import { getArgs, updateTruckConfig } from "~/parser/parse.server"
 
 interface DetailsData {
   blob?: HydratedGitBlobObject
