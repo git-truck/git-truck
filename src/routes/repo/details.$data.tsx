@@ -25,24 +25,6 @@ export const loader: LoaderFunction = async ({ params, }) => {
   }
 }
 
-export const action: ActionFunction = async ({ request }) => {
-  const data = await request.formData()
-  const ignore = data.get("ignore")
-
-  if (ignore && typeof ignore === "string") {
-    await updateTruckConfig((await getArgs()).path, prevConfig => {
-      const ignoredFilesSet = new Set((prevConfig?.ignoredFiles ?? []).map(x => x.trim()))
-      ignoredFilesSet.add(ignore)
-
-      return ({
-      ...prevConfig,
-      ignoredFiles: Array.from(ignoredFilesSet.values())
-    })})
-  }
-
-  return null
-}
-
 export default function DetailsRoute() {
   const loaderData = useLoaderData<DetailsData>()
 
@@ -83,14 +65,14 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       {state === "loading" ? (<><div>Parsing... please wait</div>
         <Spacer lg />
       </>) : null}
-        <Form method="post">
+        <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton disabled={state === "submitting"}>
             Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
           </IgnoreButton>
         </Form>
         <Spacer />
-        <Form method="post">
+        <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={blob.name} />
           <IgnoreButton disabled={state === "submitting"}>
             Ignore this file
