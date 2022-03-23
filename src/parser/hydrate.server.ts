@@ -145,9 +145,6 @@ function updateBlob_mut(
 ) {
   const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
 
-  if (noCommits < data.minNoCommits) data.minNoCommits = noCommits
-  if (noCommits > data.maxNoCommits) data.maxNoCommits = noCommits
-
   const isBinary = isBinaryFile(blob)
 
   const hydratedBlob = {
@@ -173,12 +170,6 @@ function updateBlob_mut(
   if (!hydratedBlob.lastChangeEpoch) {
     const epoch = currCommit.author.timestamp
     hydratedBlob.lastChangeEpoch = epoch
-
-    if (epoch > data.newestLatestChangeEpoch)
-      data.newestLatestChangeEpoch = epoch
-
-    if (epoch < data.oldestLatestChangeEpoch)
-      data.oldestLatestChangeEpoch = epoch
   }
 
   Object.assign(blob, hydratedBlob)

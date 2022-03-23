@@ -4,11 +4,11 @@ import {
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
+  HydratedGitTreeObject,
   ParserData,
   ParserDataInterfaceVersion,
   Person,
   TruckConfig,
-  TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import {
@@ -23,13 +23,13 @@ import {
   resetQuotePath,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
-import { resolve , isAbsolute, join} from "path"
+import { resolve, isAbsolute, join } from "path"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
-import yargs from 'yargs'
-
-import { } from "@remix-run/node"
+import {} from "@remix-run/node"
 import ignore, { Ignore } from "ignore"
+import yargsParser from "yargs-parser"
+import { tree } from "d3-hierarchy"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -96,13 +96,12 @@ export async function parseCommitLight(
 export async function parseCommit(
   repo: string,
   repoName: string,
-  hash: string,
-  truckignore: Ignore
+  hash: string
 ): Promise<GitCommitObject> {
   const { tree, ...commit } = await parseCommitLight(repo, hash)
   return {
     ...commit,
-    tree: await parseTree(getRepoName(repo), repo, repoName, tree, truckignore),
+    tree: await parseTree(getRepoName(repo), repo, repoName, tree),
   }
 }
 
@@ -126,28 +125,27 @@ async function parseTree(
   path: string,
   repo: string,
   name: string,
-  hash: string,
-  truckignore: Ignore
+  hash: string
 ): Promise<GitTreeObject> {
   const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
   const children: (GitTreeObject | GitBlobObject)[] = []
   for await (const line of entries) {
-    const catFileRegex = /^.+?\s(?<type>\w+)\s(?<hash>.+?)\s+(?<name>.+?)\s*$/g;
+    const catFileRegex = /^.+?\s(?<type>\w+)\s(?<hash>.+?)\s+(?<name>.+?)\s*$/g
     const groups = catFileRegex.exec(line)?.groups ?? {}
 
     const type = groups["type"]
     const hash = groups["hash"]
     const name = groups["name"]
 
-    if (truckignore.ignores(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
 
     switch (type) {
       case "tree":
-        children.push(await parseTree(newPath, repo, name, hash, truckignore))
+        const tree = await parseTree(newPath, repo, name, hash)
+        if (tree.children.length > 0) children.push(tree)
         break
       case "blob":
         children.push(await parseBlob(newPath, repo, name, hash))
@@ -183,43 +181,55 @@ async function parseBlob(
   return blob
 }
 
-export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckConfig) => TruckConfig) {
+export async function updateTruckConfig(
+  repoDir: string,
+  updaterFn: (tc: TruckConfig) => TruckConfig
+) {
   const truckConfigPath = resolve(repoDir, "truckconfig.json")
-  const currentConfig = JSON.parse(await fs.readFile(truckConfigPath, "utf-8")) as TruckConfig
+  const currentConfig = JSON.parse(
+    await fs.readFile(truckConfigPath, "utf-8")
+  ) as TruckConfig
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export function getArgs(): TruckConfig {
-  const args = yargs.config({
-    extends: './truckconfig.json',
-  }).argv as TruckUserConfig
-
-  return {
+export async function getArgs(): Promise<TruckConfig> {
+  const args = yargsParser(process.argv.slice(2), {
+    configuration: {
+      "duplicate-arguments-array": false,
+    },
+  })
+  const tempArgs = {
     path: ".",
     branch: null,
     ignoredFiles: [] as string[],
-    ...args
+    unionedAuthors: [] as string[][],
+    ...args,
+  }
+
+  const config = JSON.parse(
+    await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8")
+  )
+
+  return {
+    ...tempArgs,
+    ...config,
   } as TruckConfig
 }
 
 export async function parse(useCache = true) {
-  const args = getArgs()
-  console.log("ignored: " + args.ignoredFiles.join(", "))
+  const args = await getArgs()
 
   if (args?.log) {
     setLogLevel(args.log as string)
   }
 
-
   let repoDir = args.path
-  if (!isAbsolute(repoDir))
-    repoDir = resolve(process.cwd(), repoDir)
+  if (!isAbsolute(repoDir)) repoDir = resolve(process.cwd(), repoDir)
 
   const branch = args.branch
 
   const ignoredFiles = args.ignoredFiles
-  const truckignore = ignore().add(ignoredFiles)
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
   await disableQuotePath(repoDir)
@@ -233,66 +243,89 @@ export async function parse(useCache = true) {
   )
   const repoName = getRepoName(repoDir)
 
-  console.log("")
-  console.log("Ignored files: " + args.ignoredFiles.join(", "))
-  console.log("")
+  let data: ParserData | null = null
 
   const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
   if (fsSync.existsSync(dataPath)) {
     const path = getOutPathFromRepoAndBranch(repoName, branchName)
     const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as ParserData
+
     // Check if the current branchHead matches the hash of the parsed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash
-    // Check if the files that are ignored are the same
-    const truckIgnoreIsTheSame = (cachedData?.ignoredFiles ?? []).slice().sort().join("\n") === ignoredFiles.slice().sort().join("\n")
-    // Check if the data uses the most recent parser data interface
-    const dataVersionMatches = cachedData.interfaceVersion === ParserDataInterfaceVersion
 
-    const cacheConditions = {branchHeadMatches, dataVersionMatches, truckIgnoreIsTheSame, refresh: !useCache }
+    // Check if the data uses the most recent parser data interface
+    const dataVersionMatches =
+      cachedData.interfaceVersion === ParserDataInterfaceVersion
+
+    const cacheConditions = {
+      branchHeadMatches,
+      dataVersionMatches,
+      refresh: !useCache,
+    }
 
     // Only return cached data if every criteria is met
-    if (Object.values(cacheConditions).every(Boolean)) return cachedData
-    else {
-      const reasons = Object.entries(cacheConditions).filter(([, value]) => !value).map(([key, value]) => `${key}: ${value}`).join(", ")
-      log.info(`Reparsing, since the following cache conditions were not met: ${reasons}`)
+    if (Object.values(cacheConditions).every(Boolean)) {
+      data = {
+        ...cachedData,
+        ignoredFiles,
+      }
+    } else {
+      const reasons = Object.entries(cacheConditions)
+        .filter(([, value]) => !value)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ")
+      log.info(
+        `Reparsing, since the following cache conditions were not met: ${reasons}`
+      )
     }
   }
 
-  const repoTree = await describeAsyncJob(
-    () => parseCommit(repoDir, repoName, branchHead, truckignore),
-    "Parsing commit tree",
-    "Commit tree parsed",
-    "Error parsing commit tree"
-  )
-  const hydratedRepoTree = await describeAsyncJob(
-    () => hydrateData(repoDir, repoTree),
-    "Hydrating commit tree with authorship data",
-    "Commit tree hydrated",
-    "Error hydrating commit tree"
-  )
+  if (data === null) {
+    const repoTree = await describeAsyncJob(
+      () => parseCommit(repoDir, repoName, branchHead),
+      "Parsing commit tree",
+      "Commit tree parsed",
+      "Error parsing commit tree"
+    )
+    const hydratedRepoTree = await describeAsyncJob(
+      () => hydrateData(repoDir, repoTree),
+      "Hydrating commit tree with authorship data",
+      "Commit tree hydrated",
+      "Error hydrating commit tree"
+    )
 
-  const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
-  let outPath = resolve(args.out as string ?? defaultOutPath)
-  if (!isAbsolute(outPath))
-    outPath = resolve(process.cwd(), outPath)
+    const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
+    let outPath = resolve((args.out as string) ?? defaultOutPath)
+    if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
-  const authorUnions = args.unionedAuthors as string[][]
-  const data : ParserData = {
-    cached: false,
-    ignoredFiles,
-    repo: repoName,
-    branch: branchName,
-    commit: hydratedRepoTree,
-    authorUnions: authorUnions,
-    interfaceVersion: ParserDataInterfaceVersion
+    const authorUnions = args.unionedAuthors as string[][]
+    data = {
+      cached: false,
+      ignoredFiles,
+      repo: repoName,
+      branch: branchName,
+      commit: hydratedRepoTree,
+      authorUnions: authorUnions,
+      interfaceVersion: ParserDataInterfaceVersion,
+    }
+
+    await describeAsyncJob(
+      () =>
+        writeRepoToFile(outPath, {
+          ...data,
+          cached: true,
+        } as ParserData),
+      "Writing data to file",
+      `Wrote data to ${resolve(outPath)}`,
+      `Error writing data to file ${outPath}`
+    )
   }
-  await describeAsyncJob(
-    () =>
-      writeRepoToFile(outPath, {...data, cached: true}),
-    "Writing data to file",
-    `Wrote data to ${resolve(outPath)}`,
-    `Error writing data to file ${outPath}`
-  )
+
+  const truckignore = ignore().add(ignoredFiles)
+  data.commit.tree = applyIgnore(data.commit.tree, truckignore)
+  initMetrics(data)
+  data.commit.tree = await applyMetrics(data, data.commit.tree)
+
   const stop = performance.now()
 
   log.raw(`\nDone in ${formatMs(stop - start)}`)
@@ -302,10 +335,61 @@ export async function parse(useCache = true) {
   return data
 }
 
+function applyIgnore(
+  tree: HydratedGitTreeObject,
+  truckIgnore: Ignore
+): HydratedGitTreeObject {
+  return {
+    ...tree,
+    children: tree.children
+      .filter((child) => {
+        return !truckIgnore.ignores(child.path)
+      })
+      .map((child) => {
+        if (child.type === "tree") return applyIgnore(child, truckIgnore)
+        return child
+      }),
+  }
+}
+
+function initMetrics(data: ParserData) {
+  data.commit.minNoCommits = Number.MAX_VALUE
+  data.commit.maxNoCommits = Number.MIN_VALUE
+  data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE
+  data.commit.newestLatestChangeEpoch = Number.MIN_VALUE
+}
+
+function applyMetrics(data: ParserData, currentTree: HydratedGitTreeObject): HydratedGitTreeObject {
+  return {
+    ...currentTree,
+    children: currentTree.children.map((current) => {
+      if (current.type === "tree") return applyMetrics(data, current)
+      if (!current.lastChangeEpoch) return current
+
+      const numCommits = current.noCommits
+
+      if (numCommits < data.commit.minNoCommits) data.commit.minNoCommits = numCommits
+      if (numCommits > data.commit.maxNoCommits) data.commit.maxNoCommits = numCommits
+
+      if (current.lastChangeEpoch > data.commit.newestLatestChangeEpoch) {
+        data.commit.newestLatestChangeEpoch = current.lastChangeEpoch
+      }
+
+      if (current.lastChangeEpoch < data.commit.oldestLatestChangeEpoch) {
+        data.commit.oldestLatestChangeEpoch = current.lastChangeEpoch
+      }
+      return current
+    }),
+  }
+}
+
 export const exportForTest = {
   getCoAuthors,
 }
 
-export function getOutPathFromRepoAndBranch(repoName: string, branchName: string) {
+export function getOutPathFromRepoAndBranch(
+  repoName: string,
+  branchName: string
+) {
   return resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
 }
