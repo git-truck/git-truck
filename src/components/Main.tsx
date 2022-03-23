@@ -5,7 +5,6 @@ import { Chart } from "./Chart"
 export const MainRoot = styled.main`
   overflow: hidden;
   height: 100%;
-  width: calc(100vw - var(--side-panel-width));
 `
 
 export function Main() {

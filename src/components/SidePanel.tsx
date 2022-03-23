@@ -2,7 +2,8 @@ import styled from "styled-components"
 
 const SidePanelRoot = styled.aside`
   overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 `
 
 export function SidePanel(props: { children: React.ReactNode }) {

@@ -4,7 +4,7 @@ import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/index.css"
 import chartStyles from "~/styles/Chart.css"
 import { Providers } from "~/components/Providers";
-import { Container } from "~/components/util";
+import { Container, Grower } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
 import { AnalyzerData } from "~/analyzer/model";
@@ -89,11 +89,14 @@ export default function Index() {
           <Options />
           <SearchBar />
           <Spacer />
+        </SidePanel>
+        {typeof document !== "undefined" ? <Main /> : <div />}
+        <SidePanel>
+          <Grower />
           <Outlet />
           {data.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Legend />
         </SidePanel>
-        {typeof document !== "undefined" ? <Main /> : null}
       </Container>
     </Providers>
   );

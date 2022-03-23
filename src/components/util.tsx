@@ -33,7 +33,7 @@ export const NavigateBackButton = styled(Link)`
 export const Container = styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: var(--side-panel-width) 1fr;
+  grid-template-columns: var(--side-panel-width) 1fr var(--side-panel-width) ;
   grid-template-rows: 1fr;
 `
 
@@ -41,7 +41,7 @@ export const Box = styled.div`
   /* border: 1px var(--border-color-alpha) solid; */
   margin: var(--unit);
   color: var(--text-color);
-  width: calc(var(--side-panel-width) - 6 * var(--unit));
+  width: auto;
   background-color: #fff;
   border-radius: var(--unit);
   padding: calc(2 * var(--unit));
@@ -170,4 +170,8 @@ export const NonClickableText = styled.span`
 export const InlineCode = styled.code`
   display: inline-block;
   font-family: monospace;
+`
+
+export const Grower = styled.div`
+  flex-grow: 1;
 `
