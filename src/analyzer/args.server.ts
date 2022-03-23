@@ -16,7 +16,7 @@ export async function getArgs(): Promise<TruckConfig> {
   const tempArgs = {
     path: ".",
     branch: null,
-    ignoredFiles: [] as string[],
+    hiddenFiles: [] as string[],
     unionedAuthors: [] as string[][],
     ...args,
   }

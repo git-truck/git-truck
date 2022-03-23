@@ -14,8 +14,8 @@ import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
 import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
-import { IgnoredFiles } from "~/components/IgnoredFiles";
 import { getArgs } from "~/analyzer/args.server";
+import { HiddenFiles } from "~/components/HiddenFiles";
 
 export function links() {
   return [appStyles,
@@ -50,24 +50,24 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig((await getArgs()).path, prevConfig => {
-      const ignoredFilesSet = new Set((prevConfig?.ignoredFiles ?? []).map(x => x.trim()))
-      ignoredFilesSet.add(ignore)
+      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map(x => x.trim()))
+      hiddenFilesSet.add(ignore)
 
       return ({
       ...prevConfig,
-      ignoredFiles: Array.from(ignoredFilesSet.values())
+      hiddenFiles: Array.from(hiddenFilesSet.values())
     })})
     return null
   }
 
   if (unignore && typeof unignore === "string") {
     await updateTruckConfig((await getArgs()).path, prevConfig => {
-      const ignoredFilesSet = new Set((prevConfig?.ignoredFiles ?? []).map(x => x.trim()))
-      ignoredFilesSet.delete(unignore.trim())
+      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map(x => x.trim()))
+      hiddenFilesSet.delete(unignore.trim())
 
       return ({
       ...prevConfig,
-      ignoredFiles: Array.from(ignoredFilesSet.values())
+      hiddenFiles: Array.from(hiddenFilesSet.values())
     })})
     return null
   }
@@ -90,7 +90,7 @@ export default function Index() {
           <SearchBar />
           <Spacer />
           <Outlet />
-          {data.ignoredFiles.length > 0 ? <IgnoredFiles /> : null}
+          {data.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Legend />
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : null}

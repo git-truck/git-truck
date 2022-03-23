@@ -39,29 +39,28 @@ const StyledButton = styled.button`
 `
 
 
-function ignoredFileFormat(ignored: string) {
+function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
   const split = ignored.split("/")
   return split[split.length - 1]
 }
 
 
-export function IgnoredFiles() {
+export function HiddenFiles() {
   const [collapse, setCollapse] = useBoolean(false)
   const transitionState = useTransition()
   const data = useData()
   return <Box>
-    <BoxSubTitle>Ignored Files ({data.ignoredFiles.length})</BoxSubTitle>
+    <BoxSubTitle>Hidden files ({data.hiddenFiles.length})</BoxSubTitle>
     <Toggle
       relative={false}
       collapse={collapse}
       toggle={() => setCollapse(!collapse)}
     />
     {!collapse ? <Ul>
-      {data.ignoredFiles.map(ignored => <li key={ignored} title={ignored}>{ignoredFileFormat(ignored)}
-        
+      {data.hiddenFiles.map(hidden => <li key={hidden} title={hidden}>{hiddenFileFormat(hidden)}
         <InlineForm method="post" action="/repo/">
-          <input type="hidden" name="unignore" value={ignored} />
+          <input type="hidden" name="unignore" value={hidden} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
             <FontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
             <FontAwesomeIcon id="eye" icon={faEye} />

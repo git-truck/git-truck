@@ -206,7 +206,7 @@ export async function analyze(useCache = true) {
 
   const branch = args.branch
 
-  const ignoredFiles = args.ignoredFiles
+  const hiddenFiles = args.hiddenFiles
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
   await disableQuotePath(repoDir)
@@ -244,7 +244,7 @@ export async function analyze(useCache = true) {
     if (Object.values(cacheConditions).every(Boolean)) {
       data = {
         ...cachedData,
-        ignoredFiles,
+        hiddenFiles,
       }
     } else {
       const reasons = Object.entries(cacheConditions)
@@ -278,7 +278,7 @@ export async function analyze(useCache = true) {
     const authorUnions = args.unionedAuthors as string[][]
     data = {
       cached: false,
-      ignoredFiles,
+      hiddenFiles,
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,
@@ -298,7 +298,7 @@ export async function analyze(useCache = true) {
     )
   }
 
-  const truckignore = ignore().add(ignoredFiles)
+  const truckignore = ignore().add(hiddenFiles)
   data.commit.tree = applyIgnore(data.commit.tree, truckignore)
   initMetrics(data)
   data.commit.tree = applyMetrics(data, data.commit.tree)
