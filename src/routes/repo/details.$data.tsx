@@ -11,6 +11,7 @@ import { useState } from "react"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Toggle } from "~/components/Toggle"
+import { useClickedBlob } from "~/contexts/ClickedContext"
 
 interface DetailsData {
   blob?: HydratedGitBlobObject
@@ -36,10 +37,12 @@ export default function DetailsRoute() {
 function Details({ blob }: { blob: HydratedGitBlobObject }) {
   const extension = last(blob.name.split("."))
   const { state } = useTransition()
+  const { setClickedBlob } = useClickedBlob()
 
   return (
     <Box>
       <NavigateBackButton
+        onClick={() => setClickedBlob(null)}
         to=".."
       >
         &times;

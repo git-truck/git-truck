@@ -34,6 +34,7 @@ import {
   treemap,
 } from "d3-hierarchy"
 import { usePath } from "../contexts/PathContext"
+import { useClickedBlob } from "~/contexts/ClickedContext"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -152,6 +153,7 @@ function Circle({
 }) {
   const metricCaches = useMetricCaches()
   const { metricType } = useOptions()
+  const {setClickedBlob} = useClickedBlob()
 
   const props = useSpring({
     cx: d.x,
@@ -162,7 +164,7 @@ function Circle({
     fill: metricCaches.get(metricType)?.colormap.get(d.data.path) ?? "grey",
   })
 
-  return <animated.circle {...props} className={d.data.type} />
+  return <animated.circle {...props} className={d.data.type} onClick={() => (isBlob(d.data))? setClickedBlob(d.data as HydratedGitBlobObject) : setClickedBlob(null)} />
 }
 
 function Rect({
@@ -174,6 +176,7 @@ function Rect({
 }) {
   const metricCaches = useMetricCaches()
   const { metricType } = useOptions()
+  const {setClickedBlob} = useClickedBlob()
 
   const props = useSpring({
     x: d.x0,
@@ -190,7 +193,7 @@ function Rect({
         : "transparent",
   })
 
-  return <animated.rect {...props} className={d.data.type} />
+  return <animated.rect {...props} className={d.data.type} onClick={() => (isBlob(d.data))? setClickedBlob(d.data as HydratedGitBlobObject) : setClickedBlob(null)} />
 }
 
 function CircleText({
