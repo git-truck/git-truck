@@ -57,7 +57,7 @@ export function IgnoredFiles() {
       {data.ignoredFiles.map(ignored => <li key={ignored}>{ignored}
         <InlineForm method="post" action="/repo/">
           <input type="hidden" name="unignore" value={ignored} />
-          <StyledButton title="Show file" disabled={transitionState.state === "submitting"}>
+          <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
             <FontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
             <FontAwesomeIcon id="eye" icon={faEye} />
           </StyledButton>
