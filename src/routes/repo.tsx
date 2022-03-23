@@ -61,7 +61,7 @@ export default function Index() {
           <SearchBar />
           <Spacer />
           <Outlet />
-          <IgnoredFiles />
+          {data.ignoredFiles.length > 0 ? <IgnoredFiles /> : null}
           <Legend />
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : null}

@@ -4,7 +4,7 @@ import { Form, json, useLoaderData } from "remix"
 import { HydratedGitBlobObject } from "~/parser/model"
 import { Spacer } from "~/components/Spacer"
 import { makePercentResponsibilityDistribution } from "~/components/Chart"
-import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode } from "~/components/util"
+import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode, BoxSubTitle } from "~/components/util"
 import { dateFormatLong, last } from "~/util"
 import styled from "styled-components"
 import { useState } from "react"
@@ -62,8 +62,7 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       >
         &times;
       </NavigateBackButton>
-      <Spacer xl />
-      <BoxTitle title={blob.name}>{blob.name}</BoxTitle>
+      <BoxSubTitle title={blob.name}>{blob.name}</BoxSubTitle>
       <Spacer xl />
       <StyledDetailsEntries>
         <LineCountEntry
