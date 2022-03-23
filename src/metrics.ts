@@ -77,8 +77,8 @@ export function getMetricCalcs(
 ][] {
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(
-    commit.newestLatestChangeEpoch,
-    commit.oldestLatestChangeEpoch
+    commit.oldestLatestChangeEpoch,
+    commit.newestLatestChangeEpoch
   )
   const authorColorState = {
     palette: distinctColors({ count: 100 }),
@@ -122,10 +122,10 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            dateFormatLong(commit.newestLatestChangeEpoch),
             dateFormatLong(commit.oldestLatestChangeEpoch),
-            coldmap.getColor(commit.newestLatestChangeEpoch),
+            dateFormatLong(commit.newestLatestChangeEpoch),
             coldmap.getColor(commit.oldestLatestChangeEpoch),
+            coldmap.getColor(commit.newestLatestChangeEpoch),
           ]
         }
         coldmap.setColor(blob, cache)
@@ -304,7 +304,7 @@ class ColdMapTranslater {
   }
 
   getColor(value: number): string {
-    return `hsl(240,100%,${this.translator.translate(value)}%)`
+    return `hsl(240,100%,${this.translator.inverseTranslate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
