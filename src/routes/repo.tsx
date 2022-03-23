@@ -41,12 +41,24 @@ export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData()
   const refresh = formData.get("refresh");
   const unignore = formData.get("unignore")
+  const ignore = formData.get("ignore")
 
   if (refresh) {
     useCacheNextTime = true
+    return null
   }
 
+  if (ignore && typeof ignore === "string") {
+    await updateTruckConfig((await getArgs()).path, prevConfig => {
+      const ignoredFilesSet = new Set((prevConfig?.ignoredFiles ?? []).map(x => x.trim()))
+      ignoredFilesSet.add(ignore)
 
+      return ({
+      ...prevConfig,
+      ignoredFiles: Array.from(ignoredFilesSet.values())
+    })})
+    return null
+  }
 
   if (unignore && typeof unignore === "string") {
     await updateTruckConfig((await getArgs()).path, prevConfig => {
@@ -57,6 +69,7 @@ export const action: ActionFunction = async ({ request }) => {
       ...prevConfig,
       ignoredFiles: Array.from(ignoredFilesSet.values())
     })})
+    return null
   }
 
   return null
