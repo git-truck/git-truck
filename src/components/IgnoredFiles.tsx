@@ -12,7 +12,7 @@ export function IgnoredFiles() {
   const [collapse, setCollapse] = useBoolean(true)
   const data = useData()
   return <Box>
-    <BoxSubTitle>Ignored Files</BoxSubTitle>
+    <BoxSubTitle>Ignored Files ({data.ignoredFiles.length})</BoxSubTitle>
     <Toggle
       relative={false}
       collapse={collapse}
