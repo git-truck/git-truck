@@ -8,7 +8,6 @@ import {
   ParserData,
   ParserDataInterfaceVersion,
   Person,
-  TruckConfig,
   TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -29,8 +28,7 @@ import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore, { Ignore } from "ignore"
-import yargsParser from "yargs-parser"
-import { tree } from "d3-hierarchy"
+import { getArgs } from "./args.server"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -189,37 +187,11 @@ export async function updateTruckConfig(
   const truckConfigPath = resolve(repoDir, "truckconfig.json")
   let currentConfig: TruckUserConfig = {}
   try {
-    let configFileContents = await fs.readFile(truckConfigPath, "utf-8")
+    const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
     if (configFileContents) currentConfig = JSON.parse(configFileContents)
   } catch (e) {}
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
-}
-
-export async function getArgs(): Promise<TruckConfig> {
-  const args = yargsParser(process.argv.slice(2), {
-    configuration: {
-      "duplicate-arguments-array": false,
-    },
-  })
-  const tempArgs = {
-    path: ".",
-    branch: null,
-    ignoredFiles: [] as string[],
-    unionedAuthors: [] as string[][],
-    ...args,
-  }
-
-  let config : TruckUserConfig = {}
-  try {
-    const configContents = JSON.parse(await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8"))
-    config = configContents
-  } catch (e) {}
-
-  return {
-    ...tempArgs,
-    ...config,
-  } as TruckConfig
 }
 
 export async function parse(useCache = true) {

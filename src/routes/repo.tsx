@@ -8,14 +8,14 @@ import { Container } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
 import { ParserData } from "~/parser/model";
-import { getArgs, parse, updateTruckConfig } from "~/parser/parse.server";
-import fs from "fs"
+import { parse, updateTruckConfig } from "~/parser/parse.server";
 import { GlobalInfo } from "~/components/GlobalInfo";
 import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
 import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
 import { IgnoredFiles } from "~/components/IgnoredFiles";
+import { getArgs } from "~/parser/args.server";
 
 export function links() {
   return [appStyles,
