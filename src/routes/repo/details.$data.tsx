@@ -31,7 +31,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig((await getArgs()).path, prevConfig => {
-      const ignoredFilesSet = new Set(prevConfig?.ignoredFiles ?? [])
+      const ignoredFilesSet = new Set((prevConfig?.ignoredFiles ?? []).map(x => x.trim()))
       ignoredFilesSet.add(ignore)
 
       return ({
@@ -39,6 +39,7 @@ export const action: ActionFunction = async ({ request }) => {
       ignoredFiles: Array.from(ignoredFilesSet.values())
     })})
   }
+
   return null
 }
 
