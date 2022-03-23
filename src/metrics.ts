@@ -20,15 +20,15 @@ export type MetricType = keyof typeof Metric
 export function getMetricDescription(metric: MetricType): string {
   switch (metric) {
     case "FILE_EXTENSION":
-      return "Where are files of different type located?"
-    case "TOP_CONTRIBUTOR":
-      return "Which person is responsible for the largest fraction of changes, per file?"
-    case "SINGLE_AUTHOR":
-      return "Which files have had changes made by only 1 person, throughout history?"
-    case "LAST_CHANGED":
-      return "Where are the most recent or least recent changes?"
+      return "Where are different types of files located?"
     case "MOST_COMMITS":
-      return "Which files have had the most changes, throughout history?"
+      return "Which files have had the most commits, throughout the repository's history?"
+    case "LAST_CHANGED":
+      return "Where are the most recent or least recent commits made?"
+    case "SINGLE_AUTHOR":
+      return "Which files are authored by only 1 person, throughout the repository's history?"
+    case "TOP_CONTRIBUTOR":
+      return "Which person have made the most line-changes to a file, throughout the repository's history?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
