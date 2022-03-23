@@ -35,7 +35,7 @@
     "express": "^4.17.3",
     "fs-extra": "^10.0.1",
     "github-colors": "git+https://github.com/ozh/github-colors.git",
-    "gitignore-parser": "^0.0.2",
+    "ignore": "^5.2.0",
     "is-binary-path": "^2.1.0",
     "lang-map": "^0.4.0",
     "morgan": "^1.10.0",
