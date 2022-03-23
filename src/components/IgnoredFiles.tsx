@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { useBoolean } from "react-use";
 import styled from "styled-components";
 import { useData } from "~/contexts/DataContext";
@@ -16,8 +16,30 @@ const InlineForm = styled(Form)`
   display: inline-block;
 `
 
+const StyledButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+
+  & > :first-child {
+    display: none;
+  }
+  & > :last-child {
+    opacity: 0.5;
+  }
+  &:hover > :first-child  {
+    display: block;
+  }
+  &:hover > :last-child {
+    display: none;
+  }
+`
+
 export function IgnoredFiles() {
-  const [collapse, setCollapse] = useBoolean(true)
+  const [collapse, setCollapse] = useBoolean(false)
   const transitionState = useTransition()
   const data = useData()
   return <Box>
@@ -31,9 +53,10 @@ export function IgnoredFiles() {
       {data.ignoredFiles.map(ignored => <li key={ignored}>{ignored}
         <InlineForm method="post" action="/repo/">
           <input type="hidden" name="unignore" value={ignored} />
-          <button disabled={transitionState.state === "submitting"}>
+          <StyledButton title="Show file" disabled={transitionState.state === "submitting"}>
             <FontAwesomeIcon icon={faEyeSlash} />
-          </button>
+            <FontAwesomeIcon icon={faEye} />
+          </StyledButton>
         </InlineForm>
       </li>)}
     </Ul> : null}
