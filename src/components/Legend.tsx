@@ -35,6 +35,16 @@ const StyledBox = styled(Box)`
   bottom: 0;
 `
 
+const StyledH2 = styled.h2`
+  font-size: 0.9em;
+`
+
+const StyledP = styled.p`
+  font-size: 0.9em;
+  opacity: 0.7;
+  margin: 0.5em 0 1.5em 0;
+`
+
 export function Legend() {
   const { metricType } = useOptions()
   const metricCaches = useMetricCaches()
@@ -42,22 +52,15 @@ export function Legend() {
   if (metricCaches.get(metricType)?.legend === undefined) return null
 
   return (
-    <StyledBox>
-      <strong style={{
-        fontSize: "0.9em",
-        marginBottom: "0.5em"
-      }}>
+    <Box>
+      <StyledH2>
         {
           Metric[metricType]
         }
-      </strong>
-      <p style={{
-        fontSize: "0.9em",
-        opacity: "0.7",
-        marginBottom: "1em"
-      }}>
+      </StyledH2>
+      <StyledP>
         {getMetricDescription(metricType)}
-      </p>
+      </StyledP>
       {
         (isGradientMetric(metricType))
         ? <GradientMetricLegend metricType={metricType} metricCaches={metricCaches}></GradientMetricLegend>
