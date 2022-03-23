@@ -55,11 +55,6 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   isBinary?: boolean
 }
 
-export interface TruckIgnore {
-    accepts(input: string): boolean;
-    denies(input: string): boolean;
-    maybe(input: string): boolean;
-}
 export interface GitTreeObject extends GitBaseObject {
   type: "tree"
   name: string

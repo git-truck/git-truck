@@ -1,4 +1,4 @@
-import fsSync, { promises as fs, readFileSync } from "fs"
+import fsSync, { promises as fs } from "fs"
 import {
   GitBlobObject,
   GitCommitObject,
@@ -24,13 +24,12 @@ import {
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
 import { resolve , isAbsolute, join} from "path"
-import { TruckIgnore } from "./model"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
 import yargs from 'yargs'
 
 import { } from "@remix-run/node"
-import { compile } from "gitignore-parser"
+import ignore, { Ignore } from "ignore"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -98,7 +97,7 @@ export async function parseCommit(
   repo: string,
   repoName: string,
   hash: string,
-  truckignore: TruckIgnore
+  truckignore: Ignore
 ): Promise<GitCommitObject> {
   const { tree, ...commit } = await parseCommitLight(repo, hash)
   return {
@@ -128,7 +127,7 @@ async function parseTree(
   repo: string,
   name: string,
   hash: string,
-  truckignore: TruckIgnore
+  truckignore: Ignore
 ): Promise<GitTreeObject> {
   const rawContent = await deflateGitObject(repo, hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
@@ -142,7 +141,7 @@ async function parseTree(
     const hash = groups["hash"]
     const name = groups["name"]
 
-    if (!truckignore.accepts(name)) continue
+    if (truckignore.ignores(name)) continue
     const newPath = [path, name].join("/")
     log.debug(`Path: ${newPath}`)
 
@@ -220,8 +219,7 @@ export async function parse(useCache = true) {
   const branch = args.branch
 
   const ignoredFiles = args.ignoredFiles
-  const ignoredFilesString = (ignoredFiles ?? []).join("\n")
-  const truckignore = compile(ignoredFilesString)
+  const truckignore = ignore().add(ignoredFiles)
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
   await disableQuotePath(repoDir)
