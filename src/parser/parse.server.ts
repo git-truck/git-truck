@@ -5,7 +5,10 @@ import {
   GitCommitObjectLight,
   GitTreeObject,
   ParserData,
+  ParserDataInterfaceVersion,
   Person,
+  TruckConfig,
+  TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import {
@@ -181,23 +184,43 @@ async function parseBlob(
   return blob
 }
 
-export async function parse() {
+export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckConfig) => TruckConfig) {
+  const truckConfigPath = resolve(repoDir, "truckconfig.json")
+  const currentConfig = JSON.parse(await fs.readFile(truckConfigPath, "utf-8")) as TruckConfig
+  const updatedConfig = updaterFn(currentConfig)
+  await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
+}
+
+export function getArgs(): TruckConfig {
   const args = yargs.config({
     extends: './truckconfig.json',
-  }).argv as {[key: string]: unknown}
+  }).argv as TruckUserConfig
 
-  if (args.log) {
+  return {
+    path: ".",
+    branch: null,
+    ignoredFiles: [] as string[],
+    ...args
+  } as TruckConfig
+}
+
+export async function parse(useCache = true) {
+  const args = getArgs()
+  console.log("ignored: " + args.ignoredFiles.join(", "))
+
+  if (args?.log) {
     setLogLevel(args.log as string)
   }
 
 
-  let repoDir = (args.path ?? ".") as string
+  let repoDir = args.path
   if (!isAbsolute(repoDir))
     repoDir = resolve(process.cwd(), repoDir)
 
-  const branch = args.branch as string ?? null
+  const branch = args.branch
 
-  const ignoredFilesString = (args.ignoredFiles as string[] ?? []).join("\n")
+  const ignoredFiles = args.ignoredFiles
+  const ignoredFilesString = (ignoredFiles ?? []).join("\n")
   const truckignore = compile(ignoredFilesString)
 
   const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
@@ -212,14 +235,29 @@ export async function parse() {
   )
   const repoName = getRepoName(repoDir)
 
+  console.log("")
+  console.log("Ignored files: " + args.ignoredFiles.join(", "))
+  console.log("")
+
   const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
   if (fsSync.existsSync(dataPath)) {
     const path = getOutPathFromRepoAndBranch(repoName, branchName)
     const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as ParserData
     // Check if the current branchHead matches the hash of the parsed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash
-    const truckIgnoreIsTheSame = false
-    if (branchHeadMatches && truckIgnoreIsTheSame) return cachedData
+    // Check if the files that are ignored are the same
+    const truckIgnoreIsTheSame = (cachedData?.ignoredFiles ?? []).slice().sort().join("\n") === ignoredFiles.slice().sort().join("\n")
+    // Check if the data uses the most recent parser data interface
+    const dataVersionMatches = cachedData.interfaceVersion === ParserDataInterfaceVersion
+
+    const cacheConditions = {branchHeadMatches, dataVersionMatches, truckIgnoreIsTheSame, refresh: !useCache }
+
+    // Only return cached data if every criteria is met
+    if (Object.values(cacheConditions).every(Boolean)) return cachedData
+    else {
+      const reasons = Object.entries(cacheConditions).filter(([, value]) => !value).map(([key, value]) => `${key}: ${value}`).join(", ")
+      log.info(`Reparsing, since the following cache conditions were not met: ${reasons}`)
+    }
   }
 
   const repoTree = await describeAsyncJob(
@@ -241,15 +279,18 @@ export async function parse() {
     outPath = resolve(process.cwd(), outPath)
 
   const authorUnions = args.unionedAuthors as string[][]
-  const data = {
+  const data : ParserData = {
+    cached: false,
+    ignoredFiles,
     repo: repoName,
     branch: branchName,
     commit: hydratedRepoTree,
     authorUnions: authorUnions,
+    interfaceVersion: ParserDataInterfaceVersion
   }
   await describeAsyncJob(
     () =>
-      writeRepoToFile(outPath, data),
+      writeRepoToFile(outPath, {...data, cached: true}),
     "Writing data to file",
     `Wrote data to ${resolve(outPath)}`,
     `Error writing data to file ${outPath}`

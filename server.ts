@@ -40,8 +40,8 @@ app.all(
 
 const port = process.env.PORT || 3000;
 
-function printOpen(server) {
-  const serverport = server.address().port
+function printOpen(port: number) {
+  const serverport = port
   console.log(`Git Truck v${gitTruckPackage.version}`);
   console.log(`Serving static assets from ${staticAssetsPath}`);
   if (serverport !== port) console.log("Default/Specified port was used by another process");
@@ -49,14 +49,14 @@ function printOpen(server) {
   open("http://localhost:" + serverport);
 }
 
-function startServer(port) {
+function startServer(port: number) {
   let server = app.listen(port)
     .on('error', () => {
       server.close(() => {
-        startServer(port+1);
+        startServer(port + 1);
       })
     })
-    .once('listening', () => printOpen(server));
+    .once('listening', () => printOpen(port));
 }
 
-startServer(port);
+startServer(Number(port));
