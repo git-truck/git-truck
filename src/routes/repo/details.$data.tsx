@@ -64,22 +64,22 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
         <AuthorDistribution currentClickedBlob={blob} />
       )}
       <Spacer lg />
+      <Form method="post" action="/repo">
+        <input type="hidden" name="ignore" value={blob.path} />
+        <IgnoreButton disabled={state !== "idle"}>
+          Ignore this file
+        </IgnoreButton>
+      </Form>
+      <Spacer />
+      {(blob.name.includes(".") && blob.name[0] !== ".") ?
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
-          {(blob.name.includes(".") && blob.name[0] !== ".") ? 
-            <IgnoreButton disabled={state === "submitting"}>
-              Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
-            </IgnoreButton>
-            : null
-          }
-        </Form>
-        <Spacer />
-        <Form method="post" action="/repo">
-          <input type="hidden" name="ignore" value={blob.path} />
-          <IgnoreButton disabled={state === "submitting"}>
-            Ignore this file
+          <IgnoreButton disabled={state !== "idle"}>
+            Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
           </IgnoreButton>
         </Form>
+        : null
+      }
     </Box>
   )
 }
