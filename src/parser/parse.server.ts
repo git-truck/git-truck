@@ -9,6 +9,7 @@ import {
   ParserDataInterfaceVersion,
   Person,
   TruckConfig,
+  TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import {
@@ -183,12 +184,14 @@ async function parseBlob(
 
 export async function updateTruckConfig(
   repoDir: string,
-  updaterFn: (tc: TruckConfig) => TruckConfig
+  updaterFn: (tc: TruckUserConfig) => TruckUserConfig
 ) {
   const truckConfigPath = resolve(repoDir, "truckconfig.json")
-  const currentConfig = JSON.parse(
-    await fs.readFile(truckConfigPath, "utf-8")
-  ) as TruckConfig
+  let currentConfig: TruckUserConfig = {}
+  try {
+    let configFileContents = await fs.readFile(truckConfigPath, "utf-8")
+    if (configFileContents) currentConfig = JSON.parse(configFileContents)
+  } catch (e) {}
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
@@ -207,9 +210,11 @@ export async function getArgs(): Promise<TruckConfig> {
     ...args,
   }
 
-  const config = JSON.parse(
-    await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8")
-  )
+  let config : TruckUserConfig = {}
+  try {
+    const configContents = JSON.parse(await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8"))
+    config = configContents
+  } catch (e) {}
 
   return {
     ...tempArgs,
@@ -359,7 +364,10 @@ function initMetrics(data: ParserData) {
   data.commit.newestLatestChangeEpoch = Number.MIN_VALUE
 }
 
-function applyMetrics(data: ParserData, currentTree: HydratedGitTreeObject): HydratedGitTreeObject {
+function applyMetrics(
+  data: ParserData,
+  currentTree: HydratedGitTreeObject
+): HydratedGitTreeObject {
   return {
     ...currentTree,
     children: currentTree.children.map((current) => {
@@ -368,8 +376,10 @@ function applyMetrics(data: ParserData, currentTree: HydratedGitTreeObject): Hyd
 
       const numCommits = current.noCommits
 
-      if (numCommits < data.commit.minNoCommits) data.commit.minNoCommits = numCommits
-      if (numCommits > data.commit.maxNoCommits) data.commit.maxNoCommits = numCommits
+      if (numCommits < data.commit.minNoCommits)
+        data.commit.minNoCommits = numCommits
+      if (numCommits > data.commit.maxNoCommits)
+        data.commit.maxNoCommits = numCommits
 
       if (current.lastChangeEpoch > data.commit.newestLatestChangeEpoch) {
         data.commit.newestLatestChangeEpoch = current.lastChangeEpoch
