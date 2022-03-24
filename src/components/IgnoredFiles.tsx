@@ -39,7 +39,11 @@ const StyledButton = styled.button`
 `
 
 
-
+function ignoredFileFormat(ignored: string) {
+  if (!ignored.includes("/")) return ignored
+  const split = ignored.split("/")
+  return split[split.length - 1]
+}
 
 
 export function IgnoredFiles() {
@@ -54,7 +58,8 @@ export function IgnoredFiles() {
       toggle={() => setCollapse(!collapse)}
     />
     {!collapse ? <Ul>
-      {data.ignoredFiles.map(ignored => <li key={ignored}>{ignored}
+      {data.ignoredFiles.map(ignored => <li key={ignored} title={ignored}>{ignoredFileFormat(ignored)}
+        
         <InlineForm method="post" action="/repo/">
           <input type="hidden" name="unignore" value={ignored} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
