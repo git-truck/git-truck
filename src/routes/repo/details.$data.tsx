@@ -81,6 +81,22 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
   )
 }
 
+// return (
+//   <Box>
+//     <CloseButton onClick={() => { setClickedObject(null) }}>
+//       &times;
+//     </CloseButton>
+//     <Spacer xl />
+//     <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
+//     <Spacer xl />
+//     <StyledDetailsEntries>
+//       <PathEntry path={clickedObject.path} />
+//     </StyledDetailsEntries>
+//     <Spacer xl />
+//     <AuthorDistribution currentClickedObject={clickedObject} />
+//   </Box>
+// )
+
 function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>

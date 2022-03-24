@@ -35,6 +35,7 @@ import {
 } from "d3-hierarchy"
 import { usePath } from "../contexts/PathContext"
 import { useClickedBlob } from "~/contexts/ClickedContext"
+import { calculateSubTree } from "../authorUnionUtil"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -340,9 +341,9 @@ function circlePathFromCircle(x: number, y: number, r: number) {
 }
 
 export function makePercentResponsibilityDistribution(
-  d: HydratedGitBlobObject
+  d: HydratedGitObject
 ): Record<string, number> {
-  const unionedAuthors = d.unionedAuthors
+  const unionedAuthors = d.type === "blob" ? d.unionedAuthors : calculateSubTree(d)
   if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 

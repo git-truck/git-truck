@@ -88,11 +88,6 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           hoveredBlob: blob,
         })),
-      setClickedBlob: (blob: HydratedGitBlobObject | null) =>
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
-          clickedBlob: blob,
-        })),
     }),
     [options]
   )
