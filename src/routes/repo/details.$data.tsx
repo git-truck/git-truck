@@ -63,13 +63,15 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       <Spacer lg />
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
-          <IgnoreButton disabled={state === "submitting"}>
-            Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
-          </IgnoreButton>
+          {blob.name.includes(".") && blob.name[0] !== "." && 
+            <IgnoreButton disabled={state === "submitting"}>
+              Ignore all files of this extension (<InlineCode>*.{extension}</InlineCode>)
+            </IgnoreButton>
+          }
         </Form>
         <Spacer />
         <Form method="post" action="/repo">
-          <input type="hidden" name="ignore" value={blob.name} />
+          <input type="hidden" name="ignore" value={blob.path} />
           <IgnoreButton disabled={state === "submitting"}>
             Ignore this file
           </IgnoreButton>
