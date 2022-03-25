@@ -1,5 +1,5 @@
 import { createContext, Dispatch, SetStateAction, useContext } from "react"
-import { HydratedGitBlobObject } from "~/parser/model"
+import { HydratedGitBlobObject } from "../analyzer/model"
 
 export interface ClickedBlob {
   clickedBlob: HydratedGitBlobObject | null
