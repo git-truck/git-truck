@@ -23,12 +23,12 @@ export interface TruckConfig {
   ignoredFiles: string[]
 }
 
-// Bump this if ParserData interface chances
-export const ParserDataInterfaceVersion = 1
+// Bump this if AnalyzerData interface chances
+export const AnalyzerDataInterfaceVersion = 1
 
-export interface ParserData {
+export interface AnalyzerData {
   cached: boolean
-  interfaceVersion: typeof ParserDataInterfaceVersion
+  interfaceVersion: typeof AnalyzerDataInterfaceVersion
   ignoredFiles: string[]
   repo: string
   branch: string

@@ -13,7 +13,7 @@ import {
   OptionsContext,
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, ParserData } from "~/parser/model"
+import { HydratedGitBlobObject, AnalyzerData } from "~/analyze/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
@@ -21,7 +21,7 @@ import { PathContext } from "../contexts/PathContext"
 
 interface ProvidersProps {
   children: React.ReactNode
-  data: ParserData
+  data: AnalyzerData
 }
 
 export function Providers({ children, data }: ProvidersProps) {

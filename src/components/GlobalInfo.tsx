@@ -30,7 +30,7 @@ export function GlobalInfo() {
       {(typeof data.cached === "undefined" || data.cached) ? <>
         (cached) <Form method="post" action="/repo">
           <input type="hidden" name="refresh" value="true" />
-          <button disabled={transitionState.state !== "idle"}>{transitionState.state === "idle" ? "Run parser" : "Parsing..."}</button>
+          <button disabled={transitionState.state !== "idle"}>{transitionState.state === "idle" ? "Run analyzer" : "analyzing..."}</button>
         </Form>
       </> : null}
       <Spacer />

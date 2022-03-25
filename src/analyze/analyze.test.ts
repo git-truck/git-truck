@@ -1,4 +1,4 @@
-import { exportForTest } from "./parse.server"
+import { exportForTest } from "./analyze.server"
 
 describe("getCoAuthors", () => {
   it("Should return none", () => {

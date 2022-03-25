@@ -11,8 +11,8 @@ import {
   HydratedGitTreeObject,
   PersonWithTime,
 } from "./model"
-import { parseCommitLight } from "./parse.server"
-import { gitDiffNumStatParsed, lookupFileInTree } from "./util"
+import { analyzeCommitLight } from "./analyze.server"
+import { gitDiffNumStatAnalyzed, lookupFileInTree } from "./util"
 import { Queue } from "./queue"
 
 const renamedFiles = new Map<string, string>()
@@ -69,7 +69,7 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     // don't compare the empty commit to it's parent
     if (currHash == emptyGitCommitHash) continue
 
-    const currCommit = await parseCommitLight(repo, currHash)
+    const currCommit = await analyzeCommitLight(repo, currHash)
 
     const parentsOfCurr = parents(currCommit)
 
@@ -112,7 +112,7 @@ async function diffAndUpdate_mut(
 
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
-  const fileChanges = await gitDiffNumStatParsed(
+  const fileChanges = await gitDiffNumStatAnalyzed(
     repo,
     parentHash,
     currHash,

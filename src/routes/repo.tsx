@@ -7,15 +7,15 @@ import { Providers } from "~/components/Providers";
 import { Container } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
-import { ParserData } from "~/parser/model";
-import { parse, updateTruckConfig } from "~/parser/parse.server";
+import { AnalyzerData } from "~/analyze/model";
+import { analyze, updateTruckConfig } from "~/analyze/analyze.server";
 import { GlobalInfo } from "~/components/GlobalInfo";
 import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
 import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
 import { IgnoredFiles } from "~/components/IgnoredFiles";
-import { getArgs } from "~/parser/args.server";
+import { getArgs } from "~/analyze/args.server";
 
 export function links() {
   return [appStyles,
@@ -32,9 +32,9 @@ let useCacheNextTime = false
 
 export const loader: LoaderFunction = async () => {
   const useCache = useCacheNextTime
-  const data = await parse(useCache)
+  const data = await analyze(useCache)
   useCacheNextTime = false
-  return json<ParserData>(data)
+  return json<AnalyzerData>(data)
 }
 
 export const action: ActionFunction = async ({ request }) => {
@@ -77,7 +77,7 @@ export const action: ActionFunction = async ({ request }) => {
 
 
 export default function Index() {
-  const data = useLoaderData<ParserData>()
+  const data = useLoaderData<AnalyzerData>()
 
   return (
     <Providers
