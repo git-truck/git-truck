@@ -100,16 +100,31 @@ export function Chart(props: ChartProps) {
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
-          return (
-            <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
-              <Node isRoot={i === 0} d={d} />
-            </g>
-          )
+          const emptyChildTree = emptyTreeAsChild(d)
+          if (!emptyChildTree) {
+            return (
+              <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
+                <Node isRoot={i === 0} d={d} />
+              </g>
+            )
+          }
+          else {
+            if (d.data.name !== "") {
+              emptyChildTree.data.name = `${d.data.name}/${emptyChildTree.data.name}`
+              d.data.name = ""
+            }
+            return null
+          }
         })}
       </SVG>
       {typeof document !== "undefined" ? <Tooltip hoveredBlob={hoveredBlob} /> : null}
     </>
   )
+}
+
+function emptyTreeAsChild(node: CircleOrRectHiearchyNode) : CircleOrRectHiearchyNode | null {
+  if (node.children?.length === 1 && isTree(node.children?.[0].data)) return node.children?.[0]
+  return null
 }
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
@@ -123,7 +138,6 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
       if (circleDatum.r * Math.PI < d.data.name.length * estimatedLetterWidth)
         showLabel = false
-
       return (
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
