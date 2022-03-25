@@ -88,7 +88,7 @@ export function Legend() {
           <LegendLable>{maxValue}</LegendLable>
         </GradientLegendDiv>
         <LegendGradient min={minColor} max={maxColor} />
-        <GradArrow vis={offset !== -1} pos={offset}>{'\u25B2'}</GradArrow>
+        <GradArrow vis={offset !== -1} pos={offset}>▲</GradArrow>
       </Box>
     )
   }
