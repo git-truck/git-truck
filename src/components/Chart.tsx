@@ -4,7 +4,7 @@ import {
   HydratedGitCommitObject,
   HydratedGitObject,
   HydratedGitTreeObject,
-} from "~/analyze/model"
+} from "~/analyzer/model"
 import type {
   HierarchyCircularNode,
   HierarchyRectangularNode,

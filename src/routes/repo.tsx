@@ -7,15 +7,15 @@ import { Providers } from "~/components/Providers";
 import { Container } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
-import { AnalyzerData } from "~/analyze/model";
-import { analyze, updateTruckConfig } from "~/analyze/analyze.server";
+import { AnalyzerData } from "~/analyzer/model";
+import { analyze, updateTruckConfig } from "~/analyzer/analyze.server";
 import { GlobalInfo } from "~/components/GlobalInfo";
 import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
 import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
 import { IgnoredFiles } from "~/components/IgnoredFiles";
-import { getArgs } from "~/analyze/args.server";
+import { getArgs } from "~/analyzer/args.server";
 
 export function links() {
   return [appStyles,

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { AnalyzerData } from "~/analyze/model"
+import { AnalyzerData } from "~/analyzer/model"
 
 export const DataContext = createContext<AnalyzerData | undefined>(undefined)
 
