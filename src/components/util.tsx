@@ -101,26 +101,6 @@ export const LegendLable = styled.p`
   font-weight: bold;
 `
 
-export const ToggleButton = styled.button<{
-  collapse: boolean
-  relative: boolean
-}>`
-  position: ${(props) => (props.relative ? "relative" : "absolute")};
-  top: ${(props) => (props.relative ? "unset" : "var(--unit)")};
-  right: ${(props) => (props.relative ? "unset" : "var(--unit)")};
-  border: none;
-  background-color: rgba(0, 0, 0, 0);
-  transition-duration: 0.4s;
-  color: grey;
-  transform-origin: 50% 55%;
-  transform: ${(props) => (props.collapse ? "rotate(180deg)" : "none")};
-  font-size: large;
-  &:hover {
-    color: #606060;
-    cursor: pointer;
-  }
-`
-
 export const LegendGradient = styled.div<{ min: string; max: string }>`
   background-image: linear-gradient(
     to right,

@@ -3,7 +3,7 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { useBoolean } from "react-use";
 import styled from "styled-components";
 import { useData } from "~/contexts/DataContext";
-import { Toggle } from "./Toggle";
+import { ExpandUp } from "./Toggle";
 import { Box, BoxSubTitle, InlineCode } from "./util";
 import { Form, useTransition } from "remix";
 
@@ -49,8 +49,7 @@ export function HiddenFiles() {
   const data = useData()
   return <Box>
     <BoxSubTitle>Hidden files ({data.hiddenFiles.length})</BoxSubTitle>
-    <Toggle
-      relative={false}
+    <ExpandUp
       collapse={collapse}
       toggle={() => setCollapse(!collapse)}
     />

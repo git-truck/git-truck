@@ -1,6 +1,6 @@
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
-import { Toggle } from "./Toggle"
+import { ExpandUp } from "./Toggle"
 import { useState } from "react"
 import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
 import { GradLegendData, isGradientMetric, PointLegendData } from "../metrics"
@@ -67,8 +67,7 @@ export function Legend() {
             items={items.slice(legendCutoff)}
             toggle={() => setCollapse(!collapse)}
           />
-          <Toggle
-            relative={false}
+          <ExpandUp
             collapse={collapse}
             toggle={() => setCollapse(!collapse)}
           />

@@ -1,17 +1,17 @@
-import { ActionFunction, LoaderFunction, useTransition } from "remix"
+import { LoaderFunction, useTransition } from "remix"
 import { Navigate } from "react-router-dom"
 import { Form, json, useLoaderData } from "remix"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Spacer } from "~/components/Spacer"
 import { makePercentResponsibilityDistribution } from "~/components/Chart"
-import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode, BoxSubTitle } from "~/components/util"
+import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode } from "~/components/util"
 import { dateFormatLong, last } from "~/util"
 import styled from "styled-components"
 import { useState } from "react"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
-import { Toggle } from "~/components/Toggle"
 import { useClickedBlob } from "~/contexts/ClickedContext"
+import { ExpandDown } from "~/components/Toggle"
 
 interface DetailsData {
   blob?: HydratedGitBlobObject
@@ -47,7 +47,7 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       >
         &times;
       </NavigateBackButton>
-      <BoxSubTitle title={blob.name}>{blob.name}</BoxSubTitle>
+      <BoxTitle title={blob.name}>{blob.name}</BoxTitle>
       <Spacer xl />
       <StyledDetailsEntries>
         <LineCountEntry
@@ -160,7 +160,7 @@ function AuthorDistribution(props: {
     <>
       <AuthorDistHeader>
         <DetailsHeading>Author distribution</DetailsHeading>
-        <Toggle
+        <ExpandDown
           relative={true}
           collapse={collapse}
           toggle={() => setCollapse(!collapse)}
