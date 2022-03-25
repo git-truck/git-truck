@@ -1,13 +1,13 @@
-import { exportForTest } from "./analyze.server"
+import { getCoAuthors } from "./coauthors.server"
 
 describe("getCoAuthors", () => {
   it("Should return none", () => {
-    const actual = exportForTest.getCoAuthors("lorem ipsum\n\nCo-authored-by:")
+    const actual = getCoAuthors("lorem ipsum\n\nCo-authored-by:")
     expect(actual.length).toBe(0)
   })
 
   it("Should return none when empty input", () => {
-    const actual = exportForTest.getCoAuthors("")
+    const actual = getCoAuthors("")
     expect(actual.length).toBe(0)
   })
 
@@ -24,7 +24,7 @@ describe("getCoAuthors", () => {
         email: "alice@example.com",
       },
     ]
-    const actual = exportForTest.getCoAuthors(sampleDescription)
+    const actual = getCoAuthors(sampleDescription)
     expect(actual).toStrictEqual(expected)
   })
 })
