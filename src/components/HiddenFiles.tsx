@@ -4,13 +4,8 @@ import { useBoolean } from "react-use";
 import styled from "styled-components";
 import { useData } from "~/contexts/DataContext";
 import { Toggle } from "./Toggle";
-import { Box, BoxSubTitle } from "./util";
+import { Box, BoxSubTitle, InlineCode } from "./util";
 import { Form, useTransition } from "remix";
-
-
-const Ul = styled.ul`
-  padding-left: calc(3 * var(--unit));
-`
 
 const InlineForm = styled(Form)`
   display: inline-block;
@@ -23,6 +18,8 @@ const StyledButton = styled.button`
   display: grid;
   align-items: center;
   justify-items: center;
+  width: calc(2 * var(--unit));
+  margin-right: calc(1 * var(--unit));
 
   & > #eye {
     display: none;
@@ -57,8 +54,8 @@ export function HiddenFiles() {
       collapse={collapse}
       toggle={() => setCollapse(!collapse)}
     />
-    {!collapse ? <Ul>
-      {data.hiddenFiles.map(hidden => <li key={hidden} title={hidden}>{hiddenFileFormat(hidden)}
+    {!collapse ? <div>
+      {data.hiddenFiles.map(hidden => <div key={hidden}>
         <InlineForm method="post" action="/repo/">
           <input type="hidden" name="unignore" value={hidden} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
@@ -66,7 +63,10 @@ export function HiddenFiles() {
             <FontAwesomeIcon id="eye" icon={faEye} />
           </StyledButton>
         </InlineForm>
-      </li>)}
-    </Ul> : null}
+        <InlineCode>
+          {hiddenFileFormat(hidden)}
+        </InlineCode>
+      </div>)}
+    </div> : null}
   </Box>
 }
