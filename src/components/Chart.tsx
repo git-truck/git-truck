@@ -182,7 +182,6 @@ function Rect({
 }) {
   const metricCaches = useMetricCaches()
   const { metricType } = useOptions()
-  const {setClickedBlob} = useClickedBlob()
 
   const props = useSpring({
     x: d.x0,
@@ -199,7 +198,7 @@ function Rect({
         : "transparent",
   })
 
-  return <animated.rect {...props} className={d.data.type} onClick={() => (isBlob(d.data))? setClickedBlob(d.data as HydratedGitBlobObject) : setClickedBlob(null)} />
+  return <animated.rect {...props} className={d.data.type} />
 }
 
 function CircleText({
