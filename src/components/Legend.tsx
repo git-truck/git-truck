@@ -9,12 +9,13 @@ import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
 import { useClickedBlob } from "~/contexts/ClickedContext"
 import styled from "styled-components"
+import { estimatedLetterWidth } from "~/const"
 
 const legendCutoff = 3
 
 function getLightness(hsl: string) : number {
   const regex = /%,((?:\d|\.)+?)%\)/gm
-  let ent = regex.exec(hsl)?.entries()
+  const ent = regex.exec(hsl)?.entries()
   ent?.next()
   const res = parseFloat(ent?.next().value[1] ?? "-1")
   return res
@@ -25,7 +26,7 @@ const GradArrow = styled.i<{ vis: boolean, pos: number }>`
   transition: 500ms;
   position: relative;
   bottom: 11px;
-  left: calc(${({pos}) => pos*100}% - 8px);
+  left: calc(${({pos}) => pos*100}% - ${estimatedLetterWidth}px);
 `
 
 export function Legend() {
@@ -35,7 +36,7 @@ export function Legend() {
   const {clickedBlob} = useClickedBlob()
 
   if (!isGradientMetric(metricType)) {
-    let items = Array.from(
+    const items = Array.from(
       metricCaches.get(metricType)?.legend as PointLegendData
     ).sort(([, info1], [, info2]) => {
       if (info1.weight < info2.weight) return 1
@@ -68,7 +69,7 @@ export function Legend() {
         </Box>
       )
   } else {
-    let [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
+    const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
     const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedBlob?.path ?? "") ?? "")
