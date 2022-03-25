@@ -115,34 +115,44 @@ export function Chart(props: ChartProps) {
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = isTree(d.data)
+  let displayText = d.data.name
+  let textToLong: (text: string) => boolean
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      if (circleDatum.r * Math.PI < d.data.name.length * estimatedLetterWidth)
-        showLabel = false
+      textToLong = (text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth
+      if (textToLong(displayText)) {
+        displayText = displayText.replace(/\/.+\//gm, "/.../")
+        if (textToLong(displayText)) {
+          showLabel = false
+        }
+      }
+
       return (
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
-            <CircleText d={circleDatum} isSearchMatch={match} />
+            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={match} />
           ) : null}
         </>
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      if (
-        rectDatum.x1 - rectDatum.x0 <
-        d.data.name.length * estimatedLetterWidth
-      )
-        showLabel = false
+      textToLong = (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth
+      if (textToLong(displayText)) {
+        displayText = displayText.replace(/\/.+\//gm, "/.../")
+        if (textToLong(displayText)) {
+          showLabel = false
+        }
+      }
 
       return (
         <>
           <Rect d={rectDatum} isSearchMatch={match} />
-          {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
+          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={match} /> : null}
         </>
       )
     default:
@@ -202,9 +212,11 @@ function Rect({
 
 function CircleText({
   d,
+  displayText,
   isSearchMatch,
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
+  displayText: string
   isSearchMatch: boolean,
 }) {
   const { setPath } = usePath()
@@ -230,7 +242,7 @@ function CircleText({
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >
-          {d.data.name}
+          {displayText}
         </textPath>
       </text>
       <text>
@@ -243,7 +255,7 @@ function CircleText({
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >
-          {d.data.name}
+          {displayText}
         </textPath>
       </text>
     </>
@@ -252,9 +264,11 @@ function CircleText({
 
 function RectText({
   d,
+  displayText,
   isSearchMatch,
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
+  displayText: string
   isSearchMatch: boolean
 }) {
   const { setPath } = usePath()
@@ -266,7 +280,7 @@ function RectText({
 
   return (
     <animated.text {...props} onClick={() => setPath(d.data.path)} className="object-name">
-      {d.data.name}
+      {displayText}
     </animated.text>
   )
 }
