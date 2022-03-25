@@ -5,8 +5,8 @@ import open from "open";
 import { createRequestHandler } from "@remix-run/express";
 import { join } from "path";
 import * as serverBuild from "@remix-run/dev/server-build";
-import updateNotifier from "update-notifier";
 import pkg from "./package.json"
+import latestVersion from "latest-version"
 
 const app = express();
 
@@ -38,14 +38,13 @@ app.all(
 
 const port = process.env.PORT || 3000;
 
-function printOpen(port: number) {
-  const notifier = updateNotifier({
-    pkg,
-    updateCheckInterval: 500
-  });
+async function printOpen(port: number) {
+  const latestV = await latestVersion(pkg.name)
+  const currentV = pkg.version
 
-  if (notifier.update) {
-    console.log(`Update available: ${notifier.update.latest}. Currently installed: ${notifier.update.current}`);
+
+  if (latestV !== currentV) {
+    console.log(`Update available: ${latestV}. Currently installed: ${currentV}`);
     console.log(`To update, run: npx git-truck@latest`)
     console.log(`Or to install globally: npm install -g git-truck@latest`)
   }

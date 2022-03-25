@@ -4,7 +4,7 @@ import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/index.css"
 import chartStyles from "~/styles/Chart.css"
 import { Providers } from "~/components/Providers";
-import { Container, Grower } from "~/components/util";
+import { Box, Container, Grower } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
 import { AnalyzerData } from "~/analyzer/model";
@@ -92,6 +92,12 @@ export default function Index() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
+          {data.currentVersion !== data.latestVersion ?
+            <Box>
+              <p title={`To update, close application and run: npx git-truck@latest`}>Update available: {data.latestVersion}</p> 
+            </Box>
+            : null
+          }
           <Grower />
           <Outlet />
           {data.hiddenFiles.length > 0 ? <HiddenFiles /> : null}

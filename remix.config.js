@@ -11,6 +11,7 @@ module.exports = {
     "is-binary-path",
     "yargs-parser",
     "gitignore-parser",
+    "latest-version"
   ],
   appDirectory: "src",
   // assetsBuildDirectory: "public/build",
