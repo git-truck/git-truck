@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject } from "~/analyze/model"
+import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Metric, MetricType } from "../metrics"
 
 export const Chart = {
