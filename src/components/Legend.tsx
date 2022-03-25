@@ -22,7 +22,7 @@ function getLightness(hsl: string) : number {
 }
 
 const GradArrow = styled.i<{ visible: boolean, position: number }>`
-  display: ${({visible}) => (visible)? "block" : "none"};
+  display: ${({visible}) => (visible)? "initital" : "none"};
   transition: 500ms;
   position: relative;
   bottom: 11px;
