@@ -65,4 +65,21 @@ export function collapseTrees(tree: HydratedGitTreeObject) {
             collapseTrees(child)
         }
     }
-} 
+}
+
+export function removeEmptyTrees(tree: HydratedGitTreeObject) {
+    for(const child of tree.children) {
+        if (child.type === "tree") {
+            const ctree = child as HydratedGitTreeObject
+            removeEmptyTrees(ctree)
+        }
+    }
+    tree.children = tree.children.filter((child) => {
+        if (child.type === "blob") return true
+        else {
+            const ctree = child as HydratedGitTreeObject
+            if (ctree.children.length === 0) return false
+            return true
+        }
+    })
+}
