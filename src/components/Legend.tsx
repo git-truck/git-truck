@@ -27,6 +27,7 @@ const GradArrow = styled.i<{ vis: boolean, pos: number }>`
   position: relative;
   bottom: 11px;
   left: calc(${({pos}) => pos*100}% - ${estimatedLetterWidth}px);
+  filter: drop-shadow(0px -2px 0.5px #fff);
 `
 
 export function Legend() {
