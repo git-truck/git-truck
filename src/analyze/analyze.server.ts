@@ -4,8 +4,8 @@ import {
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
-  ParserData,
-  ParserDataInterfaceVersion,
+  AnalyzerData,
+  AnalyzerDataInterfaceVersion,
   Person,
   TruckUserConfig,
 } from "./model"
@@ -48,7 +48,7 @@ export async function findBranchHead(repo: string, branch: string | null) {
   return [branchHead, branch]
 }
 
-export async function parseCommitLight(
+export async function analyzeCommitLight(
   repo: string,
   hash: string
 ): Promise<GitCommitObjectLight> {
@@ -92,15 +92,15 @@ export async function parseCommitLight(
   }
 }
 
-export async function parseCommit(
+export async function analyzeCommit(
   repo: string,
   repoName: string,
   hash: string
 ): Promise<GitCommitObject> {
-  const { tree, ...commit } = await parseCommitLight(repo, hash)
+  const { tree, ...commit } = await analyzeCommitLight(repo, hash)
   return {
     ...commit,
-    tree: await parseTree(getRepoName(repo), repo, repoName, tree),
+    tree: await analyzeTree(getRepoName(repo), repo, repoName, tree),
   }
 }
 
@@ -120,7 +120,7 @@ function getCoAuthors(description: string) {
   return coauthors
 }
 
-async function parseTree(
+async function analyzeTree(
   path: string,
   repo: string,
   name: string,
@@ -143,11 +143,11 @@ async function parseTree(
 
     switch (type) {
       case "tree":
-        const tree = await parseTree(newPath, repo, name, hash)
+        const tree = await analyzeTree(newPath, repo, name, hash)
         if (tree.children.length > 0) children.push(tree)
         break
       case "blob":
-        children.push(await parseBlob(newPath, repo, name, hash))
+        children.push(await analyzeBlob(newPath, repo, name, hash))
         break
       default:
         throw new Error(` type ${type}`)
@@ -163,7 +163,7 @@ async function parseTree(
   }
 }
 
-async function parseBlob(
+async function analyzeBlob(
   path: string,
   repo: string,
   name: string,
@@ -194,7 +194,7 @@ export async function updateTruckConfig(
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export async function parse(useCache = true) {
+export async function analyze(useCache = true) {
   const args = await getArgs()
 
   if (args?.log) {
@@ -220,19 +220,19 @@ export async function parse(useCache = true) {
   )
   const repoName = getRepoName(repoDir)
 
-  let data: ParserData | null = null
+  let data: AnalyzerData | null = null
 
   const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
   if (fsSync.existsSync(dataPath)) {
     const path = getOutPathFromRepoAndBranch(repoName, branchName)
-    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as ParserData
+    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as AnalyzerData
 
-    // Check if the current branchHead matches the hash of the parsed commit from the cache
+    // Check if the current branchHead matches the hash of the analyzed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash
 
-    // Check if the data uses the most recent parser data interface
+    // Check if the data uses the most recent analyzer data interface
     const dataVersionMatches =
-      cachedData.interfaceVersion === ParserDataInterfaceVersion
+      cachedData.interfaceVersion === AnalyzerDataInterfaceVersion
 
     const cacheConditions = {
       branchHeadMatches,
@@ -252,21 +252,21 @@ export async function parse(useCache = true) {
         .map(([key, value]) => `${key}: ${value}`)
         .join(", ")
       log.info(
-        `Reparsing, since the following cache conditions were not met: ${reasons}`
+        `Reanalyzing, since the following cache conditions were not met: ${reasons}`
       )
     }
   }
 
   if (data === null) {
     const repoTree = await describeAsyncJob(
-      () => parseCommit(repoDir, repoName, branchHead),
-      "Parsing commit tree",
-      "Commit tree parsed",
-      "Error parsing commit tree"
+      () => analyzeCommit(repoDir, repoName, branchHead),
+      "Analyzing commit tree",
+      "Commit tree analyzed",
+      "Error analyzing commit tree"
     )
     const hydratedRepoTree = await describeAsyncJob(
       () => hydrateData(repoDir, repoTree),
-      "Hydrating commit tree with authorship data",
+      "Hydrating commit tree",
       "Commit tree hydrated",
       "Error hydrating commit tree"
     )
@@ -283,7 +283,7 @@ export async function parse(useCache = true) {
       branch: branchName,
       commit: hydratedRepoTree,
       authorUnions: authorUnions,
-      interfaceVersion: ParserDataInterfaceVersion,
+      interfaceVersion: AnalyzerDataInterfaceVersion,
     }
 
     await describeAsyncJob(
@@ -291,7 +291,7 @@ export async function parse(useCache = true) {
         writeRepoToFile(outPath, {
           ...data,
           cached: true,
-        } as ParserData),
+        } as AnalyzerData),
       "Writing data to file",
       `Wrote data to ${resolve(outPath)}`,
       `Error writing data to file ${outPath}`

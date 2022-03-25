@@ -3,7 +3,7 @@ import { existsSync, promises as fs } from "fs"
 import { createSpinner, Spinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import { GitBlobObject, GitTreeObject, ParserData } from "./model"
+import { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
 import { performance } from "perf_hooks"
 
 export function last<T>(array: T[]) {
@@ -28,7 +28,7 @@ function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export async function gitDiffNumStatParsed(
+export async function gitDiffNumStatAnalyzed(
   repo: string,
   a: string,
   b: string,
@@ -43,7 +43,7 @@ export async function gitDiffNumStatParsed(
       let filePath = file
       const hasBeenMoved = file.includes("=>")
       if (hasBeenMoved) {
-        filePath = parseRenamedFile(filePath, renamedFiles)
+        filePath = analyzeRenamedFile(filePath, renamedFiles)
       }
 
       const newestPath = renamedFiles.get(filePath) ?? filePath
@@ -57,7 +57,7 @@ export async function gitDiffNumStatParsed(
   return stuff
 }
 
-function parseRenamedFile(file: string, renamedFiles: Map<string, string>) {
+function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
   const movedFileRegex =
     /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
@@ -135,8 +135,8 @@ export async function resetQuotePath(repoDir: string, value: string) {
   } 
 }
 
-export async function writeRepoToFile(outPath: string, parsedData: ParserData) {
-  const data = JSON.stringify(parsedData, null, 2)
+export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
+  const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })

@@ -1,7 +1,7 @@
 import { ActionFunction, LoaderFunction, useTransition } from "remix"
 import { Navigate } from "react-router-dom"
 import { Form, json, useLoaderData } from "remix"
-import { HydratedGitBlobObject } from "~/parser/model"
+import { HydratedGitBlobObject } from "~/analyze/model"
 import { Spacer } from "~/components/Spacer"
 import { makePercentResponsibilityDistribution } from "~/components/Chart"
 import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode, BoxSubTitle } from "~/components/util"

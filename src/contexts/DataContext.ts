@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react"
-import { ParserData } from "~/parser/model"
+import { AnalyzerData } from "~/analyze/model"
 
-export const DataContext = createContext<ParserData | undefined>(undefined)
+export const DataContext = createContext<AnalyzerData | undefined>(undefined)
 
 export function useData() {
   const context = useContext(DataContext)

@@ -2,7 +2,7 @@ import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
-} from "~/parser/model"
+} from "~/analyze/model"
 import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
