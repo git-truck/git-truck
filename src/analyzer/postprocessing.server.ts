@@ -54,25 +54,11 @@ export function applyIgnore(
     }
 }
 
-export function collapseTrees(tree: HydratedGitTreeObject) {
-    for(const child of tree.children) {
-        if (child.type == "tree") {
-            collapseTrees(child)
-        }
-    }
-    if (tree.children.length === 1 && tree.children[0].type === "tree") {
-        const temp = tree.children[0]
-        tree.children = temp.children
-        tree.name = `${tree.name}/${temp.name}`
-        tree.path = `${tree.path}/${temp.name}`
-    }
-}
-
-export function removeEmptyTrees(tree: HydratedGitTreeObject) {
+export function TreeCleanup(tree: HydratedGitTreeObject) {
     for(const child of tree.children) {
         if (child.type === "tree") {
             const ctree = child as HydratedGitTreeObject
-            removeEmptyTrees(ctree)
+            TreeCleanup(ctree)
         }
     }
     tree.children = tree.children.filter((child) => {
@@ -83,4 +69,10 @@ export function removeEmptyTrees(tree: HydratedGitTreeObject) {
             return true
         }
     })
+    if (tree.children.length === 1 && tree.children[0].type === "tree") {
+        const temp = tree.children[0]
+        tree.children = temp.children
+        tree.name = `${tree.name}/${temp.name}`
+        tree.path = `${tree.path}/${temp.name}`
+    }
 }

@@ -28,7 +28,7 @@ import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
-import { applyIgnore, applyMetrics, collapseTrees, initMetrics, removeEmptyTrees } from "./postprocessing.server"
+import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -300,8 +300,7 @@ export async function analyze(useCache = true) {
 
   const truckignore = ignore().add(hiddenFiles)
   data.commit.tree = applyIgnore(data.commit.tree, truckignore)
-  collapseTrees(data.commit.tree)
-  removeEmptyTrees(data.commit.tree)
+  TreeCleanup(data.commit.tree)
   initMetrics(data)
   data.commit.tree = applyMetrics(data, data.commit.tree)
 

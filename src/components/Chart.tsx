@@ -294,11 +294,18 @@ function createPartitionedHiearchy(
   const root = data.tree as HydratedGitTreeObject
 
   let currentTree = root
-  for (const step of path.split("/")) {
+  let steps = path.substring(data.tree.name.length+1).split("/")
+
+  for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
-      if (child.type === "tree" && child.name === step) {
-        currentTree = child
-        break;
+      if (child.type === "tree") {
+        let childSteps = child.name.split("/")
+        if (childSteps[0] === steps[i]) {
+          currentTree = child
+          i += childSteps.length-1
+          console.log(currentTree.path);
+          break;
+        }
       }
     }
   }
