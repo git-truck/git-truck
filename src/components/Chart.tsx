@@ -34,6 +34,7 @@ import {
   treemap,
 } from "d3-hierarchy"
 import { usePath } from "../contexts/PathContext"
+import { useClickedBlob } from "~/contexts/ClickedContext"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -59,6 +60,7 @@ export function Chart(props: ChartProps) {
   const data = useData()
   const { chartType } = useOptions()
   const { path } = usePath();
+  const {setClickedBlob} = useClickedBlob()
 
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
@@ -74,12 +76,18 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => navigate(`./details/${global.btoa(JSON.stringify(d.data))}`),
+        onClick: () => {
+          navigate(`./details/${global.btoa(JSON.stringify(d.data))}`);
+          setClickedBlob(d.data as HydratedGitBlobObject);
+        },
         onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
         onMouseOut: () => setHoveredBlob(null),
       }
       : {
-        onClick: () => navigate("/repo"),
+        onClick: () => {
+          navigate("/repo");
+          setClickedBlob(null);
+        },
         onMouseOver: () => setHoveredBlob(null),
         onMouseOut: () => setHoveredBlob(null),
       }
