@@ -64,6 +64,7 @@ export function collapseTrees(tree: HydratedGitTreeObject) {
         const temp = tree.children[0]
         tree.children = temp.children
         tree.name = `${tree.name}/${temp.name}`
+        tree.path = `${tree.path}/${temp.name}`
     }
 }
 
