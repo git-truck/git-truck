@@ -21,12 +21,12 @@ function getLightness(hsl: string) : number {
   return res
 }
 
-const GradArrow = styled.i<{ vis: boolean, pos: number }>`
-  display: ${({vis}) => (vis)? "block" : "none"};
+const GradArrow = styled.i<{ visible: boolean, position: number }>`
+  display: ${({visible}) => (visible)? "block" : "none"};
   transition: 500ms;
   position: relative;
   bottom: 11px;
-  left: calc(${({pos}) => pos*100}% - ${estimatedLetterWidth}px);
+  left: calc(${({position}) => position*100}% - ${estimatedLetterWidth}px);
   filter: drop-shadow(0px -2px 0.5px #fff);
 `
 
@@ -88,7 +88,7 @@ export function Legend() {
           <LegendLable>{maxValue}</LegendLable>
         </GradientLegendDiv>
         <LegendGradient min={minColor} max={maxColor} />
-        <GradArrow vis={offset !== -1} pos={offset}>{'\u25B2'}</GradArrow>
+        <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>
       </Box>
     )
   }
