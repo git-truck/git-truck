@@ -55,15 +55,15 @@ export function applyIgnore(
 }
 
 export function collapseTrees(tree: HydratedGitTreeObject) {
-    if (tree.children.length === 1 && tree.children[0].type === "tree") {
-        const temp = tree.children[0]
-        tree.children = temp.children
-        tree.name = `${tree.name}/${temp.name}`
-    }
     for(const child of tree.children) {
         if (child.type == "tree") {
             collapseTrees(child)
         }
+    }
+    if (tree.children.length === 1 && tree.children[0].type === "tree") {
+        const temp = tree.children[0]
+        tree.children = temp.children
+        tree.name = `${tree.name}/${temp.name}`
     }
 }
 
