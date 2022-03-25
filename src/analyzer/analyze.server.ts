@@ -29,6 +29,8 @@ import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics } from "./postprocessing.server"
+import updateNotifier from "update-notifier"
+import pkg from "../../package.json"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -275,6 +277,11 @@ export async function analyze(useCache = true) {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
+    const notifier = updateNotifier({
+      pkg,
+      updateCheckInterval: 500
+    });
+
     const authorUnions = args.unionedAuthors as string[][]
     data = {
       cached: false,
@@ -284,6 +291,8 @@ export async function analyze(useCache = true) {
       commit: hydratedRepoTree,
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
+      currentVersion: notifier.update?.current,
+      latestVersion: notifier.update?.latest
     }
 
     await describeAsyncJob(

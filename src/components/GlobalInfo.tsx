@@ -25,26 +25,34 @@ export function GlobalInfo() {
   }
 
   return (
-    <Box>
-      <BoxTitle>{data.repo}</BoxTitle>
-      {(typeof data.cached === "undefined" || data.cached) ? <>
-        (cached) <Form method="post" action="/repo">
-          <input type="hidden" name="refresh" value="true" />
-          <button disabled={transitionState.state !== "idle"}>{!transitionState.submission?.formData.has("refresh") ? "Run analyzer" : "Analyzing..."}</button>
-        </Form>
-      </> : null}
-      <Spacer />
-      <div>
-        <strong>Branch: </strong>
-        {data.branch}
-      </div>
-      <div>
-        <strong>Path: </strong>
-        {paths.reverse().map(([name, p], i) => {
-          if (p === "" || i === paths.length - 1) return <NonClickableText key={p}>/{name}</NonClickableText>
-          else return <ClickableText key={p} onClick={() => setPath(p)}>/{name}</ClickableText>
-        })}
-      </div>
-    </Box>
+    <>
+      {data.currentVersion !== data.latestVersion ?
+        <Box>
+          <p title={`To update, close application and run: npx git-truck@latest`}>New version available: {data.latestVersion}</p> 
+        </Box>
+        : null 
+      }
+      <Box>
+        <BoxTitle>{data.repo}</BoxTitle>
+        {(typeof data.cached === "undefined" || data.cached) ? <>
+          (cached) <Form method="post" action="/repo">
+            <input type="hidden" name="refresh" value="true" />
+            <button disabled={transitionState.state !== "idle"}>{!transitionState.submission?.formData.has("refresh") ? "Run analyzer" : "Analyzing..."}</button>
+          </Form>
+        </> : null}
+        <Spacer />
+        <div>
+          <strong>Branch: </strong>
+          {data.branch}
+        </div>
+        <div>
+          <strong>Path: </strong>
+          {paths.reverse().map(([name, p], i) => {
+            if (p === "" || i === paths.length - 1) return <NonClickableText key={p}>/{name}</NonClickableText>
+            else return <ClickableText key={p} onClick={() => setPath(p)}>/{name}</ClickableText>
+          })}
+        </div>
+      </Box>
+    </>
   )
 }

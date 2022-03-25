@@ -8,18 +8,6 @@ import * as serverBuild from "@remix-run/dev/server-build";
 import updateNotifier from "update-notifier";
 import pkg from "./package.json"
 
-const notifier = updateNotifier({
-	pkg,
-	updateCheckInterval: 1000 * 60
-});
-
-if (notifier.update) {
-  console.log(`Update available: ${notifier.update.latest}. Currently installed: ${notifier.update.current}`);
-  console.log(`To update, run: npx git-truck@latest`)
-  console.log(`Or to install globally: npm install -g git-truck@latest`)
-}
-
-
 const app = express();
 
 app.use(compression());
@@ -51,11 +39,20 @@ app.all(
 const port = process.env.PORT || 3000;
 
 function printOpen(port: number) {
+  const notifier = updateNotifier({
+    pkg,
+    updateCheckInterval: 500
+  });
+
+  if (notifier.update) {
+    console.log(`Update available: ${notifier.update.latest}. Currently installed: ${notifier.update.current}`);
+    console.log(`To update, run: npx git-truck@latest`)
+    console.log(`Or to install globally: npm install -g git-truck@latest`)
+  }
+
   const serverport = port
-  console.log(`Git Truck v${pkg.version}`);
-  console.log(`Serving static assets from ${staticAssetsPath}`);
   if (serverport !== port) console.log("Default/Specified port was used by another process");
-  console.log(`Express server listening on port ${serverport}`);
+  console.log(`Now listening on port ${serverport}`);
   open("http://localhost:" + serverport);
 }
 
