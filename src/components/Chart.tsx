@@ -100,8 +100,8 @@ export function Chart(props: ChartProps) {
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
-          const emptyChildTree = emptyTreeAsChild(d)
-          if (!emptyChildTree) {
+          const onlyChildTree = onlyChildIsTree(d)
+          if (!onlyChildTree) {
             return (
               <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
                 <Node isRoot={i === 0} d={d} />
@@ -110,7 +110,7 @@ export function Chart(props: ChartProps) {
           }
           else {
             if (d.data.name !== "") {
-              emptyChildTree.data.name = `${d.data.name}/${emptyChildTree.data.name}`
+              onlyChildTree.data.name = `${d.data.name}/${onlyChildTree.data.name}`
               d.data.name = ""
             }
             return null
@@ -122,7 +122,7 @@ export function Chart(props: ChartProps) {
   )
 }
 
-function emptyTreeAsChild(node: CircleOrRectHiearchyNode) : CircleOrRectHiearchyNode | null {
+function onlyChildIsTree(node: CircleOrRectHiearchyNode) : CircleOrRectHiearchyNode | null {
   if (node.children?.length === 1 && isTree(node.children?.[0].data)) return node.children?.[0]
   return null
 }
