@@ -1,7 +1,7 @@
 import { Ignore } from "ignore"
-import { HydratedGitTreeObject, ParserData } from "./model"
+import { HydratedGitTreeObject, AnalyzerData } from "./model"
 
-export function initMetrics(data: ParserData) {
+export function initMetrics(data: AnalyzerData) {
     data.commit.minNoCommits = Number.MAX_VALUE
     data.commit.maxNoCommits = Number.MIN_VALUE
     data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE
@@ -9,7 +9,7 @@ export function initMetrics(data: ParserData) {
 }
 
 export function applyMetrics(
-    data: ParserData,
+    data: AnalyzerData,
     currentTree: HydratedGitTreeObject
 ): HydratedGitTreeObject {
     return {
