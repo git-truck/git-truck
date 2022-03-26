@@ -65,7 +65,7 @@ function Details({ blob }: { blob: HydratedGitBlobObject }) {
       )}
       <Spacer lg />
       <Form method="post" action="/repo">
-        <input type="hidden" name="ignore" value={blob.name} />
+        <input type="hidden" name="ignore" value={blob.path} />
         <IgnoreButton disabled={state !== "idle"}>
           Hide this file
         </IgnoreButton>
