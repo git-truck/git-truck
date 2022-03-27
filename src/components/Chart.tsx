@@ -115,10 +115,24 @@ export function Chart(props: ChartProps) {
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = isTree(d.data)
+  const { path } = usePath()
   let displayText = d.data.name
   let textToLong: (text: string) => boolean
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
+
+  if (isRoot) {
+    const pathSteps = path.split('/')
+    const dispSteps = displayText.split('/')
+    let ps = 0
+    let ds = 0
+    while(ps < pathSteps.length &&  ds < dispSteps.length) {
+      if ( pathSteps[ps] !== dispSteps[ds]) ps++
+      else { ps++; ds++ }
+    }
+
+    displayText = dispSteps.slice(ds-1).join('/')
+  }
 
   switch (chartType) {
     case "BUBBLE_CHART":
@@ -303,7 +317,6 @@ function createPartitionedHiearchy(
         if (childSteps[0] === steps[i]) {
           currentTree = child
           i += childSteps.length-1
-          console.log(currentTree.path);
           break;
         }
       }
