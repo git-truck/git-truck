@@ -8,7 +8,7 @@ import { Box, Container, Grower } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
 import { Main } from "~/components/Main";
 import { AnalyzerData } from "~/analyzer/model";
-import { analyze, updateTruckConfig } from "~/analyzer/analyze.server";
+import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server";
 import { GlobalInfo } from "~/components/GlobalInfo";
 import { Options } from "~/components/Options";
 import SearchBar from "~/components/SearchBar";
@@ -44,6 +44,7 @@ export const action: ActionFunction = async ({ request }) => {
   const refresh = formData.get("refresh");
   const unignore = formData.get("unignore")
   const ignore = formData.get("ignore")
+  const fileToOpen = formData.get("open")
 
   if (refresh) {
     useCacheNextTime = true
@@ -71,6 +72,11 @@ export const action: ActionFunction = async ({ request }) => {
       ...prevConfig,
       hiddenFiles: Array.from(hiddenFilesSet.values())
     })})
+    return null
+  }
+
+  if (typeof fileToOpen === "string") {
+    openFile(fileToOpen)
     return null
   }
 
