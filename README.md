@@ -27,8 +27,8 @@ npx git-truck [args]
 |  `--path`  |                         path to git repository                          | current directory  |
 | `--branch` |                               branch name                               | checked out branch |
 |  `--out`   |                        output path for data file                        |    ./data.json     |
-|  `--log`   | output log level. See [here](./app/parser/src/log.server.ts) for values |        null        |
-|  `--help`  |                        output usage information                         |        N/A         |
+|  `--log`   | output log level. See [here](./app/parser/src/log.server.ts) for values |          -         |
+|  `--help`  |                        output usage information                         |          -         |
 
 ### [Configuration](#configuration)
 
