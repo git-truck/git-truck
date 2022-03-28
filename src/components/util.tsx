@@ -1,5 +1,4 @@
 import styled from "styled-components"
-import { Link } from "remix"
 
 export const BoxTitle = styled.h2`
   font-size: 1.5em;

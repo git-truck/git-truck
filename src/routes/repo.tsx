@@ -1,4 +1,4 @@
-import { ActionFunction, json, LoaderFunction, Outlet, useLoaderData } from "remix";
+import { ActionFunction, json, LoaderFunction, useLoaderData } from "remix";
 import appStyles from "~/styles/App.css"
 import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/index.css"
