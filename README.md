@@ -17,7 +17,7 @@ This projected is tested to work with:
 Run `npx git-truck` in the root of a git repository, that you want to visualize:
 
 ```sh
-npx git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
+npx git-truck [args]
 ```
 
 #### [Arguments](#arguments)
