@@ -41,6 +41,8 @@ export function Legend() {
   const [collapse, setCollapse] = useState<boolean>(true)
   const {clickedBlob} = useClickedBlob()
 
+  if (metricCaches.get(metricType)?.legend === undefined) return null
+
   if (!isGradientMetric(metricType)) {
     const items = Array.from(
       metricCaches.get(metricType)?.legend as PointLegendData
