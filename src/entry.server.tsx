@@ -19,6 +19,7 @@ export default function handleRequest(
   const styles = sheet.getStyleTags()
   markup = markup.replace("__STYLES__", styles)
   responseHeaders.set("Content-Type", "text/html");
+  responseHeaders.set("X-Content-Type-Options", "nosniff");
 
   return new Response("<!DOCTYPE html>" + markup, {
     status: responseStatusCode,
