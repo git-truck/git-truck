@@ -119,7 +119,6 @@ export const GradientLegendDiv = styled.div`
 `
 
 export const DetailsKey = styled.span<{ grow?: boolean }>`
-  /* white-space: pre; */
   font-size: 0.9em;
   font-weight: 500;
   opacity: 0.7;
@@ -128,7 +127,6 @@ export const DetailsKey = styled.span<{ grow?: boolean }>`
 export const DetailsValue = styled.p`
   overflow-wrap: anywhere;
   font-size: 0.9em;
-  text-align: right;
 `
 
 export const ClickableText = styled.button`
