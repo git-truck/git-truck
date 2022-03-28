@@ -28,8 +28,10 @@ npx git-truck [--path <path>] [--branch <name>] [--out <path>] [--log <path>]
 | `--branch` | checked out branch |                               branch name                               |
 |  `--out`   |    ./data.json     |                        output path for data file                        |
 |  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
+|  `--help`  |        N/A         |                        output usage information                         |
 
 ### [Configuration](#configuration)
+
 You can add a `truckconfig.json` file to the root of your project, where you can define the arguments you want.
 Additionally you can define which git-aliases should be considered as the same person.
 You can also define files to ignore.
@@ -41,13 +43,9 @@ Example:
   "branch": "main",
   "unionedAuthors": [
     ["Bob", "Bobby Bob"],
-    ["Alice", "aliiii", "alice alice"],
+    ["Alice", "aliiii", "alice alice"]
   ],
-  "hiddenFiles": [
-    "package-lock.json",
-    "*.bin",
-    "*.svg"
-  ]
+  "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"]
 }
 ```
 
@@ -65,12 +63,17 @@ _or using yarn:_ `yarn dev`
 This starts the app in development mode, rebuilding assets on file changes.
 
 **Note:**
+The remix development server does not watch `server.ts` for changes, so if you are testing
+
+**Note:**
 If you want to provide args to the parser, you need to run remix and node separately in two different terminals:
 
 ```
 npm run dev:remix
 ```
+
 and
+
 ```
 npm run dev:node -- <args>
 ```
