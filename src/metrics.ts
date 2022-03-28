@@ -3,7 +3,6 @@ import {
   HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
-import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
 
@@ -58,8 +57,8 @@ export class PointInfo {
 
 export type PointLegendData = Map<string, PointInfo>
 export type GradLegendData = [
-  minValue: string,
-  maxValue: string,
+  minValue: number,
+  maxValue: number,
   minColor: string,
   maxColor: string
 ]
@@ -107,8 +106,8 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            `${commit.minNoCommits}`,
-            `${commit.maxNoCommits}`,
+            commit.minNoCommits,
+            commit.maxNoCommits,
             heatmap.getColor(commit.minNoCommits),
             heatmap.getColor(commit.maxNoCommits),
           ]
@@ -121,8 +120,8 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            dateFormatLong(commit.oldestLatestChangeEpoch),
-            dateFormatLong(commit.newestLatestChangeEpoch),
+            commit.oldestLatestChangeEpoch,
+            commit.newestLatestChangeEpoch,
             coldmap.getColor(commit.oldestLatestChangeEpoch),
             coldmap.getColor(commit.newestLatestChangeEpoch),
           ]
