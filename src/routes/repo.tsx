@@ -17,6 +17,7 @@ import { Legend } from "~/components/Legend";
 import { getArgs } from "~/analyzer/args.server";
 import { HiddenFiles } from "~/components/HiddenFiles";
 import semverCompare from "semver-compare"
+import { Details } from "~/components/Details";
 
 export function links() {
   return [appStyles,
@@ -94,12 +95,12 @@ export default function Index() {
         <SidePanel>
           {data.latestVersion && semverCompare(data.latestVersion, data.currentVersion) === 1 ?
             <Box>
-              <p title={`To update, close application and run: npx git-truck@latest`}>Update available: {data.latestVersion}</p> 
+              <p title={`To update, close application and run: npx git-truck@latest`}>Update available: {data.latestVersion}</p>
             </Box>
             : null
           }
           <Grower />
-          <Outlet />
+          <Details />
           {data.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Legend />
         </SidePanel>

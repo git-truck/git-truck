@@ -1,79 +1,75 @@
-import { LoaderFunction, useTransition } from "remix"
-import { Navigate } from "react-router-dom"
-import { Form, json, useLoaderData } from "remix"
+import { useTransition } from "remix"
+import { Form } from "remix"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Spacer } from "~/components/Spacer"
 import { makePercentResponsibilityDistribution } from "~/components/Chart"
 import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode } from "~/components/util"
 import { dateFormatLong, last } from "~/util"
 import styled from "styled-components"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { useClickedBlob } from "~/contexts/ClickedContext"
 import { ExpandDown } from "~/components/Toggle"
 
-interface DetailsData {
-  blob?: HydratedGitBlobObject
-}
-
-export const loader: LoaderFunction = async ({ params, }) => {
-  if (params.data) {
-    return json<DetailsData>({
-      blob: JSON.parse(Buffer.from(params.data, 'base64').toString('utf8'))
-    })
-  }
-}
-
-export default function DetailsRoute() {
-  const loaderData = useLoaderData<DetailsData>()
-
-  if (loaderData?.blob) {
-    return <Details blob={loaderData.blob} />
-  }
-  return <Navigate to=".." replace={true} />
-}
-
-function Details({ blob }: { blob: HydratedGitBlobObject }) {
-  const extension = last(blob.name.split("."))
+export function Details() {
+  const { clickedBlob } = useClickedBlob()
   const { state } = useTransition()
   const { setClickedBlob } = useClickedBlob()
+  const didHideRef = useRef(false)
+
+  useEffect(() => {
+    if (didHideRef.current) {
+      setClickedBlob(null)
+      didHideRef.current = false
+    }
+
+  }, [clickedBlob, setClickedBlob, state])
+
+  if (!clickedBlob) return null
+
+  const extension = last(clickedBlob.name.split("."))
+
+
 
   return (
     <Box>
       <NavigateBackButton
         onClick={() => setClickedBlob(null)}
-        to=".."
       >
         &times;
       </NavigateBackButton>
-      <BoxTitle title={blob.name}>{blob.name}</BoxTitle>
+      <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
       <Spacer xl />
       <StyledDetailsEntries>
         <LineCountEntry
-          lineCount={blob.noLines}
-          isBinary={blob.isBinary}
+          lineCount={clickedBlob.noLines}
+          isBinary={clickedBlob.isBinary}
         />
-        <CommitsEntry clickedBlob={blob} />
-        <LastchangedEntry clickedBlob={blob} />
-        <PathEntry path={blob.path} />
+        <CommitsEntry clickedBlob={clickedBlob} />
+        <LastchangedEntry clickedBlob={clickedBlob} />
+        <PathEntry path={clickedBlob.path} />
       </StyledDetailsEntries>
       <Spacer xl />
-      {blob.isBinary ||
-        hasZeroContributions(blob.authors) ? null : (
-        <AuthorDistribution currentClickedBlob={blob} />
+      {clickedBlob.isBinary ||
+        hasZeroContributions(clickedBlob.authors) ? null : (
+        <AuthorDistribution currentClickedBlob={clickedBlob} />
       )}
       <Spacer lg />
       <Form method="post" action="/repo">
-        <input type="hidden" name="ignore" value={blob.path} />
-        <IgnoreButton disabled={state !== "idle"}>
+        <input type="hidden" name="ignore" value={clickedBlob.path} />
+        <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+          didHideRef.current = true
+        }}>
           Hide this file
         </IgnoreButton>
       </Form>
-      {blob.name.includes(".") ? <><Spacer />
+      {clickedBlob.name.includes(".") ? <><Spacer />
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
-          <IgnoreButton disabled={state !== "idle"}>
+          <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+            didHideRef.current = true
+          }}>
             Hide all <InlineCode>.{extension}</InlineCode> files
           </IgnoreButton>
         </Form></> : null}
