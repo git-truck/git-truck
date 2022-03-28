@@ -16,6 +16,7 @@ import { Spacer } from "~/components/Spacer";
 import { Legend } from "~/components/Legend";
 import { getArgs } from "~/analyzer/args.server";
 import { HiddenFiles } from "~/components/HiddenFiles";
+import semverCompare from "semver-compare"
 
 export function links() {
   return [appStyles,
@@ -75,7 +76,6 @@ export const action: ActionFunction = async ({ request }) => {
   return null
 }
 
-
 export default function Index() {
   const data = useLoaderData<AnalyzerData>()
 
@@ -92,7 +92,7 @@ export default function Index() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {data.currentVersion !== data.latestVersion ?
+          {semverCompare(data.latestVersion, data.currentVersion) === 1 ?
             <Box>
               <p title={`To update, close application and run: npx git-truck@latest`}>Update available: {data.latestVersion}</p> 
             </Box>

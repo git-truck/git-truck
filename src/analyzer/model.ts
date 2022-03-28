@@ -34,8 +34,8 @@ export interface AnalyzerData {
   branch: string
   commit: HydratedGitCommitObject
   authorUnions: string[][]
-  currentVersion?: string
-  latestVersion?: string
+  currentVersion: string
+  latestVersion: string
 }
 
 export interface GitBlobObject extends GitBaseObject {
