@@ -26,7 +26,7 @@ npx git-truck [args]
 | :--------: | :---------------------------------------------------------------------: | :----------------: |
 | `--branch` |                               branch name                               | checked out branch |
 |  `--path`  |                         path to git repository                          | current directory  |
-|  `--log`   | output log level. See [here](./app/parser/src/log.server.ts) for values |          -         |
+|  `--log`   | output log level. See [here](./src/analyzer/log.server.ts) for values |          -         |
 
 ### [Configuration](#configuration)
 
