@@ -52,7 +52,7 @@ export function Legend() {
   if (metricCaches.get(metricType)?.legend === undefined) return null
 
   return (
-    <Box>
+    <StyledBox>
       <StyledH2>
         {
           Metric[metricType]
