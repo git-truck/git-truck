@@ -16,12 +16,12 @@ export function Details() {
   const { clickedBlob } = useClickedBlob()
   const { state } = useTransition()
   const { setClickedBlob } = useClickedBlob()
-  const didHideRef = useRef(false)
+  const hideIsPendingRef = useRef(false)
 
   useEffect(() => {
-    if (didHideRef.current) {
+    if (hideIsPendingRef.current) {
       setClickedBlob(null)
-      didHideRef.current = false
+      hideIsPendingRef.current = false
     }
 
   }, [clickedBlob, setClickedBlob, state])
@@ -59,7 +59,7 @@ export function Details() {
       <Form method="post" action="/repo">
         <input type="hidden" name="ignore" value={clickedBlob.path} />
         <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
-          didHideRef.current = true
+          hideIsPendingRef.current = true
         }}>
           Hide this file
         </IgnoreButton>
@@ -68,7 +68,7 @@ export function Details() {
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
-            didHideRef.current = true
+            hideIsPendingRef.current = true
           }}>
             Hide all <InlineCode>.{extension}</InlineCode> files
           </IgnoreButton>
