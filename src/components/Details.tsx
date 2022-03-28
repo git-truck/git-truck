@@ -191,6 +191,9 @@ const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0 calc(var(--unit) * 3);
+  & > ${ DetailsValue } {
+    text-align: right;
+  }
 `
 
 const DetailsEntries = styled.div`
