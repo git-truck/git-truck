@@ -69,7 +69,14 @@ export function Details() {
           }}>
             Hide all <InlineCode>.{extension}</InlineCode> files
           </IgnoreButton>
-        </Form></> : null}
+        </Form>
+        <Spacer /></> : null}
+      <Form method="post" action="/repo">
+        <input type="hidden" name="open" value={blob.path}/>
+        <IgnoreButton disabled={state !== "idle"}>
+          Open file
+        </IgnoreButton>
+      </Form>
     </Box>
   )
 }
