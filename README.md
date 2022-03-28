@@ -22,13 +22,13 @@ npx git-truck [args]
 
 #### [Arguments](#arguments)
 
-|    arg     |   default value    |                               description                               |
-| :--------: | :----------------: | :---------------------------------------------------------------------: |
-|  `--path`  | current directory  |                         path to git repository                          |
-| `--branch` | checked out branch |                               branch name                               |
-|  `--out`   |    ./data.json     |                        output path for data file                        |
-|  `--log`   |        null        | output log level. See [here](./app/parser/src/log.server.ts) for values |
-|  `--help`  |        N/A         |                        output usage information                         |
+|    arg     |                               description                               |   default value    |
+| :--------: | :---------------------------------------------------------------------: | :----------------: |
+|  `--path`  |                         path to git repository                          | current directory  |
+| `--branch` |                               branch name                               | checked out branch |
+|  `--out`   |                        output path for data file                        |    ./data.json     |
+|  `--log`   | output log level. See [here](./app/parser/src/log.server.ts) for values |        null        |
+|  `--help`  |                        output usage information                         |        N/A         |
 
 ### [Configuration](#configuration)
 
@@ -61,9 +61,6 @@ npm run dev
 _or using yarn:_ `yarn dev`
 
 This starts the app in development mode, rebuilding assets on file changes.
-
-**Note:**
-The remix development server does not watch `server.ts` for changes, so if you are testing
 
 **Note:**
 If you want to provide args to the parser, you need to run remix and node separately in two different terminals:
