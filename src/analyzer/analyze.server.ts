@@ -29,6 +29,9 @@ import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
+import latestVersion from "latest-version"
+import pkg from "../../package.json"
+import { getCoAuthors } from "./coauthors.server"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -102,22 +105,6 @@ export async function analyzeCommit(
     ...commit,
     tree: await analyzeTree(getRepoName(repo), repo, repoName, tree),
   }
-}
-
-function getCoAuthors(description: string) {
-  const coauthorRegex = /.*Co-authored-by: (?<name>.*) <(?<email>.*)>/gm
-  const coauthormatches = description.matchAll(coauthorRegex)
-  let next = coauthormatches.next()
-  const coauthors: Person[] = []
-
-  while (next.value !== undefined) {
-    coauthors.push({
-      name: next.value.groups["name"].trimEnd(),
-      email: next.value.groups["email"],
-    })
-    next = coauthormatches.next()
-  }
-  return coauthors
 }
 
 async function analyzeTree(
@@ -284,6 +271,8 @@ export async function analyze(useCache = true) {
       commit: hydratedRepoTree,
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
+      currentVersion: pkg.version,
+      latestVersion: await latestVersion(pkg.name)
     }
 
     await describeAsyncJob(
@@ -311,10 +300,6 @@ export async function analyze(useCache = true) {
   await resetQuotePath(repoDir, quotePathDefaultValue)
 
   return data
-}
-
-export const exportForTest = {
-  getCoAuthors,
 }
 
 export function getOutPathFromRepoAndBranch(

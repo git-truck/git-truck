@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "0.5.15",
+  "version": "0.6.1",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
@@ -38,6 +38,7 @@
     "ignore": "^5.2.0",
     "is-binary-path": "^2.1.0",
     "lang-map": "^0.4.0",
+    "latest-version": "^6.0.0",
     "morgan": "^1.10.0",
     "nanospinner": "^1.0.0",
     "open": "^8.4.0",

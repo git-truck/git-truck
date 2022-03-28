@@ -4,11 +4,9 @@ import morgan from "morgan";
 import open from "open";
 import { createRequestHandler } from "@remix-run/express";
 import { join } from "path";
-import { readFileSync } from "fs";
-
 import * as serverBuild from "@remix-run/dev/server-build";
-
-const gitTruckPackage = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8"));
+import pkg from "./package.json"
+import latestVersion from "latest-version"
 
 const app = express();
 
@@ -40,17 +38,25 @@ app.all(
 
 const port = process.env.PORT || 3000;
 
-function printOpen(port: number) {
+async function printOpen(port: number) {
+  const latestV = await latestVersion(pkg.name)
+  const currentV = pkg.version
+
+
+  if (latestV !== currentV) {
+    console.log(`Update available: ${latestV}. Currently installed: ${currentV}`);
+    console.log(`To update, run: npx git-truck@latest`)
+    console.log(`Or to install globally: npm install -g git-truck@latest`)
+  }
+
   const serverport = port
-  console.log(`Git Truck v${gitTruckPackage.version}`);
-  console.log(`Serving static assets from ${staticAssetsPath}`);
   if (serverport !== port) console.log("Default/Specified port was used by another process");
-  console.log(`Express server listening on port ${serverport}`);
+  console.log(`Now listening on port ${serverport}`);
   open("http://localhost:" + serverport);
 }
 
 function startServer(port: number) {
-  let server = app.listen(port)
+  const server = app.listen(port)
     .on('error', () => {
       server.close(() => {
         startServer(port + 1);

@@ -1,0 +1,31 @@
+name: "Bumb version"
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  bump-version:
+      name: "Bump Version on master"
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: "Checkout source code"
+          uses: "actions/checkout@v2"
+          with:
+            ref: ${{ github.ref }}
+        - name: "cat package.json"
+          run: cat ./package.json
+        - name: "Setup Node.js"
+          uses: "actions/setup-node@v2"
+          with:
+            node-version: 14
+        - name: Update version in package.json
+          uses: "phips28/gh-action-bump-version@master"
+          with:
+            tag-prefix: ''
+          env:
+            GITHUB_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        - name: "cat package.json"
+          run: cat ./package.json
