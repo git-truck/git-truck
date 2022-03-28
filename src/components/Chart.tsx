@@ -231,12 +231,16 @@ function CircleText({
   isSearchMatch: boolean,
 }) {
   const { setPath } = usePath()
+  const props = useSpring({
+    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
+  })
+
   return (
     <>
-      <path
+      <animated.path
+        {...props}
         id={d.data.path}
         className="name-path"
-        d={circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)}
       />
       <text
         style={{
