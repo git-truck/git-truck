@@ -12,12 +12,10 @@ const InlineForm = styled(Form)`
 `
 
 const StyledButton = styled.button`
+  position: relative;
   background: none;
   border: none;
   cursor: pointer;
-  display: grid;
-  align-items: center;
-  justify-items: center;
   width: calc(2 * var(--unit));
   margin-right: calc(1 * var(--unit));
 
@@ -35,6 +33,12 @@ const StyledButton = styled.button`
   }
 `
 
+const StyledFontAwesomeIcon = styled(FontAwesomeIcon)`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -58,8 +62,8 @@ export function HiddenFiles() {
         <InlineForm method="post" action="/repo">
           <input type="hidden" name="unignore" value={hidden} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
-            <FontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
-            <FontAwesomeIcon id="eye" icon={faEye} />
+            <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
+            <StyledFontAwesomeIcon id="eye" icon={faEye} />
           </StyledButton>
         </InlineForm>
         <InlineCode>
