@@ -189,11 +189,12 @@ const DetailsHeading = styled.h3`
 
 const DetailsEntries = styled.div`
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr auto;
   gap: 0 calc(var(--unit) * 3);
 `
 
 const StyledDetailsEntries = styled(DetailsEntries)`
+  grid-template-columns: 1fr auto;
   gap: var(--unit) calc(var(--unit) * 3);
   & > p {
     text-align: left;
