@@ -10,12 +10,29 @@ import { getColorFromExtension } from "./extension-color"
 export const Metric = {
   FILE_EXTENSION: "File extension",
   MOST_COMMITS: "Most commits",
-  LAST_CHANGED: "Time of last change",
+  LAST_CHANGED: "Last changed",
   SINGLE_AUTHOR: "Single author",
   TOP_CONTRIBUTOR: "Top contributor",
 }
 
 export type MetricType = keyof typeof Metric
+
+export function getMetricDescription(metric: MetricType): string {
+  switch (metric) {
+    case "FILE_EXTENSION":
+      return "Where are different types of files located?"
+    case "MOST_COMMITS":
+      return "Which files have had the most commits, throughout the repository's history?"
+    case "LAST_CHANGED":
+      return "Where are the most recent or least recent commits made?"
+    case "SINGLE_AUTHOR":
+      return "Which files are authored by only one person, throughout the repository's history?"
+    case "TOP_CONTRIBUTOR":
+      return "Which person has made the most line-changes to a file, throughout the repository's history?"
+    default:
+      throw new Error("Uknown metric type: " + metric)
+  }
+}
 
 export function isGradientMetric(metric: MetricType) {
   switch (metric) {
@@ -287,7 +304,7 @@ class ColdMapTranslater {
   }
 
   getColor(value: number): string {
-    return `hsl(240,100%,${this.translator.translate(value)}%)`
+    return `hsl(240,100%,${this.translator.inverseTranslate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {

@@ -53,3 +53,26 @@ export function applyIgnore(
         }),
     }
 }
+
+export function TreeCleanup(tree: HydratedGitTreeObject) {
+    for(const child of tree.children) {
+        if (child.type === "tree") {
+            const ctree = child as HydratedGitTreeObject
+            TreeCleanup(ctree)
+        }
+    }
+    tree.children = tree.children.filter((child) => {
+        if (child.type === "blob") return true
+        else {
+            const ctree = child as HydratedGitTreeObject
+            if (ctree.children.length === 0) return false
+            return true
+        }
+    })
+    if (tree.children.length === 1 && tree.children[0].type === "tree") {
+        const temp = tree.children[0]
+        tree.children = temp.children
+        tree.name = `${tree.name}/${temp.name}`
+        tree.path = `${tree.path}/${temp.name}`
+    }
+}

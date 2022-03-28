@@ -115,39 +115,59 @@ export function Chart(props: ChartProps) {
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
   let showLabel = isTree(d.data)
+  const { path } = usePath()
+  let displayText = d.data.name
+  type textIsTooLongFunction = (text: string) => boolean
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
+
+  if (isRoot) {
+    const pathSteps = path.split('/')
+    const dispSteps = displayText.split('/')
+    let ps = 0
+    let ds = 0
+    while(ps < pathSteps.length &&  ds < dispSteps.length) {
+      if ( pathSteps[ps] !== dispSteps[ds]) ps++
+      else { ps++; ds++ }
+    }
+
+    displayText = dispSteps.slice(ds-1).join('/')
+  }
 
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      if (circleDatum.r * Math.PI < d.data.name.length * estimatedLetterWidth)
-        showLabel = false
+      collapseDisplayText_mut((text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth)
 
       return (
         <>
           <Circle d={circleDatum} isSearchMatch={match} />
           {showLabel ? (
-            <CircleText d={circleDatum} isSearchMatch={match} />
+            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={match} />
           ) : null}
         </>
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      if (
-        rectDatum.x1 - rectDatum.x0 <
-        d.data.name.length * estimatedLetterWidth
-      )
-        showLabel = false
+      collapseDisplayText_mut((text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth)
 
       return (
         <>
           <Rect d={rectDatum} isSearchMatch={match} />
-          {showLabel ? <RectText d={rectDatum} isSearchMatch={match} /> : null}
+          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={match} /> : null}
         </>
       )
     default:
       throw Error("Unknown chart type")
+  }
+
+  function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction) {
+    if (textIsTooLong(displayText)) {
+      displayText = displayText.replace(/\/.+\//gm, "/.../")
+      if (textIsTooLong(displayText)) {
+        showLabel = false
+      }
+    }
   }
 })
 
@@ -203,9 +223,11 @@ function Rect({
 
 function CircleText({
   d,
+  displayText,
   isSearchMatch,
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
+  displayText: string
   isSearchMatch: boolean,
 }) {
   const { setPath } = usePath()
@@ -235,7 +257,7 @@ function CircleText({
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >
-          {d.data.name}
+          {displayText}
         </textPath>
       </text>
       <text>
@@ -248,7 +270,7 @@ function CircleText({
           textAnchor="middle"
           xlinkHref={`#${d.data.path}`}
         >
-          {d.data.name}
+          {displayText}
         </textPath>
       </text>
     </>
@@ -257,9 +279,11 @@ function CircleText({
 
 function RectText({
   d,
+  displayText,
   isSearchMatch,
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
+  displayText: string
   isSearchMatch: boolean
 }) {
   const { setPath } = usePath()
@@ -271,7 +295,7 @@ function RectText({
 
   return (
     <animated.text {...props} onClick={() => setPath(d.data.path)} className="object-name">
-      {d.data.name}
+      {displayText}
     </animated.text>
   )
 }
@@ -285,11 +309,17 @@ function createPartitionedHiearchy(
   const root = data.tree as HydratedGitTreeObject
 
   let currentTree = root
-  for (const step of path.split("/")) {
+  const steps = path.substring(data.tree.name.length+1).split("/")
+
+  for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
-      if (child.type === "tree" && child.name === step) {
-        currentTree = child
-        break;
+      if (child.type === "tree") {
+        const childSteps = child.name.split("/")
+        if (childSteps[0] === steps[i]) {
+          currentTree = child
+          i += childSteps.length-1
+          break;
+        }
       }
     }
   }
