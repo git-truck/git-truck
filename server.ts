@@ -40,10 +40,14 @@ app.all(
 const port = process.env.PORT || 3000;
 
 async function printOpen(port: number) {
-  const latestV = await latestVersion(pkg.name)
+  let latestV: string | undefined
+  
+  try {
+    latestV = await latestVersion(pkg.name)
+  } catch {}
   const currentV = pkg.version
 
-  if (semverCompare(latestV, currentV) === 1) {
+  if (latestV && semverCompare(latestV, currentV) === 1) {
     console.log(`Update available: ${latestV}. Currently installed: ${currentV}`);
     console.log(`To update, run: npx git-truck@latest`)
     console.log(`Or to install globally: npm install -g git-truck@latest`)

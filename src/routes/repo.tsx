@@ -92,7 +92,7 @@ export default function Index() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {semverCompare(data.latestVersion, data.currentVersion) === 1 ?
+          {data.latestVersion && semverCompare(data.latestVersion, data.currentVersion) === 1 ?
             <Box>
               <p title={`To update, close application and run: npx git-truck@latest`}>Update available: {data.latestVersion}</p> 
             </Box>

@@ -262,6 +262,12 @@ export async function analyze(useCache = true) {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
+    let latestV: string | undefined
+  
+    try {
+      latestV = await latestVersion(pkg.name)
+    } catch {}
+
     const authorUnions = args.unionedAuthors as string[][]
     data = {
       cached: false,
@@ -272,7 +278,7 @@ export async function analyze(useCache = true) {
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
-      latestVersion: await latestVersion(pkg.name)
+      latestVersion: latestV
     }
 
     await describeAsyncJob(
