@@ -13,12 +13,12 @@ import {
   OptionsContext,
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, AnalyzerData } from "~/analyzer/model"
+import { HydratedGitBlobObject, AnalyzerData, HydratedGitObject } from "~/analyzer/model"
 import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
 import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
 import { PathContext } from "../contexts/PathContext"
-import { ClickedBlobContext } from "~/contexts/ClickedContext"
+import { ClickedObjectContext } from "~/contexts/ClickedContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -30,7 +30,7 @@ export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
   const [path, setPath] = useState(data.repo)
-  const [clickedBlob, setClickedBlob] = useState<HydratedGitBlobObject | null>(null)
+  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
   const metricState: {
     metricCaches: Map<MetricType, MetricCache> | null
@@ -88,10 +88,10 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           hoveredBlob: blob,
         })),
-      setClickedBlob: (blob: HydratedGitBlobObject | null) =>
+      setClickedObject: (object: HydratedGitObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
-          clickedBlob: blob,
+          clickedObject: object,
         })),
     }),
     [options]
@@ -122,9 +122,9 @@ export function Providers({ children, data }: ProvidersProps) {
           <OptionsContext.Provider value={optionsValue}>
             <SearchContext.Provider value={{ searchText, setSearchText }}>
               <PathContext.Provider value={{ path, setPath }}>
-                <ClickedBlobContext.Provider value={{ clickedBlob, setClickedBlob }}>
+                <ClickedObjectContext.Provider value={{ clickedObject: clickedObject, setClickedObject }}>
                   {children}
-                </ClickedBlobContext.Provider>
+                </ClickedObjectContext.Provider>
               </PathContext.Provider>
             </SearchContext.Provider>
           </OptionsContext.Provider>

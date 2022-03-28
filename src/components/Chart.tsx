@@ -26,7 +26,6 @@ import { useSearch } from "../contexts/SearchContext"
 import { useData } from "../contexts/DataContext"
 import { animated, useSpring } from "@react-spring/web"
 import { useMetricCaches } from "../contexts/MetricContext"
-import { useNavigate } from "remix"
 
 import {
   hierarchy,
@@ -34,7 +33,7 @@ import {
   treemap,
 } from "d3-hierarchy"
 import { usePath } from "../contexts/PathContext"
-import { useClickedBlob } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/contexts/ClickedContext"
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -59,7 +58,8 @@ export function Chart(props: ChartProps) {
   const data = useData()
   const { chartType } = useOptions()
   const { path } = usePath();
-  const {setClickedBlob} = useClickedBlob()
+  const {setClickedObject } = useClickedObject()
+  const { setPath } = usePath()
 
   const nodes = useMemo(() => {
     return createPartitionedHiearchy(
@@ -75,12 +75,15 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
+        onClick: () => setClickedObject(d.data as HydratedGitBlobObject),
         onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
         onMouseOut: () => setHoveredBlob(null),
       }
       : {
-        onClick: () => setClickedBlob(null),
+        onClick: () => {
+          setClickedObject(d.data as HydratedGitTreeObject)
+          setPath(d.data.path)
+        },
         onMouseOver: () => setHoveredBlob(null),
         onMouseOut: () => setHoveredBlob(null),
       }
@@ -223,7 +226,6 @@ function CircleText({
   displayText: string
   isSearchMatch: boolean,
 }) {
-  const { setPath } = usePath()
   const props = useSpring({
     d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
   })
@@ -255,7 +257,6 @@ function CircleText({
       </text>
       <text>
         <textPath
-          onClick={() => setPath(d.data.path)}
           fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
@@ -279,7 +280,6 @@ function RectText({
   displayText: string
   isSearchMatch: boolean
 }) {
-  const { setPath } = usePath()
   const props = useSpring({
     x: d.x0 + 4,
     y: d.y0 + 12,
@@ -287,7 +287,7 @@ function RectText({
   })
 
   return (
-    <animated.text {...props} onClick={() => setPath(d.data.path)} className="object-name">
+    <animated.text {...props} className="object-name">
       {displayText}
     </animated.text>
   )
@@ -364,24 +364,6 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           m0,${r}
           a${r},${r} 0 1,1 0,${-r * 2}
           a${r},${r} 0 1,1 0,${r * 2}`
-}
-
-export function makePercentResponsibilityDistribution(
-  d: HydratedGitBlobObject
-): Record<string, number> {
-  const unionedAuthors = d.unionedAuthors
-  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
-  const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
-
-  const newAuthorsEntries = Object.entries(unionedAuthors).reduce(
-    (newAuthorOject, [author, contrib]) => {
-      const fraction: number = contrib / sum
-      return { ...newAuthorOject, [author]: fraction }
-    },
-    {}
-  )
-
-  return newAuthorsEntries
 }
 
 function getPaddedSizeProps(

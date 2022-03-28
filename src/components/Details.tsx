@@ -2,66 +2,71 @@ import { useEffect, useRef, useState } from "react"
 import { Form, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "~/analyzer/model"
+import { calculateSubTree } from "~/authorUnionUtil"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
-import { makePercentResponsibilityDistribution } from "~/components/Chart"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
 import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton } from "~/components/util"
-import { useClickedBlob } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/contexts/ClickedContext"
 import { dateFormatLong, last } from "~/util"
 
 export function Details() {
-  const { clickedBlob } = useClickedBlob()
+  const { clickedObject } = useClickedObject()
   const { state } = useTransition()
-  const { setClickedBlob } = useClickedBlob()
+  const { setClickedObject } = useClickedObject()
   const isProcessingHideRef = useRef(false)
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
-      setClickedBlob(null)
+      setClickedObject(null)
       isProcessingHideRef.current = false
     }
 
-  }, [clickedBlob, setClickedBlob, state])
+  }, [clickedObject, setClickedObject, state])
 
-  if (!clickedBlob) return null
-
-  const extension = last(clickedBlob.name.split("."))
+  if (!clickedObject) return null
+  const isBlob = clickedObject.type === "blob"
+  const extension = last(clickedObject.name.split("."))
 
   return (
     <Box>
       <NavigateBackButton
-        onClick={() => setClickedBlob(null)}
+        onClick={() => setClickedObject(null)}
       >
         &times;
       </NavigateBackButton>
-      <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
+      <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
       <Spacer xl />
       <DetailsEntries>
-        <LineCountEntry
-          lineCount={clickedBlob.noLines}
-          isBinary={clickedBlob.isBinary}
-        />
-        <CommitsEntry clickedBlob={clickedBlob} />
-        <LastchangedEntry clickedBlob={clickedBlob} />
-        <PathEntry path={clickedBlob.path} />
+        { isBlob ? <>
+          <LineCountEntry
+            lineCount={clickedObject.noLines}
+            isBinary={clickedObject.isBinary}
+          />
+          <CommitsEntry clickedBlob={clickedObject} />
+          <LastchangedEntry clickedBlob={clickedObject} />
+          </> : null }
+        <PathEntry path={clickedObject.path} />
       </DetailsEntries>
       <Spacer xl />
-      {clickedBlob.isBinary ||
-        hasZeroContributions(clickedBlob.authors) ? null : (
-        <AuthorDistribution currentClickedBlob={clickedBlob} />
-      )}
+      { isBlob ?
+        (clickedObject.isBinary ||
+          hasZeroContributions(clickedObject.authors) ? null : (
+          <AuthorDistribution authors={clickedObject.unionedAuthors} />
+        ))
+        : <AuthorDistribution authors={calculateSubTree(clickedObject)} />
+      }
       <Spacer lg />
       <Form method="post" action="/repo">
-        <input type="hidden" name="ignore" value={clickedBlob.path} />
+        <input type="hidden" name="ignore" value={clickedObject.path} />
         <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
           isProcessingHideRef.current = true
         }}>
           Hide this file
         </IgnoreButton>
       </Form>
-      {clickedBlob.name.includes(".") ? <><Spacer />
+      {clickedObject.name.includes(".") ? <><Spacer />
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
@@ -130,11 +135,11 @@ const AuthorDistHeader = styled.div`
 const authorCutoff = 2
 
 function AuthorDistribution(props: {
-  currentClickedBlob: HydratedGitBlobObject
+  authors: Record<string, number> | undefined
 }) {
   const [collapse, setCollapse] = useState<boolean>(true)
   const contribDist = Object.entries(
-    makePercentResponsibilityDistribution(props.currentClickedBlob)
+    makePercentResponsibilityDistribution(props.authors)
   ).sort((a, b) => (a[1] < b[1] ? 1 : -1))
 
   if (contribDist.length === 0) return null
@@ -179,6 +184,22 @@ function AuthorDistribution(props: {
   )
 }
 
+function makePercentResponsibilityDistribution(
+  unionedAuthors: Record<string, number> | undefined
+): Record<string, number> {
+  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
+  const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
+
+  const newAuthorsEntries = Object.entries(unionedAuthors).reduce(
+    (newAuthorOject, [author, contrib]) => {
+      const fraction: number = contrib / sum
+      return { ...newAuthorOject, [author]: fraction }
+    },
+    {}
+  )
+
+  return newAuthorsEntries
+}
 
 const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);

@@ -18,5 +18,8 @@
       "emiljapelt",
       "Emil Jäpelt"
     ]
+  ],
+  "hiddenFiles": [
+    "git-visual/src/analyzer/analyze.server.ts"
   ]
 }
