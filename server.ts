@@ -7,6 +7,7 @@ import { join } from "path";
 import * as serverBuild from "@remix-run/dev/server-build";
 import pkg from "./package.json"
 import latestVersion from "latest-version"
+import semverCompare from "semver-compare"
 
 const app = express();
 
@@ -42,8 +43,7 @@ async function printOpen(port: number) {
   const latestV = await latestVersion(pkg.name)
   const currentV = pkg.version
 
-
-  if (latestV !== currentV) {
+  if (semverCompare(latestV, currentV) === 1) {
     console.log(`Update available: ${latestV}. Currently installed: ${currentV}`);
     console.log(`To update, run: npx git-truck@latest`)
     console.log(`Or to install globally: npm install -g git-truck@latest`)

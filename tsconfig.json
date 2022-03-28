@@ -4,7 +4,6 @@
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "isolatedModules": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
     "skipLibCheck": true,
