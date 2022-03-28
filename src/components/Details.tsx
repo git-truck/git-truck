@@ -72,7 +72,7 @@ export function Details() {
         </Form>
         <Spacer /></> : null}
       <Form method="post" action="/repo">
-        <input type="hidden" name="open" value={blob.path}/>
+        <input type="hidden" name="open" value={clickedBlob.path}/>
         <IgnoreButton disabled={state !== "idle"}>
           Open file
         </IgnoreButton>
