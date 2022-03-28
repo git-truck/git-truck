@@ -58,23 +58,35 @@ export function Details() {
         : <AuthorDistribution authors={calculateSubTree(clickedObject)} />
       }
       <Spacer lg />
-      <Form method="post" action="/repo">
-        <input type="hidden" name="ignore" value={clickedObject.path} />
-        <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
-          isProcessingHideRef.current = true
-        }}>
-          Hide this file
-        </IgnoreButton>
-      </Form>
-      {clickedObject.name.includes(".") ? <><Spacer />
+      { isBlob ? <>
         <Form method="post" action="/repo">
-          <input type="hidden" name="ignore" value={`*.${extension}`} />
+          <input type="hidden" name="ignore" value={clickedObject.path} />
           <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
             isProcessingHideRef.current = true
           }}>
-            Hide all <InlineCode>.{extension}</InlineCode> files
+            Hide this file
           </IgnoreButton>
-        </Form></> : null}
+        </Form>
+        {clickedObject.name.includes(".") ? <><Spacer />
+          <Form method="post" action="/repo">
+            <input type="hidden" name="ignore" value={`*.${extension}`} />
+            <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+              isProcessingHideRef.current = true
+            }}>
+              Hide all <InlineCode>.{extension}</InlineCode> files
+            </IgnoreButton>
+          </Form></> : null}</>
+        : <>
+          <Form method="post" action="/repo">
+            <input type="hidden" name="ignore" value={clickedObject.path} />
+            <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+              isProcessingHideRef.current = true
+            }}>
+              Hide this folder
+            </IgnoreButton>
+          </Form>
+        </>
+        }
     </Box>
   )
 }
