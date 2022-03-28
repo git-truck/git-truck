@@ -122,6 +122,9 @@ export const DetailsKey = styled.span<{ grow?: boolean }>`
   font-size: 0.9em;
   font-weight: 500;
   opacity: 0.7;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 export const DetailsValue = styled.p`
