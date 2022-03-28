@@ -55,7 +55,7 @@ export function HiddenFiles() {
     />
     {!collapse ? <div>
       {data.hiddenFiles.map(hidden => <div key={hidden} title={hidden}>
-        <InlineForm method="post" action="/repo/">
+        <InlineForm method="post" action="/repo">
           <input type="hidden" name="unignore" value={hidden} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
             <FontAwesomeIcon id="eyeslash" icon={faEyeSlash} />

@@ -53,7 +53,6 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
-  const navigate = useNavigate()
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(
     null
   )
@@ -76,18 +75,12 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => {
-          navigate(`./details/${global.btoa(JSON.stringify(d.data))}`);
-          setClickedBlob(d.data as HydratedGitBlobObject);
-        },
+        onClick: () => setClickedBlob(d.data as HydratedGitBlobObject),
         onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
         onMouseOut: () => setHoveredBlob(null),
       }
       : {
-        onClick: () => {
-          navigate("/repo");
-          setClickedBlob(null);
-        },
+        onClick: () => setClickedBlob(null),
         onMouseOver: () => setHoveredBlob(null),
         onMouseOut: () => setHoveredBlob(null),
       }

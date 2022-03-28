@@ -1,5 +1,4 @@
 import styled from "styled-components"
-import { Link } from "remix"
 
 export const BoxTitle = styled.h2`
   font-size: 1.5em;
@@ -20,9 +19,11 @@ export const BoxSubTitle = styled.h2`
   color: var(--title-color);
 `
 
-export const NavigateBackButton = styled(Link)`
+export const NavigateBackButton = styled.button`
   color: #000;
   text-decoration: none;
+  background-color: transparent;
+  border: none;
   font-size: larger;
   position: absolute;
   top: calc(var(--unit));
