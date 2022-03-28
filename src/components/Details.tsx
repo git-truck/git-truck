@@ -38,7 +38,7 @@ export function Details() {
       </NavigateBackButton>
       <BoxTitle title={clickedBlob.name}>{clickedBlob.name}</BoxTitle>
       <Spacer xl />
-      <StyledDetailsEntries>
+      <DetailsEntries>
         <LineCountEntry
           lineCount={clickedBlob.noLines}
           isBinary={clickedBlob.isBinary}
@@ -46,7 +46,7 @@ export function Details() {
         <CommitsEntry clickedBlob={clickedBlob} />
         <LastchangedEntry clickedBlob={clickedBlob} />
         <PathEntry path={clickedBlob.path} />
-      </StyledDetailsEntries>
+      </DetailsEntries>
       <Spacer xl />
       {clickedBlob.isBinary ||
         hasZeroContributions(clickedBlob.authors) ? null : (
@@ -143,9 +143,9 @@ function AuthorDistribution(props: {
       <>
         <DetailsHeading>Author distribution</DetailsHeading>
         <Spacer xs />
-        <DetailsEntries>
+        <AuthorDistEntries>
           <AuthorDistFragment show={true} items={contribDist} />
-        </DetailsEntries>
+        </AuthorDistEntries>
       </>
     )
   }
@@ -160,7 +160,7 @@ function AuthorDistribution(props: {
         />
       </AuthorDistHeader>
       <Spacer xs />
-      <DetailsEntries>
+      <AuthorDistEntries>
         <AuthorDistFragment
           show={true}
           items={contribDist.slice(0, authorCutoff)}
@@ -174,7 +174,7 @@ function AuthorDistribution(props: {
           items={contribDist.slice(authorCutoff)}
           toggle={() => setCollapse(!collapse)}
         />
-      </DetailsEntries>
+      </AuthorDistEntries>
     </>
   )
 }
@@ -187,18 +187,16 @@ const DetailsHeading = styled.h3`
   font-size: 1.1em;
 `
 
-const DetailsEntries = styled.div`
+const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0 calc(var(--unit) * 3);
 `
 
-const StyledDetailsEntries = styled(DetailsEntries)`
-  grid-template-columns: 1fr auto;
+const DetailsEntries = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: var(--unit) calc(var(--unit) * 3);
-  & > p {
-    text-align: left;
-  }
 `
 
 const IgnoreButton = styled.button`
