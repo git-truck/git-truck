@@ -1,4 +1,4 @@
-name: "Bumb version"
+name: "Bump version"
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   bump-version:
-      name: "Bump Version on master"
+      name: "Bump Version on main"
       runs-on: ubuntu-latest
 
       steps:
@@ -15,6 +15,7 @@ jobs:
           uses: "actions/checkout@v2"
           with:
             ref: ${{ github.ref }}
+            token: ${{ secrets.TOKEN }}
         - name: "cat package.json"
           run: cat ./package.json
         - name: "Setup Node.js"
@@ -26,6 +27,6 @@ jobs:
           with:
             tag-prefix: ''
           env:
-            GITHUB_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.TOKEN }}
         - name: "cat package.json"
           run: cat ./package.json
