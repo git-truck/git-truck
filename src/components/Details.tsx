@@ -1,27 +1,26 @@
-import { useTransition } from "remix"
-import { Form } from "remix"
-import { HydratedGitBlobObject } from "~/analyzer/model"
-import { Spacer } from "~/components/Spacer"
-import { makePercentResponsibilityDistribution } from "~/components/Chart"
-import { Box, BoxTitle, NavigateBackButton, DetailsKey, DetailsValue, InlineCode } from "~/components/util"
-import { dateFormatLong, last } from "~/util"
-import styled from "styled-components"
 import { useEffect, useRef, useState } from "react"
+import { Form, useTransition } from "remix"
+import styled from "styled-components"
+import { HydratedGitBlobObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
-import { useClickedBlob } from "~/contexts/ClickedContext"
+import { makePercentResponsibilityDistribution } from "~/components/Chart"
+import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
+import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton } from "~/components/util"
+import { useClickedBlob } from "~/contexts/ClickedContext"
+import { dateFormatLong, last } from "~/util"
 
 export function Details() {
   const { clickedBlob } = useClickedBlob()
   const { state } = useTransition()
   const { setClickedBlob } = useClickedBlob()
-  const hideIsPendingRef = useRef(false)
+  const isProcessingHideRef = useRef(false)
 
   useEffect(() => {
-    if (hideIsPendingRef.current) {
+    if (isProcessingHideRef.current) {
       setClickedBlob(null)
-      hideIsPendingRef.current = false
+      isProcessingHideRef.current = false
     }
 
   }, [clickedBlob, setClickedBlob, state])
@@ -29,8 +28,6 @@ export function Details() {
   if (!clickedBlob) return null
 
   const extension = last(clickedBlob.name.split("."))
-
-
 
   return (
     <Box>
@@ -59,7 +56,7 @@ export function Details() {
       <Form method="post" action="/repo">
         <input type="hidden" name="ignore" value={clickedBlob.path} />
         <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
-          hideIsPendingRef.current = true
+          isProcessingHideRef.current = true
         }}>
           Hide this file
         </IgnoreButton>
@@ -68,7 +65,7 @@ export function Details() {
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
           <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
-            hideIsPendingRef.current = true
+            isProcessingHideRef.current = true
           }}>
             Hide all <InlineCode>.{extension}</InlineCode> files
           </IgnoreButton>
