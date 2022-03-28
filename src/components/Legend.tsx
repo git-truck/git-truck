@@ -10,6 +10,7 @@ import { Box } from "./util"
 import { useClickedBlob } from "~/contexts/ClickedContext"
 import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
+import { dateFormatLong, dateFormatRelative } from "~/util"
 
 const legendCutoff = 3
 
@@ -92,8 +93,8 @@ export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendP
   return (
     <>
       <GradientLegendDiv>
-        <LegendLable>{minValue}</LegendLable>
-        <LegendLable>{maxValue}</LegendLable>
+        <LegendLable title={dateFormatLong(minValue)} >{dateFormatRelative(minValue)}</LegendLable>
+        <LegendLable title={dateFormatLong(maxValue)} >{dateFormatRelative(maxValue)}</LegendLable>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
       <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>
