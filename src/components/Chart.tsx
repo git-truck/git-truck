@@ -117,7 +117,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   let showLabel = isTree(d.data)
   const { path } = usePath()
   let displayText = d.data.name
-  let textIsTooLong: (text: string) => boolean
+  type textIsTooLongFunction = (text: string) => boolean
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
@@ -137,13 +137,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      textIsTooLong = (text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth
-      if (textIsTooLong(displayText)) {
-        displayText = displayText.replace(/\/.+\//gm, "/.../")
-        if (textIsTooLong(displayText)) {
-          showLabel = false
-        }
-      }
+      collapseDisplayText_mut((text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth)
 
       return (
         <>
@@ -155,13 +149,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      textIsTooLong = (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth
-      if (textIsTooLong(displayText)) {
-        displayText = displayText.replace(/\/.+\//gm, "/.../")
-        if (textIsTooLong(displayText)) {
-          showLabel = false
-        }
-      }
+      collapseDisplayText_mut((text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth)
 
       return (
         <>
@@ -171,6 +159,15 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       )
     default:
       throw Error("Unknown chart type")
+  }
+
+  function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction) {
+    if (textIsTooLong(displayText)) {
+      displayText = displayText.replace(/\/.+\//gm, "/.../")
+      if (textIsTooLong(displayText)) {
+        showLabel = false
+      }
+    }
   }
 })
 
