@@ -117,7 +117,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   let showLabel = isTree(d.data)
   const { path } = usePath()
   let displayText = d.data.name
-  let textToLong: (text: string) => boolean
+  let textIsTooLong: (text: string) => boolean
   const { searchText } = useSearch()
   const match = !isRoot && isSearchMatch(d, searchText)
 
@@ -137,10 +137,10 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      textToLong = (text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth
-      if (textToLong(displayText)) {
+      textIsTooLong = (text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth
+      if (textIsTooLong(displayText)) {
         displayText = displayText.replace(/\/.+\//gm, "/.../")
-        if (textToLong(displayText)) {
+        if (textIsTooLong(displayText)) {
           showLabel = false
         }
       }
@@ -155,10 +155,10 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      textToLong = (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth
-      if (textToLong(displayText)) {
+      textIsTooLong = (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth
+      if (textIsTooLong(displayText)) {
         displayText = displayText.replace(/\/.+\//gm, "/.../")
-        if (textToLong(displayText)) {
+        if (textIsTooLong(displayText)) {
           showLabel = false
         }
       }
@@ -308,12 +308,12 @@ function createPartitionedHiearchy(
   const root = data.tree as HydratedGitTreeObject
 
   let currentTree = root
-  let steps = path.substring(data.tree.name.length+1).split("/")
+  const steps = path.substring(data.tree.name.length+1).split("/")
 
   for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
       if (child.type === "tree") {
-        let childSteps = child.name.split("/")
+        const childSteps = child.name.split("/")
         if (childSteps[0] === steps[i]) {
           currentTree = child
           i += childSteps.length-1
