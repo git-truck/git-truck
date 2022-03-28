@@ -24,11 +24,9 @@ npx git-truck [args]
 
 |    arg     |                               description                               |   default value    |
 | :--------: | :---------------------------------------------------------------------: | :----------------: |
-|  `--path`  |                         path to git repository                          | current directory  |
 | `--branch` |                               branch name                               | checked out branch |
-|  `--out`   |                        output path for data file                        |    ./data.json     |
+|  `--path`  |                         path to git repository                          | current directory  |
 |  `--log`   | output log level. See [here](./app/parser/src/log.server.ts) for values |          -         |
-|  `--help`  |                        output usage information                         |          -         |
 
 ### [Configuration](#configuration)
 
