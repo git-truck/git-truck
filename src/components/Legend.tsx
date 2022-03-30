@@ -7,7 +7,7 @@ import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendD
 import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
-import { useClickedBlob } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/contexts/ClickedContext"
 import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
 
@@ -79,9 +79,9 @@ export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendP
   const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
-  const {clickedBlob} = useClickedBlob()
+  const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedBlob?.path ?? "") ?? "")
+  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedObject?.path ?? "") ?? "")
   let offset = -1
   if (blobLightness !== -1) {
     const min = getLightness(minColor)

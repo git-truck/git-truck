@@ -50,3 +50,21 @@ export function addAuthorUnion(
     }
   }
 }
+
+export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
+  const aggregatedAuthors: Record<string, number> = {}
+  subTree(tree)
+  function subTree(tree: HydratedGitTreeObject) {
+      for (const child of tree.children) {
+          if (child.type === "blob") {
+              if (!child.unionedAuthors) throw Error("No unioned authors")
+              for (const [author, contrib] of Object.entries(child.unionedAuthors)) {
+                  aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
+              }
+          } else if (child.type === "tree") {
+              subTree(child)
+          }
+      }
+  }
+  return aggregatedAuthors
+}
