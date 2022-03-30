@@ -33,6 +33,8 @@ import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 
+let repoDir = "."
+
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
 
@@ -177,10 +179,10 @@ function getCommandLine() {
 
 export function openFile(path: string) {
   path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
-  exec(`${getCommandLine()} ${resolve(path)}`)
+  exec(`${getCommandLine()} ${resolve(repoDir, path)}`)
   .stderr?.on("data", (e) => {
     // TODO show error in UI
-    log.error(`Cannot open file ${path}: ${e}`)
+    log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
   })
 }
 
@@ -205,7 +207,7 @@ export async function analyze(useCache = true) {
     setLogLevel(args.log as string)
   }
 
-  let repoDir = args.path
+  repoDir = args.path
   if (!isAbsolute(repoDir)) repoDir = resolve(process.cwd(), repoDir)
 
   const branch = args.branch
