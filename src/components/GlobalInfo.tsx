@@ -2,7 +2,7 @@ import { Form, useTransition } from "remix"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, ClickableText, NonClickableText } from "./util"
+import { Box, BoxTitle } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
@@ -37,13 +37,6 @@ export function GlobalInfo() {
       <div>
         <strong>Branch: </strong>
         {data.branch}
-      </div>
-      <div>
-        <strong>Path: </strong>
-        {paths.reverse().map(([name, p], i) => {
-          if (p === "" || i === paths.length - 1) return <NonClickableText key={p}>/{name}</NonClickableText>
-          else return <ClickableText key={p} onClick={() => setPath(p)}>/{name}</ClickableText>
-        })}
       </div>
     </Box>
   )
