@@ -133,27 +133,6 @@ export const DetailsValue = styled.p`
   font-size: 0.9em;
 `
 
-export const ClickableText = styled.button`
-  margin-right: 2px;
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-weight: inherit;
-  font-size: inherit;
-  color: blue;
-  text-decoration: underline;
-  text-decoration-color: blue;
-  cursor: pointer;
-  &:hover {
-    color: #8080ff;
-    text-decoration-color: #8080ff;
-  }
-`
-
-export const NonClickableText = styled.span`
-  cursor: default;
-`
-
 export const InlineCode = styled.code`
   display: inline-block;
   font-family: monospace;
