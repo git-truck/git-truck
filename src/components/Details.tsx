@@ -55,27 +55,27 @@ export function Details() {
       <Spacer lg />
       <Form method="post" action="/repo">
         <input type="hidden" name="ignore" value={clickedBlob.path} />
-        <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+        <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
           isProcessingHideRef.current = true
         }}>
           Hide this file
-        </IgnoreButton>
+        </DetailsButton>
       </Form>
       {clickedBlob.name.includes(".") ? <><Spacer />
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={`*.${extension}`} />
-          <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+          <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
             isProcessingHideRef.current = true
           }}>
             Hide all <InlineCode>.{extension}</InlineCode> files
-          </IgnoreButton>
+          </DetailsButton>
         </Form>
         <Spacer /></> : null}
       <Form method="post" action="/repo">
         <input type="hidden" name="open" value={clickedBlob.path}/>
-        <IgnoreButton disabled={state !== "idle"}>
+        <DetailsButton disabled={state !== "idle"}>
           Open file
-        </IgnoreButton>
+        </DetailsButton>
       </Form>
     </Box>
   )
@@ -209,7 +209,7 @@ const DetailsEntries = styled.div`
   gap: var(--unit) calc(var(--unit) * 3);
 `
 
-const IgnoreButton = styled.button`
+const DetailsButton = styled.button`
   background: var(--button-bg);
   width: fit-content;
   border: none;
