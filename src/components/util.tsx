@@ -134,15 +134,19 @@ export const DetailsValue = styled.p`
 `
 
 export const ClickableText = styled.button`
+  margin-right: 2px;
   background: none;
   border: none;
   font-family: inherit;
   font-weight: inherit;
   font-size: inherit;
-  color: inherit;
+  color: blue;
+  text-decoration: underline;
+  text-decoration-color: blue;
   cursor: pointer;
   &:hover {
-    color: darkgrey;
+    color: #8080ff;
+    text-decoration-color: #8080ff;
   }
 `
 
