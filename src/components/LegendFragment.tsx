@@ -1,6 +1,6 @@
 import { PointInfo } from "../metrics"
 import { Spacer } from "./Spacer"
-import { LegendEntry, LegendDot, LegendLable } from "./util"
+import { LegendEntry, LegendDot, LegendLabel } from "./util"
 
 interface LegendFragProps {
   items: [string, PointInfo][]
@@ -18,7 +18,7 @@ export function LegendFragment(props: LegendFragProps) {
             <LegendEntry>
               <LegendDot dotColor={info.color} />
               <Spacer horizontal />
-              <LegendLable>{label}</LegendLable>
+              <LegendLabel>{label}</LegendLabel>
             </LegendEntry>
             <Spacer />
           </div>
