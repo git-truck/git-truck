@@ -9,6 +9,7 @@ import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
+  Person,
   PersonWithTime,
 } from "./model"
 import { analyzeCommitLight } from "./analyze.server"
@@ -16,6 +17,8 @@ import { gitDiffNumStatAnalyzed, lookupFileInTree } from "./util"
 import { Queue } from "./queue"
 
 const renamedFiles = new Map<string, string>()
+
+const authors = new Set<string>()
 
 export async function hydrateData(
   repo: string,
@@ -32,6 +35,10 @@ export async function hydrateData(
   finally_mut(data)
 
   return data
+}
+
+export function getAuthorSet() {
+  return Array.from(authors);
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
@@ -70,6 +77,8 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     if (currHash == emptyGitCommitHash) continue
 
     const currCommit = await analyzeCommitLight(repo, currHash)
+    authors.add((currCommit.author as Person).name)
+    for(const person of currCommit.coauthors) authors.add(person.name)
 
     const parentsOfCurr = parents(currCommit)
 
