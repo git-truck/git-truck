@@ -75,13 +75,13 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => setClickedObject(d.data as HydratedGitBlobObject),
+        onClick: () => setClickedObject(d.data),
         onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
         onMouseOut: () => setHoveredBlob(null),
       }
       : {
         onClick: () => {
-          setClickedObject(d.data as HydratedGitTreeObject)
+          setClickedObject(d.data)
           setPath(d.data.path)
         },
         onMouseOver: () => setHoveredBlob(null),

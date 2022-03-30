@@ -9,12 +9,22 @@ import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
 import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
+
+function OneFolderOut(path: string) {
+  const index = path.lastIndexOf("/")
+  const index2 = path.lastIndexOf("\\")
+  if (index !== -1) return path.slice(0, index)
+  if (index2 !== -1) return path.slice(0, index2)
+  return path
+}
 
 export function Details() {
   const { clickedObject } = useClickedObject()
   const { state } = useTransition()
   const { setClickedObject } = useClickedObject()
+  const { setPath, path } = usePath()
   const isProcessingHideRef = useRef(false)
 
   useEffect(() => {
@@ -80,6 +90,7 @@ export function Details() {
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+              setPath(OneFolderOut(path))
               isProcessingHideRef.current = true
             }}>
               Hide this folder
