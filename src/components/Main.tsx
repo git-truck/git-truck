@@ -37,6 +37,12 @@ export const NonClickableText = styled.span`
   cursor: default;
 `
 
+const ChartWrapper = styled.div`
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+`
+
 export function Main() {
   const [ref, size] = useComponentSize()
   const { path, setPath } = usePath()
@@ -88,17 +94,9 @@ export function Main() {
         </Breadcrumb>
         : <Breadcrumb></Breadcrumb>
       }
-      <div
-        ref={ref}
-        style={{
-          display: "grid",
-          placeItems: "center",
-          // boxShadow: "inset 0 0 0 5px green",
-          overflow: "hidden"
-        }}
-      >
+      <ChartWrapper ref={ref}>
         <Chart size={size} />
-      </div>
+      </ChartWrapper>
     </MainRoot>
   )
 }
