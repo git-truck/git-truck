@@ -1,6 +1,8 @@
 .tree,
 .blob {
   position: relative;
+  cursor: pointer;
+  pointer-events: all;
 }
 
 .tree {
@@ -8,17 +10,14 @@
   fill: transparent;
 }
 
-.blob {
-  cursor: pointer;
-  pointer-events: all;
-  position: relative;
+.blob:hover, .tree:hover {
+  stroke: darkslategray;
 }
 
 .object-name {
   font-weight: bold;
   font-size: 0.8rem;
   fill: "#333";
-  cursor: pointer;
 }
 
 .name-path {

@@ -21,9 +21,8 @@ function OneFolderOut(path: string) {
 }
 
 export function Details() {
-  const { clickedObject } = useClickedObject()
+  const { setClickedObject, clickedObject } = useClickedObject()
   const { state } = useTransition()
-  const { setClickedObject } = useClickedObject()
   const { setPath, path } = usePath()
   const isProcessingHideRef = useRef(false)
 

@@ -51,7 +51,6 @@ export function addAuthorUnion(
   }
 }
 
-
 export function calculateSubTree(tree: HydratedGitTreeObject) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
