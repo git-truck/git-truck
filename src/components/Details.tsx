@@ -70,36 +70,38 @@ export function Details() {
       { isBlob ? <>
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={clickedObject.path} />
-          <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+          <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
             isProcessingHideRef.current = true
           }}>
             Hide this file
-          </IgnoreButton>
+          </DetailsButton>
         </Form>
         {clickedObject.name.includes(".") ? <><Spacer />
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={`*.${extension}`} />
-            <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+            <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
               isProcessingHideRef.current = true
             }}>
               Hide all <InlineCode>.{extension}</InlineCode> files
-            </IgnoreButton>
-          </Form></> : null}</>
-        <Form method="post" action="/repo">
-          <input type="hidden" name="open" value={clickedBlob.path}/>
-          <DetailsButton disabled={state !== "idle"}>
-            Open file
-          </DetailsButton>
-        </Form>
+            </DetailsButton>
+          </Form></> : null}
+          <Spacer />
+          <Form method="post" action="/repo">
+            <input type="hidden" name="open" value={clickedObject.path}/>
+            <DetailsButton disabled={state !== "idle"}>
+              Open file
+            </DetailsButton>
+          </Form>
+        </>
         : <>
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <IgnoreButton type="submit" disabled={state !== "idle"} onClick={() => {
+            <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
               setPath(OneFolderOut(path))
               isProcessingHideRef.current = true
             }}>
               Hide this folder
-            </IgnoreButton>
+            </DetailsButton>
           </Form>
         </>
         }
