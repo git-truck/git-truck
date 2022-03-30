@@ -177,11 +177,10 @@ function getCommandLine() {
 
 export function openFile(path: string) {
   path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
-  const process = exec(`${getCommandLine()} ${resolve(path)}`)
-  process.on("error", (e) => {
-    console.log(e)
-  }).on("message", (m) => {
-    console.log(m)
+  exec(`${getCommandLine()} ${resolve(path)}`)
+  .stderr?.on("data", (e) => {
+    // TODO show error in UI
+    log.error(`Cannot open file ${path}: ${e}`)
   })
 }
 
