@@ -85,6 +85,12 @@ export function Details() {
               Hide all <InlineCode>.{extension}</InlineCode> files
             </IgnoreButton>
           </Form></> : null}</>
+        <Form method="post" action="/repo">
+          <input type="hidden" name="open" value={clickedBlob.path}/>
+          <DetailsButton disabled={state !== "idle"}>
+            Open file
+          </DetailsButton>
+        </Form>
         : <>
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={clickedObject.path} />
@@ -245,7 +251,7 @@ const DetailsEntries = styled.div`
   gap: var(--unit) calc(var(--unit) * 3);
 `
 
-const IgnoreButton = styled.button`
+const DetailsButton = styled.button`
   background: var(--button-bg);
   width: fit-content;
   border: none;

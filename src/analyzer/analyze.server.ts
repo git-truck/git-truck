@@ -6,7 +6,6 @@ import {
   GitTreeObject,
   AnalyzerData,
   AnalyzerDataInterfaceVersion,
-  Person,
   TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -32,6 +31,7 @@ import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postproce
 import latestVersion from "latest-version"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
+import { exec } from "child_process"
 
 export async function findBranchHead(repo: string, branch: string | null) {
   if (branch === null) branch = await getCurrentBranch(repo)
@@ -165,6 +165,23 @@ async function analyzeBlob(
     content,
   }
   return blob
+}
+
+function getCommandLine() {
+  switch (process.platform) { 
+     case 'darwin' : return 'open'; // MacOS
+     case 'win32' : return 'start'; // Windows
+     default : return 'xdg-open'; // Linux
+  }
+}
+
+export function openFile(path: string) {
+  path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
+  exec(`${getCommandLine()} ${resolve(path)}`)
+  .stderr?.on("data", (e) => {
+    // TODO show error in UI
+    log.error(`Cannot open file ${path}: ${e}`)
+  })
 }
 
 export async function updateTruckConfig(

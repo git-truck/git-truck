@@ -2,7 +2,7 @@ import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { useState } from "react"
-import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
+import { GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
 import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendData, getMetricDescription, Metric } from "../metrics"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
@@ -76,7 +76,7 @@ interface MetricLegendProps {
 }
 
 export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
-  const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
+  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
@@ -92,8 +92,8 @@ export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendP
   return (
     <>
       <GradientLegendDiv>
-        <LegendLable>{minValue}</LegendLable>
-        <LegendLable>{maxValue}</LegendLable>
+        <LegendLabel title={minValueAltFormat}>{minValue}</LegendLabel>
+        <LegendLabel title={maxValueAltFormat}>{maxValue}</LegendLabel>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
       <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>

@@ -3,9 +3,9 @@ import {
   HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
-import { dateFormatLong } from "./util"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
+import { dateFormatLong, dateFormatRelative } from "./util"
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
@@ -60,6 +60,8 @@ export type PointLegendData = Map<string, PointInfo>
 export type GradLegendData = [
   minValue: string,
   maxValue: string,
+  minValueAltFormat: string | undefined,
+  maxValueAltFormat: string | undefined,
   minColor: string,
   maxColor: string
 ]
@@ -109,6 +111,8 @@ export function getMetricCalcs(
           cache.legend = [
             `${commit.minNoCommits}`,
             `${commit.maxNoCommits}`,
+            undefined,
+            undefined,
             heatmap.getColor(commit.minNoCommits),
             heatmap.getColor(commit.maxNoCommits),
           ]
@@ -121,6 +125,8 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
+            dateFormatRelative(commit.oldestLatestChangeEpoch),
+            dateFormatRelative(commit.newestLatestChangeEpoch),
             dateFormatLong(commit.oldestLatestChangeEpoch),
             dateFormatLong(commit.newestLatestChangeEpoch),
             coldmap.getColor(commit.oldestLatestChangeEpoch),
