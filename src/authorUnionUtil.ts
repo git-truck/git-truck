@@ -51,7 +51,7 @@ export function addAuthorUnion(
   }
 }
 
-export function calculateSubTree(tree: HydratedGitTreeObject) {
+export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Form, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "~/analyzer/model"
-import { calculateSubTree } from "~/authorUnionUtil"
+import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -64,7 +64,7 @@ export function Details() {
           hasZeroContributions(clickedObject.authors) ? null : (
           <AuthorDistribution authors={clickedObject.unionedAuthors} />
         ))
-        : <AuthorDistribution authors={calculateSubTree(clickedObject)} />
+        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
       }
       <Spacer lg />
       { isBlob ? <>
