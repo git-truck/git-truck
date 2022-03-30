@@ -46,7 +46,7 @@ export function Providers({ children, data }: ProvidersProps) {
       const metricCaches = new Map<MetricType, MetricCache>()
       setupMetricsCache(
         data.commit.tree,
-        getMetricCalcs(data.commit),
+        getMetricCalcs(data),
         metricCaches
       )
       return ({ metricCaches, errorMessage: null })

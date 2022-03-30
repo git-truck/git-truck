@@ -23,7 +23,7 @@ import {
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, join } from "path"
 import { performance } from "perf_hooks"
-import { hydrateData } from "./hydrate.server"
+import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
@@ -289,6 +289,7 @@ export async function analyze(useCache = true) {
     data = {
       cached: false,
       hiddenFiles,
+      authors: getAuthorSet(),
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,

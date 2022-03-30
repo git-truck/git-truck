@@ -33,6 +33,7 @@ export interface AnalyzerData {
   repo: string
   branch: string
   commit: HydratedGitCommitObject
+  authors: string[]
   authorUnions: string[][]
   currentVersion: string
   latestVersion?: string

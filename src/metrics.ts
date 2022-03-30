@@ -1,10 +1,11 @@
 import {
+  AnalyzerData,
   HydratedGitBlobObject,
-  HydratedGitCommitObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
+import { unionAuthors } from "./authorUnionUtil"
 import { dateFormatLong, dateFormatRelative } from "./util"
 
 export const Metric = {
@@ -72,21 +73,24 @@ export interface MetricCache {
 }
 
 export function getMetricCalcs(
-  commit: HydratedGitCommitObject
+  data: AnalyzerData
 ): [
   metricType: MetricType,
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
 ][] {
+  const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(
     commit.oldestLatestChangeEpoch,
     commit.newestLatestChangeEpoch
   )
+  
   const authorColorState = {
-    palette: distinctColors({ count: 100 }),
+    palette: distinctColors({ count: data.authors.length }),
     paletteIndex: 0,
     cache: new Map<string, string>(),
   }
+
   return [
     [
       "FILE_EXTENSION",
