@@ -26,6 +26,7 @@ jobs:
           uses: "phips28/gh-action-bump-version@master"
           with:
             skip-tag: "true"
+            minorwording: "NewVersion"
             commit-message: "Bump version to {{version}}"
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
