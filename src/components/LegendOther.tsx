@@ -1,7 +1,7 @@
 import styled from "styled-components"
 import { PointInfo } from "../metrics"
 import { Spacer } from "./Spacer"
-import { LegendDot, LegendEntry, LegendLable } from "./util"
+import { LegendDot, LegendEntry, LegendLabel } from "./util"
 
 interface LegendOtherProps {
   toggle: () => void
@@ -36,7 +36,7 @@ export function LegendOther(props: LegendOtherProps) {
           )
         })}
         <Spacer horizontal />
-        <LegendLable>{props.items.length} more</LegendLable>
+        <LegendLabel>{props.items.length} more</LegendLabel>
       </LegendEntry>
     </LegendOtherDiv>
   )

@@ -2,12 +2,12 @@ import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { useState } from "react"
-import { GradientLegendDiv, LegendGradient, LegendLable } from "./util"
+import { GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
 import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendData, getMetricDescription, Metric } from "../metrics"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
-import { useClickedBlob } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/contexts/ClickedContext"
 import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
 
@@ -76,12 +76,12 @@ interface MetricLegendProps {
 }
 
 export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
-  const [minValue, maxValue, minColor, maxColor] = metricCaches.get(metricType)
+  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCaches.get(metricType)
       ?.legend as GradLegendData
 
-  const {clickedBlob} = useClickedBlob()
+  const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedBlob?.path ?? "") ?? "")
+  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedObject?.path ?? "") ?? "")
   let offset = -1
   if (blobLightness !== -1) {
     const min = getLightness(minColor)
@@ -92,8 +92,8 @@ export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendP
   return (
     <>
       <GradientLegendDiv>
-        <LegendLable>{minValue}</LegendLable>
-        <LegendLable>{maxValue}</LegendLable>
+        <LegendLabel title={minValueAltFormat}>{minValue}</LegendLabel>
+        <LegendLabel title={maxValueAltFormat}>{maxValue}</LegendLabel>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
       <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>

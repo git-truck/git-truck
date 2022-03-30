@@ -96,10 +96,11 @@ export const LegendDot = styled.div<{ dotColor: string }>`
   box-shadow: var(--small-shadow);
 `
 
-export const LegendLable = styled.p`
+export const LegendLabel = styled.p`
   padding: 0px;
   margin: 0px;
   font-weight: bold;
+  cursor: default;
 `
 
 export const LegendGradient = styled.div<{ min: string; max: string }>`
