@@ -5,6 +5,8 @@ import { useComponentSize } from "../hooks"
 import { Chart } from "./Chart"
 
 export const MainRoot = styled.main`
+  display: grid;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
   height: 100%;
 `
@@ -43,7 +45,7 @@ export function Main() {
   let temppath = path
   let paths: [string, string][] = []
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 8; i++) {
     if (temppath === "") { break; }
     const idx = temppath.lastIndexOf("/")
     paths.push([temppath.substring(idx + 1), temppath])
@@ -56,16 +58,24 @@ export function Main() {
     paths.push([data.repo, data.repo])
   }
 
-
   return (
-    <MainRoot ref={ref}>
+    <MainRoot>
       {
         (paths.length > 1)
         ? <Breadcrumb>
           {
             paths.reverse().map(([name, p], i) => {
                 if (p === "" || i === paths.length - 1)
-                  return <NonClickableText key={p}>{name}</NonClickableText>
+                  if (p === "") 
+                    return (
+                    <>
+                      <NonClickableText key={p}>{name}</NonClickableText>
+                      <span>{'\u203A'}</span>
+                    </>
+                    
+                    )
+                  else
+                    return <NonClickableText key={p}>{name}</NonClickableText>
                 else
                   return (
                     <>
@@ -76,9 +86,19 @@ export function Main() {
                 })
           }
         </Breadcrumb>
-        : null
+        : <Breadcrumb></Breadcrumb>
       }
-      <Chart size={size} />
+      <div
+        ref={ref}
+        style={{
+          display: "grid",
+          placeItems: "center",
+          // boxShadow: "inset 0 0 0 5px green",
+          overflow: "hidden"
+        }}
+      >
+        <Chart size={size} />
+      </div>
     </MainRoot>
   )
 }
