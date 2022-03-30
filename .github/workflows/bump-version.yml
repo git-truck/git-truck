@@ -25,7 +25,7 @@ jobs:
         - name: Update version in package.json
           uses: "phips28/gh-action-bump-version@master"
           with:
-            tag-prefix: 'v'
+            skip-tag: "true"
             commit-message: "Bump version to {{version}}"
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
