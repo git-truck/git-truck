@@ -122,7 +122,7 @@ export function Providers({ children, data }: ProvidersProps) {
           <OptionsContext.Provider value={optionsValue}>
             <SearchContext.Provider value={{ searchText, setSearchText }}>
               <PathContext.Provider value={{ path, setPath }}>
-                <ClickedObjectContext.Provider value={{ clickedObject: clickedObject, setClickedObject }}>
+                <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
                   {children}
                 </ClickedObjectContext.Provider>
               </PathContext.Provider>
