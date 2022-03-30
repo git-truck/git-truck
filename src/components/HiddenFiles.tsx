@@ -7,18 +7,27 @@ import { ExpandUp } from "./Toggle";
 import { Box, BoxSubTitle, InlineCode } from "./util";
 import { Form, useTransition } from "remix";
 
+const Line = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--unit);
+  margin-top: calc(var(--unit) * 0.5);
+`
+
 const InlineForm = styled(Form)`
-  display: inline-block;
+  width: calc(2 * var(--unit));
+  height: 100%;
 `
 
 const StyledButton = styled.button`
+  display: block;
   position: relative;
+  height: 100%;
+  width: 100%;
   background: none;
   border: none;
   cursor: pointer;
-  width: calc(2 * var(--unit));
-  margin-right: calc(1 * var(--unit));
-
+  
   & > #eye {
     display: none;
   }
@@ -58,7 +67,7 @@ export function HiddenFiles() {
       toggle={() => setCollapse(!collapse)}
     />
     {!collapse ? <div>
-      {data.hiddenFiles.map(hidden => <div key={hidden} title={hidden}>
+      {data.hiddenFiles.map(hidden => <Line key={hidden} title={hidden}>
         <InlineForm method="post" action="/repo">
           <input type="hidden" name="unignore" value={hidden} />
           <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
@@ -69,7 +78,7 @@ export function HiddenFiles() {
         <InlineCode>
           {hiddenFileFormat(hidden)}
         </InlineCode>
-      </div>)}
+      </Line>)}
     </div> : null}
   </Box>
 }
