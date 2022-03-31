@@ -37,6 +37,7 @@ export interface AnalyzerData {
   authorUnions: string[][]
   currentVersion: string
   latestVersion?: string
+  lastRunEpoch: number
 }
 
 export interface GitBlobObject extends GitBaseObject {

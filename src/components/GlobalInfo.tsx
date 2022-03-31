@@ -1,4 +1,5 @@
 import { Form, useTransition } from "remix"
+import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
@@ -6,7 +7,7 @@ import { Box, BoxTitle } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
-  const { path, setPath } = usePath()
+  const { path } = usePath()
   const transitionState = useTransition()
 
   let temppath = path
@@ -27,17 +28,20 @@ export function GlobalInfo() {
   return (
     <Box>
       <BoxTitle>{data.repo}</BoxTitle>
-      {(typeof data.cached === "undefined" || data.cached) ? <>
-        (cached) <Form method="post" action="/repo">
-          <input type="hidden" name="refresh" value="true" />
-          <button disabled={transitionState.state !== "idle"}>{!transitionState.submission?.formData.has("refresh") ? "Run analyzer" : "Analyzing..."}</button>
-        </Form>
-      </> : null}
       <Spacer />
       <div>
         <strong>Branch: </strong>
         {data.branch}
+        <Spacer/>
+        <strong>Analyzed: </strong>{dateTimeFormatShort(data.lastRunEpoch)}
+        <Spacer />
+        <strong>As of commit: </strong>{data.commit.hash.slice(0, 7)}
       </div>
+      <Spacer/>
+      <Form method="post" action="/repo">
+        <input type="hidden" name="refresh" value="true" />
+        <button disabled={transitionState.state !== "idle"}>{!transitionState.submission?.formData.has("refresh") ? "Run analyzer" : "Analyzing..."}</button>
+      </Form>
     </Box>
   )
 }

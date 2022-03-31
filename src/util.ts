@@ -16,6 +16,16 @@ export function dateFormatLong(epochTime?: number) {
   })
 }
 
+export function dateTimeFormatShort(epochTime: number) {
+  return new Date(epochTime).toLocaleString("en-gb", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+    year: "2-digit"
+  })
+}
+
 export function dateFormatRelative(epochTime: number) {
   const now = Date.now()
   const hourMillis = 60 * 60 * 1000
