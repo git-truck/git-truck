@@ -268,6 +268,7 @@ export async function analyze(useCache = true) {
     const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
     await setGitSetting(repoDir, "diff.renameLimit", "1000000")
 
+    const runDateEpoch = Date.now()
     const repoTree = await describeAsyncJob(
       () => analyzeCommit(repoDir, repoName, branchHead),
       "Analyzing commit tree",
@@ -306,7 +307,8 @@ export async function analyze(useCache = true) {
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
-      latestVersion: latestV
+      latestVersion: latestV,
+      lastRunEpoch: runDateEpoch
     }
 
     await describeAsyncJob(
