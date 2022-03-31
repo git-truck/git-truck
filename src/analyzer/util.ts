@@ -114,25 +114,24 @@ export async function deflateGitObject(repo: string, hash: string) {
   return result as string
 }
 
-export async function getDefaultQuotePathValue(repoDir: string) {
-  const result = await runProcess(repoDir, "git", ["config", "core.quotepath"])
+export async function getDefaultGitSettingValue(repoDir: string, setting: string) {
+  const result = await runProcess(repoDir, "git", ["config", setting])
   return result as string
 }
 
-export async function disableQuotePath(repoDir: string) {
-  await runProcess(repoDir, "git", ["config", "core.quotepath", "off"])
-  log.debug("Disabled quotePath")
+export async function resetGitSetting(repoDir: string, settingToReset: string, value: string, ) {
+  if (!value) {
+    await runProcess(repoDir, "git", ["config", "--unset", settingToReset])
+    log.debug(`Unset ${settingToReset}`)
+  } else {
+    await runProcess(repoDir, "git", ["config", settingToReset, value])
+    log.debug(`Reset ${settingToReset} to ${value}`)
+  } 
 }
 
-export async function resetQuotePath(repoDir: string, value: string) {
-  if (!value) {
-    await runProcess(repoDir, "git", ["config", "--unset", "core.quotepath"])
-    log.debug("Unset quotePath")
-  } 
-  else {
-    await runProcess(repoDir, "git", ["config", "core.quotepath", value])
-    log.debug(`Reset quotePath to ${value}`)
-  } 
+export async function setGitSetting(repoDir: string, setting: string, value: string) {
+  await runProcess(repoDir, "git", ["config", setting, value])
+  log.debug(`Set ${setting} to ${value}`)
 }
 
 export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {

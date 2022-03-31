@@ -16,9 +16,9 @@ import {
   getCurrentBranch,
   getRepoName,
   deflateGitObject,
-  getDefaultQuotePathValue,
-  disableQuotePath,
-  resetQuotePath,
+  getDefaultGitSettingValue,
+  resetGitSetting,
+  setGitSetting,
 } from "./util"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, join } from "path"
@@ -212,8 +212,13 @@ export async function analyze(useCache = true) {
 
   const hiddenFiles = args.hiddenFiles
 
-  const quotePathDefaultValue = await getDefaultQuotePathValue(repoDir)
-  await disableQuotePath(repoDir)
+  // TODO refactor git settings to function
+  const quotePathDefaultValue = await getDefaultGitSettingValue(repoDir, "core.quotepath")
+  await setGitSetting(repoDir, "core.quotePath", "off")
+  const renamesDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renames")
+  await setGitSetting(repoDir, "diff.renames", "true")
+  const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
+  await setGitSetting(repoDir, "diff.renameLimit", "1000000")
 
   const start = performance.now()
   const [branchHead, branchName] = await describeAsyncJob(
@@ -321,7 +326,9 @@ export async function analyze(useCache = true) {
 
   log.raw(`\nDone in ${formatMs(stop - start)}`)
 
-  await resetQuotePath(repoDir, quotePathDefaultValue)
+  await resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
+  await resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
+  await resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
 
   return data
 }
