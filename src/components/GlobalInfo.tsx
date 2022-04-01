@@ -3,7 +3,7 @@ import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle } from "./util"
+import { Box, BoxTitle, InlineCode } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
@@ -35,7 +35,7 @@ export function GlobalInfo() {
         <Spacer/>
         <strong>Analyzed: </strong>{dateTimeFormatShort(data.lastRunEpoch)}
         <Spacer />
-        <strong>As of commit: </strong>{data.commit.hash.slice(0, 7)}
+        <strong>As of commit: </strong><InlineCode title={data.commit.message}>{data.commit.hash.slice(0, 7)}</InlineCode>
       </div>
       <Spacer/>
       <Form method="post" action="/repo">
