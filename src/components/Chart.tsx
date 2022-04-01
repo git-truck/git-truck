@@ -337,7 +337,11 @@ function createPartitionedHiearchy(
 
       const tmPartition = treeMapPartition(hiearchy)
 
-      removeSmallRects(tmPartition)
+      filterTree(tmPartition, (child) => {
+        const cast = child as HierarchyRectangularNode<HydratedGitObject>
+        if ((child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) || child.data.type === "tree") return true
+        return false
+      })
 
       return tmPartition
 
@@ -348,7 +352,11 @@ function createPartitionedHiearchy(
 
       const bPartition = bubbleChartPartition(hiearchy)
       
-      removeSmallBubbles(bPartition)
+      filterTree(bPartition, (child) => {
+        const cast = child as HierarchyCircularNode<HydratedGitObject>
+        if ((child.data.type === "blob" && cast.r >= 1) || child.data.type === "tree") return true
+        return false
+      })
 
       return bPartition
     default:
@@ -356,28 +364,11 @@ function createPartitionedHiearchy(
   }
 }
 
-function removeSmallRects(node: HierarchyRectangularNode<HydratedGitObject>) {
-  node.children = node.children?.filter((child) => {
-    if ((child.data.type === "blob" && child.x0 >= 1 && child.y0 >= 1) || child.data.type === "tree") return true
-    return false
-  })
+function filterTree(node: HierarchyNode<HydratedGitObject>, filter: (child: HierarchyNode<HydratedGitObject>) => boolean) {
+  node.children = node.children?.filter((c) => filter(c));
   for(const child of (node.children ?? [])) {
-    if (child.data.type === "tree") {
-      removeSmallRects(child)
-    }
-  } 
-}
-
-function removeSmallBubbles(node: HierarchyCircularNode<HydratedGitObject>) {
-  node.children = node.children?.filter((child) => {
-    if ((child.data.type === "blob" && child.r >= 1) || child.data.type === "tree") return true
-    return false
-  })
-  for(const child of (node.children ?? [])) {
-    if (child.data.type === "tree") {
-      removeSmallBubbles(child)
-    }
-  } 
+    if ((child.children?.length ?? 0) > 0) filterTree(child, filter)
+  }
 }
 
 // a rx ry angle large-arc-flag sweep-flag dx dy
