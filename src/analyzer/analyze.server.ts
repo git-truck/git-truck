@@ -212,14 +212,6 @@ export async function analyze(useCache = true) {
 
   const hiddenFiles = args.hiddenFiles
 
-  // TODO refactor git settings to function
-  const quotePathDefaultValue = await getDefaultGitSettingValue(repoDir, "core.quotepath")
-  await setGitSetting(repoDir, "core.quotePath", "off")
-  const renamesDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renames")
-  await setGitSetting(repoDir, "diff.renames", "true")
-  const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
-  await setGitSetting(repoDir, "diff.renameLimit", "1000000")
-
   const start = performance.now()
   const [branchHead, branchName] = await describeAsyncJob(
     () => findBranchHead(repoDir, branch),
@@ -267,6 +259,13 @@ export async function analyze(useCache = true) {
   }
 
   if (data === null) {
+    const quotePathDefaultValue = await getDefaultGitSettingValue(repoDir, "core.quotepath")
+    await setGitSetting(repoDir, "core.quotePath", "off")
+    const renamesDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renames")
+    await setGitSetting(repoDir, "diff.renames", "true")
+    const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
+    await setGitSetting(repoDir, "diff.renameLimit", "1000000")
+
     const repoTree = await describeAsyncJob(
       () => analyzeCommit(repoDir, repoName, branchHead),
       "Analyzing commit tree",
@@ -279,6 +278,10 @@ export async function analyze(useCache = true) {
       "Commit tree hydrated",
       "Error hydrating commit tree"
     )
+
+    await resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
+    await resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
+    await resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
 
     const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
     let outPath = resolve((args.out as string) ?? defaultOutPath)
@@ -325,10 +328,6 @@ export async function analyze(useCache = true) {
   const stop = performance.now()
 
   log.raw(`\nDone in ${formatMs(stop - start)}`)
-
-  await resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
-  await resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
-  await resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
 
   return data
 }
