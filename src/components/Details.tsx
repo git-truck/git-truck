@@ -145,11 +145,11 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
 
   return (
     <>
-      <DetailsKey grow>File count</DetailsKey>
+      <DetailsKey grow>Files</DetailsKey>
       <DetailsValue>
         {fileCount}
       </DetailsValue>
-      <DetailsKey grow>Folder count</DetailsKey>
+      <DetailsKey grow>Folders</DetailsKey>
       <DetailsValue>
         {folderCount}
       </DetailsValue>
@@ -195,7 +195,7 @@ const StyledSpan = styled.span`
 function LineCountEntry(props: { lineCount: number; isBinary?: boolean }) {
   return (
     <>
-      <DetailsKey grow>Line count</DetailsKey>
+      <DetailsKey grow>Lines</DetailsKey>
       <DetailsValue>
         {props.lineCount ?? 0}{" "}
         <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
