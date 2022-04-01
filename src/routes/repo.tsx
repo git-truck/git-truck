@@ -1,8 +1,4 @@
 import { ActionFunction, json, LoaderFunction, useLoaderData } from "remix";
-import appStyles from "~/styles/App.css"
-import varsStyles from "~/styles/vars.css"
-import indexStyles from "~/styles/index.css"
-import chartStyles from "~/styles/Chart.css"
 import { Providers } from "~/components/Providers";
 import { Box, Container, Grower } from "~/components/util";
 import { SidePanel } from "~/components/SidePanel";
@@ -18,17 +14,6 @@ import { getArgs } from "~/analyzer/args.server";
 import { HiddenFiles } from "~/components/HiddenFiles";
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details";
-
-export function links() {
-  return [appStyles,
-    varsStyles,
-    indexStyles,
-    chartStyles].map(x => (
-      {
-        rel: "stylesheet",
-        href: x
-      }))
-}
 
 let useCacheNextTime = false
 
