@@ -1,9 +1,11 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { Form, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, InlineCode } from "./util"
+import { Box, BoxTitle, InlineCode, TextButton } from "./util"
 
 export function GlobalInfo() {
   const data = useData()
@@ -40,7 +42,10 @@ export function GlobalInfo() {
       <Spacer/>
       <Form method="post" action="/repo">
         <input type="hidden" name="refresh" value="true" />
-        <button disabled={transitionState.state !== "idle"}>{!transitionState.submission?.formData.has("refresh") ? "Run analyzer" : "Analyzing..."}</button>
+        <TextButton disabled={transitionState.state !== "idle"}>
+          <FontAwesomeIcon icon={faRotate} />
+          {" "}{!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
+        </TextButton>
       </Form>
     </Box>
   )

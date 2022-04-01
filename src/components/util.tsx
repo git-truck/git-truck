@@ -19,6 +19,20 @@ export const BoxSubTitle = styled.h2`
   color: var(--title-color);
 `
 
+export const TextButton = styled.button`
+  background: var(--button-bg);
+  width: fit-content;
+  border: none;
+  border-radius: calc(2 * var(--unit));
+  padding: var(--unit) calc(2 * var(--unit));
+  /* color: #fff; */
+  cursor: pointer;
+  transition: backround-color var(--hover-transition-duration);
+  &:hover {
+    background-color: var(--button-hovered-bg);
+  }
+`
+
 export const NavigateBackButton = styled.button`
   color: #000;
   text-decoration: none;

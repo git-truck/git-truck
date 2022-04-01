@@ -7,7 +7,7 @@ import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
-import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton } from "~/components/util"
+import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton, TextButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
@@ -79,38 +79,38 @@ export function Details() {
       { isBlob ? <>
         <Form method="post" action="/repo">
           <input type="hidden" name="ignore" value={clickedObject.path} />
-          <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
+          <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
             isProcessingHideRef.current = true
           }}>
             Hide this file
-          </DetailsButton>
+          </TextButton>
         </Form>
         {clickedObject.name.includes(".") ? <><Spacer />
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={`*.${extension}`} />
-            <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
+            <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
               isProcessingHideRef.current = true
             }}>
               Hide all <InlineCode>.{extension}</InlineCode> files
-            </DetailsButton>
+            </TextButton>
           </Form></> : null}
           <Spacer />
           <Form method="post" action="/repo">
             <input type="hidden" name="open" value={clickedObject.path}/>
-            <DetailsButton disabled={state !== "idle"}>
+            <TextButton disabled={state !== "idle"}>
               Open file
-            </DetailsButton>
+            </TextButton>
           </Form>
         </>
         : <>
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <DetailsButton type="submit" disabled={state !== "idle"} onClick={() => {
+            <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
               setPath(OneFolderOut(path))
               isProcessingHideRef.current = true
             }}>
               Hide this folder
-            </DetailsButton>
+            </TextButton>
           </Form>
         </>
         }
@@ -299,20 +299,6 @@ const DetailsEntries = styled.div`
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--unit) calc(var(--unit) * 3);
-`
-
-const DetailsButton = styled.button`
-  background: var(--button-bg);
-  width: fit-content;
-  border: none;
-  border-radius: calc(2 * var(--unit));
-  padding: var(--unit) calc(2 * var(--unit));
-  /* color: #fff; */
-  cursor: pointer;
-  transition: backround-color var(--hover-transition-duration);
-  &:hover {
-    background-color: var(--button-hovered-bg);
-  }
 `
 
 function hasZeroContributions(authors: Record<string, number>) {
