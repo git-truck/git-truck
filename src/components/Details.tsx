@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useTransition } from "remix"
 import styled from "styled-components"
-import { HydratedGitBlobObject } from "~/analyzer/model"
+import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
@@ -9,6 +9,7 @@ import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
 import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 
@@ -24,6 +25,7 @@ export function Details() {
   const { setClickedObject, clickedObject } = useClickedObject()
   const { state } = useTransition()
   const { setPath, path } = usePath()
+  const data = useData()
   const isProcessingHideRef = useRef(false)
 
   useEffect(() => {
@@ -31,8 +33,12 @@ export function Details() {
       setClickedObject(null)
       isProcessingHideRef.current = false
     }
-
   }, [clickedObject, setClickedObject, state])
+
+  useEffect(() => {
+    // Update clickedObject if data changes
+    setClickedObject(clickedObject => findObjectInTree(data.commit.tree, clickedObject))
+  }, [data, setClickedObject])
 
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"
@@ -48,14 +54,17 @@ export function Details() {
       <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
       <Spacer xl />
       <DetailsEntries>
-        { isBlob ? <>
-          <LineCountEntry
-            lineCount={clickedObject.noLines}
-            isBinary={clickedObject.isBinary}
-          />
-          <CommitsEntry clickedBlob={clickedObject} />
-          <LastchangedEntry clickedBlob={clickedObject} />
-          </> : null }
+        { isBlob ? 
+          <>
+            <LineCountEntry
+              lineCount={clickedObject.noLines}
+              isBinary={clickedObject.isBinary}
+            />
+            <CommitsEntry clickedBlob={clickedObject} />
+            <LastchangedEntry clickedBlob={clickedObject} />
+          </> 
+          : <FileAndSubfolderCountEntries clickedTree={clickedObject}/>
+        }
         <PathEntry path={clickedObject.path} />
       </DetailsEntries>
       <Spacer xl />
@@ -106,6 +115,45 @@ export function Details() {
         </>
         }
     </Box>
+  )
+}
+
+function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject | null) {
+  if (object === null) return null
+  let currentTree = tree
+  const steps = object.path.split("/")
+
+  for (let i = 0; i < steps.length; i++) {
+    for (const child of currentTree.children) {
+      if (child.hash === object.hash) return child
+      if (child.type === "tree") {
+        const childSteps = child.name.split("/")
+        if (childSteps[0] === steps[i]) {
+          currentTree = child
+          i += childSteps.length-1
+          break;
+        }
+      }
+    }
+  }
+  return currentTree
+}
+
+function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObject}) {
+  const folderCount = props.clickedTree.children.filter(child => child.type === "tree").length
+  const fileCount = props.clickedTree.children.length - folderCount
+
+  return (
+    <>
+      <DetailsKey grow>File count</DetailsKey>
+      <DetailsValue>
+        {fileCount}
+      </DetailsValue>
+      <DetailsKey grow>Folder count</DetailsKey>
+      <DetailsValue>
+        {folderCount}
+      </DetailsValue>
+    </>
   )
 }
 
