@@ -33,3 +33,9 @@ input:focus,
 select:focus {
   outline-color: var(--focused-outline-color);
 }
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
