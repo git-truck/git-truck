@@ -60,7 +60,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
 
-  const right = mouse.docX + toolTipWidth < window.innerWidth - 3 * unit
+  const right = mouse.docX + toolTipWidth < window.innerWidth - ((34 + 1) * unit)
 
   const visible = hoveredBlob !== null
   const transformStyles = { transform: "none" }
