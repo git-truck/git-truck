@@ -335,17 +335,49 @@ function createPartitionedHiearchy(
         .paddingInner(1)
         .paddingOuter(treemapPadding)
 
-      return treeMapPartition(hiearchy)
+      const tmPartition = treeMapPartition(hiearchy)
+
+      removeSmallRects(tmPartition)
+
+      return tmPartition
 
     case "BUBBLE_CHART":
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([paddedSizeProps.width, paddedSizeProps.height])
         .padding(bubblePadding)
 
-      return bubbleChartPartition(hiearchy)
+      const bPartition = bubbleChartPartition(hiearchy)
+      
+      removeSmallBubbles(bPartition)
+
+      return bPartition
     default:
       throw Error("Invalid chart type")
   }
+}
+
+function removeSmallRects(node: HierarchyRectangularNode<HydratedGitObject>) {
+  node.children = node.children?.filter((child) => {
+    if ((child.data.type === "blob" && child.x0 >= 1 && child.y0 >= 1) || child.data.type === "tree") return true
+    return false
+  })
+  for(const child of (node.children ?? [])) {
+    if (child.data.type === "tree") {
+      removeSmallRects(child)
+    }
+  } 
+}
+
+function removeSmallBubbles(node: HierarchyCircularNode<HydratedGitObject>) {
+  node.children = node.children?.filter((child) => {
+    if ((child.data.type === "blob" && child.r >= 1) || child.data.type === "tree") return true
+    return false
+  })
+  for(const child of (node.children ?? [])) {
+    if (child.data.type === "tree") {
+      removeSmallBubbles(child)
+    }
+  } 
 }
 
 // a rx ry angle large-arc-flag sweep-flag dx dy
