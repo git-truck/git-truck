@@ -339,8 +339,7 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        if ((child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) || child.data.type === "tree") return true
-        return false
+        return ((child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) || child.data.type === "tree")
       })
 
       return tmPartition
@@ -354,8 +353,7 @@ function createPartitionedHiearchy(
       
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        if ((child.data.type === "blob" && cast.r >= 1) || child.data.type === "tree") return true
-        return false
+        return ((child.data.type === "blob" && cast.r >= 1) || child.data.type === "tree")
       })
 
       return bPartition
