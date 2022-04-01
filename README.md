@@ -4,7 +4,7 @@ Gives a truckload of visualizations of your repository, and lets you find out if
 
 Get an overview over your git repo. See your folder-structure, which users have contributed most to which files, and more.
 
-![How the tool looks](https://imgur.com/eb8x95g)
+![billede](https://user-images.githubusercontent.com/23435481/161273053-a9420c2b-2b80-4f73-a78e-39dec822fab1.png)
 
 ## [Get started](#get-started)
 1. Make sure you have nodejs installed by running `node --version`. If not, you can download it [here](https://nodejs.org/en/). You will also need to have Git installed.
