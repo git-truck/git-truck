@@ -37,7 +37,7 @@ export function GlobalInfo() {
         <Spacer/>
         <strong>Analyzed: </strong>{dateTimeFormatShort(data.lastRunEpoch)}
         <Spacer />
-        <strong>As of commit: </strong><InlineCode title={data.commit.message}>{data.commit.hash.slice(0, 7)}</InlineCode>
+        <strong>As of commit: </strong><InlineCode title={data.commit.message ?? "No commit message"}>{data.commit.hash.slice(0, 7)}</InlineCode>
       </div>
       <Spacer/>
       <Form method="post" action="/repo">
