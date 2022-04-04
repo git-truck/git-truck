@@ -10,7 +10,6 @@
     "test": "jest --coverage",
     "clean": "npx rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "postinstall": "npm run build",
     "build": "npx remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
     "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
