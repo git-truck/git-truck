@@ -120,6 +120,7 @@ async function diffAndUpdate_mut(
   const currHash = currCommit.hash
 
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
+  log.debug("hvad fanden")
 
   const fileChanges = await gitDiffNumStatAnalyzed(
     repo,
