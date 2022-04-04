@@ -92,7 +92,7 @@
     "semi": false
   },
   "lint-staged": {
-    "app/**/*.ts": [
+    "src/**/*.{ts,tsx}": [
       "eslint --cache --fix",
       "prettier --write"
     ]
