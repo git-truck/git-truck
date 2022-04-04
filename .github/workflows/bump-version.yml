@@ -34,7 +34,8 @@ jobs:
         - run: npm install
         - run: git add package-lock.json
         - run: git commit --amend --no-edit
-        - run: git push --force
+#         This part is not essential to the workflow, so exit softly with a zero exit code
+        - run: git push --force || 0
 
         - name: "cat package.json"
           run: cat ./package.json
