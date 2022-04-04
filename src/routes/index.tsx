@@ -7,6 +7,11 @@ const LoadingPane = styled.div`
   display: grid;
   place-items: center;
   border-radius: 5px;
+
+  /* hide_initially animation */
+  opacity: 0;
+  animation: hide_initially 0s linear forwards;
+  animation-delay: 1s;
 `
 
 const FullViewbox = styled.div`
@@ -20,7 +25,7 @@ const StyledPath = styled.path`
   fill: none;
   stroke: #4580ff;
   /* transition: 1s; */
-  animation: dash 1s linear infinite;
+  animation: dash 2s ease-in-out alternate infinite;
 `
 
 const LoadingText = styled.div`
@@ -40,7 +45,7 @@ export default function Index() {
     navigate("/repo/")
   }, [])
 
-  const width = 40;
+  const width = 20;
   const height = 20;
   const length = width + height;
 
@@ -51,9 +56,9 @@ export default function Index() {
     <>
       <FullViewbox>
         <LoadingPane>
-          <LoadingText>analyzing...</LoadingText>
-          <StyledSVG height="200px" width="400px" viewBox={viewBox}>
-            <StyledPath strokeDasharray={length*0.5} strokeDashoffset={length} d={path}></StyledPath>
+          <LoadingText>Analyzing...</LoadingText>
+          <StyledSVG height="160px" width="160px" viewBox={viewBox}>
+            <StyledPath strokeDasharray={length*0.5} strokeDashoffset={length*2} d={path}></StyledPath>
           </StyledSVG>
         </LoadingPane>
       </FullViewbox>
