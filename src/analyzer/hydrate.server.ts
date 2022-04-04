@@ -38,7 +38,7 @@ export async function hydrateData(
 }
 
 export function getAuthorSet() {
-  return Array.from(authors);
+  return Array.from(authors)
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
@@ -76,9 +76,9 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     // don't compare the empty commit to it's parent
     if (currHash == emptyGitCommitHash) continue
 
-    const currCommit = await analyzeCommitLight(repo, currHash)
+    const currCommit = await analyzeCommitLight(currHash)
     authors.add((currCommit.author as Person).name)
-    for(const person of currCommit.coauthors) authors.add(person.name)
+    for (const person of currCommit.coauthors) authors.add(person.name)
 
     const parentsOfCurr = parents(currCommit)
 
@@ -122,7 +122,6 @@ async function diffAndUpdate_mut(
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
   const fileChanges = await gitDiffNumStatAnalyzed(
-    repo,
     parentHash,
     currHash,
     renamedFiles

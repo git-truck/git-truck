@@ -5,12 +5,13 @@ import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
 import { performance } from "perf_hooks"
+import { GitCaller } from "./git-caller"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
 }
 
-function runProcess(dir: string, command: string, args: string[]) {
+export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
@@ -29,12 +30,11 @@ function runProcess(dir: string, command: string, args: string[]) {
 }
 
 export async function gitDiffNumStatAnalyzed(
-  repo: string,
   a: string,
   b: string,
   renamedFiles: Map<string, string>
 ) {
-  const diff = await gitDiffNumStat(repo, a, b)
+  const diff = await GitCaller.getInstance().gitDiffNumStatCached(a, b)
   const entries = diff.split("\n")
   const stuff = entries
     .filter((x) => x.trim().length > 0)
@@ -104,16 +104,6 @@ export async function lookupFileInTree(
   return await lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
-export async function gitDiffNumStat(repoDir: string, a: string, b: string) {
-  const result = await runProcess(repoDir, "git", ["diff", "--numstat", a, b])
-  return result as string
-}
-
-export async function deflateGitObject(repo: string, hash: string) {
-  const result = await runProcess(repo, "git", ["cat-file", "-p", hash])
-  return result as string
-}
-
 export async function getDefaultGitSettingValue(repoDir: string, setting: string) {
   const result = await runProcess(repoDir, "git", ["config", setting])
   return result as string
@@ -126,7 +116,7 @@ export async function resetGitSetting(repoDir: string, settingToReset: string, v
   } else {
     await runProcess(repoDir, "git", ["config", settingToReset, value])
     log.debug(`Reset ${settingToReset} to ${value}`)
-  } 
+  }
 }
 
 export async function setGitSetting(repoDir: string, setting: string, value: string) {
@@ -134,7 +124,10 @@ export async function setGitSetting(repoDir: string, setting: string, value: str
   log.debug(`Set ${setting} to ${value}`)
 }
 
-export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
+export async function writeRepoToFile(
+  outPath: string,
+  analyzedData: AnalyzerData
+) {
   const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
   if (!existsSync(dir)) {
@@ -226,3 +219,8 @@ export async function describeAsyncJob<T>(
     process.exit(1)
   }
 }
+
+export const removeFirstLine = (str: string) =>
+  str.split("\n").slice(1).join("\n")
+export const removeLastLine = (str: string) =>
+  str.split("\n").slice(0, -1).join("\n")
