@@ -133,7 +133,7 @@ async function diffAndUpdate_mut(
 
     if (file === "dev/null") continue
     if (blob) {
-      updateBlob_mut(blob, data, author, currCommit, pos, neg)
+      updateBlob_mut(blob, author, currCommit, pos, neg)
     }
   }
 }
@@ -144,7 +144,6 @@ function isBinaryFile(blob: GitBlobObject) {
 
 function updateBlob_mut(
   blob: GitBlobObject,
-  data: HydratedGitCommitObject,
   author: PersonWithTime,
   currCommit: GitCommitObjectLight,
   pos: number,
