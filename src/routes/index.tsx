@@ -34,9 +34,6 @@ const LoadingText = styled.div`
 
 const StyledSVG = styled.svg`
   grid-area: 1/2;
-  &:hover > ${StyledPath} {
-    stroke-dashoffset: 0;
-  }
 `
 
 export default function Index() {
