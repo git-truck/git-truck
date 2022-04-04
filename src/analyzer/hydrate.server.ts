@@ -127,15 +127,22 @@ async function diffAndUpdate_mut(
     currHash,
     renamedFiles
   )
+  log.debug(`num filechanges ${fileChanges.length}`)
 
   for (const fileChange of fileChanges) {
     const { pos, neg, file } = fileChange
 
     const blob = await lookupFileInTree(data.tree, file)
-
-    if (file === "dev/null") continue
+    log.debug(`Changes: ${JSON.stringify(fileChange)}`)
+    log.debug(`Blob: ${blob?.hash}`)
+    if (file === "dev/null") {
+      log.debug(`Continuing from ${file}`)
+      continue
+    }
     if (blob) {
       updateBlob_mut(blob, data, author, currCommit, pos, neg)
+    } else {
+      log.debug(`Blob not found: ${file}`)
     }
   }
 }
@@ -152,6 +159,7 @@ function updateBlob_mut(
   pos: number,
   neg: number
 ) {
+  log.debug(`Trying to update ${blob.name}`)
   const noCommits = 1 + ((blob as HydratedGitBlobObject).noCommits ?? 0)
 
   const isBinary = isBinaryFile(blob)
