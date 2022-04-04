@@ -25,3 +25,38 @@ To check if these programs are installed, and what version you have, run `node -
 Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
 
 If you have any suggestions about new features, or things that you think should be different, also feel free to open an issue.
+
+## [Advanced use](#advanced-use)
+
+Run `npx git-truck` in the root of a git repository, that you want to visualize:
+
+```sh
+npx git-truck [args]
+```
+
+### [Arguments](#arguments)
+
+|    arg     |                               description                               |   default value    |
+| :--------: | :---------------------------------------------------------------------: | :----------------: |
+| `--branch` |                               branch name                               | checked out branch |
+|  `--path`  |                         path to git repository                          | current directory  |
+|  `--log`   | output log level. See [here](./src/analyzer/log.server.ts) for values |          -         |
+
+### [Configuration](#configuration)
+
+You can add a `truckconfig.json` file to the root of your project, where you can define the arguments you want.
+Additionally you can define which git-aliases should be considered as the same person.
+You can also define files to ignore.
+Example:
+
+```json
+{
+  "log": "debug",
+  "branch": "main",
+  "unionedAuthors": [
+    ["Bob", "Bobby Bob"],
+    ["Alice", "aliiii", "alice alice"]
+  ],
+  "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"]
+}
+```
