@@ -22,9 +22,9 @@ export function LegendOther(props: LegendOtherProps) {
   return (
     <LegendOtherDiv>
       <LegendEntry onClick={props.toggle}>
-        {props.items.map((legendItem, i) => {
-          let [label, info] = legendItem
-          let margin = i === 0 ? 0 : -10
+        {props.items.slice(0, 14).map((legendItem, i) => {
+          const [label, info] = legendItem
+          const margin = i === 0 ? 0 : -10
           return (
             <LegendDot
               key={`dot${label}`}
