@@ -93,7 +93,8 @@
   },
   "lint-staged": {
     "app/**/*.ts": [
-      "eslint --cache --fix"
+      "eslint --cache --fix",
+      "prettier --write"
     ]
   },
   "engines": {
