@@ -25,6 +25,15 @@ To check if these programs are installed, and what version you have, run `node -
 
 ![interface-img](https://user-images.githubusercontent.com/55390848/161504380-7f9715cc-8b06-4cd3-b9f0-1221388f3a52.PNG)
 
+Git Truck displays folders as transparent elements, with a small border, and files as colored elements. If you hover over a file, a tooltip will be displayed near your mouse, informing you about the files name, and what its color means.
+
+1. Displays global information about the repository and the analyzed data. This is also where you can force a run of the analyzer.
+2. These are the visualization options. Here you control how the visualization looks, and what metric is mapped to the colors.
+3. The search bar allows you to search for specific elements. Type in what name you are searching for, and anything that matches will be highlighted. `Ctrl+F` will move your cursor here.
+4. Shows you where you are looking in the folder structure. Clicking on a name, will navigate back to that folder.
+5. If you click on a file or a folder, this menu shows up to display detailed information about the clicked element. Note that clicking a folder, will also navigate to that folder.
+6. This is the legend, it informs you about what all the colors mean.
+
 ## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-what-do-i-do)
 Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
 
