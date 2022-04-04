@@ -38,7 +38,7 @@ export async function hydrateData(
 }
 
 export function getAuthorSet() {
-  return Array.from(authors);
+  return Array.from(authors)
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
@@ -76,9 +76,9 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     // don't compare the empty commit to it's parent
     if (currHash == emptyGitCommitHash) continue
 
-    const currCommit = await analyzeCommitLight(repo, currHash)
+    const currCommit = await analyzeCommitLight(currHash)
     authors.add((currCommit.author as Person).name)
-    for(const person of currCommit.coauthors) authors.add(person.name)
+    for (const person of currCommit.coauthors) authors.add(person.name)
 
     const parentsOfCurr = parents(currCommit)
 
@@ -88,12 +88,12 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
           queue.enqueue(parentHash)
           break
         case 1: // curr is a linear commit
-          await diffAndUpdate_mut(data, currCommit, parentHash, repo)
+          await diffAndUpdate_mut(data, currCommit, parentHash)
           queue.enqueue(parentHash)
           break
         default:
           // curr is the root commit
-          await diffAndUpdate_mut(data, currCommit, emptyGitCommitHash, repo)
+          await diffAndUpdate_mut(data, currCommit, emptyGitCommitHash)
           break
       }
     }
@@ -113,7 +113,6 @@ async function diffAndUpdate_mut(
   data: HydratedGitCommitObject,
   currCommit: GitCommitObjectLight,
   parentHash: string,
-  repo: string
 ) {
   const { author } = currCommit
 
@@ -122,7 +121,6 @@ async function diffAndUpdate_mut(
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
   const fileChanges = await gitDiffNumStatAnalyzed(
-    repo,
     parentHash,
     currHash,
     renamedFiles
@@ -135,7 +133,7 @@ async function diffAndUpdate_mut(
 
     if (file === "dev/null") continue
     if (blob) {
-      updateBlob_mut(blob, data, author, currCommit, pos, neg)
+      updateBlob_mut(blob, author, currCommit, pos, neg)
     }
   }
 }
@@ -146,7 +144,6 @@ function isBinaryFile(blob: GitBlobObject) {
 
 function updateBlob_mut(
   blob: GitBlobObject,
-  data: HydratedGitCommitObject,
   author: PersonWithTime,
   currCommit: GitCommitObjectLight,
   pos: number,
