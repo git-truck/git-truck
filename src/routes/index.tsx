@@ -2,23 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import styled from "styled-components";
 
-import appStyles from "~/styles/App.css"
-import varsStyles from "~/styles/vars.css"
-import indexStyles from "~/styles/index.css"
-import chartStyles from "~/styles/Chart.css"
-
-export function links() {
-  return [appStyles,
-    varsStyles,
-    indexStyles,
-    chartStyles].map(x => (
-      {
-        rel: "stylesheet",
-        href: x
-      }))
-}
-
-
 const LoadingPane = styled.div`
   padding: 0.5em 2em;
   display: grid;
