@@ -19,6 +19,12 @@ export const BoxSubTitle = styled.h2`
   color: var(--title-color);
 `
 
+export const StyledP = styled.p`
+  font-size: 0.9em;
+  opacity: 0.7;
+  margin: 0.5em 0 1.5em 0;
+`
+
 export const TextButton = styled.button`
   background: var(--button-bg);
   width: fit-content;
@@ -31,6 +37,22 @@ export const TextButton = styled.button`
   &:hover {
     background-color: var(--button-hovered-bg);
   }
+`
+
+export const SearchResultButton = styled(TextButton)`
+  border-radius: 3px;
+  padding: 1px;
+  padding-left: 5px;
+  width: 100%;
+  text-align: left;
+  background: none;
+`
+
+export const SearchResultSpan = styled.span`
+  overflow: hidden;
+  white-space: nowrap;
+  display: block;
+  text-overflow: ellipsis;
 `
 
 export const NavigateBackButton = styled.button`

@@ -43,3 +43,13 @@ export function dateFormatRelative(epochTime: number) {
 }
 
 export const last = <T>(arr: T[]) => arr[arr.length - 1]
+
+export const allExceptLast = <T>(arr: T[]) => {
+  if (arr.length <= 1) return []  
+  return arr.slice(0, arr.length - 1)
+}
+
+export function getSeparator(path: string) {
+  if (path.includes("\\")) return "\\"
+  return "/"
+}

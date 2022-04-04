@@ -6,7 +6,7 @@ import { GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
 import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendData, getMetricDescription, Metric } from "../metrics"
 import { useMetricCaches } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
-import { Box } from "./util"
+import { Box, StyledP } from "./util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
@@ -37,12 +37,6 @@ const StyledBox = styled(Box)`
 
 const StyledH2 = styled.h2`
   font-size: 0.9em;
-`
-
-const StyledP = styled.p`
-  font-size: 0.9em;
-  opacity: 0.7;
-  margin: 0.5em 0 1.5em 0;
 `
 
 export function Legend() {
