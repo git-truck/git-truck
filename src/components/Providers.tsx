@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react"
 import { SSRProvider } from "@react-aria/ssr"
 import {
+  BaseDataType,
+  generateAuthorColors,
   getMetricCalcs,
   MetricCache,
   MetricType,
@@ -14,11 +16,11 @@ import {
 } from "../contexts/OptionsContext"
 import { SearchContext } from "../contexts/SearchContext"
 import { HydratedGitBlobObject, AnalyzerData, HydratedGitObject } from "~/analyzer/model"
-import { MetricContext } from "../contexts/MetricContext"
 import { DataContext } from "../contexts/DataContext"
-import { addAuthorUnion, makeDupeMap } from "../authorUnionUtil"
+import { addAuthorUnion, makeDupeMap, unionAuthors } from "../authorUnionUtil"
 import { PathContext } from "../contexts/PathContext"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
+import { MetricsContext } from "../contexts/MetricContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -33,26 +35,44 @@ export function Providers({ children, data }: ProvidersProps) {
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
   const metricState: {
-    metricCaches: Map<MetricType, MetricCache> | null
+    metricsData: Map<BaseDataType, Map<MetricType, MetricCache>> | null
     errorMessage: string | null
   } = useMemo(() => {
     if (!data) {
-      return { metricCaches: null, errorMessage: null }
+      return { metricsData: null, errorMessage: null }
     }
     try {
       // TODO: Move this to index.tsx loader function
       const authorAliasMap = makeDupeMap(data.authorUnions)
       addAuthorUnion(data.commit.tree, authorAliasMap)
-      const metricCaches = new Map<MetricType, MetricCache>()
+      const metricsData = new Map<BaseDataType, Map<MetricType, MetricCache>>()
+      
+      const meme : Record<string, number> = {}
+      for (const author of data.authors) { meme[author] = 0 }
+      const fullAuthorUnion = unionAuthors(meme, authorAliasMap);
+    
+      const authorColors = generateAuthorColors(Object.keys(fullAuthorUnion))
+
+      const historicalMetricCache = new Map<MetricType, MetricCache>()
       setupMetricsCache(
         data.commit.tree,
-        getMetricCalcs(data),
-        metricCaches
+        getMetricCalcs(data, "HISTORICAL", authorColors),
+        historicalMetricCache
       )
-      return ({ metricCaches, errorMessage: null })
+      const blameMetricCache = new Map<MetricType, MetricCache>()
+      setupMetricsCache(
+        data.commit.tree,
+        getMetricCalcs(data, "BLAME", authorColors),
+        blameMetricCache
+      )
+
+      metricsData.set("HISTORICAL", historicalMetricCache)
+      metricsData.set("BLAME", blameMetricCache)
+
+      return ({ metricsData, errorMessage: null })
     } catch (e) {
       return {
-        metricCaches: null,
+        metricsData: null,
         errorMessage: (e as Error).message,
       }
     }
@@ -83,6 +103,11 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           chartType,
         })),
+      setBaseDataType: (baseDataType: BaseDataType) => 
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
+          baseDataType,
+        })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
@@ -97,9 +122,9 @@ export function Providers({ children, data }: ProvidersProps) {
     [options]
   )
 
-  const { metricCaches, errorMessage } = metricState
+  const { metricsData, errorMessage } = metricState
 
-  if (data === null || metricCaches === null) {
+  if (data === null || metricsData === null) {
     if (errorMessage === null) {
       return <div>Loading...</div>
     } else {
@@ -118,7 +143,7 @@ export function Providers({ children, data }: ProvidersProps) {
   return (
     <SSRProvider>
       <DataContext.Provider value={data}>
-        <MetricContext.Provider value={metricCaches}>
+        <MetricsContext.Provider value={metricsData}>
           <OptionsContext.Provider value={optionsValue}>
             <SearchContext.Provider value={{ searchText, setSearchText }}>
               <PathContext.Provider value={{ path, setPath }}>
@@ -128,7 +153,7 @@ export function Providers({ children, data }: ProvidersProps) {
               </PathContext.Provider>
             </SearchContext.Provider>
           </OptionsContext.Provider>
-        </MetricContext.Provider>
+        </MetricsContext.Provider>
       </DataContext.Provider>
     </SSRProvider>
   )

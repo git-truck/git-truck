@@ -3,8 +3,8 @@ import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { useState } from "react"
 import { GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
-import { GradLegendData, isGradientMetric, MetricCache, MetricType, PointLegendData, getMetricDescription, Metric } from "../metrics"
-import { useMetricCaches } from "../contexts/MetricContext"
+import { GradLegendData, isGradientMetric, MetricCache, PointLegendData, getMetricDescription, Metric } from "../metrics"
+import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { Box } from "./util"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -46,10 +46,12 @@ const StyledP = styled.p`
 `
 
 export function Legend() {
-  const { metricType } = useOptions()
-  const metricCaches = useMetricCaches()
+  const { metricType, baseDataType } = useOptions()
+  const metricsData = useMetrics()
 
-  if (metricCaches.get(metricType)?.legend === undefined) return null
+  const metricCache = metricsData.get(baseDataType)?.get(metricType) ?? undefined
+
+  if (metricCache === undefined) return null
 
   return (
     <StyledBox>
@@ -63,25 +65,23 @@ export function Legend() {
       </StyledP>
       {
         (isGradientMetric(metricType))
-        ? <GradientMetricLegend metricType={metricType} metricCaches={metricCaches}></GradientMetricLegend>
-        : <PointMetricLegend metricType={metricType} metricCaches={metricCaches}></PointMetricLegend>
+        ? <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
+        : <PointMetricLegend metricCache={metricCache}></PointMetricLegend>
       }
     </StyledBox>
   )
 }
 
 interface MetricLegendProps {
-  metricType: MetricType
-  metricCaches: Map<"FILE_EXTENSION" | "MOST_COMMITS" | "LAST_CHANGED" | "SINGLE_AUTHOR" | "TOP_CONTRIBUTOR", MetricCache>
+  metricCache:  MetricCache
 }
 
-export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
-  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCaches.get(metricType)
-      ?.legend as GradLegendData
+export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
+  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(metricCaches.get(metricType)?.colormap.get(clickedObject?.path ?? "") ?? "")
+  const blobLightness = getLightness(metricCache.colormap.get(clickedObject?.path ?? "") ?? "")
   let offset = -1
   if (blobLightness !== -1) {
     const min = getLightness(minColor)
@@ -101,11 +101,11 @@ export function GradientMetricLegend({ metricType, metricCaches }: MetricLegendP
   )
 }
 
-export function PointMetricLegend({ metricType, metricCaches }: MetricLegendProps) {
+export function PointMetricLegend({ metricCache }: MetricLegendProps) {
   const [collapse, setCollapse] = useState<boolean>(true)
 
   const items = Array.from(
-    metricCaches.get(metricType)?.legend as PointLegendData
+    metricCache.legend as PointLegendData
   ).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
     if (info1.weight > info2.weight) return -1

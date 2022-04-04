@@ -25,7 +25,7 @@ import { Tooltip } from "./Tooltip"
 import { useSearch } from "../contexts/SearchContext"
 import { useData } from "../contexts/DataContext"
 import { animated, useSpring } from "@react-spring/web"
-import { useMetricCaches } from "../contexts/MetricContext"
+import { useMetrics } from "../contexts/MetricContext"
 
 import {
   hierarchy,
@@ -174,8 +174,8 @@ function Circle({
   d: HierarchyCircularNode<HydratedGitObject>
   isSearchMatch: boolean
 }) {
-  const metricCaches = useMetricCaches()
-  const { metricType } = useOptions()
+  const metricsData = useMetrics()
+  const { metricType, baseDataType } = useOptions()
 
   const props = useSpring({
     cx: d.x,
@@ -183,7 +183,7 @@ function Circle({
     r: Math.max(d.r - 1, 0),
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: isSearchMatch ? "4px" : "1px",
-    fill: metricCaches.get(metricType)?.colormap.get(d.data.path) ?? "grey",
+    fill: metricsData.get(baseDataType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey",
   })
 
   return <animated.circle {...props} className={d.data.type} />
@@ -196,8 +196,8 @@ function Rect({
   d: HierarchyRectangularNode<HydratedGitObject>
   isSearchMatch: boolean
 }) {
-  const metricCaches = useMetricCaches()
-  const { metricType } = useOptions()
+  const metricsData = useMetrics()
+  const { metricType, baseDataType } = useOptions()
 
   const props = useSpring({
     x: d.x0,
@@ -210,7 +210,7 @@ function Rect({
 
     fill:
       d.data.type === "blob"
-        ? metricCaches.get(metricType)?.colormap.get(d.data.path) ?? "grey"
+        ? metricsData.get(baseDataType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey"
         : "transparent",
   })
 

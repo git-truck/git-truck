@@ -5,7 +5,7 @@ import styled from "styled-components"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
-import { useMetricCaches } from "../contexts/MetricContext"
+import { useMetrics } from "../contexts/MetricContext"
 import { MetricType } from "../metrics"
 import { useCSSVar } from "../hooks"
 import { dateFormatRelative } from "../util"
@@ -42,20 +42,20 @@ interface TooltipProps {
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
   const tooltipContainerRef = useRef<HTMLDivElement>(null)
-  const { metricType } = useOptions()
+  const { metricType, baseDataType } = useOptions()
   const documentElementRef = useRef(document.documentElement)
   const mouse = useMouse(documentElementRef)
   const unitRaw = useCSSVar("--unit")
   const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
-  const metricCaches = useMetricCaches()
+  const metricsData = useMetrics()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null
     }
-    const { colormap } = metricCaches.get(metricType)!
-    const color = colormap.get(hoveredBlob.path)
+    const colormap = metricsData.get(baseDataType)?.get(metricType)?.colormap
+    const color = colormap?.get(hoveredBlob.path) ?? "grey"
     return color
-  }, [hoveredBlob, metricCaches, metricType])
+  }, [hoveredBlob, metricsData, metricType, baseDataType])
   const toolTipWidth = tooltipContainerRef.current
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0

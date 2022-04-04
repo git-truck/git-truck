@@ -5,8 +5,14 @@ import {
 } from "~/analyzer/model"
 import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
-import { unionAuthors } from "./authorUnionUtil"
 import { dateFormatLong, dateFormatRelative } from "./util"
+
+export const BaseData = {
+  HISTORICAL: "Historical",
+  BLAME: "Blame",
+}
+
+export type BaseDataType = keyof typeof BaseData
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
@@ -72,8 +78,28 @@ export interface MetricCache {
   colormap: Map<string, string>
 }
 
+// export interface authorColorState {
+//   palette: chroma.Color[]
+//   paletteIndex: number
+//   cache: Map<string, string>
+// }
+
+export function generateAuthorColors(authors: string[]) : Map<string, string> {
+  const palette = distinctColors({ count: authors.length })
+  let index = 0
+  const map = new Map<string, string>()
+  for(const author of authors) {
+    const color = palette[index++].rgb(true)
+    const colorString = `rgb(${color[0]},${color[1]},${color[2]})`
+    map.set(author, colorString)
+  }
+  return map
+}
+
 export function getMetricCalcs(
-  data: AnalyzerData
+  data: AnalyzerData,
+  baseDataType: BaseDataType,
+  authorColors: Map<string, string>
 ): [
   metricType: MetricType,
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
@@ -84,12 +110,7 @@ export function getMetricCalcs(
     commit.oldestLatestChangeEpoch,
     commit.newestLatestChangeEpoch
   )
-  
-  const authorColorState = {
-    palette: distinctColors({ count: data.authors.length }),
-    paletteIndex: 0,
-    cache: new Map<string, string>(),
-  }
+
   return [
     [
       "FILE_EXTENSION",
@@ -104,7 +125,7 @@ export function getMetricCalcs(
       "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache)
+        setDominanceColor(blob, cache, baseDataType)
       },
     ],
     [
@@ -143,7 +164,7 @@ export function getMetricCalcs(
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColorState, blob, cache)
+        setDominantAuthorColor(authorColors, blob, cache, baseDataType)
       },
     ],
   ]
@@ -199,21 +220,25 @@ function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   }
 }
 
-export interface authorColorState {
-  palette: chroma.Color[]
-  paletteIndex: number
-  cache: Map<string, string>
-}
-
 function setDominantAuthorColor(
-  acs: authorColorState,
+  authorColors: Map<string, string>,
   blob: HydratedGitBlobObject,
-  cache: MetricCache
+  cache: MetricCache,
+  baseDataType: BaseDataType
 ) {
+  let authorUnion: Record<string, number> | undefined
+  switch (baseDataType) {
+    case "BLAME":
+      authorUnion = blob.unionedAuthorsBlame
+      break
+    default:
+      authorUnion = blob.unionedAuthors
+      break
+  }
   let sorted: [string, number][]
   try {
-    if (!blob.unionedAuthors) throw Error
-    sorted = Object.entries(blob.unionedAuthors).sort(([k1, v1], [k2, v2]) => {
+    if (!authorUnion) throw Error
+    sorted = Object.entries(authorUnion).sort(([k1, v1], [k2, v2]) => {
       if (v1 === 0 || v2 === 0 || !k1 || !k2) throw Error
       if (v1 < v2) return 1
       else if (v1 > v2) return -1
@@ -225,22 +250,20 @@ function setDominantAuthorColor(
   }
 
   const [dom] = sorted[0]
-  let colorString: string
   const legend = cache.legend as PointLegendData
-  if (acs.cache.has(dom)) {
-    colorString = acs.cache.get(dom) ?? "grey"
-    legend.get(dom)?.add(1)
-  } else {
-    const color = acs.palette[acs.paletteIndex++].rgb(true)
-    colorString = `rgb(${color[0]},${color[1]},${color[2]})`
-    acs.cache.set(dom, colorString)
-    legend.set(dom, new PointInfo(colorString, 1))
-  }
-  cache.colormap.set(blob.path, colorString)
+  const color = authorColors.get(dom) ?? "grey"
+  
+  cache.colormap.set(blob.path, color)
   blob.dominantAuthor = sorted[0]
+
+  if (legend.has(dom)) {
+    legend.get(dom)?.add(1)
+    return
+  }
+  legend.set(dom, new PointInfo(color, 1))
 }
 
-function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, baseDataType: BaseDataType) {
   const dominatedColor = "red"
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
@@ -258,8 +281,18 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     return
   }
 
-  if (!blob.unionedAuthors) throw Error("No unioned authors found")
-  switch (Object.keys(blob.unionedAuthors).length) {
+  let authorUnion: Record<string, number> | undefined
+  switch (baseDataType) {
+    case "BLAME":
+      authorUnion = blob.unionedAuthorsBlame
+      break
+    default:
+      authorUnion = blob.unionedAuthors
+      break
+  }
+
+  if (!authorUnion) throw Error("No unioned authors found")
+  switch (Object.keys(authorUnion).length) {
     case 1:
       legend.set("Single author", new PointInfo(dominatedColor, 2))
       cache.colormap.set(blob.path, dominatedColor)
