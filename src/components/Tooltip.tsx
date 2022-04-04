@@ -60,7 +60,8 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
 
-  const right = mouse.docX + toolTipWidth < window.innerWidth - ((34 + 1) * unit)
+  const sidePanelWidth = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
+  const right = mouse.docX + toolTipWidth < window.innerWidth - (sidePanelWidth * unit)
 
   const visible = hoveredBlob !== null
   const transformStyles = { transform: "none" }
