@@ -219,8 +219,3 @@ export async function describeAsyncJob<T>(
     process.exit(1)
   }
 }
-
-export const removeFirstLine = (str: string) =>
-  str.split("\n").slice(1).join("\n")
-export const removeLastLine = (str: string) =>
-  str.split("\n").slice(0, -1).join("\n")
