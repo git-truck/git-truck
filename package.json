@@ -92,10 +92,10 @@
     "semi": false
   },
   "lint-staged": {
-    "app/**/*.css": [
+    "src/**/*.css": [
       "eslint --cache --fix"
     ],
-    "app/**/*.ts": [
+    "src/**/*.ts": [
       "eslint --cache --fix"
     ]
   },
