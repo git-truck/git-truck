@@ -29,6 +29,7 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
+  const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
   const [path, setPath] = useState(data.repo)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
@@ -120,7 +121,7 @@ export function Providers({ children, data }: ProvidersProps) {
       <DataContext.Provider value={data}>
         <MetricContext.Provider value={metricCaches}>
           <OptionsContext.Provider value={optionsValue}>
-            <SearchContext.Provider value={{ searchText, setSearchText }}>
+            <SearchContext.Provider value={{ searchText, setSearchText, searchResults, setSearchResults }}>
               <PathContext.Provider value={{ path, setPath }}>
                 <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
                   {children}

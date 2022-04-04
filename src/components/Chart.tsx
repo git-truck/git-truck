@@ -114,8 +114,8 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   const { path } = usePath()
   let displayText = d.data.name
   type textIsTooLongFunction = (text: string) => boolean
-  const { searchText } = useSearch()
-  const match = !isRoot && isSearchMatch(d, searchText)
+  const { searchResults } = useSearch()
+  const isSearchMatch = searchResults.filter(result => result.hash === d.data.hash).length > 0
 
   if (isRoot) {
     const pathSteps = path.split('/')
@@ -137,9 +137,9 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
       return (
         <>
-          <Circle d={circleDatum} isSearchMatch={match} />
+          <Circle d={circleDatum} isSearchMatch={isSearchMatch} />
           {showLabel ? (
-            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={match} />
+            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={isSearchMatch} />
           ) : null}
         </>
       )
@@ -149,8 +149,8 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
       return (
         <>
-          <Rect d={rectDatum} isSearchMatch={match} />
-          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={match} /> : null}
+          <Rect d={rectDatum} isSearchMatch={isSearchMatch} />
+          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={isSearchMatch} /> : null}
         </>
       )
     default:
@@ -413,9 +413,3 @@ const isTree = (d: HydratedGitObject): d is HydratedGitTreeObject =>
   d.type === "tree"
 const isBlob = (d: HydratedGitObject): d is HydratedGitBlobObject =>
   d.type === "blob"
-const isSearchMatch = (
-  d: HierarchyNode<HydratedGitObject>,
-  searchText: string
-) =>
-  searchText !== "" &&
-  d.data.name.toLowerCase().includes(searchText.toLowerCase())

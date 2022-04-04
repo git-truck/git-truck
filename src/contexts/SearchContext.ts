@@ -1,8 +1,11 @@
 import { createContext, Dispatch, SetStateAction, useContext } from "react"
+import { HydratedGitObject } from "~/analyzer/model"
 
 type Search = {
   searchText: string
   setSearchText: Dispatch<SetStateAction<string>>
+  searchResults: HydratedGitObject[]
+  setSearchResults: Dispatch<SetStateAction<HydratedGitObject[]>>
 }
 
 export const SearchContext = createContext<Search | undefined>(undefined)
