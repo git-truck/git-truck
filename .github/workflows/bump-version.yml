@@ -33,6 +33,8 @@ jobs:
             
         - run: npm install
         - run: git add package-lock.json
+        - run: git config user.email "version-bot@example.com"
+        - run: git config user.name "Version Bot"
         - run: git commit --amend --no-edit
 #         This part is not essential to the workflow, so exit softly with a zero exit code
         - run: git push --force || 0
