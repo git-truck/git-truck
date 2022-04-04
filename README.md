@@ -23,6 +23,8 @@ To check if these programs are installed, and what version you have, run `node -
 
 ## [The interface](#the-interface)
 
+![interface-img](https://user-images.githubusercontent.com/55390848/161504380-7f9715cc-8b06-4cd3-b9f0-1221388f3a52.PNG)
+
 ## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-what-do-i-do)
 Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
 
