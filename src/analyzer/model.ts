@@ -24,7 +24,7 @@ export interface TruckConfig {
 }
 
 // Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 2
+export const AnalyzerDataInterfaceVersion = 3
 
 export interface AnalyzerData {
   cached: boolean
