@@ -39,3 +39,9 @@ select:focus {
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes hide_initially {
+  to {
+    opacity: 1;
+  }
+}
