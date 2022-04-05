@@ -9,7 +9,6 @@ import pkg from "./package.json"
 import latestVersion from "latest-version"
 import semverCompare from "semver-compare"
 import { parseArgs } from "./src/analyzer/args.server"
-import { Express } from "express-serve-static-core"
 
 const args = parseArgs()
 
@@ -17,7 +16,8 @@ const args = parseArgs()
   const latestV = await latestVersion(pkg.name)
   const currentV = pkg.version
 
-  console.clear()
+  // Soft clear the console
+  process.stdout.write("\u001b[2J\u001b[0;0H");
   console.log()
 
   const updateMessage =
@@ -76,9 +76,17 @@ for usage instructions.`)
     })
   )
 
-  const port = process.env.PORT || 3000
+  const argPort = args.port ? Number(args.port) : null
+  const envPort = process.env.PORT ? Number(process.env.PORT) : null
+  const getPort = (await import("get-port")).default
+  const port =
+    argPort ||
+    envPort ||
+    (await getPort({
+      port: [3000, 3001, 3002],
+    }))
 
-  startServer(app, Number(port))
+  app.listen(port).once("listening", () => printOpen(port))
 })()
 
 function printOpen(port: number) {
@@ -88,16 +96,6 @@ function printOpen(port: number) {
     console.log("Default/Specified port was used by another process")
   }
   console.log(`Now listening on port ${serverport}`)
-  open("http://localhost:" + serverport)
-}
-
-function startServer(app: Express, port: number) {
-  const server = app
-    .listen(port)
-    .on("error", () => {
-      server.close(() => {
-        startServer(app, port + 1)
-      })
-    })
-    .once("listening", () => printOpen(port))
+  if (process.env.NODE_ENV !== "development")
+    open("http://localhost:" + serverport)
 }
