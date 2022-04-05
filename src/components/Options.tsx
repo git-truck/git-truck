@@ -1,11 +1,11 @@
-import { BaseData, BaseDataType, Metric, MetricType } from "../metrics"
+import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics"
 import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 
 export function Options() {
-  const { setMetricType, setChartType, setBaseDataType } = useOptions()
+  const { setMetricType, setChartType, setAuthorshipType: setBaseDataType } = useOptions()
   return (
     <Box>
       <EnumSelect
@@ -21,9 +21,9 @@ export function Options() {
       />
       <Spacer />
       <EnumSelect
-        label="Base Date"
-        enum={BaseData}
-        onChange={(baseData: BaseDataType) => setBaseDataType(baseData)}
+        label="Authorship Data"
+        enum={Authorship}
+        onChange={(baseData: AuthorshipType) => setBaseDataType(baseData)}
       />
       <Spacer />
     </Box>

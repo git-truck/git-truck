@@ -7,12 +7,12 @@ import distinctColors from "distinct-colors"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
 
-export const BaseData = {
-  HISTORICAL: "Historical",
-  BLAME: "Blame",
+export const Authorship = {
+  HISTORICAL: "Complete history",
+  BLAME: "Newest version",
 }
 
-export type BaseDataType = keyof typeof BaseData
+export type AuthorshipType = keyof typeof Authorship
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
@@ -98,7 +98,7 @@ export function generateAuthorColors(authors: string[]) : Map<string, string> {
 
 export function getMetricCalcs(
   data: AnalyzerData,
-  baseDataType: BaseDataType,
+  baseDataType: AuthorshipType,
   authorColors: Map<string, string>
 ): [
   metricType: MetricType,
@@ -163,6 +163,7 @@ export function getMetricCalcs(
     [
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, baseDataType)
       },
@@ -224,17 +225,9 @@ function setDominantAuthorColor(
   authorColors: Map<string, string>,
   blob: HydratedGitBlobObject,
   cache: MetricCache,
-  baseDataType: BaseDataType
+  baseDataType: AuthorshipType
 ) {
-  let authorUnion: Record<string, number> | undefined
-  switch (baseDataType) {
-    case "BLAME":
-      authorUnion = blob.unionedAuthorsBlame
-      break
-    default:
-      authorUnion = blob.unionedAuthors
-      break
-  }
+  const authorUnion = blob.unionedAuthors?.get(baseDataType)
   let sorted: [string, number][]
   try {
     if (!authorUnion) throw Error
@@ -254,7 +247,7 @@ function setDominantAuthorColor(
   const color = authorColors.get(dom) ?? "grey"
   
   cache.colormap.set(blob.path, color)
-  blob.dominantAuthor = sorted[0]
+  blob.dominantAuthor?.set(baseDataType, sorted[0])
 
   if (legend.has(dom)) {
     legend.get(dom)?.add(1)
@@ -263,7 +256,7 @@ function setDominantAuthorColor(
   legend.set(dom, new PointInfo(color, 1))
 }
 
-function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, baseDataType: BaseDataType) {
+function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, baseDataType: AuthorshipType) {
   const dominatedColor = "red"
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
@@ -281,15 +274,7 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, base
     return
   }
 
-  let authorUnion: Record<string, number> | undefined
-  switch (baseDataType) {
-    case "BLAME":
-      authorUnion = blob.unionedAuthorsBlame
-      break
-    default:
-      authorUnion = blob.unionedAuthors
-      break
-  }
+  const authorUnion = blob.unionedAuthors?.get(baseDataType)
 
   if (!authorUnion) throw Error("No unioned authors found")
   switch (Object.keys(authorUnion).length) {

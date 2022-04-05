@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { SSRProvider } from "@react-aria/ssr"
 import {
-  BaseDataType,
+  AuthorshipType,
   generateAuthorColors,
   getMetricCalcs,
   MetricCache,
@@ -35,7 +35,7 @@ export function Providers({ children, data }: ProvidersProps) {
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
   const metricState: {
-    metricsData: Map<BaseDataType, Map<MetricType, MetricCache>> | null
+    metricsData: Map<AuthorshipType, Map<MetricType, MetricCache>> | null
     errorMessage: string | null
   } = useMemo(() => {
     if (!data) {
@@ -45,7 +45,7 @@ export function Providers({ children, data }: ProvidersProps) {
       // TODO: Move this to index.tsx loader function
       const authorAliasMap = makeDupeMap(data.authorUnions)
       addAuthorUnion(data.commit.tree, authorAliasMap)
-      const metricsData = new Map<BaseDataType, Map<MetricType, MetricCache>>()
+      const metricsData = new Map<AuthorshipType, Map<MetricType, MetricCache>>()
       
       const meme : Record<string, number> = {}
       for (const author of data.authors) { meme[author] = 0 }
@@ -103,10 +103,10 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           chartType,
         })),
-      setBaseDataType: (baseDataType: BaseDataType) => 
+      setAuthorshipType: (authorshipType: AuthorshipType) => 
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
-          baseDataType,
+          authorshipType,
         })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
         setOptions((prevOptions) => ({

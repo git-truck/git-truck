@@ -1,8 +1,8 @@
 import { createContext, useContext } from "react"
-import { BaseDataType, MetricCache, MetricType } from "../metrics"
+import { AuthorshipType, MetricCache, MetricType } from "../metrics"
 
 export const MetricsContext = createContext<
-  Map<BaseDataType, Map<MetricType, MetricCache>> | undefined
+  Map<AuthorshipType, Map<MetricType, MetricCache>> | undefined
 >(undefined)
 
 export function useMetrics() {

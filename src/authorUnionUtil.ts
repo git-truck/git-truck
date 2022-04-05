@@ -2,6 +2,7 @@ import {
   HydratedGitBlobObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
+import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
   const dupeMap = new Map<string, string>()
@@ -43,22 +44,23 @@ export function addAuthorUnion(
 ) {
   for (const child of tree.children) {
     if (child.type === "blob") {
-      child.unionedAuthors = unionAuthors(child.authors, authorUnions)
-      child.unionedAuthorsBlame = unionAuthors(child.blameAuthors, authorUnions)
+      child.unionedAuthors = new Map<AuthorshipType, Record<string, number>>()
+      child.unionedAuthors.set("HISTORICAL", unionAuthors(child.authors, authorUnions))
+      child.unionedAuthors.set("BLAME", unionAuthors(child.blameAuthors, authorUnions))
     } else {
       addAuthorUnion(child, authorUnions)
     }
   }
 }
 
-export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
+export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, baseDataType: AuthorshipType) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {
       for (const child of tree.children) {
           if (child.type === "blob") {
-              if (!child.unionedAuthors) throw Error("No unioned authors")
-              for (const [author, contrib] of Object.entries(child.unionedAuthors)) {
+              if (!child.unionedAuthors?.get(baseDataType)) throw Error("No unioned authors")
+              for (const [author, contrib] of Object.entries(child.unionedAuthors?.get(baseDataType) ?? {})) {
                   aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
               }
           } else if (child.type === "tree") {

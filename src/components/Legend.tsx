@@ -46,7 +46,7 @@ const StyledP = styled.p`
 `
 
 export function Legend() {
-  const { metricType, baseDataType } = useOptions()
+  const { metricType, authorshipType: baseDataType } = useOptions()
   const metricsData = useMetrics()
 
   const metricCache = metricsData.get(baseDataType)?.get(metricType) ?? undefined

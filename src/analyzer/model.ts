@@ -1,3 +1,5 @@
+import { AuthorshipType } from "~/metrics"
+
 export type GitObject = GitBlobObject | GitTreeObject
 
 export interface GitBaseObject {
@@ -53,13 +55,11 @@ export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
 export interface HydratedGitBlobObject extends GitBlobObject {
   noLines: number
   authors: Record<string, number>
-  unionedAuthors?: Record<string, number>
-  unionedAuthorsBlame?: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
-  dominantAuthor?: [string, number]
-  dominantAuthorBlame?: [string, number]
   isBinary?: boolean
+  unionedAuthors?: Map<AuthorshipType, Record<string, number>>
+  dominantAuthor?: Map<AuthorshipType, [string, number]>
 }
 
 export interface GitTreeObject extends GitBaseObject {

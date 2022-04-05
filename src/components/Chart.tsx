@@ -175,7 +175,7 @@ function Circle({
   isSearchMatch: boolean
 }) {
   const metricsData = useMetrics()
-  const { metricType, baseDataType } = useOptions()
+  const { metricType, authorshipType: baseDataType } = useOptions()
 
   const props = useSpring({
     cx: d.x,
@@ -197,7 +197,7 @@ function Rect({
   isSearchMatch: boolean
 }) {
   const metricsData = useMetrics()
-  const { metricType, baseDataType } = useOptions()
+  const { metricType, authorshipType: baseDataType } = useOptions()
 
   const props = useSpring({
     x: d.x0,

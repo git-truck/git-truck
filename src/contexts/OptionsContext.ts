@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { BaseData, BaseDataType, Metric, MetricType } from "../metrics"
+import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -11,10 +11,10 @@ export type ChartType = keyof typeof Chart
 export interface Options {
   metricType: MetricType
   chartType: ChartType
-  baseDataType: BaseDataType
+  authorshipType: AuthorshipType
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
-  setBaseDataType: (baseDataType: BaseDataType) => void
+  setAuthorshipType: (baseDataType: AuthorshipType) => void
 }
 
 export const OptionsContext = createContext<Options | undefined>(undefined)
@@ -31,14 +31,14 @@ export function getDefaultOptions() {
   return {
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
-    baseDataType: Object.keys(BaseData)[0] as BaseDataType,
+    authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
     },
     setMetricType: () => {
       throw new Error("No metricTypeSetter provided")
     },
-    setBaseDataType: () => {
+    setAuthorshipType: () => {
       throw new Error("No baseDataTypeSetter provided")
     }
   }

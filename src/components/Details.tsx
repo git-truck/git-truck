@@ -10,6 +10,7 @@ import { ExpandDown } from "~/components/Toggle"
 import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton, TextButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 
@@ -23,6 +24,7 @@ function OneFolderOut(path: string) {
 
 export function Details() {
   const { setClickedObject, clickedObject } = useClickedObject()
+  const { authorshipType: baseDataType } = useOptions()
   const { state } = useTransition()
   const { setPath, path } = usePath()
   const data = useData()
@@ -71,9 +73,9 @@ export function Details() {
       { isBlob ?
         (clickedObject.isBinary ||
           hasZeroContributions(clickedObject.authors) ? null : (
-          <AuthorDistribution authors={clickedObject.unionedAuthors} />
+          <AuthorDistribution authors={clickedObject.unionedAuthors?.get(baseDataType)} />
         ))
-        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
+        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, baseDataType)} />
       }
       <Spacer lg />
       { isBlob ? <>
