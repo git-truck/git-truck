@@ -1,18 +1,32 @@
 # Git Truck 🚛
 
-_Visualizing a Git repository_
+Get a truckload of visualizations for your git repository, and find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/)!
 
-Get an overview over your git repo. See your folder-structure, which users have contributed most to which files, and more.
+Git Truck gives an overview of your folder-structure, which users have contributed most to which files, and more.
+
+![billede](https://user-images.githubusercontent.com/23435481/161273053-a9420c2b-2b80-4f73-a78e-39dec822fab1.png)
 
 ## [Prerequisites](#prerequisites)
 
-This projected is tested to work with:
+To use Git Truck, you will need to install the following programs:
 
-- Node.js 16.13
-- npm 6.14
-- git 2.35
+- Node.js 16.13 or newer
+- npm 6.14 or newer
+- git 2.29 or newer
 
-## [Usage](#usage)
+To check if these programs are installed, and what version you have, run `node --version`, `npm --version` and `git --version`. If any of these are not install on your system, or are just very old, they can be installed on these sites: [node](https://nodejs.org/en/), [git](https://git-scm.com/downloads). (Note that `npm` is installed along with `node`)
+
+## [Get started](#get-started)
+1. In your favorite shell (for example cmd, PowerShell, etc.), navigate to the root directory of a git project you want to visualize.
+2. Execute the command `npx git-truck@latest`. Click `y` if it asks you to download the tool. A blank browser-window will open and Git Truck will now start analyzing your project (This might take a while to run, especially on big projects, you can follow the progress in your terminal). If you get an error in the terminal, you can try installing the tool globally by running `npm i -g git-truck@latest` and then run `git-truck` instead.
+3. When Git Truck is done analyzing your project, it will show the visualization in your browser. Enjoy!
+
+## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-or-i-want-to-give-feedback-what-do-i-do)
+Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
+
+If you have any suggestions about new features, or things that you think should be different, also feel free to open an issue.
+
+## [Advanced use](#advanced-use)
 
 Run `npx git-truck` in the root of a git repository, that you want to visualize:
 
@@ -20,7 +34,7 @@ Run `npx git-truck` in the root of a git repository, that you want to visualize:
 npx git-truck [args]
 ```
 
-#### [Arguments](#arguments)
+### [Arguments](#arguments)
 
 |    arg     |                               description                               |   default value    |
 | :--------: | :---------------------------------------------------------------------: | :----------------: |
@@ -45,44 +59,4 @@ Example:
   ],
   "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"]
 }
-```
-
-## [Development](#development)
-
-1. Install dependencies with `npm install`
-2. Run git-truck in development mode with:
-
-```sh
-npm run dev
-```
-
-_or using yarn:_ `yarn dev`
-
-This starts the app in development mode, rebuilding assets on file changes.
-
-**Note:**
-If you want to provide args to the parser, you need to run remix and node separately in two different terminals:
-
-```
-npm run dev:remix
-```
-
-and
-
-```
-npm run dev:node -- <args>
-```
-
-For arguments, see [Arguments](#arguments).
-
-### [Husky](#husky)
-
-To enable husky, run `npx husky install`.
-
-## [Clean up](#clean-up)
-
-To clean up build artefacts, cached analyzations, etc., run:
-
-```
-npm run clean
 ```
