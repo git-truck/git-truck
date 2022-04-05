@@ -57,6 +57,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   lastChangeEpoch?: number
   dominantAuthor?: [string, number]
   isBinary?: boolean
+  isSearchResult?: boolean
 }
 
 export interface GitTreeObject extends GitBaseObject {
@@ -68,6 +69,7 @@ export interface GitTreeObject extends GitBaseObject {
 
 export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
   children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
+  isSearchResult?: boolean
 }
 
 export interface GitCommitObject extends GitBaseObject {

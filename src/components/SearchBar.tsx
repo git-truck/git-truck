@@ -20,10 +20,14 @@ const StyledBox = styled(Box)`
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   const searchResults: HydratedGitObject[] = []
-  if (searchString === "") return searchResults
   function subTreeSearch(subTree: HydratedGitTreeObject) {
     for (const child of subTree.children) {
-      if (child.name.toLowerCase().includes(searchString.toLowerCase())) searchResults.push(child)
+      if (child.name.toLowerCase().includes(searchString.toLowerCase()) && searchString) {
+        searchResults.push(child)
+        child.isSearchResult = true
+      } else {
+        child.isSearchResult = false
+      }
       if (child.type === "tree") subTreeSearch(child)
     }
   }

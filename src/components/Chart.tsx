@@ -114,9 +114,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   const { path } = usePath()
   let displayText = d.data.name
   type textIsTooLongFunction = (text: string) => boolean
-  const { searchResults } = useSearch()
-  const isSearchMatch = searchResults.filter(result => result.hash === d.data.hash).length > 0
-
+  
   if (isRoot) {
     const pathSteps = path.split('/')
     const dispSteps = displayText.split('/')
@@ -137,9 +135,9 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
       return (
         <>
-          <Circle d={circleDatum} isSearchMatch={isSearchMatch} />
+          <Circle d={circleDatum} isSearchMatch={d.data.isSearchResult ?? false} />
           {showLabel ? (
-            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={isSearchMatch} />
+            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} />
           ) : null}
         </>
       )
@@ -149,8 +147,8 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
       return (
         <>
-          <Rect d={rectDatum} isSearchMatch={isSearchMatch} />
-          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={isSearchMatch} /> : null}
+          <Rect d={rectDatum} isSearchMatch={d.data.isSearchResult ?? false} />
+          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} /> : null}
         </>
       )
     default:
