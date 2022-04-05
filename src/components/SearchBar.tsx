@@ -1,23 +1,69 @@
-import { SearchField, Box, Label } from "./util"
+import { SearchField, Box, Label, StyledP, SearchResultButton, SearchResultSpan } from "./util"
 import styled from "styled-components"
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
 import { useId } from "@react-aria/utils"
+import { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { useData } from "~/contexts/DataContext"
+import { usePath } from "~/contexts/PathContext"
+import { useClickedObject } from "~/contexts/ClickedContext"
+import { allExceptLast, getSeparator } from "~/util"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faFolderOpen, faFile } from "@fortawesome/free-solid-svg-icons";
 
 const StyledBox = styled(Box)`
   display: flex;
   flex-direction: column;
 `
 
+function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
+  const searchResults: HydratedGitObject[] = []
+  function subTreeSearch(subTree: HydratedGitTreeObject) {
+    for (const child of subTree.children) {
+      if (child.name.toLowerCase().includes(searchString.toLowerCase()) && searchString) {
+        searchResults.push(child)
+        child.isSearchResult = true
+      } else {
+        child.isSearchResult = false
+      }
+      if (child.type === "tree") subTreeSearch(child)
+    }
+  }
+  subTreeSearch(tree)
+  return searchResults
+}
+
+const LightFontAwesomeIcon = styled(FontAwesomeIcon)`
+  opacity: 0.5;
+`
+
 export default function SearchBar() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
-  const { setSearchText } = useSearch()
+  const { searchText, setSearchText, searchResults, setSearchResults } = useSearch()
   const [value, setValue] = useState("")
   const id = useId()
+  const data = useData()
+  const { setPath } = usePath()
+  const { setClickedObject } = useClickedObject()
 
-  useDebounce(() => setSearchText(value), 200, [value])
+  function onClick(object: HydratedGitObject) {
+    setClickedObject(object)
+    if (object.type === "tree") {
+      setPath(object.path)
+    } else {
+      const sep = getSeparator(object.path)
+      setPath(allExceptLast(object.path.split(sep)).join(sep))
+    }
+  }
+
+  function debounceUpdate() {
+    setSearchText(value)
+    setSearchResults(findSearchResults(data.commit.tree, value))
+  }
+
+  useDebounce(() => debounceUpdate(), 200, [value])
 
   useEffect(() => {
     const searchOverride = (event: KeyboardEvent) => {
@@ -41,11 +87,29 @@ export default function SearchBar() {
         id={id}
         value={value}
         type="search"
-        placeholder="Enter terms"
+        placeholder="Enter file or folder name"
         onChange={(event) => {
           setValue(event.target.value)
         }}
       />
+      {
+        searchText.length > 0 ?
+        <StyledP>{searchResults.length} results</StyledP>
+        : null
+      }
+      {searchResults.map(result => {
+        return (
+          <Fragment key={result.path}>
+            <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
+              <SearchResultSpan>
+                <LightFontAwesomeIcon icon={result.type === "tree" ? faFolderOpen : faFile} />
+                {" "}{result.name}
+              </SearchResultSpan>
+            </SearchResultButton>
+            <Spacer xs/>
+          </Fragment>
+        )
+      })}
     </StyledBox>
   )
 }

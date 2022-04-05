@@ -60,6 +60,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   isBinary?: boolean
   unionedAuthors?: Map<AuthorshipType, Record<string, number>>
   dominantAuthor?: Map<AuthorshipType, [string, number]>
+  isSearchResult?: boolean
 }
 
 export interface GitTreeObject extends GitBaseObject {
@@ -71,6 +72,7 @@ export interface GitTreeObject extends GitBaseObject {
 
 export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
   children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
+  isSearchResult?: boolean
 }
 
 export interface GitCommitObject extends GitBaseObject {
