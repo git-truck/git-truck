@@ -18,7 +18,6 @@ import {
   getDefaultGitSettingValue,
   resetGitSetting,
   setGitSetting,
-  gitBlame,
 } from "./util"
 import { GitCaller } from "./git-caller"
 import { emptyGitCommitHash } from "./constants"
@@ -149,7 +148,7 @@ async function analyzeTree(
           path: newPath,
           name,
           content: await GitCaller.getInstance().catFileCached(hash),
-          blameAuthors: await parseBlame(name, newPath)
+          blameAuthors: await  GitCaller.getInstance().parseBlame(newPath)
         })
         break
       default:
@@ -175,22 +174,6 @@ function getCommandLine() {
     default:
       return "xdg-open" // Linux
   }
-}
-
-async function parseBlame(repo: string, path: string) {
-  const cutString = path.slice(path.indexOf("/") + 1)
-  const blame = await gitBlame(repo, cutString)
-  const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
-  const matches = blame.match(blameRegex)
-  const blameAuthors: Record<string, number> = {}
-  matches?.forEach(match => {
-    const author = match.slice(1).slice(0, match.length - 11).trim()
-    if (author !== "Not Committed Yet") {
-      const currentValue = blameAuthors[author] ?? 0
-      blameAuthors[author] = currentValue + 1
-    }
-  })
-  return blameAuthors
 }
 
 export function openFile(path: string) {
