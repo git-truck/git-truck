@@ -1,14 +1,14 @@
 import { createContext, useContext } from "react"
-import { MetricCache, MetricType } from "../metrics"
+import { AuthorshipType, MetricCache, MetricType } from "../metrics"
 
-export const MetricContext = createContext<
-  Map<MetricType, MetricCache> | undefined
+export const MetricsContext = createContext<
+  Map<AuthorshipType, Map<MetricType, MetricCache>> | undefined
 >(undefined)
 
-export function useMetricCaches() {
-  const context = useContext(MetricContext)
+export function useMetrics() {
+  const context = useContext(MetricsContext)
   if (!context) {
-    throw new Error("useMetricCache must be used within a MetricContext")
+    throw new Error("useMetrics must be used within a MetricsContext")
   }
   return context
 }

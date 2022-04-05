@@ -124,10 +124,7 @@ export async function setGitSetting(repoDir: string, setting: string, value: str
   log.debug(`Set ${setting} to ${value}`)
 }
 
-export async function writeRepoToFile(
-  outPath: string,
-  analyzedData: AnalyzerData
-) {
+export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
   const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
   if (!existsSync(dir)) {

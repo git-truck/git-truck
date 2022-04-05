@@ -1,6 +1,5 @@
 import { createContext, useContext } from "react"
-import { HydratedGitBlobObject } from "~/analyzer/model"
-import { Metric, MetricType } from "../metrics"
+import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -12,8 +11,10 @@ export type ChartType = keyof typeof Chart
 export interface Options {
   metricType: MetricType
   chartType: ChartType
+  authorshipType: AuthorshipType
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
+  setAuthorshipType: (authorshipType: AuthorshipType) => void
 }
 
 export const OptionsContext = createContext<Options | undefined>(undefined)
@@ -30,11 +31,15 @@ export function getDefaultOptions() {
   return {
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
+    authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
     },
     setMetricType: () => {
       throw new Error("No metricTypeSetter provided")
     },
+    setAuthorshipType: () => {
+      throw new Error("No AuthorshipTypeSetter provided")
+    }
   }
 }

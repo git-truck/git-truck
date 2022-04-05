@@ -5,8 +5,8 @@ import styled from "styled-components"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
-import { useMetricCaches } from "../contexts/MetricContext"
-import { MetricType } from "../metrics"
+import { useMetrics } from "../contexts/MetricContext"
+import { Authorship, AuthorshipType, MetricType } from "../metrics"
 import { useCSSVar } from "../hooks"
 import { dateFormatRelative } from "../util"
 
@@ -42,20 +42,20 @@ interface TooltipProps {
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
   const tooltipContainerRef = useRef<HTMLDivElement>(null)
-  const { metricType } = useOptions()
+  const { metricType, authorshipType } = useOptions()
   const documentElementRef = useRef(document.documentElement)
   const mouse = useMouse(documentElementRef)
   const unitRaw = useCSSVar("--unit")
   const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
-  const metricCaches = useMetricCaches()
+  const metricsData = useMetrics()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null
     }
-    const { colormap } = metricCaches.get(metricType)!
-    const color = colormap.get(hoveredBlob.path)
+    const colormap = metricsData.get(authorshipType)?.get(metricType)?.colormap
+    const color = colormap?.get(hoveredBlob.path) ?? "grey"
     return color
-  }, [hoveredBlob, metricCaches, metricType])
+  }, [hoveredBlob, metricsData, metricType, authorshipType])
   const toolTipWidth = tooltipContainerRef.current
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
@@ -87,6 +87,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
         <ColorMetricDependentInfo
           metric={metricType}
           hoveredBlob={hoveredBlob}
+          authorshipType={authorshipType}
         />
       </TooltipBox>
     </TooltipContainer>
@@ -96,6 +97,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: HydratedGitBlobObject | null
+  authorshipType: AuthorshipType
 }) {
   switch (props.metric) {
     case "MOST_COMMITS":
@@ -112,7 +114,7 @@ function ColorMetricDependentInfo(props: {
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.unionedAuthors ?? [])
+        ? Object.entries(props.hoveredBlob?.unionedAuthors?.get(props.authorshipType) ?? [])
         : []
       switch (authors.length) {
         case 0:
@@ -123,7 +125,7 @@ function ColorMetricDependentInfo(props: {
           return <>{authors.length} authors</>
       }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.hoveredBlob?.dominantAuthor
+      const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
     default:

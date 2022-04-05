@@ -2,6 +2,7 @@ import {
   HydratedGitBlobObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
+import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
   const dupeMap = new Map<string, string>()
@@ -14,11 +15,10 @@ export const makeDupeMap = (authors: string[][]) => {
 }
 
 export function unionAuthors(
-  blob: HydratedGitBlobObject,
+  authors: Record<string, number>,
   authorAliasMap: Map<string, string>
 ) {
-  const authorCopy = { ...blob.authors }
-  return Object.entries(authorCopy).reduce<HydratedGitBlobObject["authors"]>(
+  return Object.entries(authors).reduce<HydratedGitBlobObject["authors"]>(
     (newAuthorObject, [authorOrAlias, contributionCount]) => {
       // Lookup the author in the dupe list
       const author = authorAliasMap.get(authorOrAlias)
@@ -44,21 +44,23 @@ export function addAuthorUnion(
 ) {
   for (const child of tree.children) {
     if (child.type === "blob") {
-      child.unionedAuthors = unionAuthors(child, authorUnions)
+      child.unionedAuthors = new Map<AuthorshipType, Record<string, number>>()
+      child.unionedAuthors.set("HISTORICAL", unionAuthors(child.authors, authorUnions))
+      child.unionedAuthors.set("BLAME", unionAuthors(child.blameAuthors, authorUnions))
     } else {
       addAuthorUnion(child, authorUnions)
     }
   }
 }
 
-export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
+export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {
       for (const child of tree.children) {
           if (child.type === "blob") {
-              if (!child.unionedAuthors) throw Error("No unioned authors")
-              for (const [author, contrib] of Object.entries(child.unionedAuthors)) {
+              if (!child.unionedAuthors?.get(authorshipType)) throw Error("No unioned authors")
+              for (const [author, contrib] of Object.entries(child.unionedAuthors?.get(authorshipType) ?? {})) {
                   aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
               }
           } else if (child.type === "tree") {

@@ -148,6 +148,7 @@ async function analyzeTree(
           path: newPath,
           name,
           content: await GitCaller.getInstance().catFileCached(hash),
+          blameAuthors: await  GitCaller.getInstance().parseBlame(newPath)
         })
         break
       default:

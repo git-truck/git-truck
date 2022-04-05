@@ -13,6 +13,7 @@ export class GitCaller {
   private repo: string
   private catFileCache: Map<string, string> = new Map()
   private diffNumStatCache: Map<string, string> = new Map()
+  private blameCache: Map<string, string> = new Map()
 
   private static instance: GitCaller | null = null
 
@@ -41,6 +42,11 @@ export class GitCaller {
     this.useCache = useCache
   }
 
+  private async catFile(hash: string) {
+    const result = await runProcess(this.repo, "git", ["cat-file", "-p", hash])
+    return result as string
+  }
+
   async catFileCached(hash: string): Promise<string> {
     if (!this.useCache) {
       const cachedValue = this.catFileCache.get(hash)
@@ -54,6 +60,40 @@ export class GitCaller {
     return result
   }
 
+  private async blame(path: string) {
+    const result = await runProcess(this.repo, "git", ["blame", path])
+    return result as string
+  }
+
+  async blameCached(path: string): Promise<string> {
+    if (!this.useCache) {
+      const cachedValue = this.blameCache.get(path)
+      if (cachedValue) {
+        return cachedValue
+      }
+    }
+    const result = await this.blame(path)
+    this.blameCache.set(path, result)
+
+    return result
+  }
+
+  async parseBlame(path: string) {
+    const cutString = path.slice(path.indexOf("/") + 1)
+    const blame = await this.blameCached(cutString)
+    const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
+    const matches = blame.match(blameRegex)
+    const blameAuthors: Record<string, number> = {}
+    matches?.forEach(match => {
+      const author = match.slice(1).slice(0, match.length - 11).trim()
+      if (author !== "Not Committed Yet") {
+        const currentValue = blameAuthors[author] ?? 0
+        blameAuthors[author] = currentValue + 1
+      }
+    })
+    return blameAuthors
+  }
+
   async gitDiffNumStatCached(a: string, b: string) {
     const key = a + b
     if (this.useCache) {
@@ -65,11 +105,6 @@ export class GitCaller {
     const result = await this.gitDiffNumStat(a, b)
     this.diffNumStatCache.set(key, result)
     return result
-  }
-
-  private async catFile(hash: string) {
-    const result = await runProcess(this.repo, "git", ["cat-file", "-p", hash])
-    return result as string
   }
 
   private async gitDiffNumStat(a: string, b: string) {
