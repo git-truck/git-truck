@@ -78,12 +78,6 @@ export interface MetricCache {
   colormap: Map<string, string>
 }
 
-// export interface authorColorState {
-//   palette: chroma.Color[]
-//   paletteIndex: number
-//   cache: Map<string, string>
-// }
-
 export function generateAuthorColors(authors: string[]) : Map<string, string> {
   const palette = distinctColors({ count: authors.length })
   let index = 0
