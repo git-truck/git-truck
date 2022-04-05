@@ -3,9 +3,20 @@ import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
+import styled from "styled-components"
+
+const Checkbox = styled.input`
+  margin: var(--unit);
+`
 
 export function Options() {
-  const { setMetricType, setChartType, setAuthorshipType } = useOptions()
+  const {
+    animationsEnabled,
+    setMetricType,
+    setChartType,
+    setAnimationsEnabled,
+    setAuthorshipType
+  } = useOptions()
   return (
     <Box>
       <EnumSelect
@@ -26,6 +37,14 @@ export function Options() {
         onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
       />
       <Spacer />
+      <label>
+        <Checkbox
+          type="checkbox"
+          checked={animationsEnabled}
+          onChange={(e) => setAnimationsEnabled(e.target.checked)}
+        />
+        <span>Enable animations</span>
+      </label>
     </Box>
   )
 }

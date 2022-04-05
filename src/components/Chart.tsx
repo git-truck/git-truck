@@ -1,39 +1,27 @@
+import { animated } from "@react-spring/web"
+import type {
+  HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode
+} from "d3-hierarchy"
+import { hierarchy, pack, treemap } from "d3-hierarchy"
 import { memo, useEffect, useMemo, useState } from "react"
+import styled from "styled-components"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitObject,
-  HydratedGitTreeObject,
+  HydratedGitTreeObject
 } from "~/analyzer/model"
-import type {
-  HierarchyCircularNode,
-  HierarchyRectangularNode,
-  HierarchyNode,
-} from "d3-hierarchy"
-
-import {
-  treemapPadding,
-  textSpacingFromCircle,
-  bubblePadding,
-  searchMatchColor,
-  estimatedLetterWidth,
-  EstimatedLetterHeightForDirText,
-} from "../const"
-import { ChartType, useOptions } from "../contexts/OptionsContext"
-import styled from "styled-components"
-import { Tooltip } from "./Tooltip"
-import { useSearch } from "../contexts/SearchContext"
-import { useData } from "../contexts/DataContext"
-import { animated, useSpring } from "@react-spring/web"
-import { useMetrics } from "../contexts/MetricContext"
-
-import {
-  hierarchy,
-  pack,
-  treemap,
-} from "d3-hierarchy"
-import { usePath } from "../contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { useToggleableSpring } from "~/hooks"
+import {
+  bubblePadding, EstimatedLetterHeightForDirText, estimatedLetterWidth, searchMatchColor, textSpacingFromCircle, treemapPadding
+} from "../const"
+import { useData } from "../contexts/DataContext"
+import { useMetrics } from "../contexts/MetricContext"
+import { ChartType, useOptions } from "../contexts/OptionsContext"
+import { usePath } from "../contexts/PathContext"
+import { Tooltip } from "./Tooltip"
+
 
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
@@ -57,8 +45,8 @@ export function Chart(props: ChartProps) {
   )
   const data = useData()
   const { chartType } = useOptions()
-  const { path } = usePath();
-  const {setClickedObject } = useClickedObject()
+  const { path } = usePath()
+  const { setClickedObject } = useClickedObject()
   const { setPath } = usePath()
 
   const nodes = useMemo(() => {
@@ -75,25 +63,27 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => setClickedObject(d.data),
-        onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-        onMouseOut: () => setHoveredBlob(null),
-      }
+          onClick: () => setClickedObject(d.data),
+          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+          onMouseOut: () => setHoveredBlob(null),
+        }
       : {
-        onClick: () => {
-          setClickedObject(d.data)
-          setPath(d.data.path)
-        },
-        onMouseOver: () => setHoveredBlob(null),
-        onMouseOut: () => setHoveredBlob(null),
-      }
+          onClick: () => {
+            setClickedObject(d.data)
+            setPath(d.data.path)
+          },
+          onMouseOver: () => setHoveredBlob(null),
+          onMouseOut: () => setHoveredBlob(null),
+        }
 
   return (
     <>
       <SVG
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
+        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${
+          props.size.height
+        }`}
       >
         {nodes?.descendants().map((d, i) => {
           return (
@@ -103,35 +93,49 @@ export function Chart(props: ChartProps) {
           )
         })}
       </SVG>
-      {typeof document !== "undefined" ? <Tooltip hoveredBlob={hoveredBlob} /> : null}
+      {typeof document !== "undefined" ? (
+        <Tooltip hoveredBlob={hoveredBlob} />
+      ) : null}
     </>
   )
 }
 
-const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo(function Node({
+  d,
+  isRoot,
+}: {
+  d: CircleOrRectHiearchyNode
+  isRoot: boolean
+}) {
   const { chartType } = useOptions()
   let showLabel = isTree(d.data)
   const { path } = usePath()
   let displayText = d.data.name
   type textIsTooLongFunction = (text: string) => boolean
-  
+
   if (isRoot) {
-    const pathSteps = path.split('/')
-    const dispSteps = displayText.split('/')
+    const pathSteps = path.split("/")
+    const dispSteps = displayText.split("/")
     let ps = 0
     let ds = 0
-    while(ps < pathSteps.length &&  ds < dispSteps.length) {
-      if ( pathSteps[ps] !== dispSteps[ds]) ps++
-      else { ps++; ds++ }
+    while (ps < pathSteps.length && ds < dispSteps.length) {
+      if (pathSteps[ps] !== dispSteps[ds]) ps++
+      else {
+        ps++
+        ds++
+      }
     }
 
-    displayText = dispSteps.slice(ds-1).join('/')
+    displayText = dispSteps.slice(ds - 1).join("/")
   }
 
   switch (chartType) {
     case "BUBBLE_CHART":
       const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      collapseDisplayText_mut((text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth)
+      collapseDisplayText_mut(
+        (text: string) =>
+          circleDatum.r * Math.PI < text.length * estimatedLetterWidth
+      )
 
       return (
         <>
@@ -143,7 +147,11 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      collapseDisplayText_mut((text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth)
+      collapseDisplayText_mut(
+        (text: string) =>
+          rectDatum.x1 - rectDatum.x0 <
+          displayText.length * estimatedLetterWidth
+      )
 
       return (
         <>
@@ -175,7 +183,7 @@ function Circle({
   const metricsData = useMetrics()
   const { metricType, authorshipType  } = useOptions()
 
-  const props = useSpring({
+  const props = useToggleableSpring({
     cx: d.x,
     cy: d.y,
     r: Math.max(d.r - 1, 0),
@@ -197,7 +205,7 @@ function Rect({
   const metricsData = useMetrics()
   const { metricType, authorshipType } = useOptions()
 
-  const props = useSpring({
+  const props = useToggleableSpring({
     x: d.x0,
     y: d.y0,
     width: d.x1 - d.x0,
@@ -222,19 +230,15 @@ function CircleText({
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
   displayText: string
-  isSearchMatch: boolean,
+  isSearchMatch: boolean
 }) {
-  const props = useSpring({
-    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle)
+  const props = useToggleableSpring({
+    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle),
   })
 
   return (
     <>
-      <animated.path
-        {...props}
-        id={d.data.path}
-        className="name-path"
-      />
+      <animated.path {...props} id={d.data.path} className="name-path" />
       <text
         style={{
           stroke: "var(--global-bg-color)",
@@ -278,7 +282,7 @@ function RectText({
   displayText: string
   isSearchMatch: boolean
 }) {
-  const props = useSpring({
+  const props = useToggleableSpring({
     x: d.x0 + 4,
     y: d.y0 + 12,
     fill: isSearchMatch ? searchMatchColor : "#333",
@@ -300,7 +304,7 @@ function createPartitionedHiearchy(
   const root = data.tree as HydratedGitTreeObject
 
   let currentTree = root
-  const steps = path.substring(data.tree.name.length+1).split("/")
+  const steps = path.substring(data.tree.name.length + 1).split("/")
 
   for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
@@ -308,8 +312,8 @@ function createPartitionedHiearchy(
         const childSteps = child.name.split("/")
         if (childSteps[0] === steps[i]) {
           currentTree = child
-          i += childSteps.length-1
-          break;
+          i += childSteps.length - 1
+          break
         }
       }
     }
@@ -337,7 +341,10 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return ((child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) || child.data.type === "tree")
+        return (
+          (child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) ||
+          child.data.type === "tree"
+        )
       })
 
       return tmPartition
@@ -348,10 +355,13 @@ function createPartitionedHiearchy(
         .padding(bubblePadding)
 
       const bPartition = bubbleChartPartition(hiearchy)
-      
+
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        return ((child.data.type === "blob" && cast.r >= 1) || child.data.type === "tree")
+        return (
+          (child.data.type === "blob" && cast.r >= 1) ||
+          child.data.type === "tree"
+        )
       })
 
       return bPartition
@@ -360,9 +370,12 @@ function createPartitionedHiearchy(
   }
 }
 
-function filterTree(node: HierarchyNode<HydratedGitObject>, filter: (child: HierarchyNode<HydratedGitObject>) => boolean) {
-  node.children = node.children?.filter((c) => filter(c));
-  for(const child of (node.children ?? [])) {
+function filterTree(
+  node: HierarchyNode<HydratedGitObject>,
+  filter: (child: HierarchyNode<HydratedGitObject>) => boolean
+) {
+  node.children = node.children?.filter((c) => filter(c))
+  for (const child of node.children ?? []) {
     if ((child.children?.length ?? 0) > 0) filterTree(child, filter)
   }
 }
