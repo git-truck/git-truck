@@ -18,10 +18,10 @@ To check if these programs are installed, and what version you have, run `node -
 
 ## [Get started](#get-started)
 1. In your favorite shell (for example cmd, PowerShell, etc.), navigate to the root directory of a git project you want to visualize.
-2. Execute the command `npx git-truck@latest`. Click `y` if it asks you to download the tool. A blank browser-window will open and Git Truck will now start analyzing your project (This might take a while to run, especially on big projects. You can follow the progress in your terminal). If you get an error in the terminal, you can try running `npm i -g git-truck@latest` and then `git-truck` instead.
-3. When the Git Truck is done analyzing your project, it will show the visualization in your browser. Enjoy!
+2. Execute the command `npx git-truck@latest`. Click `y` if it asks you to download the tool. A blank browser-window will open and Git Truck will now start analyzing your project (This might take a while to run, especially on big projects, you can follow the progress in your terminal). If you get an error in the terminal, you can try installing the tool globally by running `npm i -g git-truck@latest` and then run `git-truck` instead.
+3. When Git Truck is done analyzing your project, it will show the visualization in your browser. Enjoy!
 
-## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-what-do-i-do)
+## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-or-i-want-to-give-feedback-what-do-i-do)
 Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
 
 If you have any suggestions about new features, or things that you think should be different, also feel free to open an issue.
