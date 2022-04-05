@@ -1,26 +1,26 @@
-import { useEffect, useState, useMemo } from "react"
 import { SSRProvider } from "@react-aria/ssr"
+import { useEffect, useMemo, useState } from "react"
+import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import { ClickedObjectContext } from "~/contexts/ClickedContext"
+import { addAuthorUnion, makeDupeMap, unionAuthors } from "../authorUnionUtil"
+import { DataContext } from "../contexts/DataContext"
+import { MetricsContext } from "../contexts/MetricContext"
+import {
+  ChartType,
+  getDefaultOptions,
+  Options,
+  OptionsContext
+} from "../contexts/OptionsContext"
+import { PathContext } from "../contexts/PathContext"
+import { SearchContext } from "../contexts/SearchContext"
 import {
   AuthorshipType,
   generateAuthorColors,
   getMetricCalcs,
   MetricCache,
   MetricType,
-  setupMetricsCache,
+  setupMetricsCache
 } from "../metrics"
-import {
-  ChartType,
-  getDefaultOptions,
-  Options,
-  OptionsContext,
-} from "../contexts/OptionsContext"
-import { SearchContext } from "../contexts/SearchContext"
-import { HydratedGitBlobObject, AnalyzerData, HydratedGitObject } from "~/analyzer/model"
-import { DataContext } from "../contexts/DataContext"
-import { addAuthorUnion, makeDupeMap, unionAuthors } from "../authorUnionUtil"
-import { PathContext } from "../contexts/PathContext"
-import { ClickedObjectContext } from "~/contexts/ClickedContext"
-import { MetricsContext } from "../contexts/MetricContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -28,12 +28,13 @@ interface ProvidersProps {
 }
 
 export function Providers({ children, data }: ProvidersProps) {
-
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
   const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
   const [path, setPath] = useState(data.repo)
-  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
+  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(
+    null
+  )
 
   const metricState: {
     metricsData: Map<AuthorshipType, Map<MetricType, MetricCache>> | null
@@ -47,11 +48,11 @@ export function Providers({ children, data }: ProvidersProps) {
       const authorAliasMap = makeDupeMap(data.authorUnions)
       addAuthorUnion(data.commit.tree, authorAliasMap)
       const metricsData = new Map<AuthorshipType, Map<MetricType, MetricCache>>()
-      
-      const meme : Record<string, number> = {}
-      for (const author of data.authors) { meme[author] = 0 }
-      const fullAuthorUnion = unionAuthors(meme, authorAliasMap);
-    
+
+      const authorUnion : Record<string, number> = {}
+      for (const author of data.authors) { authorUnion[author] = 0 }
+      const fullAuthorUnion = unionAuthors(authorUnion, authorAliasMap);
+
       const authorColors = generateAuthorColors(Object.keys(fullAuthorUnion))
 
       const historicalMetricCache = new Map<MetricType, MetricCache>()
@@ -104,7 +105,7 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           chartType,
         })),
-      setAuthorshipType: (authorshipType: AuthorshipType) => 
+      setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
           authorshipType,
@@ -118,6 +119,11 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
           clickedObject: object,
+        })),
+      setAnimationsEnabled: (enabled: boolean) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
+          animationsEnabled: enabled,
         })),
     }),
     [options]
@@ -148,7 +154,9 @@ export function Providers({ children, data }: ProvidersProps) {
           <OptionsContext.Provider value={optionsValue}>
             <SearchContext.Provider value={{ searchText, setSearchText, searchResults, setSearchResults }}>
               <PathContext.Provider value={{ path, setPath }}>
-                <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
+                <ClickedObjectContext.Provider
+                  value={{ clickedObject, setClickedObject }}
+                >
                   {children}
                 </ClickedObjectContext.Provider>
               </PathContext.Provider>
