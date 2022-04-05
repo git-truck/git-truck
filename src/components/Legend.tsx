@@ -46,10 +46,10 @@ const StyledP = styled.p`
 `
 
 export function Legend() {
-  const { metricType, authorshipType: baseDataType } = useOptions()
+  const { metricType, authorshipType } = useOptions()
   const metricsData = useMetrics()
 
-  const metricCache = metricsData.get(baseDataType)?.get(metricType) ?? undefined
+  const metricCache = metricsData.get(authorshipType)?.get(metricType) ?? undefined
 
   if (metricCache === undefined) return null
 
@@ -61,7 +61,7 @@ export function Legend() {
         }
       </StyledH2>
       <StyledP>
-        {getMetricDescription(metricType)}
+        {getMetricDescription(metricType, authorshipType)}
       </StyledP>
       {
         (isGradientMetric(metricType))

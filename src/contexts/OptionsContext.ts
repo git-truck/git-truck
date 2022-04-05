@@ -14,7 +14,7 @@ export interface Options {
   authorshipType: AuthorshipType
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
-  setAuthorshipType: (baseDataType: AuthorshipType) => void
+  setAuthorshipType: (authorshipType: AuthorshipType) => void
 }
 
 export const OptionsContext = createContext<Options | undefined>(undefined)
@@ -39,7 +39,7 @@ export function getDefaultOptions() {
       throw new Error("No metricTypeSetter provided")
     },
     setAuthorshipType: () => {
-      throw new Error("No baseDataTypeSetter provided")
+      throw new Error("No AuthorshipTypeSetter provided")
     }
   }
 }

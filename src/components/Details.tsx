@@ -24,7 +24,7 @@ function OneFolderOut(path: string) {
 
 export function Details() {
   const { setClickedObject, clickedObject } = useClickedObject()
-  const { authorshipType: baseDataType } = useOptions()
+  const { authorshipType } = useOptions()
   const { state } = useTransition()
   const { setPath, path } = usePath()
   const data = useData()
@@ -73,9 +73,9 @@ export function Details() {
       { isBlob ?
         (clickedObject.isBinary ||
           hasZeroContributions(clickedObject.authors) ? null : (
-          <AuthorDistribution authors={clickedObject.unionedAuthors?.get(baseDataType)} />
+          <AuthorDistribution authors={clickedObject.unionedAuthors?.get(authorshipType)} />
         ))
-        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, baseDataType)} />
+        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       }
       <Spacer lg />
       { isBlob ? <>

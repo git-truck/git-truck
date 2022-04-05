@@ -42,7 +42,7 @@ interface TooltipProps {
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
   const tooltipContainerRef = useRef<HTMLDivElement>(null)
-  const { metricType, authorshipType: baseDataType } = useOptions()
+  const { metricType, authorshipType } = useOptions()
   const documentElementRef = useRef(document.documentElement)
   const mouse = useMouse(documentElementRef)
   const unitRaw = useCSSVar("--unit")
@@ -52,10 +52,10 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     if (!hoveredBlob) {
       return null
     }
-    const colormap = metricsData.get(baseDataType)?.get(metricType)?.colormap
+    const colormap = metricsData.get(authorshipType)?.get(metricType)?.colormap
     const color = colormap?.get(hoveredBlob.path) ?? "grey"
     return color
-  }, [hoveredBlob, metricsData, metricType, baseDataType])
+  }, [hoveredBlob, metricsData, metricType, authorshipType])
   const toolTipWidth = tooltipContainerRef.current
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
@@ -87,7 +87,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
         <ColorMetricDependentInfo
           metric={metricType}
           hoveredBlob={hoveredBlob}
-          baseDataType={baseDataType}
+          authorshipType={authorshipType}
         />
       </TooltipBox>
     </TooltipContainer>
@@ -97,7 +97,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: HydratedGitBlobObject | null
-  baseDataType: AuthorshipType
+  authorshipType: AuthorshipType
 }) {
   switch (props.metric) {
     case "MOST_COMMITS":
@@ -114,7 +114,7 @@ function ColorMetricDependentInfo(props: {
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.unionedAuthors?.get(props.baseDataType) ?? [])
+        ? Object.entries(props.hoveredBlob?.unionedAuthors?.get(props.authorshipType) ?? [])
         : []
       switch (authors.length) {
         case 0:
@@ -125,7 +125,7 @@ function ColorMetricDependentInfo(props: {
           return <>{authors.length} authors</>
       }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.hoveredBlob?.dominantAuthor?.get(props.baseDataType) ?? undefined
+      const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
     default:

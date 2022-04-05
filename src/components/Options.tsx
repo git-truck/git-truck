@@ -5,7 +5,7 @@ import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 
 export function Options() {
-  const { setMetricType, setChartType, setAuthorshipType: setBaseDataType } = useOptions()
+  const { setMetricType, setChartType, setAuthorshipType } = useOptions()
   return (
     <Box>
       <EnumSelect
@@ -23,7 +23,7 @@ export function Options() {
       <EnumSelect
         label="Authorship Data"
         enum={Authorship}
-        onChange={(baseData: AuthorshipType) => setBaseDataType(baseData)}
+        onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
       />
       <Spacer />
     </Box>

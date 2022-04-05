@@ -175,7 +175,7 @@ function Circle({
   isSearchMatch: boolean
 }) {
   const metricsData = useMetrics()
-  const { metricType, authorshipType: baseDataType } = useOptions()
+  const { metricType, authorshipType  } = useOptions()
 
   const props = useSpring({
     cx: d.x,
@@ -183,7 +183,7 @@ function Circle({
     r: Math.max(d.r - 1, 0),
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: isSearchMatch ? "4px" : "1px",
-    fill: metricsData.get(baseDataType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey",
+    fill: metricsData.get(authorshipType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey",
   })
 
   return <animated.circle {...props} className={d.data.type} />
@@ -197,7 +197,7 @@ function Rect({
   isSearchMatch: boolean
 }) {
   const metricsData = useMetrics()
-  const { metricType, authorshipType: baseDataType } = useOptions()
+  const { metricType, authorshipType } = useOptions()
 
   const props = useSpring({
     x: d.x0,
@@ -210,7 +210,7 @@ function Rect({
 
     fill:
       d.data.type === "blob"
-        ? metricsData.get(baseDataType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey"
+        ? metricsData.get(authorshipType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey"
         : "transparent",
   })
 
