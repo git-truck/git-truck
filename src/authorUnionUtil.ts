@@ -1,4 +1,8 @@
-import { HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import {
+  AnalyzerData,
+  HydratedGitBlobObject,
+  HydratedGitTreeObject,
+} from "~/analyzer/model"
 import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
@@ -35,7 +39,13 @@ export function unionAuthors(
   )
 }
 
-export function addAuthorUnion(
+export function addAuthorUnion(data: AnalyzerData) {
+  const authorUnions = makeDupeMap(data.authorUnions)
+  addAuthorUnionRec(data.commit.tree, authorUnions)
+  return authorUnions
+}
+
+function addAuthorUnionRec(
   tree: HydratedGitTreeObject,
   authorUnions: Map<string, string>
 ) {
@@ -51,7 +61,7 @@ export function addAuthorUnion(
         unionAuthors(child.blameAuthors, authorUnions)
       )
     } else {
-      addAuthorUnion(child, authorUnions)
+      addAuthorUnionRec(child, authorUnions)
     }
   }
 }

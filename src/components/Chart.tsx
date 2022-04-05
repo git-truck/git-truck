@@ -14,7 +14,12 @@ import {
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useToggleableSpring } from "~/hooks"
 import {
-  bubblePadding, EstimatedLetterHeightForDirText, estimatedLetterWidth, searchMatchColor, textSpacingFromCircle, treemapPadding
+  bubblePadding,
+  EstimatedLetterHeightForDirText,
+  estimatedLetterWidth,
+  searchMatchColor,
+  textSpacingFromCircle,
+  treemapPadding,
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
@@ -62,27 +67,26 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-          onClick: () => setClickedObject(d.data),
-          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => setClickedObject(d.data),
+        onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+        onMouseOut: () => setHoveredBlob(null),
+      }
       : {
-          onClick: () => {
-            setClickedObject(d.data)
-            setPath(d.data.path)
-          },
-          onMouseOver: () => setHoveredBlob(null),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => {
+          setClickedObject(d.data)
+          setPath(d.data.path)
+        },
+        onMouseOver: () => setHoveredBlob(null),
+        onMouseOut: () => setHoveredBlob(null),
+      }
 
   return (
     <>
       <SVG
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${
-          props.size.height
-        }`}
+        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height
+          }`}
       >
         {nodes?.descendants().map((d, i) => {
           return (
@@ -202,10 +206,8 @@ function Circle({
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: isSearchMatch ? "4px" : "1px",
     fill:
-      metricsData
-        .get(authorshipType)
-        ?.get(metricType)
-        ?.colormap.get(d.data.path) ?? "grey",
+      metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ??
+      "grey",
   })
 
   return <animated.circle {...props} className={d.data.type} />
@@ -232,10 +234,9 @@ function Rect({
 
     fill:
       d.data.type === "blob"
-        ? metricsData
-            .get(authorshipType)
-            ?.get(metricType)
-            ?.colormap.get(d.data.path) ?? "grey"
+        ? metricsData[authorshipType]
+          .get(metricType)
+          ?.colormap.get(d.data.path) ?? "grey"
         : "transparent",
   })
 

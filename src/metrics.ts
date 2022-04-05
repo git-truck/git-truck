@@ -1,11 +1,14 @@
+import distinctColors from "distinct-colors"
 import {
   AnalyzerData,
   HydratedGitBlobObject,
   HydratedGitTreeObject,
 } from "~/analyzer/model"
-import distinctColors from "distinct-colors"
+import { addAuthorUnion, makeDupeMap, unionAuthors } from "./authorUnionUtil"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
+
+export type MetricsData = Record<AuthorshipType, Map<MetricType, MetricCache>>
 
 export const Authorship = {
   HISTORICAL: "Complete history",
@@ -24,7 +27,25 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
+export function createMetricData(data: AnalyzerData): MetricsData {
+  const authorColors = generateAuthorColors(data)
+
+  return {
+    HISTORICAL: setupMetricsCache(
+      data.commit.tree,
+      getMetricCalcs(data, "HISTORICAL", authorColors)
+    ),
+    BLAME: setupMetricsCache(
+      data.commit.tree,
+      getMetricCalcs(data, "BLAME", authorColors)
+    ),
+  }
+}
+
+export function getMetricDescription(
+  metric: MetricType,
+  authorshipType: AuthorshipType
+): string {
   switch (metric) {
     case "FILE_EXTENSION":
       return "Where are different types of files located?"
@@ -33,11 +54,11 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
     case "LAST_CHANGED":
       return "Where are the most recent or least recent commits made?"
     case "SINGLE_AUTHOR":
-      return authorshipType === "HISTORICAL" 
-      ? "Which files are authored by only one person, throughout the repository's history?" 
-      : "Which files are authored by only one person, in the newest version?"
+      return authorshipType === "HISTORICAL"
+        ? "Which files are authored by only one person, throughout the repository's history?"
+        : "Which files are authored by only one person, in the newest version?"
     case "TOP_CONTRIBUTOR":
-      return authorshipType === "HISTORICAL" 
+      return authorshipType === "HISTORICAL"
         ? "Which person has made the most line-changes to a file, throughout the repository's history?"
         : "Which person has made the most line-changes to a file, in the newest version?"
     default:
@@ -82,11 +103,20 @@ export interface MetricCache {
   colormap: Map<string, string>
 }
 
-export function generateAuthorColors(authors: string[]) : Map<string, string> {
+export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
+  const authorAliasMap = makeDupeMap(data.authorUnions)
+  addAuthorUnion(data)
+
+  const authorsMap: Record<string, number> = {}
+  for (const author of data.authors) authorsMap[author] = 0
+
+  const fullAuthorUnion = unionAuthors(authorsMap, authorAliasMap)
+  const authors = Object.keys(fullAuthorUnion)
+
   const palette = distinctColors({ count: authors.length })
   let index = 0
   const map = new Map<string, string>()
-  for(const author of authors) {
+  for (const author of authors) {
     const color = palette[index++].rgb(true)
     const colorString = `rgb(${color[0]},${color[1]},${color[2]})`
     map.set(author, colorString)
@@ -103,7 +133,10 @@ export function getMetricCalcs(
   func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
 ][] {
   const commit = data.commit
-  const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
+  const heatmap = new HeatMapTranslater(
+    commit.minNoCommits,
+    commit.maxNoCommits
+  )
   const coldmap = new ColdMapTranslater(
     commit.oldestLatestChangeEpoch,
     commit.newestLatestChangeEpoch
@@ -161,7 +194,8 @@ export function getMetricCalcs(
     [
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
+        if (!blob.dominantAuthor)
+          blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
       },
@@ -174,13 +208,25 @@ export function setupMetricsCache(
   metricCalcs: [
     metricType: MetricType,
     func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
+  ][]
+) {
+  const blameMetricCache = new Map<MetricType, MetricCache>()
+  setupMetricsCacheRec(tree, metricCalcs, blameMetricCache)
+  return blameMetricCache
+}
+
+function setupMetricsCacheRec(
+  tree: HydratedGitTreeObject,
+  metricCalcs: [
+    metricType: MetricType,
+    func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
   ][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {
     switch (child.type) {
       case "tree":
-        setupMetricsCache(child, metricCalcs, acc)
+        setupMetricsCacheRec(child, metricCalcs, acc)
         break
       case "blob":
         for (const [metricType, metricFunc] of metricCalcs) {
@@ -214,7 +260,7 @@ function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     }
     cache.colormap.set(blob.path, color)
   } else {
-    if(!legend.has("Other")) legend.set("Other", new PointInfo("grey", 0))
+    if (!legend.has("Other")) legend.set("Other", new PointInfo("grey", 0))
     cache.colormap.set(blob.path, "grey")
   }
 }
@@ -243,7 +289,7 @@ function setDominantAuthorColor(
   const [dom] = sorted[0]
   const legend = cache.legend as PointLegendData
   const color = authorColors.get(dom) ?? "grey"
-  
+
   cache.colormap.set(blob.path, color)
   blob.dominantAuthor?.set(authorshipType, sorted[0])
 
@@ -254,7 +300,11 @@ function setDominantAuthorColor(
   legend.set(dom, new PointInfo(color, 1))
 }
 
-function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorshipType: AuthorshipType) {
+function setDominanceColor(
+  blob: HydratedGitBlobObject,
+  cache: MetricCache,
+  authorshipType: AuthorshipType
+) {
   const dominatedColor = "red"
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
