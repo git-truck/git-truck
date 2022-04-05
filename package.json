@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "0.7.10",
+  "version": "0.7.17",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
@@ -10,7 +10,6 @@
     "test": "jest --coverage",
     "clean": "npx rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "postinstall": "npm run build",
     "build": "npx remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
     "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
@@ -92,11 +91,9 @@
     "semi": false
   },
   "lint-staged": {
-    "app/**/*.css": [
-      "eslint --cache --fix"
-    ],
-    "app/**/*.ts": [
-      "eslint --cache --fix"
+    "src/**/*.{ts,tsx}": [
+      "eslint --cache --fix",
+      "prettier --write"
     ]
   },
   "engines": {

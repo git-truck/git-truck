@@ -15,12 +15,12 @@ import {
   writeRepoToFile,
   getCurrentBranch,
   getRepoName,
-  deflateGitObject,
   getDefaultGitSettingValue,
   resetGitSetting,
   setGitSetting,
   gitBlame,
 } from "./util"
+import { GitCaller } from "./git-caller"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, join } from "path"
 import { performance } from "perf_hooks"
@@ -28,7 +28,12 @@ import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
-import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
+import {
+  applyIgnore,
+  applyMetrics,
+  initMetrics,
+  TreeCleanup,
+} from "./postprocessing.server"
 import latestVersion from "latest-version"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
@@ -50,15 +55,15 @@ export async function findBranchHead(repo: string, branch: string | null) {
 
   const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
   log.debug(`${branch} -> [commit]${branchHead}`)
+  if (!branchHead) throw Error("Branch head not found")
 
   return [branchHead, branch]
 }
 
 export async function analyzeCommitLight(
-  repo: string,
   hash: string
 ): Promise<GitCommitObjectLight> {
-  const rawContent = await deflateGitObject(repo, hash)
+  const rawContent = await GitCaller.getInstance().catFileCached(hash)
   const commitRegex =
     /tree (?<tree>.*)\n(?:parent (?<parent>.*)\n)?(?:parent (?<parent2>.*)\n)?author (?<authorName>.*) <(?<authorEmail>.*)> (?<authorTimeStamp>\d*) (?<authorTimeZone>.*)\ncommitter (?<committerName>.*) <(?<committerEmail>.*)> (?<committerTimeStamp>\d*) (?<committerTimeZone>.*)\n(?:gpgsig (?:.|\n)*-----END PGP SIGNATURE-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
 
@@ -99,24 +104,26 @@ export async function analyzeCommitLight(
 }
 
 export async function analyzeCommit(
-  repo: string,
   repoName: string,
   hash: string
 ): Promise<GitCommitObject> {
-  const { tree, ...commit } = await analyzeCommitLight(repo, hash)
-  return {
-    ...commit,
-    tree: await analyzeTree(getRepoName(repo), repo, repoName, tree),
+  if (hash === undefined) {
+    throw Error("Hash is required")
   }
+  const { tree, ...commit } = await analyzeCommitLight(hash)
+  const commitObject = {
+    ...commit,
+    tree: await analyzeTree(repoName, repoName, tree),
+  }
+  return commitObject
 }
 
 async function analyzeTree(
   path: string,
-  repo: string,
   name: string,
   hash: string
 ): Promise<GitTreeObject> {
-  const rawContent = await deflateGitObject(repo, hash)
+  const rawContent = await GitCaller.getInstance().catFileCached(hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
   const children: (GitTreeObject | GitBlobObject)[] = []
@@ -133,11 +140,17 @@ async function analyzeTree(
 
     switch (type) {
       case "tree":
-        const tree = await analyzeTree(newPath, repo, name, hash)
-        children.push(tree)
+        children.push(await analyzeTree(newPath, name, hash))
         break
       case "blob":
-        children.push(await analyzeBlob(newPath, repo, name, hash))
+        children.push({
+          type: "blob",
+          hash,
+          path: newPath,
+          name,
+          content: await GitCaller.getInstance().catFileCached(hash),
+          blameAuthors: await parseBlame(name, newPath)
+        })
         break
       default:
         throw new Error(` type ${type}`)
@@ -146,37 +159,21 @@ async function analyzeTree(
 
   return {
     type: "tree",
-    path: path,
+    path,
     name,
     hash,
     children,
   }
 }
 
-async function analyzeBlob(
-  path: string,
-  repo: string,
-  name: string,
-  hash: string
-): Promise<GitBlobObject> {
-  const content = await deflateGitObject(repo, hash)
-  const blameAuthors = await parseBlame(repo, path)
-  const blob: GitBlobObject = {
-    type: "blob",
-    hash,
-    path,
-    name,
-    content,
-    blameAuthors
-  }
-  return blob
-}
-
 function getCommandLine() {
-  switch (process.platform) { 
-     case 'darwin' : return 'open'; // MacOS
-     case 'win32' : return 'start'; // Windows
-     default : return 'xdg-open'; // Linux
+  switch (process.platform) {
+    case "darwin":
+      return "open" // MacOS
+    case "win32":
+      return "start" // Windows
+    default:
+      return "xdg-open" // Linux
   }
 }
 
@@ -221,6 +218,7 @@ export async function updateTruckConfig(
 
 export async function analyze(useCache = true) {
   const args = await getArgs()
+  GitCaller.initInstance(args.path)
 
   if (args?.log) {
     setLogLevel(args.log as string)
@@ -247,7 +245,9 @@ export async function analyze(useCache = true) {
   const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
   if (fsSync.existsSync(dataPath)) {
     const path = getOutPathFromRepoAndBranch(repoName, branchName)
-    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as AnalyzerData
+    const cachedData = JSON.parse(
+      await fs.readFile(path, "utf8")
+    ) as AnalyzerData
 
     // Check if the current branchHead matches the hash of the analyzed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash
@@ -289,11 +289,12 @@ export async function analyze(useCache = true) {
 
     const runDateEpoch = Date.now()
     const repoTree = await describeAsyncJob(
-      () => analyzeCommit(repoDir, repoName, branchHead),
+      () => analyzeCommit(repoName, branchHead),
       "Analyzing commit tree",
       "Commit tree analyzed",
       "Error analyzing commit tree"
     )
+
     const hydratedRepoTree = await describeAsyncJob(
       () => hydrateData(repoDir, repoTree),
       "Hydrating commit tree",
@@ -310,7 +311,7 @@ export async function analyze(useCache = true) {
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
     let latestV: string | undefined
-  
+
     try {
       latestV = await latestVersion(pkg.name)
     } catch {}

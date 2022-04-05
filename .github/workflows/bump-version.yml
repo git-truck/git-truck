@@ -21,7 +21,7 @@ jobs:
         - name: "Setup Node.js"
           uses: "actions/setup-node@v2"
           with:
-            node-version: 14
+            node-version: 16
         - name: Update version in package.json
           uses: "phips28/gh-action-bump-version@master"
           with:
@@ -30,5 +30,14 @@ jobs:
             commit-message: "Bump version to {{version}}"
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+        - run: npm install --package-lock-only
+        - run: git add package-lock.json
+        - run: git config user.email "version-bot@example.com"
+        - run: git config user.name "Version Bot"
+        - run: git commit --amend --no-edit
+#         This part is not essential to the workflow, so exit softly with a zero exit code
+        - run: git push --force || exit 0
+
         - name: "cat package.json"
           run: cat ./package.json
