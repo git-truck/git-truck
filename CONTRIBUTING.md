@@ -1,5 +1,3 @@
-
-
 # [Development](#development)
 
 1. Install dependencies with `npm install`
@@ -26,7 +24,7 @@ and
 npm run dev:node -- <args>
 ```
 
-For arguments, see [Arguments](#arguments).
+For arguments, see [Arguments](README.md#arguments).
 
 # [Husky](#husky)
 
