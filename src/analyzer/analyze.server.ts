@@ -176,12 +176,15 @@ function getCommandLine() {
 }
 
 export function openFile(path: string) {
-  path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
-  exec(`${getCommandLine()} ${resolve(repoDir, path)}`)
-  .stderr?.on("data", (e) => {
-    // TODO show error in UI
-    log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
-  })
+  path =
+    path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
+  exec(`${getCommandLine()} ${resolve(repoDir, path)}`).stderr?.on(
+    "data",
+    (e) => {
+      // TODO show error in UI
+      log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
+    }
+  )
 }
 
 export async function updateTruckConfig(
@@ -262,11 +265,20 @@ export async function analyze(useCache = true) {
   }
 
   if (data === null) {
-    const quotePathDefaultValue = await getDefaultGitSettingValue(repoDir, "core.quotepath")
+    const quotePathDefaultValue = await getDefaultGitSettingValue(
+      repoDir,
+      "core.quotepath"
+    )
     await setGitSetting(repoDir, "core.quotePath", "off")
-    const renamesDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renames")
+    const renamesDefaultValue = await getDefaultGitSettingValue(
+      repoDir,
+      "diff.renames"
+    )
     await setGitSetting(repoDir, "diff.renames", "true")
-    const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
+    const renameLimitDefaultValue = await getDefaultGitSettingValue(
+      repoDir,
+      "diff.renameLimit"
+    )
     await setGitSetting(repoDir, "diff.renameLimit", "1000000")
 
     const runDateEpoch = Date.now()
@@ -310,7 +322,9 @@ export async function analyze(useCache = true) {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       latestVersion: latestV,
-      lastRunEpoch: runDateEpoch
+      lastRunEpoch: runDateEpoch,
+      historicGraph: hydratedRepoTree.historicGraph,
+      hashToGitCommitObjectLight: hydratedRepoTree.hashToGitCommitObjectLight,
     }
 
     await describeAsyncJob(

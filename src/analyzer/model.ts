@@ -24,7 +24,7 @@ export interface TruckConfig {
 }
 
 // Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 3
+export const AnalyzerDataInterfaceVersion = 4
 
 export interface AnalyzerData {
   cached: boolean
@@ -38,6 +38,8 @@ export interface AnalyzerData {
   currentVersion: string
   latestVersion?: string
   lastRunEpoch: number
+  historicGraph: HistoricGraph
+  hashToGitCommitObjectLight: Record<string, GitCommitObjectLight>
 }
 
 export interface GitBlobObject extends GitBaseObject {
@@ -88,6 +90,13 @@ export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
   maxNoCommits: number
   newestLatestChangeEpoch: number
   oldestLatestChangeEpoch: number
+  historicGraph: HistoricGraph
+  hashToGitCommitObjectLight: Record<string, GitCommitObjectLight>
+}
+
+export interface HistoricGraph {
+  head: string
+  edges: Record<string, string>
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {

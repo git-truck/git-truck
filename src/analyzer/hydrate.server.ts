@@ -46,6 +46,8 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.maxNoCommits = Number.MIN_VALUE
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
+  data.historicGraph = { head: data.hash, edges: {} }
+  data.hashToGitCommitObjectLight = {}
 
   addAuthorsField_mut(data.tree)
 }
@@ -83,6 +85,9 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     const parentsOfCurr = parents(currCommit)
 
     for (const parentHash of parentsOfCurr) {
+      data.historicGraph.edges[currHash] = parentHash
+      data.hashToGitCommitObjectLight[currHash] = currCommit
+
       switch (parentsOfCurr.size) {
         case 2: // curr is a merge commit
           queue.enqueue(parentHash)
@@ -112,7 +117,7 @@ function parents(obj: GitCommitObject | GitCommitObjectLight): Set<string> {
 async function diffAndUpdate_mut(
   data: HydratedGitCommitObject,
   currCommit: GitCommitObjectLight,
-  parentHash: string,
+  parentHash: string
 ) {
   const { author } = currCommit
 
