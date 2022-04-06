@@ -38,7 +38,7 @@ type SpacerProps = { horizontal?: boolean } & {
 }
 
 export const Spacer = (props: SpacerProps) => {
-  let spacing =
+  const spacing =
     props.size ?? props.xs
       ? Spacing.xs
       : props.sm

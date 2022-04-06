@@ -1,11 +1,11 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { useBoolean } from "react-use";
-import styled from "styled-components";
-import { useData } from "~/contexts/DataContext";
-import { ExpandUp } from "./Toggle";
-import { Box, BoxSubTitle, InlineCode } from "./util";
-import { Form, useTransition } from "remix";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
+import { useBoolean } from "react-use"
+import styled from "styled-components"
+import { useData } from "~/contexts/DataContext"
+import { ExpandUp } from "./Toggle"
+import { Box, BoxSubTitle, InlineCode } from "./util"
+import { Form, useTransition } from "remix"
 
 const Line = styled.div`
   display: grid;
@@ -27,7 +27,7 @@ const StyledButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  
+
   & > #eye {
     display: none;
   }
@@ -55,30 +55,30 @@ function hiddenFileFormat(ignored: string) {
   return split[split.length - 1]
 }
 
-
 export function HiddenFiles() {
   const [collapse, setCollapse] = useBoolean(false)
   const transitionState = useTransition()
   const data = useData()
-  return <Box>
-    <BoxSubTitle>Hidden files ({data.hiddenFiles.length})</BoxSubTitle>
-    <ExpandUp
-      collapse={collapse}
-      toggle={() => setCollapse(!collapse)}
-    />
-    {!collapse ? <div>
-      {data.hiddenFiles.map(hidden => <Line key={hidden} title={hidden}>
-        <InlineForm method="post" action="/repo">
-          <input type="hidden" name="unignore" value={hidden} />
-          <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
-            <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
-            <StyledFontAwesomeIcon id="eye" icon={faEye} />
-          </StyledButton>
-        </InlineForm>
-        <InlineCode>
-          {hiddenFileFormat(hidden)}
-        </InlineCode>
-      </Line>)}
-    </div> : null}
-  </Box>
+  return (
+    <Box>
+      <BoxSubTitle>Hidden files ({data.hiddenFiles.length})</BoxSubTitle>
+      <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
+      {!collapse ? (
+        <div>
+          {data.hiddenFiles.map((hidden) => (
+            <Line key={hidden} title={hidden}>
+              <InlineForm method="post" action="/repo">
+                <input type="hidden" name="unignore" value={hidden} />
+                <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
+                  <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
+                  <StyledFontAwesomeIcon id="eye" icon={faEye} />
+                </StyledButton>
+              </InlineForm>
+              <InlineCode>{hiddenFileFormat(hidden)}</InlineCode>
+            </Line>
+          ))}
+        </div>
+      ) : null}
+    </Box>
+  )
 }

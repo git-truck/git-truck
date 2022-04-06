@@ -12,7 +12,7 @@ export function LegendFragment(props: LegendFragProps) {
   return (
     <>
       {props.items.map((legendItem) => {
-        let [label, info] = legendItem
+        const [label, info] = legendItem
         return (
           <div key={label}>
             <LegendEntry>

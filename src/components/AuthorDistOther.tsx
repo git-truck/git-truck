@@ -18,7 +18,5 @@ const OtherText = styled.span<{ grow?: boolean }>`
 
 export function AuthorDistOther(props: AuthorDistOtherProps) {
   if (!props.show) return null
-  return (
-    <OtherText onClick={props.toggle}>+ {props.items.length} more</OtherText>
-  )
+  return <OtherText onClick={props.toggle}>+ {props.items.length} more</OtherText>
 }

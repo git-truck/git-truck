@@ -9,17 +9,12 @@ interface EnumSelectProps<T> {
 }
 
 export function EnumSelect<T>(props: EnumSelectProps<T>) {
-  let id = useId()
+  const id = useId()
   return (
     <div>
       <Label htmlFor={id}>{props.label}</Label>
       <Spacer xs />
-      <Select
-        id={id}
-        onChange={(event) =>
-          props.onChange(event.target.value as unknown as keyof T)
-        }
-      >
+      <Select id={id} onChange={(event) => props.onChange(event.target.value as unknown as keyof T)}>
         {Object.entries(props.enum).map(([key, value]) => (
           <option key={value} value={key}>
             {value}

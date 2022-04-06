@@ -15,10 +15,10 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
         const roundedContrib = Math.round(contrib * 100)
         return (
           <Fragment key={author + contrib}>
-            <DetailsKey title={author} grow>{author}</DetailsKey>
-            <DetailsValue>
-              {roundedContrib === 0 ? "<1" : roundedContrib}%
-            </DetailsValue>
+            <DetailsKey title={author} grow>
+              {author}
+            </DetailsKey>
+            <DetailsValue>{roundedContrib === 0 ? "<1" : roundedContrib}%</DetailsValue>
           </Fragment>
         )
       })}

@@ -39,7 +39,7 @@ export function Details() {
 
   useEffect(() => {
     // Update clickedObject if data changes
-    setClickedObject(clickedObject => findObjectInTree(data.commit.tree, clickedObject))
+    setClickedObject((clickedObject) => findObjectInTree(data.commit.tree, clickedObject))
   }, [data, setClickedObject])
 
   if (!clickedObject) return null
@@ -48,74 +48,82 @@ export function Details() {
 
   return (
     <Box>
-      <NavigateBackButton
-        onClick={() => setClickedObject(null)}
-      >
-        &times;
-      </NavigateBackButton>
+      <NavigateBackButton onClick={() => setClickedObject(null)}>&times;</NavigateBackButton>
       <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
       <Spacer xl />
       <DetailsEntries>
-        { isBlob ? 
+        {isBlob ? (
           <>
-            <LineCountEntry
-              lineCount={clickedObject.noLines}
-              isBinary={clickedObject.isBinary}
-            />
+            <LineCountEntry lineCount={clickedObject.noLines} isBinary={clickedObject.isBinary} />
             <CommitsEntry clickedBlob={clickedObject} />
             <LastchangedEntry clickedBlob={clickedObject} />
-          </> 
-          : <FileAndSubfolderCountEntries clickedTree={clickedObject}/>
-        }
+          </>
+        ) : (
+          <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+        )}
         <PathEntry path={clickedObject.path} />
       </DetailsEntries>
       <Spacer xl />
-      { isBlob ?
-        (clickedObject.isBinary ||
-          hasZeroContributions(clickedObject.authors) ? null : (
+      {isBlob ? (
+        clickedObject.isBinary || hasZeroContributions(clickedObject.authors) ? null : (
           <AuthorDistribution authors={clickedObject.unionedAuthors?.get(authorshipType)} />
-        ))
-        : <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
-      }
+        )
+      ) : (
+        <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+      )}
       <Spacer lg />
-      { isBlob ? <>
-        <Form method="post" action="/repo">
-          <input type="hidden" name="ignore" value={clickedObject.path} />
-          <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
-            isProcessingHideRef.current = true
-          }}>
-            Hide this file
-          </TextButton>
-        </Form>
-        {clickedObject.name.includes(".") ? <><Spacer />
-          <Form method="post" action="/repo">
-            <input type="hidden" name="ignore" value={`*.${extension}`} />
-            <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
-              isProcessingHideRef.current = true
-            }}>
-              Hide all <InlineCode>.{extension}</InlineCode> files
-            </TextButton>
-          </Form></> : null}
-          <Spacer />
-          <Form method="post" action="/repo">
-            <input type="hidden" name="open" value={clickedObject.path}/>
-            <TextButton disabled={state !== "idle"}>
-              Open file
-            </TextButton>
-          </Form>
-        </>
-        : <>
+      {isBlob ? (
+        <>
           <Form method="post" action="/repo">
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <TextButton type="submit" disabled={state !== "idle"} onClick={() => {
-              setPath(OneFolderOut(path))
-              isProcessingHideRef.current = true
-            }}>
-              Hide this folder
+            <TextButton
+              type="submit"
+              disabled={state !== "idle"}
+              onClick={() => {
+                isProcessingHideRef.current = true
+              }}
+            >
+              Hide this file
             </TextButton>
           </Form>
+          {clickedObject.name.includes(".") ? (
+            <>
+              <Spacer />
+              <Form method="post" action="/repo">
+                <input type="hidden" name="ignore" value={`*.${extension}`} />
+                <TextButton
+                  type="submit"
+                  disabled={state !== "idle"}
+                  onClick={() => {
+                    isProcessingHideRef.current = true
+                  }}
+                >
+                  Hide all <InlineCode>.{extension}</InlineCode> files
+                </TextButton>
+              </Form>
+            </>
+          ) : null}
+          <Spacer />
+          <Form method="post" action="/repo">
+            <input type="hidden" name="open" value={clickedObject.path} />
+            <TextButton disabled={state !== "idle"}>Open file</TextButton>
+          </Form>
         </>
-        }
+      ) : (
+        <Form method="post" action="/repo">
+          <input type="hidden" name="ignore" value={clickedObject.path} />
+          <TextButton
+            type="submit"
+            disabled={state !== "idle"}
+            onClick={() => {
+              setPath(OneFolderOut(path))
+              isProcessingHideRef.current = true
+            }}
+          >
+            Hide this folder
+          </TextButton>
+        </Form>
+      )}
     </Box>
   )
 }
@@ -132,8 +140,8 @@ function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject
         const childSteps = child.name.split("/")
         if (childSteps[0] === steps[i]) {
           currentTree = child
-          i += childSteps.length-1
-          break;
+          i += childSteps.length - 1
+          break
         }
       }
     }
@@ -141,20 +149,16 @@ function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject
   return currentTree
 }
 
-function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObject}) {
-  const folderCount = props.clickedTree.children.filter(child => child.type === "tree").length
+function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObject }) {
+  const folderCount = props.clickedTree.children.filter((child) => child.type === "tree").length
   const fileCount = props.clickedTree.children.length - folderCount
 
   return (
     <>
       <DetailsKey grow>Files</DetailsKey>
-      <DetailsValue>
-        {fileCount}
-      </DetailsValue>
+      <DetailsValue>{fileCount}</DetailsValue>
       <DetailsKey grow>Folders</DetailsKey>
-      <DetailsValue>
-        {folderCount}
-      </DetailsValue>
+      <DetailsValue>{folderCount}</DetailsValue>
     </>
   )
 }
@@ -163,9 +167,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Commits</DetailsKey>
-      <DetailsValue>
-        {props.clickedBlob.noCommits > 0 ? props.clickedBlob.noCommits : 0}
-      </DetailsValue>
+      <DetailsValue>{props.clickedBlob.noCommits > 0 ? props.clickedBlob.noCommits : 0}</DetailsValue>
     </>
   )
 }
@@ -174,9 +176,7 @@ function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Last changed</DetailsKey>
-      <DetailsValue>
-        {dateFormatLong(props.clickedBlob.lastChangeEpoch)}
-      </DetailsValue>
+      <DetailsValue>{dateFormatLong(props.clickedBlob.lastChangeEpoch)}</DetailsValue>
     </>
   )
 }
@@ -199,8 +199,7 @@ function LineCountEntry(props: { lineCount: number; isBinary?: boolean }) {
     <>
       <DetailsKey grow>Lines</DetailsKey>
       <DetailsValue>
-        {props.lineCount ?? 0}{" "}
-        <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
+        {props.lineCount ?? 0} <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
       </DetailsValue>
     </>
   )
@@ -214,13 +213,11 @@ const AuthorDistHeader = styled.div`
 
 const authorCutoff = 2
 
-function AuthorDistribution(props: {
-  authors: Record<string, number> | undefined
-}) {
+function AuthorDistribution(props: { authors: Record<string, number> | undefined }) {
   const [collapse, setCollapse] = useState<boolean>(true)
-  const contribDist = Object.entries(
-    makePercentResponsibilityDistribution(props.authors)
-  ).sort((a, b) => (a[1] < b[1] ? 1 : -1))
+  const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
+    a[1] < b[1] ? 1 : -1
+  )
 
   if (contribDist.length === 0) return null
   if (contribDist.length <= authorCutoff + 1) {
@@ -238,22 +235,12 @@ function AuthorDistribution(props: {
     <>
       <AuthorDistHeader>
         <DetailsHeading>Author distribution</DetailsHeading>
-        <ExpandDown
-          relative={true}
-          collapse={collapse}
-          toggle={() => setCollapse(!collapse)}
-        />
+        <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
       </AuthorDistHeader>
       <Spacer xs />
       <AuthorDistEntries>
-        <AuthorDistFragment
-          show={true}
-          items={contribDist.slice(0, authorCutoff)}
-        />
-        <AuthorDistFragment
-          show={!collapse}
-          items={contribDist.slice(authorCutoff)}
-        />
+        <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
+        <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
         <AuthorDistOther
           show={collapse}
           items={contribDist.slice(authorCutoff)}
@@ -270,13 +257,10 @@ function makePercentResponsibilityDistribution(
   if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
 
-  const newAuthorsEntries = Object.entries(unionedAuthors).reduce(
-    (newAuthorOject, [author, contrib]) => {
-      const fraction: number = contrib / sum
-      return { ...newAuthorOject, [author]: fraction }
-    },
-    {}
-  )
+  const newAuthorsEntries = Object.entries(unionedAuthors).reduce((newAuthorOject, [author, contrib]) => {
+    const fraction: number = contrib / sum
+    return { ...newAuthorOject, [author]: fraction }
+  }, {})
 
   return newAuthorsEntries
 }
@@ -292,7 +276,7 @@ const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0 calc(var(--unit) * 3);
-  & > ${ DetailsValue } {
+  & > ${DetailsValue} {
     text-align: right;
   }
 `

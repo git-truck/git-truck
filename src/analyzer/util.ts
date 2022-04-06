@@ -29,11 +29,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export async function gitDiffNumStatAnalyzed(
-  a: string,
-  b: string,
-  renamedFiles: Map<string, string>
-) {
+export async function gitDiffNumStatAnalyzed(a: string, b: string, renamedFiles: Map<string, string>) {
   const diff = await GitCaller.getInstance().gitDiffNumStatCached(a, b)
   const entries = diff.split("\n")
   const stuff = entries
@@ -58,8 +54,7 @@ export async function gitDiffNumStatAnalyzed(
 }
 
 function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
-  const movedFileRegex =
-    /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
+  const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
   const groups = match?.groups ?? {}
@@ -83,18 +78,13 @@ function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
   return newPath
 }
 
-export async function lookupFileInTree(
-  tree: GitTreeObject,
-  path: string
-): Promise<GitBlobObject | undefined> {
+export async function lookupFileInTree(tree: GitTreeObject, path: string): Promise<GitBlobObject | undefined> {
   const dirs = path.split("/")
 
   if (dirs.length < 2) {
     // We have reached the end of the tree, look for the blob
     const [file] = dirs
-    const result = tree.children.find(
-      (x) => x.name === file && x.type === "blob"
-    )
+    const result = tree.children.find((x) => x.name === file && x.type === "blob")
     if (!result) return
     if (result.type === "tree") return undefined
     return result
@@ -109,7 +99,7 @@ export async function getDefaultGitSettingValue(repoDir: string, setting: string
   return result as string
 }
 
-export async function resetGitSetting(repoDir: string, settingToReset: string, value: string, ) {
+export async function resetGitSetting(repoDir: string, settingToReset: string, value: string) {
   if (!value) {
     await runProcess(repoDir, "git", ["config", "--unset", settingToReset])
     log.debug(`Unset ${settingToReset}`)
@@ -139,11 +129,7 @@ export function getRepoName(repoDir: string) {
 }
 
 export async function getCurrentBranch(dir: string) {
-  const result = (await runProcess(dir, "git", [
-    "rev-parse",
-    "--abbrev-ref",
-    "HEAD",
-  ])) as string
+  const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
   return result.trim()
 }
 
@@ -199,8 +185,7 @@ export async function describeAsyncJob<T>(
     } else log.info(text)
   }
 
-  const error = (text: string) =>
-    spinner === null ? log.error(text) : spinner.error({ text })
+  const error = (text: string) => (spinner === null ? log.error(text) : spinner.error({ text }))
 
   output(beforeMsg)
   try {

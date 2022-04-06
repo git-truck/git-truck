@@ -1,27 +1,13 @@
 import { SSRProvider } from "@react-aria/ssr"
 import { useMemo, useState } from "react"
-import {
-  AnalyzerData,
-  HydratedGitBlobObject,
-  HydratedGitObject,
-} from "~/analyzer/model"
+import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import {
-  ChartType,
-  getDefaultOptions,
-  Options,
-  OptionsContext,
-} from "../contexts/OptionsContext"
+import { ChartType, getDefaultOptions, Options, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
-import {
-  AuthorshipType,
-  createMetricData as createMetricsData,
-  MetricsData,
-  MetricType,
-} from "../metrics"
+import { AuthorshipType, createMetricData as createMetricsData, MetricsData, MetricType } from "../metrics"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -33,14 +19,9 @@ export function Providers({ children, data }: ProvidersProps) {
   const [searchText, setSearchText] = useState("")
   const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
   const [path, setPath] = useState(data.repo)
-  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(
-    null
-  )
+  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(
-    () => createMetricsData(data),
-    [data]
-  )
+  const metricsData: MetricsData = useMemo(() => createMetricsData(data), [data])
 
   const optionsValue = useMemo(
     () => ({
@@ -94,9 +75,7 @@ export function Providers({ children, data }: ProvidersProps) {
               }}
             >
               <PathContext.Provider value={{ path, setPath }}>
-                <ClickedObjectContext.Provider
-                  value={{ clickedObject, setClickedObject }}
-                >
+                <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
                   {children}
                 </ClickedObjectContext.Provider>
               </PathContext.Provider>

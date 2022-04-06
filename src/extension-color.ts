@@ -22,7 +22,7 @@ export function getColorFromExtension(extension: string) {
   // Loop through lang resuts
   for (const langResult of langMatches) {
     // If we have a color for the language, return it
-    let match = lowercasedColors.get(langResult)
+    const match = lowercasedColors.get(langResult)
     if (match) {
       colorResult = match
       langs.push(colorResult.lang)

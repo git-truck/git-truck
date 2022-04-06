@@ -15,13 +15,7 @@ import {
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
-import {
-  Box,
-  GradientLegendDiv,
-  LegendGradient,
-  LegendLabel,
-  StyledP,
-} from "./util"
+import { Box, GradientLegendDiv, LegendGradient, LegendLabel, StyledP } from "./util"
 
 const legendCutoff = 3
 
@@ -77,20 +71,12 @@ interface MetricLegendProps {
 }
 
 export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
-  const [
-    minValue,
-    maxValue,
-    minValueAltFormat,
-    maxValueAltFormat,
-    minColor,
-    maxColor,
-  ] = metricCache.legend as GradLegendData
+  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] =
+    metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(
-    metricCache.colormap.get(clickedObject?.path ?? "") ?? ""
-  )
+  const blobLightness = getLightness(metricCache.colormap.get(clickedObject?.path ?? "") ?? "")
   let offset = -1
   if (blobLightness !== -1) {
     const min = getLightness(minColor)
@@ -115,31 +101,21 @@ export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
 export function PointMetricLegend({ metricCache }: MetricLegendProps) {
   const [collapse, setCollapse] = useState<boolean>(true)
 
-  const items = Array.from(metricCache.legend as PointLegendData).sort(
-    ([, info1], [, info2]) => {
-      if (info1.weight < info2.weight) return 1
-      if (info1.weight > info2.weight) return -1
-      return 0
-    }
-  )
+  const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
+    if (info1.weight < info2.weight) return 1
+    if (info1.weight > info2.weight) return -1
+    return 0
+  })
 
   if (items.length === 0) return null
   if (items.length <= legendCutoff + 1) {
-    return (
-      <>
-        <LegendFragment show={true} items={items} />
-      </>
-    )
+    return <LegendFragment show={true} items={items} />
   } else {
     return (
       <>
         <LegendFragment show={true} items={items.slice(0, legendCutoff)} />
         <LegendFragment show={!collapse} items={items.slice(legendCutoff)} />
-        <LegendOther
-          show={collapse}
-          items={items.slice(legendCutoff)}
-          toggle={() => setCollapse(!collapse)}
-        />
+        <LegendOther show={collapse} items={items.slice(legendCutoff)} toggle={() => setCollapse(!collapse)} />
         <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       </>
     )

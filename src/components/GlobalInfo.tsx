@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faRotate } from "@fortawesome/free-solid-svg-icons";
+import { faRotate } from "@fortawesome/free-solid-svg-icons"
 import { Form, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
@@ -16,14 +16,16 @@ export function GlobalInfo() {
   let paths: [string, string][] = []
 
   for (let i = 0; i < 3; i++) {
-    if (temppath === "") { break; }
+    if (temppath === "") {
+      break
+    }
     const idx = temppath.lastIndexOf("/")
     paths.push([temppath.substring(idx + 1), temppath])
     temppath = temppath.substring(0, idx)
   }
   if (temppath !== "") {
-    paths = paths.slice(0, paths.length - 1);
-    paths.push(["...", ""]);
+    paths = paths.slice(0, paths.length - 1)
+    paths.push(["...", ""])
     paths.push([data.repo, data.repo])
   }
 
@@ -34,17 +36,19 @@ export function GlobalInfo() {
       <div>
         <strong>Branch: </strong>
         {data.branch}
-        <Spacer/>
-        <strong>Analyzed: </strong>{dateTimeFormatShort(data.lastRunEpoch)}
         <Spacer />
-        <strong>As of commit: </strong><InlineCode title={data.commit.message ?? "No commit message"}>{data.commit.hash.slice(0, 7)}</InlineCode>
+        <strong>Analyzed: </strong>
+        {dateTimeFormatShort(data.lastRunEpoch)}
+        <Spacer />
+        <strong>As of commit: </strong>
+        <InlineCode title={data.commit.message ?? "No commit message"}>{data.commit.hash.slice(0, 7)}</InlineCode>
       </div>
-      <Spacer/>
+      <Spacer />
       <Form method="post" action="/repo">
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
-          <FontAwesomeIcon icon={faRotate} />
-          {" "}{!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
+          <FontAwesomeIcon icon={faRotate} />{" "}
+          {!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
         </TextButton>
       </Form>
     </Box>

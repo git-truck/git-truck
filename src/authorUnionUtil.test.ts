@@ -32,10 +32,7 @@ function sumContributions(authors: HydratedGitBlobObject["authors"]) {
 describe("unionAuthors", () => {
   it("merges authors properly", () => {
     const hydratedGitBlobObject = makeHydratedGitBlobObject()
-    const authors = unionAuthors(
-      hydratedGitBlobObject.authors,
-      makeDupeMap(authorUnions)
-    )
+    const authors = unionAuthors(hydratedGitBlobObject.authors, makeDupeMap(authorUnions))
     expect(authors.author1).toEqual(50)
     expect(authors.author2).toEqual(50)
     expect(authors.author1Dupe).toBeUndefined()
@@ -74,10 +71,7 @@ describe("unionAuthors", () => {
   it("the sum is the same before and after union", () => {
     const hydratedGitBlobObject = makeHydratedGitBlobObject()
     const sumBefore = sumContributions(hydratedGitBlobObject.authors)
-    const authors = unionAuthors(
-      hydratedGitBlobObject.authors,
-      makeDupeMap(authorUnions)
-    )
+    const authors = unionAuthors(hydratedGitBlobObject.authors, makeDupeMap(authorUnions))
     const sumAfter = sumContributions(authors)
     expect(sumBefore).toEqual(sumAfter)
   })

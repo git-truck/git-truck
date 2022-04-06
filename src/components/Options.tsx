@@ -10,26 +10,12 @@ const Checkbox = styled.input`
 `
 
 export function Options() {
-  const {
-    animationsEnabled,
-    setMetricType,
-    setChartType,
-    setAnimationsEnabled,
-    setAuthorshipType
-  } = useOptions()
+  const { animationsEnabled, setMetricType, setChartType, setAnimationsEnabled, setAuthorshipType } = useOptions()
   return (
     <Box>
-      <EnumSelect
-        label="Chart type"
-        enum={Chart}
-        onChange={(chartType: ChartType) => setChartType(chartType)}
-      />
+      <EnumSelect label="Chart type" enum={Chart} onChange={(chartType: ChartType) => setChartType(chartType)} />
       <Spacer />
-      <EnumSelect
-        label="Metric"
-        enum={Metric}
-        onChange={(metric: MetricType) => setMetricType(metric)}
-      />
+      <EnumSelect label="Metric" enum={Metric} onChange={(metric: MetricType) => setMetricType(metric)} />
       <Spacer />
       <EnumSelect
         label="Authorship Data"

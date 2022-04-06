@@ -22,7 +22,7 @@ export function dateTimeFormatShort(epochTime: number) {
     minute: "2-digit",
     day: "2-digit",
     month: "short",
-    year: "2-digit"
+    year: "2-digit",
   })
 }
 
@@ -45,7 +45,7 @@ export function dateFormatRelative(epochTime: number) {
 export const last = <T>(arr: T[]) => arr[arr.length - 1]
 
 export const allExceptLast = <T>(arr: T[]) => {
-  if (arr.length <= 1) return []  
+  if (arr.length <= 1) return []
   return arr.slice(0, arr.length - 1)
 }
 
