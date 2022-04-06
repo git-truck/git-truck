@@ -3,7 +3,8 @@ import { MutableRefObject, useMemo } from "react"
 import { useComponentSize as useCompSize } from "react-use-size"
 import { useOptions } from "./contexts/OptionsContext"
 
-type RefAndSize = [MutableRefObject<unknown>, { width: number; height: number }]
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
 
 export function useComponentSize() {
   const { ref, width, height } = useCompSize()
