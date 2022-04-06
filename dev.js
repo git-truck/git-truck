@@ -9,7 +9,6 @@ const open = require("open")
     port: getPortLib.portNumbers(3000, 4000),
   })
 
-  console.log("Opening in browser")
   open("http://localhost:" + port)
   await runAll(
     [`dev:node -- --port ${port} ${process.argv.join(" ")}`, "dev:remix"],

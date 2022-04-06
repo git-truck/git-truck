@@ -77,27 +77,25 @@ for usage instructions.`)
     })
   )
 
-  const ports = []
-  if (args.port && !isNaN(parseInt(args.port))) ports.push(parseInt(args.port))
-  if (process.env.PORT && !isNaN(parseInt(process.env.PORT)))
-    ports.push(parseInt(process.env.PORT))
+  let minPort = 3000
+
+  if (args.port && !isNaN(parseInt(args.port))) minPort = parseInt(args.port)
 
   const getPortLib = (await import("get-port"))
   const getPort = getPortLib.default
   const port = await getPort({
-    port: [...ports, ...getPortLib.portNumbers(3000, 4000)],
+    port: getPortLib.portNumbers(minPort, minPort + 1000),
   })
 
   app.listen(port).once("listening", () => printOpen(port))
 })()
 
-function printOpen(port: number) {
+async function printOpen(port: number) {
   console.log()
-  const serverport = port
-  if (serverport !== port) {
-    console.log("Default/Specified port was used by another process")
-  }
-  console.log(`Now listening on port ${serverport}`)
-  if (process.env.NODE_ENV !== "development")
-    open("http://localhost:" + serverport)
+  console.log(`Now listening on port ${port}`)
+  if (process.env.NODE_ENV !== "development") {
+    const url = "http://localhost:" + port
+      open(url)
+      console.log(`Opening ${url} in your browser`)
+    }
 }
