@@ -6,8 +6,6 @@
   "extends": [
       "@remix-run/eslint-config",
       "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:react/jsx-runtime",
       "plugin:@typescript-eslint/recommended"
   ],
   "parser": "@typescript-eslint/parser",
@@ -16,12 +14,10 @@
       "sourceType": "module"
   },
   "plugins": [
-      "@typescript-eslint",
-      "react"
+      "@typescript-eslint"
   ],
   "rules": {
-      "no-case-declarations":"off",
-      "react/jsx-no-useless-fragment": "warn"
+      "no-case-declarations":"off"
   }
 }
 
