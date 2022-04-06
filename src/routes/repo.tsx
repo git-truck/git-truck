@@ -1,6 +1,6 @@
 import { ActionFunction, json, LoaderFunction, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower } from "~/components/util"
+import { Box, Container, Grower, InlineCode, StyledP } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData } from "~/analyzer/model"
@@ -86,9 +86,12 @@ export default function Index() {
         <SidePanel>
           {data.latestVersion && semverCompare(data.latestVersion, data.currentVersion) === 1 ? (
             <Box>
-              <p title={`To update, close application and run: npx git-truck@latest`}>
-                Update available: {data.latestVersion}
-              </p>
+              <p>Update available: {data.latestVersion}</p>
+              <StyledP>Currently installed: {data.currentVersion}</StyledP>
+              <StyledP>
+                To update, close application and run:{" "}
+                <InlineCode>npx git-truck@latest</InlineCode>
+              </StyledP>
             </Box>
           ) : null}
           <Grower />
