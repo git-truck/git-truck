@@ -8,10 +8,10 @@
   "bin": "./build/index.js",
   "scripts": {
     "test": "jest --coverage",
-    "clean": "npx rimraf -rf build public/build .cache .temp",
+    "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "build": "npx remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
-    "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
+    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "dev": "cross-env NODE_ENV=development remix build && node dev.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "dev:node": "cross-env NODE_ENV=development nodemon --watch ./build/index.js ./build/index.js --",
     "start": "cross-env NODE_ENV=production node ./build/index.js"
@@ -33,6 +33,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "fs-extra": "^10.0.1",
+    "get-port": "^6.1.2",
     "github-colors": "git+https://github.com/ozh/github-colors.git",
     "ignore": "^5.2.0",
     "is-binary-path": "^2.1.0",

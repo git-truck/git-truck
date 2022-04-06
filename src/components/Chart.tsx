@@ -22,7 +22,6 @@ import { ChartType, useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { Tooltip } from "./Tooltip"
 
-
 type CircleOrRectHiearchyNode =
   | HierarchyCircularNode<HydratedGitObject>
   | HierarchyRectangularNode<HydratedGitObject>
@@ -139,9 +138,16 @@ const Node = memo(function Node({
 
       return (
         <>
-          <Circle d={circleDatum} isSearchMatch={d.data.isSearchResult ?? false} />
+          <Circle
+            d={circleDatum}
+            isSearchMatch={d.data.isSearchResult ?? false}
+          />
           {showLabel ? (
-            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} />
+            <CircleText
+              d={circleDatum}
+              displayText={displayText}
+              isSearchMatch={d.data.isSearchResult ?? false}
+            />
           ) : null}
         </>
       )
@@ -156,7 +162,13 @@ const Node = memo(function Node({
       return (
         <>
           <Rect d={rectDatum} isSearchMatch={d.data.isSearchResult ?? false} />
-          {showLabel ? <RectText d={rectDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} /> : null}
+          {showLabel ? (
+            <RectText
+              d={rectDatum}
+              displayText={displayText}
+              isSearchMatch={d.data.isSearchResult ?? false}
+            />
+          ) : null}
         </>
       )
     default:
@@ -181,7 +193,7 @@ function Circle({
   isSearchMatch: boolean
 }) {
   const metricsData = useMetrics()
-  const { metricType, authorshipType  } = useOptions()
+  const { metricType, authorshipType } = useOptions()
 
   const props = useToggleableSpring({
     cx: d.x,
@@ -189,7 +201,11 @@ function Circle({
     r: Math.max(d.r - 1, 0),
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: isSearchMatch ? "4px" : "1px",
-    fill: metricsData.get(authorshipType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey",
+    fill:
+      metricsData
+        .get(authorshipType)
+        ?.get(metricType)
+        ?.colormap.get(d.data.path) ?? "grey",
   })
 
   return <animated.circle {...props} className={d.data.type} />
@@ -216,7 +232,10 @@ function Rect({
 
     fill:
       d.data.type === "blob"
-        ? metricsData.get(authorshipType)?.get(metricType)?.colormap.get(d.data.path) ?? "grey"
+        ? metricsData
+            .get(authorshipType)
+            ?.get(metricType)
+            ?.colormap.get(d.data.path) ?? "grey"
         : "transparent",
   })
 
