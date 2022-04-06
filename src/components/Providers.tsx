@@ -1,25 +1,26 @@
 import { SSRProvider } from "@react-aria/ssr"
-import { useEffect, useMemo, useState } from "react"
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import { useMemo, useState } from "react"
+import {
+  AnalyzerData,
+  HydratedGitBlobObject,
+  HydratedGitObject,
+} from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
-import { addAuthorUnion, makeDupeMap, unionAuthors } from "../authorUnionUtil"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import {
   ChartType,
   getDefaultOptions,
   Options,
-  OptionsContext
+  OptionsContext,
 } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import {
   AuthorshipType,
-  generateAuthorColors,
-  getMetricCalcs,
-  MetricCache,
+  createMetricData as createMetricsData,
+  MetricsData,
   MetricType,
-  setupMetricsCache
 } from "../metrics"
 
 interface ProvidersProps {
@@ -36,60 +37,10 @@ export function Providers({ children, data }: ProvidersProps) {
     null
   )
 
-  const metricState: {
-    metricsData: Map<AuthorshipType, Map<MetricType, MetricCache>> | null
-    errorMessage: string | null
-  } = useMemo(() => {
-    if (!data) {
-      return { metricsData: null, errorMessage: null }
-    }
-    try {
-      // TODO: Move this to index.tsx loader function
-      const authorAliasMap = makeDupeMap(data.authorUnions)
-      addAuthorUnion(data.commit.tree, authorAliasMap)
-      const metricsData = new Map<AuthorshipType, Map<MetricType, MetricCache>>()
-
-      const authorUnion : Record<string, number> = {}
-      for (const author of data.authors) { authorUnion[author] = 0 }
-      const fullAuthorUnion = unionAuthors(authorUnion, authorAliasMap);
-
-      const authorColors = generateAuthorColors(Object.keys(fullAuthorUnion))
-
-      const historicalMetricCache = new Map<MetricType, MetricCache>()
-      setupMetricsCache(
-        data.commit.tree,
-        getMetricCalcs(data, "HISTORICAL", authorColors),
-        historicalMetricCache
-      )
-      const blameMetricCache = new Map<MetricType, MetricCache>()
-      setupMetricsCache(
-        data.commit.tree,
-        getMetricCalcs(data, "BLAME", authorColors),
-        blameMetricCache
-      )
-
-      metricsData.set("HISTORICAL", historicalMetricCache)
-      metricsData.set("BLAME", blameMetricCache)
-
-      return ({ metricsData, errorMessage: null })
-    } catch (e) {
-      return {
-        metricsData: null,
-        errorMessage: (e as Error).message,
-      }
-    }
-  }, [data])
-
-  useEffect(() => {
-    if (!metricState) {
-      setOptions(null)
-      return
-    }
-    setOptions((prevOptions) => ({
-      ...(prevOptions ?? getDefaultOptions()),
-      ...metricState,
-    }))
-  }, [metricState])
+  const metricsData: MetricsData = useMemo(
+    () => createMetricsData(data),
+    [data]
+  )
 
   const optionsValue = useMemo(
     () => ({
@@ -129,30 +80,19 @@ export function Providers({ children, data }: ProvidersProps) {
     [options]
   )
 
-  const { metricsData, errorMessage } = metricState
-
-  if (data === null || metricsData === null) {
-    if (errorMessage === null) {
-      return <div>Loading...</div>
-    } else {
-      return (
-        <div>
-          <h1>An unexpected error occured:</h1>
-          <pre>
-            <code>{metricState.errorMessage}</code>
-          </pre>
-          Verify the data is correct.
-        </div>
-      )
-    }
-  }
-
   return (
     <SSRProvider>
       <DataContext.Provider value={data}>
         <MetricsContext.Provider value={metricsData}>
           <OptionsContext.Provider value={optionsValue}>
-            <SearchContext.Provider value={{ searchText, setSearchText, searchResults, setSearchResults }}>
+            <SearchContext.Provider
+              value={{
+                searchText,
+                setSearchText,
+                searchResults,
+                setSearchResults,
+              }}
+            >
               <PathContext.Provider value={{ path, setPath }}>
                 <ClickedObjectContext.Provider
                   value={{ clickedObject, setClickedObject }}

@@ -1,14 +1,14 @@
-import { Box, BoxSubTitle, LegendDot } from "./util"
-import { useMouse } from "react-use"
 import { useMemo, useRef } from "react"
+import { useMouse } from "react-use"
 import styled from "styled-components"
 import { HydratedGitBlobObject } from "~/analyzer/model"
-import { useOptions } from "../contexts/OptionsContext"
-import { Spacer } from "./Spacer"
 import { useMetrics } from "../contexts/MetricContext"
-import { Authorship, AuthorshipType, MetricType } from "../metrics"
+import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
+import { AuthorshipType, MetricType } from "../metrics"
 import { dateFormatRelative } from "../util"
+import { Spacer } from "./Spacer"
+import { Box, BoxSubTitle, LegendDot } from "./util"
 
 const TooltipBox = styled(Box)<{
   visible: boolean
@@ -52,7 +52,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     if (!hoveredBlob) {
       return null
     }
-    const colormap = metricsData.get(authorshipType)?.get(metricType)?.colormap
+    const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
     const color = colormap?.get(hoveredBlob.path) ?? "grey"
     return color
   }, [hoveredBlob, metricsData, metricType, authorshipType])
@@ -60,8 +60,14 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     ? tooltipContainerRef.current.getBoundingClientRect().width
     : 0
 
-  const sidePanelWidth = Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
-  const right = mouse.docX + toolTipWidth < window.innerWidth - (sidePanelWidth * unit)
+  const sidePanelWidth =
+    Number.parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--side-panel-width-units"
+      )
+    ) || 0
+  const right =
+    mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidth * unit
 
   const visible = hoveredBlob !== null
   const transformStyles = { transform: "none" }
@@ -114,7 +120,9 @@ function ColorMetricDependentInfo(props: {
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.unionedAuthors?.get(props.authorshipType) ?? [])
+        ? Object.entries(
+            props.hoveredBlob?.unionedAuthors?.get(props.authorshipType) ?? []
+          )
         : []
       switch (authors.length) {
         case 0:
@@ -125,7 +133,9 @@ function ColorMetricDependentInfo(props: {
           return <>{authors.length} authors</>
       }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
+      const dominant =
+        props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ??
+        undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
     default:

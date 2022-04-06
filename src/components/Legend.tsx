@@ -1,19 +1,31 @@
+import { useState } from "react"
+import styled from "styled-components"
+import { estimatedLetterWidth } from "~/const"
+import { useClickedObject } from "~/contexts/ClickedContext"
+import { useMetrics } from "../contexts/MetricContext"
+import { useOptions } from "../contexts/OptionsContext"
+import {
+  getMetricDescription,
+  GradLegendData,
+  isGradientMetric,
+  Metric,
+  MetricCache,
+  PointLegendData,
+} from "../metrics"
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
-import { useState } from "react"
-import { GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
-import { GradLegendData, isGradientMetric, MetricCache, PointLegendData, getMetricDescription, Metric } from "../metrics"
-import { useMetrics } from "../contexts/MetricContext"
-import { useOptions } from "../contexts/OptionsContext"
-import { Box, StyledP } from "./util"
-import { useClickedObject } from "~/contexts/ClickedContext"
-import styled from "styled-components"
-import { estimatedLetterWidth } from "~/const"
+import {
+  Box,
+  GradientLegendDiv,
+  LegendGradient,
+  LegendLabel,
+  StyledP,
+} from "./util"
 
 const legendCutoff = 3
 
-function getLightness(hsl: string) : number {
+function getLightness(hsl: string): number {
   const regex = /%,((?:\d|\.)+?)%\)/gm
   const ent = regex.exec(hsl)?.entries()
   ent?.next()
@@ -21,12 +33,12 @@ function getLightness(hsl: string) : number {
   return res
 }
 
-const GradArrow = styled.i<{ visible: boolean, position: number }>`
-  display: ${({visible}) => (visible)? "initital" : "none"};
+const GradArrow = styled.i<{ visible: boolean; position: number }>`
+  display: ${({ visible }) => (visible ? "initital" : "none")};
   transition: 500ms;
   position: relative;
   bottom: 11px;
-  left: calc(${({position}) => position*100}% - ${estimatedLetterWidth}px);
+  left: calc(${({ position }) => position * 100}% - ${estimatedLetterWidth}px);
   filter: drop-shadow(0px -2px 0.5px #fff);
 `
 
@@ -43,39 +55,42 @@ export function Legend() {
   const { metricType, authorshipType } = useOptions()
   const metricsData = useMetrics()
 
-  const metricCache = metricsData.get(authorshipType)?.get(metricType) ?? undefined
+  const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
 
   if (metricCache === undefined) return null
 
   return (
     <StyledBox>
-      <StyledH2>
-        {
-          Metric[metricType]
-        }
-      </StyledH2>
-      <StyledP>
-        {getMetricDescription(metricType, authorshipType)}
-      </StyledP>
-      {
-        (isGradientMetric(metricType))
-        ? <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
-        : <PointMetricLegend metricCache={metricCache}></PointMetricLegend>
-      }
+      <StyledH2>{Metric[metricType]}</StyledH2>
+      <StyledP>{getMetricDescription(metricType, authorshipType)}</StyledP>
+      {isGradientMetric(metricType) ? (
+        <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
+      ) : (
+        <PointMetricLegend metricCache={metricCache}></PointMetricLegend>
+      )}
     </StyledBox>
   )
 }
 
 interface MetricLegendProps {
-  metricCache:  MetricCache
+  metricCache: MetricCache
 }
 
 export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
-  const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] = metricCache.legend as GradLegendData
+  const [
+    minValue,
+    maxValue,
+    minValueAltFormat,
+    maxValueAltFormat,
+    minColor,
+    maxColor,
+  ] = metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(metricCache.colormap.get(clickedObject?.path ?? "") ?? "")
+  const blobLightness = getLightness(
+    metricCache.colormap.get(clickedObject?.path ?? "") ?? ""
+  )
   let offset = -1
   if (blobLightness !== -1) {
     const min = getLightness(minColor)
@@ -90,7 +105,9 @@ export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
         <LegendLabel title={maxValueAltFormat}>{maxValue}</LegendLabel>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
-      <GradArrow visible={offset !== -1} position={offset}>{'\u25B2'}</GradArrow>
+      <GradArrow visible={offset !== -1} position={offset}>
+        {"\u25B2"}
+      </GradArrow>
     </>
   )
 }
@@ -98,13 +115,13 @@ export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
 export function PointMetricLegend({ metricCache }: MetricLegendProps) {
   const [collapse, setCollapse] = useState<boolean>(true)
 
-  const items = Array.from(
-    metricCache.legend as PointLegendData
-  ).sort(([, info1], [, info2]) => {
-    if (info1.weight < info2.weight) return 1
-    if (info1.weight > info2.weight) return -1
-    return 0
-  })
+  const items = Array.from(metricCache.legend as PointLegendData).sort(
+    ([, info1], [, info2]) => {
+      if (info1.weight < info2.weight) return 1
+      if (info1.weight > info2.weight) return -1
+      return 0
+    }
+  )
 
   if (items.length === 0) return null
   if (items.length <= legendCutoff + 1) {
@@ -123,10 +140,7 @@ export function PointMetricLegend({ metricCache }: MetricLegendProps) {
           items={items.slice(legendCutoff)}
           toggle={() => setCollapse(!collapse)}
         />
-        <ExpandUp
-          collapse={collapse}
-          toggle={() => setCollapse(!collapse)}
-        />
+        <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       </>
     )
   }
