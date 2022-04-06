@@ -62,4 +62,5 @@ Example:
   ],
   "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"]
 }
+
 ```
