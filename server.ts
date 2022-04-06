@@ -80,7 +80,7 @@ for usage instructions.`)
 
   if (args.port && !isNaN(parseInt(args.port))) minPort = parseInt(args.port)
 
-  const getPortLib = (await import("get-port"))
+  const getPortLib = await import("get-port")
   const getPort = getPortLib.default
   const port = await getPort({
     port: getPortLib.portNumbers(minPort, minPort + 1000),
@@ -94,7 +94,7 @@ async function printOpen(port: number) {
   console.log(`Now listening on port ${port}`)
   if (process.env.NODE_ENV !== "development") {
     const url = "http://localhost:" + port
-      open(url)
-      console.log(`Opening ${url} in your browser`)
-    }
+    console.log(`Opening ${url} in your browser`)
+    await open(url)
+  }
 }
