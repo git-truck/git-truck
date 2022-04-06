@@ -1,7 +1,4 @@
-import {
-  HydratedGitBlobObject,
-  HydratedGitTreeObject,
-} from "~/analyzer/model"
+import { HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
@@ -45,28 +42,39 @@ export function addAuthorUnion(
   for (const child of tree.children) {
     if (child.type === "blob") {
       child.unionedAuthors = new Map<AuthorshipType, Record<string, number>>()
-      child.unionedAuthors.set("HISTORICAL", unionAuthors(child.authors, authorUnions))
-      child.unionedAuthors.set("BLAME", unionAuthors(child.blameAuthors, authorUnions))
+      child.unionedAuthors.set(
+        "HISTORICAL",
+        unionAuthors(child.authors, authorUnions)
+      )
+      child.unionedAuthors.set(
+        "BLAME",
+        unionAuthors(child.blameAuthors, authorUnions)
+      )
     } else {
       addAuthorUnion(child, authorUnions)
     }
   }
 }
 
-export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
+export function calculateAuthorshipForSubTree(
+  tree: HydratedGitTreeObject,
+  authorshipType: AuthorshipType
+) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {
-      for (const child of tree.children) {
-          if (child.type === "blob") {
-              if (!child.unionedAuthors?.get(authorshipType)) throw Error("No unioned authors")
-              for (const [author, contrib] of Object.entries(child.unionedAuthors?.get(authorshipType) ?? {})) {
-                  aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
-              }
-          } else if (child.type === "tree") {
-              subTree(child)
-          }
+    for (const child of tree.children) {
+      if (child.type === "blob") {
+        if (child.isBinary) continue
+        const unionedAuthors = child.unionedAuthors?.get(authorshipType)
+        if (!unionedAuthors) throw Error("No unioned authors")
+        for (const [author, contrib] of Object.entries(unionedAuthors)) {
+          aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
+        }
+      } else if (child.type === "tree") {
+        subTree(child)
       }
+    }
   }
   return aggregatedAuthors
 }
