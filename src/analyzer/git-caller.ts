@@ -84,8 +84,11 @@ export class GitCaller {
     const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
     const matches = blame.match(blameRegex)
     const blameAuthors: Record<string, number> = {}
-    matches?.forEach(match => {
-      const author = match.slice(1).slice(0, match.length - 11).trim()
+    matches?.forEach((match) => {
+      const author = match
+        .slice(1)
+        .slice(0, match.length - 11)
+        .trim()
       if (author !== "Not Committed Yet") {
         const currentValue = blameAuthors[author] ?? 0
         blameAuthors[author] = currentValue + 1
@@ -108,12 +111,7 @@ export class GitCaller {
   }
 
   private async gitDiffNumStat(a: string, b: string) {
-    const result = await runProcess(this.repo, "git", [
-      "diff",
-      "--numstat",
-      a,
-      b,
-    ])
+    const result = await runProcess(this.repo, "git", ["diff", "--numstat", a, b])
     return result as string
   }
 }

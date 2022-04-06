@@ -14,7 +14,8 @@
     "dev": "cross-env NODE_ENV=development remix build && node dev.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "dev:node": "cross-env NODE_ENV=development nodemon --watch ./build/index.js ./build/index.js --",
-    "start": "cross-env NODE_ENV=production node ./build/index.js"
+    "start": "cross-env NODE_ENV=production node ./build/index.js",
+    "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
@@ -69,6 +70,7 @@
     "eslint": "^8.9.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.29.4",
     "husky": "^7.0.4",
     "jest": "^27.5.1",
     "lint-staged": "^12.3.5",
@@ -89,7 +91,8 @@
     ]
   },
   "prettier": {
-    "semi": false
+    "semi": false,
+    "printWidth": 120
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [

@@ -1,9 +1,5 @@
 import distinctColors from "distinct-colors"
-import {
-  AnalyzerData,
-  HydratedGitBlobObject,
-  HydratedGitTreeObject,
-} from "~/analyzer/model"
+import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { addAuthorUnion, makeDupeMap, unionAuthors } from "./authorUnionUtil"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
@@ -31,21 +27,12 @@ export function createMetricData(data: AnalyzerData): MetricsData {
   const authorColors = generateAuthorColors(data)
 
   return {
-    HISTORICAL: setupMetricsCache(
-      data.commit.tree,
-      getMetricCalcs(data, "HISTORICAL", authorColors)
-    ),
-    BLAME: setupMetricsCache(
-      data.commit.tree,
-      getMetricCalcs(data, "BLAME", authorColors)
-    ),
+    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
+    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
   }
 }
 
-export function getMetricDescription(
-  metric: MetricType,
-  authorshipType: AuthorshipType
-): string {
+export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
   switch (metric) {
     case "FILE_EXTENSION":
       return "Where are different types of files located?"
@@ -128,19 +115,10 @@ export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, string>
-): [
-  metricType: MetricType,
-  func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
-][] {
+): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
-  const heatmap = new HeatMapTranslater(
-    commit.minNoCommits,
-    commit.maxNoCommits
-  )
-  const coldmap = new ColdMapTranslater(
-    commit.oldestLatestChangeEpoch,
-    commit.newestLatestChangeEpoch
-  )
+  const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
+  const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
 
   return [
     [
@@ -194,8 +172,7 @@ export function getMetricCalcs(
     [
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor)
-          blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
+        if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
       },
@@ -205,10 +182,7 @@ export function getMetricCalcs(
 
 export function setupMetricsCache(
   tree: HydratedGitTreeObject,
-  metricCalcs: [
-    metricType: MetricType,
-    func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
-  ][]
+  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -217,10 +191,7 @@ export function setupMetricsCache(
 
 function setupMetricsCacheRec(
   tree: HydratedGitTreeObject,
-  metricCalcs: [
-    metricType: MetricType,
-    func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
-  ][],
+  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {
@@ -300,11 +271,7 @@ function setDominantAuthorColor(
   legend.set(dom, new PointInfo(color, 1))
 }
 
-function setDominanceColor(
-  blob: HydratedGitBlobObject,
-  cache: MetricCache,
-  authorshipType: AuthorshipType
-) {
+function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorshipType: AuthorshipType) {
   const dominatedColor = "red"
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
@@ -343,12 +310,7 @@ class SpectrumTranslater {
   readonly target_max: number
   readonly target_min: number
 
-  constructor(
-    input_min: number,
-    input_max: number,
-    target_min: number,
-    target_max: number
-  ) {
+  constructor(input_min: number, input_max: number, target_min: number, target_max: number) {
     this.scale = (target_max - target_min) / (input_max - input_min)
     this.offset = input_min * this.scale - target_min
     this.target_max = target_max
@@ -370,12 +332,7 @@ class ColdMapTranslater {
   readonly max_lightness = 90
 
   constructor(min: number, max: number) {
-    this.translator = new SpectrumTranslater(
-      min,
-      max,
-      this.min_lightness,
-      this.max_lightness
-    )
+    this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
   }
 
   getColor(value: number): string {
@@ -393,12 +350,7 @@ class HeatMapTranslater {
   readonly max_lightness = 95
 
   constructor(min: number, max: number) {
-    this.translator = new SpectrumTranslater(
-      min,
-      max,
-      this.min_lightness,
-      this.max_lightness
-    )
+    this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
   }
 
   getColor(value: number): string {

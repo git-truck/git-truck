@@ -11,7 +11,7 @@ import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faFolderOpen, faFile } from "@fortawesome/free-solid-svg-icons";
+import { faFolderOpen, faFile } from "@fortawesome/free-solid-svg-icons"
 
 const StyledBox = styled(Box)`
   display: flex;
@@ -92,21 +92,16 @@ export default function SearchBar() {
           setValue(event.target.value)
         }}
       />
-      {
-        searchText.length > 0 ?
-        <StyledP>{searchResults.length} results</StyledP>
-        : null
-      }
-      {searchResults.map(result => {
+      {searchText.length > 0 ? <StyledP>{searchResults.length} results</StyledP> : null}
+      {searchResults.map((result) => {
         return (
           <Fragment key={result.path}>
             <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
               <SearchResultSpan>
-                <LightFontAwesomeIcon icon={result.type === "tree" ? faFolderOpen : faFile} />
-                {" "}{result.name}
+                <LightFontAwesomeIcon icon={result.type === "tree" ? faFolderOpen : faFile} /> {result.name}
               </SearchResultSpan>
             </SearchResultButton>
-            <Spacer xs/>
+            <Spacer xs />
           </Fragment>
         )
       })}

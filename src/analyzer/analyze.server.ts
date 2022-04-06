@@ -27,12 +27,7 @@ import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import { getArgs } from "./args.server"
 import ignore from "ignore"
-import {
-  applyIgnore,
-  applyMetrics,
-  initMetrics,
-  TreeCleanup,
-} from "./postprocessing.server"
+import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
 import latestVersion from "latest-version"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
@@ -59,13 +54,11 @@ export async function findBranchHead(repo: string, branch: string | null) {
   return [branchHead, branch]
 }
 
-export async function analyzeCommitLight(
-  hash: string
-): Promise<GitCommitObjectLight> {
+export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
   const rawContent = await GitCaller.getInstance().catFileCached(hash)
   const commitRegex =
-  /tree (?<tree>.*)\s*(?:parent (?<parent>.*)\s*)?(?:parent (?<parent2>.*)\s*)?author (?<authorName>.*?) <(?<authorEmail>.*?)> (?<authorTimeStamp>\d*?) (?<authorTimeZone>.*?)\s*committer (?<committerName>.*?) <(?<committerEmail>.*?)> (?<committerTimeStamp>\d*?) (?<committerTimeZone>.*)\s*(?:gpgsig (?:.|\s)*?-----END PGP SIGNATURE-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
-  
+    /tree (?<tree>.*)\s*(?:parent (?<parent>.*)\s*)?(?:parent (?<parent2>.*)\s*)?author (?<authorName>.*?) <(?<authorEmail>.*?)> (?<authorTimeStamp>\d*?) (?<authorTimeZone>.*?)\s*committer (?<committerName>.*?) <(?<committerEmail>.*?)> (?<committerTimeStamp>\d*?) (?<committerTimeZone>.*)\s*(?:gpgsig (?:.|\s)*?-----END PGP SIGNATURE-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
+
   const match = commitRegex.exec(rawContent)
   const groups = match?.groups ?? {}
 
@@ -102,10 +95,7 @@ export async function analyzeCommitLight(
   }
 }
 
-export async function analyzeCommit(
-  repoName: string,
-  hash: string
-): Promise<GitCommitObject> {
+export async function analyzeCommit(repoName: string, hash: string): Promise<GitCommitObject> {
   if (hash === undefined) {
     throw Error("Hash is required")
   }
@@ -117,11 +107,7 @@ export async function analyzeCommit(
   return commitObject
 }
 
-async function analyzeTree(
-  path: string,
-  name: string,
-  hash: string
-): Promise<GitTreeObject> {
+async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
   const rawContent = await GitCaller.getInstance().catFileCached(hash)
   const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
 
@@ -148,7 +134,7 @@ async function analyzeTree(
           path: newPath,
           name,
           content: await GitCaller.getInstance().catFileCached(hash),
-          blameAuthors: await  GitCaller.getInstance().parseBlame(newPath)
+          blameAuthors: await GitCaller.getInstance().parseBlame(newPath),
         })
         break
       default:
@@ -178,17 +164,13 @@ function getCommandLine() {
 
 export function openFile(path: string) {
   path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
-  exec(`${getCommandLine()} ${resolve(repoDir, path)}`)
-  .stderr?.on("data", (e) => {
+  exec(`${getCommandLine()} ${resolve(repoDir, path)}`).stderr?.on("data", (e) => {
     // TODO show error in UI
     log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
   })
 }
 
-export async function updateTruckConfig(
-  repoDir: string,
-  updaterFn: (tc: TruckUserConfig) => TruckUserConfig
-) {
+export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUserConfig) => TruckUserConfig) {
   const truckConfigPath = resolve(repoDir, "truckconfig.json")
   let currentConfig: TruckUserConfig = {}
   try {
@@ -228,16 +210,13 @@ export async function analyze(useCache = true) {
   const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
   if (fsSync.existsSync(dataPath)) {
     const path = getOutPathFromRepoAndBranch(repoName, branchName)
-    const cachedData = JSON.parse(
-      await fs.readFile(path, "utf8")
-    ) as AnalyzerData
+    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as AnalyzerData
 
     // Check if the current branchHead matches the hash of the analyzed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash
 
     // Check if the data uses the most recent analyzer data interface
-    const dataVersionMatches =
-      cachedData.interfaceVersion === AnalyzerDataInterfaceVersion
+    const dataVersionMatches = cachedData.interfaceVersion === AnalyzerDataInterfaceVersion
 
     const cacheConditions = {
       branchHeadMatches,
@@ -256,9 +235,7 @@ export async function analyze(useCache = true) {
         .filter(([, value]) => !value)
         .map(([key, value]) => `${key}: ${value}`)
         .join(", ")
-      log.info(
-        `Reanalyzing, since the following cache conditions were not met: ${reasons}`
-      )
+      log.info(`Reanalyzing, since the following cache conditions were not met: ${reasons}`)
     }
   }
 
@@ -311,7 +288,7 @@ export async function analyze(useCache = true) {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       latestVersion: latestV,
-      lastRunEpoch: runDateEpoch
+      lastRunEpoch: runDateEpoch,
     }
 
     await describeAsyncJob(
@@ -339,9 +316,6 @@ export async function analyze(useCache = true) {
   return data
 }
 
-export function getOutPathFromRepoAndBranch(
-  repoName: string,
-  branchName: string
-) {
+export function getOutPathFromRepoAndBranch(repoName: string, branchName: string) {
   return resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
 }

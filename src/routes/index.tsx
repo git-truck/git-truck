@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import styled from "styled-components";
+import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
+import styled from "styled-components"
 
 const LoadingPane = styled.div`
   padding: 0.5em 2em;
@@ -40,25 +40,23 @@ export default function Index() {
   const navigate = useNavigate()
   useEffect(() => {
     navigate("/repo/")
-  }, [])
+  }, [navigate])
 
-  const width = 20;
-  const height = 20;
-  const length = width + height;
+  const width = 20
+  const height = 20
+  const length = width + height
 
-  const path = `M0,0 m-${width*0.5},-${height*0.5} l${width},0 l0,${height} l-${width},0 l0,-${height} Z`
-  const viewBox = `-${height*0.5} -${width*0.5} ${height} ${width}`
+  const path = `M0,0 m-${width * 0.5},-${height * 0.5} l${width},0 l0,${height} l-${width},0 l0,-${height} Z`
+  const viewBox = `-${height * 0.5} -${width * 0.5} ${height} ${width}`
 
   return (
-    <>
-      <FullViewbox>
-        <LoadingPane>
-          <LoadingText>Analyzing...</LoadingText>
-          <StyledSVG height="160px" width="160px" viewBox={viewBox}>
-            <StyledPath strokeDasharray={length*0.5} strokeDashoffset={length*2} d={path}></StyledPath>
-          </StyledSVG>
-        </LoadingPane>
-      </FullViewbox>
-    </>
+    <FullViewbox>
+      <LoadingPane>
+        <LoadingText>Analyzing...</LoadingText>
+        <StyledSVG height="160px" width="160px" viewBox={viewBox}>
+          <StyledPath strokeDasharray={length * 0.5} strokeDashoffset={length * 2} d={path}></StyledPath>
+        </StyledSVG>
+      </LoadingPane>
+    </FullViewbox>
   )
 }

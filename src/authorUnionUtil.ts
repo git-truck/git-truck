@@ -1,8 +1,4 @@
-import {
-  AnalyzerData,
-  HydratedGitBlobObject,
-  HydratedGitTreeObject,
-} from "~/analyzer/model"
+import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
@@ -15,10 +11,7 @@ export const makeDupeMap = (authors: string[][]) => {
   return dupeMap
 }
 
-export function unionAuthors(
-  authors: Record<string, number>,
-  authorAliasMap: Map<string, string>
-) {
+export function unionAuthors(authors: Record<string, number>, authorAliasMap: Map<string, string>) {
   return Object.entries(authors).reduce<HydratedGitBlobObject["authors"]>(
     (newAuthorObject, [authorOrAlias, contributionCount]) => {
       // Lookup the author in the dupe list
@@ -45,31 +38,19 @@ export function addAuthorUnion(data: AnalyzerData) {
   return authorUnions
 }
 
-function addAuthorUnionRec(
-  tree: HydratedGitTreeObject,
-  authorUnions: Map<string, string>
-) {
+function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Map<string, string>) {
   for (const child of tree.children) {
     if (child.type === "blob") {
       child.unionedAuthors = new Map<AuthorshipType, Record<string, number>>()
-      child.unionedAuthors.set(
-        "HISTORICAL",
-        unionAuthors(child.authors, authorUnions)
-      )
-      child.unionedAuthors.set(
-        "BLAME",
-        unionAuthors(child.blameAuthors, authorUnions)
-      )
+      child.unionedAuthors.set("HISTORICAL", unionAuthors(child.authors, authorUnions))
+      child.unionedAuthors.set("BLAME", unionAuthors(child.blameAuthors, authorUnions))
     } else {
       addAuthorUnionRec(child, authorUnions)
     }
   }
 }
 
-export function calculateAuthorshipForSubTree(
-  tree: HydratedGitTreeObject,
-  authorshipType: AuthorshipType
-) {
+export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {

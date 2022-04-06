@@ -23,9 +23,7 @@ export async function getArgs(): Promise<TruckConfig> {
 
   let config: TruckUserConfig = {}
   try {
-    const configContents = JSON.parse(
-      await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8")
-    )
+    const configContents = JSON.parse(await fs.readFile(resolve(tempArgs.path, "truckconfig.json"), "utf-8"))
     config = configContents
   } catch (e) {}
 

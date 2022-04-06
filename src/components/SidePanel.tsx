@@ -7,7 +7,5 @@ const SidePanelRoot = styled.aside`
 `
 
 export function SidePanel(props: { children: React.ReactNode }) {
-  return (
-    <SidePanelRoot>{props.children}</SidePanelRoot>
-  )
+  return <SidePanelRoot>{props.children}</SidePanelRoot>
 }

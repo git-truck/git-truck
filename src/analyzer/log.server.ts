@@ -24,8 +24,7 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
 function setIntialLogLevel() {
-  if (typeof process.env.LOG_LEVEL === "string")
-    return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
+  if (typeof process.env.LOG_LEVEL === "string") return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
   if (typeof process.env.LOG_LEVEL === "number") return process.env.LOG_LEVEL
   return null
 }
@@ -36,7 +35,7 @@ export const getLogLevel = () => logLevel
 
 export function setLogLevel(level: string) {
   const newLevel = stringToLevelMap[level.trim().toUpperCase()]
-  if(typeof newLevel === "undefined") {
+  if (typeof newLevel === "undefined") {
     throw new Error(`Invalid log level: ${level}`)
   }
   logLevel = newLevel
@@ -46,9 +45,7 @@ export function error(message: Error | unknown) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.ERROR) {
     const messageString =
-      message instanceof Error
-        ? `${prefix(ERROR)}${message.message}\n${message.stack}`
-        : `${prefix(ERROR)}${message}`
+      message instanceof Error ? `${prefix(ERROR)}${message.message}\n${message.stack}` : `${prefix(ERROR)}${message}`
     console.error(messageString)
   }
 }

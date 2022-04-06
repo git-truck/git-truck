@@ -20,10 +20,7 @@ const renamedFiles = new Map<string, string>()
 
 const authors = new Set<string>()
 
-export async function hydrateData(
-  repo: string,
-  commit: GitCommitObject
-): Promise<HydratedGitCommitObject> {
+export async function hydrateData(repo: string, commit: GitCommitObject): Promise<HydratedGitCommitObject> {
   const data = commit as HydratedGitCommitObject
 
   initially_mut(data)
@@ -109,22 +106,14 @@ function parents(obj: GitCommitObject | GitCommitObjectLight): Set<string> {
   return parents
 }
 
-async function diffAndUpdate_mut(
-  data: HydratedGitCommitObject,
-  currCommit: GitCommitObjectLight,
-  parentHash: string,
-) {
+async function diffAndUpdate_mut(data: HydratedGitCommitObject, currCommit: GitCommitObjectLight, parentHash: string) {
   const { author } = currCommit
 
   const currHash = currCommit.hash
 
   log.debug(`comparing [${currHash}] -> [${parentHash}]`)
 
-  const fileChanges = await gitDiffNumStatAnalyzed(
-    parentHash,
-    currHash,
-    renamedFiles
-  )
+  const fileChanges = await gitDiffNumStatAnalyzed(parentHash, currHash, renamedFiles)
 
   for (const fileChange of fileChanges) {
     const { pos, neg, file } = fileChange

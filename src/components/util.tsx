@@ -70,7 +70,7 @@ export const NavigateBackButton = styled.button`
 export const Container = styled.div`
   height: 100%;
   display: grid;
-  grid-template-columns: var(--side-panel-width) 1fr var(--side-panel-width) ;
+  grid-template-columns: var(--side-panel-width) 1fr var(--side-panel-width);
   grid-template-rows: 1fr;
 `
 
@@ -140,10 +140,7 @@ export const LegendLabel = styled.p`
 `
 
 export const LegendGradient = styled.div<{ min: string; max: string }>`
-  background-image: linear-gradient(
-    to right,
-    ${(props) => `${props.min},${props.max}`}
-  );
+  background-image: linear-gradient(to right, ${(props) => `${props.min},${props.max}`});
   width: 100%;
   height: 20px;
   border-radius: calc(var(--unit) * 0.5);
