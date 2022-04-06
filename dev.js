@@ -3,9 +3,10 @@ const runAll = require("npm-run-all")
 const open = require("open")
 
 ;(async () => {
-  const getPort = (await import("get-port")).default
+  const getPortLib = (await import("get-port"))
+  const getPort = getPortLib.default
   const port = await getPort({
-    port: [3000, 3001, 3002],
+    port: getPortLib.portNumbers(3000, 4000),
   })
 
   console.log("Opening in browser")

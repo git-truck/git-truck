@@ -1,13 +1,14 @@
-import express from "express"
+import * as serverBuild from "@remix-run/dev/server-build"
+import { createRequestHandler } from "@remix-run/express"
 import compression from "compression"
+import express from "express"
+import { portNumbers } from "get-port"
+import latestVersion from "latest-version"
 import morgan from "morgan"
 import open from "open"
-import { createRequestHandler } from "@remix-run/express"
 import { join } from "path"
-import * as serverBuild from "@remix-run/dev/server-build"
-import pkg from "./package.json"
-import latestVersion from "latest-version"
 import semverCompare from "semver-compare"
+import pkg from "./package.json"
 import { parseArgs } from "./src/analyzer/args.server"
 
 const args = parseArgs()
@@ -17,7 +18,7 @@ const args = parseArgs()
   const currentV = pkg.version
 
   // Soft clear the console
-  process.stdout.write("\u001b[2J\u001b[0;0H");
+  process.stdout.write("\u001b[2J\u001b[0;0H")
   console.log()
 
   const updateMessage =
@@ -76,15 +77,16 @@ for usage instructions.`)
     })
   )
 
-  const argPort = args.port ? Number(args.port) : null
-  const envPort = process.env.PORT ? Number(process.env.PORT) : null
-  const getPort = (await import("get-port")).default
-  const port =
-    argPort ||
-    envPort ||
-    (await getPort({
-      port: [3000, 3001, 3002],
-    }))
+  const ports = []
+  if (args.port && !isNaN(parseInt(args.port))) ports.push(parseInt(args.port))
+  if (process.env.PORT && !isNaN(parseInt(process.env.PORT)))
+    ports.push(parseInt(process.env.PORT))
+
+  const getPortLib = (await import("get-port"))
+  const getPort = getPortLib.default
+  const port = await getPort({
+    port: [...ports, ...getPortLib.portNumbers(3000, 4000)],
+  })
 
   app.listen(port).once("listening", () => printOpen(port))
 })()
