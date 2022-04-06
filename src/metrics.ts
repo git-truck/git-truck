@@ -210,9 +210,9 @@ export function setupMetricsCache(
     func: (blob: HydratedGitBlobObject, cache: MetricCache) => void
   ][]
 ) {
-  const blameMetricCache = new Map<MetricType, MetricCache>()
-  setupMetricsCacheRec(tree, metricCalcs, blameMetricCache)
-  return blameMetricCache
+  const metricCache = new Map<MetricType, MetricCache>()
+  setupMetricsCacheRec(tree, metricCalcs, metricCache)
+  return metricCache
 }
 
 function setupMetricsCacheRec(
