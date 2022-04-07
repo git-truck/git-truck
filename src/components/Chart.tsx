@@ -2,7 +2,7 @@ import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import { memo, useEffect, useMemo, useState } from "react"
-import styled from "styled-components"
+import styled, { keyframes } from "styled-components"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -44,7 +44,7 @@ export function Chart(props: ChartProps) {
   const data = useData()
   const { chartType } = useOptions()
   const { path } = usePath()
-  const { setClickedObject } = useClickedObject()
+  const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
 
   const nodes = useMemo(() => {
@@ -68,7 +68,7 @@ export function Chart(props: ChartProps) {
           onMouseOver: () => setHoveredBlob(null),
           onMouseOut: () => setHoveredBlob(null),
         }
-
+  
   return (
     <>
       <SVG
@@ -77,6 +77,13 @@ export function Chart(props: ChartProps) {
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
+          if (clickedObject?.path === d.data.path) {
+            return (
+              <GBlink key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
+                <Node isRoot={i === 0} d={d} />
+              </GBlink>
+            )
+          }
           return (
             <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
               <Node isRoot={i === 0} d={d} />
@@ -88,6 +95,18 @@ export function Chart(props: ChartProps) {
     </>
   )
 }
+
+const blinkAnimation = keyframes`
+  0% { opacity: 100% }
+  50% { opacity: 50% }
+  100% { opacity: 100% }
+`
+
+const GBlink = styled.g`
+  animation-name: ${blinkAnimation};
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+`
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType } = useOptions()
