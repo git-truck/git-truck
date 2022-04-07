@@ -33,7 +33,7 @@ const GradArrow = styled.i<{ visible: boolean; position: number }>`
   position: relative;
   bottom: 11px;
   left: calc(${({ position }) => position * 100}% - ${estimatedLetterWidth}px);
-  filter: drop-shadow(0px -2px 0.5px #fff);
+  filter: drop-shadow(0px -2px 0px #fff);
 `
 
 const StyledBox = styled(Box)`
