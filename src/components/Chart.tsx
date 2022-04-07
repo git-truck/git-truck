@@ -77,17 +77,10 @@ export function Chart(props: ChartProps) {
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
-          if (clickedObject?.path === d.data.path) {
-            return (
-              <GBlink key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
-                <Node isRoot={i === 0} d={d} />
-              </GBlink>
-            )
-          }
           return (
-            <g key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
+            <G blink={clickedObject?.path === d.data.path} key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
               <Node isRoot={i === 0} d={d} />
-            </g>
+            </G>
           )
         })}
       </SVG>
@@ -102,8 +95,8 @@ const blinkAnimation = keyframes`
   100% { opacity: 100% }
 `
 
-const GBlink = styled.g`
-  animation-name: ${blinkAnimation};
+const G = styled.g<{ blink: boolean }>`
+  animation-name: ${ props => props.blink ? blinkAnimation : "none" };
   animation-duration: 2s;
   animation-iteration-count: infinite;
 `
