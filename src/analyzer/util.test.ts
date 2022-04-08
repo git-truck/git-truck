@@ -1,4 +1,4 @@
-import { last } from "./util"
+import { last } from "./util.server"
 
 describe("last", () => {
   it("gets the last element of the array", () => {
