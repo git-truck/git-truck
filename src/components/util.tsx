@@ -1,4 +1,5 @@
 import styled from "styled-components"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 export const BoxTitle = styled.h2`
   font-size: 1.5em;
@@ -23,6 +24,10 @@ export const StyledP = styled.p`
   font-size: 0.9em;
   opacity: 0.7;
   margin: 0.5em 0 0.5em 0;
+`
+
+export const LightFontAwesomeIcon = styled(FontAwesomeIcon)`
+  opacity: 0.5;
 `
 
 export const TextButton = styled.button`
