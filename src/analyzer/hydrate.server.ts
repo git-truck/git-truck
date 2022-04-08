@@ -29,7 +29,7 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
 
   await bfs(first, repo, data)
 
-  finally_mut(data)
+  await finally_mut(data)
 
   return data
 }
@@ -43,6 +43,11 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.maxNoCommits = Number.MIN_VALUE
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
+  data.historyGraph = {
+    head: data.hash,
+    root: "root hash placeholder",
+    edges: {},
+  }
 
   addAuthorsField_mut(data.tree)
 }
@@ -80,6 +85,11 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
     const parentsOfCurr = parents(currCommit)
 
     for (const parentHash of parentsOfCurr) {
+      data.historyGraph.edges[parentHash] = data.historyGraph.edges[parentHash] ?? []
+      data.historyGraph.edges[parentHash].push(currHash)
+
+      if (parentHash == emptyGitCommitHash) data.historyGraph.root = currHash
+
       switch (parentsOfCurr.size) {
         case 2: // curr is a merge commit
           queue.enqueue(parentHash)
@@ -91,6 +101,7 @@ async function bfs(first: string, repo: string, data: HydratedGitCommitObject) {
         default:
           // curr is the root commit
           await diffAndUpdate_mut(data, currCommit, emptyGitCommitHash)
+
           break
       }
     }
@@ -171,8 +182,43 @@ function updateBlob_mut(
   log.debug(`Updated blob ${blob.name} from commit ${currCommit.hash}`)
 }
 
-function finally_mut(data: HydratedGitCommitObject) {
+async function finally_mut(data: HydratedGitCommitObject) {
   discardContentField_mut(data.tree)
+
+  data.lineChangeCountRunningSum = {}
+  data.lineChangeCount = {}
+  data.linearHistory = []
+
+  const root = data.historyGraph.root
+  let prevHash = root
+  let runningSum = 0
+
+  const lineChangeCount = await getLineChangeCount(root, emptyGitCommitHash)
+  runningSum += lineChangeCount
+  data.lineChangeCountRunningSum[root] = runningSum
+  data.lineChangeCount[root] = lineChangeCount
+  data.linearHistory.push(root)
+
+  while (prevHash != data.historyGraph.head) {
+    const currHash = data.historyGraph.edges[prevHash][0]
+
+    const lineChangeCount = await getLineChangeCount(currHash, prevHash)
+    runningSum += lineChangeCount
+
+    data.lineChangeCountRunningSum[currHash] = runningSum
+    data.lineChangeCount[currHash] = lineChangeCount
+    data.linearHistory.push(currHash)
+
+    log.debug(`currHash: ${currHash}`)
+
+    prevHash = data.historyGraph.edges[prevHash][0]
+  }
+}
+
+async function getLineChangeCount(currHash: string, prevHash: string) {
+  const fileChanges = await gitDiffNumStatAnalyzed(currHash, prevHash, renamedFiles)
+  const lineChangeCount = fileChanges.map(({ pos, neg }) => pos + neg).reduce((acc, curr) => acc + curr, 0)
+  return lineChangeCount
 }
 
 function discardContentField_mut(tree: HydratedGitTreeObject) {

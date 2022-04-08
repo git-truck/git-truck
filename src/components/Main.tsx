@@ -1,3 +1,4 @@
+import { useState } from "react"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
@@ -97,6 +98,96 @@ export function Main() {
       <ChartWrapper ref={ref}>
         <Chart size={size} />
       </ChartWrapper>
+      <HistoryStuff />
     </MainRoot>
+  )
+}
+
+const HistoryStuffContainer = styled.div`
+  display: grid;
+`
+
+const StyledRangeInput = styled.input`
+  width: 100%;
+  height: 100%;
+  grid-area: 2/1;
+  opacity: 0;
+  cursor: col-resize;
+`
+
+const BarChartWrapper = styled.div`
+  display: grid;
+`
+
+const BarChart = styled.div`
+  display: flex;
+  align-items: flex-end;
+  flex-direction: row;
+  height: 50px;
+  grid-area: 2/1;
+`
+
+const Bar = styled.div`
+  background-color: hsl(0, 0%, 80%);
+  width: 100%;
+`
+
+export function HistoryStuff() {
+  const data = useData()
+
+  const linearHistory: string[] = data.commit.linearHistory
+
+  const lineChangeCountLogarithmic: Record<string, number> = {}
+  for (const hash in data.commit.lineChangeCount) {
+    if (Object.prototype.hasOwnProperty.call(data.commit.lineChangeCount, hash)) {
+      const value = data.commit.lineChangeCount[hash]
+      lineChangeCountLogarithmic[hash] = Math.log(value)
+    }
+  }
+
+  let maxLineChangeCount = 0
+  for (const lineChangeCount of Object.values(lineChangeCountLogarithmic))
+    if (lineChangeCount > maxLineChangeCount) maxLineChangeCount = lineChangeCount
+
+  // maxLineChangeCount = 2
+
+  const [commitIndex, setCommitIndex] = useState(linearHistory.length - 1)
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    setCommitIndex(Number.parseInt(e.target.value))
+  }
+
+  const commitHashShort = linearHistory[commitIndex].substring(0, 6)
+  const currLineChangeCount = lineChangeCountLogarithmic[linearHistory[commitIndex]]
+  const currLineChangeCountNotLogarithmic = data.commit.lineChangeCount[linearHistory[commitIndex]]
+
+  return (
+    <HistoryStuffContainer>
+      <BarChartWrapper>
+        <BarChart>
+          {linearHistory.map((hash: string, i: number) => {
+            const getHeight =
+              Math.floor((10000 * lineChangeCountLogarithmic[linearHistory[i]]) / maxLineChangeCount) / 100
+            return (
+              <Bar
+                key={hash}
+                style={{
+                  height: `${getHeight ?? 1}%`,
+                  backgroundColor: i <= commitIndex ? "hsl(0, 50%, 50%)" : "hsl(0, 0%, 80%)",
+                }}
+              ></Bar>
+            )
+          })}
+        </BarChart>
+        <StyledRangeInput
+          type="range"
+          min={0}
+          max={linearHistory.length - 1}
+          value={commitIndex}
+          onChange={handleChange}
+        ></StyledRangeInput>
+      </BarChartWrapper>
+      <div>{`[#${commitHashShort}] lines: ${currLineChangeCountNotLogarithmic}`}</div>
+    </HistoryStuffContainer>
   )
 }
