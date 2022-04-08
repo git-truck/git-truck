@@ -276,8 +276,10 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
 
+  const authorUnion = blob.unionedAuthors?.get(authorshipType) ?? {}
+
   let creditsum = 0
-  for (const [, val] of Object.entries(blob.authors)) {
+  for (const [, val] of Object.entries(authorUnion)) {
     creditsum += val
   }
 
@@ -289,7 +291,6 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
     return
   }
 
-  const authorUnion = blob.unionedAuthors?.get(authorshipType)
 
   if (!authorUnion) throw Error("No unioned authors found")
   switch (Object.keys(authorUnion).length) {
