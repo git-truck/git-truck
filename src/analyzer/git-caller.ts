@@ -67,7 +67,7 @@ export class GitCaller {
       return result as string
     } catch (e) {
       log.warn(`Could not blame on ${path}. It might have been deleted since last commit.`)
-      return `${path} 0 0`
+      return ""
     }
   }
 
