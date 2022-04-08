@@ -44,9 +44,17 @@ export async function gitDiffNumStatAnalyzed(a: string, b: string, renamedFiles:
 
       const newestPath = renamedFiles.get(filePath) ?? filePath
 
+      const negInt = parseInt(neg) || 0
+      const posInt = parseInt(pos) || 0
+
+      if (isNaN(negInt) || isNaN(posInt)) {
+        log.error(diff)
+        throw new Error("Parse error in gitDiffNumStatAnalyzed(), `pos` or `neg` is NaN")
+      }
+
       return {
-        neg: parseInt(neg),
-        pos: parseInt(pos),
+        neg: negInt,
+        pos: posInt,
         file: newestPath,
       }
     })
