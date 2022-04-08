@@ -94,26 +94,6 @@ export async function lookupFileInTree(tree: GitTreeObject, path: string): Promi
   return await lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
-export async function getDefaultGitSettingValue(repoDir: string, setting: string) {
-  const result = await runProcess(repoDir, "git", ["config", setting])
-  return result as string
-}
-
-export async function resetGitSetting(repoDir: string, settingToReset: string, value: string) {
-  if (!value) {
-    await runProcess(repoDir, "git", ["config", "--unset", settingToReset])
-    log.debug(`Unset ${settingToReset}`)
-  } else {
-    await runProcess(repoDir, "git", ["config", settingToReset, value])
-    log.debug(`Reset ${settingToReset} to ${value}`)
-  }
-}
-
-export async function setGitSetting(repoDir: string, setting: string, value: string) {
-  await runProcess(repoDir, "git", ["config", setting, value])
-  log.debug(`Set ${setting} to ${value}`)
-}
-
 export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
   const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
@@ -126,11 +106,6 @@ export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerDat
 
 export function getRepoName(repoDir: string) {
   return resolve(repoDir).split(sep).slice().reverse()[0]
-}
-
-export async function getCurrentBranch(dir: string) {
-  const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
-  return result.trim()
 }
 
 export const formatMs = (ms: number) => {

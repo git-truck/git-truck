@@ -26,7 +26,7 @@ export interface TruckConfig {
 }
 
 // Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 3
+export const AnalyzerDataInterfaceVersion = 4
 
 export interface AnalyzerData {
   cached: boolean
@@ -40,6 +40,7 @@ export interface AnalyzerData {
   currentVersion: string
   latestVersion?: string
   lastRunEpoch: number
+  hasUnstagedChanges: boolean
 }
 
 export interface GitBlobObject extends GitBaseObject {

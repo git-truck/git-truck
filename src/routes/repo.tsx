@@ -89,8 +89,15 @@ export default function Index() {
               <p>Update available: {data.latestVersion}</p>
               <StyledP>Currently installed: {data.currentVersion}</StyledP>
               <StyledP>
-                To update, close application and run:{" "}
-                <InlineCode>npx git-truck@latest</InlineCode>
+                To update, close application and run: <InlineCode>npx git-truck@latest</InlineCode>
+              </StyledP>
+            </Box>
+          ) : null}
+          {data.hasUnstagedChanges ? (
+            <Box>
+              <p>You have unstaged changes</p>
+              <StyledP>
+                This means that some data might be incorrect. Please stash or commit changes and rerun analyzer.
               </StyledP>
             </Box>
           ) : null}
