@@ -13,7 +13,7 @@ import {
   PersonWithTime,
 } from "./model"
 import { analyzeCommitLight } from "./analyze.server"
-import { gitDiffNumStatAnalyzed, lookupFileInTree } from "./util"
+import { gitDiffNumStatAnalyzed, lookupFileInTree } from "./util.server"
 import { Queue } from "./queue"
 
 const renamedFiles = new Map<string, string>()
