@@ -1,4 +1,5 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "remix"
+import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "remix"
 
 import appStyles from "~/styles/App.css"
@@ -18,6 +19,8 @@ export function links() {
 }
 
 export default function App() {
+  useKonami(() => window.open("https://fruit-rush.joglr.dev", "_self"))
+
   return (
     <html lang="en">
       <head>
