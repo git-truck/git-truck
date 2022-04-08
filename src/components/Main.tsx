@@ -103,11 +103,15 @@ export function Main() {
 }
 
 const HistoryStuffContainer = styled.div`
-  /* border: 2px solid black; */
+  display: grid;
 `
 
 const StyledRangeInput = styled.input`
   width: 100%;
+  height: 100%;
+  grid-area: 2/1;
+  opacity: 0;
+  cursor: col-resize;
 `
 
 const BarChart = styled.div`
@@ -115,10 +119,11 @@ const BarChart = styled.div`
   align-items: flex-end;
   flex-direction: row;
   height: 50px;
+  grid-area: 2/1;
 `
 
 const Bar = styled.div`
-  background-color: red;
+  background-color: hsl(0, 0%, 80%);
   width: 100%;
 `
 
@@ -164,6 +169,8 @@ export function HistoryStuff() {
               key={hash}
               style={{
                 height: `${values[i]}%`,
+                backgroundColor:
+                  i < commitIndex ? "hsl(0, 50%, 50%)" : "hsl(0, 0%, 80%)",
               }}
             ></Bar>
           )
@@ -176,7 +183,7 @@ export function HistoryStuff() {
         value={commitIndex}
         onChange={handleChange}
       ></StyledRangeInput>
-      <div>{`[#${commitHashShort}] ${commitMessageSnippet}`}</div>
+      {/* <div>{`[#${commitHashShort}] ${commitMessageSnippet}`}</div> */}
     </HistoryStuffContainer>
   )
 }
