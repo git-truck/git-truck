@@ -1,5 +1,5 @@
 import { log } from "./log.server"
-import { runProcess } from "./util"
+import { runProcess } from "./util.server"
 
 export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
 export type RawGitObject = {
