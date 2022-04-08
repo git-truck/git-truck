@@ -1,6 +1,6 @@
 import { ActionFunction, json, LoaderFunction, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, InlineCode, StyledP } from "~/components/util"
+import { Box, Container, Grower, InlineCode, LightFontAwesomeIcon, StyledP } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData } from "~/analyzer/model"
@@ -14,6 +14,7 @@ import { getArgs } from "~/analyzer/args.server"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
+import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
 
 let useCacheNextTime = false
 
@@ -95,7 +96,10 @@ export default function Index() {
           ) : null}
           {data.hasUnstagedChanges ? (
             <Box>
-              <p>You have unstaged changes</p>
+              <p>
+                <LightFontAwesomeIcon icon={faTriangleExclamation} />
+                You have unstaged changes
+              </p>
               <StyledP>
                 This means that some data might be incorrect. Please stash or commit changes and rerun analyzer.
               </StyledP>

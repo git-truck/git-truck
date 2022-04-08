@@ -1,4 +1,4 @@
-import { SearchField, Box, Label, StyledP, SearchResultButton, SearchResultSpan } from "./util"
+import { SearchField, Box, Label, StyledP, SearchResultButton, SearchResultSpan, LightFontAwesomeIcon } from "./util"
 import styled from "styled-components"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { useDebounce } from "react-use"
@@ -10,7 +10,6 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFolderOpen, faFile } from "@fortawesome/free-solid-svg-icons"
 
 const StyledBox = styled(Box)`
@@ -34,10 +33,6 @@ function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   subTreeSearch(tree)
   return searchResults
 }
-
-const LightFontAwesomeIcon = styled(FontAwesomeIcon)`
-  opacity: 0.5;
-`
 
 export default function SearchBar() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
