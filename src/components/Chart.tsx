@@ -2,7 +2,7 @@ import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import { memo, useEffect, useMemo, useState } from "react"
-import styled, { keyframes } from "styled-components"
+import styled from "styled-components"
 import {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -23,6 +23,7 @@ import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import { ChartType, useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
+import { blinkAnimation, pulseAnimation } from "./Animations"
 import { Tooltip } from "./Tooltip"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
@@ -88,12 +89,6 @@ export function Chart(props: ChartProps) {
     </>
   )
 }
-
-const blinkAnimation = keyframes`
-  0% { opacity: 100% }
-  50% { opacity: 50% }
-  100% { opacity: 100% }
-`
 
 const G = styled.g<{ blink: boolean }>`
   animation-name: ${ props => props.blink ? blinkAnimation : "none" };
@@ -172,12 +167,19 @@ function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObje
     cy: d.y,
     r: Math.max(d.r - 1, 0),
     stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: isSearchMatch ? "4px" : "1px",
+    strokeWidth: "1px",
     fill: metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey",
   })
 
-  return <animated.circle {...props} className={d.data.type} />
+  return <CircleSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
+
+const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
+  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+`
 
 function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObject>; isSearchMatch: boolean }) {
   const metricsData = useMetrics()
@@ -190,7 +192,7 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
     height: d.y1 - d.y0,
 
     stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: isSearchMatch ? "4px" : "1px",
+    strokeWidth: "1px",
 
     fill:
       d.data.type === "blob"
@@ -198,8 +200,15 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
         : "transparent",
   })
 
-  return <animated.rect {...props} className={d.data.type} />
+  return <RectSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
+
+const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
+  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+`
 
 function CircleText({
   d,
