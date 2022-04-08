@@ -1,3 +1,4 @@
+import { log } from "./log.server"
 import { runProcess } from "./util"
 
 export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
@@ -61,8 +62,13 @@ export class GitCaller {
   }
 
   private async blame(path: string) {
-    const result = await runProcess(this.repo, "git", ["blame", path])
-    return result as string
+    try {
+      const result = await runProcess(this.repo, "git", ["blame", path])
+      return result as string
+    } catch (e) {
+      log.warn(`Could not blame on ${path}. It might have been deleted since last commit.`)
+      return `${path} 0 0`
+    }
   }
 
   async blameCached(path: string): Promise<string> {
@@ -76,6 +82,11 @@ export class GitCaller {
     this.blameCache.set(path, result)
 
     return result
+  }
+
+  public async hasUnstagedChanges() {
+    const result = await runProcess(this.repo, "git", ["update-index", "--refresh"])
+    return !!result
   }
 
   async parseBlame(path: string) {
@@ -113,5 +124,30 @@ export class GitCaller {
   private async gitDiffNumStat(a: string, b: string) {
     const result = await runProcess(this.repo, "git", ["diff", "--numstat", a, b])
     return result as string
+  }
+
+  public async getDefaultGitSettingValue(repoDir: string, setting: string) {
+    const result = await runProcess(repoDir, "git", ["config", setting])
+    return result as string
+  }
+
+  public async resetGitSetting(repoDir: string, settingToReset: string, value: string) {
+    if (!value) {
+      await runProcess(repoDir, "git", ["config", "--unset", settingToReset])
+      log.debug(`Unset ${settingToReset}`)
+    } else {
+      await runProcess(repoDir, "git", ["config", settingToReset, value])
+      log.debug(`Reset ${settingToReset} to ${value}`)
+    }
+  }
+
+  public async setGitSetting(repoDir: string, setting: string, value: string) {
+    await runProcess(repoDir, "git", ["config", setting, value])
+    log.debug(`Set ${setting} to ${value}`)
+  }
+
+  public async getCurrentBranch(dir: string) {
+    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+    return result.trim()
   }
 }

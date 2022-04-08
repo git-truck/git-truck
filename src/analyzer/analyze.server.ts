@@ -9,16 +9,7 @@ import {
   TruckUserConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
-import {
-  describeAsyncJob,
-  formatMs,
-  writeRepoToFile,
-  getCurrentBranch,
-  getRepoName,
-  getDefaultGitSettingValue,
-  resetGitSetting,
-  setGitSetting,
-} from "./util"
+import { describeAsyncJob, formatMs, writeRepoToFile, getRepoName } from "./util"
 import { GitCaller } from "./git-caller"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, join } from "path"
@@ -36,7 +27,7 @@ import { exec } from "child_process"
 let repoDir = "."
 
 export async function findBranchHead(repo: string, branch: string | null) {
-  if (branch === null) branch = await getCurrentBranch(repo)
+  if (branch === null) branch = await GitCaller.getInstance().getCurrentBranch(repo)
 
   const gitFolder = join(repo, ".git")
   if (!fsSync.existsSync(gitFolder)) {
@@ -240,12 +231,13 @@ export async function analyze(useCache = true) {
   }
 
   if (data === null) {
-    const quotePathDefaultValue = await getDefaultGitSettingValue(repoDir, "core.quotepath")
-    await setGitSetting(repoDir, "core.quotePath", "off")
-    const renamesDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renames")
-    await setGitSetting(repoDir, "diff.renames", "true")
-    const renameLimitDefaultValue = await getDefaultGitSettingValue(repoDir, "diff.renameLimit")
-    await setGitSetting(repoDir, "diff.renameLimit", "1000000")
+    const quotePathDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "core.quotepath")
+    await GitCaller.getInstance().setGitSetting(repoDir, "core.quotePath", "off")
+    const renamesDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "diff.renames")
+    await GitCaller.getInstance().setGitSetting(repoDir, "diff.renames", "true")
+    const renameLimitDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "diff.renameLimit")
+    await GitCaller.getInstance().setGitSetting(repoDir, "diff.renameLimit", "1000000")
+    const hasUnstagedChanges = await GitCaller.getInstance().hasUnstagedChanges()
 
     const runDateEpoch = Date.now()
     const repoTree = await describeAsyncJob(
@@ -262,9 +254,9 @@ export async function analyze(useCache = true) {
       "Error hydrating commit tree"
     )
 
-    await resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
-    await resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
-    await resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
+    await GitCaller.getInstance().resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
+    await GitCaller.getInstance().resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
+    await GitCaller.getInstance().resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
 
     const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
     let outPath = resolve((args.out as string) ?? defaultOutPath)
@@ -289,6 +281,7 @@ export async function analyze(useCache = true) {
       currentVersion: pkg.version,
       latestVersion: latestV,
       lastRunEpoch: runDateEpoch,
+      hasUnstagedChanges,
     }
 
     await describeAsyncJob(
