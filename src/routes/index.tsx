@@ -1,13 +1,14 @@
 import { ActionFunction, json, Link, LoaderFunction, useLoaderData, useNavigate, useSubmit, useTransition } from "remix"
 import styled from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
-import { getBaseDirFromPath, getDirName, scanForRepositories } from "~/analyzer/util.server"
+import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import { Box, BoxSubTitle, Code } from "~/components/util"
+import { Box, BoxSubTitle, Code, Grower, TextButton } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
-import { useEffect } from "react"
+import { GitCaller } from "~/analyzer/git-caller.server"
+import { useMount } from "react-use"
 
 interface IndexData {
   repositories: Repository[]
@@ -21,10 +22,7 @@ let hasRedirected = false
 
 export const loader: LoaderFunction = async () => {
   const args = await getArgsWithDefaults()
-
-  // If this file is moved, this should be updated
-  const basePath = resolve(__dirname, "..", "..")
-  const [repo, repositories] = await scanForRepositories(basePath, args.path)
+  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   const repositoriesResponse = json<IndexData>({
     repositories,
@@ -49,20 +47,24 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const { repositories, baseDir, baseDirName, repo, hasRedirected } = useLoaderData<IndexData>()
+  const loadterData = useLoaderData<IndexData>()
+  const { repositories, baseDir, baseDirName, repo, hasRedirected } = loadterData
   const transitionData = useTransition()
   const navigate = useNavigate()
   const submit = useSubmit()
 
   const willRedirect = repo && !hasRedirected
-  useEffect(() => {
+  useMount(() => {
     if (willRedirect) {
       const data = new FormData()
       data.append("hasRedirected", "true")
       submit(data, { method: "post" })
       navigate(`/${repo.name}`)
     }
-  }, [])
+  })
+
+  const cachedRepositories = repositories.filter((repo) => repo.data?.cached)
+  const notCachedRepositories = repositories.filter((repo) => !repo.data?.cached)
 
   if (transitionData.state !== "idle" || willRedirect) return <AnalyzingIndicator />
   return (
@@ -81,21 +83,54 @@ export default function Index() {
           </p>
         </>
       ) : null}
-      <Spacer />
-      <nav>
-        <Ul>
-          {repositories.map(({ name }) => (
-            <Li key={name}>
-              <Box>
-                <BoxSubTitle>{name}</BoxSubTitle>
-                <Actions>
-                  <SLink to={name}>Analyze</SLink>
-                </Actions>
-              </Box>
-            </Li>
-          ))}
-        </Ul>
-      </nav>
+      {cachedRepositories.length > 0 ? (
+        <>
+          <Spacer xxl />
+          <h2>Ready to view</h2>
+          <nav>
+            <Ul>
+              {cachedRepositories.map((repo) => (
+                <Li key={repo.name}>
+                  <SLink to={repo.name} tabIndex={-1}>
+                    <Box>
+                      <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
+                      <Spacer />
+                      <Actions>
+                        <Grower />
+                        <TextButton>{repo.data?.cached ? "View" : "Analyze"}</TextButton>
+                      </Actions>
+                    </Box>
+                  </SLink>
+                </Li>
+              ))}
+            </Ul>
+          </nav>
+        </>
+      ) : null}
+      {notCachedRepositories.length > 0 ? (
+        <>
+          <Spacer xxl />
+          <h2>Needs to be analyzed before viewing</h2>
+          <nav>
+            <Ul>
+              {notCachedRepositories.map((repo) => (
+                <Li key={repo.name}>
+                  <SLink to={repo.name} tabIndex={-1}>
+                    <Box>
+                      <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
+                      <Spacer />
+                      <Actions>
+                        <Grower />
+                        <TextButton>{repo.data?.cached ? "View" : "Analyze"}</TextButton>
+                      </Actions>
+                    </Box>
+                  </SLink>
+                </Li>
+              ))}
+            </Ul>
+          </nav>
+        </>
+      ) : null}
     </Wrapper>
   )
 }
@@ -114,10 +149,24 @@ const Ul = styled.ul`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 `
 
-const Li = styled.li``
-
-const Actions = styled.div`
-  text-align: right;
+const Li = styled.li`
+  margin: 0;
 `
 
-const SLink = styled(Link)``
+const Tag = styled.span`
+  font-size: 0.7em;
+  text-transform: uppercase;
+  padding: calc(0.25 * var(--unit)) calc(var(--unit));
+  letter-spacing: 0.2em;
+  color: white;
+  background-color: hsl(210, 100%, 50%);
+  border-radius: 1000px;
+`
+
+const Actions = styled.div`
+  display: flex;
+`
+
+const SLink = styled(Link)`
+  text-decoration: none;
+`

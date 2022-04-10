@@ -185,7 +185,6 @@ export async function analyze(args: TruckConfig) {
 
   if (!args.invalidateCache) {
     const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
-      basePath: __dirname,
       repo: repoName,
       branch: branchName,
       branchHead: branchHead,
@@ -236,7 +235,7 @@ export async function analyze(args: TruckConfig) {
     await git.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
     // Change this if this file moves:
-    const defaultOutPath = GitCaller.getCachePath(resolve(__dirname, ".."), repoName, branchName)
+    const defaultOutPath = GitCaller.getCachePath(repoName, branchName)
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
     let outPath = resolve((args.out as string) ?? defaultOutPath)
