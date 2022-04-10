@@ -1,26 +1,25 @@
 import styled, { css } from "styled-components"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
-export const BoxTitle = styled.h2`
-  display: flex;
-  align-items: center;
-  justify-content: baseline;
-  font-size: 1.5em;
+const titleBaseStyles = css`
   font-weight: bold;
   margin-bottom: 0;
   margin-top: 0;
   color: var(--title-color);
-  overflow: hidden;
   text-overflow: ellipsis;
+  word-break: keep-all;
   white-space: nowrap;
+  overflow-x: hidden;
+`
+
+export const BoxTitle = styled.h2`
+  ${titleBaseStyles}
+  font-size: 1.5em;
 `
 
 export const BoxSubTitle = styled.h2`
+  ${titleBaseStyles}
   font-size: 1em;
-  font-weight: bold;
-  margin-bottom: 0;
-  margin-top: 0;
-  color: var(--title-color);
 `
 
 export const StyledP = styled.p`

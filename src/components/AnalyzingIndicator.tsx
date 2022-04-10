@@ -22,11 +22,11 @@ const FullViewbox = styled.div`
 const StyledPath = styled.path`
   fill: none;
   stroke: #4580ff;
-  /* transition: 1s; */
   animation: dash 2s ease-in-out alternate infinite;
 `
 
 const LoadingText = styled.div`
+  text-align: center;
   grid-area: 1/2;
 `
 

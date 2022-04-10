@@ -3,10 +3,10 @@ import { existsSync, promises as fs } from "fs"
 import { createSpinner, Spinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import { GitBlobObject, GitTreeObject, AnalyzerData, Repository } from "./model"
+import { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
 import { performance } from "perf_hooks"
 import { GitCaller } from "./git-caller.server"
-import { join, resolve as resolvePath } from "path"
+import { resolve as resolvePath } from "path"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -178,54 +178,6 @@ export async function describeAsyncJob<T>(
     log.error(e as Error)
     return [null, e as Error]
   }
-}
-
-export async function scanForRepositories(
-  basePath: string,
-  argPath: string
-): Promise<[Repository | null, Repository[]]> {
-  let userRepo: Repository | null = null
-  const pathIsRepo = await GitCaller.isGitRepo(argPath)
-  const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
-
-  const entries = await fs.readdir(baseDir, { withFileTypes: true })
-  const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
-  const repoOrNull = await Promise.all(
-    dirs.map(async (repoDir) => {
-      const repoPath = join(baseDir, repoDir)
-      const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
-      if (!isRepo) return null
-      const repo: Repository = { name: repoDir, path: repoPath, data: null, reasons: [] }
-      // try {
-      //   const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(path))
-      //   if (!error) {
-      //     const [branchHead, branch] = findBranchHeadResult
-      //     const [data, reasons] = await GitCaller.retrieveCachedResult({
-      //       repo: repoDir,
-      //       basePath,
-      //       branch,
-      //       branchHead,
-      //     })
-      //     repo.data = data
-      //     repo.reasons = reasons
-      //   }
-      // } catch (e) {
-      //   return null
-      // }
-      return repo
-    })
-  )
-  const onlyRepos: Repository[] = repoOrNull.filter((currRepo) => {
-    if (currRepo === null) return false
-    const { name, path } = currRepo
-    if (pathIsRepo && name === getDirName(argPath)) {
-      userRepo = currRepo
-      log.debug(`Found git repo: ${path}`)
-    }
-    return true
-  }) as Repository[]
-
-  return [userRepo, onlyRepos]
 }
 
 export const getBaseDirFromPath = (path: string) => resolve(path, "..")

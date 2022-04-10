@@ -1,8 +1,8 @@
 import { log } from "./log.server"
-import { promiseHelper, runProcess } from "./util.server"
+import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
-import { AnalyzerData, AnalyzerDataInterfaceVersion } from "./model"
+import { AnalyzerData, AnalyzerDataInterfaceVersion, Repository } from "./model"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -84,23 +84,68 @@ export class GitCaller {
     return [branchHead, branch]
   }
 
-  static getCachePath(basePath: string, repo: string, branch: string) {
-    return resolve(basePath, "..", ".temp", repo, `${branch}.json`)
+  static getCachePath(repo: string, branch: string) {
+    return resolve(__dirname, "..", ".temp", repo, `${branch}.json`)
+  }
+
+  static async getCurrentBranch(dir: string) {
+    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+    return result.trim()
+  }
+
+  static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
+    let userRepo: Repository | null = null
+    const pathIsRepo = await GitCaller.isGitRepo(argPath)
+    const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
+
+    const entries = await fs.readdir(baseDir, { withFileTypes: true })
+    const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
+    const repoOrNull = await Promise.all(
+      dirs.map(async (repoDir) => {
+        const repoPath = join(baseDir, repoDir)
+        const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
+        if (!isRepo) return null
+        const repo: Repository = { name: repoDir, path: repoPath, data: null, reasons: [] }
+        try {
+          const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
+          if (!error) {
+            const [branchHead, branch] = findBranchHeadResult
+            const [data, reasons] = await GitCaller.retrieveCachedResult({
+              repo: repoDir,
+              branch,
+              branchHead,
+            })
+            repo.data = data
+            repo.reasons = reasons
+          }
+        } catch (e) {
+          return null
+        }
+        return repo
+      })
+    )
+    const onlyRepos: Repository[] = repoOrNull.filter((currentRepo) => {
+      if (currentRepo === null) return false
+      if (pathIsRepo && currentRepo.name === getDirName(argPath)) {
+        userRepo = currentRepo
+      }
+      return true
+    }) as Repository[]
+
+    return [userRepo, onlyRepos]
   }
 
   static async retrieveCachedResult({
-    basePath,
     repo,
     branch,
     branchHead,
   }: {
-    basePath: string
     repo: string
     branch: string
     branchHead: string
   }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
     const reasons = []
-    const cachedDataPath = GitCaller.getCachePath(basePath, repo, branch)
+    const cachedDataPath = GitCaller.getCachePath(repo, branch)
     if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
 
     const cachedData = JSON.parse(await fs.readFile(cachedDataPath, "utf8")) as AnalyzerData
@@ -181,7 +226,7 @@ export class GitCaller {
     return result
   }
 
-  public async hasUnstagedChanges() {
+  async hasUnstagedChanges() {
     const result = await runProcess(this.repo, "git", ["update-index", "--refresh"])
     return !!result
   }
@@ -223,12 +268,12 @@ export class GitCaller {
     return result as string
   }
 
-  public async getDefaultGitSettingValue(setting: string) {
+  async getDefaultGitSettingValue(setting: string) {
     const result = await runProcess(this.repo, "git", ["config", setting])
     return result as string
   }
 
-  public async resetGitSetting(settingToReset: string, value: string) {
+  async resetGitSetting(settingToReset: string, value: string) {
     if (!value) {
       await runProcess(this.repo, "git", ["config", "--unset", settingToReset])
       log.debug(`Unset ${settingToReset}`)
@@ -238,13 +283,8 @@ export class GitCaller {
     }
   }
 
-  public async setGitSetting(setting: string, value: string) {
+  async setGitSetting(setting: string, value: string) {
     await runProcess(this.repo, "git", ["config", setting, value])
     log.debug(`Set ${setting} to ${value}`)
-  }
-
-  public static async getCurrentBranch(dir: string) {
-    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
-    return result.trim()
   }
 }
