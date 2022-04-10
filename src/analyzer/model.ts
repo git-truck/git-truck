@@ -1,4 +1,12 @@
 import { AuthorshipType } from "~/metrics"
+import { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
+
+export interface Repository {
+  path: string
+  name: string
+  data: AnalyzerData | null
+  reasons: ANALYZER_CACHE_MISS_REASONS[]
+}
 
 export type GitObject = GitBlobObject | GitTreeObject
 
@@ -14,15 +22,17 @@ export interface TruckUserConfig {
   path?: string
   unionedAuthors?: string[][]
   hiddenFiles?: string[]
+  invalidateCache?: boolean
 }
 
 export interface TruckConfig {
   log?: string
   out?: string
-  branch: string
+  branch?: string
   path: string
   unionedAuthors: string[][]
   hiddenFiles: string[]
+  invalidateCache: boolean
 }
 
 // Bump this if AnalyzerData interface chances

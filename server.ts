@@ -57,10 +57,7 @@ for usage instructions.`)
 
   const staticAssetsPath = join(__dirname, "../public/build")
   // Remix fingerprints its assets so we can cache forever.
-  app.use(
-    "/build",
-    express.static(staticAssetsPath, { immutable: true, maxAge: "1y" })
-  )
+  app.use("/build", express.static(staticAssetsPath, { immutable: true, maxAge: "1y" }))
 
   // Everything else (like favicon.ico) is cached for an hour. You may want to be
   // more aggressive with this caching.
@@ -76,16 +73,24 @@ for usage instructions.`)
     })
   )
 
+  let devServerPort: number | null = null
+  let userHasProvidedPort = false
   let minPort = 3000
 
-  if (args.port && !isNaN(parseInt(args.port))) minPort = parseInt(args.port)
+  if (args.port && !isNaN(parseInt(args.port))) {
+    minPort = parseInt(args.port)
+    userHasProvidedPort = true
+  }
+
+  if (process.env["PORT"] && !isNaN(parseInt(process.env["PORT"]))) {
+    devServerPort = parseInt(process.env["PORT"])
+  }
 
   const getPortLib = await import("get-port")
   const getPort = getPortLib.default
   const port = await getPort({
-    port: getPortLib.portNumbers(minPort, minPort + 1000),
+    port: devServerPort ?? [...(!userHasProvidedPort ? [80] : []), ...getPortLib.portNumbers(minPort, minPort + 1000)],
   })
-
   app.listen(port).once("listening", () => printOpen(port))
 })()
 
@@ -93,7 +98,7 @@ async function printOpen(port: number) {
   console.log()
   console.log(`Now listening on port ${port}`)
   if (process.env.NODE_ENV !== "development") {
-    const url = "http://localhost:" + port
+    const url = `http://localhost:${port}`
     console.log(`Opening ${url} in your browser`)
     await open(url)
   }

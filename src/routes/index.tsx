@@ -1,62 +1,123 @@
-import { useNavigate } from "react-router-dom"
-import { useEffect } from "react"
+import { ActionFunction, json, Link, LoaderFunction, useLoaderData, useNavigate, useSubmit, useTransition } from "remix"
 import styled from "styled-components"
+import { getArgsWithDefaults } from "~/analyzer/args.server"
+import { getBaseDirFromPath, getDirName, scanForRepositories } from "~/analyzer/util.server"
+import { Spacer } from "~/components/Spacer"
+import { Box, BoxSubTitle, Code } from "~/components/util"
+import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
+import { resolve } from "path"
+import { Repository } from "~/analyzer/model"
+import { useEffect } from "react"
 
-const LoadingPane = styled.div`
-  padding: 0.5em 2em;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
+interface IndexData {
+  repositories: Repository[]
+  baseDir: string
+  baseDirName: string
+  repo: Repository | null
+  hasRedirected: boolean
+}
 
-  /* hide_initially animation */
-  opacity: 0;
-  animation: hide_initially 0s linear forwards;
-  animation-delay: 1s;
-`
+let hasRedirected = false
 
-const FullViewbox = styled.div`
-  display: grid;
-  place-items: center;
-  height: 100vh;
-  width: 100vw;
-`
+export const loader: LoaderFunction = async () => {
+  const args = await getArgsWithDefaults()
 
-const StyledPath = styled.path`
-  fill: none;
-  stroke: #4580ff;
-  /* transition: 1s; */
-  animation: dash 2s ease-in-out alternate infinite;
-`
+  // If this file is moved, this should be updated
+  const basePath = resolve(__dirname, "..", "..")
+  const [repo, repositories] = await scanForRepositories(basePath, args.path)
+  const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
+  const repositoriesResponse = json<IndexData>({
+    repositories,
+    baseDir,
+    baseDirName: getDirName(baseDir),
+    repo,
+    hasRedirected,
+  })
 
-const LoadingText = styled.div`
-  grid-area: 1/2;
-`
+  const response = repositoriesResponse
+  hasRedirected = true
 
-const StyledSVG = styled.svg`
-  grid-area: 1/2;
-`
+  return response
+}
+
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData()
+  if (formData.has("hasRedirected")) {
+    hasRedirected = true
+  }
+  return null
+}
 
 export default function Index() {
+  const { repositories, baseDir, baseDirName, repo, hasRedirected } = useLoaderData<IndexData>()
+  const transitionData = useTransition()
   const navigate = useNavigate()
+  const submit = useSubmit()
+
+  const willRedirect = repo && !hasRedirected
   useEffect(() => {
-    navigate("/repo/")
-  }, [navigate])
+    if (willRedirect) {
+      const data = new FormData()
+      data.append("hasRedirected", "true")
+      submit(data, { method: "post" })
+      navigate(`/${repo.name}`)
+    }
+  }, [])
 
-  const width = 20
-  const height = 20
-  const length = width + height
-
-  const path = `M0,0 m-${width * 0.5},-${height * 0.5} l${width},0 l0,${height} l-${width},0 l0,-${height} Z`
-  const viewBox = `-${height * 0.5} -${width * 0.5} ${height} ${width}`
-
+  if (transitionData.state !== "idle" || willRedirect) return <AnalyzingIndicator />
   return (
-    <FullViewbox>
-      <LoadingPane>
-        <LoadingText>Analyzing...</LoadingText>
-        <StyledSVG height="160px" width="160px" viewBox={viewBox}>
-          <StyledPath strokeDasharray={length * 0.5} strokeDashoffset={length * 2} d={path}></StyledPath>
-        </StyledSVG>
-      </LoadingPane>
-    </FullViewbox>
+    <Wrapper>
+      <Spacer />
+      <H1>{baseDir}</H1>
+      <Spacer />
+      <p>
+        Found {repositories.length} git repositories in the folder <Code inline>{baseDirName}</Code>.
+      </p>
+      {repositories.length === 0 ? (
+        <>
+          <Spacer />
+          <p>
+            Try running <Code inline>git-truck</Code> in another folder or provide another path as argument.
+          </p>
+        </>
+      ) : null}
+      <Spacer />
+      <nav>
+        <Ul>
+          {repositories.map(({ name }) => (
+            <Li key={name}>
+              <Box>
+                <BoxSubTitle>{name}</BoxSubTitle>
+                <Actions>
+                  <SLink to={name}>Analyze</SLink>
+                </Actions>
+              </Box>
+            </Li>
+          ))}
+        </Ul>
+      </nav>
+    </Wrapper>
   )
 }
+
+const Wrapper = styled.div`
+  width: calc(100vw - 2 * var(--side-panel-width));
+  margin: auto;
+`
+const H1 = styled.h1`
+  font-family: "Courier New", Courier, monospace;
+`
+
+const Ul = styled.ul`
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+`
+
+const Li = styled.li``
+
+const Actions = styled.div`
+  text-align: right;
+`
+
+const SLink = styled(Link)``

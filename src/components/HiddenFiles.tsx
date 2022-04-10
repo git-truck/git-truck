@@ -4,7 +4,7 @@ import { useBoolean } from "react-use"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, InlineCode } from "./util"
+import { Box, BoxSubTitle, Code } from "./util"
 import { Form, useTransition } from "remix"
 
 const Line = styled.div`
@@ -67,14 +67,14 @@ export function HiddenFiles() {
         <div>
           {data.hiddenFiles.map((hidden) => (
             <Line key={hidden} title={hidden}>
-              <InlineForm method="post" action="/repo">
+              <InlineForm method="post" action=".">
                 <input type="hidden" name="unignore" value={hidden} />
                 <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
                   <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
                   <StyledFontAwesomeIcon id="eye" icon={faEye} />
                 </StyledButton>
               </InlineForm>
-              <InlineCode>{hiddenFileFormat(hidden)}</InlineCode>
+              <Code>{hiddenFileFormat(hidden)}</Code>
             </Line>
           ))}
         </div>
