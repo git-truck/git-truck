@@ -3,9 +3,10 @@ import { existsSync, promises as fs } from "fs"
 import { createSpinner, Spinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
+import { GitBlobObject, GitTreeObject, AnalyzerData, Repository } from "./model"
 import { performance } from "perf_hooks"
-import { GitCaller } from "./git-caller"
+import { GitCaller } from "./git-caller.server"
+import { join, resolve as resolvePath } from "path"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -15,10 +16,12 @@ export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
-        cwd: dir,
+        cwd: resolvePath(dir),
       })
       const chunks: Uint8Array[] = []
-      prcs.stderr.once("data", (buf) => reject(buf.toString().trim()))
+      const errorHandler = (buf: Error): void => reject(buf.toString().trim())
+      prcs.once("error", errorHandler)
+      prcs.stderr.once("data", errorHandler)
       prcs.stdout.on("data", (buf) => chunks.push(buf))
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())
@@ -104,8 +107,8 @@ export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerDat
   return outPath
 }
 
-export function getRepoName(repoDir: string) {
-  return resolve(repoDir).split(sep).slice().reverse()[0]
+export function getDirName(dir: string) {
+  return resolve(dir).split(sep).slice().reverse()[0]
 }
 
 export const formatMs = (ms: number) => {
@@ -142,7 +145,7 @@ export async function describeAsyncJob<T>(
   beforeMsg: string,
   afterMsg: string,
   errorMsg: string
-) {
+): Promise<[T, null] | [null, Error]> {
   spinner = createTruckSpinner()
   const success = (text: string, final = false) => {
     if (getLogLevel() === LOG_LEVEL.SILENT) return
@@ -169,10 +172,74 @@ export async function describeAsyncJob<T>(
     const stopTime = performance.now()
     const suffix = `[${formatMs(stopTime - startTime)}]`
     success(`${afterMsg} ${suffix}`, true)
-    return result
+    return [result, null]
   } catch (e) {
     error(errorMsg)
     log.error(e as Error)
-    process.exit(1)
+    return [null, e as Error]
+  }
+}
+
+export async function scanForRepositories(
+  basePath: string,
+  argPath: string
+): Promise<[Repository | null, Repository[]]> {
+  let userRepo: Repository | null = null
+  const pathIsRepo = await GitCaller.isGitRepo(argPath)
+  const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
+
+  const entries = await fs.readdir(baseDir, { withFileTypes: true })
+  const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
+  const repoOrNull = await Promise.all(
+    dirs.map(async (repoDir) => {
+      const repoPath = join(baseDir, repoDir)
+      const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
+      if (!isRepo) return null
+      const repo: Repository = { name: repoDir, path: repoPath, data: null, reasons: [] }
+      // try {
+      //   const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(path))
+      //   if (!error) {
+      //     const [branchHead, branch] = findBranchHeadResult
+      //     const [data, reasons] = await GitCaller.retrieveCachedResult({
+      //       repo: repoDir,
+      //       basePath,
+      //       branch,
+      //       branchHead,
+      //     })
+      //     repo.data = data
+      //     repo.reasons = reasons
+      //   }
+      // } catch (e) {
+      //   return null
+      // }
+      return repo
+    })
+  )
+  const onlyRepos: Repository[] = repoOrNull.filter((currRepo) => {
+    if (currRepo === null) return false
+    const { name, path } = currRepo
+    if (pathIsRepo && name === getDirName(argPath)) {
+      userRepo = currRepo
+      log.debug(`Found git repo: ${path}`)
+    }
+    return true
+  }) as Repository[]
+
+  return [userRepo, onlyRepos]
+}
+
+export const getBaseDirFromPath = (path: string) => resolve(path, "..")
+export const getSiblingRepository = (path: string, repo: string) => resolve(getBaseDirFromPath(path), repo)
+
+/**
+ * This functions handles try / catch for you, so your code stays flat.
+ * @param promise An async function
+ * @returns A tuple of the result and an error. If there is no error, the error will be null.
+ */
+export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Error] | [T, null]> {
+  try {
+    return [await promise, null]
+  } catch (e) {
+    return [null, e as Error]
   }
 }

@@ -92,7 +92,7 @@ export function Main() {
           })}
         </Breadcrumb>
       ) : (
-        <Breadcrumb></Breadcrumb>
+        <Breadcrumb />
       )}
       <ChartWrapper ref={ref}>
         <Chart size={size} />

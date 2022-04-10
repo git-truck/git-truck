@@ -1,4 +1,4 @@
-import fsSync, { promises as fs } from "fs"
+import { promises as fs } from "fs"
 import {
   GitBlobObject,
   GitCommitObject,
@@ -7,16 +7,16 @@ import {
   AnalyzerData,
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
+  TruckConfig,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
-import { GitCaller } from "./git-caller"
+import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
-import { resolve, isAbsolute, join, sep } from "path"
+import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
 import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
-import { getArgs } from "./args.server"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
 import latestVersion from "latest-version"
@@ -25,25 +25,6 @@ import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 
 let repoDir = "."
-
-export async function findBranchHead(repo: string, branch: string | null) {
-  if (branch === null) branch = await GitCaller.getInstance().getCurrentBranch(repo)
-
-  const gitFolder = join(repo, ".git")
-  if (!fsSync.existsSync(gitFolder)) {
-    throw Error(`${repo} is not a git repository`)
-  }
-  // Find file containing the branch head
-  const branchPath = join(gitFolder, "refs/heads/" + branch)
-  const absolutePath = join(process.cwd(), branchPath)
-  log.debug("Looking for branch head at " + absolutePath)
-
-  const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
-  log.debug(`${branch} -> [commit]${branchHead}`)
-  if (!branchHead) throw Error("Branch head not found")
-
-  return [branchHead, branch]
-}
 
 export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
   const rawContent = await GitCaller.getInstance().catFileCached(hash)
@@ -173,9 +154,9 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export async function analyze(useCache = true) {
-  const args = await getArgs()
+export async function analyze(args: TruckConfig) {
   GitCaller.initInstance(args.path)
+  const git = GitCaller.getInstance()
 
   if (args?.log) {
     setLogLevel(args.log as string)
@@ -189,77 +170,76 @@ export async function analyze(useCache = true) {
   const hiddenFiles = args.hiddenFiles
 
   const start = performance.now()
-  const [branchHead, branchName] = await describeAsyncJob(
-    () => findBranchHead(repoDir, branch),
+  const [findBranchHeadResult, findBranchHeadError] = await describeAsyncJob(
+    () => git.findBranchHead(branch),
     "Finding branch head",
     "Found branch head",
     "Error finding branch head"
   )
-  const repoName = getRepoName(repoDir)
+  const repoName = getDirName(repoDir)
+
+  if (findBranchHeadError) throw findBranchHeadError
+
+  const [branchHead, branchName] = findBranchHeadResult
 
   let data: AnalyzerData | null = null
 
-  const dataPath = getOutPathFromRepoAndBranch(repoName, branchName)
-  if (fsSync.existsSync(dataPath)) {
-    const path = getOutPathFromRepoAndBranch(repoName, branchName)
-    const cachedData = JSON.parse(await fs.readFile(path, "utf8")) as AnalyzerData
+  if (!args.invalidateCache) {
+    const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
+      basePath: __dirname,
+      repo: repoName,
+      branch: branchName,
+      branchHead: branchHead,
+    })
 
-    // Check if the current branchHead matches the hash of the analyzed commit from the cache
-    const branchHeadMatches = branchHead === cachedData.commit.hash
-
-    // Check if the data uses the most recent analyzer data interface
-    const dataVersionMatches = cachedData.interfaceVersion === AnalyzerDataInterfaceVersion
-
-    const cacheConditions = {
-      branchHeadMatches,
-      dataVersionMatches,
-      refresh: !useCache,
-    }
-
-    // Only return cached data if every criteria is met
-    if (Object.values(cacheConditions).every(Boolean)) {
+    if (cachedData) {
       data = {
         ...cachedData,
         hiddenFiles,
       }
     } else {
-      const reasons = Object.entries(cacheConditions)
-        .filter(([, value]) => !value)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(", ")
-      log.info(`Reanalyzing, since the following cache conditions were not met: ${reasons}`)
+      log.info(
+        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
+      )
     }
+  } else {
+    GitCaller.getInstance().setUseCache(false)
   }
 
   if (data === null) {
-    const quotePathDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "core.quotepath")
-    await GitCaller.getInstance().setGitSetting(repoDir, "core.quotePath", "off")
-    const renamesDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "diff.renames")
-    await GitCaller.getInstance().setGitSetting(repoDir, "diff.renames", "true")
-    const renameLimitDefaultValue = await GitCaller.getInstance().getDefaultGitSettingValue(repoDir, "diff.renameLimit")
-    await GitCaller.getInstance().setGitSetting(repoDir, "diff.renameLimit", "1000000")
-    const hasUnstagedChanges = await GitCaller.getInstance().hasUnstagedChanges()
+    const quotePathDefaultValue = await git.getDefaultGitSettingValue("core.quotepath")
+    await git.setGitSetting("core.quotePath", "off")
+    const renamesDefaultValue = await git.getDefaultGitSettingValue("diff.renames")
+    await git.setGitSetting("diff.renames", "true")
+    const renameLimitDefaultValue = await git.getDefaultGitSettingValue("diff.renameLimit")
+    await git.setGitSetting("diff.renameLimit", "1000000")
+    const hasUnstagedChanges = await git.hasUnstagedChanges()
 
     const runDateEpoch = Date.now()
-    const repoTree = await describeAsyncJob(
+    const [repoTree, repoTreeError] = await describeAsyncJob(
       () => analyzeCommit(repoName, branchHead),
       "Analyzing commit tree",
       "Commit tree analyzed",
       "Error analyzing commit tree"
     )
 
-    const hydratedRepoTree = await describeAsyncJob(
+    if (repoTreeError) throw repoTreeError
+
+    const [hydratedRepoTree, hydratedRepoTreeError] = await describeAsyncJob(
       () => hydrateData(repoDir, repoTree),
       "Hydrating commit tree",
       "Commit tree hydrated",
       "Error hydrating commit tree"
     )
 
-    await GitCaller.getInstance().resetGitSetting(repoDir, "core.quotepath", quotePathDefaultValue)
-    await GitCaller.getInstance().resetGitSetting(repoDir, "diff.renames", renamesDefaultValue)
-    await GitCaller.getInstance().resetGitSetting(repoDir, "diff.renameLimit", renameLimitDefaultValue)
+    await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
+    await git.resetGitSetting("diff.renames", renamesDefaultValue)
+    await git.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
-    const defaultOutPath = getOutPathFromRepoAndBranch(repoName, branchName)
+    // Change this if this file moves:
+    const defaultOutPath = GitCaller.getCachePath(resolve(__dirname, ".."), repoName, branchName)
+    if (hydratedRepoTreeError) throw hydratedRepoTreeError
+
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
@@ -308,8 +288,4 @@ export async function analyze(useCache = true) {
   log.raw(`\nDone in ${formatMs(stop - start)}`)
 
   return data
-}
-
-export function getOutPathFromRepoAndBranch(repoName: string, branchName: string) {
-  return resolve(__dirname, "..", ".temp", repoName, `${branchName}.json`)
 }

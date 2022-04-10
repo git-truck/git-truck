@@ -1,11 +1,12 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faRotate } from "@fortawesome/free-solid-svg-icons"
-import { Form, useTransition } from "remix"
+import { faRotate as reanalyzeIcon, faLeftLong as backIcon } from "@fortawesome/free-solid-svg-icons"
+import { Form, Link, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, InlineCode, TextButton } from "./util"
+import { Box, BoxTitle, Code, TextButton } from "./util"
+import styled from "styled-components"
 
 export function GlobalInfo() {
   const data = useData()
@@ -31,26 +32,36 @@ export function GlobalInfo() {
 
   return (
     <Box>
+      <StyledLink to=".." title="See all projects">
+        <FontAwesomeIcon icon={backIcon} color="#333" />
+      </StyledLink>
       <BoxTitle>{data.repo}</BoxTitle>
       <Spacer />
       <div>
         <strong>Branch: </strong>
-        {data.branch}
+        <span>{data.branch}</span>
         <Spacer />
         <strong>Analyzed: </strong>
-        {dateTimeFormatShort(data.lastRunEpoch)}
+        <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
         <Spacer />
         <strong>As of commit: </strong>
-        <InlineCode title={data.commit.message ?? "No commit message"}>{data.commit.hash.slice(0, 7)}</InlineCode>
+        <Code inline title={data.commit.message ?? "No commit message"}>
+          {data.commit.hash.slice(0, 7)}
+        </Code>
       </div>
       <Spacer />
-      <Form method="post" action="/repo">
+      <Form method="post" action=".">
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
-          <FontAwesomeIcon icon={faRotate} />{" "}
+          <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
           {!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
         </TextButton>
       </Form>
     </Box>
   )
 }
+
+const StyledLink = styled(Link)`
+  display: inline-flex;
+  margin-right: var(--unit);
+`

@@ -6,12 +6,14 @@ const open = require("open")
   const getPortLib = (await import("get-port"))
   const getPort = getPortLib.default
   const port = await getPort({
-    port: getPortLib.portNumbers(3000, 4000),
+    port: [80, ...getPortLib.portNumbers(3000, 4000)],
   })
+
+  process.env["PORT"] = port.toString()
 
   open("http://localhost:" + port)
   await runAll(
-    [`dev:node -- --port ${port} ${process.argv.join(" ")}`, "dev:remix"],
+    [`dev:node -- ${process.argv.slice(2).join(" ")}`, "dev:remix"],
     {
       parallel: true,
       stdout: process.stdout,

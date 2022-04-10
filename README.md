@@ -18,9 +18,9 @@ To check if these programs are installed, and what version you have, run `node -
 
 ## [Get started](#get-started)
 
-1. In your favorite shell (for example cmd, PowerShell, etc.), navigate to the root directory of a git project you want to visualize.
-2. Execute the command `npx git-truck@latest`. Click `y` if it asks you to download the tool. A blank browser-window will open and Git Truck will now start analyzing your project (This might take a while to run, especially on big projects, you can follow the progress in your terminal). If you get an error in the terminal, you can try installing the tool globally by running `npm i -g git-truck@latest` and then run `git-truck` instead.
-3. When Git Truck is done analyzing your project, it will show the visualization in your browser. Enjoy!
+1. Within git repository, or a directory containing git repositories, run the command `npx git-truck@latest`.
+2. Press `y` if it asks you to download the package.
+3. The application will now open in your default browser.
 
 ## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-or-i-want-to-give-feedback-what-do-i-do)
 
@@ -38,19 +38,23 @@ npx git-truck [args]
 
 ### [Arguments](#arguments)
 
-|    arg     |                              description                              |   default value    |
-| :--------: | :-------------------------------------------------------------------: | :----------------: |
-| `--branch` |                              branch name                              | checked out branch |
-|  `--path`  |                        path to git repository                         | current directory  |
-|  `--log`   | output log level. See [here](./src/analyzer/log.server.ts) for values |         -          |
-|  `--port`  |                      port to use for the program                      |        3000        |
+|         arg          |                              description                              |   default value    |
+| :------------------: | :-------------------------------------------------------------------: | :----------------: |
+|      `--branch`      |                              branch name                              | checked out branch |
+|       `--path`       |                 path to a folder or a git repository                  | current directory  |
+|       `--log`        | output log level. See [here](./src/analyzer/log.server.ts) for values |         -          |
+|       `--port`       |                      port to use for the program                      |        3000        |
+| `--invalidate-cache` |                    bypass analyzer cache manually                     |         -          |
+
+**Note:** Using `--invalidate-cache` will cause the analyzer to run every time the client talks to the server.
 
 ### [Configuration](#configuration)
 
 You can add a `truckconfig.json` file to the root of your project, where you can define the arguments you want.
-Additionally you can define which git-aliases should be considered as the same person.
+Additionally you can define which git-aliases should be considered as the same person using `unionedAuthors`. If provided, the first name in the array is used as the name of the person.
 You can also define files to ignore.
-Example:
+
+**Example:**
 
 ```json
 {
@@ -60,7 +64,7 @@ Example:
     ["Bob", "Bobby Bob"],
     ["Alice", "aliiii", "alice alice"]
   ],
-  "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"]
+  "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"],
+  "invalidateCache": true
 }
-
 ```
