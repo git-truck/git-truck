@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useTransition } from "remix"
+import { Form, useNavigate, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
@@ -7,7 +7,7 @@ import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
-import { Box, BoxTitle, DetailsKey, DetailsValue, InlineCode, NavigateBackButton, TextButton } from "~/components/util"
+import { Box, BoxTitle, DetailsKey, DetailsValue, Code, NavigateBackButton, TextButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -29,6 +29,7 @@ export function Details() {
   const { setPath, path } = usePath()
   const data = useData()
   const isProcessingHideRef = useRef(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -74,7 +75,7 @@ export function Details() {
       <Spacer lg />
       {isBlob ? (
         <>
-          <Form method="post" action="/repo">
+          <Form method="post" action=".">
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <TextButton
               type="submit"
@@ -89,7 +90,7 @@ export function Details() {
           {clickedObject.name.includes(".") ? (
             <>
               <Spacer />
-              <Form method="post" action="/repo">
+              <Form method="post" action=".">
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
                 <TextButton
                   type="submit"
@@ -98,19 +99,19 @@ export function Details() {
                     isProcessingHideRef.current = true
                   }}
                 >
-                  Hide all <InlineCode>.{extension}</InlineCode> files
+                  Hide all <Code inline>.{extension}</Code> files
                 </TextButton>
               </Form>
             </>
           ) : null}
           <Spacer />
-          <Form method="post" action="/repo">
+          <Form method="post" action=".">
             <input type="hidden" name="open" value={clickedObject.path} />
             <TextButton disabled={state !== "idle"}>Open file</TextButton>
           </Form>
         </>
       ) : (
-        <Form method="post" action="/repo">
+        <Form method="post" action=".">
           <input type="hidden" name="ignore" value={clickedObject.path} />
           <TextButton
             type="submit"

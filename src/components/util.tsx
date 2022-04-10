@@ -1,7 +1,10 @@
-import styled from "styled-components"
+import styled, { css } from "styled-components"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 export const BoxTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  justify-content: baseline;
   font-size: 1.5em;
   font-weight: bold;
   margin-bottom: 0;
@@ -171,9 +174,11 @@ export const DetailsValue = styled.p`
   font-size: 0.9em;
 `
 
-export const InlineCode = styled.code`
-  display: inline-block;
+export const Code = styled.code<{ inline?: boolean }>`
+  display: ${(props) => (props.inline ? "inline-block" : "block")};
   font-family: monospace;
+  font-size: 1.2em;
+  white-space: pre;
 `
 
 export const Grower = styled.div`

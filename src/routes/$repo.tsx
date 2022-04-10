@@ -1,31 +1,49 @@
-import { ActionFunction, json, LoaderFunction, useLoaderData } from "remix"
+import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, InlineCode, LightFontAwesomeIcon, StyledP } from "~/components/util"
+import { Box, Container, Grower, Code, StyledP } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
-import { AnalyzerData } from "~/analyzer/model"
+import { AnalyzerData, TruckUserConfig } from "~/analyzer/model"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { Options } from "~/components/Options"
 import SearchBar from "~/components/SearchBar"
 import { Spacer } from "~/components/Spacer"
 import { Legend } from "~/components/Legend"
-import { getArgs } from "~/analyzer/args.server"
+import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
-import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { resolve } from "path"
 
-let useCacheNextTime = false
+let invalidateCache = false
 
-export const loader: LoaderFunction = async () => {
-  const useCache = useCacheNextTime
-  const data = await analyze(useCache)
-  useCacheNextTime = false
+export const loader: LoaderFunction = async ({ params, request }) => {
+  if (params["repo"] === "favicon.ico") {
+    return null
+  }
+
+  const args = await getTruckConfigWithArgs(params["repo"] as string)
+
+  const options: TruckUserConfig = {
+    invalidateCache: invalidateCache || args.invalidateCache,
+  }
+  if (params["repo"]) {
+    options.path = resolve(args.path, params["repo"])
+  }
+
+  const branch = new URL(request.url).searchParams.get("branch")
+  if (branch) options.branch = decodeURIComponent(branch)
+
+  const data = await analyze({ ...args, ...options })
+  invalidateCache = false
   return json<AnalyzerData>(data)
 }
 
-export const action: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request, params }) => {
+  if (!params["repo"]) {
+    throw Error("This can never happen, since this route is only called if a repo exists in the URL")
+  }
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -33,12 +51,15 @@ export const action: ActionFunction = async ({ request }) => {
   const fileToOpen = formData.get("open")
 
   if (refresh) {
-    useCacheNextTime = true
+    invalidateCache = true
     return null
   }
 
+  const args = await getTruckConfigWithArgs(params["repo"])
+  const path = resolve(args.path, params["repo"])
+
   if (ignore && typeof ignore === "string") {
-    await updateTruckConfig((await getArgs()).path, (prevConfig) => {
+    await updateTruckConfig(path, (prevConfig) => {
       const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
       hiddenFilesSet.add(ignore)
 
@@ -51,7 +72,7 @@ export const action: ActionFunction = async ({ request }) => {
   }
 
   if (unignore && typeof unignore === "string") {
-    await updateTruckConfig((await getArgs()).path, (prevConfig) => {
+    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
       const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
       hiddenFilesSet.delete(unignore.trim())
 
@@ -71,8 +92,31 @@ export const action: ActionFunction = async ({ request }) => {
   return null
 }
 
+export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
+  console.error(error.message)
+  console.error(error.stack)
+  return (
+    <Container>
+      <div />
+      <Box>
+        <h1>An error occured!</h1>
+        <p>See console for more infomation.</p>
+        <Code>{error.stack}</Code>
+        <div>
+          <Link to=".">Retry</Link>
+        </div>
+        <div>
+          <Link to="..">Go back</Link>
+        </div>
+      </Box>
+    </Container>
+  )
+}
+
 export default function Index() {
   const data = useLoaderData<AnalyzerData>()
+
+  if (!data) return null
 
   return (
     <Providers data={data}>
@@ -90,18 +134,7 @@ export default function Index() {
               <p>Update available: {data.latestVersion}</p>
               <StyledP>Currently installed: {data.currentVersion}</StyledP>
               <StyledP>
-                To update, close application and run: <InlineCode>npx git-truck@latest</InlineCode>
-              </StyledP>
-            </Box>
-          ) : null}
-          {data.hasUnstagedChanges ? (
-            <Box>
-              <p>
-                <LightFontAwesomeIcon icon={faTriangleExclamation} />
-                You have unstaged changes
-              </p>
-              <StyledP>
-                This means that some data might be incorrect. Please stash or commit changes and rerun analyzer.
+                To update, close application and run: <Code inline>npx git-truck@latest</Code>
               </StyledP>
             </Box>
           ) : null}
