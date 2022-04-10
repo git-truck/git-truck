@@ -234,7 +234,6 @@ export async function analyze(args: TruckConfig) {
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
     await git.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
-    // Change this if this file moves:
     const defaultOutPath = GitCaller.getCachePath(repoName, branchName)
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
