@@ -18,7 +18,7 @@ To check if these programs are installed, and what version you have, run `node -
 
 ## [Get started](#get-started)
 
-1. Within git repository, or a directory containing git repositories, run the command `npx git-truck@latest`.
+1. Within a git repository, or a directory containing git repositories, run the command `npx git-truck@latest`.
 2. Press `y` if it asks you to download the package.
 3. The application will now open in your default browser.
 
