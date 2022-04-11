@@ -5,7 +5,7 @@
   "description": "Visualizing a Git repository",
   "license": "MIT",
   "main": "./build/index.js",
-  "bin": "./build/index.js",
+  "bin": "./cli.js",
   "files": [
     "LICENSE",
     "README.md",
