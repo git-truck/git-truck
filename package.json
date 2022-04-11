@@ -10,7 +10,7 @@
     "test": "jest --coverage",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./shebang.js",
     "dev": "cross-env NODE_ENV=development remix build && node dev.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "postinstall": "npm run build",
