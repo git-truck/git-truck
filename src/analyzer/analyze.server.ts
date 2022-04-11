@@ -154,7 +154,7 @@ function getCommandLine() {
 }
 
 export function openFile(path: string) {
-  path = resolve("..", path.split("/").join(sep))
+  path = resolve(repoDir, "..", path.split("/").join(sep))
   const command = `${getCommandLine()} "${path}"`
   exec(command).stderr?.on("data", (e) => {
     // TODO show error in UI
