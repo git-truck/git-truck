@@ -7,8 +7,8 @@
   "main": "./build/index.js",
   "bin": "./build/index.js",
   "files": [
-    "build/index.js",
-    "build/public/**/*"
+    "./build/index.js",
+    "./build/public/**/*"
   ],
   "scripts": {
     "test": "jest --coverage",
