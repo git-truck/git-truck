@@ -14,7 +14,7 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
   const enumEntries = Object.entries(props.enum) as [T, string][]
 
   return (
-    <div style={props.hidden ? { visibility: "hidden" } : {}}>
+    <div style={props.hidden ? { display: "none" } : {}}>
       <Label htmlFor={id}>{props.label}</Label>
       <Spacer xs />
       <Select id={id} onChange={(event) => props.onChange(event.target.value as T)}>
