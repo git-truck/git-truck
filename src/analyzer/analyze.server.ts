@@ -156,7 +156,6 @@ function getCommandLine() {
 export function openFile(path: string) {
   path = resolve("..", path.split("/").join(sep))
   const command = `${getCommandLine()} "${path}"`
-  console.log("command", command)
   exec(command).stderr?.on("data", (e) => {
     // TODO show error in UI
     log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
