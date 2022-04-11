@@ -1,11 +1,15 @@
 {
   "name": "git-truck",
-  "version": "0.8.6-experimental",
+  "version": "0.8.6-experimental2",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
   "main": "./cli.js",
   "bin": "./cli.js",
+  "files": [
+    "build/index.js",
+    "public/build/**/*"
+  ],
   "scripts": {
     "test": "jest --coverage",
     "clean": "rimraf -rf build public/build .cache .temp",
