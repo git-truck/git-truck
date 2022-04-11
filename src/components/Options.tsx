@@ -9,8 +9,19 @@ const Checkbox = styled.input`
   margin: var(--unit);
 `
 
+function isMetricWithHistoricalOption(metric: MetricType) {
+  switch (metric) {
+    case "SINGLE_AUTHOR":
+    case "TOP_CONTRIBUTOR":
+      return true
+  }
+  return false
+}
+
 export function Options() {
-  const { animationsEnabled, setMetricType, setChartType, setAnimationsEnabled, setAuthorshipType } = useOptions()
+  const { animationsEnabled, setAnimationsEnabled, metricType, setMetricType, setChartType, setAuthorshipType } =
+    useOptions()
+
   return (
     <Box>
       <EnumSelect label="Chart type" enum={Chart} onChange={(chartType: ChartType) => setChartType(chartType)} />
@@ -18,9 +29,10 @@ export function Options() {
       <EnumSelect label="Metric" enum={Metric} onChange={(metric: MetricType) => setMetricType(metric)} />
       <Spacer />
       <EnumSelect
-        label="Authorship Data"
+        label="Authorship data"
         enum={Authorship}
         onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
+        hidden={!isMetricWithHistoricalOption(metricType)}
       />
       <Spacer />
       <label>
