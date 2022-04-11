@@ -12,7 +12,7 @@ import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getRepoName } from "./util"
 import { GitCaller } from "./git-caller"
 import { emptyGitCommitHash } from "./constants"
-import { resolve, isAbsolute, join } from "path"
+import { resolve, isAbsolute, join, sep } from "path"
 import { performance } from "perf_hooks"
 import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
@@ -147,15 +147,17 @@ function getCommandLine() {
     case "darwin":
       return "open" // MacOS
     case "win32":
-      return "start" // Windows
+      return 'start ""' // Windows
     default:
       return "xdg-open" // Linux
   }
 }
 
 export function openFile(path: string) {
-  path = path.split("/").slice(1).join("/") ?? path.split("\\").slice(1).join("\\")
-  exec(`${getCommandLine()} ${resolve(repoDir, path)}`).stderr?.on("data", (e) => {
+  path = resolve("..", path.split("/").join(sep))
+  const command = `${getCommandLine()} "${path}"`
+  console.log("command", command)
+  exec(command).stderr?.on("data", (e) => {
     // TODO show error in UI
     log.error(`Cannot open file ${resolve(repoDir, path)}: ${e}`)
   })
