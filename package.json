@@ -6,14 +6,21 @@
   "license": "MIT",
   "main": "./build/index.js",
   "bin": "./build/index.js",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build/",
+    "public/",
+    "cli.js"
+  ],
   "scripts": {
     "test": "jest --coverage",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "build": "rimraf -rf build public/build && remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "build": "rimraf -rf build public/build && remix setup node && cross-env NODE_ENV=production remix build",
     "dev": "cross-env NODE_ENV=development remix build && node dev.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
-    "postinstall": "npm run build",
+    "prepare": "npm run build",
     "dev:node": "cross-env NODE_ENV=development nodemon --watch ./build/index.js ./build/index.js --",
     "start": "cross-env NODE_ENV=production node ./build/index.js",
     "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}"
