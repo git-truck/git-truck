@@ -6,11 +6,15 @@
   "license": "MIT",
   "main": "./build/index.js",
   "bin": "./build/index.js",
+  "files": [
+    "build/index.js",
+    "build/public/**/*"
+  ],
   "scripts": {
     "test": "jest --coverage",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
-    "build": "remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
+    "build": "rimraf -rf build public/build && remix setup node && cross-env NODE_ENV=production remix build && node ./post-build.js",
     "dev": "cross-env NODE_ENV=development remix build && node dev.js",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "postinstall": "npm run build",
