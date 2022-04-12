@@ -231,13 +231,13 @@ export async function analyze(args: TruckConfig) {
       "Error hydrating commit tree"
     )
 
+    if (hydratedRepoTreeError) throw hydratedRepoTreeError
+
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
     await git.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
     const defaultOutPath = GitCaller.getCachePath(repoName, branchName)
-    if (hydratedRepoTreeError) throw hydratedRepoTreeError
-
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
