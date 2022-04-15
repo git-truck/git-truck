@@ -1,6 +1,6 @@
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, Code, StyledP } from "~/components/util"
+import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData, TruckUserConfig } from "~/analyzer/model"
@@ -15,6 +15,7 @@ import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
+import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
 
 let invalidateCache = false
 
@@ -135,6 +136,17 @@ export default function Index() {
               <StyledP>Currently installed: {data.currentVersion}</StyledP>
               <StyledP>
                 To update, close application and run: <Code inline>npx git-truck@latest</Code>
+              </StyledP>
+            </Box>
+          ) : null}
+          {data.hasUnstagedChanges ? (
+            <Box>
+              <p>
+                <LightFontAwesomeIcon icon={faTriangleExclamation} />
+                You have unstaged changes
+              </p>
+              <StyledP>
+                This means that some data might be incorrect. Please stash or commit changes and rerun analyzer.
               </StyledP>
             </Box>
           ) : null}
