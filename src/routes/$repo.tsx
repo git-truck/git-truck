@@ -47,6 +47,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
   const formData = await request.formData()
   const refresh = formData.get("refresh")
+  const newBranch = formData.get("newBranch")
   const unignore = formData.get("unignore")
   const ignore = formData.get("ignore")
   const fileToOpen = formData.get("open")
@@ -58,6 +59,15 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const args = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
+
+  if (newBranch) {
+    await updateTruckConfig(path, (prevConfig) => {
+      return {
+        ...prevConfig,
+        branch: newBranch as string,
+      }
+    })
+  }
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
