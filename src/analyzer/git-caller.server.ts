@@ -181,6 +181,11 @@ export class GitCaller {
     this.useCache = useCache
   }
 
+  async getRefs() {
+    const result = await runProcess(this.repo, "git", ["show-ref"])
+    return result as string
+  }
+
   private async catFile(hash: string) {
     const result = await runProcess(this.repo, "git", ["cat-file", "-p", hash])
     return result as string

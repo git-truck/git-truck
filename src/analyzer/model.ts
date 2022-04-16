@@ -36,9 +36,10 @@ export interface TruckConfig {
 }
 
 // Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 4
+export const AnalyzerDataInterfaceVersion = 5
 
 export interface AnalyzerData {
+  refs: GitRefs
   cached: boolean
   interfaceVersion: typeof AnalyzerDataInterfaceVersion
   hiddenFiles: string[]
@@ -51,6 +52,12 @@ export interface AnalyzerData {
   latestVersion?: string
   lastRunEpoch: number
   hasUnstagedChanges: boolean
+}
+
+export interface GitRefs {
+  heads: Record<string, string>
+  remotes: Record<string, string>
+  tags: Record<string, string>
 }
 
 export interface GitBlobObject extends GitBaseObject {
