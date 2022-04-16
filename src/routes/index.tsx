@@ -47,8 +47,8 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const loadterData = useLoaderData<IndexData>()
-  const { repositories, baseDir, baseDirName, repo, hasRedirected } = loadterData
+  const loaderData = useLoaderData<IndexData>()
+  const { repositories, baseDir, baseDirName, repo, hasRedirected } = loaderData
   const transitionData = useTransition()
   const navigate = useNavigate()
   const submit = useSubmit()
@@ -151,16 +151,6 @@ const Ul = styled.ul`
 
 const Li = styled.li`
   margin: 0;
-`
-
-const Tag = styled.span`
-  font-size: 0.7em;
-  text-transform: uppercase;
-  padding: calc(0.25 * var(--unit)) calc(var(--unit));
-  letter-spacing: 0.2em;
-  color: white;
-  background-color: hsl(210, 100%, 50%);
-  border-radius: 1000px;
 `
 
 const Actions = styled.div`

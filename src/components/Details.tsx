@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useNavigate, useTransition } from "remix"
+import { Form, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
@@ -29,7 +29,6 @@ export function Details() {
   const { setPath, path } = usePath()
   const data = useData()
   const isProcessingHideRef = useRef(false)
-  const navigate = useNavigate()
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
