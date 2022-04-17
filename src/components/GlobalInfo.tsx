@@ -5,7 +5,7 @@ import {
   faCodeBranch as branchIcon,
   faHashtag as hashIcon,
 } from "@fortawesome/free-solid-svg-icons"
-import { Form, Link, useTransition } from "remix"
+import { Form, Link, useSubmit, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
@@ -52,7 +52,8 @@ export function GlobalInfo() {
   const { path } = usePath()
   const transitionState = useTransition()
   const [branch, setBranch] = useState(data.branch)
-  const newBranchSubmit = useRef<HTMLInputElement | null>(null)
+  const switchBranch = useSubmit()
+  const newBranchForm = useRef<HTMLFormElement | null>(null)
 
   let temppath = path
   let paths: [string, string][] = []
@@ -82,7 +83,7 @@ export function GlobalInfo() {
       <Spacer />
       <GlobalInfoEntry>
         <FontAwesomeIcon icon={branchIcon} color="#333" />
-        <StyledForm method="post" action=".">
+        <StyledForm ref={newBranchForm} method="post" action=".">
           <SelectWithEllipsis
             disabled={transitionState.state !== "idle"}
             name="newBranch"
@@ -91,7 +92,7 @@ export function GlobalInfo() {
             onChange={(event) => {
               const target = event.target
               setBranch(target.value as string)
-              newBranchSubmit.current?.click()
+              switchBranch(newBranchForm.current)
             }}
           >
             {Object.entries(data.refs.heads).map(([branchName, hash]) => {
@@ -102,7 +103,6 @@ export function GlobalInfo() {
               )
             })}
           </SelectWithEllipsis>
-          <StyledHiddenSubmit ref={newBranchSubmit} type="submit" name="newBranchSubmit" value="" />
         </StyledForm>
       </GlobalInfoEntry>
       <Spacer />
@@ -130,14 +130,6 @@ export function GlobalInfo() {
     </Box>
   )
 }
-
-const StyledHiddenSubmit = styled.input`
-  border: none;
-  background: none;
-
-  display: hidden;
-  pointer-events: none;
-`
 
 const StyledLink = styled(Link)`
   display: inline-flex;
