@@ -94,9 +94,7 @@ export function GlobalInfo() {
               newBranchSubmit.current?.click()
             }}
           >
-            {Object.keys(data.refs.heads).map((key) => {
-              const hash = data.refs.heads[key]
-              const branchName = key
+            {Object.entries(data.refs.heads).map(([branchName, hash]) => {
               return (
                 <OptionWithEllipsis key={hash} value={branchName}>
                   {branchName}
