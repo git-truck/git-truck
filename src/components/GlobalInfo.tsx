@@ -12,9 +12,10 @@ import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
 import { Box, BoxTitle, Code, TextButton } from "./util"
 import styled from "styled-components"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 const GlobalInfoEntry = styled.div`
+  width: 100%;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.5em;
@@ -51,6 +52,7 @@ export function GlobalInfo() {
   const { path } = usePath()
   const transitionState = useTransition()
   const [branch, setBranch] = useState(data.branch)
+  const newBranchSubmit = useRef<HTMLInputElement | null>(null)
 
   let temppath = path
   let paths: [string, string][] = []
@@ -78,45 +80,47 @@ export function GlobalInfo() {
         <BoxTitle>{data.repo}</BoxTitle>
       </GlobalInfoEntry>
       <Spacer />
-      <div>
-        <GlobalInfoEntry>
-          <FontAwesomeIcon icon={branchIcon} color="#333" />
-          <Form method="post" action=".">
-            <SelectWithEllipsis
-              disabled={transitionState.state !== "idle"}
-              name="newBranch"
-              value={branch}
-              id="branch-selector"
-              onChange={(event) => {
-                const target = event.target
-                setBranch(event.target.value as string)
-                target.form?.submit()
-              }}
-            >
-              {Object.keys(data.refs.heads).map((key) => {
-                const hash = data.refs.heads[key]
-                const branchName = key
-                const hashShortened = hash.substring(0, 7)
-                return (
-                  <OptionWithEllipsis key={hash} value={branchName}>
-                    {branchName}
-                  </OptionWithEllipsis>
-                )
-              })}
-            </SelectWithEllipsis>
-          </Form>
-        </GlobalInfoEntry>
-        <Spacer />
-        <div>{!transitionState.submission?.formData.has("newBranch") ? "" : `Analyzing branch ${branch}`}</div>
-        <Spacer />
-        <strong>Analyzed: </strong>
-        <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
-        <Spacer />
-        <strong>As of commit: </strong>
-        <Code inline title={data.commit.message ?? "No commit message"}>
-          {data.commit.hash.slice(0, 7)}
-        </Code>
-      </div>
+      <GlobalInfoEntry>
+        <FontAwesomeIcon icon={branchIcon} color="#333" />
+        <StyledForm method="post" action=".">
+          <SelectWithEllipsis
+            disabled={transitionState.state !== "idle"}
+            name="newBranch"
+            value={branch}
+            id="branch-selector"
+            onChange={(event) => {
+              const target = event.target
+              setBranch(target.value as string)
+              newBranchSubmit.current?.click()
+            }}
+          >
+            {Object.keys(data.refs.heads).map((key) => {
+              const hash = data.refs.heads[key]
+              const branchName = key
+              return (
+                <OptionWithEllipsis key={hash} value={branchName}>
+                  {branchName}
+                </OptionWithEllipsis>
+              )
+            })}
+          </SelectWithEllipsis>
+          <StyledHiddenSubmit ref={newBranchSubmit} type="submit" name="newBranchSubmit" value="" />
+        </StyledForm>
+      </GlobalInfoEntry>
+      <Spacer />
+      {!transitionState.submission?.formData.has("newBranch") ? null : (
+        <>
+          <p style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>Analyzing branch {branch} ...</p>
+          <Spacer xxl />
+        </>
+      )}
+      <strong>Analyzed: </strong>
+      <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
+      <Spacer />
+      <strong>As of commit: </strong>
+      <Code inline title={data.commit.message ?? "No commit message"}>
+        {data.commit.hash.slice(0, 7)}
+      </Code>
       <Spacer />
       <Form method="post" action=".">
         <input type="hidden" name="refresh" value="true" />
@@ -129,7 +133,21 @@ export function GlobalInfo() {
   )
 }
 
+const StyledHiddenSubmit = styled.input`
+  border: none;
+  background: none;
+
+  display: hidden;
+  pointer-events: none;
+`
+
 const StyledLink = styled(Link)`
   display: inline-flex;
   margin-right: var(--unit);
+`
+
+const StyledForm = styled(Form)`
+  width: 100%;
+  display: flex;
+  flex-direction: row;
 `
