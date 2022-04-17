@@ -13,16 +13,18 @@ import { parseArgs } from "./src/analyzer/args.server"
 const args = parseArgs()
 
 ;(async () => {
-  const latestV = await latestVersion(pkg.name)
   const currentV = pkg.version
+  let updateMessage = ""
+  try {
+    const latestV = await latestVersion(pkg.name)
 
-  // Soft clear the console
-  process.stdout.write("\u001b[2J\u001b[0;0H")
-  console.log()
+    // Soft clear the console
+    process.stdout.write("\u001b[2J\u001b[0;0H")
+    console.log()
 
-  const updateMessage =
-    latestV && semverCompare(latestV, currentV) === 1
-      ? ` [!] Update available: ${latestV}
+    updateMessage =
+      latestV && semverCompare(latestV, currentV) === 1
+        ? ` [!] Update available: ${latestV}
 
 To update, run:
 
@@ -33,8 +35,8 @@ Or to install globally:
   npm install -g git-truck@latest
 
 `
-      : " (latest)"
-
+        : " (latest)"
+  } catch (e) {}
   console.log(`Git Truck version ${currentV}${updateMessage}`)
 
   if (args.h || args.help) {
