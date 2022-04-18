@@ -2,7 +2,7 @@ import { log } from "./log.server"
 import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
-import { AnalyzerData, AnalyzerDataInterfaceVersion, Repository } from "./model"
+import { AnalyzerData, AnalyzerDataInterfaceVersion, GitRefs, Repository } from "./model"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -61,7 +61,7 @@ export class GitCaller {
    */
   static async findBranchHead(repo: string, branch?: string): Promise<[string, string]> {
     if (!branch) {
-      const [foundBranch, getBranchError] = await promiseHelper(GitCaller.getCurrentBranch(repo))
+      const [foundBranch, getBranchError] = await promiseHelper(GitCaller.getRepositoryHead(repo))
       if (getBranchError) {
         throw getBranchError
       }
@@ -88,7 +88,7 @@ export class GitCaller {
     return resolve(__dirname, "..", ".temp", repo, `${branch}.json`)
   }
 
-  static async getCurrentBranch(dir: string) {
+  static async getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
     return result.trim()
   }
@@ -105,7 +105,15 @@ export class GitCaller {
         const repoPath = join(baseDir, repoDir)
         const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
         if (!isRepo) return null
-        const repo: Repository = { name: repoDir, path: repoPath, data: null, reasons: [] }
+        const repo: Repository = {
+          name: repoDir,
+          path: repoPath,
+          data: null,
+          reasons: [],
+          currentHead: await GitCaller.getRepositoryHead(repoPath),
+          refs: GitCaller.parseRefs(await GitCaller._getRefs(repoPath)),
+        }
+
         try {
           const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
           if (!error) {
@@ -133,6 +141,42 @@ export class GitCaller {
     }) as Repository[]
 
     return [userRepo, onlyRepos]
+  }
+
+  static parseRefs(refsAsMultilineString: string): GitRefs {
+    const gitRefs: GitRefs = {
+      heads: {},
+      remotes: {},
+      tags: {},
+    }
+
+    const regex = /^(?<hash>.*) refs\/(?<ref_type>.*?)\/(?<path>.*)$/gm
+
+    let match: RegExpExecArray | null = null
+
+    while (regex.global && (match = regex.exec(refsAsMultilineString))) {
+      const groups = match?.groups ?? {}
+
+      const hash: string = groups["hash"]
+      const ref_type: string = groups["ref_type"]
+      const path: string = groups["path"]
+
+      switch (ref_type) {
+        case "heads":
+          gitRefs.heads[path] = hash
+          break
+        case "remotes":
+          gitRefs.remotes[path] = hash
+          break
+        case "tags":
+          gitRefs.tags[path] = hash
+          break
+        default:
+          throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
+      }
+    }
+
+    return gitRefs
   }
 
   static async retrieveCachedResult({
@@ -182,7 +226,11 @@ export class GitCaller {
   }
 
   async getRefs() {
-    const result = await runProcess(this.repo, "git", ["show-ref"])
+    return await GitCaller._getRefs(this.repo)
+  }
+
+  static async _getRefs(repo: string) {
+    const result = await runProcess(repo, "git", ["show-ref"])
     return result as string
   }
 

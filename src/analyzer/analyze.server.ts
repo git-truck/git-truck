@@ -250,7 +250,7 @@ export async function analyze(args: TruckConfig) {
 
     const authorUnions = args.unionedAuthors as string[][]
     data = {
-      refs: await getRefs(),
+      refs: GitCaller.parseRefs(await GitCaller.getInstance().getRefs()),
       cached: false,
       hiddenFiles,
       authors: getAuthorSet(),
@@ -288,44 +288,4 @@ export async function analyze(args: TruckConfig) {
   log.raw(`\nDone in ${formatMs(stop - start)}`)
 
   return data
-}
-
-async function getRefs(): Promise<GitRefs> {
-  const gitRefs: GitRefs = {
-    heads: {},
-    remotes: {},
-    tags: {},
-  }
-
-  const refsAsMultilineString = await GitCaller.getInstance().getRefs()
-
-  const regex = /^(?<hash>.*) refs\/(?<ref_type>.*?)\/(?<path>.*)$/gm
-
-  let match: RegExpExecArray | null = null
-
-  while (regex.global && (match = regex.exec(refsAsMultilineString))) {
-    const groups = match?.groups ?? {}
-
-    const hash: string = groups["hash"]
-    const ref_type: string = groups["ref_type"]
-    const path: string = groups["path"]
-
-    // console.log(`hash: ${hash}, ref_type: ${ref_type}, path: ${path}`)
-
-    switch (ref_type) {
-      case "heads":
-        gitRefs.heads[path] = hash
-        break
-      case "remotes":
-        gitRefs.remotes[path] = hash
-        break
-      case "tags":
-        gitRefs.tags[path] = hash
-        break
-      default:
-        throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
-    }
-  }
-
-  return gitRefs
 }

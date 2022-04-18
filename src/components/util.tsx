@@ -183,3 +183,36 @@ export const Code = styled.code<{ inline?: boolean }>`
 export const Grower = styled.div`
   flex-grow: 1;
 `
+
+export const SelectWithEllipsis = styled.select`
+  text-overflow: ellipsis;
+  overflow: scroll;
+  width: 100%;
+
+  font-size: 0.9em;
+  padding: 0.2em 0;
+
+  background: none;
+  border-radius: 4px;
+
+  transition: border-color 0.1s;
+  border: 2px solid hsla(0, 0%, 50%, 0);
+
+  &:not([disabled]):hover,
+  &:not([disabled]):active {
+    border: 2px solid hsla(0, 0%, 50%, 1);
+  }
+`
+
+export const OptionWithEllipsis = styled.option`
+  text-overflow: ellipsis;
+  overflow: scroll;
+`
+
+export const SelectWithIconWrapper = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5em;
+  place-items: center left;
+`
