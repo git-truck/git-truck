@@ -3,57 +3,29 @@ import {
   faRotate as reanalyzeIcon,
   faFolder as folderIcon,
   faCodeBranch as branchIcon,
-  faHashtag as hashIcon,
 } from "@fortawesome/free-solid-svg-icons"
-import { Form, Link, useSubmit, useTransition } from "remix"
+import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, Code, TextButton } from "./util"
+import { Box, BoxTitle, Code, OptionWithEllipsis, SelectWithEllipsis, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
-import { useRef, useState } from "react"
-
-const GlobalInfoEntry = styled.div`
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5em;
-  place-items: center left;
-`
-
-const SelectWithEllipsis = styled.select`
-  text-overflow: ellipsis;
-  overflow: scroll;
-  width: 100%;
-
-  font-size: 0.9em;
-  padding: 0.2em 0;
-
-  background: none;
-  border-radius: 4px;
-
-  transition: border-color 0.1s;
-  border: 2px solid hsla(0, 0%, 50%, 0);
-
-  &:hover,
-  &:active {
-    border: 2px solid hsla(0, 0%, 50%, 1);
-  }
-`
-
-const OptionWithEllipsis = styled.option`
-  text-overflow: ellipsis;
-  overflow: scroll;
-`
 
 export function GlobalInfo() {
   const data = useData()
   const { path } = usePath()
   const transitionState = useTransition()
-  const [branch, setBranch] = useState(data.branch)
-  const switchBranch = useSubmit()
-  const newBranchForm = useRef<HTMLFormElement | null>(null)
+
+  const location = useLocation()
+  // Discard the repo part of the path
+  const [, ...branchPieces] = location.pathname.split("/")
+  const branch = branchPieces.join("/")
+  const navigate = useNavigate()
+
+  const switchBranch = (branch: string) => {
+    navigate(["", data.repo, branch].join("/"))
+  }
 
   let temppath = path
   let paths: [string, string][] = []
@@ -74,37 +46,38 @@ export function GlobalInfo() {
 
   return (
     <Box>
-      <GlobalInfoEntry>
+      <SelectWithIconWrapper>
         <StyledLink to=".." title="See all projects">
           <FontAwesomeIcon icon={folderIcon} color="#333" />
         </StyledLink>
         <BoxTitle>{data.repo}</BoxTitle>
-      </GlobalInfoEntry>
+      </SelectWithIconWrapper>
       <Spacer />
-      <GlobalInfoEntry>
+      <SelectWithIconWrapper>
         <FontAwesomeIcon icon={branchIcon} color="#333" />
-        <StyledForm ref={newBranchForm} method="post" action=".">
+        <StyledForm method="post" action=".">
           <SelectWithEllipsis
             disabled={transitionState.state !== "idle"}
             name="newBranch"
-            value={branch}
             id="branch-selector"
             onChange={(event) => {
-              const target = event.target
-              setBranch(target.value as string)
-              switchBranch(newBranchForm.current)
+              switchBranch(event.target.value)
             }}
           >
             {Object.entries(data.refs.heads).map(([branchName, hash]) => {
               return (
-                <OptionWithEllipsis key={hash} value={branchName}>
+                <OptionWithEllipsis
+                  key={hash}
+                  value={branchName}
+                  {...(data.branch === branchName ? { selected: true } : {})}
+                >
                   {branchName}
                 </OptionWithEllipsis>
               )
             })}
           </SelectWithEllipsis>
         </StyledForm>
-      </GlobalInfoEntry>
+      </SelectWithIconWrapper>
       <Spacer />
       {!transitionState.submission?.formData.has("newBranch") ? null : (
         <>

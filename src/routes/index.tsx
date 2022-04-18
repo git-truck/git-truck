@@ -3,12 +3,25 @@ import styled from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import { Box, BoxSubTitle, Code, Grower, TextButton } from "~/components/util"
+import {
+  Box,
+  BoxSubTitle,
+  Code,
+  Grower,
+  OptionWithEllipsis,
+  SelectWithEllipsis,
+  SelectWithIconWrapper,
+  TextButton,
+} from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
+import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
+import { ChangeEvent, useState } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faCodeBranch as branchIcon } from "@fortawesome/free-solid-svg-icons"
 
 interface IndexData {
   repositories: Repository[]
@@ -59,7 +72,7 @@ export default function Index() {
       const data = new FormData()
       data.append("hasRedirected", "true")
       submit(data, { method: "post" })
-      navigate(`/${repo.name}`)
+      navigate(`/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`)
     }
   })
 
@@ -90,18 +103,7 @@ export default function Index() {
           <nav>
             <Ul>
               {cachedRepositories.map((repo) => (
-                <Li key={repo.name}>
-                  <SLink to={repo.name} tabIndex={-1}>
-                    <Box>
-                      <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
-                      <Spacer />
-                      <Actions>
-                        <Grower />
-                        <TextButton>{repo.data?.cached ? "View" : "Analyze"}</TextButton>
-                      </Actions>
-                    </Box>
-                  </SLink>
-                </Li>
+                <RepositoryEntry key={repo.path} repo={repo} />
               ))}
             </Ul>
           </nav>
@@ -114,18 +116,7 @@ export default function Index() {
           <nav>
             <Ul>
               {notCachedRepositories.map((repo) => (
-                <Li key={repo.name}>
-                  <SLink to={repo.name} tabIndex={-1}>
-                    <Box>
-                      <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
-                      <Spacer />
-                      <Actions>
-                        <Grower />
-                        <TextButton>{repo.data?.cached ? "View" : "Analyze"}</TextButton>
-                      </Actions>
-                    </Box>
-                  </SLink>
-                </Li>
+                <RepositoryEntry key={repo.path} repo={repo} />
               ))}
             </Ul>
           </nav>
@@ -160,3 +151,37 @@ const Actions = styled.div`
 const SLink = styled(Link)`
   text-decoration: none;
 `
+function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
+  const [head, setHead] = useState(repo.currentHead)
+
+  const headSelectProps = {
+    value: head,
+    onChange: (e: ChangeEvent<HTMLSelectElement>) => setHead(e.target.value),
+  }
+
+  const path = getPathFromRepoAndHead(repo.name, head)
+
+  return (
+    <Li key={repo.name}>
+      <Box>
+        <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
+        <Spacer />
+        <SelectWithIconWrapper>
+          <FontAwesomeIcon icon={branchIcon} color="#333" />
+          <SelectWithEllipsis {...headSelectProps}>
+            {Object.entries(repo.refs.heads).map(([branch, head]) => (
+              <OptionWithEllipsis key={head} value={branch} {...(head === branch ? { selected: true } : {})}>
+                {branch}
+                {}
+              </OptionWithEllipsis>
+            ))}
+          </SelectWithEllipsis>
+        </SelectWithIconWrapper>
+        <Actions>
+          <Grower />
+          <SLink to={path}>{repo.data?.cached ? "View" : "Analyze"}</SLink>
+        </Actions>
+      </Box>
+    </Li>
+  )
+}

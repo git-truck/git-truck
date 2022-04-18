@@ -5,6 +5,8 @@ export interface Repository {
   path: string
   name: string
   data: AnalyzerData | null
+  currentHead: string
+  refs: GitRefs
   reasons: ANALYZER_CACHE_MISS_REASONS[]
 }
 

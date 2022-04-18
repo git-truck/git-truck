@@ -33,8 +33,13 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     options.path = resolve(args.path, params["repo"])
   }
 
-  const branch = new URL(request.url).searchParams.get("branch")
-  if (branch) options.branch = decodeURIComponent(branch)
+  if (params["*"]) {
+    options.branch = params["*"]
+  }
+
+  // const branch = new URL(request.url).searchParams.get("branch")
+  // if (branch) options.head = decodeURIComponent(branch)
+  // console.log(branch)
 
   const data = await analyze({ ...args, ...options })
   invalidateCache = false
@@ -47,7 +52,6 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
   const formData = await request.formData()
   const refresh = formData.get("refresh")
-  const newBranch = formData.get("newBranch")
   const unignore = formData.get("unignore")
   const ignore = formData.get("ignore")
   const fileToOpen = formData.get("open")
@@ -60,14 +64,14 @@ export const action: ActionFunction = async ({ request, params }) => {
   const args = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
 
-  if (newBranch) {
-    await updateTruckConfig(path, (prevConfig) => {
-      return {
-        ...prevConfig,
-        branch: newBranch as string,
-      }
-    })
-  }
+  // if (newBranch) {
+  //   await updateTruckConfig(path, (prevConfig) => {
+  //     return {
+  //       ...prevConfig,
+  //       branch: newBranch as string,
+  //     }
+  //   })
+  // }
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
