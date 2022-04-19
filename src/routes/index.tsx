@@ -183,6 +183,15 @@ const Actions = styled.div`
 
 const SLink = styled(Link)`
   text-decoration: none;
+  font-weight: bold;
+  font-size: 0.9em;
+  color: var(--text-color);
+  text-transform: uppercase;
+  opacity: 75%;
+  cursor: pointer;
+  &:hover {
+    opacity: 100%;
+  }
 `
 
 const AnalyzedTag = styled.span`
