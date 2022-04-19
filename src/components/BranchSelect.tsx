@@ -38,16 +38,19 @@ export function BranchSelect({ heads, ...props }: BranchSelectProps & SelectHTML
 }
 
 
-interface GroupedBranchSelectProps {
+type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: Record<string, Record<string, string>>,
+  iconGroupColorMap?: Record<string, string>,
+  iconColor?: string
 }
 
-export function GroupedBranchSelect({ headGroups, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
+export function GroupedBranchSelect({ headGroups, iconColor, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const id = useId()
   const headGroupsEntries = Object.entries(headGroups).map<[string, [string, string][]]>(([group, heads]) => [group, Object.entries(heads)])
+
   return <SelectWithIconWrapper>
     <label htmlFor={id}>
-      <FontAwesomeIcon icon={branchIcon} color="#333" />
+      <FontAwesomeIcon icon={branchIcon} color={iconColor ?? "#333"} />
     </label>
     {headGroupsEntries.length === 1 && headGroupsEntries[0][1].length === 1 ? (
       <SelectPlaceholder>{headGroupsEntries[0][1]}</SelectPlaceholder>

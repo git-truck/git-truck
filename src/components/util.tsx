@@ -10,6 +10,9 @@ const titleBaseStyles = css`
   word-break: keep-all;
   white-space: nowrap;
   overflow-x: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `
 
 export const BoxTitle = styled.h2`

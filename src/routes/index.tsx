@@ -19,7 +19,10 @@ import { ChangeEvent, useState } from "react"
 import { GroupedBranchSelect } from "~/components/BranchSelect"
 
 type RepositoryWithGroups = Repository & {
-  groups: Record<string, Record<string, string>>
+  groups: {
+    "Analyzed": Record<string, string>,
+    "Not analyzed": Record<string, string>,
+  }
 }
 
 interface IndexData {
@@ -131,19 +134,25 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element 
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 
+  const branchIsAnalyzed = repo.analyzedBranches[head]
+  const iconColor = branchIsAnalyzed ? "green" : undefined
+
   return (
     <Li key={repo.name}>
       <Box>
-        <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
+        <BoxSubTitle title={repo.name}>{repo.name}
+        {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
+        </BoxSubTitle>
         <Spacer />
         <GroupedBranchSelect
           value={head}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => setHead(e.target.value)}
           headGroups={repo.groups}
+          iconColor={iconColor}
         />
         <Actions>
           <Grower />
-          <SLink to={path}>{repo.data?.cached ? "View" : "Analyze"}</SLink>
+          <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
         </Actions>
       </Box>
     </Li>
@@ -174,4 +183,22 @@ const Actions = styled.div`
 
 const SLink = styled(Link)`
   text-decoration: none;
+`
+
+const AnalyzedTag = styled.span`
+  text-transform: uppercase;
+  font-weight: normal;
+  font-size: 0.6rem;
+  border: 1px solid currentColor;
+  color: green;
+  border-radius:  100000px;
+  padding: 2px 4px;
+  letter-spacing: 1px;
+  user-select: none;
+  font-weight: bold;
+  display: flex;
+  place-items: center;
+  line-height: 100%;
+  vertical-align: middle;
+  align-content: flex-start;
 `
