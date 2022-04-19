@@ -72,7 +72,7 @@ export function GlobalInfo() {
       <Spacer />
       <BranchSelect
         heads={data.refs.heads}
-        currentBranch={data.branch}
+        defaultValue={data.branch}
         onChange={(e) => switchBranch(e.target.value)}
         disabled={transitionState.state !== "idle"} />
       <Spacer />
