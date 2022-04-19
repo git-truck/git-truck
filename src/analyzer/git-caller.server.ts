@@ -114,13 +114,28 @@ export class GitCaller {
         const repoPath = join(baseDir, repoDir)
         const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
         if (!isRepo) return null
+        const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
+        const branchesWithCaches = await Promise.all(Object.entries(refs.heads).map(async ([branch, branchHead]) => {
+          const [result] = await GitCaller.retrieveCachedResult({ repo: repoPath, branch, branchHead })
+          return {
+            branch,
+            branchHead,
+            isAnalyzed: result !== null,
+          }
+        }))
+        const analyzedBranches = branchesWithCaches.filter(branch => branch.isAnalyzed).reduce((acc, branch) => {
+          acc[branch.branch] = branch.branchHead
+          return acc
+        }, {} as { [branch: string]: string })
+
         const repo: Repository = {
           name: repoDir,
           path: repoPath,
           data: null,
           reasons: [],
           currentHead: await GitCaller._getRepositoryHead(repoPath),
-          refs: GitCaller.parseRefs(await GitCaller._getRefs(repoPath)),
+          refs,
+          analyzedBranches
         }
 
         try {
