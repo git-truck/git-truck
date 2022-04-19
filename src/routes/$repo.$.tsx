@@ -64,15 +64,6 @@ export const action: ActionFunction = async ({ request, params }) => {
   const args = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
 
-  // if (newBranch) {
-  //   await updateTruckConfig(path, (prevConfig) => {
-  //     return {
-  //       ...prevConfig,
-  //       branch: newBranch as string,
-  //     }
-  //   })
-  // }
-
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
       const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
