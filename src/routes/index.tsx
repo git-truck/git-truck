@@ -165,6 +165,11 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element 
 const Wrapper = styled.div`
   width: calc(100vw - 2 * var(--side-panel-width));
   margin: auto;
+  padding: var(--unit);
+
+  @media(max-width: 1000px) {
+    width: 100vw;
+  }
 `
 const H1 = styled.h1`
   font-family: "Courier New", Courier, monospace;
