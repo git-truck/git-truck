@@ -1,5 +1,5 @@
 import { ActionFunction, json, Link, LoaderFunction, useLoaderData, useNavigate, useSubmit, useTransition } from "remix"
-import styled from "styled-components"
+import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
@@ -139,7 +139,9 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element 
 
   return (
     <Li key={repo.name}>
-      <Box>
+      <Box style={{
+        outline: branchIsAnalyzed ? "1px solid green" : undefined,
+      }}>
         <BoxSubTitle title={repo.name}>{repo.name}
         {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
         </BoxSubTitle>
@@ -182,12 +184,12 @@ const Actions = styled.div`
   display: flex;
 `
 
-const SLink = styled(Link)`
+const SLink = styled(Link)<{ green?: boolean }>`
   line-height: 100%;
   text-decoration: none;
   font-weight: bold;
   font-size: 0.9em;
-  color: var(--text-color);
+  color: ${props => props.green ? " green" : css`var(--text-color)`};
   text-transform: uppercase;
   opacity: 75%;
   cursor: pointer;
