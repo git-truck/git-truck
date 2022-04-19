@@ -9,9 +9,9 @@ import {
   Code,
   Grower,
   OptionWithEllipsis,
+  SelectPlaceholder,
   SelectWithEllipsis,
   SelectWithIconWrapper,
-  TextButton,
 } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
@@ -161,6 +161,7 @@ function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
 
   const path = getPathFromRepoAndHead(repo.name, head)
 
+  const headsEntries = Object.entries(repo.refs.heads)
   return (
     <Li key={repo.name}>
       <Box>
@@ -168,14 +169,18 @@ function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
         <Spacer />
         <SelectWithIconWrapper>
           <FontAwesomeIcon icon={branchIcon} color="#333" />
+          {headsEntries.length === 1 ? <SelectPlaceholder>
+            {headsEntries[0][0]}
+          </SelectPlaceholder> :
           <SelectWithEllipsis {...headSelectProps}>
-            {Object.entries(repo.refs.heads).map(([branch, head]) => (
-              <OptionWithEllipsis key={head} value={branch} {...(head === branch ? { selected: true } : {})}>
+            {headsEntries.map(([branch, head]) => (
+              <OptionWithEllipsis key={head} value={branch} selected={head === branch}>
                 {branch}
                 {}
               </OptionWithEllipsis>
             ))}
           </SelectWithEllipsis>
+          }
         </SelectWithIconWrapper>
         <Actions>
           <Grower />
