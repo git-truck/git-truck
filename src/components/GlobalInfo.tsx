@@ -2,7 +2,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faRotate as reanalyzeIcon,
   faFolder as folderIcon,
-  faCodeBranch as branchIcon,
 } from "@fortawesome/free-solid-svg-icons"
 import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
@@ -13,14 +12,12 @@ import {
   Box,
   BoxTitle,
   Code,
-  OptionWithEllipsis,
-  SelectPlaceholder,
-  SelectWithEllipsis,
   SelectWithIconWrapper,
   TextButton,
 } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
+import { BranchSelect } from "./BranchSelect"
 
 export function GlobalInfo() {
   const data = useData()
@@ -36,7 +33,7 @@ export function GlobalInfo() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const switchBranch = (branch: string) => {
-    setIsAnalyzing( true)
+    setIsAnalyzing(true)
     navigate(["", data.repo, branch].join("/"))
   }
   useEffect(() => {
@@ -62,7 +59,6 @@ export function GlobalInfo() {
     paths.push([data.repo, data.repo])
   }
 
-  const headsEntries = Object.entries(data.refs.heads)
   return (
     <Box>
       <SelectWithIconWrapper>
@@ -74,29 +70,11 @@ export function GlobalInfo() {
       <Spacer />
       <BoxTitle>{data.repo}</BoxTitle>
       <Spacer />
-      <SelectWithIconWrapper>
-        <FontAwesomeIcon icon={branchIcon} color="#333" />
-        {headsEntries.length === 1 ? (
-          <SelectPlaceholder>{headsEntries[0][0]}</SelectPlaceholder>
-        ) : (
-          <SelectWithEllipsis
-            disabled={transitionState.state !== "idle"}
-            name="newBranch"
-            id="branch-selector"
-            onChange={(event) => {
-              switchBranch(event.target.value)
-            }}
-          >
-            {headsEntries.map(([branchName, hash]) => {
-              return (
-                <OptionWithEllipsis key={hash} value={branchName} selected={data.branch === branchName}>
-                  {branchName}
-                </OptionWithEllipsis>
-              )
-            })}
-          </SelectWithEllipsis>
-        )}
-      </SelectWithIconWrapper>
+      <BranchSelect
+        heads={data.refs.heads}
+        currentBranch={data.branch}
+        onChange={(e) => switchBranch(e.target.value)}
+        disabled={transitionState.state !== "idle"} />
       <Spacer />
       {isAnalyzing ? (
         <>
