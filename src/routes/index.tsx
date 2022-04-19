@@ -102,11 +102,13 @@ export default function Index() {
   return (
     <Wrapper>
       <Spacer />
-      <H1>{baseDir}</H1>
+      <H1>Welcome to Git Truck!</H1>
+
       <Spacer />
       <p>
-        Found {repositories.length} git repositories in the folder <Code inline>{baseDirName}</Code>.
+        Found {repositories.length} git repositories in the folder <Code inline title={baseDir}>{baseDirName}</Code>.
       </p>
+      <Spacer />
       {repositories.length === 0 ? (
         <>
           <Spacer />
@@ -172,7 +174,7 @@ const Wrapper = styled.div`
   }
 `
 const H1 = styled.h1`
-  font-family: "Courier New", Courier, monospace;
+  font-weight: normal;
 `
 
 const Ul = styled.ul`
