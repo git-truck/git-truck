@@ -41,7 +41,12 @@ export const TextButton = styled.button`
   /* color: #fff; */
   cursor: pointer;
   transition: backround-color var(--hover-transition-duration);
-  &:hover {
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
     background-color: var(--button-hovered-bg);
   }
 `
@@ -198,8 +203,12 @@ export const SelectWithEllipsis = styled.select`
   transition: border-color 0.1s;
   border: 2px solid hsla(0, 0%, 50%, 0);
 
-  &:not([disabled]):hover,
-  &:not([disabled]):active {
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover,
+  &:not(:disabled):active {
     border: 2px solid hsla(0, 0%, 50%, 1);
   }
 `
@@ -215,4 +224,10 @@ export const SelectWithIconWrapper = styled.div`
   grid-template-columns: auto 1fr;
   gap: 0.5em;
   place-items: center left;
+`
+
+export const SelectPlaceholder = styled.div`
+  font-size: 0.9em;
+  padding: 0.2em 0;
+  border: 2px solid transparent;
 `

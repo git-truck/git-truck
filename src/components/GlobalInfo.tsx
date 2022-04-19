@@ -9,7 +9,7 @@ import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, Code, OptionWithEllipsis, SelectWithEllipsis, SelectWithIconWrapper, TextButton } from "./util"
+import { Box, BoxTitle, Code, OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
 
 export function GlobalInfo() {
@@ -44,6 +44,7 @@ export function GlobalInfo() {
     paths.push([data.repo, data.repo])
   }
 
+  const headsEntries = Object.entries(data.refs.heads)
   return (
     <Box>
       <SelectWithIconWrapper>
@@ -55,7 +56,7 @@ export function GlobalInfo() {
       <Spacer />
       <SelectWithIconWrapper>
         <FontAwesomeIcon icon={branchIcon} color="#333" />
-        <StyledForm method="post" action=".">
+        {headsEntries.length === 1 ? <SelectPlaceholder>{headsEntries[0][0]}</SelectPlaceholder> :
           <SelectWithEllipsis
             disabled={transitionState.state !== "idle"}
             name="newBranch"
@@ -64,19 +65,19 @@ export function GlobalInfo() {
               switchBranch(event.target.value)
             }}
           >
-            {Object.entries(data.refs.heads).map(([branchName, hash]) => {
+            {headsEntries.map(([branchName, hash]) => {
               return (
                 <OptionWithEllipsis
                   key={hash}
                   value={branchName}
-                  {...(data.branch === branchName ? { selected: true } : {})}
+                  selected={data.branch === branchName}
                 >
                   {branchName}
                 </OptionWithEllipsis>
               )
             })}
           </SelectWithEllipsis>
-        </StyledForm>
+        }
       </SelectWithIconWrapper>
       <Spacer />
       {!transitionState.submission?.formData.has("newBranch") ? null : (
@@ -107,10 +108,4 @@ export function GlobalInfo() {
 const StyledLink = styled(Link)`
   display: inline-flex;
   margin-right: var(--unit);
-`
-
-const StyledForm = styled(Form)`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
 `
