@@ -178,7 +178,7 @@ const H1 = styled.h1`
 const Ul = styled.ul`
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
 `
 
 const Li = styled.li`
