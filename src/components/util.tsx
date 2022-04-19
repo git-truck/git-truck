@@ -46,7 +46,7 @@ export const TextButton = styled.button`
     cursor: not-allowed;
   }
 
-  &:not(:disabled):hover {
+  &:enabled:hover {
     background-color: var(--button-hovered-bg);
   }
 `
@@ -207,8 +207,8 @@ export const SelectWithEllipsis = styled.select`
     cursor: not-allowed;
   }
 
-  &:not(:disabled):hover,
-  &:not(:disabled):active {
+  &:enabled:hover,
+  &:enabled:active {
     border: 2px solid hsla(0, 0%, 50%, 1);
   }
 `
