@@ -20,6 +20,7 @@ import {
   TextButton,
 } from "./util"
 import styled from "styled-components"
+import { useEffect, useState } from "react"
 
 export function GlobalInfo() {
   const data = useData()
@@ -32,9 +33,17 @@ export function GlobalInfo() {
   const branch = branchPieces.join("/")
   const navigate = useNavigate()
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+
   const switchBranch = (branch: string) => {
+    setIsAnalyzing( true)
     navigate(["", data.repo, branch].join("/"))
   }
+  useEffect(() => {
+    if (transitionState.state === "idle") {
+      setIsAnalyzing(false)
+    }
+  }, [transitionState.state])
 
   let temppath = path
   let paths: [string, string][] = []
@@ -89,12 +98,12 @@ export function GlobalInfo() {
         )}
       </SelectWithIconWrapper>
       <Spacer />
-      {!transitionState.submission?.formData.has("newBranch") ? null : (
+      {isAnalyzing ? (
         <>
           <p style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>Analyzing branch {branch} ...</p>
           <Spacer xxl />
         </>
-      )}
+      ) : null}
       <strong>Analyzed: </strong>
       <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
       <Spacer />
@@ -103,8 +112,10 @@ export function GlobalInfo() {
         {data.commit.hash.slice(0, 7)}
       </Code>
       <Spacer />
-      <Form method="post" action=".">
-        <input type="hidden" name="refresh" value="true" />
+      <Form method="post" action="." onSubmit={() => {
+        setIsAnalyzing(true)
+      }}>
+        <input type="hidden" name="sresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
           <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
           {!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
