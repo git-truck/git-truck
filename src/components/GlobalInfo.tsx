@@ -135,4 +135,5 @@ const StyledLink = styled(Link)`
   text-decoration: none;
   color: hsl(0, 0%, 60%);
   font-size: 0.9em;
+  align-items: center;
 `
