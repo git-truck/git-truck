@@ -9,7 +9,16 @@ import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, Code, OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper, TextButton } from "./util"
+import {
+  Box,
+  BoxTitle,
+  Code,
+  OptionWithEllipsis,
+  SelectPlaceholder,
+  SelectWithEllipsis,
+  SelectWithIconWrapper,
+  TextButton,
+} from "./util"
 import styled from "styled-components"
 
 export function GlobalInfo() {
@@ -48,15 +57,19 @@ export function GlobalInfo() {
   return (
     <Box>
       <SelectWithIconWrapper>
-        <StyledLink to=".." title="See all projects">
-          <FontAwesomeIcon icon={folderIcon} color="#333" />
+        <StyledLink to=".." title="See all repositories">
+          <FontAwesomeIcon icon={folderIcon} color="hsl(0, 0%, 60%)" />
+          <StyledP>See more repositories</StyledP>
         </StyledLink>
-        <BoxTitle>{data.repo}</BoxTitle>
       </SelectWithIconWrapper>
+      <Spacer />
+      <BoxTitle>{data.repo}</BoxTitle>
       <Spacer />
       <SelectWithIconWrapper>
         <FontAwesomeIcon icon={branchIcon} color="#333" />
-        {headsEntries.length === 1 ? <SelectPlaceholder>{headsEntries[0][0]}</SelectPlaceholder> :
+        {headsEntries.length === 1 ? (
+          <SelectPlaceholder>{headsEntries[0][0]}</SelectPlaceholder>
+        ) : (
           <SelectWithEllipsis
             disabled={transitionState.state !== "idle"}
             name="newBranch"
@@ -67,17 +80,13 @@ export function GlobalInfo() {
           >
             {headsEntries.map(([branchName, hash]) => {
               return (
-                <OptionWithEllipsis
-                  key={hash}
-                  value={branchName}
-                  selected={data.branch === branchName}
-                >
+                <OptionWithEllipsis key={hash} value={branchName} selected={data.branch === branchName}>
                   {branchName}
                 </OptionWithEllipsis>
               )
             })}
           </SelectWithEllipsis>
-        }
+        )}
       </SelectWithIconWrapper>
       <Spacer />
       {!transitionState.submission?.formData.has("newBranch") ? null : (
@@ -105,7 +114,14 @@ export function GlobalInfo() {
   )
 }
 
+const StyledP = styled.p`
+  margin-left: var(--unit);
+`
+
 const StyledLink = styled(Link)`
   display: inline-flex;
   margin-right: var(--unit);
+  text-decoration: none;
+  color: hsl(0, 0%, 60%);
+  font-size: 0.9em;
 `
