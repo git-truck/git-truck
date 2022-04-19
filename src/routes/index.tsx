@@ -8,10 +8,6 @@ import {
   BoxSubTitle,
   Code,
   Grower,
-  OptionWithEllipsis,
-  SelectPlaceholder,
-  SelectWithEllipsis,
-  SelectWithIconWrapper,
 } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
@@ -20,8 +16,7 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
 import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
 import { ChangeEvent, useState } from "react"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faCodeBranch as branchIcon } from "@fortawesome/free-solid-svg-icons"
+import { BranchSelect } from "~/components/BranchSelect"
 
 interface IndexData {
   repositories: Repository[]
@@ -126,6 +121,30 @@ export default function Index() {
   )
 }
 
+function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
+  const [head, setHead] = useState(repo.currentHead)
+  const path = getPathFromRepoAndHead(repo.name, head)
+
+  return (
+    <Li key={repo.name}>
+      <Box>
+        <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
+        <Spacer />
+        <BranchSelect
+          value={head}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) => setHead(e.target.value)}
+          heads={repo.refs.heads}
+          currentBranch={repo.currentHead}
+        />
+        <Actions>
+          <Grower />
+          <SLink to={path}>{repo.data?.cached ? "View" : "Analyze"}</SLink>
+        </Actions>
+      </Box>
+    </Li>
+  )
+}
+
 const Wrapper = styled.div`
   width: calc(100vw - 2 * var(--side-panel-width));
   margin: auto;
@@ -151,42 +170,3 @@ const Actions = styled.div`
 const SLink = styled(Link)`
   text-decoration: none;
 `
-function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
-  const [head, setHead] = useState(repo.currentHead)
-
-  const headSelectProps = {
-    value: head,
-    onChange: (e: ChangeEvent<HTMLSelectElement>) => setHead(e.target.value),
-  }
-
-  const path = getPathFromRepoAndHead(repo.name, head)
-
-  const headsEntries = Object.entries(repo.refs.heads)
-  return (
-    <Li key={repo.name}>
-      <Box>
-        <BoxSubTitle title={repo.name}>{repo.name}</BoxSubTitle>
-        <Spacer />
-        <SelectWithIconWrapper>
-          <FontAwesomeIcon icon={branchIcon} color="#333" />
-          {headsEntries.length === 1 ? <SelectPlaceholder>
-            {headsEntries[0][0]}
-          </SelectPlaceholder> :
-          <SelectWithEllipsis {...headSelectProps}>
-            {headsEntries.map(([branch, head]) => (
-              <OptionWithEllipsis key={head} value={branch} selected={head === branch}>
-                {branch}
-                {}
-              </OptionWithEllipsis>
-            ))}
-          </SelectWithEllipsis>
-          }
-        </SelectWithIconWrapper>
-        <Actions>
-          <Grower />
-          <SLink to={path}>{repo.data?.cached ? "View" : "Analyze"}</SLink>
-        </Actions>
-      </Box>
-    </Li>
-  )
-}
