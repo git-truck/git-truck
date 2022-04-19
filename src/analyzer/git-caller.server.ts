@@ -116,7 +116,7 @@ export class GitCaller {
         if (!isRepo) return null
         const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
         const branchesWithCaches = await Promise.all(Object.entries(refs.heads).map(async ([branch, branchHead]) => {
-          const [result] = await GitCaller.retrieveCachedResult({ repo: repoPath, branch, branchHead })
+          const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
           return {
             branch,
             branchHead,
