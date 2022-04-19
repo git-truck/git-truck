@@ -1,4 +1,3 @@
-import { SSRProvider } from "@react-aria/ssr"
 import { useMemo, useState } from "react"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
@@ -62,27 +61,25 @@ export function Providers({ children, data }: ProvidersProps) {
   )
 
   return (
-    <SSRProvider>
-      <DataContext.Provider value={data}>
-        <MetricsContext.Provider value={metricsData}>
-          <OptionsContext.Provider value={optionsValue}>
-            <SearchContext.Provider
-              value={{
-                searchText,
-                setSearchText,
-                searchResults,
-                setSearchResults,
-              }}
-            >
-              <PathContext.Provider value={{ path, setPath }}>
-                <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
-                  {children}
-                </ClickedObjectContext.Provider>
-              </PathContext.Provider>
-            </SearchContext.Provider>
-          </OptionsContext.Provider>
-        </MetricsContext.Provider>
-      </DataContext.Provider>
-    </SSRProvider>
+    <DataContext.Provider value={data}>
+      <MetricsContext.Provider value={metricsData}>
+        <OptionsContext.Provider value={optionsValue}>
+          <SearchContext.Provider
+            value={{
+              searchText,
+              setSearchText,
+              searchResults,
+              setSearchResults,
+            }}
+          >
+            <PathContext.Provider value={{ path, setPath }}>
+              <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
+                {children}
+              </ClickedObjectContext.Provider>
+            </PathContext.Provider>
+          </SearchContext.Provider>
+        </OptionsContext.Provider>
+      </MetricsContext.Provider>
+    </DataContext.Provider>
   )
 }

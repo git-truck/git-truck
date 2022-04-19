@@ -8,6 +8,7 @@ export interface Repository {
   currentHead: string
   refs: GitRefs
   reasons: ANALYZER_CACHE_MISS_REASONS[]
+  analyzedBranches: Record<string, string>
 }
 
 export type GitObject = GitBlobObject | GitTreeObject
