@@ -89,7 +89,8 @@ export class GitCaller {
   }
 
   static async _getRepositoryHead(dir: string) {
-    return await GitCaller._revParse(dir, "HEAD")
+    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+    return result.trim()
   }
 
   async revParse(ref: string) {
@@ -97,7 +98,7 @@ export class GitCaller {
   }
 
   static async _revParse(dir: string, ref: string) {
-    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", ref])) as string
+    const result = (await runProcess(dir, "git", ["rev-parse", ref])) as string
     return result.trim()
   }
 
