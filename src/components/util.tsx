@@ -203,6 +203,10 @@ export const SelectWithEllipsis = styled.select`
   transition: border-color 0.1s;
   border: 2px solid hsla(0, 0%, 50%, 0);
 
+  &:enabled {
+    cursor: pointer;
+  }
+
   &:disabled {
     cursor: not-allowed;
   }
