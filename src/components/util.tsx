@@ -201,7 +201,7 @@ export const SelectWithEllipsis = styled.select`
   border-radius: 4px;
 
   transition: border-color 0.1s;
-  border: 2px solid hsla(0, 0%, 50%, 0);
+  border: 1px solid hsla(0, 0%, 50%, 0);
 
   &:enabled {
     cursor: pointer;
@@ -213,7 +213,7 @@ export const SelectWithEllipsis = styled.select`
 
   &:enabled:hover,
   &:enabled:active {
-    border: 2px solid hsla(0, 0%, 50%, 1);
+    border: 1px solid hsla(0, 0%, 50%, 1);
   }
 `
 
@@ -233,5 +233,5 @@ export const SelectWithIconWrapper = styled.div`
 export const SelectPlaceholder = styled.div`
   font-size: 0.9em;
   padding: 0.2em 0;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
 `
