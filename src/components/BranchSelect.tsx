@@ -48,12 +48,16 @@ export function GroupedBranchSelect({ headGroups, iconColor, ...props }: Grouped
   const id = useId()
   const headGroupsEntries = Object.entries(headGroups).map<[string, [string, string][]]>(([group, heads]) => [group, Object.entries(heads)])
 
+  const allEntriesFlattened = headGroupsEntries.reduce<string[]>((acc, [group, heads]) => {
+    return acc.concat(heads.map(([branchName]) => branchName))
+  }, [])
+
   return <SelectWithIconWrapper>
     <label htmlFor={id}>
       <FontAwesomeIcon icon={branchIcon} color={iconColor ?? "#333"} />
     </label>
-    {headGroupsEntries.length === 1 && headGroupsEntries[0][1].length === 1 ? (
-      <SelectPlaceholder>{headGroupsEntries[0][1]}</SelectPlaceholder>
+    {allEntriesFlattened.length === 1 ? (
+      <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
     ) : (
       <SelectWithEllipsis
         {...props}
