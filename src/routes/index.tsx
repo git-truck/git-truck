@@ -71,9 +71,6 @@ export default function Index() {
     }
   })
 
-  const cachedRepositories = repositories.filter((repo) => repo.data?.cached)
-  const notCachedRepositories = repositories.filter((repo) => !repo.data?.cached)
-
   if (transitionData.state !== "idle" || willRedirect) return <AnalyzingIndicator />
   return (
     <Wrapper>
@@ -90,33 +87,18 @@ export default function Index() {
             Try running <Code inline>git-truck</Code> in another folder or provide another path as argument.
           </p>
         </>
-      ) : null}
-      {cachedRepositories.length > 0 ? (
+      ) : (
         <>
           <Spacer xxl />
-          <h2>Ready to view</h2>
           <nav>
             <Ul>
-              {cachedRepositories.map((repo) => (
+              {repositories.map((repo) => (
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
             </Ul>
           </nav>
         </>
-      ) : null}
-      {notCachedRepositories.length > 0 ? (
-        <>
-          <Spacer xxl />
-          <h2>Needs to be analyzed before viewing</h2>
-          <nav>
-            <Ul>
-              {notCachedRepositories.map((repo) => (
-                <RepositoryEntry key={repo.path} repo={repo} />
-              ))}
-            </Ul>
-          </nav>
-        </>
-      ) : null}
+      )}
     </Wrapper>
   )
 }
