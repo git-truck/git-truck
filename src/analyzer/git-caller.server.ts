@@ -61,7 +61,7 @@ export class GitCaller {
    */
   static async findBranchHead(repo: string, branch?: string): Promise<[string, string]> {
     if (!branch) {
-      const [foundBranch, getBranchError] = await promiseHelper(GitCaller.getRepositoryHead(repo))
+      const [foundBranch, getBranchError] = await promiseHelper(GitCaller._getRepositoryHead(repo))
       if (getBranchError) {
         throw getBranchError
       }
@@ -73,13 +73,9 @@ export class GitCaller {
       throw Error("No git folder exists at " + gitFolder)
     }
     // Find file containing the branch head
-    const branchPath = join(gitFolder, "refs/heads/" + branch)
-    const absolutePath = join(process.cwd(), branchPath)
-    log.debug("Looking for branch head at " + absolutePath)
 
-    const branchHead = (await fs.readFile(branchPath, "utf-8")).trim()
+    const branchHead = await GitCaller._revParse(gitFolder, branch)
     log.debug(`${branch} -> [commit]${branchHead}`)
-    if (!branchHead) throw Error("Branch head not found")
 
     return [branchHead, branch]
   }
@@ -88,8 +84,20 @@ export class GitCaller {
     return resolve(__dirname, "..", ".temp", repo, `${branch}.json`)
   }
 
-  static async getRepositoryHead(dir: string) {
-    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+  async getRepositoryHead() {
+    return await GitCaller._getRepositoryHead(this.repo)
+  }
+
+  static async _getRepositoryHead(dir: string) {
+    return await GitCaller._revParse(dir, "HEAD")
+  }
+
+  async revParse(ref: string) {
+    return await GitCaller._revParse(this.repo, ref)
+  }
+
+  static async _revParse(dir: string, ref: string) {
+    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", ref])) as string
     return result.trim()
   }
 
@@ -110,7 +118,7 @@ export class GitCaller {
           path: repoPath,
           data: null,
           reasons: [],
-          currentHead: await GitCaller.getRepositoryHead(repoPath),
+          currentHead: await GitCaller._getRepositoryHead(repoPath),
           refs: GitCaller.parseRefs(await GitCaller._getRefs(repoPath)),
         }
 
