@@ -37,10 +37,6 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     options.branch = params["*"]
   }
 
-  // const branch = new URL(request.url).searchParams.get("branch")
-  // if (branch) options.head = decodeURIComponent(branch)
-  // console.log(branch)
-
   const data = await analyze({ ...args, ...options })
   invalidateCache = false
   return json<AnalyzerData>(data)
