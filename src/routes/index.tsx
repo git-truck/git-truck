@@ -150,6 +150,7 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element 
           headGroups={repo.groups}
           iconColor={iconColor}
         />
+        <Spacer />
         <Actions>
           <Grower />
           <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
@@ -182,6 +183,7 @@ const Actions = styled.div`
 `
 
 const SLink = styled(Link)`
+  line-height: 100%;
   text-decoration: none;
   font-weight: bold;
   font-size: 0.9em;
