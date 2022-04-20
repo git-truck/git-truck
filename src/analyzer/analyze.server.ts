@@ -110,7 +110,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
         })
         break
       default:
-        throw new Error(` type ${type}`)
+        log.warn(`Unknown type: ${type}`)
     }
   }
 
