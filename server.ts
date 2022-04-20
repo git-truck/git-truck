@@ -63,7 +63,7 @@ for usage instructions.`)
 
   // Everything else (like favicon.ico) is cached for an hour. You may want to be
   // more aggressive with this caching.
-  app.use(express.static(staticAssetsPath, { maxAge: "1h" }))
+  app.use(express.static(join(__dirname, "../public"), { maxAge: "1h" }))
 
   app.use(morgan("tiny"))
 
