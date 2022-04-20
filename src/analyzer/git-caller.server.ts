@@ -273,7 +273,7 @@ export class GitCaller {
   }
 
   async catFileCached(hash: string): Promise<string> {
-    if (!this.useCache) {
+    if (this.useCache) {
       const cachedValue = this.catFileCache.get(hash)
       if (cachedValue) {
         return cachedValue
