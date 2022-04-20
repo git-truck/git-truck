@@ -90,10 +90,6 @@ export function GlobalInfo() {
   )
 }
 
-const WrapAnywhereP = styled.p`
-  overflow-wrap: anywhere;
-`
-
 const StyledP = styled.p`
   margin-left: var(--unit);
 `
