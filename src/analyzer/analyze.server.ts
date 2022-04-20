@@ -8,7 +8,6 @@ import {
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
   TruckConfig,
-  GitRefs,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
