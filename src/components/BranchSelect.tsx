@@ -3,7 +3,6 @@ import {
   faCodeBranch as branchIcon,
 } from "@fortawesome/free-solid-svg-icons"
 import { OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper } from "./util"
-import { useId } from "@react-aria/utils"
 import { SelectHTMLAttributes } from "react"
 
 interface BranchSelectProps {
