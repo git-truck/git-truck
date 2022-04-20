@@ -115,18 +115,22 @@ export class GitCaller {
         const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
         if (!isRepo) return null
         const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-        const branchesWithCaches = await Promise.all(Object.entries(refs.heads).map(async ([branch, branchHead]) => {
-          const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
-          return {
-            branch,
-            branchHead,
-            isAnalyzed: result !== null,
-          }
-        }))
-        const analyzedBranches = branchesWithCaches.filter(branch => branch.isAnalyzed).reduce((acc, branch) => {
-          acc[branch.branch] = branch.branchHead
-          return acc
-        }, {} as { [branch: string]: string })
+        const branchesWithCaches = await Promise.all(
+          Object.entries(refs.heads).map(async ([branch, branchHead]) => {
+            const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
+            return {
+              branch,
+              branchHead,
+              isAnalyzed: result !== null,
+            }
+          })
+        )
+        const analyzedBranches = branchesWithCaches
+          .filter((branch) => branch.isAnalyzed)
+          .reduce((acc, branch) => {
+            acc[branch.branch] = branch.branchHead
+            return acc
+          }, {} as { [branch: string]: string })
 
         const repo: Repository = {
           name: repoDir,
@@ -135,7 +139,7 @@ export class GitCaller {
           reasons: [],
           currentHead: await GitCaller._getRepositoryHead(repoPath),
           refs,
-          analyzedBranches
+          analyzedBranches,
         }
 
         try {
@@ -176,11 +180,12 @@ export class GitCaller {
 
     const regex = /^(?<hash>.*) refs\/(?<ref_type>.*?)\/(?<path>.*)$/gm
 
-    let match: RegExpExecArray | null = null
+    const matches = refsAsMultilineString.matchAll(regex)
+    let next = matches.next()
 
-    while (regex.global && (match = regex.exec(refsAsMultilineString))) {
-      const groups = match?.groups ?? {}
-
+    while (next.value) {
+      const groups = next.value.groups
+      next = matches.next()
       const hash: string = groups["hash"]
       const ref_type: string = groups["ref_type"]
       const path: string = groups["path"]
