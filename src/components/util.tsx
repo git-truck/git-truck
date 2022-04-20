@@ -197,6 +197,8 @@ export const SelectWithEllipsis = styled.select`
   overflow: scroll;
   width: 100%;
 
+  font: inherit;
+  color: inherit;
   font-size: 0.9em;
   padding: 0.2em 0;
 
