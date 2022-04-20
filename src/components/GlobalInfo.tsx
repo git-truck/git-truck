@@ -16,9 +16,6 @@ export function GlobalInfo() {
   const transitionState = useTransition()
 
   const location = useLocation()
-  // Discard the repo part of the path
-  const [, ...branchPieces] = location.pathname.split("/")
-  const branch = branchPieces.join("/")
   const navigate = useNavigate()
 
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -68,14 +65,6 @@ export function GlobalInfo() {
         disabled={transitionState.state !== "idle"}
       />
       <Spacer />
-      {isAnalyzing ? (
-        <>
-          <WrapAnywhereP style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>
-            Analyzing...
-          </WrapAnywhereP>
-          <Spacer xxl />
-        </>
-      ) : null}
       <strong>Analyzed: </strong>
       <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
       <Spacer />
@@ -94,7 +83,7 @@ export function GlobalInfo() {
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
           <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
-          {!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
+          {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
         </TextButton>
       </Form>
     </Box>
