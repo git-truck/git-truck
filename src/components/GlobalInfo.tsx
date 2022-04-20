@@ -24,11 +24,7 @@ export function GlobalInfo() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
-    if (isAnalyzing) {
-      document.title = document.title = analyzingTitle
-    } else {
-      document.title = document.title = title
-    }
+    document.title = isAnalyzing ? analyzingTitle : title
   }, [isAnalyzing])
 
   const switchBranch = (branch: string) => {
