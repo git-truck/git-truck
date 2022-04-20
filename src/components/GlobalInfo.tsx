@@ -71,7 +71,7 @@ export function GlobalInfo() {
       {isAnalyzing ? (
         <>
           <WrapAnywhereP style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>
-            Analyzing branch {branch} ...
+            Analyzing...
           </WrapAnywhereP>
           <Spacer xxl />
         </>
