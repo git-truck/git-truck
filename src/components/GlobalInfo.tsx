@@ -86,7 +86,7 @@ export function GlobalInfo() {
       <Spacer />
       <Form
         method="post"
-        action="."
+        action={location.pathname}
         onSubmit={() => {
           setIsAnalyzing(true)
         }}
