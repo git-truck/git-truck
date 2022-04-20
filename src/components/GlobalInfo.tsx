@@ -10,6 +10,9 @@ import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { BranchSelect } from "./BranchSelect"
 
+const title = "Git Truck"
+const analyzingTitle = "Analyzing | Git Truck"
+
 export function GlobalInfo() {
   const data = useData()
   const { path } = usePath()
@@ -19,6 +22,14 @@ export function GlobalInfo() {
   const navigate = useNavigate()
 
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  useEffect(() => {
+    if (isAnalyzing) {
+      document.title = document.title = analyzingTitle
+    } else {
+      document.title = document.title = title
+    }
+  }, [isAnalyzing])
 
   const switchBranch = (branch: string) => {
     setIsAnalyzing(true)
