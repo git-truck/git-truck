@@ -19,11 +19,7 @@ import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
 
 let invalidateCache = false
 
-export const loader: LoaderFunction = async ({ params, request }) => {
-  if (params["repo"] === "favicon.ico") {
-    return null
-  }
-
+export const loader: LoaderFunction = async ({ params }) => {
   const args = await getTruckConfigWithArgs(params["repo"] as string)
 
   const options: TruckUserConfig = {
