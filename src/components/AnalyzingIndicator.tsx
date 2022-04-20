@@ -28,7 +28,7 @@ export function AnalyzingIndicator() {
   return (
     <FullViewbox>
       <LoadingPane>
-        <img src={anitruck} alt={"Sad"} width={400}/>
+        <img src={anitruck} alt={"🚛"} width={400}/>
         <LoadingText>Analyzing...</LoadingText>
       </LoadingPane>
     </FullViewbox>
