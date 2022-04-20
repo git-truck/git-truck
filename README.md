@@ -65,6 +65,6 @@ You can also define files to ignore.
     ["Alice", "aliiii", "alice alice"]
   ],
   "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"],
-  "invalidateCache": false
+  "invalidateCache": true
 }
 ```
