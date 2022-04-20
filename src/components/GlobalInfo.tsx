@@ -91,7 +91,7 @@ export function GlobalInfo() {
           setIsAnalyzing(true)
         }}
       >
-        <input type="hidden" name="sresh" value="true" />
+        <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
           <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
           {!transitionState.submission?.formData.has("refresh") ? "Rerun analyzer" : "Analyzing..."}
