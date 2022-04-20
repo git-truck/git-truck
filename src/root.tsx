@@ -11,14 +11,19 @@ import { useEffect } from "react"
 import { Code } from "./components/util"
 
 export const meta: MetaFunction = () => {
-  return { title: "Git Truck 🚛" }
+  return { title: "Git Truck" }
 }
 
 export function links() {
-  return [appStyles, varsStyles, indexStyles, chartStyles].map((x) => ({
+  return [...[appStyles, varsStyles, indexStyles, chartStyles].map((x) => ({
     rel: "stylesheet",
     href: x,
-  }))
+  })),
+  {
+    rel: "favicon",
+    type: "image/x-icon",
+    href: "favicon.ico",
+  }]
 }
 
 export default function App() {
