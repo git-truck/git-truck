@@ -5,7 +5,7 @@ import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
 import { Box, BoxSubTitle, Code } from "./util"
-import { Form, useTransition } from "remix"
+import { Form, useLocation, useTransition } from "remix"
 
 const Line = styled.div`
   display: grid;
@@ -56,6 +56,7 @@ function hiddenFileFormat(ignored: string) {
 }
 
 export function HiddenFiles() {
+  const location = useLocation()
   const [collapse, setCollapse] = useBoolean(false)
   const transitionState = useTransition()
   const data = useData()
@@ -67,7 +68,7 @@ export function HiddenFiles() {
         <div>
           {data.hiddenFiles.map((hidden) => (
             <Line key={hidden} title={hidden}>
-              <InlineForm method="post" action=".">
+              <InlineForm method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
                   <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />

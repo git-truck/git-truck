@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useTransition } from "remix"
+import { Form, useLocation, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
@@ -24,6 +24,7 @@ function OneFolderOut(path: string) {
 
 export function Details() {
   const { setClickedObject, clickedObject } = useClickedObject()
+  const location = useLocation()
   const { authorshipType } = useOptions()
   const { state } = useTransition()
   const { setPath, path } = usePath()
@@ -74,7 +75,7 @@ export function Details() {
       <Spacer lg />
       {isBlob ? (
         <>
-          <Form method="post" action=".">
+          <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <TextButton
               type="submit"
@@ -89,7 +90,7 @@ export function Details() {
           {clickedObject.name.includes(".") ? (
             <>
               <Spacer />
-              <Form method="post" action=".">
+              <Form method="post" action={location.pathname}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
                 <TextButton
                   type="submit"
@@ -104,13 +105,13 @@ export function Details() {
             </>
           ) : null}
           <Spacer />
-          <Form method="post" action=".">
+          <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
             <TextButton disabled={state !== "idle"}>Open file</TextButton>
           </Form>
         </>
       ) : (
-        <Form method="post" action=".">
+        <Form method="post" action={location.pathname}>
           <input type="hidden" name="ignore" value={clickedObject.path} />
           <TextButton
             type="submit"
