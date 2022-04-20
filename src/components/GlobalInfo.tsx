@@ -1,20 +1,11 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import {
-  faRotate as reanalyzeIcon,
-  faFolder as folderIcon,
-} from "@fortawesome/free-solid-svg-icons"
+import { faRotate as reanalyzeIcon, faFolder as folderIcon } from "@fortawesome/free-solid-svg-icons"
 import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
-import {
-  Box,
-  BoxTitle,
-  Code,
-  SelectWithIconWrapper,
-  TextButton,
-} from "./util"
+import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { BranchSelect } from "./BranchSelect"
@@ -74,11 +65,14 @@ export function GlobalInfo() {
         heads={data.refs.heads}
         defaultValue={data.branch}
         onChange={(e) => switchBranch(e.target.value)}
-        disabled={transitionState.state !== "idle"} />
+        disabled={transitionState.state !== "idle"}
+      />
       <Spacer />
       {isAnalyzing ? (
         <>
-          <p style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>Analyzing branch {branch} ...</p>
+          <WrapAnywhereP style={{ fontSize: "0.9em", color: "hsl(0, 50%, 50%)" }}>
+            Analyzing branch {branch} ...
+          </WrapAnywhereP>
           <Spacer xxl />
         </>
       ) : null}
@@ -90,9 +84,13 @@ export function GlobalInfo() {
         {data.commit.hash.slice(0, 7)}
       </Code>
       <Spacer />
-      <Form method="post" action="." onSubmit={() => {
-        setIsAnalyzing(true)
-      }}>
+      <Form
+        method="post"
+        action="."
+        onSubmit={() => {
+          setIsAnalyzing(true)
+        }}
+      >
         <input type="hidden" name="sresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
           <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
@@ -102,6 +100,10 @@ export function GlobalInfo() {
     </Box>
   )
 }
+
+const WrapAnywhereP = styled.p`
+  overflow-wrap: anywhere;
+`
 
 const StyledP = styled.p`
   margin-left: var(--unit);
