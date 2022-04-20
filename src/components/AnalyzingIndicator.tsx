@@ -1,10 +1,10 @@
 import styled from "styled-components"
+import anitruck from "~/assets/truck.gif"
 
 const LoadingPane = styled.div`
   padding: 0.5em 2em;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
 
   /* hide_initially animation */
   opacity: 0;
@@ -19,36 +19,17 @@ const FullViewbox = styled.div`
   width: 100vw;
 `
 
-const StyledPath = styled.path`
-  fill: none;
-  stroke: #4580ff;
-  animation: dash 2s ease-in-out alternate infinite;
-`
-
 const LoadingText = styled.div`
   text-align: center;
   grid-area: 1/2;
 `
 
-const StyledSVG = styled.svg`
-  grid-area: 1/2;
-`
-
 export function AnalyzingIndicator() {
-  const width = 20
-  const height = 20
-  const length = width + height
-
-  const path = `M0,0 m-${width * 0.5},-${height * 0.5} l${width},0 l0,${height} l-${width},0 l0,-${height} Z`
-  const viewBox = `-${height * 0.5} -${width * 0.5} ${height} ${width}`
-
   return (
     <FullViewbox>
       <LoadingPane>
+        <img src={anitruck} alt={"Sad"} width={400}/>
         <LoadingText>Analyzing...</LoadingText>
-        <StyledSVG height="160px" width="160px" viewBox={viewBox}>
-          <StyledPath strokeDasharray={length * 0.5} strokeDashoffset={length * 2} d={path}></StyledPath>
-        </StyledSVG>
       </LoadingPane>
     </FullViewbox>
   )
