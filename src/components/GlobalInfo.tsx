@@ -54,7 +54,7 @@ export function GlobalInfo() {
     <Box>
       <SelectWithIconWrapper>
         <StyledLink to=".." title="See all repositories">
-          <FontAwesomeIcon icon={folderIcon} color="hsl(0, 0%, 60%)" />
+          <FontAwesomeIcon icon={folderIcon} />
           <StyledP>See more repositories</StyledP>
         </StyledLink>
       </SelectWithIconWrapper>
@@ -116,4 +116,7 @@ const StyledLink = styled(Link)`
   color: hsl(0, 0%, 60%);
   font-size: 0.9em;
   align-items: center;
+  &:hover {
+    color: hsl(0, 0%, 20%);
+  }
 `
