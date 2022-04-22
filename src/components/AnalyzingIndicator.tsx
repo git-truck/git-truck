@@ -13,7 +13,6 @@ const LoadingPane = styled.div`
 `
 
 const FullViewbox = styled.div`
-  display: grid;
   place-items: center;
   height: 100vh;
   width: 100vw;
@@ -22,7 +21,6 @@ const FullViewbox = styled.div`
 
 const LoadingText = styled.div`
   text-align: center;
-  grid-area: 1/2;
 `
 
 export function AnalyzingIndicator() {
