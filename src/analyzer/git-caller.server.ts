@@ -286,9 +286,10 @@ export class GitCaller {
     return result
   }
 
-  private async blame(path: string, branch: string) {
+  private async blame(path: string) {
+    if (!this.branch) throw Error("Branch is undefined")
     try {
-      const result = await runProcess(this.repo, "git", ["blame", branch, "--", path])
+      const result = await runProcess(this.repo, "git", ["blame", this.branch, "--", path])
       return result as string
     } catch (e) {
       log.warn(`Could not blame on ${path}. It might have been deleted since last commit.`)
@@ -296,14 +297,14 @@ export class GitCaller {
     }
   }
 
-  async blameCached(path: string, branch: string): Promise<string> {
+  async blameCached(path: string): Promise<string> {
     if (!this.useCache) {
       const cachedValue = this.blameCache.get(path)
       if (cachedValue) {
         return cachedValue
       }
     }
-    const result = await this.blame(path, branch)
+    const result = await this.blame(path)
     this.blameCache.set(path, result)
 
     return result
@@ -316,8 +317,7 @@ export class GitCaller {
 
   async parseBlame(path: string) {
     const cutString = path.slice(path.indexOf("/") + 1)
-    if (!this.branch) throw Error("Branch is undefined")
-    const blame = await this.blameCached(cutString, this.branch)
+    const blame = await this.blameCached(cutString)
     const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
     const matches = blame.match(blameRegex)
     const blameAuthors: Record<string, number> = {}
