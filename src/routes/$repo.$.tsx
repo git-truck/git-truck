@@ -1,6 +1,6 @@
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon } from "~/components/util"
+import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon, TextButton } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData, TruckUserConfig } from "~/analyzer/model"
@@ -15,7 +15,7 @@ import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
-import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
 
 let invalidateCache = false
 
@@ -111,6 +111,36 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   )
 }
 
+function openInNewTab(url: string) {
+  window.open(url, "_blank")
+}
+
+function Feedback() {
+  return (
+    <Box>
+      <p>
+        <LightFontAwesomeIcon icon={faComment} /> Help make Git Truck better
+      </p>
+      <Spacer xs />
+      <TextButton
+        onClick={() =>
+          openInNewTab(
+            "https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
+          )
+        }
+      >
+        Answer questionnaire
+      </TextButton>
+      <Spacer xs />
+      <TextButton
+        onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
+      >
+        Open an issue
+      </TextButton>
+    </Box>
+  )
+}
+
 export default function Index() {
   const data = useLoaderData<AnalyzerData>()
 
@@ -121,6 +151,7 @@ export default function Index() {
       <Container>
         <SidePanel>
           <GlobalInfo />
+          <Feedback />
           <Options />
           <SearchBar />
           <Spacer />
