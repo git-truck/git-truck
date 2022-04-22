@@ -29,7 +29,6 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
 
   await bfs(first, repo, data)
 
-  finally_mut(data)
 
   return data
 }
@@ -145,7 +144,6 @@ function updateBlob_mut(
   const hydratedBlob = {
     ...blob,
     authors: (blob as HydratedGitBlobObject).authors ?? {},
-    noLines: isBinary ? 0 : blob.content?.split("\n").length,
     noCommits: noCommits,
     isBinary: isBinary,
   } as HydratedGitBlobObject
@@ -169,18 +167,4 @@ function updateBlob_mut(
 
   Object.assign(blob, hydratedBlob)
   log.debug(`Updated blob ${blob.name} from commit ${currCommit.hash}`)
-}
-
-function finally_mut(data: HydratedGitCommitObject) {
-  discardContentField_mut(data.tree)
-}
-
-function discardContentField_mut(tree: HydratedGitTreeObject) {
-  for (const child of tree.children) {
-    if (child.type === "blob") {
-      child.content = undefined
-    } else {
-      discardContentField_mut(child)
-    }
-  }
 }

@@ -8,6 +8,7 @@
             "name": "Debug Remix App",
             "program": "${workspaceFolder}/build/index.js",
             "request": "launch",
+            "args": ["--log", "info"],
             "skipFiles": [
                 "<node_internals>/**"
             ],

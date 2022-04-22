@@ -69,7 +69,7 @@ export function Chart(props: ChartProps) {
           onMouseOver: () => setHoveredBlob(null),
           onMouseOut: () => setHoveredBlob(null),
         }
-  
+
   return (
     <>
       <SVG
@@ -310,7 +310,7 @@ function createPartitionedHiearchy(
 
   const hiearchy = hierarchy(castedTree)
     .sum((d) => {
-      const lineCount = (d as HydratedGitBlobObject).noLines
+      const lineCount = (d as HydratedGitBlobObject).sizeInBytes
       return lineCount ? lineCount : 1
     })
     .sort((a, b) => (b.value !== undefined && a.value !== undefined ? b.value - a.value : 0))
