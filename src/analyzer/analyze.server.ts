@@ -181,6 +181,7 @@ export async function analyze(args: TruckConfig) {
   if (findBranchHeadError) throw findBranchHeadError
 
   const [branchHead, branchName] = findBranchHeadResult
+  git.branch = branchName
 
   let data: AnalyzerData | null = null
 
