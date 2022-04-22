@@ -94,6 +94,15 @@ export class GitCaller {
     return result.trim()
   }
 
+  async lsTree(hash: string) {
+    return await GitCaller._lsTree(this.repo, hash)
+  }
+
+  static async _lsTree(repo: string, hash: string) {
+    const result = await runProcess(repo, "git", ["ls-tree", "-rlt", hash]) as string
+    return result.trim()
+  }
+
   async revParse(ref: string) {
     return await GitCaller._revParse(this.repo, ref)
   }

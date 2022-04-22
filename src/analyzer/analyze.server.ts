@@ -79,48 +79,83 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Git
   return commitObject
 }
 
+const treeRegex = /^[0-9a-z]+? (?<type>\w+) (?<hash>[0-9a-z]+)\s+(?<size>\d+|-)\s+(?<path>.+)/gm
+
+interface RawGitObject {
+  type: "blob" | "tree"
+  path: string
+  hash: string
+  size?: number
+}
+
 async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
-  const rawContent = await GitCaller.getInstance().catFileCached(hash)
-  const entries = rawContent.split("\n").filter((x) => x.trim().length > 0)
+  const rawContent = await GitCaller.getInstance().lsTree(hash)
 
-  const children: (GitTreeObject | GitBlobObject)[] = []
-  for await (const line of entries) {
-    const catFileRegex = /^.+?\s(?<type>\w+)\s(?<hash>.+?)\s+(?<name>.+?)\s*$/g
-    const groups = catFileRegex.exec(line)?.groups ?? {}
+  const children: RawGitObject[] = []
+  const matches = rawContent.matchAll(treeRegex)
+  for (const match of matches) {
+    if (match === null || match.groups === undefined) continue
 
-    const type = groups["type"]
-    const hash = groups["hash"]
-    const name = groups["name"]
-
-    const newPath = [path, name].join("/")
-    log.debug(`Path: ${newPath}`)
-
-    switch (type) {
-      case "tree":
-        children.push(await analyzeTree(newPath, name, hash))
-        break
-      case "blob":
-        children.push({
-          type: "blob",
-          hash,
-          path: newPath,
-          name,
-          content: await GitCaller.getInstance().catFileCached(hash),
-          blameAuthors: await GitCaller.getInstance().parseBlame(newPath),
-        })
-        break
-      default:
-        log.warn(`Unknown type: ${type}`)
-    }
+    const groups = match.groups
+    children.push({
+      type: groups["type"] as "blob" | "tree",
+      hash: groups["hash"],
+      size: groups["size"] === "-" ? undefined : Number(groups["size"]),
+      path: groups["path"],
+    })
   }
 
-  return {
+  const rootTree = {
     type: "tree",
     path,
     name,
     hash,
-    children,
+    children: [],
+  } as GitTreeObject
+
+  const jobs = []
+
+  for (const child of children) {
+    const prevTrees = child.path.split("/")
+    const newName = prevTrees.pop() as string
+    const newPath = `${path}/${child.path}`
+    let currTree = rootTree
+    for (const treePath of prevTrees) {
+      currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
+    }
+    switch (child.type) {
+      case "tree":
+        const newTree: GitTreeObject = {
+          type: "tree",
+          path: newPath,
+          name: newName,
+          hash: child.hash,
+          children: [],
+        }
+
+        currTree.children.push(newTree)
+
+        break
+      case "blob":
+        const blob: GitBlobObject = {
+          type: "blob",
+          hash: child.hash,
+          path: newPath,
+          name: newName,
+          sizeInBytes: child.size as number,
+          blameAuthors: {}
+        }
+        jobs.push((async (path) => {
+          blob.blameAuthors = await GitCaller.getInstance().parseBlame(path)
+        })(blob.path))
+        currTree.children.push(blob)
+        break
+    }
   }
+
+  await Promise.all(jobs)
+
+  return rootTree
 }
 
 function getCommandLine() {

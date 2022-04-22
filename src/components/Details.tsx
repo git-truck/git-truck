@@ -55,7 +55,7 @@ export function Details() {
       <DetailsEntries>
         {isBlob ? (
           <>
-            <LineCountEntry lineCount={clickedObject.noLines} isBinary={clickedObject.isBinary} />
+            <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
             <CommitsEntry clickedBlob={clickedObject} />
             <LastchangedEntry clickedBlob={clickedObject} />
           </>
@@ -195,12 +195,12 @@ const StyledSpan = styled.span`
   opacity: 0.5;
 `
 
-function LineCountEntry(props: { lineCount: number; isBinary?: boolean }) {
+function SizeEntry(props: { size: number; isBinary?: boolean }) {
   return (
     <>
-      <DetailsKey grow>Lines</DetailsKey>
+      <DetailsKey grow>Size</DetailsKey>
       <DetailsValue>
-        {props.lineCount ?? 0} <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
+        {props.size ?? 0} B <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
       </DetailsValue>
     </>
   )

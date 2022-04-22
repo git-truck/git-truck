@@ -10,7 +10,7 @@ const authorUnionsTwo = [
 ]
 
 const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
-  noLines: 0,
+  sizeInBytes: 0,
   authors: {
     author1Dupe: 25,
     author2: 50,
@@ -54,7 +54,7 @@ describe("unionAuthors", () => {
         "Jonas Røssum": 125,
       },
       blameAuthors: {},
-      noLines: 249,
+      sizeInBytes: 249,
       noCommits: 30,
       lastChangeEpoch: 1646818775,
     }

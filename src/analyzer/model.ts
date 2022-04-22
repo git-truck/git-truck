@@ -38,8 +38,8 @@ export interface TruckConfig {
   invalidateCache: boolean
 }
 
-// Bump this if AnalyzerData interface chances
-export const AnalyzerDataInterfaceVersion = 5
+// Bump this if changes are made to this file
+export const AnalyzerDataInterfaceVersion = 6
 
 export interface AnalyzerData {
   refs: GitRefs
@@ -67,14 +67,13 @@ export interface GitBlobObject extends GitBaseObject {
   type: "blob"
   name: string
   path: string
-  content?: string
+  sizeInBytes: number
   blameAuthors: Record<string, number>
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
 
 export interface HydratedGitBlobObject extends GitBlobObject {
-  noLines: number
   authors: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
@@ -82,6 +81,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   unionedAuthors?: Map<AuthorshipType, Record<string, number>>
   dominantAuthor?: Map<AuthorshipType, [string, number]>
   isSearchResult?: boolean
+  blameAuthors: Record<string, number>
 }
 
 export interface GitTreeObject extends GitBaseObject {
