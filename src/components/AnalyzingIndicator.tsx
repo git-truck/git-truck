@@ -17,7 +17,7 @@ const FullViewbox = styled.div`
   place-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: rgb(217,217,237);
+  background-color: var(--global-bg-color);
 `
 
 const LoadingText = styled.div`
@@ -28,7 +28,7 @@ export function AnalyzingIndicator() {
   return (
     <FullViewbox>
       <LoadingPane>
-        <img src={anitruck} alt={"🚛"} width={400}/>
+        <img src={anitruck} alt={"🚛"} width={400} />
         <LoadingText>Analyzing...</LoadingText>
       </LoadingPane>
     </FullViewbox>
