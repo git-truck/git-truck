@@ -17,6 +17,7 @@ const FullViewbox = styled.div`
   place-items: center;
   height: 100vh;
   width: 100vw;
+  background-color: rgb(217,217,237);
 `
 
 const LoadingText = styled.div`
