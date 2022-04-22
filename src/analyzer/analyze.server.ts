@@ -79,7 +79,7 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Git
   return commitObject
 }
 
-const treeRegex = /^[0-9a-z]+? (?<type>\w+) (?<hash>[0-9a-z]+)\s+(?<size>\d+|-)\s+(?<path>.+)/gm
+const treeRegex = /^\S+? (?<type>\S+) (?<hash>\S+)\s+(?<size>\S+)\s+(?<path>.+)/gm
 
 interface RawGitObject {
   type: "blob" | "tree"
@@ -91,13 +91,14 @@ interface RawGitObject {
 async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
   const rawContent = await GitCaller.getInstance().lsTree(hash)
 
-  const children: RawGitObject[] = []
+  const lsTreeEntries: RawGitObject[] = []
   const matches = rawContent.matchAll(treeRegex)
+
   for (const match of matches) {
-    if (match === null || match.groups === undefined) continue
+    if (!match.groups) continue
 
     const groups = match.groups
-    children.push({
+    lsTreeEntries.push({
       type: groups["type"] as "blob" | "tree",
       hash: groups["hash"],
       size: groups["size"] === "-" ? undefined : Number(groups["size"]),
@@ -115,7 +116,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
 
   const jobs = []
 
-  for (const child of children) {
+  for (const child of lsTreeEntries) {
     const prevTrees = child.path.split("/")
     const newName = prevTrees.pop() as string
     const newPath = `${path}/${child.path}`
