@@ -13,6 +13,7 @@ const LoadingPane = styled.div`
 `
 
 const FullViewbox = styled.div`
+  display: grid;
   place-items: center;
   height: 100vh;
   width: 100vw;
