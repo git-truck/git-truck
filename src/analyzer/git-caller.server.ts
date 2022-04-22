@@ -22,6 +22,7 @@ export type RawGitObject = {
 export class GitCaller {
   private useCache = true
   private repo: string
+  public branch?: string
   private catFileCache: Map<string, string> = new Map()
   private diffNumStatCache: Map<string, string> = new Map()
   private blameCache: Map<string, string> = new Map()
@@ -285,9 +286,9 @@ export class GitCaller {
     return result
   }
 
-  private async blame(path: string) {
+  private async blame(path: string, branch: string) {
     try {
-      const result = await runProcess(this.repo, "git", ["blame", path])
+      const result = await runProcess(this.repo, "git", ["blame", branch, "--", path])
       return result as string
     } catch (e) {
       log.warn(`Could not blame on ${path}. It might have been deleted since last commit.`)
@@ -295,14 +296,14 @@ export class GitCaller {
     }
   }
 
-  async blameCached(path: string): Promise<string> {
+  async blameCached(path: string, branch: string): Promise<string> {
     if (!this.useCache) {
       const cachedValue = this.blameCache.get(path)
       if (cachedValue) {
         return cachedValue
       }
     }
-    const result = await this.blame(path)
+    const result = await this.blame(path, branch)
     this.blameCache.set(path, result)
 
     return result
@@ -315,7 +316,8 @@ export class GitCaller {
 
   async parseBlame(path: string) {
     const cutString = path.slice(path.indexOf("/") + 1)
-    const blame = await this.blameCached(cutString)
+    if (!this.branch) throw Error("Branch is undefined")
+    const blame = await this.blameCached(cutString, this.branch)
     const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
     const matches = blame.match(blameRegex)
     const blameAuthors: Record<string, number> = {}
