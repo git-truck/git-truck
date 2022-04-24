@@ -141,7 +141,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
       case "blob":
         const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
         const gitLogRegex =
-          /commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>.*)\|> body <\|(?<body>(?:.|\s)*)\|>\s*(?:.* changed,)?\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
+          /"commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>.*)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
         const matches = gitLogResult.matchAll(gitLogRegex)
         const authorCredit: Record<string, number> = {}
         let commitCount = 0
@@ -152,6 +152,12 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           const insertions = Number(groups.insertions ?? 0)
           const deletions = Number(groups.deletions ?? 0)
           authorCredit[groups.authorName] = currentValue + insertions + deletions
+
+          const coauthors = getCoAuthors(groups.body)
+          for (const coauthor of coauthors) {
+            const coauothorCurrentValue = authorCredit[coauthor.name] ?? 0
+            authorCredit[coauthor.name] = coauothorCurrentValue + insertions + deletions
+          }
         }
 
         const blob: HydratedGitBlobObject = {

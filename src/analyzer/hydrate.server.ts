@@ -27,8 +27,7 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
 
   const { hash: first } = data
 
-  await bfs(first, repo, data)
-
+  // await bfs(first, repo, data)
 
   return data
 }
@@ -43,7 +42,7 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
 
-  addAuthorsField_mut(data.tree)
+  // addAuthorsField_mut(data.tree)
 }
 
 function addAuthorsField_mut(tree: HydratedGitTreeObject) {
