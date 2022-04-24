@@ -94,12 +94,25 @@ export class GitCaller {
     return result.trim()
   }
 
+  public async gitLog(filePath: string) {
+    if (!this.branch) throw Error("Branch not set")
+    const result = (await runProcess(this.repo, "git", [
+      "log",
+      this.branch,
+      '--format="commit <|%H|> author <|%an|> time <|%at|> subject <|%s|> body <|%b|>"',
+      "--shortstat",
+      "--follow",
+      filePath,
+    ])) as string
+    return result.trim()
+  }
+
   async lsTree(hash: string) {
     return await GitCaller._lsTree(this.repo, hash)
   }
 
   static async _lsTree(repo: string, hash: string) {
-    const result = await runProcess(repo, "git", ["ls-tree", "-rlt", hash]) as string
+    const result = (await runProcess(repo, "git", ["ls-tree", "-rlt", hash])) as string
     return result.trim()
   }
 

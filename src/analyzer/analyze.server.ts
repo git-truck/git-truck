@@ -1,6 +1,5 @@
 import { promises as fs } from "fs"
 import {
-  GitBlobObject,
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
@@ -8,6 +7,8 @@ import {
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
   TruckConfig,
+  HydratedGitBlobObject,
+  HydratedGitTreeObject,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
@@ -112,7 +113,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
     name,
     hash,
     children: [],
-  } as GitTreeObject
+  } as HydratedGitTreeObject
 
   const jobs = []
 
@@ -122,11 +123,11 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
     const newPath = `${path}/${child.path}`
     let currTree = rootTree
     for (const treePath of prevTrees) {
-      currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
+      currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as HydratedGitTreeObject
     }
     switch (child.type) {
       case "tree":
-        const newTree: GitTreeObject = {
+        const newTree: HydratedGitTreeObject = {
           type: "tree",
           path: newPath,
           name: newName,
@@ -138,13 +139,30 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
 
         break
       case "blob":
-        const blob: GitBlobObject = {
+        const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
+        const gitLogRegex =
+          /commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>.*)\|> body <\|(?<body>(?:.|\s)*)\|>\s*(?:.* changed,)?\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
+        const matches = gitLogResult.matchAll(gitLogRegex)
+        const authorCredit: Record<string, number> = {}
+        let commitCount = 0
+        for (const match of matches) {
+          commitCount++
+          const groups = match.groups ?? {}
+          const currentValue = authorCredit[groups.authorName] ?? 0
+          const insertions = Number(groups.insertions ?? 0)
+          const deletions = Number(groups.deletions ?? 0)
+          authorCredit[groups.authorName] = currentValue + insertions + deletions
+        }
+
+        const blob: HydratedGitBlobObject = {
           type: "blob",
           hash: child.hash,
           path: newPath,
           name: newName,
           sizeInBytes: child.size as number,
-          blameAuthors: {}
+          blameAuthors: {},
+          noCommits: commitCount,
+          authors: authorCredit,
         }
         // Don't block the current loop, just add the job to the queue and await it later
         jobs.push((async () => blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path))())
