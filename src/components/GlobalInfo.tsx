@@ -66,6 +66,7 @@ export function GlobalInfo() {
       <BoxTitle>{repo.name}</BoxTitle>
       <Spacer />
       <GroupedBranchSelect
+          disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
           headGroups={repo.groups}
         />

@@ -12,14 +12,14 @@ import {
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
-import { GitCaller, RepositoryWithGroups } from "~/analyzer/git-caller.server"
+import { GitCaller, RepositoryWithGroupedRefs } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
 import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
 import { GroupedBranchSelect } from "~/components/BranchSelect"
 
 interface IndexData {
-  repositories: RepositoryWithGroups[]
+  repositories: RepositoryWithGroupedRefs[]
   baseDir: string
   baseDirName: string
   repo: Repository | null
@@ -106,7 +106,7 @@ export default function Index() {
   )
 }
 
-function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element {
+function RepositoryEntry({ repo }: { repo: RepositoryWithGroupedRefs }): JSX.Element {
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 

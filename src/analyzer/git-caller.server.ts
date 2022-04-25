@@ -3,6 +3,7 @@ import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./uti
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
 import { AnalyzerData, AnalyzerDataInterfaceVersion, GitRefs, Repository } from "./model"
+import semverCompare from "semver-compare"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -19,11 +20,13 @@ export type RawGitObject = {
   value: string
 }
 
-export type RepositoryWithGroups = Repository & {
-  groups: {
-    Analyzed: Record<string, string>
-    "Not analyzed": Record<string, string>
-  }
+export type GroupedRefs = {
+  Branches: Record<string, [string, boolean]>
+  Tags: Record<string, [string, boolean]>
+}
+
+export type RepositoryWithGroupedRefs = Repository & {
+  groups: GroupedRefs
 }
 
 export class GitCaller {
@@ -121,23 +124,27 @@ export class GitCaller {
 
   static async getRepositoriesWithGroupedBranches(path: string) {
     const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(path)
-    const groupedRepos = repositories.map<RepositoryWithGroups>(GitCaller.groupRepositoryRefs)
-    return [repo, groupedRepos] as [Repository | null, RepositoryWithGroups[]]
+    const groupedRepos = await Promise.all(repositories.map<Promise<RepositoryWithGroupedRefs>>(GitCaller.groupRepositoryRefs))
+    return [repo, groupedRepos] as [Repository | null, RepositoryWithGroupedRefs[]]
   }
 
-  static groupRepositoryRefs(repo: Repository): RepositoryWithGroups {
-    const analyzedBranchNames = Object.entries(repo.analyzedBranches).map(([branchName]) => {
-      return branchName
-    })
-    const groups = {
-      Analyzed: repo.analyzedBranches,
-      "Not analyzed": Object.entries(repo.refs.heads).reduce((acc, [branchName, branch]) => {
-        if (!analyzedBranchNames.includes(branchName)) {
-          acc[branchName] = branch
-        }
-        return acc
-      }, {} as Record<string, string>),
+  static async groupRepositoryRefs(repo: Repository): Promise<RepositoryWithGroupedRefs> {
+    const groups: GroupedRefs = {
+      Branches: {},
+      Tags: {},
     }
+
+    const tagsEntries = Object.entries(repo.refs.tags).sort(([a], [b]) => semverCompare(a, b)).reverse()
+    for (const [tag, head] of tagsEntries) {
+      const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repo.path), branch: tag, branchHead: head })
+      groups.Tags[tag] = [head, !!result]
+    }
+
+    for (const [branch, head] of Object.entries(repo.refs.heads)) {
+      const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repo.path), branch: branch, branchHead: head })
+      groups.Branches[branch] = [head, !!result]
+    }
+
     return {
       ...repo,
       groups,
@@ -147,8 +154,7 @@ export class GitCaller {
   static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
     const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
-    if (!isRepo)
-      return null
+    if (!isRepo) return null
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
     const branchesWithCaches = await Promise.all(
       Object.entries(refs.heads).map(async ([branch, branchHead]) => {
@@ -165,7 +171,7 @@ export class GitCaller {
       .reduce((acc, branch) => {
         acc[branch.branch] = branch.branchHead
         return acc
-      }, {} as { [branch: string]: string} )
+      }, {} as { [branch: string]: string })
 
     const repo: Repository = {
       name: repoDir,
@@ -203,9 +209,7 @@ export class GitCaller {
     const entries = await fs.readdir(baseDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
 
-    const repoOrNull = await Promise.all(
-      dirs.map(repo => GitCaller.getRepoMetadata(join(baseDir, repo)))
-    )
+    const repoOrNull = await Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo))))
     const onlyRepos: Repository[] = repoOrNull.filter((currentRepo) => {
       if (currentRepo === null) return false
       if (pathIsRepo && currentRepo.name === getDirName(argPath)) {
