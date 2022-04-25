@@ -1,5 +1,6 @@
 import { useSpring } from "@react-spring/web"
-import { MutableRefObject, useMemo } from "react"
+import { MutableRefObject, useEffect, useMemo } from "react"
+import { useBoolean } from "react-use"
 import { useComponentSize as useCompSize } from "react-use-size"
 import { useOptions } from "./contexts/OptionsContext"
 
@@ -18,9 +19,13 @@ export function useCSSVar(varName: string) {
 
 export function useToggleableSpring(props: unknown) {
   const { animationsEnabled } = useOptions()
+  const [initialRender, setInitialRender] = useBoolean(true)
+  useEffect(() => {
+    setTimeout(() => setInitialRender(false), 0)
+  }, [setInitialRender])
 
   return useSpring({
     ...(typeof props === "object" ? props : {}),
-    immediate: !animationsEnabled,
+    immediate: initialRender || !animationsEnabled,
   })
 }
