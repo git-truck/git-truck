@@ -3,7 +3,7 @@ import { Providers } from "~/components/Providers"
 import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon, TextButton } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
-import { AnalyzerData, TruckUserConfig } from "~/analyzer/model"
+import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { Options } from "~/components/Options"
@@ -16,13 +16,13 @@ import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
 import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
-import { GitCaller, RepositoryWithGroupedRefs } from "~/analyzer/git-caller.server"
+import { GitCaller } from "~/analyzer/git-caller.server"
 
 let invalidateCache = false
 
 export interface RepoData {
   analyzerData: AnalyzerData
-  repo: RepositoryWithGroupedRefs
+  repo: Repository
 }
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -52,7 +52,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   return json<RepoData>({
     analyzerData,
-    repo: await GitCaller.groupRepositoryRefs(repo),
+    repo
   })
 }
 

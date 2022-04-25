@@ -20,15 +20,6 @@ export type RawGitObject = {
   value: string
 }
 
-export type GroupedRefs = {
-  Branches: Record<string, [string, boolean]>
-  Tags: Record<string, [string, boolean]>
-}
-
-export type RepositoryWithGroupedRefs = Repository & {
-  groups: GroupedRefs
-}
-
 export class GitCaller {
   private useCache = true
   private repo: string
@@ -122,56 +113,32 @@ export class GitCaller {
     return result.trim()
   }
 
-  static async getRepositoriesWithGroupedBranches(path: string) {
-    const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(path)
-    const groupedRepos = await Promise.all(repositories.map<Promise<RepositoryWithGroupedRefs>>(GitCaller.groupRepositoryRefs))
-    return [repo, groupedRepos] as [Repository | null, RepositoryWithGroupedRefs[]]
-  }
-
-  static async groupRepositoryRefs(repo: Repository): Promise<RepositoryWithGroupedRefs> {
-    const groups: GroupedRefs = {
-      Branches: {},
-      Tags: {},
-    }
-
-    const tagsEntries = Object.entries(repo.refs.tags).sort(([a], [b]) => semverCompare(a, b)).reverse()
-    for (const [tag, head] of tagsEntries) {
-      const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repo.path), branch: tag, branchHead: head })
-      groups.Tags[tag] = [head, !!result]
-    }
-
-    for (const [branch, head] of Object.entries(repo.refs.heads)) {
-      const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repo.path), branch: branch, branchHead: head })
-      groups.Branches[branch] = [head, !!result]
-    }
-
-    return {
-      ...repo,
-      groups,
-    }
-  }
-
   static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
     const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
     if (!isRepo) return null
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-    const branchesWithCaches = await Promise.all(
-      Object.entries(refs.heads).map(async ([branch, branchHead]) => {
-        const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
+    const allHeads = new Set([...Object.entries(refs.heads), ...Object.entries(refs.tags)]).values()
+    const headsWithCaches = await Promise.all(
+      Array.from(allHeads).map(async ([headName, head]) => {
+        const [result] = await GitCaller.retrieveCachedResult({
+          repo: getDirName(repoPath),
+          branch: headName,
+          branchHead: head,
+        })
         return {
-          branch,
-          branchHead,
+          headName,
+          head,
           isAnalyzed: result !== null,
         }
       })
     )
-    const analyzedBranches = branchesWithCaches
-      .filter((branch) => branch.isAnalyzed)
-      .reduce((acc, branch) => {
-        acc[branch.branch] = branch.branchHead
-        return acc
-      }, {} as { [branch: string]: string })
+    const analyzedHeads = headsWithCaches
+      .filter((head) => head.isAnalyzed)
+      .reduce(
+        (acc, headEntry) => ({ ...acc, [headEntry.head]: true, [headEntry.headName]: true }),
+        {} as { [branch: string]: boolean }
+      )
 
     const repo: Repository = {
       name: repoDir,
@@ -180,7 +147,7 @@ export class GitCaller {
       reasons: [],
       currentHead: await GitCaller._getRepositoryHead(repoPath),
       refs,
-      analyzedBranches,
+      analyzedHeads,
     }
 
     try {
@@ -224,7 +191,7 @@ export class GitCaller {
   static parseRefs(refsAsMultilineString: string): GitRefs {
     const gitRefs: GitRefs = {
       heads: {},
-      remotes: {},
+      // remotes: {},
       tags: {},
     }
 
@@ -245,7 +212,7 @@ export class GitCaller {
           gitRefs.heads[path] = hash
           break
         case "remotes":
-          gitRefs.remotes[path] = hash
+          // gitRefs.remotes[path] = hash
           break
         case "tags":
           gitRefs.tags[path] = hash
@@ -254,6 +221,8 @@ export class GitCaller {
           throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
       }
     }
+
+    gitRefs.tags = Object.fromEntries(Object.entries(gitRefs.tags).sort(([a], [b]) => semverCompare(a, b)))
 
     return gitRefs
   }

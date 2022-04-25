@@ -4,18 +4,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper } from "./util"
 import { SelectHTMLAttributes } from "react"
-import { GroupedRefs } from "~/analyzer/git-caller.server"
+import { GitRefs } from "~/analyzer/model"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
-  headGroups: GroupedRefs,
+  headGroups: GitRefs,
+  analyzedHeads: Record<string, boolean>,
   iconGroupColorMap?: Record<string, string>,
   iconColor?: string
 }
 
-export function GroupedBranchSelect({ headGroups, iconColor, disabled, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
+export function RevisionSelect({ headGroups, analyzedHeads, iconColor, disabled, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const groupsEntries = Object.entries(headGroups)
 
-  const allEntriesFlattened = groupsEntries.reduce<string[]>((acc, [, heads]) => {
+  const allEntriesFlattened = groupsEntries.reduce<string[]>((acc, heads) => {
     return acc.concat(Object.keys(heads))
   }, [])
 
@@ -28,11 +29,14 @@ export function GroupedBranchSelect({ headGroups, iconColor, disabled, ...props 
         {groupsEntries.map(([group, heads]) => (
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
-              {Object.entries(heads).map(([branchName, [, isAnalyzed]]) => (
-                <OptionWithEllipsis key={branchName} value={branchName} disabled={disabled} title={isAnalyzed ? "Analyzed" : "Not analyzed"}>
-                  {isAnalyzed ? "✅" : "❎"} {branchName}
-                </OptionWithEllipsis>
-              ))}
+              {Object.entries(heads).map(([headName, head]) => {
+                const isAnalyzed = analyzedHeads[head]
+                return (
+                  <OptionWithEllipsis key={headName} value={headName} disabled={disabled} title={isAnalyzed ? "Analyzed" : "Not analyzed"}>
+                    {isAnalyzed ? "✅" : "❎"} {headName}
+                  </OptionWithEllipsis>
+                )
+              })}
             </optgroup>) : null
         ))}
       </SelectWithEllipsis>

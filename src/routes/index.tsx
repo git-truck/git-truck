@@ -12,14 +12,14 @@ import {
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
-import { GitCaller, RepositoryWithGroupedRefs } from "~/analyzer/git-caller.server"
+import { GitCaller } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
 import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
-import { GroupedBranchSelect } from "~/components/BranchSelect"
+import { RevisionSelect } from "~/components/RevisionSelect"
 
 interface IndexData {
-  repositories: RepositoryWithGroupedRefs[]
+  repositories: Repository[]
   baseDir: string
   baseDirName: string
   repo: Repository | null
@@ -30,11 +30,11 @@ let hasRedirected = false
 
 export const loader: LoaderFunction = async () => {
   const args = await getArgsWithDefaults()
-  const [repo, repositoriesWithGroupedBranches] = await GitCaller.getRepositoriesWithGroupedBranches(args.path)
+  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   const repositoriesResponse = json<IndexData>({
-    repositories: repositoriesWithGroupedBranches,
+    repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
     repo,
@@ -106,11 +106,11 @@ export default function Index() {
   )
 }
 
-function RepositoryEntry({ repo }: { repo: RepositoryWithGroupedRefs }): JSX.Element {
+function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 
-  const branchIsAnalyzed = repo.analyzedBranches[head]
+  const branchIsAnalyzed = repo.analyzedHeads[head]
   const iconColor = branchIsAnalyzed ? "green" : undefined
 
   return (
@@ -122,11 +122,12 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroupedRefs }): JSX.Ele
         {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
         </BoxSubTitle>
         <Spacer />
-        <GroupedBranchSelect
+        <RevisionSelect
           value={head}
           onChange={(e) => setHead(e.target.value)}
-          headGroups={repo.groups}
+          headGroups={repo.refs}
           iconColor={iconColor}
+          analyzedHeads={repo.analyzedHeads}
         />
         <Spacer />
         <Actions>
