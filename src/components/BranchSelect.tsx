@@ -4,43 +4,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper } from "./util"
 import { SelectHTMLAttributes } from "react"
-
-interface BranchSelectProps {
-  heads: Record<string, string>,
-}
-
-export function BranchSelect({ heads, disabled, ...props }: BranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
-  const headsEntries = Object.entries(heads)
-  return <SelectWithIconWrapper>
-    <FontAwesomeIcon icon={branchIcon} color="#333" />
-    {headsEntries.length === 1 ? (
-      <SelectPlaceholder>{headsEntries[0][0]}</SelectPlaceholder>
-    ) : (
-      <SelectWithEllipsis {...props}>
-        {headsEntries.map(([branchName, hash]) => {
-          return (
-            <OptionWithEllipsis key={hash} value={branchName} disabled={disabled}>
-              {branchName}
-            </OptionWithEllipsis>
-          )
-        })}
-      </SelectWithEllipsis>
-    )}
-  </SelectWithIconWrapper>
-}
-
+import { GroupedRefs } from "~/analyzer/git-caller.server"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
-  headGroups: Record<string, Record<string, string>>,
+  headGroups: GroupedRefs,
   iconGroupColorMap?: Record<string, string>,
   iconColor?: string
 }
 
-export function GroupedBranchSelect({ headGroups, iconColor, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
-  const headGroupsEntries = Object.entries(headGroups).map<[string, [string, string][]]>(([group, heads]) => [group, Object.entries(heads)])
+export function GroupedBranchSelect({ headGroups, iconColor, disabled, ...props }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
+  const groupsEntries = Object.entries(headGroups)
 
-  const allEntriesFlattened = headGroupsEntries.reduce<string[]>((acc, [group, heads]) => {
-    return acc.concat(heads.map(([branchName]) => branchName))
+  const allEntriesFlattened = groupsEntries.reduce<string[]>((acc, [, heads]) => {
+    return acc.concat(Object.keys(heads))
   }, [])
 
   return <SelectWithIconWrapper>
@@ -49,12 +25,12 @@ export function GroupedBranchSelect({ headGroups, iconColor, ...props }: Grouped
       <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
     ) : (
       <SelectWithEllipsis {...props}>
-        {headGroupsEntries.map(([group, heads]) => (
-          heads.length > 0 ? (
+        {groupsEntries.map(([group, heads]) => (
+          Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
-              {heads.map(([branchName]) => (
-                <OptionWithEllipsis key={branchName} value={branchName}>
-                  {branchName}
+              {Object.entries(heads).map(([branchName, [, isAnalyzed]]) => (
+                <OptionWithEllipsis key={branchName} value={branchName} disabled={disabled} title={isAnalyzed ? "Analyzed" : "Not analyzed"}>
+                  {isAnalyzed ? "✅" : "❎"} {branchName}
                 </OptionWithEllipsis>
               ))}
             </optgroup>) : null

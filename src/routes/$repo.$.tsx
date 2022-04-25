@@ -16,13 +16,13 @@ import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
 import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
-import { GitCaller, RepositoryWithGroups } from "~/analyzer/git-caller.server"
+import { GitCaller, RepositoryWithGroupedRefs } from "~/analyzer/git-caller.server"
 
 let invalidateCache = false
 
 export interface RepoData {
   analyzerData: AnalyzerData
-  repo: RepositoryWithGroups
+  repo: RepositoryWithGroupedRefs
 }
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -52,7 +52,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   return json<RepoData>({
     analyzerData,
-    repo: GitCaller.groupRepositoryRefs(repo),
+    repo: await GitCaller.groupRepositoryRefs(repo),
   })
 }
 
