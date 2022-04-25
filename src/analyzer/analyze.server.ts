@@ -16,7 +16,7 @@ import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
-import { getAuthorSet, hydrateData } from "./hydrate.server"
+import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
@@ -26,6 +26,7 @@ import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 
 let repoDir = "."
+const authors = new Set<string>()
 
 export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
   const rawContent = await GitCaller.getInstance().catFileCached(hash)
@@ -141,22 +142,35 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
       case "blob":
         const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
         const gitLogRegex =
-          /"commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>.*)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
+          /"commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>(?:.|\s)*?)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
         const matches = gitLogResult.matchAll(gitLogRegex)
         const authorCredit: Record<string, number> = {}
         let commitCount = 0
         let lastChanged: number | undefined = undefined
-
         for (const match of matches) {
           const groups = match.groups ?? {}
           if (commitCount === 0) lastChanged = Number(groups.timestamp)
           const currentValue = authorCredit[groups.authorName] ?? 0
-          const insertions = Number(groups.insertions ?? 0)
-          const deletions = Number(groups.deletions ?? 0)
+          const insertions = Number(groups.insertions?.trim() ?? 0)
+          const deletions = Number(groups.deletions?.trim() ?? 0)
+          if (insertions + deletions === 0) {
+            log.debug(gitLogResult)
+            //   log.debug(`hash: ${groups.hash}`)
+            //   log.debug(`authorName: ${groups.authorName}`)
+            //   log.debug(`timestamp: ${groups.timestamp}`)
+            //   log.debug(`subject: ${groups.subject}`)
+            //   log.debug(`body: ${groups.body}`)
+            //   log.debug(`insertions: ${groups.insertions}`)
+            //   log.debug(`deletions: ${groups.deletions}`)
+            //   log.debug("-------------------------------------------")
+          }
           authorCredit[groups.authorName] = currentValue + insertions + deletions
           commitCount++
 
           const coauthors = getCoAuthors(groups.body)
+          authors.add(groups.authorName)
+          for (const person of coauthors) authors.add(person.name)
+
           for (const coauthor of coauthors) {
             const coauothorCurrentValue = authorCredit[coauthor.name] ?? 0
             authorCredit[coauthor.name] = coauothorCurrentValue + insertions + deletions
@@ -316,7 +330,7 @@ export async function analyze(args: TruckConfig) {
       refs: GitCaller.parseRefs(await GitCaller.getInstance().getRefs()),
       cached: false,
       hiddenFiles,
-      authors: getAuthorSet(),
+      authors: Array.from(authors),
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,

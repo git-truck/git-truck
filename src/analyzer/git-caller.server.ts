@@ -102,6 +102,7 @@ export class GitCaller {
       '--format="commit <|%H|> author <|%an|> time <|%at|> subject <|%s|> body <|%b|>"',
       "--shortstat",
       "--follow",
+      "--",
       filePath,
     ])) as string
     return result.trim()
