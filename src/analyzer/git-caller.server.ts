@@ -108,7 +108,7 @@ export class GitCaller {
   }
 
   static async _revParse(dir: string, ref: string) {
-    const result = (await runProcess(dir, "git", ["rev-parse", ref])) as string
+    const result = (await runProcess(dir, "git", ["rev-list", "-n", "1", ref])) as string
     return result.trim()
   }
 
