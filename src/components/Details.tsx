@@ -13,6 +13,7 @@ import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
+import byteSize from "byte-size"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -196,11 +197,12 @@ const StyledSpan = styled.span`
 `
 
 function SizeEntry(props: { size: number; isBinary?: boolean }) {
+  const size = byteSize(props.size ?? 0)
   return (
     <>
       <DetailsKey grow>Size</DetailsKey>
       <DetailsValue>
-        {props.size ?? 0} B <StyledSpan>{props.isBinary ? "(binary file)" : null}</StyledSpan>
+        {size.value} {size.unit} <StyledSpan>{props.isBinary ? <><br />(binary file)</> : null}</StyledSpan>
       </DetailsValue>
     </>
   )
