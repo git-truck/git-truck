@@ -145,13 +145,16 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
         const matches = gitLogResult.matchAll(gitLogRegex)
         const authorCredit: Record<string, number> = {}
         let commitCount = 0
+        let lastChanged: number | undefined = undefined
+
         for (const match of matches) {
-          commitCount++
           const groups = match.groups ?? {}
+          if (commitCount === 0) lastChanged = Number(groups.timestamp)
           const currentValue = authorCredit[groups.authorName] ?? 0
           const insertions = Number(groups.insertions ?? 0)
           const deletions = Number(groups.deletions ?? 0)
           authorCredit[groups.authorName] = currentValue + insertions + deletions
+          commitCount++
 
           const coauthors = getCoAuthors(groups.body)
           for (const coauthor of coauthors) {
@@ -169,6 +172,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           blameAuthors: {},
           noCommits: commitCount,
           authors: authorCredit,
+          lastChangeEpoch: lastChanged,
         }
         // Don't block the current loop, just add the job to the queue and await it later
         jobs.push((async () => blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path))())
