@@ -81,7 +81,6 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   unionedAuthors?: Map<AuthorshipType, Record<string, number>>
   dominantAuthor?: Map<AuthorshipType, [string, number]>
   isSearchResult?: boolean
-  blameAuthors: Record<string, number>
 }
 
 export interface GitTreeObject extends GitBaseObject {
