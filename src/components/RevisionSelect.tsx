@@ -33,7 +33,7 @@ export function RevisionSelect({ headGroups, analyzedHeads, iconColor, disabled,
                 const isAnalyzed = analyzedHeads[head]
                 return (
                   <OptionWithEllipsis key={headName} value={headName} disabled={disabled} title={isAnalyzed ? "Analyzed" : "Not analyzed"}>
-                    {isAnalyzed ? "✅" : "❎"} {headName}
+                    {headName}
                   </OptionWithEllipsis>
                 )
               })}
