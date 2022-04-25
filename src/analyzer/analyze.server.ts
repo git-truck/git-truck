@@ -24,6 +24,7 @@ import latestVersion from "latest-version"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
+import isBinaryPath from "is-binary-path"
 
 let repoDir = "."
 const authors = new Set<string>()
@@ -180,6 +181,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           noCommits: commitCount,
           authors: authorCredit,
           lastChangeEpoch: lastChanged,
+          isBinary: isBinaryPath(child.path),
         }
         // Don't block the current loop, just add the job to the queue and await it later
         jobs.push((async () => blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path))())
