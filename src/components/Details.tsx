@@ -29,7 +29,7 @@ export function Details() {
   const { authorshipType } = useOptions()
   const { state } = useTransition()
   const { setPath, path } = usePath()
-  const data = useData()
+  const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
 
   useEffect(() => {
@@ -41,8 +41,8 @@ export function Details() {
 
   useEffect(() => {
     // Update clickedObject if data changes
-    setClickedObject((clickedObject) => findObjectInTree(data.commit.tree, clickedObject))
-  }, [data, setClickedObject])
+    setClickedObject((clickedObject) => findObjectInTree(analyzerData.commit.tree, clickedObject))
+  }, [analyzerData, setClickedObject])
 
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"

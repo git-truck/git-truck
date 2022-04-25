@@ -42,33 +42,33 @@ interface ChartProps {
 
 export function Chart(props: ChartProps) {
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(null)
-  const data = useData()
+  const { analyzerData } = useData()
   const { chartType } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
 
   const nodes = useMemo(() => {
-    return createPartitionedHiearchy(data.commit, getPaddedSizeProps(props.size, chartType), chartType, path)
-  }, [chartType, data.commit, props.size, path])
+    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(props.size, chartType), chartType, path)
+  }, [chartType, analyzerData.commit, props.size, path])
 
-  useEffect(() => setHoveredBlob(null), [chartType, data.commit, props.size])
+  useEffect(() => setHoveredBlob(null), [chartType, analyzerData.commit, props.size])
 
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-          onClick: () => setClickedObject(d.data),
-          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => setClickedObject(d.data),
+        onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+        onMouseOut: () => setHoveredBlob(null),
+      }
       : {
-          onClick: () => {
-            setClickedObject(d.data)
-            setPath(d.data.path)
-          },
-          onMouseOver: () => setHoveredBlob(null),
-          onMouseOut: () => setHoveredBlob(null),
-        }
+        onClick: () => {
+          setClickedObject(d.data)
+          setPath(d.data.path)
+        },
+        onMouseOver: () => setHoveredBlob(null),
+        onMouseOut: () => setHoveredBlob(null),
+      }
 
   return (
     <>
@@ -91,7 +91,7 @@ export function Chart(props: ChartProps) {
 }
 
 const G = styled.g<{ blink: boolean }>`
-  animation-name: ${ props => props.blink ? blinkAnimation : "none" };
+  animation-name: ${props => props.blink ? blinkAnimation : "none"};
   animation-duration: 2s;
   animation-iteration-count: infinite;
 `
@@ -174,8 +174,8 @@ function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObje
   return <CircleSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
-  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+const CircleSVG = styled(animated.circle) <{ pulse: boolean }>`
+  animation-name: ${props => props.pulse ? pulseAnimation : "none"};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
@@ -203,8 +203,8 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
   return <RectSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
-  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+const RectSVG = styled(animated.rect) <{ pulse: boolean }>`
+  animation-name: ${props => props.pulse ? pulseAnimation : "none"};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;

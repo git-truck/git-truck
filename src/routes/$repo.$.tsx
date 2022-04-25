@@ -1,4 +1,4 @@
-import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, useLoaderData } from "remix"
+import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
 import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon, TextButton } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
@@ -16,26 +16,44 @@ import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
 import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
+import { GitCaller, RepositoryWithGroups } from "~/analyzer/git-caller.server"
 
 let invalidateCache = false
 
-export const loader: LoaderFunction = async ({ params }) => {
-  const args = await getTruckConfigWithArgs(params["repo"] as string)
+export interface RepoData {
+  analyzerData: AnalyzerData
+  repo: RepositoryWithGroups
+}
 
+export const loader: LoaderFunction = async ({ params }) => {
+  if (!params["repo"] || !params["*"]) {
+    return redirect("/")
+  }
+
+  const args = await getTruckConfigWithArgs(params["repo"] as string)
   const options: TruckUserConfig = {
     invalidateCache: invalidateCache || args.invalidateCache,
   }
-  if (params["repo"]) {
-    options.path = resolve(args.path, params["repo"])
-  }
+  options.path = resolve(args.path, params["repo"])
+  options.branch = params["*"]
 
   if (params["*"]) {
     options.branch = params["*"]
   }
 
-  const data = await analyze({ ...args, ...options })
+  const analyzerData = await analyze({ ...args, ...options })
+
   invalidateCache = false
-  return json<AnalyzerData>(data)
+  const repo = await GitCaller.getRepoMetadata(options.path)
+
+  if (!repo) {
+    throw Error("Error loading repo")
+  }
+
+  return json<RepoData>({
+    analyzerData,
+    repo: GitCaller.groupRepositoryRefs(repo),
+  })
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -141,10 +159,11 @@ function Feedback() {
   )
 }
 
-export default function Index() {
-  const data = useLoaderData<AnalyzerData>()
+export default function Repo() {
+  const data = useLoaderData<RepoData>()
+  const { analyzerData } = data
 
-  if (!data) return null
+  if (!analyzerData) return null
 
   return (
     <Providers data={data}>
@@ -158,16 +177,16 @@ export default function Index() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {data.latestVersion && semverCompare(data.latestVersion, data.currentVersion) === 1 ? (
+          {analyzerData.latestVersion && semverCompare(analyzerData.latestVersion, analyzerData.currentVersion) === 1 ? (
             <Box>
-              <p>Update available: {data.latestVersion}</p>
-              <StyledP>Currently installed: {data.currentVersion}</StyledP>
+              <p>Update available: {analyzerData.latestVersion}</p>
+              <StyledP>Currently installed: {analyzerData.currentVersion}</StyledP>
               <StyledP>
                 To update, close application and run: <Code inline>npx git-truck@latest</Code>
               </StyledP>
             </Box>
           ) : null}
-          {data.hasUnstagedChanges ? (
+          {analyzerData.hasUnstagedChanges ? (
             <Box>
               <p>
                 <LightFontAwesomeIcon icon={faTriangleExclamation} />
@@ -180,7 +199,7 @@ export default function Index() {
           ) : null}
           <Grower />
           <Details />
-          {data.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+          {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Legend />
         </SidePanel>
       </Container>

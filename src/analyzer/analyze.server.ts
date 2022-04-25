@@ -285,7 +285,6 @@ export async function analyze(args: TruckConfig) {
 
     const authorUnions = args.unionedAuthors as string[][]
     data = {
-      refs: GitCaller.parseRefs(await GitCaller.getInstance().getRefs()),
       cached: false,
       hiddenFiles,
       authors: getAuthorSet(),

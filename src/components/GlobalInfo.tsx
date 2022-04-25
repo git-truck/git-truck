@@ -8,13 +8,13 @@ import { Spacer } from "./Spacer"
 import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
-import { BranchSelect } from "./BranchSelect"
+import { GroupedBranchSelect } from "./BranchSelect"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
 export function GlobalInfo() {
-  const data = useData()
+  const { analyzerData, repo } = useData()
   const { path } = usePath()
   const transitionState = useTransition()
 
@@ -29,7 +29,7 @@ export function GlobalInfo() {
 
   const switchBranch = (branch: string) => {
     setIsAnalyzing(true)
-    navigate(["", data.repo, branch].join("/"))
+    navigate(["", repo.name, branch].join("/"))
   }
   useEffect(() => {
     if (transitionState.state === "idle") {
@@ -51,7 +51,7 @@ export function GlobalInfo() {
   if (temppath !== "") {
     paths = paths.slice(0, paths.length - 1)
     paths.push(["...", ""])
-    paths.push([data.repo, data.repo])
+    paths.push([repo.name, repo.name])
   }
 
   return (
@@ -63,21 +63,19 @@ export function GlobalInfo() {
         </StyledLink>
       </SelectWithIconWrapper>
       <Spacer />
-      <BoxTitle>{data.repo}</BoxTitle>
+      <BoxTitle>{repo.name}</BoxTitle>
       <Spacer />
-      <BranchSelect
-        heads={data.refs.heads}
-        defaultValue={data.branch}
-        onChange={(e) => switchBranch(e.target.value)}
-        disabled={transitionState.state !== "idle"}
-      />
+      <GroupedBranchSelect
+          onChange={(e) => switchBranch(e.target.value)}
+          headGroups={repo.groups}
+        />
       <Spacer />
       <strong>Analyzed: </strong>
-      <span>{dateTimeFormatShort(data.lastRunEpoch)}</span>
+      <span>{dateTimeFormatShort(analyzerData.lastRunEpoch)}</span>
       <Spacer />
       <strong>As of commit: </strong>
-      <Code inline title={data.commit.message ?? "No commit message"}>
-        {data.commit.hash.slice(0, 7)}
+      <Code inline title={analyzerData.commit.message ?? "No commit message"}>
+        {analyzerData.commit.hash.slice(0, 7)}
       </Code>
       <Spacer />
       <Form

@@ -59,14 +59,14 @@ export function HiddenFiles() {
   const location = useLocation()
   const [collapse, setCollapse] = useBoolean(false)
   const transitionState = useTransition()
-  const data = useData()
+  const { analyzerData } = useData()
   return (
     <Box>
-      <BoxSubTitle>Hidden files ({data.hiddenFiles.length})</BoxSubTitle>
+      <BoxSubTitle>Hidden files ({analyzerData.hiddenFiles.length})</BoxSubTitle>
       <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       {!collapse ? (
         <div>
-          {data.hiddenFiles.map((hidden) => (
+          {analyzerData.hiddenFiles.map((hidden) => (
             <Line key={hidden} title={hidden}>
               <InlineForm method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />

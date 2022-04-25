@@ -46,7 +46,7 @@ const ChartWrapper = styled.div`
 export function Main() {
   const [ref, size] = useComponentSize()
   const { path, setPath } = usePath()
-  const data = useData()
+  const { repo } = useData()
 
   let temppath = path
   let paths: [string, string][] = []
@@ -63,7 +63,7 @@ export function Main() {
   if (temppath !== "") {
     paths = paths.slice(0, paths.length - 1)
     paths.push(["...", ""])
-    paths.push([data.repo, data.repo])
+    paths.push([repo.name, repo.name])
   }
 
   return (

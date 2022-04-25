@@ -9,7 +9,7 @@ interface BranchSelectProps {
   heads: Record<string, string>,
 }
 
-export function BranchSelect({ heads, ...props }: BranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
+export function BranchSelect({ heads, disabled, ...props }: BranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const headsEntries = Object.entries(heads)
   return <SelectWithIconWrapper>
     <FontAwesomeIcon icon={branchIcon} color="#333" />
@@ -19,7 +19,7 @@ export function BranchSelect({ heads, ...props }: BranchSelectProps & SelectHTML
       <SelectWithEllipsis {...props}>
         {headsEntries.map(([branchName, hash]) => {
           return (
-            <OptionWithEllipsis key={hash} value={branchName}>
+            <OptionWithEllipsis key={hash} value={branchName} disabled={disabled}>
               {branchName}
             </OptionWithEllipsis>
           )

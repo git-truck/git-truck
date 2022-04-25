@@ -12,18 +12,11 @@ import {
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { GitCaller, RepositoryWithGroups } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
 import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
-import { ChangeEvent, useState } from "react"
+import { useState } from "react"
 import { GroupedBranchSelect } from "~/components/BranchSelect"
-
-type RepositoryWithGroups = Repository & {
-  groups: {
-    "Analyzed": Record<string, string>,
-    "Not analyzed": Record<string, string>,
-  }
-}
 
 interface IndexData {
   repositories: RepositoryWithGroups[]
@@ -37,26 +30,7 @@ let hasRedirected = false
 
 export const loader: LoaderFunction = async () => {
   const args = await getArgsWithDefaults()
-  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
-
-  const repositoriesWithGroupedBranches = repositories.map(repo => {
-    const analyzedBranchNames = Object.entries(repo.analyzedBranches).map(([branchName]) => {
-      return branchName
-    })
-    const groups = {
-      Analyzed: repo.analyzedBranches,
-      "Not analyzed": Object.entries(repo.refs.heads).reduce((acc, [branchName, branch]) => {
-        if (!analyzedBranchNames.includes(branchName)) {
-          acc[branchName] = branch
-        }
-        return acc
-      }, {} as Record<string, string>),
-    }
-    return {
-      ...repo,
-      groups
-    }
-  })
+  const [repo, repositoriesWithGroupedBranches] = await GitCaller.getRepositoriesWithGroupedBranches(args.path)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   const repositoriesResponse = json<IndexData>({
@@ -150,7 +124,7 @@ function RepositoryEntry({ repo }: { repo: RepositoryWithGroups }): JSX.Element 
         <Spacer />
         <GroupedBranchSelect
           value={head}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => setHead(e.target.value)}
+          onChange={(e) => setHead(e.target.value)}
           headGroups={repo.groups}
           iconColor={iconColor}
         />
@@ -222,3 +196,4 @@ const AnalyzedTag = styled.span`
   vertical-align: middle;
   align-content: flex-start;
 `
+

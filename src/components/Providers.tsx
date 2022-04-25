@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
+import { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import { ChartType, getDefaultOptions, Options, OptionsContext } from "../contexts/OptionsContext"
@@ -10,17 +11,17 @@ import { AuthorshipType, createMetricData as createMetricsData, MetricsData, Met
 
 interface ProvidersProps {
   children: React.ReactNode
-  data: AnalyzerData
+  data: RepoData
 }
 
 export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
   const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
-  const [path, setPath] = useState(data.repo)
+  const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(() => createMetricsData(data), [data])
+  const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData), [data])
 
   const optionsValue = useMemo(
     () => ({
