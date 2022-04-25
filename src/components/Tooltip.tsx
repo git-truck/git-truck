@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react"
 import { useMouse } from "react-use"
 import styled from "styled-components"
-import { HydratedGitBlobObject } from "~/analyzer/model"
+import { GitBlobObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
@@ -37,7 +37,7 @@ const TooltipContainer = styled.div`
 `
 
 interface TooltipProps {
-  hoveredBlob: HydratedGitBlobObject | null
+  hoveredBlob: GitBlobObject | null
 }
 
 export function Tooltip({ hoveredBlob }: TooltipProps) {
@@ -86,7 +86,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
 
 function ColorMetricDependentInfo(props: {
   metric: MetricType
-  hoveredBlob: HydratedGitBlobObject | null
+  hoveredBlob: GitBlobObject | null
   authorshipType: AuthorshipType
 }) {
   switch (props.metric) {

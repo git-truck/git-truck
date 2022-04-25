@@ -1,5 +1,5 @@
 import { makeDupeMap, unionAuthors } from "./authorUnionUtil"
-import { HydratedGitBlobObject } from "~/analyzer/model"
+import { GitBlobObject } from "~/analyzer/model"
 
 const authorUnions = [["author1", "author1Dupe"]]
 const authorUnionsTwo = [
@@ -9,7 +9,7 @@ const authorUnionsTwo = [
   ["emiljapelt", "Emil Jäpelt"],
 ]
 
-const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
+const makeGitBlobObject: () => GitBlobObject = () => ({
   sizeInBytes: 0,
   authors: {
     author1Dupe: 25,
@@ -25,21 +25,21 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
   hash: "",
 })
 
-function sumContributions(authors: HydratedGitBlobObject["authors"]) {
+function sumContributions(authors: GitBlobObject["authors"]) {
   return Object.values(authors).reduce((a, b) => a + b, 0)
 }
 
 describe("unionAuthors", () => {
   it("merges authors properly", () => {
-    const hydratedGitBlobObject = makeHydratedGitBlobObject()
-    const authors = unionAuthors(hydratedGitBlobObject.authors, makeDupeMap(authorUnions))
+    const gitBlobObject = makeGitBlobObject()
+    const authors = unionAuthors(gitBlobObject.authors, makeDupeMap(authorUnions))
     expect(authors.author1).toEqual(50)
     expect(authors.author2).toEqual(50)
     expect(authors.author1Dupe).toBeUndefined()
   })
 
   it("still merges authors properly", () => {
-    const parseTS: HydratedGitBlobObject = {
+    const parseTS: GitBlobObject = {
       type: "blob",
       hash: "2c701dc4ef5141fc8bc6db347fa2e0a44aec6c99",
       path: "git-visual/parser/src/parse.ts",
@@ -69,9 +69,9 @@ describe("unionAuthors", () => {
   })
 
   it("the sum is the same before and after union", () => {
-    const hydratedGitBlobObject = makeHydratedGitBlobObject()
-    const sumBefore = sumContributions(hydratedGitBlobObject.authors)
-    const authors = unionAuthors(hydratedGitBlobObject.authors, makeDupeMap(authorUnions))
+    const gitBlobObject = makeGitBlobObject()
+    const sumBefore = sumContributions(gitBlobObject.authors)
+    const authors = unionAuthors(gitBlobObject.authors, makeDupeMap(authorUnions))
     const sumAfter = sumContributions(authors)
     expect(sumBefore).toEqual(sumAfter)
   })

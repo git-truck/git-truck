@@ -1,4 +1,4 @@
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { AnalyzerData, GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import { AuthorshipType } from "./metrics"
 
 export const makeDupeMap = (authors: string[][]) => {
@@ -12,7 +12,7 @@ export const makeDupeMap = (authors: string[][]) => {
 }
 
 export function unionAuthors(authors: Record<string, number>, authorAliasMap: Map<string, string>) {
-  return Object.entries(authors).reduce<HydratedGitBlobObject["authors"]>(
+  return Object.entries(authors).reduce<GitBlobObject["authors"]>(
     (newAuthorObject, [authorOrAlias, contributionCount]) => {
       // Lookup the author in the dupe list
       const author = authorAliasMap.get(authorOrAlias)
@@ -38,7 +38,7 @@ export function addAuthorUnion(data: AnalyzerData) {
   return authorUnions
 }
 
-function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Map<string, string>) {
+function addAuthorUnionRec(tree: GitTreeObject, authorUnions: Map<string, string>) {
   for (const child of tree.children) {
     if (child.type === "blob") {
       child.unionedAuthors = new Map<AuthorshipType, Record<string, number>>()
@@ -50,10 +50,10 @@ function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Map<string
   }
 }
 
-export function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
+export function calculateAuthorshipForSubTree(tree: GitTreeObject, authorshipType: AuthorshipType) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
-  function subTree(tree: HydratedGitTreeObject) {
+  function subTree(tree: GitTreeObject) {
     for (const child of tree.children) {
       if (child.type === "blob") {
         if (child.isBinary) continue

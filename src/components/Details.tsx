@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useTransition } from "remix"
 import styled from "styled-components"
-import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { GitBlobObject, GitObject, GitTreeObject } from "~/analyzer/model"
 import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
@@ -130,7 +130,7 @@ export function Details() {
   )
 }
 
-function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject | null) {
+function findObjectInTree(tree: GitTreeObject, object: GitObject | null) {
   if (object === null) return null
   let currentTree = tree
   const steps = object.path.split("/")
@@ -151,7 +151,7 @@ function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject
   return currentTree
 }
 
-function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObject }) {
+function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
   const folderCount = props.clickedTree.children.filter((child) => child.type === "tree").length
   const fileCount = props.clickedTree.children.length - folderCount
 
@@ -165,7 +165,7 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
   )
 }
 
-function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
+function CommitsEntry(props: { clickedBlob: GitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Commits</DetailsKey>
@@ -174,7 +174,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   )
 }
 
-function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
+function LastchangedEntry(props: { clickedBlob: GitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Last changed</DetailsKey>

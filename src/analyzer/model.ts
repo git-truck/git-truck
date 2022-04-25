@@ -11,8 +11,6 @@ export interface Repository {
   analyzedBranches: Record<string, string>
 }
 
-export type GitObject = GitBlobObject | GitTreeObject
-
 export interface GitBaseObject {
   type: "blob" | "tree" | "commit"
   hash: string
@@ -39,7 +37,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 6
+export const AnalyzerDataInterfaceVersion = 7
 
 export interface AnalyzerData {
   refs: GitRefs
@@ -48,7 +46,7 @@ export interface AnalyzerData {
   hiddenFiles: string[]
   repo: string
   branch: string
-  commit: HydratedGitCommitObject
+  commit: GitCommitObject
   authors: string[]
   authorUnions: string[][]
   currentVersion: string
@@ -69,11 +67,6 @@ export interface GitBlobObject extends GitBaseObject {
   path: string
   sizeInBytes: number
   blameAuthors: Record<string, number>
-}
-
-export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
-
-export interface HydratedGitBlobObject extends GitBlobObject {
   authors: Record<string, number>
   noCommits: number
   lastChangeEpoch?: number
@@ -83,21 +76,18 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   isSearchResult?: boolean
 }
 
+export type GitObject = GitBlobObject | GitTreeObject
+
 export interface GitTreeObject extends GitBaseObject {
   type: "tree"
   name: string
   path: string
   children: (GitTreeObject | GitBlobObject)[]
-}
-
-export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
-  children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
   isSearchResult?: boolean
 }
 
 export interface GitCommitObject extends GitBaseObject {
   type: "commit"
-  tree: GitTreeObject
   parent: string
   parent2: string | null
   author: PersonWithTime
@@ -105,10 +95,7 @@ export interface GitCommitObject extends GitBaseObject {
   message: string
   description: string
   coauthors: Person[]
-}
-
-export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
-  tree: HydratedGitTreeObject
+  tree: GitTreeObject
   minNoCommits: number
   maxNoCommits: number
   newestLatestChangeEpoch: number

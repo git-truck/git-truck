@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import { AnalyzerData, GitBlobObject, GitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
@@ -16,9 +16,9 @@ interface ProvidersProps {
 export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<Options | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
+  const [searchResults, setSearchResults] = useState<GitObject[]>([])
   const [path, setPath] = useState(data.repo)
-  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
+  const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
 
   const metricsData: MetricsData = useMemo(() => createMetricsData(data), [data])
 
@@ -41,12 +41,12 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           authorshipType,
         })),
-      setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
+      setHoveredBlob: (blob: GitBlobObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
           hoveredBlob: blob,
         })),
-      setClickedObject: (object: HydratedGitObject | null) =>
+      setClickedObject: (object: GitObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
           clickedObject: object,

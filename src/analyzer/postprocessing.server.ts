@@ -1,5 +1,5 @@
 import { Ignore } from "ignore"
-import { HydratedGitTreeObject, AnalyzerData } from "./model"
+import { GitTreeObject, AnalyzerData } from "./model"
 
 export function initMetrics(data: AnalyzerData) {
   data.commit.minNoCommits = Number.MAX_VALUE
@@ -8,7 +8,7 @@ export function initMetrics(data: AnalyzerData) {
   data.commit.newestLatestChangeEpoch = Number.MIN_VALUE
 }
 
-export function applyMetrics(data: AnalyzerData, currentTree: HydratedGitTreeObject): HydratedGitTreeObject {
+export function applyMetrics(data: AnalyzerData, currentTree: GitTreeObject): GitTreeObject {
   return {
     ...currentTree,
     children: currentTree.children.map((current) => {
@@ -32,7 +32,7 @@ export function applyMetrics(data: AnalyzerData, currentTree: HydratedGitTreeObj
   }
 }
 
-export function applyIgnore(tree: HydratedGitTreeObject, truckIgnore: Ignore): HydratedGitTreeObject {
+export function applyIgnore(tree: GitTreeObject, truckIgnore: Ignore): GitTreeObject {
   return {
     ...tree,
     children: tree.children
@@ -46,17 +46,17 @@ export function applyIgnore(tree: HydratedGitTreeObject, truckIgnore: Ignore): H
   }
 }
 
-export function TreeCleanup(tree: HydratedGitTreeObject) {
+export function TreeCleanup(tree: GitTreeObject) {
   for (const child of tree.children) {
     if (child.type === "tree") {
-      const ctree = child as HydratedGitTreeObject
+      const ctree = child as GitTreeObject
       TreeCleanup(ctree)
     }
   }
   tree.children = tree.children.filter((child) => {
     if (child.type === "blob") return true
     else {
-      const ctree = child as HydratedGitTreeObject
+      const ctree = child as GitTreeObject
       if (ctree.children.length === 0) return false
       return true
     }

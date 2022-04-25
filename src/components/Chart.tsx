@@ -3,12 +3,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import { memo, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
-import {
-  HydratedGitBlobObject,
-  HydratedGitCommitObject,
-  HydratedGitObject,
-  HydratedGitTreeObject,
-} from "~/analyzer/model"
+import { GitBlobObject, GitCommitObject, GitObject, GitTreeObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useToggleableSpring } from "~/hooks"
 import {
@@ -26,7 +21,7 @@ import { usePath } from "../contexts/PathContext"
 import { blinkAnimation, pulseAnimation } from "./Animations"
 import { Tooltip } from "./Tooltip"
 
-type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
+type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
 const SVG = styled.svg<{ chartType: ChartType }>`
   display: grid;
@@ -41,7 +36,7 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
-  const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(null)
+  const [hoveredBlob, setHoveredBlob] = useState<GitBlobObject | null>(null)
   const data = useData()
   const { chartType } = useOptions()
   const { path } = usePath()
@@ -58,7 +53,7 @@ export function Chart(props: ChartProps) {
     isBlob(d.data)
       ? {
           onClick: () => setClickedObject(d.data),
-          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+          onMouseOver: () => setHoveredBlob(d.data as GitBlobObject),
           onMouseOut: () => setHoveredBlob(null),
         }
       : {
@@ -79,7 +74,11 @@ export function Chart(props: ChartProps) {
       >
         {nodes?.descendants().map((d, i) => {
           return (
-            <G blink={clickedObject?.path === d.data.path} key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
+            <G
+              blink={clickedObject?.path === d.data.path}
+              key={`${chartType}${d.data.path}`}
+              {...createGroupHandlers(d)}
+            >
               <Node isRoot={i === 0} d={d} />
             </G>
           )
@@ -91,7 +90,7 @@ export function Chart(props: ChartProps) {
 }
 
 const G = styled.g<{ blink: boolean }>`
-  animation-name: ${ props => props.blink ? blinkAnimation : "none" };
+  animation-name: ${(props) => (props.blink ? blinkAnimation : "none")};
   animation-duration: 2s;
   animation-iteration-count: infinite;
 `
@@ -121,7 +120,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
   switch (chartType) {
     case "BUBBLE_CHART":
-      const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+      const circleDatum = d as HierarchyCircularNode<GitObject>
       collapseDisplayText_mut((text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth)
 
       return (
@@ -133,7 +132,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
         </>
       )
     case "TREE_MAP":
-      const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
+      const rectDatum = d as HierarchyRectangularNode<GitObject>
       collapseDisplayText_mut((text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth)
 
       return (
@@ -158,7 +157,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   }
 })
 
-function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObject>; isSearchMatch: boolean }) {
+function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<GitObject>; isSearchMatch: boolean }) {
   const metricsData = useMetrics()
   const { metricType, authorshipType } = useOptions()
 
@@ -175,13 +174,13 @@ function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObje
 }
 
 const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
-  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
 `
 
-function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObject>; isSearchMatch: boolean }) {
+function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<GitObject>; isSearchMatch: boolean }) {
   const metricsData = useMetrics()
   const { metricType, authorshipType } = useOptions()
 
@@ -204,7 +203,7 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
 }
 
 const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
-  animation-name: ${ props => props.pulse ? pulseAnimation : "none" };
+  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
@@ -215,7 +214,7 @@ function CircleText({
   displayText,
   isSearchMatch,
 }: {
-  d: HierarchyCircularNode<HydratedGitObject>
+  d: HierarchyCircularNode<GitObject>
   displayText: string
   isSearchMatch: boolean
 }) {
@@ -265,7 +264,7 @@ function RectText({
   displayText,
   isSearchMatch,
 }: {
-  d: HierarchyRectangularNode<HydratedGitObject>
+  d: HierarchyRectangularNode<GitObject>
   displayText: string
   isSearchMatch: boolean
 }) {
@@ -283,12 +282,12 @@ function RectText({
 }
 
 function createPartitionedHiearchy(
-  data: HydratedGitCommitObject,
+  data: GitCommitObject,
   paddedSizeProps: { height: number; width: number },
   chartType: ChartType,
   path: string
 ) {
-  const root = data.tree as HydratedGitTreeObject
+  const root = data.tree as GitTreeObject
 
   let currentTree = root
   const steps = path.substring(data.tree.name.length + 1).split("/")
@@ -306,18 +305,18 @@ function createPartitionedHiearchy(
     }
   }
 
-  const castedTree = currentTree as HydratedGitObject
+  const castedTree = currentTree as GitObject
 
   const hiearchy = hierarchy(castedTree)
     .sum((d) => {
-      const lineCount = (d as HydratedGitBlobObject).sizeInBytes
+      const lineCount = (d as GitBlobObject).sizeInBytes
       return lineCount ? lineCount : 1
     })
     .sort((a, b) => (b.value !== undefined && a.value !== undefined ? b.value - a.value : 0))
 
   switch (chartType) {
     case "TREE_MAP":
-      const treeMapPartition = treemap<HydratedGitObject>()
+      const treeMapPartition = treemap<GitObject>()
         .size([paddedSizeProps.width, paddedSizeProps.height])
         .paddingInner(1)
         .paddingOuter(treemapPadding)
@@ -325,21 +324,21 @@ function createPartitionedHiearchy(
       const tmPartition = treeMapPartition(hiearchy)
 
       filterTree(tmPartition, (child) => {
-        const cast = child as HierarchyRectangularNode<HydratedGitObject>
+        const cast = child as HierarchyRectangularNode<GitObject>
         return (child.data.type === "blob" && cast.x0 >= 1 && cast.y0 >= 1) || child.data.type === "tree"
       })
 
       return tmPartition
 
     case "BUBBLE_CHART":
-      const bubbleChartPartition = pack<HydratedGitObject>()
+      const bubbleChartPartition = pack<GitObject>()
         .size([paddedSizeProps.width, paddedSizeProps.height])
         .padding(bubblePadding)
 
       const bPartition = bubbleChartPartition(hiearchy)
 
       filterTree(bPartition, (child) => {
-        const cast = child as HierarchyCircularNode<HydratedGitObject>
+        const cast = child as HierarchyCircularNode<GitObject>
         return (child.data.type === "blob" && cast.r >= 1) || child.data.type === "tree"
       })
 
@@ -349,10 +348,7 @@ function createPartitionedHiearchy(
   }
 }
 
-function filterTree(
-  node: HierarchyNode<HydratedGitObject>,
-  filter: (child: HierarchyNode<HydratedGitObject>) => boolean
-) {
+function filterTree(node: HierarchyNode<GitObject>, filter: (child: HierarchyNode<GitObject>) => boolean) {
   node.children = node.children?.filter((c) => filter(c))
   for (const child of node.children ?? []) {
     if ((child.children?.length ?? 0) > 0) filterTree(child, filter)
@@ -396,5 +392,5 @@ function getPaddingFromChartType(chartType: ChartType) {
   }
 }
 
-const isTree = (d: HydratedGitObject): d is HydratedGitTreeObject => d.type === "tree"
-const isBlob = (d: HydratedGitObject): d is HydratedGitBlobObject => d.type === "blob"
+const isTree = (d: GitObject): d is GitTreeObject => d.type === "tree"
+const isBlob = (d: GitObject): d is GitBlobObject => d.type === "blob"

@@ -5,7 +5,7 @@ import { useDebounce } from "react-use"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
 import { useId } from "@react-aria/utils"
-import { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { GitObject, GitTreeObject } from "~/analyzer/model"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -17,9 +17,9 @@ const StyledBox = styled(Box)`
   flex-direction: column;
 `
 
-function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
-  const searchResults: HydratedGitObject[] = []
-  function subTreeSearch(subTree: HydratedGitTreeObject) {
+function findSearchResults(tree: GitTreeObject, searchString: string) {
+  const searchResults: GitObject[] = []
+  function subTreeSearch(subTree: GitTreeObject) {
     for (const child of subTree.children) {
       if (child.name.toLowerCase().includes(searchString.toLowerCase()) && searchString) {
         searchResults.push(child)
@@ -43,7 +43,7 @@ export default function SearchBar() {
   const { setPath } = usePath()
   const { setClickedObject } = useClickedObject()
 
-  function onClick(object: HydratedGitObject) {
+  function onClick(object: GitObject) {
     setClickedObject(object)
     if (object.type === "tree") {
       setPath(object.path)

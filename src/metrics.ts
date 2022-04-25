@@ -1,5 +1,5 @@
 import distinctColors from "distinct-colors"
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { AnalyzerData, GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import { addAuthorUnion, makeDupeMap, unionAuthors } from "./authorUnionUtil"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
@@ -115,7 +115,7 @@ export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, string>
-): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
+): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
@@ -123,7 +123,7 @@ export function getMetricCalcs(
   return [
     [
       "FILE_EXTENSION",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>()
         }
@@ -132,14 +132,14 @@ export function getMetricCalcs(
     ],
     [
       "SINGLE_AUTHOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache, authorshipType)
       },
     ],
     [
       "MOST_COMMITS",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
             `${commit.minNoCommits}`,
@@ -155,7 +155,7 @@ export function getMetricCalcs(
     ],
     [
       "LAST_CHANGED",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
             dateFormatRelative(commit.oldestLatestChangeEpoch),
@@ -171,7 +171,7 @@ export function getMetricCalcs(
     ],
     [
       "TOP_CONTRIBUTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
@@ -181,8 +181,8 @@ export function getMetricCalcs(
 }
 
 export function setupMetricsCache(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -190,8 +190,8 @@ export function setupMetricsCache(
 }
 
 function setupMetricsCacheRec(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {
@@ -219,7 +219,7 @@ function setupMetricsCacheRec(
   }
 }
 
-function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
   const color = getColorFromExtension(extension)
   const legend = cache.legend as PointLegendData
@@ -238,7 +238,7 @@ function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
 
 function setDominantAuthorColor(
   authorColors: Map<string, string>,
-  blob: HydratedGitBlobObject,
+  blob: GitBlobObject,
   cache: MetricCache,
   authorshipType: AuthorshipType
 ) {
@@ -271,7 +271,7 @@ function setDominantAuthorColor(
   legend.set(dom, new PointInfo(color, 1))
 }
 
-function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorshipType: AuthorshipType) {
+function setDominanceColor(blob: GitBlobObject, cache: MetricCache, authorshipType: AuthorshipType) {
   const dominatedColor = "red"
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
@@ -290,7 +290,6 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
     cache.colormap.set(blob.path, nocreditColor)
     return
   }
-
 
   if (!authorUnion) throw Error("No unioned authors found")
   switch (Object.keys(authorUnion).length) {
@@ -340,7 +339,7 @@ class ColdMapTranslater {
     return `hsl(240,100%,${this.translator.inverseTranslate(value)}%)`
   }
 
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+  setColor(blob: GitBlobObject, cache: MetricCache) {
     cache.colormap.set(blob.path, this.getColor(blob.lastChangeEpoch ?? 0))
   }
 }
@@ -358,7 +357,7 @@ class HeatMapTranslater {
     return `hsl(0,100%,${this.translator.inverseTranslate(value)}%)`
   }
 
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+  setColor(blob: GitBlobObject, cache: MetricCache) {
     cache.colormap.set(blob.path, this.getColor(blob.noCommits))
   }
 }

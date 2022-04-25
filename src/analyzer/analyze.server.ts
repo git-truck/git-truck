@@ -5,9 +5,9 @@ import {
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
   TruckConfig,
-  HydratedGitBlobObject,
-  HydratedGitTreeObject,
-  HydratedGitCommitObject,
+  GitBlobObject,
+  GitTreeObject,
+  GitCommitObject,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
@@ -65,10 +65,14 @@ export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectL
     message,
     description,
     coauthors,
+    minNoCommits: Number.MAX_VALUE,
+    maxNoCommits: Number.MIN_VALUE,
+    oldestLatestChangeEpoch: Number.MAX_VALUE,
+    newestLatestChangeEpoch: Number.MIN_VALUE,
   }
 }
 
-export async function analyzeCommit(repoName: string, hash: string): Promise<HydratedGitCommitObject> {
+export async function analyzeCommit(repoName: string, hash: string): Promise<GitCommitObject> {
   if (hash === undefined) {
     throw Error("Hash is required")
   }
@@ -76,10 +80,6 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Hyd
   const commitObject = {
     ...commit,
     tree: await analyzeTree(repoName, repoName, tree),
-    minNoCommits: Number.MAX_VALUE,
-    maxNoCommits: Number.MIN_VALUE,
-    oldestLatestChangeEpoch: Number.MAX_VALUE,
-    newestLatestChangeEpoch: Number.MIN_VALUE,
   }
   return commitObject
 }
@@ -93,7 +93,7 @@ interface RawGitObject {
   size?: number
 }
 
-async function analyzeTree(path: string, name: string, hash: string): Promise<HydratedGitTreeObject> {
+async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
   const rawContent = await GitCaller.getInstance().lsTree(hash)
 
   const lsTreeEntries: RawGitObject[] = []
@@ -117,7 +117,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Hy
     name,
     hash,
     children: [],
-  } as HydratedGitTreeObject
+  } as GitTreeObject
 
   const jobs = []
 
@@ -127,11 +127,11 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Hy
     const newPath = `${path}/${child.path}`
     let currTree = rootTree
     for (const treePath of prevTrees) {
-      currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as HydratedGitTreeObject
+      currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
     }
     switch (child.type) {
       case "tree":
-        const newTree: HydratedGitTreeObject = {
+        const newTree: GitTreeObject = {
           type: "tree",
           path: newPath,
           name: newName,
@@ -145,7 +145,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Hy
       case "blob":
         const { commitCount, authorCredit, lastChanged } = await analyzeGitLog(child)
 
-        const blob: HydratedGitBlobObject = {
+        const blob: GitBlobObject = {
           type: "blob",
           hash: child.hash,
           path: newPath,

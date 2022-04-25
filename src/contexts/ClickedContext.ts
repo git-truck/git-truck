@@ -1,9 +1,9 @@
 import { createContext, Dispatch, SetStateAction, useContext } from "react"
-import { HydratedGitObject } from "../analyzer/model"
+import { GitObject } from "../analyzer/model"
 
 export interface clickedObject {
-  clickedObject: HydratedGitObject | null
-  setClickedObject: Dispatch<SetStateAction<HydratedGitObject | null>>
+  clickedObject: GitObject | null
+  setClickedObject: Dispatch<SetStateAction<GitObject | null>>
 }
 
 export const ClickedObjectContext = createContext<clickedObject | null>(null)
