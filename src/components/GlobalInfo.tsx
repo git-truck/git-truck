@@ -8,7 +8,7 @@ import { Spacer } from "./Spacer"
 import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
-import { GroupedBranchSelect } from "./BranchSelect"
+import { RevisionSelect } from "./RevisionSelect"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -65,10 +65,11 @@ export function GlobalInfo() {
       <Spacer />
       <BoxTitle>{repo.name}</BoxTitle>
       <Spacer />
-      <GroupedBranchSelect
+      <RevisionSelect
           disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
-          headGroups={repo.groups}
+          headGroups={repo.refs}
+          analyzedHeads={repo.analyzedHeads}
         />
       <Spacer />
       <strong>Analyzed: </strong>

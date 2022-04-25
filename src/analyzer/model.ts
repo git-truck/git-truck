@@ -8,7 +8,7 @@ export interface Repository {
   currentHead: string
   refs: GitRefs
   reasons: ANALYZER_CACHE_MISS_REASONS[]
-  analyzedBranches: Record<string, string>
+  analyzedHeads: Record<string, boolean>
 }
 
 export type GitObject = GitBlobObject | GitTreeObject
@@ -56,11 +56,9 @@ export interface AnalyzerData {
   hasUnstagedChanges: boolean
 }
 
-export interface GitRefs {
-  heads: Record<string, string>
-  remotes: Record<string, string>
-  tags: Record<string, string>
-}
+type RefType = "heads" |  "tags" //| "remotes"
+
+export type GitRefs = Record<RefType, Record<string, string>>
 
 export interface GitBlobObject extends AbstractGitObject {
   type: "blob"
