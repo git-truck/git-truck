@@ -142,7 +142,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
       case "blob":
         const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
         const gitLogRegex =
-          /"commit <\|(?<hash>.*)\|> author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> subject <\|(?<subject>(?:.|\s)*?)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
+          /"author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
         const matches = gitLogResult.matchAll(gitLogRegex)
         const authorCredit: Record<string, number> = {}
         let commitCount = 0
@@ -153,27 +153,20 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           const currentValue = authorCredit[groups.authorName] ?? 0
           const insertions = Number(groups.insertions?.trim() ?? 0)
           const deletions = Number(groups.deletions?.trim() ?? 0)
-          if (insertions + deletions === 0) {
-            log.debug(gitLogResult)
-            //   log.debug(`hash: ${groups.hash}`)
-            //   log.debug(`authorName: ${groups.authorName}`)
-            //   log.debug(`timestamp: ${groups.timestamp}`)
-            //   log.debug(`subject: ${groups.subject}`)
-            //   log.debug(`body: ${groups.body}`)
-            //   log.debug(`insertions: ${groups.insertions}`)
-            //   log.debug(`deletions: ${groups.deletions}`)
-            //   log.debug("-------------------------------------------")
-          }
-          authorCredit[groups.authorName] = currentValue + insertions + deletions
+          const newValue = currentValue + insertions + deletions
+          if (newValue > 0) authorCredit[groups.authorName] = newValue
           commitCount++
 
           const coauthors = getCoAuthors(groups.body)
           authors.add(groups.authorName)
-          for (const person of coauthors) authors.add(person.name)
+          for (const person of coauthors) {
+            if (authorCredit[person.name] > 0) authors.add(person.name)
+          }
 
           for (const coauthor of coauthors) {
-            const coauothorCurrentValue = authorCredit[coauthor.name] ?? 0
-            authorCredit[coauthor.name] = coauothorCurrentValue + insertions + deletions
+            const coauthorCurrentValue = authorCredit[coauthor.name] ?? 0
+            const coauthorNewValue = coauthorCurrentValue + insertions + deletions
+            if (coauthorNewValue > 0) authorCredit[coauthor.name] = coauthorNewValue
           }
         }
 

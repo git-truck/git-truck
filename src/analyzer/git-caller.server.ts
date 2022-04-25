@@ -99,7 +99,7 @@ export class GitCaller {
     const result = (await runProcess(this.repo, "git", [
       "log",
       this.branch,
-      '--format="commit <|%H|> author <|%an|> time <|%at|> subject <|%s|> body <|%b|>"',
+      '--format="author <|%an|> time <|%at|> body <|%b|>"',
       "--shortstat",
       "--follow",
       "--",
