@@ -1,14 +1,13 @@
 import { promises as fs } from "fs"
 import {
-  GitCommitObject,
   GitCommitObjectLight,
-  GitTreeObject,
   AnalyzerData,
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
   TruckConfig,
   HydratedGitBlobObject,
   HydratedGitTreeObject,
+  HydratedGitCommitObject,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
@@ -16,7 +15,6 @@ import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
-import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
@@ -70,7 +68,7 @@ export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectL
   }
 }
 
-export async function analyzeCommit(repoName: string, hash: string): Promise<GitCommitObject> {
+export async function analyzeCommit(repoName: string, hash: string): Promise<HydratedGitCommitObject> {
   if (hash === undefined) {
     throw Error("Hash is required")
   }
@@ -78,6 +76,10 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Git
   const commitObject = {
     ...commit,
     tree: await analyzeTree(repoName, repoName, tree),
+    minNoCommits: Number.MAX_VALUE,
+    maxNoCommits: Number.MIN_VALUE,
+    oldestLatestChangeEpoch: Number.MAX_VALUE,
+    newestLatestChangeEpoch: Number.MIN_VALUE,
   }
   return commitObject
 }
@@ -91,7 +93,7 @@ interface RawGitObject {
   size?: number
 }
 
-async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
+async function analyzeTree(path: string, name: string, hash: string): Promise<HydratedGitTreeObject> {
   const rawContent = await GitCaller.getInstance().lsTree(hash)
 
   const lsTreeEntries: RawGitObject[] = []
@@ -141,35 +143,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
 
         break
       case "blob":
-        const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
-        const gitLogRegex =
-          /"author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
-        const matches = gitLogResult.matchAll(gitLogRegex)
-        const authorCredit: Record<string, number> = {}
-        let commitCount = 0
-        let lastChanged: number | undefined = undefined
-        for (const match of matches) {
-          const groups = match.groups ?? {}
-          if (commitCount === 0) lastChanged = Number(groups.timestamp)
-          const currentValue = authorCredit[groups.authorName] ?? 0
-          const insertions = Number(groups.insertions?.trim() ?? 0)
-          const deletions = Number(groups.deletions?.trim() ?? 0)
-          const newValue = currentValue + insertions + deletions
-          if (newValue > 0) authorCredit[groups.authorName] = newValue
-          commitCount++
-
-          const coauthors = getCoAuthors(groups.body)
-          authors.add(groups.authorName)
-          for (const person of coauthors) {
-            if (authorCredit[person.name] > 0) authors.add(person.name)
-          }
-
-          for (const coauthor of coauthors) {
-            const coauthorCurrentValue = authorCredit[coauthor.name] ?? 0
-            const coauthorNewValue = coauthorCurrentValue + insertions + deletions
-            if (coauthorNewValue > 0) authorCredit[coauthor.name] = coauthorNewValue
-          }
-        }
+        const { commitCount, authorCredit, lastChanged } = await analyzeGitLog(child)
 
         const blob: HydratedGitBlobObject = {
           type: "blob",
@@ -193,6 +167,40 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
   await Promise.all(jobs)
 
   return rootTree
+}
+
+async function analyzeGitLog(child: RawGitObject) {
+  const gitLogResult = await GitCaller.getInstance().gitLog(child.path)
+  const gitLogRegex =
+    /"author <\|(?<authorName>.*)\|> time <\|(?<timestamp>\d+)\|> body <\|(?<body>(?:.|\s)*?)\|>"\s*(?:.* changed,)\s*(?:(?<insertions>\w+).*\(\+\))?(?:,|\s)*(?:(?<deletions>\w+).*\(-\))?/gm
+  const matches = gitLogResult.matchAll(gitLogRegex)
+  const authorCredit: Record<string, number> = {}
+  let commitCount = 0
+  let lastChanged: number | undefined = undefined
+  for (const match of matches) {
+    const groups = match.groups ?? {}
+    if (commitCount === 0) lastChanged = Number(groups.timestamp)
+    const currentValue = authorCredit[groups.authorName] ?? 0
+    const insertions = Number(groups.insertions?.trim() ?? 0)
+    const deletions = Number(groups.deletions?.trim() ?? 0)
+    const newValue = currentValue + insertions + deletions
+    if (newValue > 0) authorCredit[groups.authorName] = newValue
+    commitCount++
+
+    const coauthors = getCoAuthors(groups.body)
+    authors.add(groups.authorName)
+    for (const person of coauthors) {
+      if (authorCredit[person.name] > 0) authors.add(person.name)
+    }
+
+    for (const coauthor of coauthors) {
+      const coauthorCurrentValue = authorCredit[coauthor.name] ?? 0
+      const coauthorNewValue = coauthorCurrentValue + insertions + deletions
+      if (coauthorNewValue > 0) authorCredit[coauthor.name] = coauthorNewValue
+    }
+  }
+
+  return { commitCount, authorCredit, lastChanged }
 }
 
 function getCommandLine() {
@@ -290,21 +298,12 @@ export async function analyze(args: TruckConfig) {
     const runDateEpoch = Date.now()
     const [repoTree, repoTreeError] = await describeAsyncJob(
       () => analyzeCommit(repoName, branchHead),
-      "Analyzing commit tree",
-      "Commit tree analyzed",
-      "Error analyzing commit tree"
+      "Analyzing files",
+      "Files analyzed",
+      "Error analyzing file tree"
     )
 
     if (repoTreeError) throw repoTreeError
-
-    const [hydratedRepoTree, hydratedRepoTreeError] = await describeAsyncJob(
-      () => hydrateData(repoDir, repoTree),
-      "Hydrating commit tree",
-      "Commit tree hydrated",
-      "Error hydrating commit tree"
-    )
-
-    if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -328,7 +327,7 @@ export async function analyze(args: TruckConfig) {
       authors: Array.from(authors),
       repo: repoName,
       branch: branchName,
-      commit: hydratedRepoTree,
+      commit: repoTree,
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
