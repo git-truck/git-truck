@@ -118,7 +118,7 @@ export class GitCaller {
     const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
     if (!isRepo) return null
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-    const allHeads = new Set([...Object.entries(refs.heads), ...Object.entries(refs.tags)]).values()
+    const allHeads = new Set([...Object.entries(refs.Heads), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {
         const [result] = await GitCaller.retrieveCachedResult({
@@ -190,9 +190,9 @@ export class GitCaller {
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
     const gitRefs: GitRefs = {
-      heads: {},
+      Heads: {},
       // remotes: {},
-      tags: {},
+      Tags: {},
     }
 
     const regex = /^(?<hash>.*) refs\/(?<ref_type>.*?)\/(?<path>.*)$/gm
@@ -209,20 +209,20 @@ export class GitCaller {
 
       switch (ref_type) {
         case "heads":
-          gitRefs.heads[path] = hash
+          gitRefs.Heads[path] = hash
           break
         case "remotes":
           // gitRefs.remotes[path] = hash
           break
         case "tags":
-          gitRefs.tags[path] = hash
+          gitRefs.Tags[path] = hash
           break
         default:
           throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
       }
     }
 
-    gitRefs.tags = Object.fromEntries(Object.entries(gitRefs.tags).sort(([a], [b]) => semverCompare(a, b)))
+    gitRefs.Tags = Object.fromEntries(Object.entries(gitRefs.Tags).sort(([a], [b]) => semverCompare(a, b)))
 
     return gitRefs
   }
