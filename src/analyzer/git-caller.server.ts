@@ -19,6 +19,13 @@ export type RawGitObject = {
   value: string
 }
 
+export type RepositoryWithGroups = Repository & {
+  groups: {
+    Analyzed: Record<string, string>
+    "Not analyzed": Record<string, string>
+  }
+}
+
 export class GitCaller {
   private useCache = true
   private repo: string
@@ -99,7 +106,7 @@ export class GitCaller {
   }
 
   static async _lsTree(repo: string, hash: string) {
-    const result = await runProcess(repo, "git", ["ls-tree", "-rlt", hash]) as string
+    const result = (await runProcess(repo, "git", ["ls-tree", "-rlt", hash])) as string
     return result.trim()
   }
 
@@ -112,6 +119,82 @@ export class GitCaller {
     return result.trim()
   }
 
+  static async getRepositoriesWithGroupedBranches(path: string) {
+    const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(path)
+    const groupedRepos = repositories.map<RepositoryWithGroups>(GitCaller.groupRepositoryRefs)
+    return [repo, groupedRepos] as [Repository | null, RepositoryWithGroups[]]
+  }
+
+  static groupRepositoryRefs(repo: Repository): RepositoryWithGroups {
+    const analyzedBranchNames = Object.entries(repo.analyzedBranches).map(([branchName]) => {
+      return branchName
+    })
+    const groups = {
+      Analyzed: repo.analyzedBranches,
+      "Not analyzed": Object.entries(repo.refs.heads).reduce((acc, [branchName, branch]) => {
+        if (!analyzedBranchNames.includes(branchName)) {
+          acc[branchName] = branch
+        }
+        return acc
+      }, {} as Record<string, string>),
+    }
+    return {
+      ...repo,
+      groups,
+    }
+  }
+
+  static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
+    const repoDir = getDirName(repoPath)
+    const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
+    if (!isRepo)
+      return null
+    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
+    const branchesWithCaches = await Promise.all(
+      Object.entries(refs.heads).map(async ([branch, branchHead]) => {
+        const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
+        return {
+          branch,
+          branchHead,
+          isAnalyzed: result !== null,
+        }
+      })
+    )
+    const analyzedBranches = branchesWithCaches
+      .filter((branch) => branch.isAnalyzed)
+      .reduce((acc, branch) => {
+        acc[branch.branch] = branch.branchHead
+        return acc
+      }, {} as { [branch: string]: string} )
+
+    const repo: Repository = {
+      name: repoDir,
+      path: repoPath,
+      data: null,
+      reasons: [],
+      currentHead: await GitCaller._getRepositoryHead(repoPath),
+      refs,
+      analyzedBranches,
+    }
+
+    try {
+      const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
+      if (!error) {
+        const [branchHead, branch] = findBranchHeadResult
+        const [data, reasons] = await GitCaller.retrieveCachedResult({
+          repo: repoDir,
+          branch,
+          branchHead,
+        })
+        repo.data = data
+        repo.reasons = reasons
+      }
+    } catch (e) {
+      return null
+    }
+    return repo
+  }
+
   static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const pathIsRepo = await GitCaller.isGitRepo(argPath)
@@ -119,56 +202,9 @@ export class GitCaller {
 
     const entries = await fs.readdir(baseDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
+
     const repoOrNull = await Promise.all(
-      dirs.map(async (repoDir) => {
-        const repoPath = join(baseDir, repoDir)
-        const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
-        if (!isRepo) return null
-        const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-        const branchesWithCaches = await Promise.all(
-          Object.entries(refs.heads).map(async ([branch, branchHead]) => {
-            const [result] = await GitCaller.retrieveCachedResult({ repo: getDirName(repoPath), branch, branchHead })
-            return {
-              branch,
-              branchHead,
-              isAnalyzed: result !== null,
-            }
-          })
-        )
-        const analyzedBranches = branchesWithCaches
-          .filter((branch) => branch.isAnalyzed)
-          .reduce((acc, branch) => {
-            acc[branch.branch] = branch.branchHead
-            return acc
-          }, {} as { [branch: string]: string })
-
-        const repo: Repository = {
-          name: repoDir,
-          path: repoPath,
-          data: null,
-          reasons: [],
-          currentHead: await GitCaller._getRepositoryHead(repoPath),
-          refs,
-          analyzedBranches,
-        }
-
-        try {
-          const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
-          if (!error) {
-            const [branchHead, branch] = findBranchHeadResult
-            const [data, reasons] = await GitCaller.retrieveCachedResult({
-              repo: repoDir,
-              branch,
-              branchHead,
-            })
-            repo.data = data
-            repo.reasons = reasons
-          }
-        } catch (e) {
-          return null
-        }
-        return repo
-      })
+      dirs.map(repo => GitCaller.getRepoMetadata(join(baseDir, repo)))
     )
     const onlyRepos: Repository[] = repoOrNull.filter((currentRepo) => {
       if (currentRepo === null) return false

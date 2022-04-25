@@ -13,7 +13,7 @@ export interface Repository {
 
 export type GitObject = GitBlobObject | GitTreeObject
 
-export interface GitBaseObject {
+export interface AbstractGitObject {
   type: "blob" | "tree" | "commit"
   hash: string
 }
@@ -42,7 +42,6 @@ export interface TruckConfig {
 export const AnalyzerDataInterfaceVersion = 6
 
 export interface AnalyzerData {
-  refs: GitRefs
   cached: boolean
   interfaceVersion: typeof AnalyzerDataInterfaceVersion
   hiddenFiles: string[]
@@ -63,7 +62,7 @@ export interface GitRefs {
   tags: Record<string, string>
 }
 
-export interface GitBlobObject extends GitBaseObject {
+export interface GitBlobObject extends AbstractGitObject {
   type: "blob"
   name: string
   path: string
@@ -83,7 +82,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   isSearchResult?: boolean
 }
 
-export interface GitTreeObject extends GitBaseObject {
+export interface GitTreeObject extends AbstractGitObject {
   type: "tree"
   name: string
   path: string
@@ -95,7 +94,7 @@ export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
   isSearchResult?: boolean
 }
 
-export interface GitCommitObject extends GitBaseObject {
+export interface GitCommitObject extends AbstractGitObject {
   type: "commit"
   tree: GitTreeObject
   parent: string

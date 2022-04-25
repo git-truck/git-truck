@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react"
-import { AnalyzerData } from "~/analyzer/model"
+import { RepoData } from "~/routes/$repo.$"
 
-export const DataContext = createContext<AnalyzerData | undefined>(undefined)
+export const DataContext = createContext<RepoData | undefined>(undefined)
 
 export function useData() {
   const context = useContext(DataContext)

@@ -39,7 +39,7 @@ export default function SearchBar() {
   const { searchText, setSearchText, searchResults, setSearchResults } = useSearch()
   const [value, setValue] = useState("")
   const id = useId()
-  const data = useData()
+  const { analyzerData } = useData()
   const { setPath } = usePath()
   const { setClickedObject } = useClickedObject()
 
@@ -55,7 +55,7 @@ export default function SearchBar() {
 
   function debounceUpdate() {
     setSearchText(value)
-    setSearchResults(findSearchResults(data.commit.tree, value))
+    setSearchResults(findSearchResults(analyzerData.commit.tree, value))
   }
 
   useDebounce(() => debounceUpdate(), 200, [value])
