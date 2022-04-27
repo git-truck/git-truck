@@ -17,6 +17,7 @@ import { Details } from "~/components/Details"
 import { resolve } from "path"
 import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
 import { GitCaller } from "~/analyzer/git-caller.server"
+import { TimeLine } from "~/components/Timeline"
 
 let invalidateCache = false
 
@@ -177,6 +178,7 @@ export default function Repo() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
+          <TimeLine />
           {analyzerData.latestVersion && semverCompare(analyzerData.latestVersion, analyzerData.currentVersion) === 1 ? (
             <Box>
               <p>Update available: {analyzerData.latestVersion}</p>
