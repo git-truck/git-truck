@@ -56,7 +56,7 @@ export async function gitDiffNumStatAnalyzed(a: string, b: string, renamedFiles:
   return stuff
 }
 
-function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
+export function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
@@ -78,7 +78,7 @@ function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
   const newest = renamedFiles.get(newPath) ?? newPath
   renamedFiles.delete(newPath)
   renamedFiles.set(oldPath, newest)
-  return newPath
+  return newest
 }
 
 export async function lookupFileInTree(tree: GitTreeObject, path: string): Promise<GitBlobObject | undefined> {
