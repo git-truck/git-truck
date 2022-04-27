@@ -13,8 +13,10 @@ import {
   PersonWithTime,
 } from "./model"
 import { analyzeCommitLight } from "./analyze.server"
-import { gitDiffNumStatAnalyzed, lookupFileInTree } from "./util.server"
+import { analyzeRenamedFile, gitDiffNumStatAnalyzed, lookupFileInTree } from "./util.server"
 import { Queue } from "./queue"
+import { GitCaller } from "./git-caller.server"
+import { getCoAuthors } from "./coauthors.server"
 
 const renamedFiles = new Map<string, string>()
 
@@ -27,8 +29,62 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
 
   const { hash: first } = data
 
-  await bfs(first, repo, data)
+  // await bfs(first, repo, data)
 
+  const gitLogResult = await GitCaller.getInstance().gitLog()
+
+  const gitLogRegex =
+    /"author\s+<\|(?<author>.+?)\|>\s+date\s+<\|(?<date>\d+)\|>\s+body\s+<\|(?<body>(?:\s|.)*?)\|>"\s+(?<contributions>(?:\s*.+\s+\|\s+\d+\s\+*-*\s)+).*/gm
+  const contribRegex = /(?<file>.*?)\s*\|\s*(?<contribs>\d*).*/gm
+
+  const matches = gitLogResult.matchAll(gitLogRegex)
+  for (const match of matches) {
+    const groups = match.groups ?? {}
+    const author = groups.author
+    const time = Number(groups.date)
+    const body = groups.body
+    const contributionsString = groups.contributions
+    const coauthors = getCoAuthors(body)
+
+    const contribMatches = contributionsString.matchAll(contribRegex)
+    for (const contribMatch of contribMatches) {
+      // log.debug(`giving ${contribMatch.groups?.contribs} to ${author} for ${contribMatch.groups?.file}`)
+      const file = contribMatch.groups?.file
+      if (!file) continue
+
+      const hasBeenMoved = file.includes("=>")
+
+      let filePath = file
+      if (hasBeenMoved) {
+        filePath = analyzeRenamedFile(filePath, renamedFiles)
+      }
+
+      if (file.includes("PathContext.ts")) {
+        log.debug(`file: ${file}`)
+        log.debug(`hasBeenMoved: ${hasBeenMoved}`)
+        log.debug(`filepath: ${filePath}`)
+      }
+
+      const newestPath = renamedFiles.get(filePath) ?? filePath
+
+      const contribs = Number(contribMatch.groups?.contribs)
+      if (contribs < 1) continue
+      // log.debug(`looking up ${newestPath}`)
+      const blob = (await lookupFileInTree(data.tree, newestPath)) as HydratedGitBlobObject
+      if (!blob) {
+        continue
+      }
+      blob.authors[author] = (blob.authors[author] ?? 0) + contribs
+
+      for (const coauthor of coauthors) {
+        blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
+      }
+    }
+  }
+  // log.debug(`renames: ${renamedFiles.size}`)
+  // for (const entry of renamedFiles) {
+  //   log.debug(`[${entry[0]} => ${entry[1]}]`)
+  // }
 
   return data
 }

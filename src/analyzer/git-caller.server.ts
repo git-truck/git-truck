@@ -225,6 +225,16 @@ export class GitCaller {
     return gitRefs
   }
 
+  async gitLog() {
+    const result = (await runProcess(this.repo, "git", [
+      "log",
+      "--stat=1000000",
+      "--stat-graph-width=1",
+      '--format="author <|%an|> date <|%at|> body <|%b|>"',
+    ])) as string
+    return result.trim()
+  }
+
   static async retrieveCachedResult({
     repo,
     branch,
