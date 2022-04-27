@@ -56,7 +56,7 @@ export interface AnalyzerData {
   hasUnstagedChanges: boolean
 }
 
-type RefType = "Heads" |  "Tags" //| "remotes"
+type RefType = "Heads" |  "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
 

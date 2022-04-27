@@ -191,7 +191,6 @@ export class GitCaller {
   static parseRefs(refsAsMultilineString: string): GitRefs {
     const gitRefs: GitRefs = {
       Heads: {},
-      // remotes: {},
       Tags: {},
     }
 
@@ -212,7 +211,6 @@ export class GitCaller {
           gitRefs.Heads[path] = hash
           break
         case "remotes":
-          // gitRefs.remotes[path] = hash
           break
         case "tags":
           gitRefs.Tags[path] = hash
