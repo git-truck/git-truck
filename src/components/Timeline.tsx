@@ -21,15 +21,20 @@ export function TimeLine() {
   
   useEffect(() => {
     scrollToMiddle()
-    selectedRef.current?.checked = true
+    setChecked()
   }, [branchTagOrCommit])
+
+  const setChecked = () => {
+    if (selectedRef.current)
+      selectedRef.current.checked = true
+  }
 
   const tags = Object.entries(data.repo.refs.Tags).sort(([a], [b]) => semverCompare(a,b)).reverse()
   const items = tags
 
   const radioHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     selectedRef.current = event.target
-    selectedRef.current.checked = true
+    setChecked()
     const value = event.target.value
     navigate(["", data.repo.name, value].join("/"))
   };
@@ -51,7 +56,7 @@ export function TimeLine() {
                 <CustomRadio></CustomRadio>
               </TimeLineEntry>
             : items.map(([value, hash]) => {
-                const conditionalSelectedRef = (value === branchTagOrCommit) ? { ref: selectedRef } : { };
+                const conditionalSelectedRef = (value === branchTagOrCommit) ? { ref: selectedRef, checked: true } : { ref: null, checked: false };
                 return (
                   <TimeLineEntry
                     htmlFor={hash}
