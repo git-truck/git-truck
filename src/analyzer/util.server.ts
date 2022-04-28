@@ -81,7 +81,7 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, strin
   return newest
 }
 
-export async function lookupFileInTree(tree: GitTreeObject, path: string): Promise<GitBlobObject | undefined> {
+export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObject | undefined {
   const dirs = path.split("/")
 
   if (dirs.length < 2) {
@@ -94,7 +94,7 @@ export async function lookupFileInTree(tree: GitTreeObject, path: string): Promi
   }
   const subtree = tree.children.find((x) => x.name === dirs[0])
   if (!subtree || subtree.type === "blob") return
-  return await lookupFileInTree(subtree, dirs.slice(1).join("/"))
+  return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
 export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {

@@ -34,8 +34,8 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
   const gitLogResult = await GitCaller.getInstance().gitLog()
 
   const gitLogRegex =
-    /"author\s+<\|(?<author>.+?)\|>\s+date\s+<\|(?<date>\d+)\|>\s+body\s+<\|(?<body>(?:\s|.)*?)\|>"\s+(?<contributions>(?:\s*.+\s+\|\s+\d+\s\+*-*\s)+).*/gm
-  const contribRegex = /(?<file>.*?)\s*\|\s*(?<contribs>\d*).*/gm
+    /"author\s+<\|(?<author>.+?)\|>\s+date\s+<\|(?<date>\d+)\|>\s+body\s+<\|(?<body>(?:\s|.)*?)\|>"\s+(?<contributions>(?:\s*.+\s+\|.*)+).*/gm
+  const contribRegex = /(?<file>.*?)\s*\|\s*((?<contribs>\d+)|(?<bin>Bin)).*/gm
 
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {
@@ -44,13 +44,13 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
     const time = Number(groups.date)
     const body = groups.body
     const contributionsString = groups.contributions
-    const coauthors = getCoAuthors(body)
+    const coauthors = body ? getCoAuthors(body) : []
 
     const contribMatches = contributionsString.matchAll(contribRegex)
     for (const contribMatch of contribMatches) {
-      // log.debug(`giving ${contribMatch.groups?.contribs} to ${author} for ${contribMatch.groups?.file}`)
-      const file = contribMatch.groups?.file
-      if (!file) continue
+      const file = contribMatch.groups?.file.trim()
+      const isBinary = contribMatch.groups?.bin !== undefined
+      if (!file) throw Error("file not found")
 
       const hasBeenMoved = file.includes("=>")
 
@@ -59,21 +59,22 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
         filePath = analyzeRenamedFile(filePath, renamedFiles)
       }
 
-      if (file.includes("PathContext.ts")) {
-        log.debug(`file: ${file}`)
-        log.debug(`hasBeenMoved: ${hasBeenMoved}`)
-        log.debug(`filepath: ${filePath}`)
-      }
-
       const newestPath = renamedFiles.get(filePath) ?? filePath
 
       const contribs = Number(contribMatch.groups?.contribs)
       if (contribs < 1) continue
-      // log.debug(`looking up ${newestPath}`)
-      const blob = (await lookupFileInTree(data.tree, newestPath)) as HydratedGitBlobObject
+      const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
       if (!blob) {
         continue
       }
+
+      if (isBinary) {
+        blob.isBinary = true
+        continue
+      }
+
+      blob.noCommits = (blob.noCommits ?? 0) + 1
+      blob.lastChangeEpoch = time
       blob.authors[author] = (blob.authors[author] ?? 0) + contribs
 
       for (const coauthor of coauthors) {
@@ -81,10 +82,6 @@ export async function hydrateData(repo: string, commit: GitCommitObject): Promis
       }
     }
   }
-  // log.debug(`renames: ${renamedFiles.size}`)
-  // for (const entry of renamedFiles) {
-  //   log.debug(`[${entry[0]} => ${entry[1]}]`)
-  // }
 
   return data
 }
