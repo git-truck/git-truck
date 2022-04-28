@@ -27,6 +27,9 @@ export async function hydrateData(commit: GitCommitObject): Promise<HydratedGitC
     const contributionsString = groups.contributions
     const coauthors = body ? getCoAuthors(body) : []
 
+    authors.add(author)
+    coauthors.forEach((coauthor) => authors.add(coauthor.name))
+
     const contribMatches = contributionsString.matchAll(contribRegex)
     for (const contribMatch of contribMatches) {
       const file = contribMatch.groups?.file.trim()
