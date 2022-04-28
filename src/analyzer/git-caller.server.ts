@@ -25,7 +25,6 @@ export class GitCaller {
   private repo: string
   public branch?: string
   private catFileCache: Map<string, string> = new Map()
-  private diffNumStatCache: Map<string, string> = new Map()
   private blameCache: Map<string, string> = new Map()
 
   private static instance: GitCaller | null = null
@@ -230,6 +229,7 @@ export class GitCaller {
     const result = (await runProcess(this.repo, "git", [
       "log",
       this.branch,
+      "l0",
       "--stat=1000000",
       "--stat-graph-width=1",
       '--format="author <|%an|> date <|%at|> body <|%b|>"',
@@ -360,24 +360,6 @@ export class GitCaller {
       }
     })
     return blameAuthors
-  }
-
-  async gitDiffNumStatCached(a: string, b: string) {
-    const key = a + b
-    if (this.useCache) {
-      const cachedValue = this.diffNumStatCache.get(key)
-      if (cachedValue) {
-        return cachedValue
-      }
-    }
-    const result = await this.gitDiffNumStat(a, b)
-    this.diffNumStatCache.set(key, result)
-    return result
-  }
-
-  private async gitDiffNumStat(a: string, b: string) {
-    const result = await runProcess(this.repo, "git", ["diff", "--numstat", a, b])
-    return result as string
   }
 
   async getDefaultGitSettingValue(setting: string) {

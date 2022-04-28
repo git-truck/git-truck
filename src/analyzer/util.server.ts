@@ -5,7 +5,6 @@ import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
 import { performance } from "perf_hooks"
-import { GitCaller } from "./git-caller.server"
 import { resolve as resolvePath } from "path"
 
 export function last<T>(array: T[]) {
@@ -30,30 +29,6 @@ export function runProcess(dir: string, command: string, args: string[]) {
       reject(e)
     }
   })
-}
-
-export async function gitDiffNumStatAnalyzed(a: string, b: string, renamedFiles: Map<string, string>) {
-  const diff = await GitCaller.getInstance().gitDiffNumStatCached(a, b)
-  const entries = diff.split("\n")
-  const stuff = entries
-    .filter((x) => x.trim().length > 0)
-    .map((x) => x.split(/\t+/))
-    .map(([neg, pos, file]) => {
-      let filePath = file
-      const hasBeenMoved = file.includes("=>")
-      if (hasBeenMoved) {
-        filePath = analyzeRenamedFile(filePath, renamedFiles)
-      }
-
-      const newestPath = renamedFiles.get(filePath) ?? filePath
-
-      return {
-        neg: parseInt(neg),
-        pos: parseInt(pos),
-        file: newestPath,
-      }
-    })
-  return stuff
 }
 
 export function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
