@@ -52,13 +52,14 @@ export async function hydrateData(commit: GitCommitObject): Promise<HydratedGitC
         continue
       }
 
+      blob.noCommits = (blob.noCommits ?? 0) + 1
+      if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
+
       if (isBinary) {
         blob.isBinary = true
         continue
       }
 
-      blob.noCommits = (blob.noCommits ?? 0) + 1
-      blob.lastChangeEpoch = time
       blob.authors[author] = (blob.authors[author] ?? 0) + contribs
 
       for (const coauthor of coauthors) {
