@@ -229,7 +229,6 @@ export class GitCaller {
     const result = (await runProcess(this.repo, "git", [
       "log",
       this.branch,
-      "l0",
       "--stat=1000000",
       "--stat-graph-width=1",
       '--format="author <|%an|> date <|%at|> body <|%b|>"',
