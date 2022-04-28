@@ -144,10 +144,10 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           path: newPath,
           name: newName,
           sizeInBytes: child.size as number,
-          blameAuthors: {}
+          blameAuthors: {},
         }
         // Don't block the current loop, just add the job to the queue and await it later
-        jobs.push((async () => blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path))())
+        jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
         break
     }
@@ -261,7 +261,7 @@ export async function analyze(args: TruckConfig) {
     if (repoTreeError) throw repoTreeError
 
     const [hydratedRepoTree, hydratedRepoTreeError] = await describeAsyncJob(
-      () => hydrateData(repoDir, repoTree),
+      () => hydrateData(repoTree),
       "Hydrating commit tree",
       "Commit tree hydrated",
       "Error hydrating commit tree"
