@@ -66,11 +66,11 @@ export function GlobalInfo() {
       <BoxTitle>{repo.name}</BoxTitle>
       <Spacer />
       <RevisionSelect
-          disabled={isAnalyzing}
-          onChange={(e) => switchBranch(e.target.value)}
-          headGroups={repo.refs}
-          analyzedHeads={repo.analyzedHeads}
-        />
+        disabled={isAnalyzing}
+        onChange={(e) => switchBranch(e.target.value)}
+        headGroups={repo.refs}
+        analyzedHeads={repo.analyzedHeads}
+      />
       <Spacer />
       <strong>Analyzed: </strong>
       <span>{dateTimeFormatShort(analyzerData.lastRunEpoch)}</span>
@@ -79,6 +79,9 @@ export function GlobalInfo() {
       <Code inline title={analyzerData.commit.message ?? "No commit message"}>
         {analyzerData.commit.hash.slice(0, 7)}
       </Code>
+      <Spacer />
+      <strong>Files analyzed: </strong>
+      <span>{analyzerData.commit.fileCount ?? 0}</span>
       <Spacer />
       <Form
         method="post"
@@ -89,8 +92,7 @@ export function GlobalInfo() {
       >
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
-          <FontAwesomeIcon icon={reanalyzeIcon} />{" "}
-          {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
+          <FontAwesomeIcon icon={reanalyzeIcon} /> {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
         </TextButton>
       </Form>
     </Box>

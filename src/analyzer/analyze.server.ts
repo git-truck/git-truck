@@ -72,9 +72,11 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Git
     throw Error("Hash is required")
   }
   const { tree, ...commit } = await analyzeCommitLight(hash)
+  const { rootTree, fileCount } = await analyzeTree(repoName, repoName, tree)
   const commitObject = {
     ...commit,
-    tree: await analyzeTree(repoName, repoName, tree),
+    fileCount,
+    tree: rootTree,
   }
   return commitObject
 }
@@ -88,11 +90,12 @@ interface RawGitObject {
   size?: number
 }
 
-async function analyzeTree(path: string, name: string, hash: string): Promise<GitTreeObject> {
+async function analyzeTree(path: string, name: string, hash: string) {
   const rawContent = await GitCaller.getInstance().lsTree(hash)
 
   const lsTreeEntries: RawGitObject[] = []
   const matches = rawContent.matchAll(treeRegex)
+  let fileCount = 0
 
   for (const match of matches) {
     if (!match.groups) continue
@@ -139,6 +142,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
 
         break
       case "blob":
+        fileCount += 1
         const blob: GitBlobObject = {
           type: "blob",
           hash: child.hash,
@@ -156,7 +160,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
 
   // await Promise.all(jobs)
 
-  return rootTree
+  return { rootTree, fileCount }
 }
 
 function getCommandLine() {
