@@ -1,6 +1,7 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faAngleUp } from "@fortawesome/free-solid-svg-icons"
 import styled, { css } from "styled-components"
+import {
+  ExpandLess as ExpandIcon,
+} from "@styled-icons/material"
 
 interface ToggleProps {
   toggle: () => void
@@ -11,7 +12,7 @@ interface ToggleProps {
 export function ExpandDown({ relative = false, collapse, toggle }: ToggleProps) {
   return (
     <ToggleButton relative={relative} collapse={collapse} onClick={toggle} up={false}>
-      <FontAwesomeIcon icon={faAngleUp} />
+      <ExpandIcon display="inline-block" height="1.5rem" />
     </ToggleButton>
   )
 }
@@ -19,7 +20,7 @@ export function ExpandDown({ relative = false, collapse, toggle }: ToggleProps) 
 export function ExpandUp({ relative = false, collapse, toggle }: ToggleProps) {
   return (
     <ToggleButton relative={relative} collapse={collapse} onClick={toggle} up={true}>
-      <FontAwesomeIcon icon={faAngleUp} />
+      <ExpandIcon display="inline-block" height="1.5rem" />
     </ToggleButton>
   )
 }

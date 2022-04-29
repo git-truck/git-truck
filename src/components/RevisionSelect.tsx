@@ -1,10 +1,7 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import {
-  faCodeBranch as branchIcon,
-} from "@fortawesome/free-solid-svg-icons"
 import { OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper } from "./util"
 import { SelectHTMLAttributes } from "react"
 import { GitRefs } from "~/analyzer/model"
+import { GitBranch } from "@styled-icons/octicons/GitBranch"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs,
@@ -21,7 +18,7 @@ export function RevisionSelect({ headGroups, analyzedHeads, iconColor, disabled,
   }, [])
 
   return <SelectWithIconWrapper>
-    <FontAwesomeIcon icon={branchIcon} color={iconColor ?? "#333"} />
+    <GitBranch display="inline-block" height="1em" color={iconColor ?? "#333"}/>
     {allEntriesFlattened.length === 1 ? (
       <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
     ) : (

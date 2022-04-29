@@ -1,5 +1,4 @@
 import styled, { css } from "styled-components"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 const titleBaseStyles = css`
   font-weight: bold;
@@ -25,17 +24,25 @@ export const BoxSubTitle = styled.h2`
   font-size: 1em;
 `
 
+export const BoxSubTitleWithIcon = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: left;
+  align-items: center;
+  gap: calc(var(--unit) * 0.5);
+`
+
 export const StyledP = styled.p`
   font-size: 0.9em;
   opacity: 0.7;
   margin: 0.5em 0 0.5em 0;
 `
 
-export const LightFontAwesomeIcon = styled(FontAwesomeIcon)`
-  opacity: 0.5;
-`
-
 export const TextButton = styled.button`
+  display: grid;
+  grid-auto-flow: column;
+  place-items: center;
+  gap: var(--unit);
   background: var(--button-bg);
   width: fit-content;
   border: none;
@@ -55,12 +62,15 @@ export const TextButton = styled.button`
 `
 
 export const SearchResultButton = styled(TextButton)`
-  border-radius: 3px;
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: left;
+
+  background: none;
   padding: 1px;
-  padding-left: 5px;
+  padding-left: var(--unit);
   width: 100%;
   text-align: left;
-  background: none;
 `
 
 export const SearchResultSpan = styled.span`
