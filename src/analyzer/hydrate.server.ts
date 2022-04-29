@@ -2,6 +2,7 @@ import { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, Hydrat
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
+import { log } from "./log.server"
 
 const renamedFiles = new Map<string, string>()
 
@@ -26,6 +27,8 @@ export async function hydrateData(commit: GitCommitObject): Promise<HydratedGitC
     const body = groups.body
     const contributionsString = groups.contributions
     const coauthors = body ? getCoAuthors(body) : []
+
+    log.debug(`Checking commit from ${time}`)
 
     authors.add(author)
     coauthors.forEach((coauthor) => authors.add(coauthor.name))

@@ -117,6 +117,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
   const jobs = []
 
   for (const child of lsTreeEntries) {
+    log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")
     const newName = prevTrees.pop() as string
     const newPath = `${path}/${child.path}`
@@ -147,7 +148,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
           blameAuthors: {},
         }
         // Don't block the current loop, just add the job to the queue and await it later
-        jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
+        // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
         break
     }
