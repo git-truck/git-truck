@@ -1,6 +1,6 @@
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, Code, StyledP, LightFontAwesomeIcon, TextButton } from "~/components/util"
+import { Box, Container, Grower, Code, StyledP, TextButton, BoxSubTitle, BoxSubTitleWithIcon } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
@@ -15,10 +15,14 @@ import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
-import { faComment } from "@fortawesome/free-solid-svg-icons"
-import { GitCaller } from "~/analyzer/git-caller.server"
 import { useData } from "~/contexts/DataContext"
 import { getGitTruckInfo } from "~/analyzer/util.server"
+import { GitCaller } from "~/analyzer/git-caller.server"
+import {
+  Warning as WarningIcon,
+  RateReview as ReviewIcon
+} from "@styled-icons/material"
+
 
 let invalidateCache = false
 
@@ -143,9 +147,10 @@ function openInNewTab(url: string) {
 function Feedback() {
   return (
     <Box>
-      <p>
-        <LightFontAwesomeIcon icon={faComment} /> Help make Git Truck better
-      </p>
+      <BoxSubTitleWithIcon>
+        <ReviewIcon display="inline-block" height="1rem" />
+        <BoxSubTitle>Help make Git Truck better</BoxSubTitle>
+      </BoxSubTitleWithIcon>
       <Spacer xs />
       <TextButton
         onClick={() =>

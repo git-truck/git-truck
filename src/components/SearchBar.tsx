@@ -1,4 +1,4 @@
-import { SearchField, Box, Label, StyledP, SearchResultButton, SearchResultSpan, LightFontAwesomeIcon } from "./util"
+import { SearchField, Box, Label, StyledP, SearchResultButton, BoxSubTitle } from "./util"
 import styled from "styled-components"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { useDebounce } from "react-use"
@@ -10,7 +10,10 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
-import { faFolderOpen, faFile } from "@fortawesome/free-solid-svg-icons"
+import {
+  Folder as FolderIcon,
+  TextSnippet as FileIcon
+} from "@styled-icons/material"
 
 const StyledBox = styled(Box)`
   display: flex;
@@ -75,14 +78,12 @@ export default function SearchBar() {
 
   return (
     <StyledBox>
-      <Label htmlFor={id}>Search</Label>
-      <Spacer xs />
       <SearchField
         ref={searchFieldRef}
         id={id}
         value={value}
         type="search"
-        placeholder="Enter file or folder name"
+        placeholder="Search for a file or folder..."
         onChange={(event) => {
           setValue(event.target.value)
         }}
@@ -92,9 +93,12 @@ export default function SearchBar() {
         return (
           <Fragment key={result.path}>
             <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
-              <SearchResultSpan>
-                <LightFontAwesomeIcon icon={result.type === "tree" ? faFolderOpen : faFile} /> {result.name}
-              </SearchResultSpan>
+              {
+                (result.type === "tree")
+                ? <FolderIcon display="inline-block" height="1rem" />
+                : <FileIcon display="inline-block" height="1rem" />
+              }
+              <span>{result.name}</span>
             </SearchResultButton>
             <Spacer xs />
           </Fragment>

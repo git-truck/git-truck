@@ -1,11 +1,13 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import { useBoolean } from "react-use"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
 import { Box, BoxSubTitle, Code } from "./util"
 import { Form, useLocation, useTransition } from "remix"
+import {
+  VisibilityOff as HiddenIcon,
+  Visibility as ShownIcon
+} from "@styled-icons/material"
 
 const Line = styled.div`
   display: grid;
@@ -20,10 +22,8 @@ const InlineForm = styled(Form)`
 `
 
 const StyledButton = styled.button`
-  display: block;
-  position: relative;
-  height: 100%;
-  width: 100%;
+  display: grid;
+  place-items: center;
   background: none;
   border: none;
   cursor: pointer;
@@ -40,13 +40,6 @@ const StyledButton = styled.button`
   &:hover > #eyeslash {
     display: none;
   }
-`
-
-const StyledFontAwesomeIcon = styled(FontAwesomeIcon)`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 `
 
 function hiddenFileFormat(ignored: string) {
@@ -71,8 +64,8 @@ export function HiddenFiles() {
               <InlineForm method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
-                  <StyledFontAwesomeIcon id="eyeslash" icon={faEyeSlash} />
-                  <StyledFontAwesomeIcon id="eye" icon={faEye} />
+                  <HiddenIcon display="inline-block" height="1rem" id="eyeslash" />
+                  <ShownIcon display="inline-block" height="1rem" id="eye" />
                 </StyledButton>
               </InlineForm>
               <Code>{hiddenFileFormat(hidden)}</Code>

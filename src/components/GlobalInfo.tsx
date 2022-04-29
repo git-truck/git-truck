@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faRotate as reanalyzeIcon, faFolder as folderIcon } from "@fortawesome/free-solid-svg-icons"
 import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
@@ -8,6 +6,11 @@ import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
+import {
+  Refresh as RefreshIcon,
+  Folder as FolderIcon
+} from "@styled-icons/material"
+
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -39,7 +42,7 @@ export function GlobalInfo() {
     <Box>
       <SelectWithIconWrapper>
         <StyledLink to=".." title="See all repositories">
-          <FontAwesomeIcon icon={folderIcon} />
+          <FolderIcon display="inline-block" height="1rem" />
           <StyledP>See more repositories</StyledP>
         </StyledLink>
       </SelectWithIconWrapper>
@@ -75,7 +78,8 @@ export function GlobalInfo() {
       >
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
-          <FontAwesomeIcon icon={reanalyzeIcon} /> {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
+          <RefreshIcon display="inline-block" height="1rem" />
+          {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
         </TextButton>
       </Form>
     </Box>
