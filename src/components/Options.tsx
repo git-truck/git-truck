@@ -28,13 +28,13 @@ export function Options() {
       <Spacer />
       <EnumSelect label="Metric" enum={Metric} onChange={(metric: MetricType) => setMetricType(metric)} />
       <Spacer />
-      <EnumSelect
+      {/* <EnumSelect
         label="Authorship data"
         enum={Authorship}
         onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
         hidden={!isMetricWithHistoricalOption(metricType)}
       />
-      <Spacer />
+      <Spacer /> */}
       <label>
         <Checkbox
           type="checkbox"
