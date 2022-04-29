@@ -153,7 +153,7 @@ async function analyzeTree(path: string, name: string, hash: string): Promise<Gi
     }
   }
 
-  await Promise.all(jobs)
+  // await Promise.all(jobs)
 
   return rootTree
 }
