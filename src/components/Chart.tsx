@@ -226,7 +226,7 @@ function CircleText({
   return (
     <>
       <animated.path {...props} id={d.data.path} className="name-path" />
-      <text
+      <Text
         style={{
           stroke: "var(--global-bg-color)",
         }}
@@ -243,8 +243,8 @@ function CircleText({
         >
           {displayText}
         </textPath>
-      </text>
-      <text>
+      </Text>
+      <Text>
         <textPath
           fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
@@ -255,7 +255,7 @@ function CircleText({
         >
           {displayText}
         </textPath>
-      </text>
+      </Text>
     </>
   )
 }
@@ -276,9 +276,9 @@ function RectText({
   })
 
   return (
-    <animated.text {...props} className="object-name">
+    <Text {...props} className="object-name">
       {displayText}
-    </animated.text>
+    </Text>
   )
 }
 
@@ -398,3 +398,6 @@ function getPaddingFromChartType(chartType: ChartType) {
 
 const isTree = (d: HydratedGitObject): d is HydratedGitTreeObject => d.type === "tree"
 const isBlob = (d: HydratedGitObject): d is HydratedGitBlobObject => d.type === "blob"
+const Text = styled(animated.text)`
+  pointer-events: none;
+`
