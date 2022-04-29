@@ -13,7 +13,7 @@ export function TimeLine() {
   const navigate = useNavigate()
   const data = useData()
 
-  const selectedRef = useRef<HTMLInputElement>()
+  const selectedRef = useRef<HTMLInputElement | null>(null)
 
   const scrollToMiddle = () => {
     selectedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -56,7 +56,7 @@ export function TimeLine() {
                 <CustomRadio></CustomRadio>
               </TimeLineEntry>
             : items.map(([value, hash]) => {
-                const conditionalSelectedRef = (value === branchTagOrCommit) ? { ref: selectedRef, checked: true } : { ref: null, checked: false };
+                const conditionalRadioProps = (value === branchTagOrCommit) ? { ref: selectedRef, checked: true } : { checked: false };
                 return (
                   <TimeLineEntry
                     htmlFor={hash}
@@ -69,7 +69,7 @@ export function TimeLine() {
                       id={hash}
                       value={value}
                       onChange={radioHandler}
-                      {...conditionalSelectedRef}
+                      {...conditionalRadioProps}
                     />
                     <CustomRadio></CustomRadio>
                   </TimeLineEntry>
