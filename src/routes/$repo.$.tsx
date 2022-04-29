@@ -17,12 +17,18 @@ import { Details } from "~/components/Details"
 import { resolve } from "path"
 import { faComment } from "@fortawesome/free-solid-svg-icons"
 import { GitCaller } from "~/analyzer/git-caller.server"
+import { useData } from "~/contexts/DataContext"
+import { getGitTruckInfo } from "~/analyzer/util.server"
 
 let invalidateCache = false
 
 export interface RepoData {
   analyzerData: AnalyzerData
   repo: Repository
+  gitTruckInfo: {
+    version: string
+    latestVersion: string | null
+  }
 }
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -53,6 +59,7 @@ export const loader: LoaderFunction = async ({ params }) => {
   return json<RepoData>({
     analyzerData,
     repo,
+    gitTruckInfo: await getGitTruckInfo()
   })
 }
 
@@ -159,11 +166,12 @@ function Feedback() {
   )
 }
 
-function UpdateNotifier(props: { analyzerData: AnalyzerData }) {
+function UpdateNotifier() {
+  const { gitTruckInfo } = useData()
   return (
     <Box>
-      <p>Update available: {props.analyzerData.latestVersion}</p>
-      <StyledP>Currently installed: {props.analyzerData.currentVersion}</StyledP>
+      <p>Update available: {gitTruckInfo.latestVersion}</p>
+      <StyledP>Currently installed: {gitTruckInfo.version}</StyledP>
       <StyledP>
         To update, close application and run: <Code inline>npx git-truck@latest</Code>
       </StyledP>
@@ -173,7 +181,7 @@ function UpdateNotifier(props: { analyzerData: AnalyzerData }) {
 
 export default function Repo() {
   const data = useLoaderData<RepoData>()
-  const { analyzerData } = data
+  const { analyzerData, gitTruckInfo } = data
 
   if (!analyzerData) return null
 
@@ -189,9 +197,9 @@ export default function Repo() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {analyzerData.latestVersion &&
-          semverCompare(analyzerData.latestVersion, analyzerData.currentVersion) === 1 ? (
-            <UpdateNotifier analyzerData={analyzerData} />
+          {gitTruckInfo.latestVersion &&
+          semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
+            <UpdateNotifier />
           ) : null}
           <Grower />
           <Details />

@@ -19,7 +19,6 @@ import { getAuthorSet, hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
-import latestVersion from "latest-version"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
@@ -194,7 +193,7 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export async function analyze(args: TruckConfig) {
+export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   GitCaller.initInstance(args.path)
   const git = GitCaller.getInstance()
 
@@ -281,12 +280,6 @@ export async function analyze(args: TruckConfig) {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
-    let latestV: string | undefined
-
-    try {
-      latestV = await latestVersion(pkg.name)
-    } catch {}
-
     const authorUnions = args.unionedAuthors as string[][]
     data = {
       cached: false,
@@ -298,7 +291,6 @@ export async function analyze(args: TruckConfig) {
       authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
-      latestVersion: latestV,
       lastRunEpoch: runDateEpoch,
     }
 

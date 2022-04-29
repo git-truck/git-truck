@@ -51,7 +51,6 @@ export interface AnalyzerData {
   authors: string[]
   authorUnions: string[][]
   currentVersion: string
-  latestVersion?: string
   lastRunEpoch: number
 }
 
