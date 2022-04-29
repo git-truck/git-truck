@@ -337,11 +337,6 @@ export class GitCaller {
     return result
   }
 
-  async hasUnstagedChanges() {
-    const result = await runProcess(this.repo, "git", ["update-index", "--refresh"])
-    return !!result
-  }
-
   async parseBlame(path: string) {
     const cutString = path.slice(path.indexOf("/") + 1)
     const blame = await this.blameCached(cutString)

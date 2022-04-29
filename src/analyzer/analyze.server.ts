@@ -249,7 +249,6 @@ export async function analyze(args: TruckConfig) {
     await git.setGitSetting("diff.renames", "true")
     const renameLimitDefaultValue = await git.getDefaultGitSettingValue("diff.renameLimit")
     await git.setGitSetting("diff.renameLimit", "1000000")
-    const hasUnstagedChanges = await git.hasUnstagedChanges()
 
     const runDateEpoch = Date.now()
     const [repoTree, repoTreeError] = await describeAsyncJob(
@@ -297,7 +296,6 @@ export async function analyze(args: TruckConfig) {
       currentVersion: pkg.version,
       latestVersion: latestV,
       lastRunEpoch: runDateEpoch,
-      hasUnstagedChanges,
     }
 
     await describeAsyncJob(
