@@ -15,7 +15,7 @@ import { HiddenFiles } from "~/components/HiddenFiles"
 import semverCompare from "semver-compare"
 import { Details } from "~/components/Details"
 import { resolve } from "path"
-import { faTriangleExclamation, faComment } from "@fortawesome/free-solid-svg-icons"
+import { faComment } from "@fortawesome/free-solid-svg-icons"
 import { GitCaller } from "~/analyzer/git-caller.server"
 
 let invalidateCache = false
@@ -52,7 +52,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   return json<RepoData>({
     analyzerData,
-    repo
+    repo,
   })
 }
 
@@ -159,6 +159,18 @@ function Feedback() {
   )
 }
 
+function UpdateNotifier(props: { analyzerData: AnalyzerData }) {
+  return (
+    <Box>
+      <p>Update available: {props.analyzerData.latestVersion}</p>
+      <StyledP>Currently installed: {props.analyzerData.currentVersion}</StyledP>
+      <StyledP>
+        To update, close application and run: <Code inline>npx git-truck@latest</Code>
+      </StyledP>
+    </Box>
+  )
+}
+
 export default function Repo() {
   const data = useLoaderData<RepoData>()
   const { analyzerData } = data
@@ -177,25 +189,9 @@ export default function Repo() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {analyzerData.latestVersion && semverCompare(analyzerData.latestVersion, analyzerData.currentVersion) === 1 ? (
-            <Box>
-              <p>Update available: {analyzerData.latestVersion}</p>
-              <StyledP>Currently installed: {analyzerData.currentVersion}</StyledP>
-              <StyledP>
-                To update, close application and run: <Code inline>npx git-truck@latest</Code>
-              </StyledP>
-            </Box>
-          ) : null}
-          {analyzerData.hasUnstagedChanges ? (
-            <Box>
-              <p>
-                <LightFontAwesomeIcon icon={faTriangleExclamation} />
-                You have unstaged changes
-              </p>
-              <StyledP>
-                This means that some data might be incorrect. Please stash or commit changes and rerun analyzer.
-              </StyledP>
-            </Box>
+          {analyzerData.latestVersion &&
+          semverCompare(analyzerData.latestVersion, analyzerData.currentVersion) === 1 ? (
+            <UpdateNotifier analyzerData={analyzerData} />
           ) : null}
           <Grower />
           <Details />

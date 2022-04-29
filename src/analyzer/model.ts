@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 6
+export const AnalyzerDataInterfaceVersion = 7
 
 export interface AnalyzerData {
   cached: boolean
@@ -53,10 +53,9 @@ export interface AnalyzerData {
   currentVersion: string
   latestVersion?: string
   lastRunEpoch: number
-  hasUnstagedChanges: boolean
 }
 
-type RefType = "Heads" |  "Tags"
+type RefType = "Heads" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
 
