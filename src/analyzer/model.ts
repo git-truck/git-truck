@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 7
+export const AnalyzerDataInterfaceVersion = 8
 
 export interface AnalyzerData {
   cached: boolean
@@ -101,6 +101,7 @@ export interface GitCommitObject extends AbstractGitObject {
   message: string
   description: string
   coauthors: Person[]
+  fileCount?: number
 }
 
 export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
