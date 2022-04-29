@@ -3,7 +3,6 @@ import { faRotate as reanalyzeIcon, faFolder as folderIcon } from "@fortawesome/
 import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
-import { usePath } from "../contexts/PathContext"
 import { Spacer } from "./Spacer"
 import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
 import styled from "styled-components"
@@ -15,7 +14,6 @@ const analyzingTitle = "Analyzing | Git Truck"
 
 export function GlobalInfo() {
   const { analyzerData, repo } = useData()
-  const { path } = usePath()
   const transitionState = useTransition()
 
   const location = useLocation()
@@ -37,23 +35,6 @@ export function GlobalInfo() {
     }
   }, [transitionState.state])
 
-  let temppath = path
-  let paths: [string, string][] = []
-
-  for (let i = 0; i < 3; i++) {
-    if (temppath === "") {
-      break
-    }
-    const idx = temppath.lastIndexOf("/")
-    paths.push([temppath.substring(idx + 1), temppath])
-    temppath = temppath.substring(0, idx)
-  }
-  if (temppath !== "") {
-    paths = paths.slice(0, paths.length - 1)
-    paths.push(["...", ""])
-    paths.push([repo.name, repo.name])
-  }
-
   return (
     <Box>
       <SelectWithIconWrapper>
@@ -66,8 +47,10 @@ export function GlobalInfo() {
       <BoxTitle>{repo.name}</BoxTitle>
       <Spacer />
       <RevisionSelect
+        key={repo.currentHead}
         disabled={isAnalyzing}
         onChange={(e) => switchBranch(e.target.value)}
+        defaultValue={analyzerData.branch}
         headGroups={repo.refs}
         analyzedHeads={repo.analyzedHeads}
       />
