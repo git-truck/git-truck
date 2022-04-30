@@ -65,7 +65,7 @@ export function Details() {
         )}
         <PathEntry path={clickedObject.path} />
       </DetailsEntries>
-      <Spacer xl />
+      <Spacer />
       {isBlob ? (
         clickedObject.isBinary || hasZeroContributions(clickedObject.authors) ? null : (
           <AuthorDistribution authors={clickedObject.unionedAuthors?.get(authorshipType)} />
@@ -73,7 +73,7 @@ export function Details() {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
-      <Spacer lg />
+      <Spacer xl />
       {isBlob ? (
         <>
           <Form method="post" action={location.pathname}>
@@ -100,7 +100,7 @@ export function Details() {
                     isProcessingHideRef.current = true
                   }}
                 >
-                  Hide all <Code inline>.{extension}</Code> files
+                  <span>Hide all .{extension} files</span>
                 </TextButton>
               </Form>
             </>
@@ -227,7 +227,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
     return (
       <>
         <DetailsHeading>Author distribution</DetailsHeading>
-        <Spacer xs />
+        <Spacer />
         <AuthorDistEntries>
           <AuthorDistFragment show={true} items={contribDist} />
         </AuthorDistEntries>
@@ -244,6 +244,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
       <AuthorDistEntries>
         <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
         <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
+        <Spacer />
         <AuthorDistOther
           show={collapse}
           items={contribDist.slice(authorCutoff)}
@@ -278,7 +279,8 @@ const DetailsHeading = styled.h3`
 const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0 calc(var(--unit) * 3);
+  /* gap: 0 calc(var(--unit) * 3); */
+  gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
   & > ${DetailsValue} {
     text-align: right;
   }

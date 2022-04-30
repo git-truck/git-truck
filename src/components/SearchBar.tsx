@@ -1,4 +1,4 @@
-import { SearchField, Box, Label, StyledP, SearchResultButton, BoxSubTitle } from "./util"
+import { SearchField, Box, Label, BoxP, SearchResultButton, BoxSubTitle } from "./util"
 import styled from "styled-components"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { useDebounce } from "react-use"
@@ -88,7 +88,7 @@ export default function SearchBar() {
           setValue(event.target.value)
         }}
       />
-      {searchText.length > 0 ? <StyledP>{searchResults.length} results</StyledP> : null}
+      {searchText.length > 0 ? <BoxP>{searchResults.length} results</BoxP> : null}
       {searchResults.map((result) => {
         return (
           <Fragment key={result.path}>

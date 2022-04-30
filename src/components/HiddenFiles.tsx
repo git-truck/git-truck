@@ -2,7 +2,8 @@ import { useBoolean } from "react-use"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, Code } from "./util"
+import { Box, BoxSubTitle, BoxSpan } from "./util"
+import { Spacer } from "~/components/Spacer"
 import { Form, useLocation, useTransition } from "remix"
 import {
   VisibilityOff as HiddenIcon,
@@ -56,6 +57,7 @@ export function HiddenFiles() {
   return (
     <Box>
       <BoxSubTitle>Hidden files ({analyzerData.hiddenFiles.length})</BoxSubTitle>
+      <Spacer />
       <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       {!collapse ? (
         <div>
@@ -68,7 +70,7 @@ export function HiddenFiles() {
                   <ShownIcon display="inline-block" height="1rem" id="eye" />
                 </StyledButton>
               </InlineForm>
-              <Code>{hiddenFileFormat(hidden)}</Code>
+              <BoxSpan>{hiddenFileFormat(hidden)}</BoxSpan>
             </Line>
           ))}
         </div>

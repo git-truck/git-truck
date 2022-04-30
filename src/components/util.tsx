@@ -24,7 +24,7 @@ export const BoxSubTitle = styled.h2`
   font-size: 1em;
 `
 
-export const BoxSubTitleWithIcon = styled.div`
+export const BoxSubTitleAndIconWrapper = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: left;
@@ -32,25 +32,52 @@ export const BoxSubTitleWithIcon = styled.div`
   gap: calc(var(--unit) * 0.5);
 `
 
-export const StyledP = styled.p`
+export const BoxSpan = styled.span`
   font-size: 0.9em;
   opacity: 0.7;
-  margin: 0.5em 0 0.5em 0;
+`
+
+export const BoxP = styled.p`
+  font-size: 0.9em;
+  opacity: 0.7;
+  margin-bottom: var(--unit);
+`
+
+const StyledButton = styled.button`
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.9em;
+  color: var(--text-color);
+  text-transform: uppercase;
+  opacity: 75%;
+  cursor: pointer;
+  &:hover {
+    opacity: 100%;
+  }
 `
 
 export const TextButton = styled.button`
   display: grid;
   grid-auto-flow: column;
-  place-items: center;
+  align-items: center;
   gap: var(--unit);
-  background: var(--button-bg);
-  width: fit-content;
-  border: none;
-  border-radius: calc(2 * var(--unit));
+
   padding: var(--unit) calc(2 * var(--unit));
-  /* color: #fff; */
+
+  /* background: none; */
+  background-color: var(--button-bg);
+  /* border: 1px solid var(--button-outline); */
+  border: none;
+  border-radius: calc(0.75 * var(--unit));
+
+  color: var(--button-text-color);
+  font-size: 0.7rem;
+  text-decoration: none;
+  font-weight: bold;
+  text-transform: uppercase;
+
+  /* opacity: 75%; */
   cursor: pointer;
-  transition: backround-color var(--hover-transition-duration);
 
   &:disabled {
     cursor: not-allowed;
@@ -58,6 +85,7 @@ export const TextButton = styled.button`
 
   &:enabled:hover {
     background-color: var(--button-hovered-bg);
+    opacity: 100%;
   }
 `
 
@@ -202,15 +230,15 @@ export const Grower = styled.div`
   flex-grow: 1;
 `
 
-export const SelectWithEllipsis = styled.select`
+export const SelectWithEllipsis = styled.select<{ inline?: boolean }>`
   text-overflow: ellipsis;
   overflow: scroll;
   width: 100%;
 
-  font: inherit;
-  color: inherit;
+  /* font: inherit; */
   font-size: 0.9em;
-  padding: 0.2em 0;
+  color: inherit;
+  padding: ${(props) => (props.inline ? "0.2em" : "var(--unit) calc(0.5 * var(--unit))")};
 
   background: none;
   border-radius: 4px;

@@ -15,7 +15,8 @@ import {
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, StyledP } from "./util"
+import { Box, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, BoxP } from "./util"
+import { Spacer } from "~/components/Spacer"
 
 const legendCutoff = 3
 
@@ -52,7 +53,9 @@ export function Legend() {
   return (
     <StyledBox>
       <BoxSubTitle>{Metric[metricType]}</BoxSubTitle>
-      <StyledP>{getMetricDescription(metricType, authorshipType)}</StyledP>
+      <Spacer />
+      <BoxP>{getMetricDescription(metricType, authorshipType)}</BoxP>
+      <Spacer />
       {isGradientMetric(metricType) ? (
         <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
       ) : (
