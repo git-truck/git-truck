@@ -17,6 +17,8 @@
   --small-shadow: 0.9px 0.9px 1.7px hsla(0, 0%, 0%, 0.5);
 
   --hover-transition-duration: 200ms;
-  --button-bg: hsl(0, 0%, 80%);
-  --button-hovered-bg: hsl(0, 0%, 70%);
+  --button-text-color:       hsl(216, 0%,  30%);
+  --button-bg:               hsl(216, 0%,  95%);
+  --button-hovered-bg:       hsl(216, 0%,  90%);
+  --button-outline:          hsl(216, 0%,  50%);
 }

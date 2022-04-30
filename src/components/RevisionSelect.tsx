@@ -22,7 +22,7 @@ export function RevisionSelect({ headGroups, analyzedHeads, iconColor, disabled,
     {allEntriesFlattened.length === 1 ? (
       <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
     ) : (
-      <SelectWithEllipsis {...props}>
+      <SelectWithEllipsis inline={true} {...props}>
         {groupsEntries.map(([group, heads]) => (
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>

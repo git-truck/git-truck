@@ -62,13 +62,13 @@ export function GlobalInfo() {
       <span>{dateTimeFormatShort(analyzerData.lastRunEpoch)}</span>
       <Spacer />
       <strong>As of commit: </strong>
-      <Code inline title={analyzerData.commit.message ?? "No commit message"}>
+      <span title={analyzerData.commit.message ?? "No commit message"}>
         {analyzerData.commit.hash.slice(0, 7)}
-      </Code>
+      </span>
       <Spacer />
       <strong>Files analyzed: </strong>
       <span>{analyzerData.commit.fileCount ?? 0}</span>
-      <Spacer />
+      <Spacer xl />
       <Form
         method="post"
         action={location.pathname}
@@ -79,7 +79,9 @@ export function GlobalInfo() {
         <input type="hidden" name="refresh" value="true" />
         <TextButton disabled={transitionState.state !== "idle"}>
           <RefreshIcon display="inline-block" height="1rem" />
-          {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
+          <span>
+            {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
+          </span>
         </TextButton>
       </Form>
     </Box>

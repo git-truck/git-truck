@@ -1,6 +1,6 @@
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
 import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, Code, StyledP, TextButton, BoxSubTitle, BoxSubTitleWithIcon } from "~/components/util"
+import { Box, Container, Grower, Code, BoxP, TextButton, BoxSubTitle, BoxSubTitleAndIconWrapper } from "~/components/util"
 import { SidePanel } from "~/components/SidePanel"
 import { Main } from "~/components/Main"
 import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
@@ -147,11 +147,11 @@ function openInNewTab(url: string) {
 function Feedback() {
   return (
     <Box>
-      <BoxSubTitleWithIcon>
+      <BoxSubTitleAndIconWrapper>
         <ReviewIcon display="inline-block" height="1rem" />
         <BoxSubTitle>Help make Git Truck better</BoxSubTitle>
-      </BoxSubTitleWithIcon>
-      <Spacer xs />
+      </BoxSubTitleAndIconWrapper>
+      <Spacer xl />
       <TextButton
         onClick={() =>
           openInNewTab(
@@ -161,7 +161,7 @@ function Feedback() {
       >
         Answer questionnaire
       </TextButton>
-      <Spacer xs />
+      <Spacer />
       <TextButton
         onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
       >
@@ -176,10 +176,10 @@ function UpdateNotifier() {
   return (
     <Box>
       <p>Update available: {gitTruckInfo.latestVersion}</p>
-      <StyledP>Currently installed: {gitTruckInfo.version}</StyledP>
-      <StyledP>
+      <BoxP>Currently installed: {gitTruckInfo.version}</BoxP>
+      <BoxP>
         To update, close application and run: <Code inline>npx git-truck@latest</Code>
-      </StyledP>
+      </BoxP>
     </Box>
   )
 }
