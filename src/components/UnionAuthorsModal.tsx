@@ -23,7 +23,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     .reduce((acc, union) => {
       return [...acc, ...union]
     }, [] as string[])
-    .sort()
+    .sort(stringSorter)
 
   function unmergeGroup(groupToUnGroup: number) {
     const newAuthorUnions = authorUnions.filter((_, i) => i !== groupToUnGroup)
@@ -71,7 +71,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   const ungroupedUsersSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))
     .slice(0)
-    .sort()
+    .sort(stringSorter)
 
   function handleModalWrapperClick(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) onClose()
@@ -153,7 +153,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
                   <Spacer />
                   {aliasGroup
                     .slice(1)
-                    .sort()
+                    .sort(stringSorter)
                     .map((alias) => (
                       <AliasEntry
                         key={alias}
@@ -223,6 +223,8 @@ function CheckboxWithLabel({
     </CheckboxWrapper>
   )
 }
+
+const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
 
 const ModalWrapper = styled.div`
   cursor: pointer;
