@@ -96,11 +96,11 @@ export default function SearchBar() {
         return (
           <Fragment key={result.path}>
             <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
-              {result.type === "tree" ? (
-                <FolderIcon display="inline-block" height="1rem" />
-              ) : (
-                <FileIcon display="inline-block" height="1rem" />
-              )}
+              {
+                (result.type === "tree")
+                ? <FolderIcon display="inline-block" height="1rem" />
+                : <FileIcon display="inline-block" height="1rem" />
+              }
               <span>{result.name}</span>
             </SearchResultButton>
             <Spacer xs />
