@@ -279,7 +279,6 @@ const DetailsHeading = styled.h3`
 const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
-  /* gap: 0 calc(var(--unit) * 3); */
   gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
   & > ${DetailsValue} {
     text-align: right;
