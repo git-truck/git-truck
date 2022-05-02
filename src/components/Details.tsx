@@ -14,7 +14,7 @@ import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 import byteSize from "byte-size"
 import { AuthorshipType } from "~/metrics"
-import { MergeType as MergeIcon, OpenInNew } from "@styled-icons/material"
+import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
 
 function OneFolderOut(path: string) {
@@ -77,10 +77,10 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
       )}
       <Spacer xl />
       <Button onClick={showUnionAuthorsModal}>
-        <MergeIcon display="inline-block" height="1rem" />
+        <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
       </Button>
-      <Spacer lg />
+      <Spacer />
       {isBlob ? (
         <>
           <Form method="post" action={location.pathname}>
