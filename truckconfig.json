@@ -1,13 +1,22 @@
 {
   "unionedAuthors": [
     [
-      "Jonas Glerup Røssum",
       "joglr",
+      "Jonas Glerup Røssum",
       "Jonas Røssum"
     ],
     [
+      "tjomson",
       "Thomas Hoffmann Kilbak",
-      "tjomson"
+      "Thomas Kilbak"
+    ],
+    [
+      "hojelse",
+      "Kristoffer Højelse"
+    ],
+    [
+      "emiljapelt",
+      "Emil Jäpelt"
     ]
   ],
   "hiddenFiles": [
