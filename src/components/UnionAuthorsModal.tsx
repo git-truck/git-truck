@@ -1,11 +1,13 @@
 import { useId } from "@react-aria/utils"
+import type { MouseEvent } from "react"
 import { useState } from "react"
-import { useSubmit } from "remix"
+import { useSubmit, useTransition } from "remix"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { Box, Label, Actions, Grower } from "~/components/util"
+import { Button, CloseButton, Box, Label, Actions, Grower, IconButton } from "~/components/util"
+import { ArrowUp } from "@styled-icons/octicons"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -19,7 +21,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     }, [] as string[])
     .sort()
 
-  function ungroup(groupToUnGroup: number) {
+  function unmergeGroup(groupToUnGroup: number) {
     const newAuthorUnions = authorUnions.filter((_, i) => i !== groupToUnGroup)
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
@@ -30,7 +32,8 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     })
   }
 
-  function group() {
+  function mergeSelectedUsers() {
+    if (selectedAuthors.length === 0) return
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
 
@@ -57,54 +60,27 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     })
   }
 
+  const transitionData = useTransition()
+  const disabled = transitionData.state !== "idle"
+
   if (!visible) return null
 
-  const ungroupedUsersSorted = authors.filter((a) => !flattedUnionedAuthors.includes(a)).slice(0).sort()
+  const ungroupedUsersSorted = authors
+    .filter((a) => !flattedUnionedAuthors.includes(a))
+    .slice(0)
+    .sort()
+
+  function handleModalWrapperClick(event: MouseEvent<HTMLDivElement>) {
+    if (event.target === event.currentTarget) onClose()
+  }
+
+
   return (
-    <ModalWrapper>
+    <ModalWrapper onClick={handleModalWrapperClick}>
       <Modal>
         <ModalHeader>
           <ModalTitle>Merge duplicate users</ModalTitle>
-          {/* <BoxTitle>Authors</BoxTitle> */}
         </ModalHeader>
-        <Spacer xl />
-        <h3>Grouped users</h3>
-        <Spacer sm />
-        <GroupedUsers>
-          {authorUnions.length === 0 ? (
-            <p>There are no grouped users</p>
-          ) : (
-            authorUnions.map((aliasGroup, aliasGroupIndex) => {
-              return (
-                <StyledBox key={aliasGroupIndex}>
-                  <b>{aliasGroup[0]}</b>
-                  <Spacer />
-                  {aliasGroup.slice(0).sort().map((alias) => (
-                    <AliasEntry key={alias}>
-                      <div>
-                        <button
-                          title={`Make primary display name for ${aliasGroup[0]}`}
-                          onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
-                        >
-                          ⏫
-                        </button>
-                        <Spacer horizontal />
-                        {alias}
-                      </div>
-                    </AliasEntry>
-                  ))}
-                  {/* <Grower /> */}
-                  <Actions>
-                    <Grower />
-                    <button onClick={() => ungroup(aliasGroupIndex)} title={`Unmerge this group`}>
-                      Unmerge
-                    </button>
-                  </Actions>
-                </StyledBox>
-              )
-            })
-          )}
-        </GroupedUsers>
         <Spacer xl />
         <h3>Ungrouped users</h3>
         <Spacer sm />
@@ -113,7 +89,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
             ? "All detected users have been grouped"
             : "Select the users that you know are the same person"}
         </p>
-        <Spacer />
+        <Spacer xl />
         <UngroupedUsers>
           {ungroupedUsersSorted.map((author) => (
             <CheckboxWithLabel
@@ -131,18 +107,74 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
           ))}
         </UngroupedUsers>
         <Spacer xl />
-        <ModalFooter>
+        {ungroupedUsersSorted.length > 0 ? (
           <Actions>
-            <Button onClick={group} title={`Group the selected people`}>
-              Group
+            <Button onClick={mergeSelectedUsers} title={`Merge the selected users`} disabled={disabled || selectedAuthors.length === 0}>
+              Merge
             </Button>
-            <Grower />
-            <button onClick={onClose}>Done</button>
           </Actions>
-        </ModalFooter>
+        ) : null}
+        <Spacer />
+        <h3>Grouped users</h3>
+        <Spacer sm />
+        <GroupedUsers>
+          {authorUnions.length === 0 ? (
+            <p>There are no grouped users</p>
+          ) : (
+            authorUnions.map((aliasGroup, aliasGroupIndex) => {
+              const disabled = transitionData.state !== "idle"
+              return (
+                <StyledBox key={aliasGroupIndex}>
+                  <b>{aliasGroup[0]}</b>
+                  <Spacer />
+                  {aliasGroup
+                    .slice(1)
+                    .sort()
+                    .map((alias) => (
+                      <AliasEntry
+                        key={alias}
+                        alias={alias}
+                        onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
+                        disabled={disabled}
+                      />
+                    ))}
+                  <Grower />
+                  <Actions>
+                    <Grower />
+                    <Button onClick={() => unmergeGroup(aliasGroupIndex)} title="Unmerge this group" disabled={disabled}>
+                      Unmerge
+                    </Button>
+                  </Actions>
+                </StyledBox>
+              )
+            })
+          )}
+        </GroupedUsers>
+        <CloseButton onClick={onClose} />
       </Modal>
     </ModalWrapper>
   )
+
+  function AliasEntry({
+    alias,
+    onClick,
+    disabled,
+  }: {
+    alias: string
+    disabled?: boolean
+    onClick: () => void
+  }): JSX.Element {
+    return (
+      <AliasEntryRoot key={alias}>
+        <div>
+          <StyledIconButton disabled={disabled} onClick={onClick} title="Make display name for this group">
+            <ArrowUp display="inline-block" height="1rem" />
+            <Label>{alias}</Label>
+          </StyledIconButton>
+        </div>
+      </AliasEntryRoot>
+    )
+  }
 }
 
 // Checkbox with label
@@ -165,6 +197,10 @@ function CheckboxWithLabel({
 }
 
 const ModalWrapper = styled.div`
+  cursor: pointer;
+  & > * {
+    cursor: initial;
+  }
   position: fixed;
   inset: 0;
   padding: calc(4 * var(--unit));
@@ -173,6 +209,7 @@ const ModalWrapper = styled.div`
   /* backdrop-filter: blur(var(--unit)); */
 `
 const Modal = styled(Box)`
+  position: relative;
   margin: auto;
   max-width: 1000px;
   max-height: 100%;
@@ -198,10 +235,18 @@ const StyledBox = styled(Box)`
   flex-direction: column;
 `
 
-const AliasEntry = styled.div`
+const StyledIconButton = styled(IconButton)`
+  grid-auto-flow: column;
+  & > svg {
+    opacity: 0;
+  }
+  &:hover > svg {
+    opacity: 1;
+  }
+`
+
+const AliasEntryRoot = styled.div`
   display: flex;
 `
-const ModalFooter = styled.div``
-const Button = styled.button``
 const CheckboxWrapper = styled.div``
 const Checkbox = styled.input.attrs({ type: "checkbox" })``

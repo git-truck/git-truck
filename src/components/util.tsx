@@ -1,3 +1,4 @@
+import { Close as CloseIcon } from "@styled-icons/material"
 import styled, { css } from "styled-components"
 
 const titleBaseStyles = css`
@@ -40,23 +41,9 @@ export const BoxSpan = styled.span`
 export const BoxP = styled.p`
   font-size: 0.9em;
   opacity: 0.7;
-  margin-bottom: var(--unit);
 `
 
-const StyledButton = styled.button`
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 0.9em;
-  color: var(--text-color);
-  text-transform: uppercase;
-  opacity: 75%;
-  cursor: pointer;
-  &:hover {
-    opacity: 100%;
-  }
-`
-
-export const TextButton = styled.button`
+export const Button = styled.button`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
@@ -68,7 +55,7 @@ export const TextButton = styled.button`
   border-radius: calc(0.75 * var(--unit));
 
   color: var(--button-text-color);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   text-decoration: none;
   font-weight: bold;
   text-transform: uppercase;
@@ -77,6 +64,7 @@ export const TextButton = styled.button`
 
   &:disabled {
     cursor: not-allowed;
+    opacity: 0.5;
   }
 
   &:enabled:hover {
@@ -85,10 +73,25 @@ export const TextButton = styled.button`
   }
 `
 
-export const SearchResultButton = styled(TextButton)`
+export const IconButton = styled.button`
+  display: inline-grid;
+  place-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  & > * {
+    opacity: 0.5;
+  }
+  &:hover > * {
+    opacity: 1;
+  }
+`
+
+export const SearchResultButton = styled(Button)`
   display: grid;
   grid-auto-flow: column;
   justify-content: left;
+  text-transform: none;
 
   background: none;
   padding: 1px;
@@ -104,7 +107,7 @@ export const SearchResultSpan = styled.span`
   text-overflow: ellipsis;
 `
 
-export const NavigateBackButton = styled.button`
+export const CloseButton = styled(IconButton)`
   color: #000;
   text-decoration: none;
   background-color: transparent;
@@ -115,6 +118,7 @@ export const NavigateBackButton = styled.button`
   right: calc(var(--unit));
   cursor: pointer;
 `
+CloseButton.defaultProps = { children: <CloseIcon display="inline-block" height="1em" /> }
 
 export const Container = styled.div`
   height: 100%;

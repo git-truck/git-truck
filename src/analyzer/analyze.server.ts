@@ -15,7 +15,7 @@ import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
-import { getAuthorSet, hydrateData } from "./hydrate.server"
+import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
@@ -263,7 +263,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (repoTreeError) throw repoTreeError
 
-    const [hydratedRepoTree, hydratedRepoTreeError] = await describeAsyncJob(
+    const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob(
       () => hydrateData(repoTree),
       "Hydrating commit tree",
       "Commit tree hydrated",
@@ -271,6 +271,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     )
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
+
+    const [hydratedRepoTree, authors] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -283,7 +285,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     data = {
       cached: false,
       hiddenFiles,
-      authors: getAuthorSet(),
+      authors,
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,

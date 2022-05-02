@@ -6,7 +6,7 @@ import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
-import { Box, BoxTitle, DetailsKey, DetailsValue, Code, NavigateBackButton, TextButton } from "~/components/util"
+import { Box, BoxTitle, DetailsKey, DetailsValue, CloseButton, Button } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -23,7 +23,7 @@ function OneFolderOut(path: string) {
   return path
 }
 
-export function Details() {
+export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () => void }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
   const { authorshipType } = useOptions()
@@ -50,7 +50,7 @@ export function Details() {
 
   return (
     <Box>
-      <NavigateBackButton onClick={() => setClickedObject(null)}>&times;</NavigateBackButton>
+      <CloseButton onClick={() => setClickedObject(null)} />
       <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
       <Spacer xl />
       <DetailsEntries>
@@ -76,9 +76,11 @@ export function Details() {
       <Spacer xl />
       {isBlob ? (
         <>
+          <Button onClick={showUnionAuthorsModal}>Merge duplicate users</Button>
+          <Spacer lg />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <TextButton
+            <Button
               type="submit"
               disabled={state !== "idle"}
               onClick={() => {
@@ -86,14 +88,14 @@ export function Details() {
               }}
             >
               Hide this file
-            </TextButton>
+            </Button>
           </Form>
           {clickedObject.name.includes(".") ? (
             <>
               <Spacer />
               <Form method="post" action={location.pathname}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
-                <TextButton
+                <Button
                   type="submit"
                   disabled={state !== "idle"}
                   onClick={() => {
@@ -101,20 +103,20 @@ export function Details() {
                   }}
                 >
                   <span>Hide all .{extension} files</span>
-                </TextButton>
+                </Button>
               </Form>
             </>
           ) : null}
           <Spacer />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
-            <TextButton disabled={state !== "idle"}>Open file</TextButton>
+            <Button disabled={state !== "idle"}>Open file</Button>
           </Form>
         </>
       ) : (
         <Form method="post" action={location.pathname}>
           <input type="hidden" name="ignore" value={clickedObject.path} />
-          <TextButton
+          <Button
             type="submit"
             disabled={state !== "idle"}
             onClick={() => {
@@ -123,7 +125,7 @@ export function Details() {
             }}
           >
             Hide this folder
-          </TextButton>
+          </Button>
         </Form>
       )}
     </Box>

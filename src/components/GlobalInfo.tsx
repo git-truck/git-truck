@@ -2,7 +2,7 @@ import { Form, Link, useLocation, useNavigate, useTransition } from "remix"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, Code, SelectWithIconWrapper, TextButton } from "./util"
+import { Box, BoxTitle, Code, SelectWithIconWrapper, Button } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
@@ -77,12 +77,12 @@ export function GlobalInfo() {
         }}
       >
         <input type="hidden" name="refresh" value="true" />
-        <TextButton disabled={transitionState.state !== "idle"}>
+        <Button disabled={transitionState.state !== "idle"}>
           <RefreshIcon display="inline-block" height="1rem" />
           <span>
-            {isAnalyzing ? "Analyzing..." : "Rerun analyzer"}
+            {isAnalyzing ? "Analyzing..." : "Reanalyze"}
           </span>
-        </TextButton>
+        </Button>
       </Form>
     </Box>
   )

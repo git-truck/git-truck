@@ -1,4 +1,4 @@
-import { SearchField, Box, Label, BoxP, SearchResultButton, BoxSubTitle } from "./util"
+import { SearchField, Box, BoxP, SearchResultButton } from "./util"
 import styled from "styled-components"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { useDebounce } from "react-use"
@@ -10,10 +10,7 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
-import {
-  Folder as FolderIcon,
-  TextSnippet as FileIcon
-} from "@styled-icons/material"
+import { Folder as FolderIcon, TextSnippet as FileIcon } from "@styled-icons/material"
 
 const StyledBox = styled(Box)`
   display: flex;
@@ -88,16 +85,22 @@ export default function SearchBar() {
           setValue(event.target.value)
         }}
       />
-      {searchText.length > 0 ? <BoxP>{searchResults.length} results</BoxP> : null}
+      {searchText.length > 0 ? (
+        <>
+          <BoxP>{searchResults.length} results</BoxP>
+          <Spacer />
+        </>
+      ) : null}
+
       {searchResults.map((result) => {
         return (
           <Fragment key={result.path}>
             <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
-              {
-                (result.type === "tree")
-                ? <FolderIcon display="inline-block" height="1rem" />
-                : <FileIcon display="inline-block" height="1rem" />
-              }
+              {result.type === "tree" ? (
+                <FolderIcon display="inline-block" height="1rem" />
+              ) : (
+                <FileIcon display="inline-block" height="1rem" />
+              )}
               <span>{result.name}</span>
             </SearchResultButton>
             <Spacer xs />
