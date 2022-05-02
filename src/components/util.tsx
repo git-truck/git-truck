@@ -63,10 +63,7 @@ export const TextButton = styled.button`
   gap: var(--unit);
 
   padding: var(--unit) calc(2 * var(--unit));
-
-  /* background: none; */
   background-color: var(--button-bg);
-  /* border: 1px solid var(--button-outline); */
   border: none;
   border-radius: calc(0.75 * var(--unit));
 
@@ -76,7 +73,6 @@ export const TextButton = styled.button`
   font-weight: bold;
   text-transform: uppercase;
 
-  /* opacity: 75%; */
   cursor: pointer;
 
   &:disabled {
@@ -128,7 +124,6 @@ export const Container = styled.div`
 `
 
 export const Box = styled.div`
-  /* border: 1px var(--border-color-alpha) solid; */
   margin: var(--unit);
   color: var(--text-color);
   width: auto;
@@ -136,7 +131,6 @@ export const Box = styled.div`
   border-radius: var(--unit);
   padding: calc(2 * var(--unit));
   position: relative;
-  /* Generated with: https://shadows.brumm.af/ */
   box-shadow: var(--shadow);
 `
 
@@ -235,7 +229,6 @@ export const SelectWithEllipsis = styled.select<{ inline?: boolean }>`
   overflow: scroll;
   width: 100%;
 
-  /* font: inherit; */
   font-size: 0.9em;
   color: inherit;
   padding: ${(props) => (props.inline ? "0.2em" : "var(--unit) calc(0.5 * var(--unit))")};
