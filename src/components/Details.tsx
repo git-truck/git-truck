@@ -14,6 +14,8 @@ import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 import byteSize from "byte-size"
 import { AuthorshipType } from "~/metrics"
+import { MergeType as MergeIcon, OpenInNew } from "@styled-icons/material"
+import { EyeClosed } from "@styled-icons/octicons"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -76,7 +78,11 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
       <Spacer xl />
       {isBlob ? (
         <>
-          <Button onClick={showUnionAuthorsModal}>Merge duplicate users</Button>
+          <Button onClick={showUnionAuthorsModal}>
+            <MergeIcon display="inline-block" height="1rem" />
+            {/* <Spacer horizontal /> */}
+            Merge duplicate users
+          </Button>
           <Spacer lg />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
@@ -87,6 +93,8 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
                 isProcessingHideRef.current = true
               }}
             >
+              <EyeClosed display="inline-block" height="1rem" />
+              {/* <Spacer horizontal /> */}
               Hide this file
             </Button>
           </Form>
@@ -102,7 +110,9 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
                     isProcessingHideRef.current = true
                   }}
                 >
-                  <span>Hide all .{extension} files</span>
+                  <EyeClosed display="inline-block" height="1rem" />
+                  {/* <Spacer horizontal /> */}
+                  <span>Hide .{extension} files</span>
                 </Button>
               </Form>
             </>
@@ -110,7 +120,11 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
           <Spacer />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
-            <Button disabled={state !== "idle"}>Open file</Button>
+            <Button disabled={state !== "idle"}>
+              <OpenInNew display="inline-block" height="1rem" />
+              {/* <Spacer horizontal /> */}
+              Open file
+            </Button>
           </Form>
         </>
       ) : (
@@ -204,7 +218,15 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
     <>
       <DetailsKey grow>Size</DetailsKey>
       <DetailsValue>
-        {size.value} {size.unit} <StyledSpan>{props.isBinary ? <><br />(binary file)</> : null}</StyledSpan>
+        {size.value} {size.unit}{" "}
+        <StyledSpan>
+          {props.isBinary ? (
+            <>
+              <br />
+              (binary file)
+            </>
+          ) : null}
+        </StyledSpan>
       </DetailsValue>
     </>
   )

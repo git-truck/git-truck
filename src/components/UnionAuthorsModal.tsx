@@ -10,6 +10,7 @@ import { Button, CloseButton, Box, Label, Actions, Grower, IconButton, LegendDot
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { PointLegendData } from "~/metrics"
+import { MergeType as MergeIcon } from "@styled-icons/material"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -123,6 +124,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               title={`Merge the selected users`}
               disabled={disabled || selectedAuthors.length === 0}
             >
+              <MergeIcon display="inline-block" height="1rem" />
               Merge
             </Button>
           </Actions>
