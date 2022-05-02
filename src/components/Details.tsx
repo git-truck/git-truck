@@ -25,7 +25,7 @@ function OneFolderOut(path: string) {
   return path
 }
 
-export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () => void }) {
+export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
   const { authorshipType } = useOptions()
@@ -76,7 +76,7 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
       <Spacer xl />
-      <Button onClick={showUnionAuthorsModal}>
+      <Button onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
       </Button>
