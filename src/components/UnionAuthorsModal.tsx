@@ -227,7 +227,6 @@ function CheckboxWithLabel({
 const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
 
 const ModalWrapper = styled.div`
-  cursor: pointer;
   & > * {
     cursor: initial;
   }
@@ -235,8 +234,6 @@ const ModalWrapper = styled.div`
   inset: 0;
   padding: calc(4 * var(--unit));
   background-color: hsla(0, 0%, 0%, 0.5);
-  /* Blur background */
-  /* backdrop-filter: blur(var(--unit)); */
 `
 const Modal = styled(Box)`
   position: relative;
