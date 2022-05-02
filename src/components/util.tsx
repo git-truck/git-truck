@@ -241,7 +241,7 @@ export const SelectWithEllipsis = styled.select<{ inline?: boolean }>`
   border-radius: 4px;
 
   transition: border-color 0.1s;
-  border: 1px solid hsla(0, 0%, 50%, 0);
+  border: 1px solid hsla(0, 0%, 50%, 0.3);
 
   &:enabled {
     cursor: pointer;
