@@ -117,7 +117,7 @@ export class GitCaller {
     const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
     if (!isRepo) return null
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-    const allHeads = new Set([...Object.entries(refs.Heads), ...Object.entries(refs.Tags)]).values()
+    const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {
         const [result] = await GitCaller.retrieveCachedResult({
@@ -189,7 +189,7 @@ export class GitCaller {
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
     const gitRefs: GitRefs = {
-      Heads: {},
+      Branches: {},
       Tags: {},
     }
 
@@ -207,7 +207,7 @@ export class GitCaller {
 
       switch (ref_type) {
         case "heads":
-          gitRefs.Heads[path] = hash
+          gitRefs.Branches[path] = hash
           break
         case "remotes":
           break
