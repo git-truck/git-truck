@@ -6,11 +6,7 @@ import { Box, BoxTitle, SelectWithIconWrapper, Button } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
-import {
-  Refresh as RefreshIcon,
-  Folder as FolderIcon
-} from "@styled-icons/material"
-
+import { Refresh as RefreshIcon, Folder as FolderIcon } from "@styled-icons/material"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -62,9 +58,7 @@ export function GlobalInfo() {
       <span>{dateTimeFormatShort(analyzerData.lastRunEpoch)}</span>
       <Spacer />
       <strong>As of commit: </strong>
-      <span title={analyzerData.commit.message ?? "No commit message"}>
-        {analyzerData.commit.hash.slice(0, 7)}
-      </span>
+      <span title={analyzerData.commit.message ?? "No commit message"}>{analyzerData.commit.hash.slice(0, 7)}</span>
       <Spacer />
       <strong>Files analyzed: </strong>
       <span>{analyzerData.commit.fileCount ?? 0}</span>
@@ -79,9 +73,7 @@ export function GlobalInfo() {
         <input type="hidden" name="refresh" value="true" />
         <Button disabled={transitionState.state !== "idle"}>
           <RefreshIcon display="inline-block" height="1rem" />
-          <span>
-            {isAnalyzing ? "Analyzing..." : "Reanalyze"}
-          </span>
+          {isAnalyzing ? "Analyzing..." : "Reanalyze"}
         </Button>
       </Form>
     </Box>
