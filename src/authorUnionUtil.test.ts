@@ -1,4 +1,4 @@
-import { makeDupeMap, unionAuthors } from "./authorUnionUtil"
+import { makeDupeMap, unionAuthors } from "./authorUnionUtil.server"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 
 const authorUnions = [["author1", "author1Dupe"]]

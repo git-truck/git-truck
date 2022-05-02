@@ -1,34 +1,37 @@
-import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
-import { Providers } from "~/components/Providers"
-import { Box, Container, Grower, Code, BoxP, TextButton, BoxSubTitle, BoxSubTitleAndIconWrapper } from "~/components/util"
-import { SidePanel } from "~/components/SidePanel"
-import { Main } from "~/components/Main"
-import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
-import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
-import { GlobalInfo } from "~/components/GlobalInfo"
-import { Options } from "~/components/Options"
-import SearchBar from "~/components/SearchBar"
-import { Spacer } from "~/components/Spacer"
-import { Legend } from "~/components/Legend"
-import { getTruckConfigWithArgs } from "~/analyzer/args.server"
-import { HiddenFiles } from "~/components/HiddenFiles"
-import semverCompare from "semver-compare"
-import { Details } from "~/components/Details"
-import { resolve } from "path"
-import { useData } from "~/contexts/DataContext"
-import { getGitTruckInfo } from "~/analyzer/util.server"
-import { GitCaller } from "~/analyzer/git-caller.server"
 import {
-  Warning as WarningIcon,
   RateReview as ReviewIcon
 } from "@styled-icons/material"
+import { resolve } from "path"
+import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
+import semverCompare from "semver-compare"
+import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
+import { getTruckConfigWithArgs } from "~/analyzer/args.server"
+import { GitCaller } from "~/analyzer/git-caller.server"
+import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
+import { getGitTruckInfo } from "~/analyzer/util.server"
+import { Details } from "~/components/Details"
+import { GlobalInfo } from "~/components/GlobalInfo"
+import { HiddenFiles } from "~/components/HiddenFiles"
+import { Legend } from "~/components/Legend"
+import { Main } from "~/components/Main"
+import { Options } from "~/components/Options"
+import { Providers } from "~/components/Providers"
+import SearchBar from "~/components/SearchBar"
+import { SidePanel } from "~/components/SidePanel"
+import { Spacer } from "~/components/Spacer"
+import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Code, Container, Grower, TextButton } from "~/components/util"
+import { useData } from "~/contexts/DataContext"
 
+import { useBoolean } from "react-use"
+import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 
 let invalidateCache = false
 
 export interface RepoData {
   analyzerData: AnalyzerData
   repo: Repository
+  truckConfig: TruckUserConfig
   gitTruckInfo: {
     version: string
     latestVersion: string | null
@@ -40,7 +43,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     return redirect("/")
   }
 
-  const args = await getTruckConfigWithArgs(params["repo"] as string)
+  const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
   const options: TruckUserConfig = {
     invalidateCache: invalidateCache || args.invalidateCache,
   }
@@ -52,6 +55,8 @@ export const loader: LoaderFunction = async ({ params }) => {
   }
 
   const analyzerData = await analyze({ ...args, ...options })
+    .then((data) => addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? [])))
+
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path)
@@ -63,7 +68,8 @@ export const loader: LoaderFunction = async ({ params }) => {
   return json<RepoData>({
     analyzerData,
     repo,
-    gitTruckInfo: await getGitTruckInfo()
+    gitTruckInfo: await getGitTruckInfo(),
+    truckConfig,
   })
 }
 
@@ -76,13 +82,14 @@ export const action: ActionFunction = async ({ request, params }) => {
   const unignore = formData.get("unignore")
   const ignore = formData.get("ignore")
   const fileToOpen = formData.get("open")
+  const unionedAuthors = formData.get("unionedAuthors")
 
   if (refresh) {
     invalidateCache = true
     return null
   }
 
-  const args = await getTruckConfigWithArgs(params["repo"])
+  const [args] = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
 
   if (ignore && typeof ignore === "string") {
@@ -116,6 +123,19 @@ export const action: ActionFunction = async ({ request, params }) => {
     return null
   }
 
+  if (typeof unionedAuthors === "string") {
+    try {
+      const json = JSON.parse(unionedAuthors)
+      await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
+        return {
+          ...prevConfig,
+          unionedAuthors: json,
+        }
+      })
+    } catch (e) {
+      console.error(e)
+    }
+  }
   return null
 }
 
@@ -188,6 +208,8 @@ export default function Repo() {
   const data = useLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
+  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+
   if (!analyzerData) return null
 
   return (
@@ -202,16 +224,21 @@ export default function Repo() {
         </SidePanel>
         {typeof document !== "undefined" ? <Main /> : <div />}
         <SidePanel>
-          {gitTruckInfo.latestVersion &&
-          semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
+          {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
           <Grower />
           <Details />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-          <Legend />
+          <Legend showUnionAuthorsModal={() => setUnionAuthorsModalOpen(true)} />
         </SidePanel>
       </Container>
+      <UnionAuthorsModal
+        visible={unionAuthorsModalOpen}
+        onClose={() => {
+          setUnionAuthorsModalOpen(false)
+        }}
+      />
     </Providers>
   )
 }

@@ -280,7 +280,6 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
-    const authorUnions = args.unionedAuthors as string[][]
     data = {
       cached: false,
       hiddenFiles,
@@ -288,7 +287,6 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,
-      authorUnions: authorUnions,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,

@@ -54,4 +54,4 @@ export function getSeparator(path: string) {
   return "/"
 }
 
-export const getPathFromRepoAndBranch = (repo: string, branch: string) => [repo, branch].join("/")
+export const getPathFromRepoAndHead = (repo: string, branch: string) => [repo, branch].join("/")

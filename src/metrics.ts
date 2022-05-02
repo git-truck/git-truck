@@ -1,6 +1,6 @@
 import distinctColors from "distinct-colors"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { addAuthorUnion, makeDupeMap, unionAuthors } from "./authorUnionUtil"
+// import { unionAuthors } from "./authorUnionUtil.server"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
 
@@ -91,14 +91,14 @@ export interface MetricCache {
 }
 
 export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
-  const authorAliasMap = makeDupeMap(data.authorUnions)
-  addAuthorUnion(data)
+  // const authorAliasMap = data.authorAliasMap
 
   const authorsMap: Record<string, number> = {}
   for (const author of data.authors) authorsMap[author] = 0
 
-  const fullAuthorUnion = unionAuthors(authorsMap, authorAliasMap)
-  const authors = Object.keys(fullAuthorUnion)
+  const authors = data.authors
+  // const fullAuthorUnion = unionAuthors(authorsMap, authorAliasMap)
+  // const authors = Object.keys(fullAuthorUnion)
 
   const palette = distinctColors({ count: authors.length })
   let index = 0
@@ -242,7 +242,7 @@ function setDominantAuthorColor(
   cache: MetricCache,
   authorshipType: AuthorshipType
 ) {
-  const authorUnion = blob.unionedAuthors?.get(authorshipType)
+  const authorUnion = blob.unionedAuthors?.[authorshipType]
   let sorted: [string, number][]
   try {
     if (!authorUnion) throw Error
@@ -276,7 +276,7 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
   const defaultColor = "hsl(210, 38%, 85%)"
   const nocreditColor = "teal"
 
-  const authorUnion = blob.unionedAuthors?.get(authorshipType) ?? {}
+  const authorUnion = blob.unionedAuthors?.[authorshipType] ?? {}
 
   let creditsum = 0
   for (const [, val] of Object.entries(authorUnion)) {
