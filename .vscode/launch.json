@@ -18,7 +18,7 @@
             "type": "pwa-chrome",
             "request": "launch",
             "name": "Launch visualization in chrome",
-            "url": "http://localhost:3000",
+            "url": "http://localhost",
             "webRoot": "${workspaceFolder}"
         }
     ]

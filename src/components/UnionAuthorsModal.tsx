@@ -75,7 +75,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     if (event.target === event.currentTarget) onClose()
   }
 
-  const getColorFromDisplayName = (displayName) =>
+  const getColorFromDisplayName = (displayName: string) =>
     (metrics.HISTORICAL.get("TOP_CONTRIBUTOR")?.legend as PointLegendData).get(displayName)?.color ?? "#333"
 
   if (!visible) return null
