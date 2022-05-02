@@ -319,7 +319,7 @@ function createPartitionedHiearchy(
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
         .size([paddedSizeProps.width, paddedSizeProps.height])
-        .paddingInner(1)
+        .paddingInner(2)
         .paddingOuter(treemapPadding)
 
       const tmPartition = treeMapPartition(hiearchy)
