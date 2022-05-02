@@ -15,11 +15,11 @@ const Line = styled.div`
   grid-template-columns: auto 1fr;
   gap: var(--unit);
   margin-top: calc(var(--unit) * 0.5);
+  align-items: center;
 `
 
 const InlineForm = styled(Form)`
   width: calc(2 * var(--unit));
-  height: 100%;
 `
 
 const StyledButton = styled.button`
