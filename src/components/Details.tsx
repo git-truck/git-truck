@@ -80,7 +80,6 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
         <>
           <Button onClick={showUnionAuthorsModal}>
             <MergeIcon display="inline-block" height="1rem" />
-            {/* <Spacer horizontal /> */}
             Merge duplicate users
           </Button>
           <Spacer lg />
@@ -94,7 +93,6 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
               }}
             >
               <EyeClosed display="inline-block" height="1rem" />
-              {/* <Spacer horizontal /> */}
               Hide this file
             </Button>
           </Form>
@@ -111,7 +109,6 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
                   }}
                 >
                   <EyeClosed display="inline-block" height="1rem" />
-                  {/* <Spacer horizontal /> */}
                   <span>Hide .{extension} files</span>
                 </Button>
               </Form>
@@ -122,7 +119,6 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
             <input type="hidden" name="open" value={clickedObject.path} />
             <Button disabled={state !== "idle"}>
               <OpenInNew display="inline-block" height="1rem" />
-              {/* <Spacer horizontal /> */}
               Open file
             </Button>
           </Form>
@@ -134,10 +130,11 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
             type="submit"
             disabled={state !== "idle"}
             onClick={() => {
-              setPath(OneFolderOut(path))
               isProcessingHideRef.current = true
+              setPath(OneFolderOut(path))
             }}
           >
+            <EyeClosed display="inline-block" height="1rem" />
             Hide this folder
           </Button>
         </Form>
