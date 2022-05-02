@@ -88,7 +88,7 @@ export default function SearchBar() {
       {searchText.length > 0 ? (
         <>
           <BoxP>{searchResults.length} results</BoxP>
-          <Spacer />
+          {searchResults.length > 0 ? <Spacer /> : null}
         </>
       ) : null}
 
