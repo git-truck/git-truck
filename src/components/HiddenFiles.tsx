@@ -2,7 +2,7 @@ import { useBoolean } from "react-use"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, BoxSpan } from "./util"
+import { Box, BoxSubTitle, BoxSpan, IconButton } from "./util"
 import { Spacer } from "~/components/Spacer"
 import { Form, useLocation, useTransition } from "remix"
 import {
@@ -22,13 +22,7 @@ const InlineForm = styled(Form)`
   width: calc(2 * var(--unit));
 `
 
-const StyledButton = styled.button`
-  display: grid;
-  place-items: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-
+const StyledIconButton = styled(IconButton)`
   & > #eye {
     display: none;
   }
@@ -65,10 +59,10 @@ export function HiddenFiles() {
             <Line key={hidden} title={hidden}>
               <InlineForm method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
-                <StyledButton title="Show file" disabled={transitionState.state !== "idle"}>
+                <StyledIconButton title="Show file" disabled={transitionState.state !== "idle"}>
                   <HiddenIcon display="inline-block" height="1rem" id="eyeslash" />
                   <ShownIcon display="inline-block" height="1rem" id="eye" />
-                </StyledButton>
+                </StyledIconButton>
               </InlineForm>
               <BoxSpan>{hiddenFileFormat(hidden)}</BoxSpan>
             </Line>

@@ -16,7 +16,7 @@ import {
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxP, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
+import { Box, BoxP, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, Button } from "./util"
 
 const legendCutoff = 3
 
@@ -55,11 +55,11 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
       <BoxSubTitle>{Metric[metricType]}</BoxSubTitle>
       <Spacer />
       <BoxP>{getMetricDescription(metricType, authorshipType)}</BoxP>
-      <Spacer />
+      <Spacer lg />
       {metricType === "TOP_CONTRIBUTOR" ? (
         <>
-          <button onClick={props.showUnionAuthorsModal}>Merge duplicate users</button>
-          <Spacer />
+          <Button onClick={props.showUnionAuthorsModal}>Merge duplicate users</Button>
+          <Spacer lg />
         </>
       ) : null}
       {isGradientMetric(metricType) ? (

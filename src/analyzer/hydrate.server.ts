@@ -6,9 +6,9 @@ import { log } from "./log.server"
 
 const renamedFiles = new Map<string, string>()
 
-const authors = new Set<string>()
 
-export async function hydrateData(commit: GitCommitObject): Promise<HydratedGitCommitObject> {
+export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
+  const authors = new Set<string>()
   const data = commit as HydratedGitCommitObject
 
   initially_mut(data)
@@ -71,11 +71,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<HydratedGitC
     }
   }
 
-  return data
-}
-
-export function getAuthorSet() {
-  return Array.from(authors)
+  return [data, Array.from(authors)]
 }
 
 function initially_mut(data: HydratedGitCommitObject) {

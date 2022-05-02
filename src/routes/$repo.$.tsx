@@ -19,7 +19,7 @@ import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
 import { SidePanel } from "~/components/SidePanel"
 import { Spacer } from "~/components/Spacer"
-import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Code, Container, Grower, TextButton } from "~/components/util"
+import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Code, Container, Grower, Button } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 
 import { useBoolean } from "react-use"
@@ -172,7 +172,7 @@ function Feedback() {
         <BoxSubTitle>Help make Git Truck better</BoxSubTitle>
       </BoxSubTitleAndIconWrapper>
       <Spacer xl />
-      <TextButton
+      <Button
         onClick={() =>
           openInNewTab(
             "https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
@@ -180,13 +180,13 @@ function Feedback() {
         }
       >
         Answer questionnaire
-      </TextButton>
+      </Button>
       <Spacer />
-      <TextButton
+      <Button
         onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
       >
         Open an issue
-      </TextButton>
+      </Button>
     </Box>
   )
 }
@@ -209,6 +209,7 @@ export default function Repo() {
   const { analyzerData, gitTruckInfo } = data
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+  const showUnionAuthorsModal = () => setUnionAuthorsModalOpen(true)
 
   if (!analyzerData) return null
 
@@ -228,9 +229,9 @@ export default function Repo() {
             <UpdateNotifier />
           ) : null}
           <Grower />
-          <Details />
+          <Details showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-          <Legend showUnionAuthorsModal={() => setUnionAuthorsModalOpen(true)} />
+          <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
         </SidePanel>
       </Container>
       <UnionAuthorsModal
