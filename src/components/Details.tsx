@@ -76,13 +76,13 @@ export function Details({ showUnionAuthorsModal }: { showUnionAuthorsModal: () =
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
       <Spacer xl />
+      <Button onClick={showUnionAuthorsModal}>
+        <MergeIcon display="inline-block" height="1rem" />
+        Merge duplicate users
+      </Button>
+      <Spacer lg />
       {isBlob ? (
         <>
-          <Button onClick={showUnionAuthorsModal}>
-            <MergeIcon display="inline-block" height="1rem" />
-            Merge duplicate users
-          </Button>
-          <Spacer lg />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <Button
