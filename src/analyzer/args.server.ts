@@ -27,7 +27,7 @@ export async function getArgsWithDefaults(): Promise<TruckConfig> {
   return tempArgs
 }
 
-export async function getTruckConfigWithArgs(repo: string): Promise<TruckConfig> {
+export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig, TruckUserConfig]> {
   const args = await getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
@@ -41,8 +41,11 @@ export async function getTruckConfigWithArgs(repo: string): Promise<TruckConfig>
     log.warn(`No truckconfig.json found in repo ${repo}`)
   }
 
-  return {
-    ...args,
-    ...config,
-  }
+  return [
+    {
+      ...args,
+      ...config,
+    },
+    config,
+  ]
 }

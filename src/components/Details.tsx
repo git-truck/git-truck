@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useTransition } from "remix"
 import styled from "styled-components"
 import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { calculateAuthorshipForSubTree } from "~/authorUnionUtil"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -14,6 +13,7 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 import byteSize from "byte-size"
+import { AuthorshipType } from "~/metrics"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -68,7 +68,7 @@ export function Details() {
       <Spacer />
       {isBlob ? (
         clickedObject.isBinary || hasZeroContributions(clickedObject.authors) ? null : (
-          <AuthorDistribution authors={clickedObject.unionedAuthors?.get(authorshipType)} />
+          <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
         )
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
@@ -297,4 +297,24 @@ function hasZeroContributions(authors: Record<string, number>) {
     if (contribution > 0) return false
   }
   return true
+}
+
+function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
+  const aggregatedAuthors: Record<string, number> = {}
+  subTree(tree)
+  function subTree(tree: HydratedGitTreeObject) {
+    for (const child of tree.children) {
+      if (child.type === "blob") {
+        if (child.isBinary) continue
+        const unionedAuthors = child.unionedAuthors?.[authorshipType]
+        if (!unionedAuthors) throw Error("No unioned authors")
+        for (const [author, contrib] of Object.entries(unionedAuthors)) {
+          aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
+        }
+      } else if (child.type === "tree") {
+        subTree(child)
+      }
+    }
+  }
+  return aggregatedAuthors
 }

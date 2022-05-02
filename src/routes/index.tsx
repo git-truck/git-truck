@@ -4,6 +4,7 @@ import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
 import {
+  Actions,
   Box,
   BoxSubTitle,
   Code,
@@ -14,7 +15,7 @@ import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { useMount } from "react-use"
-import { getPathFromRepoAndBranch as getPathFromRepoAndHead } from "~/util"
+import { getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 
@@ -162,9 +163,6 @@ const Li = styled.li`
   margin: 0;
 `
 
-const Actions = styled.div`
-  display: flex;
-`
 
 const SLink = styled(Link)<{ green?: boolean }>`
   line-height: 100%;

@@ -143,6 +143,7 @@ export const Label = styled.label`
   padding-left: calc(var(--unit) + var(--border-width));
   font-weight: bold;
   font-size: 0.8em;
+  cursor: pointer;
 `
 
 export const Select = styled.select`
@@ -270,4 +271,8 @@ export const SelectPlaceholder = styled.div`
   font-size: 0.9em;
   padding: 0.2em 0;
   border: 1px solid transparent;
+`
+
+export const Actions = styled.div`
+  display: flex;
 `

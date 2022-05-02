@@ -1,5 +1,6 @@
 import { useState } from "react"
 import styled from "styled-components"
+import { Spacer } from "~/components/Spacer"
 import { estimatedLetterWidth } from "~/const"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useMetrics } from "../contexts/MetricContext"
@@ -10,13 +11,12 @@ import {
   isGradientMetric,
   Metric,
   MetricCache,
-  PointLegendData,
+  PointLegendData
 } from "../metrics"
 import { LegendFragment } from "./LegendFragment"
 import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, BoxP } from "./util"
-import { Spacer } from "~/components/Spacer"
+import { Box, BoxP, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel } from "./util"
 
 const legendCutoff = 3
 
@@ -42,7 +42,7 @@ const StyledBox = styled(Box)`
   bottom: 0;
 `
 
-export function Legend() {
+export function Legend(props: { showUnionAuthorsModal: () => void }) {
   const { metricType, authorshipType } = useOptions()
   const metricsData = useMetrics()
 
@@ -56,6 +56,12 @@ export function Legend() {
       <Spacer />
       <BoxP>{getMetricDescription(metricType, authorshipType)}</BoxP>
       <Spacer />
+      {metricType === "TOP_CONTRIBUTOR" ? (
+        <>
+          <button onClick={props.showUnionAuthorsModal}>Merge duplicate users</button>
+          <Spacer />
+        </>
+      ) : null}
       {isGradientMetric(metricType) ? (
         <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
       ) : (

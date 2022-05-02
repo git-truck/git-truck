@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 8
+export const AnalyzerDataInterfaceVersion = 9
 
 export interface AnalyzerData {
   cached: boolean
@@ -49,7 +49,6 @@ export interface AnalyzerData {
   branch: string
   commit: HydratedGitCommitObject
   authors: string[]
-  authorUnions: string[][]
   currentVersion: string
   lastRunEpoch: number
 }
@@ -73,7 +72,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   noCommits: number
   lastChangeEpoch?: number
   isBinary?: boolean
-  unionedAuthors?: Map<AuthorshipType, Record<string, number>>
+  unionedAuthors?: Record<AuthorshipType, Record<string, number>>
   dominantAuthor?: Map<AuthorshipType, [string, number]>
   isSearchResult?: boolean
 }
