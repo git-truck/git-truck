@@ -169,7 +169,7 @@ function Feedback() {
     <Box>
       <BoxSubTitleAndIconWrapper>
         <ReviewIcon display="inline-block" height="1rem" />
-        <BoxSubTitle>Help make Git Truck better</BoxSubTitle>
+        <BoxSubTitle>Help improve Git Truck</BoxSubTitle>
       </BoxSubTitleAndIconWrapper>
       <Spacer xl />
       <Button
