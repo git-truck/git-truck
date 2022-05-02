@@ -53,7 +53,7 @@ export interface AnalyzerData {
   lastRunEpoch: number
 }
 
-type RefType = "Heads" | "Tags"
+type RefType = "Branches" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
 
