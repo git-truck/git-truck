@@ -6,8 +6,10 @@ import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { Button, CloseButton, Box, Label, Actions, Grower, IconButton } from "~/components/util"
+import { Button, CloseButton, Box, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
+import { useMetrics } from "~/contexts/MetricContext"
+import { PointLegendData } from "~/metrics"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -62,8 +64,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   const transitionData = useTransition()
   const disabled = transitionData.state !== "idle"
-
-  if (!visible) return null
+  const metrics = useMetrics()
 
   const ungroupedUsersSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))
@@ -74,6 +75,10 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     if (event.target === event.currentTarget) onClose()
   }
 
+  const getColorFromDisplayName = (displayName) =>
+    (metrics.HISTORICAL.get("TOP_CONTRIBUTOR")?.legend as PointLegendData).get(displayName)?.color ?? "#333"
+
+  if (!visible) return null
 
   return (
     <ModalWrapper onClick={handleModalWrapperClick}>
@@ -102,14 +107,22 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
                 setSelectedAuthors(newSelectedAuthors)
               }}
             >
-              {author}
+              <DisplayName>
+                <LegendDot dotColor={getColorFromDisplayName(author)} />
+                <Spacer horizontal />
+                {author}
+              </DisplayName>
             </CheckboxWithLabel>
           ))}
         </UngroupedUsers>
         <Spacer xl />
         {ungroupedUsersSorted.length > 0 ? (
           <Actions>
-            <Button onClick={mergeSelectedUsers} title={`Merge the selected users`} disabled={disabled || selectedAuthors.length === 0}>
+            <Button
+              onClick={mergeSelectedUsers}
+              title={`Merge the selected users`}
+              disabled={disabled || selectedAuthors.length === 0}
+            >
               Merge
             </Button>
           </Actions>
@@ -122,10 +135,16 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
             <p>There are no grouped users</p>
           ) : (
             authorUnions.map((aliasGroup, aliasGroupIndex) => {
+              const displayName = aliasGroup[0]
               const disabled = transitionData.state !== "idle"
+              const color = getColorFromDisplayName(displayName)
               return (
                 <StyledBox key={aliasGroupIndex}>
-                  <b>{aliasGroup[0]}</b>
+                  <DisplayName>
+                    <LegendDot dotColor={color} />
+                    <Spacer horizontal />
+                    <b>{displayName}</b>
+                  </DisplayName>
                   <Spacer />
                   {aliasGroup
                     .slice(1)
@@ -141,7 +160,11 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
                   <Grower />
                   <Actions>
                     <Grower />
-                    <Button onClick={() => unmergeGroup(aliasGroupIndex)} title="Unmerge this group" disabled={disabled}>
+                    <Button
+                      onClick={() => unmergeGroup(aliasGroupIndex)}
+                      title="Unmerge this group"
+                      disabled={disabled}
+                    >
                       Unmerge
                     </Button>
                   </Actions>
@@ -233,6 +256,14 @@ const StyledBox = styled(Box)`
   margin: 0;
   display: flex;
   flex-direction: column;
+`
+
+const DisplayName = styled.div`
+  display: inline-flex;
+  flex-direction: row;
+  place-items: center;
+  line-height: 100%;
+  margin: 0px;
 `
 
 const StyledIconButton = styled(IconButton)`
