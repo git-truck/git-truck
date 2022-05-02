@@ -11,6 +11,7 @@ import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { PointLegendData } from "~/metrics"
 import { MergeType as MergeIcon } from "@styled-icons/material"
+import { useKey } from "react-use"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -75,6 +76,8 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   function handleModalWrapperClick(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) onClose()
   }
+
+  useKey("Escape", onClose)
 
   const getColorFromDisplayName = (displayName: string) =>
     (metrics.HISTORICAL.get("TOP_CONTRIBUTOR")?.legend as PointLegendData).get(displayName)?.color ?? "#333"
