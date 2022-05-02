@@ -170,7 +170,6 @@ const SLink = styled(Link)<{ green?: boolean }>`
   font-weight: bold;
   font-size: 0.9em;
   color: ${props => props.green ? " green" : css`var(--text-color)`};
-  text-transform: uppercase;
   opacity: 75%;
   cursor: pointer;
   &:hover {

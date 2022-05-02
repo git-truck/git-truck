@@ -58,7 +58,6 @@ export const Button = styled.button`
   font-size: 0.8rem;
   text-decoration: none;
   font-weight: bold;
-  text-transform: uppercase;
 
   cursor: pointer;
 
