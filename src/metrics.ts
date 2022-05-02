@@ -1,6 +1,5 @@
 import distinctColors from "distinct-colors"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
-// import { unionAuthors } from "./authorUnionUtil.server"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
 
@@ -91,14 +90,10 @@ export interface MetricCache {
 }
 
 export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
-  // const authorAliasMap = data.authorAliasMap
-
   const authorsMap: Record<string, number> = {}
   for (const author of data.authors) authorsMap[author] = 0
 
   const authors = data.authors
-  // const fullAuthorUnion = unionAuthors(authorsMap, authorAliasMap)
-  // const authors = Object.keys(fullAuthorUnion)
 
   const palette = distinctColors({ count: authors.length })
   let index = 0
@@ -290,7 +285,6 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
     cache.colormap.set(blob.path, nocreditColor)
     return
   }
-
 
   if (!authorUnion) throw Error("No unioned authors found")
   switch (Object.keys(authorUnion).length) {
