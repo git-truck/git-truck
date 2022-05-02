@@ -59,7 +59,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   if (!visible) return null
 
-  const ungroupedUsersSorted = authors.filter((a) => !flattedUnionedAuthors.includes(a)).sort()
+  const ungroupedUsersSorted = authors.filter((a) => !flattedUnionedAuthors.includes(a)).slice(0).sort()
   return (
     <ModalWrapper>
       <Modal>
@@ -79,7 +79,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
                 <StyledBox key={aliasGroupIndex}>
                   <b>{aliasGroup[0]}</b>
                   <Spacer />
-                  {aliasGroup.sort().map((alias) => (
+                  {aliasGroup.slice(0).sort().map((alias) => (
                     <AliasEntry key={alias}>
                       <div>
                         <button
