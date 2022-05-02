@@ -2,29 +2,30 @@ import {
   RateReview as ReviewIcon
 } from "@styled-icons/material"
 import { resolve } from "path"
+import { useState } from "react"
+import { useBoolean } from "react-use"
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
 import semverCompare from "semver-compare"
+import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
+import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/Legend"
-import { Main } from "~/components/Main"
+import { Main, MainRoot } from "~/components/Main"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
-import { SidePanel } from "~/components/SidePanel"
+import { SidePanel, SidePanelRoot } from "~/components/SidePanel"
 import { Spacer } from "~/components/Spacer"
-import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Code, Container, Grower, Button } from "~/components/util"
-import { useData } from "~/contexts/DataContext"
-
-import { useBoolean } from "react-use"
-import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
+import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Button, Code, Grower } from "~/components/util"
+import { useData } from "~/contexts/DataContext"
 
 let invalidateCache = false
 
@@ -208,6 +209,8 @@ export default function Repo() {
   const data = useLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const showUnionAuthorsModal = () => setUnionAuthorsModalOpen(true)
 
@@ -215,7 +218,7 @@ export default function Repo() {
 
   return (
     <Providers data={data}>
-      <Container>
+      <Container isFullscreen={isFullscreen}>
         <SidePanel>
           <GlobalInfo />
           <Feedback />
@@ -223,14 +226,14 @@ export default function Repo() {
           <SearchBar />
           <Spacer />
         </SidePanel>
-        {typeof document !== "undefined" ? <Main /> : <div />}
+        {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]} /> : <div />}
         <SidePanel>
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
-          <Grower />
-          <Details showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+          <Details showUnionAuthorsModal={showUnionAuthorsModal} />
+          <Grower />
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
         </SidePanel>
       </Container>
@@ -243,3 +246,33 @@ export default function Repo() {
     </Providers>
   )
 }
+
+const Container = styled.div<{isFullscreen : boolean}>`
+  height: 100vh;
+  display: grid;
+  transition: 0.5s;
+  grid-template-areas: "left main right";
+  grid-template-columns: ${(props) => props.isFullscreen ? "0px 1fr 0px" : "var(--side-panel-width) 1fr var(--side-panel-width)" };
+  grid-template-rows: 1fr;
+
+  & > ${MainRoot} {
+    grid-area: main;
+  }
+
+  & > ${SidePanelRoot}:first-of-type() {
+    grid-area: left;
+  }
+
+  & > ${SidePanelRoot}:last-of-type() {
+    grid-area: right;
+  }
+
+  @media (max-width: 660px) {
+    height: auto;
+    grid-template-areas: "main"
+                         "left"
+                         "right";
+    grid-template-columns: none;
+    grid-template-rows: ${(props) => props.isFullscreen ? "100vh auto auto" : "50vh auto auto"};
+  }
+`

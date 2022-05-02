@@ -1,6 +1,6 @@
 import styled from "styled-components"
 
-const SidePanelRoot = styled.aside`
+export const SidePanelRoot = styled.aside`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
