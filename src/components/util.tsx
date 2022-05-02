@@ -119,13 +119,6 @@ export const CloseButton = styled(IconButton)`
 `
 CloseButton.defaultProps = { children: <CloseIcon display="inline-block" height="1em" /> }
 
-export const Container = styled.div`
-  height: 100%;
-  display: grid;
-  grid-template-columns: var(--side-panel-width) 1fr var(--side-panel-width);
-  grid-template-rows: 1fr;
-`
-
 export const Box = styled.div`
   margin: var(--unit);
   color: var(--text-color);
