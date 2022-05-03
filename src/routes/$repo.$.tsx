@@ -1,6 +1,4 @@
-import {
-  RateReview as ReviewIcon
-} from "@styled-icons/material"
+import { RateReview as ReviewIcon } from "@styled-icons/material"
 import { resolve } from "path"
 import { useState } from "react"
 import { useBoolean } from "react-use"
@@ -55,9 +53,9 @@ export const loader: LoaderFunction = async ({ params }) => {
     options.branch = params["*"]
   }
 
-  const analyzerData = await analyze({ ...args, ...options })
-    .then((data) => addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? [])))
-
+  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
+    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
+  )
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path)
@@ -144,7 +142,7 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   console.error(error.message)
   console.error(error.stack)
   return (
-    <Container>
+    <Container isFullscreen={false}>
       <div />
       <Box>
         <h1>An error occured!</h1>
@@ -183,9 +181,7 @@ function Feedback() {
         Answer questionnaire
       </Button>
       <Spacer />
-      <Button
-        onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
-      >
+      <Button onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}>
         Open an issue
       </Button>
     </Box>
@@ -209,7 +205,7 @@ export default function Repo() {
   const data = useLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const showUnionAuthorsModal = () => setUnionAuthorsModalOpen(true)
@@ -247,12 +243,13 @@ export default function Repo() {
   )
 }
 
-const Container = styled.div<{isFullscreen : boolean}>`
+const Container = styled.div<{ isFullscreen: boolean }>`
   height: 100vh;
   display: grid;
   transition: 0.5s;
   grid-template-areas: "left main right";
-  grid-template-columns: ${(props) => props.isFullscreen ? "0px 1fr 0px" : "var(--side-panel-width) 1fr var(--side-panel-width)" };
+  grid-template-columns: ${(props) =>
+    props.isFullscreen ? "0px 1fr 0px" : "var(--side-panel-width) 1fr var(--side-panel-width)"};
   grid-template-rows: 1fr;
 
   & > ${MainRoot} {
@@ -269,10 +266,11 @@ const Container = styled.div<{isFullscreen : boolean}>`
 
   @media (max-width: 660px) {
     height: auto;
-    grid-template-areas: "main"
-                         "left"
-                         "right";
+    grid-template-areas:
+      "main"
+      "left"
+      "right";
     grid-template-columns: none;
-    grid-template-rows: ${(props) => props.isFullscreen ? "100vh auto auto" : "50vh auto auto"};
+    grid-template-rows: ${(props) => (props.isFullscreen ? "100vh auto auto" : "50vh auto auto")};
   }
 `
