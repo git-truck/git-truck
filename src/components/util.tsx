@@ -207,6 +207,8 @@ export const DetailsKey = styled.span<{ grow?: boolean }>`
 
 export const DetailsValue = styled.p`
   overflow-wrap: anywhere;
+  word-wrap: break-word;
+  overflow: hidden;
   font-size: 0.9em;
 `
 
