@@ -6,7 +6,6 @@ import { log } from "./log.server"
 
 const renamedFiles = new Map<string, string>()
 
-
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
   const authors = new Set<string>()
   const data = commit as HydratedGitCommitObject
@@ -60,6 +59,11 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
       if (isBinary) {
         blob.isBinary = true
+        blob.authors[author] = (blob.authors[author] ?? 0) + 1
+
+        for (const coauthor of coauthors) {
+          blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+        }
         continue
       }
 

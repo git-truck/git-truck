@@ -69,9 +69,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       </DetailsEntries>
       <Spacer />
       {isBlob ? (
-        clickedObject.isBinary || hasZeroContributions(clickedObject.authors) ? null : (
-          <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
-        )
+        <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
@@ -243,14 +241,17 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
     a[1] < b[1] ? 1 : -1
   )
 
-  if (contribDist.length === 0) return null
   if (contribDist.length <= authorCutoff + 1) {
     return (
       <>
         <DetailsHeading>Author distribution</DetailsHeading>
         <Spacer />
         <AuthorDistEntries>
-          <AuthorDistFragment show={true} items={contribDist} />
+          {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
+            <AuthorDistFragment show={true} items={contribDist} />
+          ) : (
+            <p>No authors found</p>
+          )}
         </AuthorDistEntries>
       </>
     )
@@ -312,7 +313,8 @@ const DetailsEntries = styled.div`
   gap: var(--unit) calc(var(--unit) * 3);
 `
 
-function hasZeroContributions(authors: Record<string, number>) {
+function hasZeroContributions(authors?: Record<string, number>) {
+  if (!authors) return true
   const authorsList = Object.entries(authors)
   for (const [, contribution] of authorsList) {
     if (contribution > 0) return false
@@ -326,7 +328,6 @@ function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipTy
   function subTree(tree: HydratedGitTreeObject) {
     for (const child of tree.children) {
       if (child.type === "blob") {
-        if (child.isBinary) continue
         const unionedAuthors = child.unionedAuthors?.[authorshipType]
         if (!unionedAuthors) throw Error("No unioned authors")
         for (const [author, contrib] of Object.entries(unionedAuthors)) {
