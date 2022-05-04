@@ -61,7 +61,7 @@ You can also define files to ignore.
   "log": "debug",
   "branch": "main",
   "unionedAuthors": [
-    ["Bob", "Bobby Bobb"],
+    ["Bob", "Bobby Bob"],
     ["Alice", "aliiii", "alice alice"]
   ],
   "hiddenFiles": ["package-lock.json", "*.bin", "*.svg"],
