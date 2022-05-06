@@ -1,5 +1,25 @@
 import { Close as CloseIcon } from "@styled-icons/material"
 import styled, { css } from "styled-components"
+import { compare, valid, clean } from "semver"
+
+export const branchCompare = (a : string, b : string) : number => {
+  const defaultBranchNames = ["main", "master"]
+
+  if (defaultBranchNames.includes(a)) return -1;
+  if (defaultBranchNames.includes(b)) return 1;
+
+  return a.localeCompare(b);
+}
+
+export const semverCompare = (a : string, b : string) : number => {
+  const validA = valid(clean(a));
+  const validB = valid(clean(b));
+
+  if (!validA || !validB)
+    return -1;
+
+  return compare(validA, validB);
+}
 
 const titleBaseStyles = css`
   font-weight: bold;

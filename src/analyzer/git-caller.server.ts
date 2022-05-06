@@ -3,7 +3,7 @@ import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./uti
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
 import { AnalyzerData, AnalyzerDataInterfaceVersion, GitRefs, Repository } from "./model"
-import semverCompare from "semver-compare"
+import { branchCompare, semverCompare } from "~/components/util"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -218,6 +218,8 @@ export class GitCaller {
           throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
       }
     }
+
+    gitRefs.Branches = Object.fromEntries(Object.entries(gitRefs.Branches).sort(([a], [b]) => branchCompare(a, b)))
 
     gitRefs.Tags = Object.fromEntries(Object.entries(gitRefs.Tags).sort(([a], [b]) => semverCompare(a, b)))
 
