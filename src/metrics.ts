@@ -14,7 +14,7 @@ export type AuthorshipType = keyof typeof Authorship
 
 export const Metric = {
   FILE_EXTENSION: "File extension",
-  MOST_COMMITS: "Most commits",
+  MOST_COMMITS: "Number of commits",
   LAST_CHANGED: "Last changed",
   SINGLE_AUTHOR: "Single author",
   TOP_CONTRIBUTOR: "Top contributor",
