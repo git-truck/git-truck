@@ -22,6 +22,8 @@ To check if these programs are installed, and what version you have, run `node -
 2. Press `y` if it asks you to download the package.
 3. The application will now open in your default browser.
 
+**Git Truck is part of a research study, so please fill out our [short survey](https://forms.gle/9wCCAw6zae7wuwZQ6) after trying out the tool. Thanks!**
+
 ## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-or-i-want-to-give-feedback-what-do-i-do)
 
 Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
