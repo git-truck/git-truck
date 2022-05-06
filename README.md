@@ -4,7 +4,7 @@ Get a truckload of visualizations for your git repository, and find out if your 
 
 Git Truck gives an overview of your folder-structure, which users have contributed most to which files, and more.
 
-![billede](https://user-images.githubusercontent.com/23435481/161273053-a9420c2b-2b80-4f73-a78e-39dec822fab1.png)
+![billede](https://user-images.githubusercontent.com/23435481/167109548-6757fbca-a24b-4fb7-a2af-bba5d423a9f0.png)
 
 ## [Prerequisites](#prerequisites)
 
