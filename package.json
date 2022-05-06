@@ -57,7 +57,7 @@
     "react-use": "^17.3.2",
     "react-use-size": "^2.0.4",
     "remix": "^1.2.3",
-    "semver-compare": "^1.0.0",
+    "semver": "^7.3.7",
     "styled-components": "^5.3.3",
     "yargs": "^17.4.0"
   },
@@ -71,6 +71,7 @@
     "@types/morgan": "^1.9.3",
     "@types/react": "^17.0.40",
     "@types/react-dom": "^17.0.9",
+    "@types/semver": "^7.3.9",
     "@types/semver-compare": "^1.0.1",
     "@types/styled-components": "^5.1.24",
     "@types/yargs": "^17.0.10",

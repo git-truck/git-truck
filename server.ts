@@ -6,7 +6,7 @@ import latestVersion from "latest-version"
 import morgan from "morgan"
 import open from "open"
 import { join } from "path"
-import semverCompare from "semver-compare"
+import { semverCompare } from "~/components/util"
 import pkg from "./package.json"
 import { parseArgs } from "./src/analyzer/args.server"
 
