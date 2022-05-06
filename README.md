@@ -5,7 +5,7 @@ Get a truckload of visualizations for your git repository, and find out if your 
 Git Truck gives an overview of:
 - your folder-structure
 - which users have contributed most to which files
-- which files have been the subject of most change during evolution
+- which files have been the subject of most changes during evolution
 - which files have a single author (as the base for the truck-factor estimation)
 
 ![billede](https://user-images.githubusercontent.com/23435481/167109548-6757fbca-a24b-4fb7-a2af-bba5d423a9f0.png)
