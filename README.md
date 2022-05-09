@@ -24,11 +24,6 @@ Git-Truck provides you with a truckload of visualizations for your git repositor
 <img width="1907" alt="image" src="https://user-images.githubusercontent.com/464519/167394405-67bd5b5d-be50-444e-8a1f-68af083a6cba.png">
 
 
-
-
-
-![billede](https://user-images.githubusercontent.com/23435481/167398484-f4129781-358d-411e-abcf-dac3cc73f71e.png)
-
 ## [Prerequisites](#prerequisites)
 
 To use Git Truck, you will need to have the following programs installed:
