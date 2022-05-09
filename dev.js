@@ -6,7 +6,7 @@ const open = require("open")
   const getPortLib = (await import("get-port"))
   const getPort = getPortLib.default
   const port = await getPort({
-    port: [80, ...getPortLib.portNumbers(3000, 4000)],
+    port: [...getPortLib.portNumbers(3000, 4000)],
   })
 
   process.env["PORT"] = port.toString()

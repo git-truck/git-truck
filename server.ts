@@ -91,7 +91,7 @@ for usage instructions.`)
   const getPortLib = await import("get-port")
   const getPort = getPortLib.default
   const port = await getPort({
-    port: devServerPort ?? [...(!userHasProvidedPort ? [80] : []), ...getPortLib.portNumbers(minPort, minPort + 1000)],
+    port: devServerPort ?? [...(!userHasProvidedPort ? [3000] : []), ...getPortLib.portNumbers(minPort, minPort + 1000)],
   })
   app.listen(port).once("listening", () => printOpen(port))
 })()
