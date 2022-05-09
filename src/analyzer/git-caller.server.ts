@@ -215,7 +215,7 @@ export class GitCaller {
           gitRefs.Tags[path] = hash
           break
         default:
-          throw new Error(`Analyser error, ref_type: ${ref_type}, is invalid`)
+          break
       }
     }
 
