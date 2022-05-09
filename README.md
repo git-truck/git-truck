@@ -27,6 +27,7 @@ Git-Truck provides you with a truckload of visualizations for your git repositor
 
 
 
+![billede](https://user-images.githubusercontent.com/23435481/167398484-f4129781-358d-411e-abcf-dac3cc73f71e.png)
 
 ## [Prerequisites](#prerequisites)
 
