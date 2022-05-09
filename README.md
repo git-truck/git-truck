@@ -8,7 +8,7 @@ Git Truck gives an overview of:
 - the parts of the system that are most often changed
 - the parts of in your system that have a single author
 
-![billede](https://user-images.githubusercontent.com/23435481/167383315-fe16503a-0e85-4cc3-b009-215f91eb0258.png)
+![billede](https://user-images.githubusercontent.com/23435481/167398484-f4129781-358d-411e-abcf-dac3cc73f71e.png)
 Figure: Git Truck 🚛 showing the the top contributor for each file in an open-source project.
 
 ## [Prerequisites](#prerequisites)
