@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
