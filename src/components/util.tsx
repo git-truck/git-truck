@@ -2,23 +2,26 @@ import { Close as CloseIcon } from "@styled-icons/material"
 import styled, { css } from "styled-components"
 import { compare, valid, clean } from "semver"
 
-export const branchCompare = (a : string, b : string) : number => {
+export const branchCompare = (a: string, b: string): number => {
   const defaultBranchNames = ["main", "master"]
 
-  if (defaultBranchNames.includes(a)) return -1;
-  if (defaultBranchNames.includes(b)) return 1;
+  if (defaultBranchNames.includes(a)) return -1
+  if (defaultBranchNames.includes(b)) return 1
 
-  return a.localeCompare(b);
+  return a.toLowerCase().localeCompare(b.toLowerCase())
 }
 
-export const semverCompare = (a : string, b : string) : number => {
-  const validA = valid(clean(a));
-  const validB = valid(clean(b));
+export const semverCompare = (a: string, b: string): number => {
+  const validA = valid(clean(a))
+  const validB = valid(clean(b))
 
-  if (!validA || !validB)
-    return -1;
+  if (!validA || !validB) {
+    if (validA) return 1
+    if (validB) return -1
+    return a.toLowerCase().localeCompare(b.toLowerCase())
+  }
 
-  return compare(validA, validB);
+  return compare(validA, validB)
 }
 
 const titleBaseStyles = css`
