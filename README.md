@@ -60,7 +60,6 @@ npx git-truck [args]
 
 |         arg          |                              description                              |   default value    |
 | :------------------: | :-------------------------------------------------------------------: | :----------------: |
-|      `--branch`      |                              branch name                              | checked out branch |
 |       `--path`       |                 path to a folder or a git repository                  | current directory  |
 |       `--log`        | output log level. See [here](./src/analyzer/log.server.ts) for values |         -          |
 |       `--port`       |                      port to use for the program                      |        3000        |
