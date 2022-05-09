@@ -1,15 +1,32 @@
 # Git Truck 🚛
 
-Get a truckload of visualizations for your git repository, and find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/)!
+Git-Truck provides you with a truckload of visualizations for your git repository, and find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/):
 
-Git Truck gives an overview of:
-- your folder-structure
-- which users have contributed the most to which files
-- the parts of the system that are most often changed
-- the parts of in your system that have a single author
 
-![billede](https://user-images.githubusercontent.com/23435481/167383315-fe16503a-0e85-4cc3-b009-215f91eb0258.png)
-Figure: Git Truck 🚛 showing the the top contributor for each file in an open-source project.
+### 1. The files in your system where you have a single contributor (i.e., truck-factor = 1)
+
+<img width="1912" alt="image" src="https://user-images.githubusercontent.com/464519/167393939-8d683732-4583-44fe-99a3-36c818761bcb.png">
+
+
+### 2. How the various developers contribute to your codebase
+
+<img width="1913" alt="image" src="https://user-images.githubusercontent.com/464519/167394548-ca66665a-a699-44d7-8a97-bc7309c72f8a.png">
+
+
+
+### 3. The parts of the system that are most often changed
+
+<img width="1912" alt="image" src="https://user-images.githubusercontent.com/464519/167395118-6a4f50f4-5f37-4e0d-bcc8-144797b83e65.png">
+
+
+### 4. You can also merge multiple developer accounts
+
+<img width="1907" alt="image" src="https://user-images.githubusercontent.com/464519/167394405-67bd5b5d-be50-444e-8a1f-68af083a6cba.png">
+
+
+
+
+
 
 ## [Prerequisites](#prerequisites)
 
