@@ -57,18 +57,18 @@ export function Chart(props: ChartProps) {
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
       ? {
-        onClick: () => setClickedObject(d.data),
-        onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-        onMouseOut: () => setHoveredBlob(null),
-      }
+          onClick: () => setClickedObject(d.data),
+          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
+          onMouseOut: () => setHoveredBlob(null),
+        }
       : {
-        onClick: () => {
-          setClickedObject(d.data)
-          setPath(d.data.path)
-        },
-        onMouseOver: () => setHoveredBlob(null),
-        onMouseOut: () => setHoveredBlob(null),
-      }
+          onClick: () => {
+            setClickedObject(d.data)
+            setPath(d.data.path)
+          },
+          onMouseOver: () => setHoveredBlob(null),
+          onMouseOut: () => setHoveredBlob(null),
+        }
 
   return (
     <>
@@ -79,7 +79,11 @@ export function Chart(props: ChartProps) {
       >
         {nodes?.descendants().map((d, i) => {
           return (
-            <G blink={clickedObject?.path === d.data.path} key={`${chartType}${d.data.path}`} {...createGroupHandlers(d)}>
+            <G
+              blink={clickedObject?.path === d.data.path}
+              key={`${chartType}${d.data.path}`}
+              {...createGroupHandlers(d)}
+            >
               <Node isRoot={i === 0} d={d} />
             </G>
           )
@@ -91,7 +95,7 @@ export function Chart(props: ChartProps) {
 }
 
 const G = styled.g<{ blink: boolean }>`
-  animation-name: ${props => props.blink ? blinkAnimation : "none"};
+  animation-name: ${(props) => (props.blink ? blinkAnimation : "none")};
   animation-duration: 2s;
   animation-iteration-count: infinite;
 `
@@ -174,8 +178,8 @@ function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObje
   return <CircleSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const CircleSVG = styled(animated.circle) <{ pulse: boolean }>`
-  animation-name: ${props => props.pulse ? pulseAnimation : "none"};
+const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
+  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
@@ -203,8 +207,8 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
   return <RectSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const RectSVG = styled(animated.rect) <{ pulse: boolean }>`
-  animation-name: ${props => props.pulse ? pulseAnimation : "none"};
+const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
+  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
   animation-duration: 1.5s;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
@@ -320,7 +324,8 @@ function createPartitionedHiearchy(
       const treeMapPartition = treemap<HydratedGitObject>()
         .size([paddedSizeProps.width, paddedSizeProps.height])
         .paddingInner(2)
-        .paddingOuter(treemapPadding)
+        .paddingOuter(4)
+        .paddingTop(treemapPadding)
 
       const tmPartition = treeMapPartition(hiearchy)
 
