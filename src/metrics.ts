@@ -349,7 +349,7 @@ class HeatMapTranslater {
   }
 
   getColor(value: number): string {
-    return `hsl(0,100%,${this.translator.inverseTranslate(value)}%)`
+    return `hsl(20,100%,${this.translator.inverseTranslate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
