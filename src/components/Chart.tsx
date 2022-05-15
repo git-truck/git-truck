@@ -165,6 +165,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 
     if (textIsTooTall && textIsTooTall(displayText)) {
       displayText = displayText.replace(/\/.+\//gm, "/.../")
+
       if (textIsTooTall(displayText)) {
         showLabel = false
       }
