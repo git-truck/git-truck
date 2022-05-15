@@ -138,7 +138,10 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       )
     case "TREE_MAP":
       const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      collapseDisplayText_mut((text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth)
+      collapseDisplayText_mut(
+        (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth,
+        (text: string) => rectDatum.y1 - rectDatum.y0 < EstimatedLetterHeightForDirText
+      )
 
       return (
         <>
@@ -152,10 +155,17 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       throw Error("Unknown chart type")
   }
 
-  function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction) {
+  function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction, textIsTooTall?: textIsTooLongFunction) {
     if (textIsTooLong(displayText)) {
       displayText = displayText.replace(/\/.+\//gm, "/.../")
       if (textIsTooLong(displayText)) {
+        showLabel = false
+      }
+    }
+
+    if (textIsTooTall && textIsTooTall(displayText)) {
+      displayText = displayText.replace(/\/.+\//gm, "/.../")
+      if (textIsTooTall(displayText)) {
         showLabel = false
       }
     }
