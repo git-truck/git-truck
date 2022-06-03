@@ -5,9 +5,9 @@ import { useBoolean } from "react-use"
 import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
 import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
-import { getTruckConfigWithArgs } from "~/analyzer/args.server"
+import { getTruckConfigWithArgs, getTruckRefactorInfo } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
+import { AnalyzerData, RefactorInfo, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { Details } from "~/components/Details"
@@ -30,6 +30,7 @@ export interface RepoData {
   analyzerData: AnalyzerData
   repo: Repository
   truckConfig: TruckUserConfig
+  refactorInfo: RefactorInfo
   gitTruckInfo: {
     version: string
     latestVersion: string | null
@@ -67,6 +68,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     analyzerData,
     repo,
     gitTruckInfo: await getGitTruckInfo(),
+    refactorInfo: await getTruckRefactorInfo(params["repo"] as string),
     truckConfig,
   })
 }

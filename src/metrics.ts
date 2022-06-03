@@ -1,7 +1,9 @@
 import distinctColors from "distinct-colors"
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject, RefactorInfo } from "~/analyzer/model"
 import { getColorFromExtension } from "./extension-color"
-import { dateFormatLong, dateFormatRelative } from "./util"
+import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "./util"
+import { RepoData } from "./routes/$repo.$"
+import ignore, { Ignore } from "ignore"
 
 export type MetricsData = Record<AuthorshipType, Map<MetricType, MetricCache>>
 
@@ -18,16 +20,18 @@ export const Metric = {
   LAST_CHANGED: "Last changed",
   SINGLE_AUTHOR: "Single author",
   TOP_CONTRIBUTOR: "Top contributor",
+  REFACTOR: "Refactor"
 }
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData): MetricsData {
-  const authorColors = generateAuthorColors(data)
+export function createMetricData(data: RepoData): MetricsData {
+  const analyzerData = data.analyzerData
+  const authorColors = generateAuthorColors(analyzerData)
 
   return {
-    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
-    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
+    HISTORICAL: setupMetricsCache(analyzerData.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
+    BLAME: setupMetricsCache(analyzerData.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
   }
 }
 
@@ -47,6 +51,8 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
       return authorshipType === "HISTORICAL"
         ? "Which person has made the most line-changes to a file, throughout the repository's history?"
         : "Which person has made the most line-changes to a file, in the newest version?"
+    case "REFACTOR":
+      return "WIP"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -57,6 +63,7 @@ export function isGradientMetric(metric: MetricType) {
     case "FILE_EXTENSION":
     case "TOP_CONTRIBUTOR":
     case "SINGLE_AUTHOR":
+    case "REFACTOR":
       return false
     case "LAST_CHANGED":
     case "MOST_COMMITS":
@@ -107,13 +114,14 @@ export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
 }
 
 export function getMetricCalcs(
-  data: AnalyzerData,
+  data: RepoData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, string>
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
-  const commit = data.commit
+  const commit = data.analyzerData.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
+  const refactor = new RefactorSupporter(data.refactorInfo);
 
   return [
     [
@@ -170,6 +178,13 @@ export function getMetricCalcs(
         if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+      },
+    ],
+    [
+      "REFACTOR",
+      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
+        refactor.setColor(blob, cache)
       },
     ],
   ]
@@ -296,6 +311,46 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
       legend.set("Multiple authors", new PointInfo(defaultColor, 1))
       cache.colormap.set(blob.path, defaultColor)
       return
+  }
+}
+
+class RefactorSupporter {
+  readonly startDate?: number
+  includes: Ignore
+  excludes: Ignore
+
+  constructor(info : RefactorInfo) {
+    this.startDate = info.startDate === undefined ? undefined : (Date.parse(info.startDate))
+    this.includes = ignore().add(info.includes ?? [])
+    this.excludes = ignore().add(info.excludes ?? [])    
+  }
+
+  setColor(blob : HydratedGitBlobObject, cache: MetricCache) {
+    const legend = cache.legend as PointLegendData
+    if (this.startDate === undefined) {
+      cache.colormap.set(blob.path, "grey")
+      legend.set("No ongoing refactor", new PointInfo("grey", 0))
+      return
+    }
+
+    if (this.excludes.ignores(blob.path)) {
+      cache.colormap.set(blob.path, "grey")
+      legend.set("Not part of the refactor", new PointInfo("grey", 0))
+      return
+    }
+
+    if (this.includes.ignores(blob.path)) {
+      if ((blob.lastChangeEpoch ?? 0)*1000 >= this.startDate) {
+        cache.colormap.set(blob.path, "green")
+        legend.set("Refactored", new PointInfo("green", 2))
+        return
+      }
+      else {
+        cache.colormap.set(blob.path, "red")
+        legend.set("Not refactored", new PointInfo("red", 1))
+        return
+      }
+    }
   }
 }
 

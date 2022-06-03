@@ -9,6 +9,13 @@ export interface Repository {
   refs: GitRefs
   reasons: ANALYZER_CACHE_MISS_REASONS[]
   analyzedHeads: Record<string, boolean>
+  refactor : RefactorInfo
+}
+
+export interface RefactorInfo {
+  startDate? : string
+  includes? : string[]
+  excludes? : string[]
 }
 
 export type GitObject = GitBlobObject | GitTreeObject

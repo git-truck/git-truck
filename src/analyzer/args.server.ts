@@ -1,7 +1,7 @@
 import yargsParser from "yargs-parser"
 import { promises as fs } from "fs"
 import { resolve } from "path"
-import { TruckConfig, TruckUserConfig } from "./model"
+import { RefactorInfo, TruckConfig, TruckUserConfig } from "./model"
 import { GitCaller } from "./git-caller.server"
 import { getBaseDirFromPath } from "./util.server"
 import { log } from "./log.server"
@@ -31,7 +31,7 @@ export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig
   const args = await getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
-  args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path
+  args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path  
 
   let config: TruckUserConfig = {}
   try {
@@ -48,4 +48,21 @@ export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig
     },
     config,
   ]
+}
+
+export async function getTruckRefactorInfo(repo: string): Promise<RefactorInfo> {
+  const args = await getArgsWithDefaults()
+
+  const pathIsRepo = await GitCaller.isGitRepo(args.path)
+  args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path  
+
+  let info: RefactorInfo = {}
+  try {
+    const contents = JSON.parse(await fs.readFile(resolve(args.path, repo, "truckrefactor.json"), "utf-8"))
+    info = contents
+  } catch (e) {
+    log.warn(`No truckrefactor.json found in repo ${repo}`)
+  }
+
+  return info
 }
