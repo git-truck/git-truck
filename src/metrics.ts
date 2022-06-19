@@ -331,7 +331,7 @@ class ColdMapTranslater {
   }
 
   getColor(value: number): string {
-    return `hsl(240,100%,${this.translator.inverseTranslate(value)}%)`
+    return `hsl(240,100%,${this.translator.translate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
