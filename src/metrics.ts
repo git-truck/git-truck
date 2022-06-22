@@ -114,6 +114,7 @@ export function getMetricCalcs(
   const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
+  const agemap = new AgeColorMapper()
 
   return [
     [
@@ -161,7 +162,7 @@ export function getMetricCalcs(
             coldmap.getColor(commit.newestLatestChangeEpoch),
           ]
         }
-        coldmap.setColor(blob, cache)
+        agemap.setColor(blob, cache)
       },
     ],
     [
@@ -296,6 +297,24 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
       legend.set("Multiple authors", new PointInfo(defaultColor, 1))
       cache.colormap.set(blob.path, defaultColor)
       return
+  }
+}
+
+class AgeColorMapper {
+
+  getColor(input: number) {
+    let diff = ((Date.now()/1000) - input)
+
+    if (diff >= 31556926) return "#08519c"
+    else if (diff < 31556926 && diff >= 2629743) return "#3182bd"
+    else if (diff < 2629743 && diff >= 604800) return "#6baed6"
+    else if (diff < 604800 && diff >= 172800) return "#9ecae1"
+    else if (diff < 172800 && diff >= 86400) return "#c6dbef"
+    else if (diff < 86400) return "#eff3ff"
+  }
+
+  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+    cache.colormap.set(blob.path, this.getColor(blob.lastChangeEpoch ?? 0) ?? "grey")
   }
 }
 
