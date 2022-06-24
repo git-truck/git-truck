@@ -1,7 +1,9 @@
 import distinctColors from "distinct-colors"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { makeDupeMap, unionAuthors } from "./authorUnionUtil.server"
 import { getColorFromExtension } from "./extension-color"
 import { dateFormatLong, dateFormatRelative } from "./util"
+import { LegendType } from "./components/Legend"
 
 export type MetricsData = Record<AuthorshipType, Map<MetricType, MetricCache>>
 
@@ -18,16 +20,17 @@ export const Metric = {
   LAST_CHANGED: "Last changed",
   SINGLE_AUTHOR: "Single author",
   TOP_CONTRIBUTOR: "Top contributor",
+  TRUCK_FACTOR: "Truck factor",
 }
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData): MetricsData {
-  const authorColors = generateAuthorColors(data)
+export function createMetricData(data: AnalyzerData, fullUnion: string[]): MetricsData {
+  const authorColors = generateAuthorColors(fullUnion)
 
   return {
-    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
-    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
+    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors, fullUnion)),
+    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors, fullUnion)),
   }
 }
 
@@ -47,6 +50,8 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
       return authorshipType === "HISTORICAL"
         ? "Which person has made the most line-changes to a file, throughout the repository's history?"
         : "Which person has made the most line-changes to a file, in the newest version?"
+    case "TRUCK_FACTOR":
+        return "WIP"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -60,7 +65,24 @@ export function isGradientMetric(metric: MetricType) {
       return false
     case "LAST_CHANGED":
     case "MOST_COMMITS":
+    case "TRUCK_FACTOR":
       return true
+    default:
+      throw new Error("Uknown metric type: " + metric)
+  }
+}
+
+export function getMetricLegendType(metric: MetricType) : LegendType {
+  switch (metric) {
+    case "FILE_EXTENSION":
+    case "TOP_CONTRIBUTOR":
+    case "SINGLE_AUTHOR":
+      return "POINT"
+    case "LAST_CHANGED":
+    case "MOST_COMMITS":
+      return "GRADIENT"
+    case "TRUCK_FACTOR":
+      return "LOG_GRADIENT"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -83,17 +105,18 @@ export type GradLegendData = [
   minColor: string,
   maxColor: string
 ]
+export type LogGradLegendData = [
+  steps: number
+]
 
 export interface MetricCache {
-  legend: PointLegendData | GradLegendData | undefined
+  legend: PointLegendData | GradLegendData | LogGradLegendData| undefined
   colormap: Map<string, string>
 }
 
-export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
+export function generateAuthorColors(authors: string[]): Map<string, string> {
   const authorsMap: Record<string, number> = {}
-  for (const author of data.authors) authorsMap[author] = 0
-
-  const authors = data.authors
+  for (const author of authors) authorsMap[author] = 0
 
   const palette = distinctColors({ count: authors.length })
   let index = 0
@@ -109,12 +132,14 @@ export function generateAuthorColors(data: AnalyzerData): Map<string, string> {
 export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
-  authorColors: Map<string, string>
+  authorColors: Map<string, string>,
+  fullUnion: string[],
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
   const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
   const agemap = new AgeColorMapper()
+  const truckmap = new TruckFactorTranslater(fullUnion.length)
 
   return [
     [
@@ -171,6 +196,17 @@ export function getMetricCalcs(
         if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+      },
+    ],
+    [
+      "TRUCK_FACTOR",
+      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) {
+          cache.legend = [
+            Math.floor(Math.log2(fullUnion.length)) + 1
+          ]
+        }
+        truckmap.setColor(blob, cache)
       },
     ],
   ]
@@ -340,17 +376,36 @@ class SpectrumTranslater {
   }
 }
 
+class TruckFactorTranslater {
+  private readonly min_lightness = 50
+  private readonly max_lighness = 90
+  private readonly step: number
+
+  constructor(author_count: number) {
+    this.step = (this.max_lighness - this.min_lightness) / Math.floor(Math.log2(author_count))
+  }
+
+  getColor(value: number) {
+    const level = Math.floor(Math.log2(value))
+    return `hsl(0,75%,${this.min_lightness + (level * this.step)}%)`
+  }
+
+  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+    cache.colormap.set(blob.path, this.getColor(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
+  }
+}
+
 class ColdMapTranslater {
-  readonly translator: SpectrumTranslater
+  readonly translater: SpectrumTranslater
   readonly min_lightness = 50
   readonly max_lightness = 90
 
   constructor(min: number, max: number) {
-    this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
+    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
   }
 
   getColor(value: number): string {
-    return `hsl(240,100%,${this.translator.inverseTranslate(value)}%)`
+    return `hsl(240,100%,${this.translater.inverseTranslate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
@@ -359,16 +414,16 @@ class ColdMapTranslater {
 }
 
 class HeatMapTranslater {
-  readonly translator: SpectrumTranslater
+  readonly translater: SpectrumTranslater
   readonly min_lightness = 50
   readonly max_lightness = 95
 
   constructor(min: number, max: number) {
-    this.translator = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
+    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
   }
 
   getColor(value: number): string {
-    return `hsl(20,100%,${this.translator.inverseTranslate(value)}%)`
+    return `hsl(20,100%,${this.translater.inverseTranslate(value)}%)`
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {

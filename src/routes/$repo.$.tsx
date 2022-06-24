@@ -9,7 +9,7 @@ import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import { addAuthorUnion, makeDupeMap, nameUnion, unionAuthors } from "~/authorUnionUtil.server"
 import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -34,6 +34,7 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
+  fullAuthorUnion: string[]
 }
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -56,6 +57,8 @@ export const loader: LoaderFunction = async ({ params }) => {
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
 
+  const fullAuthorUnion = nameUnion(analyzerData.authors, makeDupeMap(truckConfig.unionedAuthors ?? []))
+
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path)
 
@@ -68,6 +71,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     repo,
     gitTruckInfo: await getGitTruckInfo(),
     truckConfig,
+    fullAuthorUnion,
   })
 }
 

@@ -7,8 +7,10 @@ import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import {
   getMetricDescription,
+  getMetricLegendType,
   GradLegendData,
   isGradientMetric,
+  LogGradLegendData,
   Metric,
   MetricCache,
   PointLegendData,
@@ -18,6 +20,7 @@ import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { Box, BoxP, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, Button } from "./util"
 import { PeopleAlt } from "@styled-icons/material"
+import { HydratedGitBlobObject } from "~/analyzer/model"
 
 const legendCutoff = 3
 
@@ -38,10 +41,21 @@ const GradArrow = styled.i<{ visible: boolean; position: number }>`
   filter: drop-shadow(0px -2px 0px #fff);
 `
 
+const LogGradArrow = styled.i<{ visible: boolean; position: number }>`
+display: ${({ visible }) => (visible ? "initital" : "none")};
+transition: 500ms;
+position: relative;
+bottom: 30px;
+left: calc(${({ position }) => position}% - ${estimatedLetterWidth}px);
+filter: drop-shadow(0px -2px 0px #fff);
+`
+
 const StyledBox = styled(Box)`
   position: sticky;
   bottom: 0;
 `
+
+export type LegendType = "POINT" | "GRADIENT" | "LOG_GRADIENT"
 
 export function Legend(props: { showUnionAuthorsModal: () => void }) {
   const { metricType, authorshipType } = useOptions()
@@ -51,6 +65,19 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
 
   if (metricCache === undefined) return null
 
+  let legend: JSX.Element = <></>
+  switch(getMetricLegendType(metricType)) {
+    case "POINT":
+      legend = <PointMetricLegend metricCache={metricCache}></PointMetricLegend>
+      break
+    case "GRADIENT":
+      legend = <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
+      break
+    case "LOG_GRADIENT":
+      legend = <LogGradiantMetricLegend metricCache={metricCache}></LogGradiantMetricLegend>
+      break
+  }
+  
   return (
     <StyledBox>
       <BoxSubTitle>{Metric[metricType]}</BoxSubTitle>
@@ -66,17 +93,67 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
           <Spacer lg />
         </>
       ) : null}
-      {isGradientMetric(metricType) ? (
-        <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
-      ) : (
-        <PointMetricLegend metricCache={metricCache}></PointMetricLegend>
-      )}
+      {legend}
     </StyledBox>
   )
 }
 
 interface MetricLegendProps {
   metricCache: MetricCache
+}
+
+export function LogGradiantMetricLegend({ metricCache }: MetricLegendProps) {
+  const [steps] = metricCache.legend as LogGradLegendData
+  let width = 100 / steps
+  let colorStep = (90 - 50) / steps
+
+  let arrowVisible = false
+  let arrowOffset = 0
+  const { clickedObject } = useClickedObject()
+  
+  if (clickedObject?.type == "blob") {
+    arrowVisible = true
+    arrowOffset = (width / 2) + width * (Math.floor(Math.log2(Object.entries(clickedObject.unionedAuthors?.HISTORICAL ?? []).length)))
+  }
+
+  return (
+    <>
+      <div style={{display: `flex`, flexDirection: `row`}}>
+        {[...Array(steps).fill(1)].map((_,i) => {
+          return <LogGradiantSegment width={width} color={`hsl(0,75%,${50 + (i*colorStep)}%)`} text={`${Math.pow(2,i)}`} top={(steps > 8) ? i % 2 === 0 : true}></LogGradiantSegment>
+        })}
+      </div>
+      <LogGradArrow visible={arrowVisible} position={arrowOffset}>
+        {"\u25B2"}
+      </LogGradArrow>
+    </>
+  )
+}
+
+interface LogGradiantSegmentProps {
+  width: number
+  color: string
+  text: string
+  top: boolean
+}
+
+export function LogGradiantSegment({width, color, text, top} : LogGradiantSegmentProps) {
+  if (top) return (
+    <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
+      <div style={{textAlign: 'left', height: '20px'}}>{','+text}</div>
+      <div style={{backgroundColor: color, height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '20px'}}></div>
+    </div>
+  )
+  
+  else return (
+    <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
+      <div style={{textAlign: 'left', height: '20px'}}></div>
+      <div style={{backgroundColor: color, height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '20px'}}>{'`'+text}</div>
+    </div>
+  )
+  
 }
 
 export function GradientMetricLegend({ metricCache }: MetricLegendProps) {

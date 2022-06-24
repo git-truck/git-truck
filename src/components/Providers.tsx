@@ -21,7 +21,7 @@ export function Providers({ children, data }: ProvidersProps) {
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData), [data])
+  const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData, data.fullAuthorUnion), [data])
 
   const optionsValue = useMemo(
     () => ({
