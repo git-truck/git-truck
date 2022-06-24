@@ -45,7 +45,7 @@ const LogGradArrow = styled.i<{ visible: boolean; position: number }>`
 display: ${({ visible }) => (visible ? "initital" : "none")};
 transition: 500ms;
 position: relative;
-bottom: 11px;
+bottom: 30px;
 left: calc(${({ position }) => position}% - ${estimatedLetterWidth}px);
 filter: drop-shadow(0px -2px 0px #fff);
 `
@@ -120,7 +120,7 @@ export function LogGradiantMetricLegend({ metricCache }: MetricLegendProps) {
     <>
       <div style={{display: `flex`, flexDirection: `row`}}>
         {[...Array(steps).fill(1)].map((_,i) => {
-          return <LogGradiantSegment width={width} color={`hsl(0,75%,${50 + (i*colorStep)}%)`} text={`${Math.pow(2,i)}`}></LogGradiantSegment>
+          return <LogGradiantSegment width={width} color={`hsl(0,75%,${50 + (i*colorStep)}%)`} text={`${Math.pow(2,i)}`} top={(steps > 8) ? i % 2 === 0 : true}></LogGradiantSegment>
         })}
       </div>
       <LogGradArrow visible={arrowVisible} position={arrowOffset}>
@@ -134,15 +134,26 @@ interface LogGradiantSegmentProps {
   width: number
   color: string
   text: string
+  top: boolean
 }
 
-export function LogGradiantSegment({width, color, text} : LogGradiantSegmentProps) {
-  return (
+export function LogGradiantSegment({width, color, text, top} : LogGradiantSegmentProps) {
+  if (top) return (
     <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
-      <div style={{textAlign: 'left'}}>{text}</div>
+      <div style={{textAlign: 'left', height: '20px'}}>{','+text}</div>
       <div style={{backgroundColor: color, height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '20px'}}></div>
     </div>
   )
+  
+  else return (
+    <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
+      <div style={{textAlign: 'left', height: '20px'}}></div>
+      <div style={{backgroundColor: color, height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '20px'}}>{'`'+text}</div>
+    </div>
+  )
+  
 }
 
 export function GradientMetricLegend({ metricCache }: MetricLegendProps) {
