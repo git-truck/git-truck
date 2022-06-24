@@ -39,7 +39,7 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
     case "MOST_COMMITS":
       return "Which files have had the most commits, throughout the repository's history?"
     case "LAST_CHANGED":
-      return "Where are the most recent or least recent commits made?"
+      return "How long ago did the files change?"
     case "SINGLE_AUTHOR":
       return authorshipType === "HISTORICAL"
         ? "Which files are authored by only one person, throughout the repository's history?"
@@ -49,7 +49,7 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
         ? "Which person has made the most line-changes to a file, throughout the repository's history?"
         : "Which person has made the most line-changes to a file, in the newest version?"
     case "TRUCK_FACTOR":
-        return "WIP"
+        return "How many have contributed to a file?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
