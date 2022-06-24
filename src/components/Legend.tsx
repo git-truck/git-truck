@@ -9,8 +9,7 @@ import {
   getMetricDescription,
   getMetricLegendType,
   GradLegendData,
-  isGradientMetric,
-  LogGradLegendData,
+  SegmentLegendData,
   Metric,
   MetricCache,
   PointLegendData,
@@ -20,7 +19,6 @@ import { LegendOther } from "./LegendOther"
 import { ExpandUp } from "./Toggle"
 import { Box, BoxP, BoxSubTitle, GradientLegendDiv, LegendGradient, LegendLabel, Button } from "./util"
 import { PeopleAlt } from "@styled-icons/material"
-import { HydratedGitBlobObject } from "~/analyzer/model"
 
 const legendCutoff = 3
 
@@ -41,7 +39,7 @@ const GradArrow = styled.i<{ visible: boolean; position: number }>`
   filter: drop-shadow(0px -2px 0px #fff);
 `
 
-const LogGradArrow = styled.i<{ visible: boolean; position: number }>`
+const SegmentArrow = styled.i<{ visible: boolean; position: number }>`
 display: ${({ visible }) => (visible ? "initital" : "none")};
 transition: 500ms;
 position: relative;
@@ -55,7 +53,7 @@ const StyledBox = styled(Box)`
   bottom: 0;
 `
 
-export type LegendType = "POINT" | "GRADIENT" | "LOG_GRADIENT"
+export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend(props: { showUnionAuthorsModal: () => void }) {
   const { metricType, authorshipType } = useOptions()
@@ -73,8 +71,8 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
     case "GRADIENT":
       legend = <GradientMetricLegend metricCache={metricCache}></GradientMetricLegend>
       break
-    case "LOG_GRADIENT":
-      legend = <LogGradiantMetricLegend metricCache={metricCache}></LogGradiantMetricLegend>
+    case "SEGMENTS":
+      legend = <SegmentMetricLegend metricCache={metricCache}></SegmentMetricLegend>
       break
   }
   
@@ -102,10 +100,9 @@ interface MetricLegendProps {
   metricCache: MetricCache
 }
 
-export function LogGradiantMetricLegend({ metricCache }: MetricLegendProps) {
-  const [steps] = metricCache.legend as LogGradLegendData
+export function SegmentMetricLegend({ metricCache}: MetricLegendProps) {
+  const [steps, textGenerator, colorGenerator, offsetStepCalc] = metricCache.legend as SegmentLegendData
   let width = 100 / steps
-  let colorStep = (90 - 50) / steps
 
   let arrowVisible = false
   let arrowOffset = 0
@@ -113,31 +110,31 @@ export function LogGradiantMetricLegend({ metricCache }: MetricLegendProps) {
   
   if (clickedObject?.type == "blob") {
     arrowVisible = true
-    arrowOffset = (width / 2) + width * (Math.floor(Math.log2(Object.entries(clickedObject.unionedAuthors?.HISTORICAL ?? []).length)))
+    arrowOffset = (width / 2) + width * (offsetStepCalc(clickedObject))
   }
 
   return (
     <>
       <div style={{display: `flex`, flexDirection: `row`}}>
         {[...Array(steps).fill(1)].map((_,i) => {
-          return <LogGradiantSegment width={width} color={`hsl(0,75%,${50 + (i*colorStep)}%)`} text={`${Math.pow(2,i)}`} top={(steps > 8) ? i % 2 === 0 : true}></LogGradiantSegment>
+          return <MetricSegment width={width} color={colorGenerator(i)} text={textGenerator(i)} top={(steps > 5) ? i % 2 === 0 : true}></MetricSegment>
         })}
       </div>
-      <LogGradArrow visible={arrowVisible} position={arrowOffset}>
+      <SegmentArrow visible={arrowVisible} position={arrowOffset}>
         {"\u25B2"}
-      </LogGradArrow>
+      </SegmentArrow>
     </>
   )
 }
 
-interface LogGradiantSegmentProps {
+interface SegmentMetricProps {
   width: number
   color: string
   text: string
   top: boolean
 }
 
-export function LogGradiantSegment({width, color, text, top} : LogGradiantSegmentProps) {
+export function MetricSegment({width, color, text, top} : SegmentMetricProps) {
   if (top) return (
     <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
       <div style={{textAlign: 'left', height: '20px'}}>{','+text}</div>
@@ -145,7 +142,6 @@ export function LogGradiantSegment({width, color, text, top} : LogGradiantSegmen
       <div style={{textAlign: 'left', height: '20px'}}></div>
     </div>
   )
-  
   else return (
     <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
       <div style={{textAlign: 'left', height: '20px'}}></div>
@@ -153,7 +149,6 @@ export function LogGradiantSegment({width, color, text, top} : LogGradiantSegmen
       <div style={{textAlign: 'left', height: '20px'}}>{'`'+text}</div>
     </div>
   )
-  
 }
 
 export function GradientMetricLegend({ metricCache }: MetricLegendProps) {

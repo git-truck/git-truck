@@ -1,8 +1,6 @@
 import distinctColors from "distinct-colors"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { makeDupeMap, unionAuthors } from "./authorUnionUtil.server"
 import { getColorFromExtension } from "./extension-color"
-import { dateFormatLong, dateFormatRelative } from "./util"
 import { LegendType } from "./components/Legend"
 
 export type MetricsData = Record<AuthorshipType, Map<MetricType, MetricCache>>
@@ -57,32 +55,17 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
   }
 }
 
-export function isGradientMetric(metric: MetricType) {
-  switch (metric) {
-    case "FILE_EXTENSION":
-    case "TOP_CONTRIBUTOR":
-    case "SINGLE_AUTHOR":
-      return false
-    case "LAST_CHANGED":
-    case "MOST_COMMITS":
-    case "TRUCK_FACTOR":
-      return true
-    default:
-      throw new Error("Uknown metric type: " + metric)
-  }
-}
-
 export function getMetricLegendType(metric: MetricType) : LegendType {
   switch (metric) {
     case "FILE_EXTENSION":
     case "TOP_CONTRIBUTOR":
     case "SINGLE_AUTHOR":
       return "POINT"
-    case "LAST_CHANGED":
     case "MOST_COMMITS":
       return "GRADIENT"
+    case "LAST_CHANGED":
     case "TRUCK_FACTOR":
-      return "LOG_GRADIENT"
+      return "SEGMENTS"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -105,12 +88,15 @@ export type GradLegendData = [
   minColor: string,
   maxColor: string
 ]
-export type LogGradLegendData = [
-  steps: number
+export type SegmentLegendData = [
+  steps: number,
+  textGenerator: (n: number) => string,
+  colorGenerator: (n: number) => string,
+  offsetStepCalc: (blob: HydratedGitBlobObject) => number
 ]
 
 export interface MetricCache {
-  legend: PointLegendData | GradLegendData | LogGradLegendData| undefined
+  legend: PointLegendData | GradLegendData | SegmentLegendData| undefined
   colormap: Map<string, string>
 }
 
@@ -137,8 +123,6 @@ export function getMetricCalcs(
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
-  const coldmap = new ColdMapTranslater(commit.oldestLatestChangeEpoch, commit.newestLatestChangeEpoch)
-  const agemap = new AgeColorMapper()
   const truckmap = new TruckFactorTranslater(fullUnion.length)
 
   return [
@@ -179,15 +163,13 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            dateFormatRelative(commit.oldestLatestChangeEpoch),
-            dateFormatRelative(commit.newestLatestChangeEpoch),
-            dateFormatLong(commit.oldestLatestChangeEpoch),
-            dateFormatLong(commit.newestLatestChangeEpoch),
-            coldmap.getColor(commit.oldestLatestChangeEpoch),
-            coldmap.getColor(commit.newestLatestChangeEpoch),
+            6,
+            (n) => lastChangedColorText(n),
+            (n) => `${lastChangedColorSteps(n)}`,
+            (blob) => mapEpochToStep(blob.lastChangeEpoch ?? 0) ?? -1
           ]
         }
-        agemap.setColor(blob, cache)
+        cacheAgeColor(blob, cache)
       },
     ],
     [
@@ -203,7 +185,10 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            Math.floor(Math.log2(fullUnion.length)) + 1
+            Math.floor(Math.log2(fullUnion.length)) + 1,
+            (n) => `${Math.pow(2,n)}`,
+            (n) => `hsl(0,75%,${50 + (n*(40 / (Math.floor(Math.log2(fullUnion.length)) + 1)))}%)`,
+            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
           ]
         }
         truckmap.setColor(blob, cache)
@@ -336,22 +321,43 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
   }
 }
 
-class AgeColorMapper {
-
-  getColor(input: number) {
-    let diff = ((Date.now()/1000) - input)
-
-    if (diff >= 31556926) return "#08519c"
-    else if (diff < 31556926 && diff >= 2629743) return "#3182bd"
-    else if (diff < 2629743 && diff >= 604800) return "#6baed6"
-    else if (diff < 604800 && diff >= 172800) return "#9ecae1"
-    else if (diff < 172800 && diff >= 86400) return "#c6dbef"
-    else if (diff < 86400) return "#eff3ff"
+function lastChangedColorSteps(n: number) {
+  switch(n) {
+    case 5: return "#08519c"  // < 1 day
+    case 4: return "#3182bd"  // < 2 days and >= 1 day
+    case 3: return "#6baed6"  // < 1 week and >= 2 days
+    case 2: return "#9ecae1"  // < 1 month and >= 1 week
+    case 1: return "#c6dbef"  // < 1 year and >= 1 month
+    case 0: return "#eff3ff"  // >= 1 year
+    default: return "grey"
   }
+}
 
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-    cache.colormap.set(blob.path, this.getColor(blob.lastChangeEpoch ?? 0) ?? "grey")
+function lastChangedColorText(n: number) {
+  switch(n) {
+    case 5: return "1y"  
+    case 4: return "1m" 
+    case 3: return "1w"  
+    case 2: return "2d"  
+    case 1: return "1d"  
+    case 0: return "now" 
+    default: return "grey"
   }
+}
+
+function mapEpochToStep(input: number) {
+  const diff = ((Date.now()/1000) - input)
+
+  if (diff >= 31556926) return 5  // >= 1 year
+  else if (diff < 31556926 && diff >= 2629743) return 4  // < 1 year and >= 1 month
+  else if (diff < 2629743 && diff >= 604800) return 3 // < 1 month and >= 1 week
+  else if (diff < 604800 && diff >= 172800) return 2 // < 1 week and >= 2 days
+  else if (diff < 172800 && diff >= 86400) return 1 // < 2 days and >= 1 day
+  else if (diff < 86400) return 0 // < 1 day
+}
+
+function cacheAgeColor(blob: HydratedGitBlobObject, cache: MetricCache) {
+  cache.colormap.set(blob.path, lastChangedColorSteps(mapEpochToStep(blob.lastChangeEpoch ?? 0) ?? -1))
 }
 
 class SpectrumTranslater {
@@ -392,24 +398,6 @@ class TruckFactorTranslater {
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
     cache.colormap.set(blob.path, this.getColor(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
-  }
-}
-
-class ColdMapTranslater {
-  readonly translater: SpectrumTranslater
-  readonly min_lightness = 50
-  readonly max_lightness = 90
-
-  constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
-  }
-
-  getColor(value: number): string {
-    return `hsl(240,100%,${this.translater.inverseTranslate(value)}%)`
-  }
-
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-    cache.colormap.set(blob.path, this.getColor(blob.lastChangeEpoch ?? 0))
   }
 }
 

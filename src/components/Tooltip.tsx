@@ -118,6 +118,14 @@ function ColorMetricDependentInfo(props: {
       const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
+    case "TRUCK_FACTOR":
+      const authorCount = Object.entries(props.hoveredBlob?.unionedAuthors?.HISTORICAL ?? []).length
+      switch(authorCount) {
+        case 0: return null
+        case 1: return <>1 author</>
+        default: return <>{authorCount} authors</>
+      }
+      return <>{}</>
     default:
       return null
   }
