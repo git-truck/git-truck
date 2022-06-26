@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 9
+export const AnalyzerDataInterfaceVersion = 10
 
 export interface AnalyzerData {
   cached: boolean
