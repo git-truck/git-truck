@@ -27,11 +27,11 @@ export const Metric = {
 export type MetricType = keyof typeof Metric
 
 export function createMetricData(data: AnalyzerData): MetricsData {
-  const authorColors = generateAuthorColors(data.authorsUnion)
+  const authorColors = generateAuthorColors(data.authors)
 
   return [{
-    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors, data.authorsUnion)),
-    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors, data.authorsUnion)),
+    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
+    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
   },
   authorColors
   ]
@@ -124,11 +124,10 @@ export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, string>,
-  fullUnion: string[],
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
   const heatmap = new HeatMapTranslater(commit.minNoCommits, commit.maxNoCommits)
-  const truckmap = new TruckFactorTranslater(fullUnion.length)
+  const truckmap = new TruckFactorTranslater(data.authorsUnion.length)
 
   return [
     [
@@ -190,9 +189,9 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            Math.floor(Math.log2(fullUnion.length)) + 1,
+            Math.floor(Math.log2(data.authorsUnion.length)) + 1,
             (n) => `${Math.pow(2,n)}`,
-            (n) => `hsl(0,75%,${50 + (n*(40 / (Math.floor(Math.log2(fullUnion.length)) + 1)))}%)`,
+            (n) => `hsl(0,75%,${50 + (n*(40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1)))}%)`,
             (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
           ]
         }
