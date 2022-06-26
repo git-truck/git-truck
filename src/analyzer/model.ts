@@ -49,6 +49,7 @@ export interface AnalyzerData {
   branch: string
   commit: HydratedGitCommitObject
   authors: string[]
+  authorsUnion: string[]
   currentVersion: string
   lastRunEpoch: number
 }

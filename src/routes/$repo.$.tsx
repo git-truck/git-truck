@@ -34,7 +34,6 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
-  fullAuthorUnion: string[]
 }
 
 export const loader: LoaderFunction = async ({ params }) => {
@@ -53,11 +52,9 @@ export const loader: LoaderFunction = async ({ params }) => {
     options.branch = params["*"]
   }
 
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
+  const analyzerData = await analyze({ ...args, ...options }).then((data) => 
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
-
-  const fullAuthorUnion = nameUnion(analyzerData.authors, makeDupeMap(truckConfig.unionedAuthors ?? []))
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path)
@@ -71,7 +68,6 @@ export const loader: LoaderFunction = async ({ params }) => {
     repo,
     gitTruckInfo: await getGitTruckInfo(),
     truckConfig,
-    fullAuthorUnion,
   })
 }
 

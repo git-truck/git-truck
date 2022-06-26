@@ -23,12 +23,12 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData, fullUnion: string[]): MetricsData {
-  const authorColors = generateAuthorColors(fullUnion)
+export function createMetricData(data: AnalyzerData): MetricsData {
+  const authorColors = generateAuthorColors(data.authorsUnion)
 
   return {
-    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors, fullUnion)),
-    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors, fullUnion)),
+    HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors, data.authorsUnion)),
+    BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors, data.authorsUnion)),
   }
 }
 
@@ -102,7 +102,7 @@ export interface MetricCache {
 
 export function generateAuthorColors(authors: string[]): Map<string, string> {
   const authorsMap: Record<string, number> = {}
-  for (const author of authors) authorsMap[author] = 0
+  for (const author of Object.keys(authors)) authorsMap[author] = 0
 
   const palette = distinctColors({ count: authors.length })
   let index = 0
