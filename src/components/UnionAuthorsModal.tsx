@@ -66,7 +66,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   const transitionData = useTransition()
   const disabled = transitionData.state !== "idle"
-  const metrics = useMetrics()
+  const [metrics, authorColors] = useMetrics()
 
   const ungroupedUsersSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))
@@ -80,7 +80,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   useKey("Escape", onClose)
 
   const getColorFromDisplayName = (displayName: string) =>
-    (metrics.HISTORICAL.get("TOP_CONTRIBUTOR")?.legend as PointLegendData).get(displayName)?.color ?? "#333"
+    authorColors.get(displayName) ?? "#333"
 
   if (!visible) return null
 

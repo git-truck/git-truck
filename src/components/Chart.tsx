@@ -174,7 +174,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
 })
 
 function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObject>; isSearchMatch: boolean }) {
-  const metricsData = useMetrics()
+  const [metricsData, _] = useMetrics()
   const { metricType, authorshipType } = useOptions()
 
   const props = useToggleableSpring({
@@ -197,7 +197,7 @@ const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
 `
 
 function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObject>; isSearchMatch: boolean }) {
-  const metricsData = useMetrics()
+  const [metricsData, _] = useMetrics()
   const { metricType, authorshipType } = useOptions()
 
   const props = useToggleableSpring({

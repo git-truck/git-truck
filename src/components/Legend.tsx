@@ -57,7 +57,7 @@ export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend(props: { showUnionAuthorsModal: () => void }) {
   const { metricType, authorshipType } = useOptions()
-  const metricsData = useMetrics()
+  const [metricsData, _] = useMetrics()
 
   const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
 

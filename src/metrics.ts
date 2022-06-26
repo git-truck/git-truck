@@ -3,7 +3,10 @@ import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/an
 import { getColorFromExtension } from "./extension-color"
 import { LegendType } from "./components/Legend"
 
-export type MetricsData = Record<AuthorshipType, Map<MetricType, MetricCache>>
+export type MetricsData = [
+  Record<AuthorshipType, Map<MetricType, MetricCache>>,
+  Map<string, string>
+]
 
 export const Authorship = {
   HISTORICAL: "Complete history",
@@ -26,10 +29,12 @@ export type MetricType = keyof typeof Metric
 export function createMetricData(data: AnalyzerData): MetricsData {
   const authorColors = generateAuthorColors(data.authorsUnion)
 
-  return {
+  return [{
     HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors, data.authorsUnion)),
     BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors, data.authorsUnion)),
-  }
+  },
+  authorColors
+  ]
 }
 
 export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
