@@ -392,7 +392,9 @@ class TruckFactorTranslater {
   private readonly step: number
 
   constructor(author_count: number) {
-    this.step = (this.max_lighness - this.min_lightness) / Math.floor(Math.log2(author_count))
+    this.step = (author_count <= 1) 
+      ? 1 
+      : this.step = (this.max_lighness - this.min_lightness) / Math.floor(Math.log2(author_count))
   }
 
   getColor(value: number) {
