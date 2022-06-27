@@ -166,15 +166,17 @@ export function getMetricCalcs(
     [
       "LAST_CHANGED",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
+        const newestEpoch = data.commit.newestLatestChangeEpoch
+        const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
           cache.legend = [
-            6,
-            (n) => lastChangedColorText(n, data.commit.newestLatestChangeEpoch),
-            (n) => `${lastChangedColorSteps(n)}`,
-            (blob) => mapEpochToStep(data.commit.newestLatestChangeEpoch, blob.lastChangeEpoch ?? 0) ?? -1
+            groupings.length,
+            (n) => groupings[n].text,
+            (n) => groupings[n].color,
+            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
           ]
         }
-        cacheAgeColor(blob, data.commit.newestLatestChangeEpoch, cache)
+        cache.colormap.set(blob.path, groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color)
       },
     ],
     [
@@ -326,43 +328,31 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
   }
 }
 
-function lastChangedColorSteps(n: number) {
-  switch(n) {
-    case 5: return "#08519c"  // >= 4 year
-    case 4: return "#3182bd"  // < 4 years and >= 1 year
-    case 3: return "#6baed6"  // < 1 year and >= 1 month
-    case 2: return "#9ecae1"  // < 1 month and >= 1 week
-    case 1: return "#c6dbef"  // < 1 week and >= 1 day
-    case 0: return "#cff2ff"  // < 1 day
-    default: return "grey"
-  }
+interface lastChangedGroup {
+  epoch: number
+  color: string
+  text: string
 }
 
-function lastChangedColorText(n: number, newest: number) {
-  switch(n) {
-    case 5: return "+4y"  
-    case 4: return "+1y" 
-    case 3: return "+1m"  
-    case 2: return "+1w"  
-    case 1: return "+1d"  
-    case 0: return dateFormatShort(newest*1000)
-    default: return "grey"
-  }
+function lastChangedGroupings(newestEpoch: number): lastChangedGroup[] {
+  return [
+    {epoch: 0, text: dateFormatShort(newestEpoch*1000), color: "#cff2ff" },
+    {epoch: 86400, text: "+1d", color: "#c6dbef" },
+    {epoch: 604800, text: "+1w", color: "#9ecae1" },
+    {epoch: 2629743, text: "+1m", color: "#6baed6" },
+    {epoch: 31556926, text: "+1y", color: "#3182bd" },
+    {epoch: 126227704, text: "+4y", color: "#08519c" },
+  ]
 }
 
-function mapEpochToStep(newest: number, input: number) {
+function getLastChangedIndex(groupings: lastChangedGroup[], newest: number, input: number) {
   const diff = (newest - input)
-
-  if (diff >= 126227704) return 5 // >= 4 years
-  else if (diff < 126227704 && diff >= 31556926) return 4  // >= 1 year
-  else if (diff < 31556926 && diff >= 2629743) return 3  // < 1 year and >= 1 month
-  else if (diff < 2629743 && diff >= 604800) return 2 // < 1 month and >= 1 week
-  else if (diff < 604800 && diff >= 86400) return 1 // < 1 week and >= 1 days
-  else if (diff < 86400) return 0 // < 1 day
-}
-
-function cacheAgeColor(blob: HydratedGitBlobObject, newest: number, cache: MetricCache) {
-  cache.colormap.set(blob.path, lastChangedColorSteps(mapEpochToStep(newest, blob.lastChangeEpoch ?? 0) ?? -1))
+  let index = 0;
+  while(index < groupings.length-1) {
+    if (diff < groupings[index+1].epoch) return index
+    else index++
+  }
+  return index
 }
 
 class SpectrumTranslater {
