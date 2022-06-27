@@ -2,6 +2,7 @@ import distinctColors from "distinct-colors"
 import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { getColorFromExtension } from "./extension-color"
 import { LegendType } from "./components/Legend"
+import { dateFormatShort } from "./util"
 
 export type MetricsData = [
   Record<AuthorshipType, Map<MetricType, MetricCache>>,
@@ -168,12 +169,12 @@ export function getMetricCalcs(
         if (!cache.legend) {
           cache.legend = [
             6,
-            (n) => lastChangedColorText(n),
+            (n) => lastChangedColorText(n, data.commit.newestLatestChangeEpoch),
             (n) => `${lastChangedColorSteps(n)}`,
-            (blob) => mapEpochToStep(blob.lastChangeEpoch ?? 0) ?? -1
+            (blob) => mapEpochToStep(data.commit.newestLatestChangeEpoch, blob.lastChangeEpoch ?? 0) ?? -1
           ]
         }
-        cacheAgeColor(blob, cache)
+        cacheAgeColor(blob, data.commit.newestLatestChangeEpoch, cache)
       },
     ],
     [
@@ -337,20 +338,20 @@ function lastChangedColorSteps(n: number) {
   }
 }
 
-function lastChangedColorText(n: number) {
+function lastChangedColorText(n: number, newest: number) {
   switch(n) {
-    case 5: return "1y"  
-    case 4: return "1m" 
-    case 3: return "1w"  
-    case 2: return "2d"  
-    case 1: return "1d"  
-    case 0: return "now" 
+    case 5: return "+1y"  
+    case 4: return "+1m" 
+    case 3: return "+1w"  
+    case 2: return "+2d"  
+    case 1: return "+1d"  
+    case 0: return dateFormatShort(newest*1000)
     default: return "grey"
   }
 }
 
-function mapEpochToStep(input: number) {
-  const diff = ((Date.now()/1000) - input)
+function mapEpochToStep(newest: number, input: number) {
+  const diff = (newest - input)
 
   if (diff >= 31556926) return 5  // >= 1 year
   else if (diff < 31556926 && diff >= 2629743) return 4  // < 1 year and >= 1 month
@@ -360,8 +361,8 @@ function mapEpochToStep(input: number) {
   else if (diff < 86400) return 0 // < 1 day
 }
 
-function cacheAgeColor(blob: HydratedGitBlobObject, cache: MetricCache) {
-  cache.colormap.set(blob.path, lastChangedColorSteps(mapEpochToStep(blob.lastChangeEpoch ?? 0) ?? -1))
+function cacheAgeColor(blob: HydratedGitBlobObject, newest: number, cache: MetricCache) {
+  cache.colormap.set(blob.path, lastChangedColorSteps(mapEpochToStep(newest, blob.lastChangeEpoch ?? 0) ?? -1))
 }
 
 class SpectrumTranslater {
