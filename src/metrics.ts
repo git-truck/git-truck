@@ -328,11 +328,11 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
 
 function lastChangedColorSteps(n: number) {
   switch(n) {
-    case 5: return "#08519c"  // >= 1 year
-    case 4: return "#3182bd"  // < 1 year and >= 1 month
-    case 3: return "#6baed6"  // < 1 month and >= 1 week
-    case 2: return "#9ecae1"  // < 1 week and >= 2 days
-    case 1: return "#c6dbef"  // < 2 days and >= 1 day
+    case 5: return "#08519c"  // >= y year
+    case 4: return "#3182bd"  // < 4 years and >= 1 year
+    case 3: return "#6baed6"  // < 1 year and >= 1 month
+    case 2: return "#9ecae1"  // < 1 month and >= 1 week
+    case 1: return "#c6dbef"  // < 1 week and >= 1 day
     case 0: return "#cff2ff"  // < 1 day
     default: return "grey"
   }
@@ -340,10 +340,10 @@ function lastChangedColorSteps(n: number) {
 
 function lastChangedColorText(n: number, newest: number) {
   switch(n) {
-    case 5: return "+1y"  
-    case 4: return "+1m" 
-    case 3: return "+1w"  
-    case 2: return "+2d"  
+    case 5: return "+4y"  
+    case 4: return "+1y" 
+    case 3: return "+1m"  
+    case 2: return "+1w"  
     case 1: return "+1d"  
     case 0: return dateFormatShort(newest*1000)
     default: return "grey"
@@ -353,11 +353,11 @@ function lastChangedColorText(n: number, newest: number) {
 function mapEpochToStep(newest: number, input: number) {
   const diff = (newest - input)
 
-  if (diff >= 31556926) return 5  // >= 1 year
-  else if (diff < 31556926 && diff >= 2629743) return 4  // < 1 year and >= 1 month
-  else if (diff < 2629743 && diff >= 604800) return 3 // < 1 month and >= 1 week
-  else if (diff < 604800 && diff >= 172800) return 2 // < 1 week and >= 2 days
-  else if (diff < 172800 && diff >= 86400) return 1 // < 2 days and >= 1 day
+  if (diff >= 126227704) return 5 // >= 4 years
+  else if (diff < 126227704 && diff >= 31556926) return 4  // >= 1 year
+  else if (diff < 31556926 && diff >= 2629743) return 3  // < 1 year and >= 1 month
+  else if (diff < 2629743 && diff >= 604800) return 2 // < 1 month and >= 1 week
+  else if (diff < 604800 && diff >= 86400) return 1 // < 1 week and >= 1 days
   else if (diff < 86400) return 0 // < 1 day
 }
 
