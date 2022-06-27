@@ -39,11 +39,11 @@ const GradArrow = styled.i<{ visible: boolean; position: number }>`
   filter: drop-shadow(0px -2px 0px #fff);
 `
 
-const SegmentArrow = styled.i<{ visible: boolean; position: number }>`
+const SegmentArrow = styled.i<{ visible: boolean; position: number; height: number }>`
 display: ${({ visible }) => (visible ? "initital" : "none")};
 transition: 500ms;
 position: relative;
-bottom: 30px;
+bottom: ${({height}) => `${height}px`};
 left: calc(${({ position }) => position}% - ${estimatedLetterWidth}px);
 filter: drop-shadow(0px -2px 0px #fff);
 `
@@ -102,7 +102,7 @@ interface MetricLegendProps {
 
 export function SegmentMetricLegend({ metricCache}: MetricLegendProps) {
   const [steps, textGenerator, colorGenerator, offsetStepCalc] = metricCache.legend as SegmentLegendData
-  let width = 100 / steps
+  const width = 100 / steps
 
   let arrowVisible = false
   let arrowOffset = 0
@@ -117,10 +117,12 @@ export function SegmentMetricLegend({ metricCache}: MetricLegendProps) {
     <>
       <div style={{display: `flex`, flexDirection: `row`}}>
         {[...Array(steps).fill(1)].map((_,i) => {
-          return <MetricSegment width={width} color={colorGenerator(i)} text={textGenerator(i)} top={(steps > 5) ? i % 2 === 0 : true}></MetricSegment>
+          return (steps > 5) 
+            ? <MetricSegment key={`legend-${i}`} width={width} color={colorGenerator(i)} text={textGenerator(i)} top={ i % 2 === 0 }></MetricSegment>
+            : <TopMetricSegment key={`legend-${i}`} width={width} color={colorGenerator(i)} text={textGenerator(i)}></TopMetricSegment>
         })}
       </div>
-      <SegmentArrow visible={arrowVisible} position={arrowOffset}>
+      <SegmentArrow visible={arrowVisible} position={arrowOffset} height={(steps > 5 ? 50 : 10)}>
         {"\u25B2"}
       </SegmentArrow>
     </>
@@ -137,16 +139,34 @@ interface SegmentMetricProps {
 export function MetricSegment({width, color, text, top} : SegmentMetricProps) {
   if (top) return (
     <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
-      <div style={{textAlign: 'left', height: '20px'}}>{','+text}</div>
+      <div style={{textAlign: 'left', height: '20px', marginBottom: '-6px'}}>{text}</div>
+      <div style={{textAlign: 'left', height: '20px', marginBottom: '-2px'}}>{'/'}</div>
       <div style={{backgroundColor: color, height: '20px'}}></div>
-      <div style={{textAlign: 'left', height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '40px'}}></div>
     </div>
   )
   else return (
     <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
-      <div style={{textAlign: 'left', height: '20px'}}></div>
+      <div style={{textAlign: 'left', height: '32px'}}></div>
       <div style={{backgroundColor: color, height: '20px'}}></div>
-      <div style={{textAlign: 'left', height: '20px'}}>{'`'+text}</div>
+      <div style={{textAlign: 'left', height: '20px', marginTop: '-7px'}}>{'\\'}</div>
+      <div style={{textAlign: 'left', height: '20px', marginTop: '-4px'}}>{text}</div>
+    </div>
+  )
+}
+
+interface TopSegmentMetricProps {
+  width: number
+  color: string
+  text: string
+}
+
+export function TopMetricSegment({width, color, text} : TopSegmentMetricProps) {
+  return (
+    <div style={{display: 'flex', flexDirection: 'column', width: `${width}%`}}>
+      <div style={{textAlign: 'left', height: '20px', marginBottom: '-6px'}}>{text}</div>
+      <div style={{textAlign: 'left', height: '20px', marginBottom: '-2px'}}>{'/'}</div>
+      <div style={{backgroundColor: color, height: '20px'}}></div>
     </div>
   )
 }

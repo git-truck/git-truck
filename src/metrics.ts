@@ -327,12 +327,12 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
 
 function lastChangedColorSteps(n: number) {
   switch(n) {
-    case 5: return "#08519c"  // < 1 day
-    case 4: return "#3182bd"  // < 2 days and >= 1 day
-    case 3: return "#6baed6"  // < 1 week and >= 2 days
-    case 2: return "#9ecae1"  // < 1 month and >= 1 week
-    case 1: return "#c6dbef"  // < 1 year and >= 1 month
-    case 0: return "#eff3ff"  // >= 1 year
+    case 5: return "#08519c"  // >= 1 year
+    case 4: return "#3182bd"  // < 1 year and >= 1 month
+    case 3: return "#6baed6"  // < 1 month and >= 1 week
+    case 2: return "#9ecae1"  // < 1 week and >= 2 days
+    case 1: return "#c6dbef"  // < 2 days and >= 1 day
+    case 0: return "#cff2ff"  // < 1 day
     default: return "grey"
   }
 }
