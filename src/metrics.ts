@@ -328,7 +328,7 @@ function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, auth
 
 function lastChangedColorSteps(n: number) {
   switch(n) {
-    case 5: return "#08519c"  // >= y year
+    case 5: return "#08519c"  // >= 4 year
     case 4: return "#3182bd"  // < 4 years and >= 1 year
     case 3: return "#6baed6"  // < 1 year and >= 1 month
     case 2: return "#9ecae1"  // < 1 month and >= 1 week
