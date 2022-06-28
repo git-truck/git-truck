@@ -170,7 +170,7 @@ export function getMetricCalcs(
         const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
           cache.legend = [
-            groupings.length,
+            getLastChangedIndex(groupings, newestEpoch, data.commit.oldestLatestChangeEpoch)+1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
             (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
@@ -337,11 +337,12 @@ interface lastChangedGroup {
 function lastChangedGroupings(newestEpoch: number): lastChangedGroup[] {
   return [
     {epoch: 0, text: dateFormatShort(newestEpoch*1000), color: "#cff2ff" },
-    {epoch: 86400, text: "+1d", color: "#c6dbef" },
+    {epoch: 86400, text: "+1d", color: "#c6dbef"},
     {epoch: 604800, text: "+1w", color: "#9ecae1" },
     {epoch: 2629743, text: "+1m", color: "#6baed6" },
-    {epoch: 31556926, text: "+1y", color: "#3182bd" },
-    {epoch: 126227704, text: "+4y", color: "#08519c" },
+    {epoch: 31556926, text: "+1y", color: "#4292c6" },
+    {epoch: 31556926*2, text: "+2y", color: "#2171b5" },
+    {epoch: 31556926*4, text: "+4y", color: "#084594" },
   ]
 }
 

@@ -117,12 +117,12 @@ export function SegmentMetricLegend({ metricCache}: MetricLegendProps) {
     <>
       <div style={{display: `flex`, flexDirection: `row`}}>
         {[...Array(steps).fill(1)].map((_,i) => {
-          return (steps > 5) 
+          return (steps >= 4) 
             ? <MetricSegment key={`legend-${i}`} width={width} color={colorGenerator(i)} text={textGenerator(i)} top={ i % 2 === 0 }></MetricSegment>
             : <TopMetricSegment key={`legend-${i}`} width={width} color={colorGenerator(i)} text={textGenerator(i)}></TopMetricSegment>
         })}
       </div>
-      <SegmentArrow visible={arrowVisible} position={arrowOffset} height={(steps > 5 ? 50 : 10)}>
+      <SegmentArrow visible={arrowVisible} position={arrowOffset} height={(steps >= 4 ? 50 : 10)}>
         {"\u25B2"}
       </SegmentArrow>
     </>
