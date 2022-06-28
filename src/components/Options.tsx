@@ -1,4 +1,4 @@
-import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics"
+import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics/metrics"
 import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"

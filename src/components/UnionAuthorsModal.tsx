@@ -9,7 +9,7 @@ import { getPathFromRepoAndHead } from "~/util"
 import { Button, CloseButton, Box, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
-import { PointLegendData } from "~/metrics"
+import { PointLegendData } from "~/metrics/metrics"
 import { MergeType as MergeIcon } from "@styled-icons/material"
 import { useKey } from "react-use"
 

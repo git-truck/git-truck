@@ -1,4 +1,4 @@
-import { AuthorshipType } from "~/metrics"
+import { AuthorshipType } from "~/metrics/metrics"
 import { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
 
 export interface Repository {

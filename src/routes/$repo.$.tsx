@@ -13,7 +13,7 @@ import { addAuthorUnion, makeDupeMap, nameUnion, unionAuthors } from "~/authorUn
 import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
-import { Legend } from "~/components/Legend"
+import { Legend } from "~/components/legend/Legend"
 import { Main, MainRoot } from "~/components/Main"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
