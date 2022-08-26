@@ -9,3 +9,9 @@
   ![billede](https://user-images.githubusercontent.com/23435481/186969232-c1ee1782-429d-4214-9502-2faa2bc10e9f.png)
 
 4. Once the analyzation is complete, you will see your repository visualized in your browser.
+
+# Manual installation
+In case you do not wish to use NPM, you can do the following
+
+1. Clone this repository to your machine
+2. In the root folder of the project run `npm start -- --path /path/to/repo` where the last argument, is the path to the repository you want to analyze.
