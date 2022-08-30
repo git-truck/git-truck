@@ -14,4 +14,5 @@
 In case you do not wish to use NPM, you can do the following
 
 1. Clone this repository to your machine
-2. In the root folder of the project run `npm start -- --path /path/to/repo` where the last argument, is the path to the repository you want to analyze.
+2. In the project folder, install dependencies by running `npm i`
+3. In the root folder of the project run `npm start -- --path /path/to/repo` where the last argument, is the path to the repository you want to analyze.
