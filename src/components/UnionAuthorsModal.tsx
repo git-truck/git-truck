@@ -65,7 +65,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   const transitionData = useTransition()
   const disabled = transitionData.state !== "idle"
-  const [metrics, authorColors] = useMetrics()
+  const [, authorColors] = useMetrics()
 
   const ungroupedUsersSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))

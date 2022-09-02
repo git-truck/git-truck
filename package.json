@@ -23,7 +23,8 @@
     "prepublishOnly": "npm install && npm run build",
     "dev:node": "cross-env NODE_ENV=development nodemon --watch ./build/index.js ./build/index.js --",
     "start": "cross-env NODE_ENV=production node ./build/index.js",
-    "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}"
+    "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}",
+    "lint": "eslint --cache --fix src/**/*.{ts,tsx}"
   },
   "dependencies": {
     "@react-aria/utils": "^3.11.3",

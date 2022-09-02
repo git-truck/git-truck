@@ -117,8 +117,6 @@ async function analyzeTree(path: string, name: string, hash: string) {
     children: [],
   } as GitTreeObject
 
-  const jobs = []
-
   for (const child of lsTreeEntries) {
     log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")
@@ -283,7 +281,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
-    const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))    
+    const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
 
     data = {
       cached: false,

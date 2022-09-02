@@ -32,7 +32,7 @@ export function unionAuthors(authors: Record<string, number>, authorAliasMap: Re
 }
 
 export function nameUnion(names: string[], authorAliasMap: Record<string, string>) {
-  let collector: string[] = []
+  const collector: string[] = []
   for(const name of names) {
     const lookup = authorAliasMap[name]
     if (lookup) {

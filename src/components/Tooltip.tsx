@@ -47,7 +47,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
   const mouse = useMouse(documentElementRef)
   const unitRaw = useCSSVar("--unit")
   const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
-  const [metricsData, _] = useMetrics()
+  const [metricsData] = useMetrics()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null

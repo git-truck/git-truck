@@ -9,7 +9,7 @@ import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap, nameUnion, unionAuthors } from "~/authorUnionUtil.server"
+import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -52,7 +52,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     options.branch = params["*"]
   }
 
-  const analyzerData = await analyze({ ...args, ...options }).then((data) => 
+  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
 

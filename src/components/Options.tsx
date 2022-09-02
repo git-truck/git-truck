@@ -1,4 +1,4 @@
-import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics/metrics"
+import { Metric, MetricType } from "../metrics/metrics"
 import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"
@@ -19,7 +19,7 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 }
 
 export function Options() {
-  const { animationsEnabled, setAnimationsEnabled, metricType, setMetricType, setChartType, setAuthorshipType } =
+  const { animationsEnabled, setAnimationsEnabled, setMetricType, setChartType } =
     useOptions()
 
   return (

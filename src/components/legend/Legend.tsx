@@ -24,7 +24,7 @@ export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend(props: { showUnionAuthorsModal: () => void }) {
   const { metricType, authorshipType } = useOptions()
-  const [metricsData, _] = useMetrics()
+  const [metricsData] = useMetrics()
 
   const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
 
@@ -42,7 +42,7 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
       legend = <SegmentLegend metricCache={metricCache}></SegmentLegend>
       break
   }
-  
+
   return (
     <StyledBox>
       <BoxSubTitle>{Metric[metricType]}</BoxSubTitle>
