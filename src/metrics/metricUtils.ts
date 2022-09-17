@@ -32,3 +32,25 @@ export function getColorFromExtension(extension: string) {
   if (!colorResult) return null
   return colorResult.color
 }
+
+export class SpectrumTranslater {
+    readonly scale: number
+    readonly offset: number
+    readonly target_max: number
+    readonly target_min: number
+  
+    constructor(input_min: number, input_max: number, target_min: number, target_max: number) {
+      this.scale = (target_max - target_min) / (input_max - input_min)
+      this.offset = input_min * this.scale - target_min
+      this.target_max = target_max
+      this.target_min = target_min
+    }
+  
+    translate(input: number) {
+      return input * this.scale - this.offset
+    }
+  
+    inverseTranslate(input: number) {
+      return this.target_max - this.translate(input) + this.target_min
+    }
+}

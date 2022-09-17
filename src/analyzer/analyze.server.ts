@@ -22,6 +22,7 @@ import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postproce
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
+import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
 
 let repoDir = "."
 
@@ -115,8 +116,6 @@ async function analyzeTree(path: string, name: string, hash: string) {
     hash,
     children: [],
   } as GitTreeObject
-
-  const jobs = []
 
   for (const child of lsTreeEntries) {
     log.debug(`Path: ${child.path}`)
@@ -282,10 +281,13 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
+    const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
+
     data = {
       cached: false,
       hiddenFiles,
       authors,
+      authorsUnion,
       repo: repoName,
       branch: branchName,
       commit: hydratedRepoTree,

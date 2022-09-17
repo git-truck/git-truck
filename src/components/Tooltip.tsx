@@ -5,7 +5,7 @@ import { HydratedGitBlobObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
-import { AuthorshipType, MetricType } from "../metrics"
+import { AuthorshipType, MetricType } from "../metrics/metrics"
 import { dateFormatRelative } from "../util"
 import { Spacer } from "./Spacer"
 import { Box, BoxSubTitle, LegendDot } from "./util"
@@ -47,7 +47,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
   const mouse = useMouse(documentElementRef)
   const unitRaw = useCSSVar("--unit")
   const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
-  const metricsData = useMetrics()
+  const [metricsData] = useMetrics()
   const color = useMemo(() => {
     if (!hoveredBlob) {
       return null
@@ -118,6 +118,14 @@ function ColorMetricDependentInfo(props: {
       const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
+    case "TRUCK_FACTOR":
+      const authorCount = Object.entries(props.hoveredBlob?.unionedAuthors?.HISTORICAL ?? []).length
+      switch(authorCount) {
+        case 0: return null
+        case 1: return <>1 author</>
+        default: return <>{authorCount} authors</>
+      }
+      return <>{}</>
     default:
       return null
   }

@@ -16,6 +16,14 @@ export function dateFormatLong(epochTime?: number) {
   })
 }
 
+export function dateFormatShort(epochTime: number) {
+  return new Date(epochTime).toLocaleString("da-dk", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  })
+}
+
 export function dateTimeFormatShort(epochTime: number) {
   return new Date(epochTime).toLocaleString("en-gb", {
     hour: "2-digit",

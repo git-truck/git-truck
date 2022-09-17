@@ -9,7 +9,6 @@ import { getPathFromRepoAndHead } from "~/util"
 import { Button, CloseButton, Box, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
-import { PointLegendData } from "~/metrics"
 import { MergeType as MergeIcon } from "@styled-icons/material"
 import { useKey } from "react-use"
 
@@ -66,7 +65,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   const transitionData = useTransition()
   const disabled = transitionData.state !== "idle"
-  const metrics = useMetrics()
+  const [, authorColors] = useMetrics()
 
   const ungroupedUsersSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))
@@ -80,7 +79,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   useKey("Escape", onClose)
 
   const getColorFromDisplayName = (displayName: string) =>
-    (metrics.HISTORICAL.get("TOP_CONTRIBUTOR")?.legend as PointLegendData).get(displayName)?.color ?? "#333"
+    authorColors.get(displayName) ?? "#333"
 
   if (!visible) return null
 

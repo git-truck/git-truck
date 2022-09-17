@@ -1,4 +1,4 @@
-import { AuthorshipType } from "~/metrics"
+import { AuthorshipType } from "~/metrics/metrics"
 import { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
 
 export interface Repository {
@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 9
+export const AnalyzerDataInterfaceVersion = 10
 
 export interface AnalyzerData {
   cached: boolean
@@ -49,6 +49,7 @@ export interface AnalyzerData {
   branch: string
   commit: HydratedGitCommitObject
   authors: string[]
+  authorsUnion: string[]
   currentVersion: string
   lastRunEpoch: number
 }

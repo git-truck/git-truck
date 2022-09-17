@@ -31,6 +31,19 @@ export function unionAuthors(authors: Record<string, number>, authorAliasMap: Re
   )
 }
 
+export function nameUnion(names: string[], authorAliasMap: Record<string, string>) {
+  const collector: string[] = []
+  for(const name of names) {
+    const lookup = authorAliasMap[name]
+    if (lookup) {
+      if (collector.includes(lookup)) continue
+      collector.push(lookup)
+    }
+    else collector.push(name)
+  }
+  return collector
+}
+
 export function addAuthorUnion(data: AnalyzerData, dupeMap: Record<string, string>) {
   data.commit.tree = addAuthorUnionRec(data.commit.tree, dupeMap)
   return data
