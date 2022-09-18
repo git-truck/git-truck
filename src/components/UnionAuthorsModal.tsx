@@ -1,7 +1,7 @@
 import { useId } from "@react-aria/utils"
 import type { MouseEvent } from "react"
 import { useState } from "react"
-import { useSubmit, useTransition } from "remix"
+import { useSubmit, useTransition } from "@remix-run/react";
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
