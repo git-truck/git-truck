@@ -202,7 +202,7 @@ function UpdateNotifier() {
 }
 
 export default function Repo() {
-  const data = useLoaderData<RepoData>()
+  const data = useLoaderData<typeof loader>()
   const { analyzerData, gitTruckInfo } = data
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)

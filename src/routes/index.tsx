@@ -1,5 +1,5 @@
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { Link, useLoaderData, useNavigate, useSubmit, useTransition } from "@remix-run/react";
+import { json, SerializeFrom } from "@remix-run/node";
+import { Link, useLoaderData, useTransition } from "@remix-run/react";
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
@@ -15,7 +15,6 @@ import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { useMount } from "react-use"
 import { getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
@@ -30,7 +29,7 @@ interface IndexData {
 
 let hasRedirected = false
 
-export const loader: LoaderFunction = async () => {
+export const loader = async () => {
   const args = await getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
 
@@ -58,7 +57,7 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const loaderData = useLoaderData<IndexData>()
+  const loaderData = useLoaderData<typeof loader>()
   const { repositories, baseDir, baseDirName, repo, hasRedirected } = loaderData
   const transitionData = useTransition()
   const navigate = useNavigate()
@@ -108,7 +107,7 @@ export default function Index() {
   )
 }
 
-function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
+function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Element {
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 
