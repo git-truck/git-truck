@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useLocation, useTransition } from "remix"
+import { Form, useLocation, useTransition } from "@remix-run/react";
 import styled from "styled-components"
 import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"

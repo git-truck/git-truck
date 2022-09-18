@@ -1,7 +1,8 @@
 import { useKonami } from "react-konami-code"
-import { ErrorBoundaryComponent, Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "remix"
+import type { MetaFunction } from "@remix-run/node";
+import { ErrorBoundaryComponent } from "@remix-run/node";
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "@remix-run/react";
 import { SSRProvider } from "@react-aria/ssr"
-import type { MetaFunction } from "remix"
 
 import appStyles from "~/styles/App.css"
 import varsStyles from "~/styles/vars.css"

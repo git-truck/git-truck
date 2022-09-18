@@ -4,7 +4,7 @@ import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
 import { Box, BoxSubTitle, BoxSpan, IconButton } from "./util"
 import { Spacer } from "~/components/Spacer"
-import { Form, useLocation, useTransition } from "remix"
+import { Form, useLocation, useTransition } from "@remix-run/react";
 import {
   VisibilityOff as HiddenIcon,
   Visibility as ShownIcon
