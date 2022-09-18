@@ -2,7 +2,8 @@ import { RateReview as ReviewIcon } from "@styled-icons/material"
 import { resolve } from "path"
 import { useState } from "react"
 import { useBoolean } from "react-use"
-import { ActionFunction, ErrorBoundaryComponent, json, Link, LoaderFunction, redirect, useLoaderData } from "remix"
+import { ActionFunction, ErrorBoundaryComponent, json, LoaderFunction, redirect } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
 import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"

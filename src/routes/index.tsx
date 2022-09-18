@@ -1,4 +1,5 @@
-import { ActionFunction, json, Link, LoaderFunction, useLoaderData, useNavigate, useSubmit, useTransition } from "remix"
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { Link, useLoaderData, useNavigate, useSubmit, useTransition } from "@remix-run/react";
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
