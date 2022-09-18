@@ -1,4 +1,4 @@
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json } from "@remix-run/node";
 import { Link, useLoaderData, useNavigate, useSubmit, useTransition } from "@remix-run/react";
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
@@ -30,7 +30,7 @@ interface IndexData {
 
 let hasRedirected = false
 
-export const loader: LoaderFunction = async () => {
+export const loader = async () => {
   const args = await getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
 
@@ -58,7 +58,7 @@ export const action: ActionFunction = async ({ request }) => {
 }
 
 export default function Index() {
-  const loaderData = useLoaderData<IndexData>()
+  const loaderData = useLoaderData<typeof loader>()
   const { repositories, baseDir, baseDirName, repo, hasRedirected } = loaderData
   const transitionData = useTransition()
   const navigate = useNavigate()
@@ -98,7 +98,7 @@ export default function Index() {
           <nav>
             <Ul>
               {repositories.map((repo) => (
-                <RepositoryEntry key={repo.path} repo={repo} />
+                <RepositoryEntry key={repo.path} repo={repo as Repository} />
               ))}
             </Ul>
           </nav>
