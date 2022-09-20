@@ -25,10 +25,7 @@ interface IndexData {
   baseDir: string
   baseDirName: string
   repo: Repository | null
-  hasRedirected: boolean
 }
-
-let hasRedirected = false
 
 export const loader = async () => {
   const args = await getArgsWithDefaults()
@@ -40,41 +37,19 @@ export const loader = async () => {
     baseDir,
     baseDirName: getDirName(baseDir),
     repo,
-    hasRedirected,
   })
 
   const response = repositoriesResponse
-  hasRedirected = true
 
   return response
 }
 
-export const action: ActionFunction = async ({ request }) => {
-  const formData = await request.formData()
-  if (formData.has("hasRedirected")) {
-    hasRedirected = true
-  }
-  return null
-}
-
 export default function Index() {
   const loaderData = useLoaderData<typeof loader>()
-  const { repositories, baseDir, baseDirName, repo, hasRedirected } = loaderData
+  const { repositories, baseDir, baseDirName } = loaderData
   const transitionData = useTransition()
-  const navigate = useNavigate()
-  const submit = useSubmit()
 
-  const willRedirect = repo && !hasRedirected
-  useMount(() => {
-    if (willRedirect) {
-      const data = new FormData()
-      data.append("hasRedirected", "true")
-      submit(data, { method: "post" })
-      navigate(`/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`)
-    }
-  })
-
-  if (transitionData.state !== "idle" || willRedirect) return <AnalyzingIndicator />
+  if (transitionData.state !== "idle") return <AnalyzingIndicator />
   return (
     <Wrapper>
       <Spacer />

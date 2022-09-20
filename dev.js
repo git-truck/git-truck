@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const runAll = require("npm-run-all")
-const open = require("open")
+import runAll from "npm-run-all"
+import open from "open"
 
 ;(async () => {
   const getPortLib = (await import("get-port"))

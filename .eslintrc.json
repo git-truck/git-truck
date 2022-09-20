@@ -1,10 +1,10 @@
 {
   "env": {
-      "browser": false,
-      "es2021": true
+      "browser": true,
+      "node": true
   },
   "extends": [
-      "@remix-run/eslint-config",
+    //   "@remix-run/eslint-config",
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended"
   ],
