@@ -1,5 +1,5 @@
-import { ActionFunction, json } from "@remix-run/node";
-import { Link, useLoaderData, useNavigate, useSubmit, useTransition } from "@remix-run/react";
+import { json, SerializeFrom } from "@remix-run/node";
+import { Link, useLoaderData, useTransition } from "@remix-run/react";
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
@@ -15,7 +15,6 @@ import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { useMount } from "react-use"
 import { getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
@@ -73,7 +72,7 @@ export default function Index() {
           <nav>
             <Ul>
               {repositories.map((repo) => (
-                <RepositoryEntry key={repo.path} repo={repo as Repository} />
+                <RepositoryEntry key={repo.path} repo={repo} />
               ))}
             </Ul>
           </nav>
@@ -83,7 +82,7 @@ export default function Index() {
   )
 }
 
-function RepositoryEntry({ repo }: { repo: Repository }): JSX.Element {
+function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Element {
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 
