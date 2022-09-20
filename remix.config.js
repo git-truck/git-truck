@@ -1,9 +1,6 @@
-/**
- * @type {import('@remix-run/dev').AppConfig}
- */
+/** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
-  server: "./server.ts",
-  ignoredRouteFiles: [".*", "components/*"],
+  ignoredRouteFiles: ["**/.*", "components/*"],
   serverDependenciesToBundle: [
     "styled-components",
     "d3-hierarchy",
@@ -11,9 +8,12 @@ module.exports = {
     "is-binary-path",
     "yargs-parser",
     "gitignore-parser",
-    "latest-version"
+    "latest-version",
+    "package-json",
+    "registry-url",
+    "semver"
   ],
-  appDirectory: "src",
+  appDirectory: "src"
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
