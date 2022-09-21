@@ -62,15 +62,6 @@ for usage instructions.`)
   })
 
   process.env["PORT"] = port.toString()
-
-  if (!fs.existsSync(resolve(__dirname, "./build"))) {
-    console.log("Building application...")
-
-    // TODO: Respect log level
-    execSync("npm install", { stdio: "ignore" })
-    execSync("npm run build", { stdio: "ignore" })
-  }
-
   process.argv[2] = "build"
   console.log("Starting Git Truck...");
 
