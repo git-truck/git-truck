@@ -14,7 +14,7 @@ export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   })
 }
 
-export async function getArgsWithDefaults(): Promise<TruckConfig> {
+export function getArgsWithDefaults(): TruckConfig {
   const args = parseArgs()
   const tempArgs = {
     path: ".",
@@ -28,7 +28,7 @@ export async function getArgsWithDefaults(): Promise<TruckConfig> {
 }
 
 export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig, TruckUserConfig]> {
-  const args = await getArgsWithDefaults()
+  const args = getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
   args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path
