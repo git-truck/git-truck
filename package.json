@@ -4,7 +4,7 @@
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
-  "main": "./build/index.js",
+  "main": "./cli.js",
   "bin": "./cli.js",
   "files": [
     "LICENSE",
@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "test": "jest --coverage",
-    "build": "remix build",
+    "build": "remix build && npm run build-cli",
+    "build-cli": "node ./scripts/build-cli.js",
     "dev": "remix dev",
     "watch": "remix watch",
     "start": "remix-serve build",
