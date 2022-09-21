@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "test": "jest --coverage",
-    "build": "remix build",
+    "build": "remix build && node ./scripts/build-cli.js",
     "dev": "remix dev",
     "start": "remix-serve build",
     "clean": "rimraf -rf build public/build .cache .temp",
