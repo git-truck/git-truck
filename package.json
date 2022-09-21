@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "test": "jest --coverage",
-    "build": "remix build && node ./scripts/build-cli.js",
+    "build": "remix build && npm run build-cli",
+    "build-cli": "node ./scripts/build-cli.js",
     "dev": "remix dev",
     "watch": "remix watch",
     "start": "remix-serve build",
