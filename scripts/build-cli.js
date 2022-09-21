@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+const start = performance.now()
 require('esbuild').build({
   entryPoints: ['src/cli.ts'],
   bundle: true,
@@ -7,7 +8,8 @@ require('esbuild').build({
   target: "node16"
 })
 .then(() => {
-  console.log("Successfully built CLI");
+  const timing = ((performance.now() - start) / 1000).toFixed(1)
+  console.log(`Successfully built CLI in ${timing}s`)
 })
 .catch(() => process.exit(1))
 
