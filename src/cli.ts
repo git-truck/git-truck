@@ -63,7 +63,7 @@ for usage instructions.`)
 
   process.env["PORT"] = port.toString()
 
-  if (!fs.existsSync("build") || args["invalidateCache"]) {
+  if (!fs.existsSync(resolve(__dirname, "./build"))) {
     console.log("Building application...")
 
     // TODO: Respect log level
