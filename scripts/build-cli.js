@@ -8,8 +8,9 @@ require('esbuild').build({
   target: "node16"
 })
 .then(() => {
-  const timing = ((performance.now() - start) / 1000).toFixed(1)
-  console.log(`Successfully built CLI in ${timing}s`)
+  let timing = (performance.now() - start)
+  const timingString = timing < 1000 ? `${timing.toFixed(1)}ms` : `${(timing / 1000).toFixed(1)}s`
+  console.log(`Successfully built ${process.env.NODE_ENV || "production"} CLI in ${timingString}`)
 })
 .catch(() => process.exit(1))
 
