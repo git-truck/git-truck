@@ -24,10 +24,8 @@
     "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}",
     "lint": "eslint --cache --fix src/**/*.{ts,tsx}"
   },
-  "dependencies": {
-    "@remix-run/serve": "^1.7.1"
-  },
   "devDependencies": {
+    "@remix-run/serve": "^1.7.1",
     "@react-aria/utils": "^3.13.3",
     "@react-spring/web": "^9.5.4",
     "@remix-run/dev": "^1.7.1",
