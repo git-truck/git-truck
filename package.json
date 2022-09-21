@@ -17,6 +17,7 @@
     "test": "jest --coverage",
     "build": "remix build",
     "dev": "remix dev",
+    "watch": "remix watch",
     "start": "remix-serve build",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
