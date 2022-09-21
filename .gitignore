@@ -8,3 +8,4 @@ data.json
 .temp
 coverage
 .eslintcache
+cli.js
