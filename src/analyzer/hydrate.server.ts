@@ -79,8 +79,6 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
-  data.minNoCommits = Number.MAX_VALUE
-  data.maxNoCommits = Number.MIN_VALUE
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
 

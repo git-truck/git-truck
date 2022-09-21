@@ -105,8 +105,6 @@ export interface GitCommitObject extends AbstractGitObject {
 
 export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
   tree: HydratedGitTreeObject
-  minNoCommits: number
-  maxNoCommits: number
   newestLatestChangeEpoch: number
   oldestLatestChangeEpoch: number
 }

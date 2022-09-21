@@ -104,13 +104,33 @@ export function generateAuthorColors(authors: string[]): Map<string, string> {
   return map
 }
 
+function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: number] {
+  let min = Number.MAX_VALUE;
+  let max = Number.MIN_VALUE;
+  tree.children.forEach(element => {
+    if (element.type == "blob") {
+      if (element.noCommits > max) max = element.noCommits;
+      if (element.noCommits < min) min = element.noCommits;
+    }
+    else if (element.type == "tree") {
+      const [submin, submax] = FindMinMaxCommit(element);
+      if (submax > max) max = submax;
+      if (submin < min) min = submin;
+    }
+  });
+  return [min, max]
+}
+
 export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, string>,
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
-  const commitmapper = new CommitAmountTranslater(commit.minNoCommits, commit.maxNoCommits)
+
+  const [mincom, maxcom] = FindMinMaxCommit(commit.tree)
+
+  const commitmapper = new CommitAmountTranslater(mincom, maxcom)
   const truckmapper = new TruckFactorTranslater(data.authorsUnion.length)
 
   return [
@@ -135,12 +155,12 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            `${commit.minNoCommits}`,
-            `${commit.maxNoCommits}`,
+            `${mincom}`,
+            `${maxcom}`,
             undefined,
             undefined,
-            commitmapper.getColor(commit.minNoCommits),
-            commitmapper.getColor(commit.maxNoCommits),
+            commitmapper.getColor(mincom),
+            commitmapper.getColor(maxcom),
           ]
         }
         commitmapper.setColor(blob, cache)
