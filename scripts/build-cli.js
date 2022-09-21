@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const start = performance.now()
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('esbuild').build({
   entryPoints: ['src/cli.ts'],
   bundle: true,
