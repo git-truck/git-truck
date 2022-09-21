@@ -5,9 +5,15 @@ import pkg from "./../package.json"
 import { compare, valid, clean } from "semver"
 import open from "open"
 import latestVersion from "latest-version"
+import { GitCaller } from "./analyzer/git-caller.server"
+import { getBaseDirFromPath } from "./analyzer/util.server"
+import { resolve } from "path"
+import { getArgsWithDefaults } from "./analyzer/args.server"
+import { getPathFromRepoAndHead } from "./util"
 
 async function main() {
   const args = parseArgs()
+  const options = getArgsWithDefaults()
 
   const currentV = pkg.version
   let updateMessage = ""
@@ -69,15 +75,25 @@ for usage instructions.`)
   console.log("Starting Git Truck...");
 
   // Save console.log to be restored later
-  let log = global.console.log
+  const log = global.console.log
 
   // Override console.log
-  global.console.log = (message?: string) => {
+  global.console.log = async (message?: string) => {
     const regex = /^Remix App Server started at (\S+)/
     if (message?.toString().match(regex)?.[1]) {
-      printOpen(port)
       // Restore console.log to original when server is started
       global.console.log = log.bind(global.console)
+      const url = `http://localhost:${port}`
+      let extension = ""
+
+      // If CWD or path argument is a git repo, go directly to that repo in the visualizer
+      if (await GitCaller.isGitRepo(options.path)) {
+        const repo = await GitCaller.getRepoMetadata(options.path)
+        if (repo) {
+          extension = `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
+        }
+      }
+      printOpen(url, extension)
     }
   }
   // Serve application build
@@ -104,9 +120,9 @@ for usage instructions.`)
     return compare(validA, validB)
   }
 
-  async function printOpen(port: number) {
+  async function printOpen(url: string, extension: string) {
     console.log()
-    const url = `http://localhost:${port}`
+
     console.log(`Application available at ${url}`)
     console.log()
 
@@ -114,7 +130,7 @@ for usage instructions.`)
       // TODO: Open correct project, if run against a single repo
       // const url = `http://localhost:${port}/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
       console.log(`Opening in your browser...`)
-      await open(url)
+      await open(url + extension)
     }
   }
 }
