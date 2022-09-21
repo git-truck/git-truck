@@ -61,34 +61,27 @@ for usage instructions.`)
     console.log("Building application...")
 
     // TODO: Respect log level
+    execSync("npm install", { stdio: "ignore" })
     execSync("npm run build", { stdio: "ignore" })
   }
-  const proc = exec("npm run start", {}, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`)
-      return
-    }
-    console.log(`stdout: ${stdout}`)
-    console.log(`stderr: ${stderr}`)
-  })
 
-  if (!proc.stdout) throw new Error("No stdout")
+  process.argv[2] = "build"
+  console.log("Starting Git Truck...");
 
-  // Enable logging after the server has started successfully
-  // TODO: Respect log level
-  let silenced = true
-  proc.stdout.on("data", (data) => {
-    if (!silenced) {
-      // Forward logging from child process
-      process.stdout.write(data)
-    }
+  // Save console.log to be restored later
+  let log = global.console.log
 
+  // Override console.log
+  global.console.log = (message?: string) => {
     const regex = /^Remix App Server started at (\S+)/
-    if (data.toString().match(regex)?.[1]) {
+    if (message?.toString().match(regex)?.[1]) {
       printOpen(port)
-      silenced = false
+      // Restore console.log to original when server is started
+      global.console.log = log.bind(global.console)
     }
-  })
+  }
+  // Serve application build
+  await import("node_modules/@remix-run/serve/dist/cli.js");
 
   function parseArgs(rawArgs = process.argv.slice(2)) {
     return yargsParser(rawArgs, {
