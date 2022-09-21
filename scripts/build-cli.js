@@ -5,4 +5,9 @@ require('esbuild').build({
   outfile: 'build/cli.js',
   platform: "node",
   target: "node16"
-}).catch(() => process.exit(1))
+})
+.then(() => {
+  console.log("Successfully built CLI");
+})
+.catch(() => process.exit(1))
+
