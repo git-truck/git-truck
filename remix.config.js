@@ -15,6 +15,7 @@ module.exports = {
     "p-cancelable",
     "form-data-encoder",
     "@sindresorhus/is",
+    "@szmarczak/http-timer",
     "semver"
   ],
   appDirectory: "src"
