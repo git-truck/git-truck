@@ -22,6 +22,8 @@
     "start": "remix-serve build",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
+    "pub-prerelease": "npm version prerelease && npm publish --tag next",
+    "pub-experimental": "npm version prerelease && npm publish --tag experimental",
     "prepublishOnly": "npm run clean && npm run build",
     "format": "eslint --cache --fix src/**/*.{ts,tsx} && prettier --loglevel warn --write src/**/*.{ts,tsx}",
     "lint": "eslint --cache --fix src/**/*.{ts,tsx}"
