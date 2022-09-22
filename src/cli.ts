@@ -1,15 +1,11 @@
-import fs from "fs"
-import { exec, execSync } from "child_process"
-import yargsParser from "yargs-parser"
 import pkg from "./../package.json"
-import { compare, valid, clean } from "semver"
 import open from "open"
 import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
-import { getBaseDirFromPath } from "./analyzer/util.server"
-import { resolve } from "path"
-import { getArgsWithDefaults } from "./analyzer/args.server"
+import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
+import { createApp } from "@remix-run/serve"
+import { semverCompare } from "./components/util"
 
 async function main() {
   const args = parseArgs()
@@ -61,69 +57,45 @@ for usage instructions.`)
     port: [...getPortLib.portNumbers(3000, 4000)],
   })
 
-  process.env["PORT"] = port.toString()
-  process.argv[2] = __dirname
-  console.log("Starting Git Truck...");
+  console.log("Starting Git Truck...")
 
-  // Save console.log to be restored later
-  const log = global.console.log
 
-  // Override console.log
-  global.console.log = async (message?: string) => {
-    const regex = /^Remix App Server started at (\S+)/
-    if (message?.toString().match(regex)?.[1]) {
-      // Restore console.log to original when server is started
-      global.console.log = log.bind(global.console)
-      const url = `http://localhost:${port}`
-      let extension = ""
-
-      // If CWD or path argument is a git repo, go directly to that repo in the visualizer
-      if (await GitCaller.isGitRepo(options.path)) {
-        const repo = await GitCaller.getRepoMetadata(options.path)
-        if (repo) {
-          extension = `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
-        }
-      }
-      printOpen(url, extension)
-    }
-  }
   // Serve application build
-  await import("node_modules/@remix-run/serve/dist/cli.js");
 
-  function parseArgs(rawArgs = process.argv.slice(2)) {
-    return yargsParser(rawArgs, {
-      configuration: {
-        "duplicate-arguments-array": false,
-      },
-    })
-  }
+  const onListen = async () => {
+    const url = `http://localhost:${port}`
 
-  function semverCompare(a: string, b: string) {
-    const validA = valid(clean(a))
-    const validB = valid(clean(b))
+    let extension = ""
 
-    if (!validA || !validB) {
-      if (validA) return 1
-      if (validB) return -1
-      return a.toLowerCase().localeCompare(b.toLowerCase())
+    // If CWD or path argument is a git repo, go directly to that repo in the visualizer
+    if (await GitCaller.isGitRepo(options.path)) {
+      const repo = await GitCaller.getRepoMetadata(options.path)
+      if (repo) {
+        extension = `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
+      }
     }
-
-    return compare(validA, validB)
+    printOpen(url, extension)
   }
 
-  async function printOpen(url: string, extension: string) {
-    console.log()
+  const build = require(__dirname)
 
-    console.log(`Application available at ${url}`)
-    console.log()
+  const app = createApp(__dirname, process.env.NODE_ENV, build.publicPath, build.assetsBuildDirectory)
+  const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
 
-    if (process.env.NODE_ENV !== "development") {
-      // TODO: Open correct project, if run against a single repo
-      // const url = `http://localhost:${port}/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
-      console.log(`Opening in your browser...`)
-      await open(url + extension)
-    }
-  }
+  ;["SIGTERM", "SIGINT"].forEach((signal) => {
+    process.once(signal, () => server?.close(console.error))
+  })
 }
 
 main()
+
+async function printOpen(url: string, extension: string) {
+  console.log()
+
+  console.log(`Application available at ${url}`)
+  console.log()
+  if (process.env.NODE_ENV !== "development") {
+    console.log(`Opening in your browser...`)
+    await open(url + extension)
+  }
+}
