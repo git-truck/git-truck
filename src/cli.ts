@@ -62,7 +62,7 @@ for usage instructions.`)
   })
 
   process.env["PORT"] = port.toString()
-  process.argv[2] = "."
+  process.argv[2] = __dirname
   console.log("Starting Git Truck...");
 
   // Save console.log to be restored later
