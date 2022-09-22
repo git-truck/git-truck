@@ -13,6 +13,7 @@ module.exports = {
     "registry-url",
     "got",
     "form-data-encoder",
+    "@sindresorhus/is",
     "semver"
   ],
   appDirectory: "src"
