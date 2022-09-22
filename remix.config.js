@@ -11,6 +11,8 @@ module.exports = {
     "latest-version",
     "package-json",
     "registry-url",
+    "got",
+    "form-data-encoder",
     "semver"
   ],
   appDirectory: "src"
