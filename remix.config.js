@@ -8,14 +8,6 @@ module.exports = {
     "is-binary-path",
     "yargs-parser",
     "gitignore-parser",
-    "latest-version",
-    "package-json",
-    "registry-url",
-    "got",
-    "p-cancelable",
-    "form-data-encoder",
-    "@sindresorhus/is",
-    "@szmarczak/http-timer",
     "semver"
   ],
   appDirectory: "src"

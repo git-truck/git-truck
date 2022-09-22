@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "1.2.0-11",
+  "version": "1.2.0-12",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "@remix-run/node": "^1.7.2",
     "@remix-run/react": "^1.7.2",
     "@styled-icons/material": "^10.46.0",
-    "latest-version": "^7.0.0",
+    "latest-version": "^6.0.0",
     "nanospinner": "^1.1.0",
     "react-dom": "^18.2.0",
     "react-konami-code": "^2.3.0",
