@@ -30,7 +30,6 @@ jobs:
             major-wording:  'BREAKING CHANGE'
             commit-message: "Bump version to {{version}}"
             tag-prefix:  'v'
-            skip-push:  'true'
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
