@@ -23,7 +23,7 @@ jobs:
           with:
             node-version: 16
         - name: Update version in package.json
-          uses: "phips28/gh-action-bump-version@v8"
+          uses: "phips28/gh-action-bump-version@v8.0.18"
           with:
             patch-wording: "Fix,fix,Patch,patch"
             minor-wording: "Feat,feat,NewVersion"
