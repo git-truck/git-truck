@@ -25,10 +25,12 @@ jobs:
         - name: Update version in package.json
           uses: "phips28/gh-action-bump-version@master"
           with:
-            skip-tag: "true"
-            minor-wording: "NewVersion"
+            patch-wording: "Fix,fix,Patch,patch"
+            minor-wording: "Feat,feat,NewVersion"
             major-wording:  'BREAKING CHANGE'
             commit-message: "Bump version to {{version}}"
+            tag-prefix:  'v'
+            skip-push:  'true'
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
@@ -37,8 +39,7 @@ jobs:
         - run: git config user.email "version-bot@example.com"
         - run: git config user.name "Version Bot"
         - run: git commit --amend --no-edit
-#         This part is not essential to the workflow, so exit softly with a zero exit code
-        - run: git push --force || exit 0
+        - run: git push --tags
 
         - run: npm ci
         - run: npm test
