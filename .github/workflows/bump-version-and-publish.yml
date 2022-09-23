@@ -27,6 +27,7 @@ jobs:
           with:
             skip-tag: "true"
             minor-wording: "NewVersion"
+            major-wording:  'BREAKING CHANGE'
             commit-message: "Bump version to {{version}}"
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -39,5 +40,8 @@ jobs:
 #         This part is not essential to the workflow, so exit softly with a zero exit code
         - run: git push --force || exit 0
 
-        - name: "cat package.json"
-          run: cat ./package.json
+        - run: npm ci
+        - run: npm test
+        - uses: JS-DevTools/npm-publish@v1
+          with:
+            token: ${{ secrets.NPM_TOKEN }}
