@@ -16,8 +16,6 @@ async function main() {
   try {
     const latestV = await latestVersion(pkg.name)
 
-    console.log("latestV", latestV)
-
     // Soft clear the console
     process.stdout.write("\u001b[2J\u001b[0;0H")
     console.log()
