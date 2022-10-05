@@ -21,13 +21,13 @@ async function main() {
 
   console.log(`Tagging version ${versionTag}...`)
   execSync(`npm version ${versionTag} --no-git-tag-version`, { stdio: "pipe" })
-  console.log(`Tagged version ${versionTag}!`)
+  console.log(`Tagged version ${versionTag}`)
   console.log(`Publishing version ${versionTag} to git-truck@experimental...`)
   execSync(`npm publish --otp ${process.argv[2]} --tag experimental`, { stdio: "inherit" })
-  console.log(`Published version ${versionTag} to git-truck@experimental!`)
+  console.log(`Published version ${versionTag} to git-truck@experimental`)
   console.log("Cleaning up...")
   cleanUp()
-  console.log("Cleaned up!")
+  console.log("Cleaned up")
 }
 
 main().catch((err) => {
