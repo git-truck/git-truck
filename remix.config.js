@@ -11,7 +11,7 @@ module.exports = {
     "gitignore-parser",
     "semver"
   ],
-  appDirectory: "src"
+  appDirectory: "src",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
