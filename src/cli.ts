@@ -1,4 +1,4 @@
-import pkg from "./../package.json"
+import pkg from "../package.json"
 import open from "open"
 import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
@@ -75,9 +75,10 @@ for usage instructions.`)
     printOpen(url, extension)
   }
 
-  const build = require(__dirname)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const build = require(path.join(__dirname, "./build"))
 
-  const app = createApp(__dirname, process.env.NODE_ENV, build.publicPath, build.assetsBuildDirectory)
+  const app = createApp("./build", process.env.NODE_ENV, build.publicPath, build.assetsBuildDirectory)
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
 
   ;["SIGTERM", "SIGINT"].forEach((signal) => {
