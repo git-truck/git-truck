@@ -3,6 +3,7 @@ import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
+import { gitLogRegex, contribRegex } from "./constants"
 
 const renamedFiles = new Map<string, string>()
 
@@ -13,10 +14,6 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
   initially_mut(data)
 
   const gitLogResult = await GitCaller.getInstance().gitLog()
-
-  const gitLogRegex =
-    /"author\s+<\|(?<author>.+?)\|>\s+date\s+<\|(?<date>\d+)\|>\s+body\s+<\|(?<body>(?:\s|.)*?)\|>"\s+(?<contributions>(?:\s*.+\s+\|.*)+).*/gm
-  const contribRegex = /(?<file>.*?)\s*\|\s*((?<contribs>\d+)|(?<bin>Bin)).*/gm
 
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {

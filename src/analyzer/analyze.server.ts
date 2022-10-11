@@ -8,11 +8,12 @@ import {
   AnalyzerDataInterfaceVersion,
   TruckUserConfig,
   TruckConfig,
+  GitLogEntry,
 } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
-import { emptyGitCommitHash } from "./constants"
+import { emptyGitCommitHash, gitLogRegex } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
@@ -170,6 +171,23 @@ function getCommandLine() {
     default:
       return "xdg-open" // Linux
   }
+}
+
+export async function parseSingleFileLog(filePath: string) {
+  const commits: GitLogEntry[] = []
+  const gitLogResult = await GitCaller.getInstance().gitLog(filePath)
+
+  const matches = gitLogResult.matchAll(gitLogRegex)
+  for (const match of matches) {
+    const groups = match.groups ?? {}
+    const author = groups.author
+    const time = Number(groups.date)
+    const body = groups.body
+    const message = groups.message
+
+    commits.push({author, time, body, message})
+  }
+  return commits
 }
 
 export function openFile(path: string) {

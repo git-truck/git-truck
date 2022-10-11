@@ -78,6 +78,20 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
       </Button>
+      {isBlob ? (
+        <>
+          <Spacer />
+          <Form method="post" action={location.pathname}>
+            <input type="hidden" name="history" value={clickedObject.path} />
+            <Button type="submit" disabled={state !== "idle"}
+                  onClick={() => {
+                    isProcessingHideRef.current = true
+                  }}>
+                    Show file history
+                  </Button>
+          </Form>
+        </>
+      ): null}
       <Spacer />
       {isBlob ? (
         <>

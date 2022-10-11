@@ -124,3 +124,10 @@ export type PersonWithTime = Person & {
   timestamp: number
   timezone: string
 }
+
+export interface GitLogEntry {
+  author: string
+  time: number
+  body: string
+  message: string
+}

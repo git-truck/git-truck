@@ -24,6 +24,7 @@ import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Button, Code, Grower, semverCompare } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
+import { parseSingleFileLog } from "~/analyzer/analyze.server";
 
 let invalidateCache = false
 
@@ -82,6 +83,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   const ignore = formData.get("ignore")
   const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
+  const history = formData.get("history")
 
   if (refresh) {
     invalidateCache = true
@@ -90,6 +92,14 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const [args] = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
+
+  if (history && typeof history === "string") {
+    GitCaller.initInstance(path)
+    const git = GitCaller.getInstance()
+    git.branch = (await GitCaller.findBranchHead(path))[1]
+    const result = await parseSingleFileLog(path)
+    console.log(result)
+  }
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
