@@ -1,3 +1,4 @@
+import path from "path"
 import pkg from "../package.json"
 import open from "open"
 import latestVersion from "latest-version"
@@ -75,10 +76,13 @@ for usage instructions.`)
     printOpen(url, extension)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const build = require(path.join(__dirname, "./build"))
+  const app = createApp(
+    path.join(__dirname, "build"),
+    process.env.NODE_ENV ?? "production",
+    "/build",
+    path.join(__dirname, "public","build")
+  )
 
-  const app = createApp("./build", process.env.NODE_ENV, build.publicPath, build.assetsBuildDirectory)
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
 
   ;["SIGTERM", "SIGINT"].forEach((signal) => {
