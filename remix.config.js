@@ -2,16 +2,7 @@
 module.exports = {
   ignoredRouteFiles: ["**/.*", "components/*"],
   serverDependenciesToBundle: [
-    "styled-components",
-    "d3-hierarchy",
-    "@react-aria/utils",
-    "is-binary-path",
-    "yargs-parser",
-    "gitignore-parser",
-    "latest-version",
-    "package-json",
-    "registry-url",
-    "semver"
+    /.*/
   ],
   appDirectory: "src"
   // assetsBuildDirectory: "public/build",
