@@ -1,7 +1,17 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
   ignoredRouteFiles: ["**/.*", "components/*"],
-  serverDependenciesToBundle: [
+  serverDependenciesToBundle: process.env.NODE_ENV === "development" ? [
+    "styled-components",
+    "d3-hierarchy",
+    "@react-aria/utils",
+    "is-binary-path",
+    "yargs-parser",
+    "gitignore-parser",
+    "latest-version",
+    "package-json",
+    "registry-url"
+  ] : [
     /.*/
   ],
   appDirectory: "src"
