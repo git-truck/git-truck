@@ -2,13 +2,14 @@ import { RateReview as ReviewIcon } from "@styled-icons/material"
 import { resolve } from "path"
 import { useState } from "react"
 import { useBoolean } from "react-use"
-import { ActionFunction, ErrorBoundaryComponent, json, LoaderFunction, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import type { ActionFunction, ErrorBoundaryComponent, LoaderFunction } from "@remix-run/node"
+import { json, redirect } from "@remix-run/node"
+import { Link, useLoaderData } from "@remix-run/react"
 import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { Details } from "~/components/Details"
@@ -22,7 +23,16 @@ import SearchBar from "~/components/SearchBar"
 import { SidePanel, SidePanelRoot } from "~/components/SidePanel"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { Box, BoxP, BoxSubTitle, BoxSubTitleAndIconWrapper, Button, Code, Grower, semverCompare } from "~/components/util"
+import {
+  Box,
+  BoxP,
+  BoxSubTitle,
+  BoxSubTitleAndIconWrapper,
+  Button,
+  Code,
+  Grower,
+  semverCompare,
+} from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 
 let invalidateCache = false

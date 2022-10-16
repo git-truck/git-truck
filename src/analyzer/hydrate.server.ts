@@ -1,4 +1,4 @@
-import { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
+import type { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"

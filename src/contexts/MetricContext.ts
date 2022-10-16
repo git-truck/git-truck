@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import { MetricsData } from "../metrics/metrics"
+import type { MetricsData } from "../metrics/metrics"
 
 export const MetricsContext = createContext<MetricsData | undefined>(undefined)
 

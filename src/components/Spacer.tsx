@@ -1,4 +1,4 @@
-import { CSSProperties } from "react"
+import type { CSSProperties } from "react"
 
 export enum Spacing {
   xs = 0.5,
@@ -57,9 +57,11 @@ export const Spacer = (props: SpacerProps) => {
   const styles = {
     height: props.horizontal ? "1px" : sizeProp,
     width: props.horizontal ? sizeProp : "1px",
-    ...props.horizontal ? {
-      display: "inline-block",
-    } : {}
+    ...(props.horizontal
+      ? {
+          display: "inline-block",
+        }
+      : {}),
   } as CSSProperties
   return <div aria-hidden style={styles} />
 }

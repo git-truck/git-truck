@@ -1,7 +1,7 @@
 import { useKonami } from "react-konami-code"
-import type { MetaFunction } from "@remix-run/node";
-import { ErrorBoundaryComponent } from "@remix-run/node";
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "@remix-run/react";
+import type { MetaFunction } from "@remix-run/node"
+import type { ErrorBoundaryComponent } from "@remix-run/node"
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "@remix-run/react"
 import { SSRProvider } from "@react-aria/ssr"
 
 import appStyles from "~/styles/App.css"
@@ -16,15 +16,17 @@ export const meta: MetaFunction = () => {
 }
 
 export function links() {
-  return [...[appStyles, varsStyles, indexStyles, chartStyles].map((x) => ({
-    rel: "stylesheet",
-    href: x,
-  })),
-  {
-    rel: "favicon",
-    type: "image/x-icon",
-    href: "favicon.ico",
-  }]
+  return [
+    ...[appStyles, varsStyles, indexStyles, chartStyles].map((x) => ({
+      rel: "stylesheet",
+      href: x,
+    })),
+    {
+      rel: "favicon",
+      type: "image/x-icon",
+      href: "favicon.ico",
+    },
+  ]
 }
 
 export default function App() {
