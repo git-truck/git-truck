@@ -3,11 +3,8 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useComponentSize } from "../hooks"
 import { Chart } from "./Chart"
-import {
-  Fullscreen as FullscreenIcon,
-  CloseFullscreen as CloseFullscreenIcon
-} from "@styled-icons/material"
-import { Dispatch, SetStateAction } from "react"
+import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
+import type { Dispatch, SetStateAction } from "react"
 
 export const MainRoot = styled.main`
   display: grid;
@@ -58,10 +55,10 @@ const ChartWrapper = styled.div`
 `
 
 interface MainProps {
-  fullscreenState : [boolean, Dispatch<SetStateAction<boolean>>]
+  fullscreenState: [boolean, Dispatch<SetStateAction<boolean>>]
 }
 
-export function Main({ fullscreenState : [isFullscreen, setIsFullscreen] } : MainProps) {
+export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainProps) {
   const [ref, size] = useComponentSize()
   const { path, setPath } = usePath()
   const { repo } = useData()
@@ -88,39 +85,35 @@ export function Main({ fullscreenState : [isFullscreen, setIsFullscreen] } : Mai
     <MainRoot>
       <TopBar>
         <Breadcrumb>
-          {
-            (paths.length > 1)
-            ? (
-              paths.reverse().map(([name, p], i) => {
-                  if (p === "" || i === paths.length - 1)
-                    if (p === "")
-                      return (
-                        <>
-                          <NonClickableText key={p}>{name}</NonClickableText>
-                          <span>{"\u203A"}</span>
-                        </>
-                      )
-                    else return <NonClickableText key={p}>{name}</NonClickableText>
-                  else
+          {paths.length > 1
+            ? paths.reverse().map(([name, p], i) => {
+                if (p === "" || i === paths.length - 1)
+                  if (p === "")
                     return (
                       <>
-                        <ClickableText key={p} onClick={() => setPath(p)}>
-                          {name}
-                        </ClickableText>
+                        <NonClickableText key={p}>{name}</NonClickableText>
                         <span>{"\u203A"}</span>
                       </>
                     )
-                })
-            ) 
-            : null
-          }
+                  else return <NonClickableText key={p}>{name}</NonClickableText>
+                else
+                  return (
+                    <>
+                      <ClickableText key={p} onClick={() => setPath(p)}>
+                        {name}
+                      </ClickableText>
+                      <span>{"\u203A"}</span>
+                    </>
+                  )
+              })
+            : null}
         </Breadcrumb>
         <IconButton onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
-          {
-            isFullscreen
-            ? <CloseFullscreenIcon display="inline-block" height="1.5em" />
-            : <FullscreenIcon display="inline-block" height="1.5em" />
-          }
+          {isFullscreen ? (
+            <CloseFullscreenIcon display="inline-block" height="1.5em" />
+          ) : (
+            <FullscreenIcon display="inline-block" height="1.5em" />
+          )}
         </IconButton>
       </TopBar>
       <ChartWrapper ref={ref}>
@@ -137,7 +130,7 @@ const IconButton = styled.button`
   padding: 0;
   color: var(--button-text-color);
   cursor: pointer;
-  
+
   &:hover {
     border-radius: calc(0.75 * var(--unit));
     background-color: white;

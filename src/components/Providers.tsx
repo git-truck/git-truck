@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react"
-import { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
-import { RepoData } from "~/routes/$repo.$"
+import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import { ChartType, getDefaultOptions, Options, OptionsContext } from "../contexts/OptionsContext"
+import type { ChartType, Options } from "../contexts/OptionsContext"
+import { getDefaultOptions, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
-import { AuthorshipType, createMetricData as createMetricsData, MetricsData, MetricType } from "../metrics/metrics"
+import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
+import { createMetricData as createMetricsData } from "../metrics/metrics"
 
 interface ProvidersProps {
   children: React.ReactNode

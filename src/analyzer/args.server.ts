@@ -1,7 +1,7 @@
 import yargsParser from "yargs-parser"
 import { promises as fs } from "fs"
 import { resolve } from "path"
-import { TruckConfig, TruckUserConfig } from "./model"
+import type { TruckConfig, TruckUserConfig } from "./model"
 import { GitCaller } from "./git-caller.server"
 import { getBaseDirFromPath } from "./util.server"
 import { log } from "./log.server"

@@ -3,7 +3,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import { memo, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
-import {
+import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitObject,
@@ -21,7 +21,8 @@ import {
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
-import { ChartType, useOptions } from "../contexts/OptionsContext"
+import type { ChartType } from "../contexts/OptionsContext"
+import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { blinkAnimation, pulseAnimation } from "./Animations"
 import { Tooltip } from "./Tooltip"

@@ -1,7 +1,9 @@
-import { Metric, MetricType } from "../metrics/metrics"
+import type { MetricType } from "../metrics/metrics"
+import { Metric } from "../metrics/metrics"
 import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
-import { Chart, ChartType, useOptions } from "../contexts/OptionsContext"
+import type { ChartType } from "../contexts/OptionsContext"
+import { Chart, useOptions } from "../contexts/OptionsContext"
 import { Spacer } from "./Spacer"
 import styled from "styled-components"
 
@@ -19,8 +21,7 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 }
 
 export function Options() {
-  const { animationsEnabled, setAnimationsEnabled, setMetricType, setChartType } =
-    useOptions()
+  const { animationsEnabled, setAnimationsEnabled, setMetricType, setChartType } = useOptions()
 
   return (
     <Box>

@@ -2,18 +2,13 @@ import styled from "styled-components"
 import { Spacer } from "~/components/Spacer"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
-import {
-  getMetricDescription,
-  getMetricLegendType,
-  Metric,
-  MetricCache,
-} from "../../metrics/metrics"
+import type { MetricCache } from "../../metrics/metrics"
+import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
 import { Box, BoxP, BoxSubTitle, Button } from "../util"
 import { PeopleAlt } from "@styled-icons/material"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
-
 
 const StyledBox = styled(Box)`
   position: sticky;
@@ -31,7 +26,7 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
   if (metricCache === undefined) return null
 
   let legend: JSX.Element = <></>
-  switch(getMetricLegendType(metricType)) {
+  switch (getMetricLegendType(metricType)) {
     case "POINT":
       legend = <PointLegend metricCache={metricCache}></PointLegend>
       break

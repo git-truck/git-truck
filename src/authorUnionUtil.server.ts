@@ -1,7 +1,7 @@
-import { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 
 export const makeDupeMap = (authors: string[][]): Record<string, string> => {
-  const dupeMap : Record<string, string> = {}
+  const dupeMap: Record<string, string> = {}
   for (const aliases of authors) {
     for (const alias of aliases) {
       dupeMap[alias] = aliases[0]
@@ -33,13 +33,12 @@ export function unionAuthors(authors: Record<string, number>, authorAliasMap: Re
 
 export function nameUnion(names: string[], authorAliasMap: Record<string, string>) {
   const collector: string[] = []
-  for(const name of names) {
+  for (const name of names) {
     const lookup = authorAliasMap[name]
     if (lookup) {
       if (collector.includes(lookup)) continue
       collector.push(lookup)
-    }
-    else collector.push(name)
+    } else collector.push(name)
   }
   return collector
 }
