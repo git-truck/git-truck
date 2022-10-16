@@ -58,7 +58,6 @@ for usage instructions.`)
 
   console.log("Starting Git Truck...")
 
-
   // Serve application build
 
   const onListen = async () => {
@@ -73,14 +72,14 @@ for usage instructions.`)
         extension = `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
       }
     }
-    printOpen(url, extension)
+    await printOpen(url, extension)
   }
 
   const app = createApp(
     path.join(__dirname, "build"),
     process.env.NODE_ENV ?? "production",
     "/build",
-    path.join(__dirname, "public","build")
+    path.join(__dirname, "public", "build")
   )
 
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
