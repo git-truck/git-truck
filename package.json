@@ -100,7 +100,7 @@
     "printWidth": 120
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
+    "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
       "eslint --cache --fix",
       "prettier --write"
     ]
