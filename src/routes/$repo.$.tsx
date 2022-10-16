@@ -2,9 +2,10 @@ import { RateReview as ReviewIcon } from "@styled-icons/material"
 import { resolve } from "path"
 import { useState } from "react"
 import { useBoolean } from "react-use"
-import type { ActionFunction, ErrorBoundaryComponent, LoaderFunction } from "@remix-run/node"
-import { json, redirect } from "@remix-run/node"
-import { Link, useLoaderData } from "@remix-run/react"
+import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-run/node"
+import { redirect } from "@remix-run/node"
+import { typedjson, useTypedLoaderData } from "remix-typedjson"
+import { Link } from "@remix-run/react"
 import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
@@ -47,7 +48,7 @@ export interface RepoData {
   }
 }
 
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader = async ({ params }: LoaderArgs) => {
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
@@ -74,7 +75,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     throw Error("Error loading repo")
   }
 
-  return json<RepoData>({
+  return typedjson<RepoData>({
     analyzerData,
     repo,
     gitTruckInfo: await getGitTruckInfo(),
@@ -212,7 +213,7 @@ function UpdateNotifier() {
 }
 
 export default function Repo() {
-  const data = useLoaderData<typeof loader>()
+  const data = useTypedLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
