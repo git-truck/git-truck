@@ -1,5 +1,7 @@
 import { Fragment } from "react"
 import { useMetrics } from "~/contexts/MetricContext"
+import { useOptions } from "~/contexts/OptionsContext"
+import { Spacer } from "./Spacer"
 import { DetailsKey, DetailsValue, LegendDot, LegendLabel } from "./util"
 
 interface AuthorDistFragProps {
@@ -9,6 +11,7 @@ interface AuthorDistFragProps {
 
 export function AuthorDistFragment(props: AuthorDistFragProps) {
   const [, authorColors] = useMetrics()
+  const { metricType } = useOptions()
 
   if (!props.show) return null
 
@@ -20,7 +23,12 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
         return (
           <Fragment key={author + contrib}>
             <DetailsKey title={author} grow>
-              <LegendDot dotColor={authorColors.get(author) ?? "white"} />
+              {metricType == "TOP_CONTRIBUTOR" ? (
+                <>
+                  <LegendDot dotColor={authorColors.get(author) ?? "white"} />
+                  <Spacer horizontal />
+                </>
+              ) : null}
               <LegendLabel>{author}</LegendLabel>
             </DetailsKey>
             <DetailsValue>{roundedContrib === 0 ? "<1" : roundedContrib}%</DetailsValue>
