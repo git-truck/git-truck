@@ -29,7 +29,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
                   <Spacer horizontal />
                 </>
               ) : null}
-              <LegendLabel>{author}</LegendLabel>
+              <LegendLabel style={{ opacity: 0.7 }}>{author}</LegendLabel>
             </DetailsKey>
             <DetailsValue>{roundedContrib === 0 ? "<1" : roundedContrib}%</DetailsValue>
           </Fragment>
