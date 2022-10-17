@@ -204,6 +204,9 @@ export const LegendLabel = styled.p`
   margin: 0px;
   font-weight: bold;
   cursor: default;
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
 `
 
 export const LegendGradient = styled.div<{ min: string; max: string }>`
