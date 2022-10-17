@@ -55,8 +55,8 @@ export const Spacer = (props: SpacerProps) => {
 
   const sizeProp = `calc(${spacing} * var(--unit))`
   const styles = {
-    height: props.horizontal ? "1px" : sizeProp,
-    width: props.horizontal ? sizeProp : "1px",
+    minHeight: props.horizontal ? "1px" : sizeProp,
+    minWidth: props.horizontal ? sizeProp : "1px",
     ...(props.horizontal
       ? {
           display: "inline-block",
