@@ -5,6 +5,7 @@ import { promises as fs, existsSync } from "fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "~/components/util"
+import os from "os"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -83,7 +84,7 @@ export class GitCaller {
   }
 
   static getCachePath(repo: string, branch: string) {
-    return resolve(__dirname, "..", ".temp", repo, `${branch}.json`)
+    return resolve(os.tmpdir(), "git-truck", repo, `${branch}.json`)
   }
 
   async getRepositoryHead() {
