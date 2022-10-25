@@ -29,8 +29,6 @@
     "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
   },
   "devDependencies": {
-    "@react-aria/ssr": "^3.3.0",
-    "@react-aria/utils": "^3.14.0",
     "@react-spring/web": "^9.5.5",
     "@remix-run/dev": "^1.7.2",
     "@remix-run/eslint-config": "^1.7.2",
