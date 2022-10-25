@@ -1,5 +1,5 @@
 import { log } from "./log.server"
-import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
+import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
@@ -171,13 +171,29 @@ export class GitCaller {
 
   static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
-    const pathIsRepo = await GitCaller.isGitRepo(argPath)
+    const [pathIsRepo] = await describeAsyncJob(
+      () => GitCaller.isGitRepo(argPath),
+      "Checking if path is a git repo...",
+      "Done checking if path is a git repo",
+      "Error checking if path is a git repo"
+    )
+
     const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
 
     const entries = await fs.readdir(baseDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
 
-    const repoOrNull = await Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo))))
+    const [repoOrNull, repoOrNullError] = await describeAsyncJob(
+      () => Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo)))),
+      "Scanning for repositories...",
+      "Done scanning for repositories",
+      "Error scanning for repositories"
+    )
+
+    if (repoOrNullError) {
+      throw repoOrNullError
+    }
+
     const onlyRepos: Repository[] = repoOrNull.filter((currentRepo) => {
       if (currentRepo === null) return false
       if (pathIsRepo && currentRepo.name === getDirName(argPath)) {
