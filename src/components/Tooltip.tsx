@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react"
+import { memo, useMemo, useRef } from "react"
 import { useMouse } from "react-use"
 import styled from "styled-components"
 import type { HydratedGitBlobObject } from "~/analyzer/model"
@@ -40,7 +40,7 @@ interface TooltipProps {
   hoveredBlob: HydratedGitBlobObject | null
 }
 
-export function Tooltip({ hoveredBlob }: TooltipProps) {
+export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
   const tooltipContainerRef = useRef<HTMLDivElement>(null)
   const { metricType, authorshipType } = useOptions()
   const documentElementRef = useRef(document.documentElement)
@@ -56,6 +56,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
     const color = colormap?.get(hoveredBlob.path) ?? "grey"
     return color
   }, [hoveredBlob, metricsData, metricType, authorshipType])
+
   const toolTipWidth = tooltipContainerRef.current ? tooltipContainerRef.current.getBoundingClientRect().width : 0
 
   const sidePanelWidth =
@@ -82,7 +83,7 @@ export function Tooltip({ hoveredBlob }: TooltipProps) {
       </TooltipBox>
     </TooltipContainer>
   )
-}
+})
 
 function ColorMetricDependentInfo(props: {
   metric: MetricType
@@ -128,7 +129,6 @@ function ColorMetricDependentInfo(props: {
         default:
           return <>{authorCount} authors</>
       }
-      return <>{}</>
     default:
       return null
   }
