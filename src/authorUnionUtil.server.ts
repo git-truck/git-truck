@@ -53,7 +53,7 @@ function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Record<str
     if (child.type === "blob") {
       child.unionedAuthors = {
         HISTORICAL: unionAuthors(child.authors, authorUnions),
-        BLAME: unionAuthors(child.blameAuthors, authorUnions),
+        // BLAME: unionAuthors(child.blameAuthors, authorUnions),
       }
     } else {
       addAuthorUnionRec(child, authorUnions)
