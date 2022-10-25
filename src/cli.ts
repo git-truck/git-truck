@@ -7,9 +7,13 @@ import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
 import { createApp } from "@remix-run/serve"
 import { semverCompare } from "./components/util"
+import { setLogLevel } from "./analyzer/log.server"
 
 async function main() {
   const args = parseArgs()
+  if (args?.log) {
+    setLogLevel(args.log as string)
+  }
   const options = getArgsWithDefaults()
 
   const currentV = pkg.version
