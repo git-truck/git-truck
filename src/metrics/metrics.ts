@@ -15,7 +15,7 @@ export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>,
 
 export const Authorship = {
   HISTORICAL: "Complete history",
-  BLAME: "Newest version",
+  // BLAME: "Newest version",
 }
 
 export type AuthorshipType = keyof typeof Authorship
@@ -37,7 +37,7 @@ export function createMetricData(data: AnalyzerData): MetricsData {
   return [
     {
       HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
-      BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
+      // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
     },
     authorColors,
   ]
