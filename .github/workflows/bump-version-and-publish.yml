@@ -28,7 +28,7 @@ jobs:
             patch-wording: "Fix,fix,Patch,patch"
             minor-wording: "Feat,feat,NewVersion"
             major-wording:  'BREAKING CHANGE'
-            commit-message: "Bump version to {{version}}"
+            commit-message: "Bump version to {{version}} [skip ci]"
             tag-prefix:  'v'
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
