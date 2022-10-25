@@ -60,6 +60,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.31.10",
+    "express-serve-static-core": "^0.1.1",
     "get-port": "^6.1.2",
     "github-colors": "github:ozh/github-colors",
     "gitignore-parser": "^0.0.2",
