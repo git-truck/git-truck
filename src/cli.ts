@@ -7,7 +7,8 @@ import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
 import { createApp } from "@remix-run/serve"
 import { semverCompare } from "./components/util"
-import { setLogLevel } from "./analyzer/log.server"
+import { describeAsyncJob } from "./analyzer/util.server"
+import { log, setLogLevel } from "./analyzer/log.server"
 
 async function main() {
   const args = parseArgs()
@@ -42,7 +43,7 @@ npm install -g git-truck@latest
   } catch (e) {
     // ignore
   }
-  console.log(`Git Truck version ${currentV}${updateMessage}`)
+  console.log(`Git Truck version ${currentV}${updateMessage}\n`)
 
   if (args.h || args.help) {
     console.log()
@@ -60,48 +61,62 @@ for usage instructions.`)
     port: [...getPortLib.portNumbers(3000, 4000)],
   })
 
-  console.log("Starting Git Truck...")
-
   // Serve application build
 
   const onListen = async () => {
     const url = `http://localhost:${port}`
 
-    let extension = ""
+    const [extension, extensionError] = await describeAsyncJob(
+      async () => {
+        // If CWD or path argument is a git repo, go directly to that repo in the visualizer
+        if (await GitCaller.isGitRepo(options.path)) {
+          const repo = await GitCaller.getRepoMetadata(options.path)
+          if (repo) {
+            return `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
+          } else return ""
+        }
+      },
+      "Checking for git repo",
+      "Done checking for git repo",
+      "Failed to check for git repo"
+    )
 
-    // If CWD or path argument is a git repo, go directly to that repo in the visualizer
-    if (await GitCaller.isGitRepo(options.path)) {
-      const repo = await GitCaller.getRepoMetadata(options.path)
-      if (repo) {
-        extension = `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
-      }
+    if (extensionError) {
+      console.error(extensionError)
     }
-    await printOpen(url, extension)
+
+    if (process.env.NODE_ENV !== "development") {
+      const openURL = url + (extension ?? "")
+      log.debug(`Opening ${openURL}`)
+      const [, err] = await describeAsyncJob(
+        () => open(openURL),
+        "Opening Git Truck in your browser",
+        `Succesfully opened Git Truck in your browser`,
+        `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`
+      )
+      if (!err) log.info(`\nApplication available at ${url}`)
+    }
   }
 
-  const app = createApp(
-    path.join(__dirname, "build"),
-    process.env.NODE_ENV ?? "production",
-    "/build",
-    path.join(__dirname, "public", "build")
+  describeAsyncJob(
+    async () => {
+      const app = createApp(
+        path.join(__dirname, "build"),
+        process.env.NODE_ENV ?? "production",
+        "/build",
+        path.join(__dirname, "public", "build")
+      )
+
+      const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
+
+      ;["SIGTERM", "SIGINT"].forEach((signal) => {
+        process.once(signal, () => server?.close(console.error))
+      })
+    },
+    "Starting Git Truck",
+    "Git Truck started",
+    "Failed to start Git Truck"
   )
-
-  const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
-
-  ;["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, () => server?.close(console.error))
-  })
 }
 
 main()
-
-async function printOpen(url: string, extension: string) {
-  console.log()
-
-  console.log(`Application available at ${url}`)
-  console.log()
-  if (process.env.NODE_ENV !== "development") {
-    console.log(`Opening in your browser...`)
-    await open(url + extension)
-  }
-}
