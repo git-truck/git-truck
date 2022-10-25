@@ -1,4 +1,4 @@
-import { useId } from "@react-aria/utils"
+import { useId } from "react"
 import { Spacer } from "./Spacer"
 import { Label, SelectWithEllipsis } from "./util"
 

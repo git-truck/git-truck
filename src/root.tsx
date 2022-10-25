@@ -2,7 +2,6 @@ import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
 import type { ErrorBoundaryComponent } from "@remix-run/node"
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "@remix-run/react"
-import { SSRProvider } from "@react-aria/ssr"
 
 import appStyles from "~/styles/App.css"
 import varsStyles from "~/styles/vars.css"
@@ -42,9 +41,7 @@ export default function App() {
         {typeof document === "undefined" ? "__STYLES__" : null}
       </head>
       <body>
-        <SSRProvider>
-          <Outlet />
-        </SSRProvider>
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
