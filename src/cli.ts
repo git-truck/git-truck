@@ -88,13 +88,17 @@ for usage instructions.`)
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension ?? "")
       log.debug(`Opening ${openURL}`)
-      const [, err] = await describeAsyncJob(
-        () => open(openURL),
-        "Opening Git Truck in your browser",
-        `Succesfully opened Git Truck in your browser`,
-        `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`
-      )
-      if (!err) log.info(`\nApplication available at ${url}`)
+      let err : Error | null = null
+
+      if (!args.headless) {
+        [, err] = await describeAsyncJob(
+          () => open(openURL),
+          "Opening Git Truck in your browser",
+          `Succesfully opened Git Truck in your browser`,
+          `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`
+        )
+      }
+      if (!err) console.log(`\nApplication available at ${url}`)
     }
   }
 
