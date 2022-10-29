@@ -61,6 +61,7 @@ npx git-truck [args]
 |       `--log`        | output log level. See [here](./src/analyzer/log.server.ts) for values |         -          |
 |       `--port`       |                      port to use for the program                      |        3000        |
 | `--invalidate-cache` |                    bypass analyzer cache manually                     |         -          |
+| `--headless`         |       run the program without opening the browser                     |         -          |
 
 **Note:** Using `--invalidate-cache` will cause the analyzer to run every time the client talks to the server.
 

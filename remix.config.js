@@ -12,7 +12,7 @@ module.exports = {
     "package-json",
     "registry-url"
   ] : [
-    /.*/
+    /^(?!open$).*$/
   ],
   appDirectory: "src"
   // assetsBuildDirectory: "public/build",
