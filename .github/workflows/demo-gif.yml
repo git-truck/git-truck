@@ -1,6 +1,8 @@
 name: vhs
 on:
   push:
+    branches-ignore:
+      - main
     paths:
       - demo.tape
       - .github/workflows/demo-gif.yml
