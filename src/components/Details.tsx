@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useLocation, useTransition } from "@remix-run/react";
+import { Form, useFetcher, useLocation, useTransition } from "@remix-run/react";
 import styled from "styled-components"
-import { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { GitLogEntry, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -33,6 +33,19 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
+  const fetcher = useFetcher();
+  let fetched = null;
+  const [commitsInfo, setCommitInfo] = useState<GitLogEntry[]>([])
+
+  useEffect(() => {
+    if (fetcher.type == "init") {
+      fetcher.load(location.pathname)
+    } else if (fetcher.type == "done") {
+      fetched = fetcher.data
+      setCommitInfo(fetched)
+      console.log(fetched)
+    }
+  }, [fetcher])
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -79,18 +92,25 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         Merge duplicate users
       </Button>
       {isBlob ? (
+        // commitsInfo.length === 0 ? (
+        true ? (
         <>
           <Spacer />
-          <Form method="post" action={location.pathname}>
+          <fetcher.Form method="post" action={location.pathname}>
             <input type="hidden" name="history" value={clickedObject.path} />
             <Button type="submit" disabled={state !== "idle"}
                   onClick={() => {
                     isProcessingHideRef.current = true
                   }}>
                     Show file history
-                  </Button>
-          </Form>
-        </>
+            </Button>
+          </fetcher.Form>
+        </>) : null
+        // (
+        //   commitsInfo.map(commit => {
+        //     <p>{`${commit.author} ${commit.time} ${commit.message}`}</p>
+        //   })
+        // )
       ): null}
       <Spacer />
       {isBlob ? (

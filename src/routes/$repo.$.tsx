@@ -99,6 +99,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     git.branch = (await GitCaller.findBranchHead(path))[1]
     const result = await parseSingleFileLog(path)
     console.log(result)
+    return result
   }
 
   if (ignore && typeof ignore === "string") {
