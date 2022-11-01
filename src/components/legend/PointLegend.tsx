@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { ExpandUp } from "../Toggle"
-import { MetricLegendProps } from "./Legend"
+import type { MetricLegendProps } from "./Legend"
 import { Spacer } from "../Spacer"
 import { LegendEntry, LegendDot, LegendLabel } from "../util"
 import styled from "styled-components"
-
 
 const legendCutoff = 3
 
@@ -41,7 +40,7 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
     )
   }
 }
-  
+
 interface PointLegendFragProps {
   items: [string, PointInfo][]
   show: boolean

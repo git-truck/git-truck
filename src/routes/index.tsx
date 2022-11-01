@@ -4,16 +4,10 @@ import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import {
-  Actions,
-  Box,
-  BoxSubTitle,
-  Code,
-  Grower,
-} from "~/components/util"
+import { Actions, Box, BoxSubTitle, Code, Grower } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
-import { Repository } from "~/analyzer/model"
+import type { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
@@ -56,7 +50,11 @@ export default function Index() {
 
       <Spacer />
       <p>
-        Found {repositories.length} git repositories in the folder <Code inline title={baseDir}>{baseDirName}</Code>.
+        Found {repositories.length} git repositories in the folder{" "}
+        <Code inline title={baseDir}>
+          {baseDirName}
+        </Code>
+        .
       </p>
       <Spacer />
       {repositories.length === 0 ? (
@@ -91,11 +89,14 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
 
   return (
     <Li key={repo.name}>
-      <Box style={{
-        outline: branchIsAnalyzed ? "1px solid green" : undefined,
-      }}>
-        <BoxSubTitle title={repo.name}>{repo.name}
-        {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
+      <Box
+        style={{
+          outline: branchIsAnalyzed ? "1px solid green" : undefined,
+        }}
+      >
+        <BoxSubTitle title={repo.name}>
+          {repo.name}
+          {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
         </BoxSubTitle>
         <Spacer />
         <RevisionSelect
@@ -120,7 +121,7 @@ const Wrapper = styled.div`
   margin: auto;
   padding: var(--unit);
 
-  @media(max-width: 1000px) {
+  @media (max-width: 1000px) {
     width: 100vw;
   }
 `
@@ -138,13 +139,12 @@ const Li = styled.li`
   margin: 0;
 `
 
-
 const SLink = styled(Link)<{ green?: boolean }>`
   line-height: 100%;
   text-decoration: none;
   font-weight: bold;
   font-size: 0.9em;
-  color: ${props => props.green ? " green" : css`var(--text-color)`};
+  color: ${(props) => (props.green ? " green" : css`var(--text-color)`)};
   opacity: 75%;
   cursor: pointer;
   &:hover {
@@ -158,7 +158,7 @@ const AnalyzedTag = styled.span`
   font-size: 0.6rem;
   border: 1px solid currentColor;
   color: green;
-  border-radius:  100000px;
+  border-radius: 100000px;
   padding: 2px 4px;
   letter-spacing: 1px;
   user-select: none;
@@ -169,4 +169,3 @@ const AnalyzedTag = styled.span`
   vertical-align: middle;
   align-content: flex-start;
 `
-

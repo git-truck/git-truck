@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useFetcher, useLocation, useTransition } from "@remix-run/react";
+import { Form, useLocation, useTransition } from "@remix-run/react"
 import styled from "styled-components"
-import { GitLogEntry, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -13,7 +13,7 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 import byteSize from "byte-size"
-import { AuthorshipType } from "~/metrics/metrics"
+import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
 

@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react"
-import { Authorship, AuthorshipType, Metric, MetricType } from "../metrics/metrics"
+import type { AuthorshipType, MetricType } from "../metrics/metrics"
+import { Authorship, Metric } from "../metrics/metrics"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",

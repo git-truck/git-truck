@@ -191,7 +191,7 @@ export const LegendEntry = styled.div`
 `
 
 export const LegendDot = styled.div<{ dotColor: string }>`
-  height: 100%;
+  height: 1em;
   aspect-ratio: 1;
   width: 1em;
   border-radius: 50%;
@@ -204,6 +204,9 @@ export const LegendLabel = styled.p`
   margin: 0px;
   font-weight: bold;
   cursor: default;
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
 `
 
 export const LegendGradient = styled.div<{ min: string; max: string }>`
@@ -219,10 +222,11 @@ export const GradientLegendDiv = styled.div`
   justify-content: space-between;
 `
 
-export const DetailsKey = styled.span<{ grow?: boolean }>`
+export const DetailsKey = styled.div<{ grow?: boolean }>`
+  display: flex;
+  align-items: center;
   font-size: 0.9em;
   font-weight: 500;
-  opacity: 0.7;
   white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;

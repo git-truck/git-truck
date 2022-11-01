@@ -44,3 +44,16 @@ To clean up build artefacts, cached analyzations, etc., run:
 ```
 npm run clean
 ```
+
+# Benchmarking
+
+A benchmark script for measuring the installation time is available. Use it by running
+
+```
+node ./scripts/benchmark.mjs [tag = experimental] [reps = 1]
+
+```
+
+Tag is the published version you want to compare to the latest version, and reps is the number of times to run each benchmark, where an average will finally be reported. The script defaults to compare the experimental tag with latest using one repetition.
+
+If running on a laptop, it is recommended to plug into power and quit any other applications that may be running in the background and disable battery saver, to get consistent results.

@@ -21,4 +21,3 @@ build({
   console.log(`Successfully built ${process.env.NODE_ENV || "production"} CLI in ${timingString}`)
 })
 .catch(() => process.exit(1))
-

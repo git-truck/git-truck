@@ -1,4 +1,4 @@
-import { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
+import type { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
@@ -76,8 +76,6 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
-  data.minNoCommits = Number.MAX_VALUE
-  data.maxNoCommits = Number.MIN_VALUE
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
 

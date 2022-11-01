@@ -2,7 +2,8 @@ import { log } from "./log.server"
 import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
-import { AnalyzerData, AnalyzerDataInterfaceVersion, GitRefs, Repository } from "./model"
+import type { AnalyzerData, GitRefs, Repository } from "./model"
+import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "~/components/util"
 
 export enum ANALYZER_CACHE_MISS_REASONS {

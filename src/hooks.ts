@@ -1,5 +1,6 @@
 import { useSpring } from "@react-spring/web"
-import { MutableRefObject, useEffect, useMemo } from "react"
+import type { MutableRefObject } from "react"
+import { useEffect, useMemo } from "react"
 import { useBoolean } from "react-use"
 import { useComponentSize as useCompSize } from "react-use-size"
 import { useOptions } from "./contexts/OptionsContext"

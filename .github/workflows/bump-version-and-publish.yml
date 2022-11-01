@@ -1,9 +1,7 @@
 name: "Bump version"
 
 on:
-  push:
-    branches:
-      - "main"
+  workflow_dispatch:
 
 jobs:
   bump-version:
@@ -23,11 +21,13 @@ jobs:
           with:
             node-version: 16
         - name: Update version in package.json
-          uses: "phips28/gh-action-bump-version@master"
+          uses: "phips28/gh-action-bump-version@v9.0.31"
           with:
-            skip-tag: "true"
-            minor-wording: "NewVersion"
-            commit-message: "Bump version to {{version}}"
+            patch-wording: "Fix,fix,Patch,patch"
+            minor-wording: "Feat,feat,NewVersion"
+            major-wording:  'BREAKING CHANGE'
+            commit-message: "Bump version to {{version}} [skip ci]"
+            tag-prefix:  'v'
           env:
             GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
@@ -36,8 +36,11 @@ jobs:
         - run: git config user.email "version-bot@example.com"
         - run: git config user.name "Version Bot"
         - run: git commit --amend --no-edit
-#         This part is not essential to the workflow, so exit softly with a zero exit code
-        - run: git push --force || exit 0
+        - run: git push --tags
 
-        - name: "cat package.json"
-          run: cat ./package.json
+        - run: npm ci
+        - run: npm test
+        - uses: JS-DevTools/npm-publish@v1
+          with:
+            token: ${{ secrets.NPM_TOKEN }}
+            
