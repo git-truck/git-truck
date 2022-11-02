@@ -10,7 +10,7 @@ Output demo.gif
 Set Width 1200
 Set Height 600
 
-Type "mkdir repos && cd repos"
+Type "mkdir ~/repos && cd ~/repos"
 Enter
 
 Type "git clone https://github.com/git-truck/git-truck"
@@ -18,7 +18,7 @@ Enter
 
 Sleep 15s
 
-Type "cd .. && clear"
+Type "cd ~ && clear"
 Enter
 
 Show
