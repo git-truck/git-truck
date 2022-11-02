@@ -21,7 +21,6 @@ Sleep 15s
 Type "cd .. && clear"
 Enter
 
-
 Show
 
 Type@150ms "cd ~/repos"
