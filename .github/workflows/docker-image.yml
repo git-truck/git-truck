@@ -13,7 +13,7 @@ jobs:
       - name: Publish to Docker Hub
         uses: bitovi/github-actions-docker-publish@main
         with:
-          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_username: ${{ secrets.DOCKER_USERNAME2 }}
           docker_password: ${{ secrets.DOCKER_PASSWORD }}
       
 
