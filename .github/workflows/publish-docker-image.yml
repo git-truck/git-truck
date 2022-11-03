@@ -15,5 +15,10 @@ jobs:
       env:
         DOCKER_USER: ${{secrets.DOCKER_USER2}}
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}        
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+
+    - name: Docker Push
+      run: docker push ${{secrets.DOCKER_USER2}}/git-truck
