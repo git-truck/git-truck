@@ -64,6 +64,7 @@ export interface GitBlobObject extends AbstractGitObject {
   path: string
   sizeInBytes: number
   blameAuthors: Record<string, number>
+  commitHistory?: Commit[]
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
@@ -74,6 +75,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   lastChangeEpoch?: number
   isBinary?: boolean
   unionedAuthors?: Record<AuthorshipType, Record<string, number>>
+  commitHistory?: Commit[]
   dominantAuthor?: Map<AuthorshipType, [string, number]>
   isSearchResult?: boolean
 }
@@ -83,6 +85,7 @@ export interface GitTreeObject extends AbstractGitObject {
   name: string
   path: string
   children: (GitTreeObject | GitBlobObject)[]
+  commitHistory?: Commit[]
 }
 
 export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
@@ -116,6 +119,11 @@ export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {
 export interface Person {
   name: string
   email: string
+}
+
+export interface Commit {
+  date: number
+  message: string
 }
 
 export type PersonWithTime = Person & {

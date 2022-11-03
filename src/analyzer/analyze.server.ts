@@ -122,6 +122,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
     const prevTrees = child.path.split("/")
     const newName = prevTrees.pop() as string
     const newPath = `${path}/${child.path}`
+    const fileCommitHistory = await GitCaller.getInstance().getFileLog(child.path)
     let currTree = rootTree
     for (const treePath of prevTrees) {
       currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
@@ -133,6 +134,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
           path: newPath,
           name: newName,
           hash: child.hash,
+          commitHistory: fileCommitHistory,
           children: [],
         }
 
@@ -146,6 +148,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
           hash: child.hash,
           path: newPath,
           name: newName,
+          commitHistory: fileCommitHistory,
           sizeInBytes: child.size as number,
           blameAuthors: {},
         }

@@ -2,7 +2,7 @@ import { log } from "./log.server"
 import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
-import type { AnalyzerData, GitRefs, Repository } from "./model"
+import type { AnalyzerData, Commit, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "~/components/util"
 import os from "os"
@@ -93,6 +93,26 @@ export class GitCaller {
 
   static async _getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+    return result.trim()
+  }
+
+  async getFileLog(path: string) {
+    const results: Commit[] = []
+    const logsRaw = await this._getFileLog(path)
+    const matchTextBetweenQuotes = /^["'](.*?)['"]$/gm // This regex matches everything between quotes (' or ") 
+    const commitsMatch = logsRaw.matchAll(matchTextBetweenQuotes)
+    for (const commit of commitsMatch) {
+      const commitSplit = commit[0].replace(/(^['"]|["']$)/g, "").split(";", 2)
+      results.push({
+        date: parseInt(commitSplit[0]), 
+        message: commitSplit[1]})
+    }
+    return results
+  }
+
+  async _getFileLog(path: string) {
+    if (!this.branch) throw Error("branch not set")
+    const result = (await runProcess(this.repo, "git", ["log", this.branch, "--pretty='%ct;%s;'", path])) as string
     return result.trim()
   }
 

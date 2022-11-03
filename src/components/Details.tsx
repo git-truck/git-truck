@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useTransition } from "@remix-run/react"
 import styled from "styled-components"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { Commit, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
+import { CommitDistFragment } from "./CommitDistFragment"
+import { CommitDistOther } from "./CommitDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
 import { Box, BoxTitle, DetailsKey, DetailsValue, CloseButton, Button } from "~/components/util"
@@ -73,6 +75,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
+      <CommitHistory commits={clickedObject.commitHistory} />
       <Spacer xl />
       <Button onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
@@ -227,13 +230,13 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
   )
 }
 
-const AuthorDistHeader = styled.div`
+const PanelDistHeader = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
 `
 
-const authorCutoff = 2
+const panelCutoff = 2
 
 function AuthorDistribution(props: { authors: Record<string, number> | undefined }) {
   const [collapse, setCollapse] = useState<boolean>(true)
@@ -241,38 +244,69 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
     a[1] < b[1] ? 1 : -1
   )
 
-  if (contribDist.length <= authorCutoff + 1) {
+  if (contribDist.length <= panelCutoff + 1) {
     return (
       <>
         <DetailsHeading>Author distribution</DetailsHeading>
         <Spacer />
-        <AuthorDistEntries>
+        <PanelDistEntries>
           {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
             <AuthorDistFragment show={true} items={contribDist} />
           ) : (
             <p>No authors found</p>
           )}
-        </AuthorDistEntries>
+        </PanelDistEntries>
       </>
     )
   }
   return (
     <>
-      <AuthorDistHeader>
+      <PanelDistHeader>
         <DetailsHeading>Author distribution</DetailsHeading>
         <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
-      </AuthorDistHeader>
+      </PanelDistHeader>
       <Spacer xs />
-      <AuthorDistEntries>
-        <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
-        <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
+      <PanelDistEntries>
+        <AuthorDistFragment show={true} items={contribDist.slice(0, panelCutoff)} />
+        <AuthorDistFragment show={!collapse} items={contribDist.slice(panelCutoff)} />
         <Spacer />
         <AuthorDistOther
           show={collapse}
-          items={contribDist.slice(authorCutoff)}
+          items={contribDist.slice(panelCutoff)}
           toggle={() => setCollapse(!collapse)}
         />
-      </AuthorDistEntries>
+      </PanelDistEntries>
+    </>
+  )
+}
+
+function CommitHistory(props: { commits: Commit[] | undefined }) {
+  const [collapse, setCollapse] = useState<boolean>(true)
+  const commits = props.commits ?? []
+  if (commits.length <= panelCutoff + 1) {
+    return (
+      <>
+        <DetailsHeading>Commit History</DetailsHeading>
+        <Spacer />
+        <PanelDistEntries>
+          {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
+        </PanelDistEntries>
+      </>
+    )
+  }
+  return (
+    <>
+      <PanelDistHeader>
+        <DetailsHeading>Commit History</DetailsHeading>
+        <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+      </PanelDistHeader>
+      <Spacer xs />
+      <PanelDistEntries>
+        <CommitDistFragment show={true} items={commits.slice(0, panelCutoff)} />
+        <CommitDistFragment show={!collapse} items={commits.slice(panelCutoff)} />
+        <Spacer />
+        <CommitDistOther show={collapse} items={commits.slice(panelCutoff)} toggle={() => setCollapse(!collapse)} />
+      </PanelDistEntries>
     </>
   )
 }
@@ -298,7 +332,7 @@ const DetailsHeading = styled.h3`
   font-size: 1.1em;
 `
 
-const AuthorDistEntries = styled.div`
+const PanelDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
