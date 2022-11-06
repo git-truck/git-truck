@@ -12,33 +12,40 @@ interface props {
 }
 
 export function FileHistoryFragment(props: props) {
-  if (Array.isArray(props.fetcher.data) && props.clickedObject.path == props.fetchedPath) {
-    return (
-        <>
-          {props.fetcher.data.map((commit) => (
-            <>
-              <p>
-                {commit.author} {commit.message}
-              </p>
-            </>
-          ))}
-        </>
-    )
-  }
+  if (props.fetcher.state !== "idle") return <p>Loading file history...</p>
 
-  return (
-    <props.fetcher.Form method="post" action={location.pathname}>
+  if (!props.fetcher.data || !Array.isArray(props.fetcher.data[0]) || props.clickedObject.path !== props.fetcher.data[1]) {
+    return (
+      <props.fetcher.Form method="post" action={location.pathname}>
         <input type="hidden" name="history" value={props.clickedObject.path} />
         <Button
           type="submit"
           disabled={props.state !== "idle"}
           onClick={() => {
-            props.setFetchedPath(props.clickedObject.path)
+            // props.setFetchedPath(props.clickedObject.path)
             // isProcessingHideRef.current = true
           }}
         >
           Show file history
         </Button>
       </props.fetcher.Form>
+    )
+
+  }
+
+  return (
+    
+    <>
+      {props.fetcher.data[0].map((commit) => (
+        <>
+          <p>
+            {commit.author} {commit.message}
+          </p>
+        </>
+      ))}
+    </>
   )
+
+
+
 }

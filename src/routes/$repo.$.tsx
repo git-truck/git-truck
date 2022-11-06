@@ -109,8 +109,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     const git = GitCaller.getInstance()
     git.branch = (await GitCaller.findBranchHead(path))[1]
     const result = await parseSingleFileLog(history.slice(history.indexOf("/") + 1))
-    return result
-  }
+    return [result, history]
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
