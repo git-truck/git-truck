@@ -35,22 +35,6 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
   const fetcher = useFetcher();
-  let fetched: GitLogEntry[] = [];
-  const [commitsInfo, setCommitInfo] = useState<GitLogEntry[]>([])
-  const [hasLoadedCommits, setHasLoadedCommits] = useState(false)
-
-  useEffect(() => {
-    if (fetcher.type == "init") {
-      fetcher.load(location.pathname)
-    } else if (fetcher.type == "done") {
-      console.log("setting")
-      // setHasLoadedCommits(true)
-      fetched = fetcher.data
-      setCommitInfo(fetched)
-      console.log("fetched", fetched)
-      console.log("setstuff", commitsInfo)
-    }
-  }, [fetcher])
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -107,9 +91,9 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
             </Button>
           </fetcher.Form>
           {
-            Array.isArray(commitsInfo) && isBlob ? (
+            Array.isArray(fetcher.data) && isBlob ? (
               <>
-                {commitsInfo.map(commit => (
+                {fetcher.data.map(commit => (
                   <>
                     <p>{commit.author} {commit.message}</p>
                   </>
