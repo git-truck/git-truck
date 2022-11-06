@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useTransition } from "@remix-run/react"
 import styled from "styled-components"
-import type { GitLogEntry, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -16,7 +16,6 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
-import { useFetcher } from "@remix-run/react"
 import { FileHistoryFragment } from "./FileHistoryFragment"
 
 function OneFolderOut(path: string) {
@@ -35,8 +34,6 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
-  const fetcher = useFetcher();
-  const [fetchedPath, setFetchedPath] = useState("")
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -85,7 +82,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       {isBlob ? 
         <>
           <Spacer />
-          <FileHistoryFragment fetcher={fetcher} isBlob={isBlob} fetchedPath={fetchedPath} setFetchedPath={setFetchedPath} state={state} clickedObject={clickedObject} />
+          <FileHistoryFragment state={state} clickedObject={clickedObject} />
         </>
         : null
       }

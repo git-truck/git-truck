@@ -1,22 +1,20 @@
-import { FetcherWithComponents } from "@remix-run/react"
+import { useFetcher } from "@remix-run/react"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Button } from "./util"
 
 interface props {
-  fetcher: FetcherWithComponents<unknown>
-  isBlob: boolean
-  fetchedPath: string
-  setFetchedPath: (value: React.SetStateAction<string>) => void
   state: "idle" | "submitting" | "loading"
   clickedObject: HydratedGitBlobObject
 }
 
 export function FileHistoryFragment(props: props) {
-  if (props.fetcher.state !== "idle") return <p>Loading file history...</p>
+  const fetcher = useFetcher();
 
-  if (!props.fetcher.data || !Array.isArray(props.fetcher.data[0]) || props.clickedObject.path !== props.fetcher.data[1]) {
+  if (fetcher.state !== "idle") return <p>Loading file history...</p>
+
+  if (!fetcher.data || !Array.isArray(fetcher.data[0]) || props.clickedObject.path !== fetcher.data[1]) {
     return (
-      <props.fetcher.Form method="post" action={location.pathname}>
+      <fetcher.Form method="post" action={location.pathname}>
         <input type="hidden" name="history" value={props.clickedObject.path} />
         <Button
           type="submit"
@@ -28,15 +26,14 @@ export function FileHistoryFragment(props: props) {
         >
           Show file history
         </Button>
-      </props.fetcher.Form>
+      </fetcher.Form>
     )
-
   }
 
   return (
     
     <>
-      {props.fetcher.data[0].map((commit) => (
+      {fetcher.data[0].map((commit) => (
         <>
           <p>
             {commit.author} {commit.message}
