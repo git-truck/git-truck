@@ -235,7 +235,7 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
   )
 }
 
-const AuthorDistHeader = styled.div`
+export const AuthorDistHeader = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -299,14 +299,14 @@ function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-const DetailsHeading = styled.h3`
+export const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
   padding-top: calc(var(--unit));
   padding-bottom: calc(var(--unit) * 0.5);
   font-size: 1.1em;
 `
 
-const AuthorDistEntries = styled.div`
+export const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
