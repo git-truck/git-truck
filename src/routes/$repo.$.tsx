@@ -110,7 +110,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     git.branch = (await GitCaller.findBranchHead(path))[1]
     const result = await parseSingleFileLog(history.slice(history.indexOf("/") + 1))
     return [result, history]
-
+  }
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
       const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
