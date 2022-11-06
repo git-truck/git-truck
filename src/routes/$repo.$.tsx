@@ -108,8 +108,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     GitCaller.initInstance(path)
     const git = GitCaller.getInstance()
     git.branch = (await GitCaller.findBranchHead(path))[1]
-    const result = await parseSingleFileLog(path)
-    console.log(result)
+    const result = await parseSingleFileLog(history.slice(history.indexOf("/") + 1))
     return result
   }
 
