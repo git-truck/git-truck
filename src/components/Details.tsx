@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useTransition } from "@remix-run/react"
 import styled from "styled-components"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitLogEntry, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
@@ -16,6 +16,7 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
+import { useFetcher } from "@remix-run/react"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -34,16 +35,20 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
   const fetcher = useFetcher();
-  let fetched = null;
+  let fetched: GitLogEntry[] = [];
   const [commitsInfo, setCommitInfo] = useState<GitLogEntry[]>([])
+  const [hasLoadedCommits, setHasLoadedCommits] = useState(false)
 
   useEffect(() => {
     if (fetcher.type == "init") {
       fetcher.load(location.pathname)
     } else if (fetcher.type == "done") {
+      console.log("setting")
+      // setHasLoadedCommits(true)
       fetched = fetcher.data
       setCommitInfo(fetched)
-      console.log(fetched)
+      console.log("fetched", fetched)
+      console.log("setstuff", commitsInfo)
     }
   }, [fetcher])
 
@@ -91,27 +96,27 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
       </Button>
-      {isBlob ? (
-        // commitsInfo.length === 0 ? (
-        true ? (
-        <>
           <Spacer />
           <fetcher.Form method="post" action={location.pathname}>
             <input type="hidden" name="history" value={clickedObject.path} />
             <Button type="submit" disabled={state !== "idle"}
                   onClick={() => {
-                    isProcessingHideRef.current = true
+                    // isProcessingHideRef.current = true
                   }}>
                     Show file history
             </Button>
           </fetcher.Form>
-        </>) : null
-        // (
-        //   commitsInfo.map(commit => {
-        //     <p>{`${commit.author} ${commit.time} ${commit.message}`}</p>
-        //   })
-        // )
-      ): null}
+          {
+            Array.isArray(commitsInfo) && isBlob ? (
+              <>
+                {commitsInfo.map(commit => (
+                  <>
+                    <p>{commit.author} {commit.message}</p>
+                  </>
+                ))}
+              </>
+            ) : null
+          }
       <Spacer />
       {isBlob ? (
         <>
