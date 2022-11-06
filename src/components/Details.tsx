@@ -16,7 +16,7 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
-import { FileHistoryFragment } from "./FileHistoryElement"
+import { FileHistoryElement } from "./FileHistoryElement"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
