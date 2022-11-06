@@ -74,18 +74,18 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
-      <Spacer xl />
-      <Button onClick={props.showUnionAuthorsModal}>
-        <PeopleAlt display="inline-block" height="1rem" />
-        Merge duplicate users
-      </Button>
       {isBlob ? 
         <>
-          <Spacer />
+          <Spacer xl />
           <FileHistoryElement state={state} clickedObject={clickedObject} />
         </>
         : null
       }
+      <Spacer />
+      <Button onClick={props.showUnionAuthorsModal}>
+        <PeopleAlt display="inline-block" height="1rem" />
+        Merge duplicate users
+      </Button>
       <Spacer />
       {isBlob ? (
         <>
