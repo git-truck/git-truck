@@ -14,7 +14,7 @@ interface props {
   clickedObject: HydratedGitBlobObject
 }
 
-export function FileHistoryFragment(props: props) {
+export function FileHistoryElement(props: props) {
   const fetcher = useFetcher();
 
   if (fetcher.state !== "idle") return <p>Loading file history...</p>

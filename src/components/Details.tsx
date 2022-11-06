@@ -16,7 +16,7 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
-import { FileHistoryFragment } from "./FileHistoryFragment"
+import { FileHistoryFragment } from "./FileHistoryElement"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -82,7 +82,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       {isBlob ? 
         <>
           <Spacer />
-          <FileHistoryFragment state={state} clickedObject={clickedObject} />
+          <FileHistoryElement state={state} clickedObject={clickedObject} />
         </>
         : null
       }
