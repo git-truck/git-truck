@@ -17,7 +17,12 @@ interface props {
 export function FileHistoryElement(props: props) {
   const fetcher = useFetcher();
 
-  if (fetcher.state !== "idle") return <p>Loading file history...</p>
+  if (fetcher.state !== "idle") return (
+    <Button disabled>
+      <History display="inline-block" height="1rem" />
+      Loading file history...
+    </Button>
+  )
 
   if (!fetcher.data || !Array.isArray(fetcher.data[0]) || props.clickedObject.path !== fetcher.data[1]) {
     return (
