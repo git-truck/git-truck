@@ -59,7 +59,6 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   return (
     <>
       {props.items.map((commit) => {
-        console.log(commit)
         return (
           <Fragment key={commit.time.toString() + commit.message}>
             <DetailsKey title={commit.message + " (" + commit.author + ")"} grow>
