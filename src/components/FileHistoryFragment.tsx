@@ -1,6 +1,7 @@
 import { useFetcher } from "@remix-run/react"
 import { HydratedGitBlobObject } from "~/analyzer/model"
 import { Button } from "./util"
+import { History } from "@styled-icons/material"
 
 interface props {
   state: "idle" | "submitting" | "loading"
@@ -24,6 +25,7 @@ export function FileHistoryFragment(props: props) {
             // isProcessingHideRef.current = true
           }}
         >
+          <History display="inline-block" height="1rem" />
           Show file history
         </Button>
       </fetcher.Form>
