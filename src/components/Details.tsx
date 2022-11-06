@@ -17,6 +17,7 @@ import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
 import { useFetcher } from "@remix-run/react"
+import { FileHistoryFragment } from "./FileHistoryFragment"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -35,6 +36,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
   const fetcher = useFetcher();
+  const [fetchedPath, setFetchedPath] = useState("")
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -80,27 +82,13 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
       </Button>
+      {isBlob ? 
+        <>
           <Spacer />
-          <fetcher.Form method="post" action={location.pathname}>
-            <input type="hidden" name="history" value={clickedObject.path} />
-            <Button type="submit" disabled={state !== "idle"}
-                  onClick={() => {
-                    // isProcessingHideRef.current = true
-                  }}>
-                    Show file history
-            </Button>
-          </fetcher.Form>
-          {
-            Array.isArray(fetcher.data) && isBlob ? (
-              <>
-                {fetcher.data.map(commit => (
-                  <>
-                    <p>{commit.author} {commit.message}</p>
-                  </>
-                ))}
-              </>
-            ) : null
-          }
+          <FileHistoryFragment fetcher={fetcher} isBlob={isBlob} fetchedPath={fetchedPath} setFetchedPath={setFetchedPath} state={state} clickedObject={clickedObject} />
+        </>
+        : null
+      }
       <Spacer />
       {isBlob ? (
         <>
