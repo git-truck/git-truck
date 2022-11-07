@@ -184,8 +184,9 @@ export async function parseSingleFileLog(filePath: string) {
     const time = Number(groups.date)
     const body = groups.body
     const message = groups.message
+    const hash = groups.hash
 
-    commits.push({author, time, body, message})
+    commits.push({author, time, body, message, hash})
   }
   return commits
 }
@@ -289,7 +290,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
-    const [hydratedRepoTree, authors] = hydrateResult
+    const [hydratedRepoTree, authors, commits] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -312,6 +313,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
+      commits
     }
 
     await describeAsyncJob(

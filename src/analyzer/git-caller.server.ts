@@ -234,7 +234,7 @@ export class GitCaller {
       this.branch,
       "--stat=1000000",
       "--stat-graph-width=1",
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|>"',
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 
     if (filePath) {
