@@ -173,24 +173,6 @@ function getCommandLine() {
   }
 }
 
-export async function parseSingleFileLog(filePath: string) {
-  const commits: GitLogEntry[] = []
-  const gitLogResult = await GitCaller.getInstance().gitLog(filePath)
-
-  const matches = gitLogResult.matchAll(gitLogRegex)
-  for (const match of matches) {
-    const groups = match.groups ?? {}
-    const author = groups.author
-    const time = Number(groups.date)
-    const body = groups.body
-    const message = groups.message
-    const hash = groups.hash
-
-    commits.push({author, time, body, message, hash})
-  }
-  return commits
-}
-
 export function openFile(path: string) {
   path = resolve(repoDir, "..", path.split("/").join(sep))
   const command = `${getCommandLine()} "${path}"`

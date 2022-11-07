@@ -1,13 +1,12 @@
-import { useFetcher } from "@remix-run/react"
 import { GitLogEntry, HydratedGitBlobObject } from "~/analyzer/model"
-import { Button, DetailsKey, DetailsValue, LegendLabel } from "./util"
-import { History } from "@styled-icons/material"
+import { DetailsKey, DetailsValue, LegendLabel } from "./util"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { Spacer } from "./Spacer"
 import { ExpandDown } from "./Toggle"
 import { AuthorDistEntries, AuthorDistHeader, DetailsHeading } from "./Details"
 import styled from "styled-components"
+import { useData } from "~/contexts/DataContext"
 
 interface props {
   state: "idle" | "submitting" | "loading"
@@ -15,36 +14,16 @@ interface props {
 }
 
 export function FileHistoryElement(props: props) {
-  const fetcher = useFetcher();
+  const { analyzerData } = useData()
 
-  if (fetcher.state !== "idle") return (
-    <Button disabled>
-      <History display="inline-block" height="1rem" />
-      Loading file history...
-    </Button>
-  )
-
-  if (!fetcher.data || !Array.isArray(fetcher.data[0]) || props.clickedObject.path !== fetcher.data[1]) {
-    return (
-      <fetcher.Form method="post" action={location.pathname}>
-        <input type="hidden" name="history" value={props.clickedObject.path} />
-        <Button
-          type="submit"
-          disabled={props.state !== "idle"}
-          onClick={() => {
-            // props.setFetchedPath(props.clickedObject.path)
-            // isProcessingHideRef.current = true
-          }}
-        >
-          <History display="inline-block" height="1rem" />
-          Show file history
-        </Button>
-      </fetcher.Form>
-    )
+  const fileCommits: GitLogEntry[] = []
+  for (const hash of props.clickedObject.commits) {
+    const found = analyzerData.commits[hash]
+    if (found) fileCommits.push(found)
   }
 
   return (
-    <CommitHistory commits={fetcher.data[0] as GitLogEntry[]} />
+    <CommitHistory commits={fileCommits} />
   )
 }
 
