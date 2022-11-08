@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "module": "CommonJS",
+    "module": "ES2022",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "target": "ES2019",

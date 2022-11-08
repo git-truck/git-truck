@@ -5,12 +5,16 @@ import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { Worker } = require("worker_threads")
+
 const renamedFiles = new Map<string, string>()
 
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
   const authors = new Set<string>()
   const data = commit as HydratedGitCommitObject
   const commits: Record<string, GitLogEntry> = {}
+  const worker = new Worker("./src/analyzer/backgroundable/worker.tsx", { workerData: "Dawid" })
 
   initially_mut(data)
 

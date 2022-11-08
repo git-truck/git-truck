@@ -11,6 +11,7 @@ export const makeDupeMap = (authors: string[][]): Record<string, string> => {
 }
 
 export function unionAuthors(authors: Record<string, number>, authorAliasMap: Record<string, string>) {
+  if(!authors) return {}
   return Object.entries(authors).reduce<HydratedGitBlobObject["authors"]>(
     (newAuthorObject, [authorOrAlias, contributionCount]) => {
       // Lookup the author in the dupe list

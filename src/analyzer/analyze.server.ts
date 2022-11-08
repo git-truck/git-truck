@@ -7,7 +7,7 @@ import type {
   AnalyzerData,
   TruckUserConfig,
   TruckConfig,
-  GitLogEntry,
+  HydratedGitCommitObject
 } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -24,6 +24,9 @@ import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { Worker } = require("worker_threads")
 
 let repoDir = "."
 
@@ -263,16 +266,18 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (repoTreeError) throw repoTreeError
 
-    const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob(
-      () => hydrateData(repoTree),
-      "Hydrating commit tree",
-      "Commit tree hydrated",
-      "Error hydrating commit tree"
-    )
+    // const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob(
+    //   () => hydrateData(repoTree),
+    //   "Hydrating commit tree",
+    //   "Commit tree hydrated",
+    //   "Error hydrating commit tree"
+    // )
+     const authors = []
+    //  const worker = new Worker("./src/analyzer/backgroundable/worker.tsx", { workerData: "Dawid" })
 
-    if (hydratedRepoTreeError) throw hydratedRepoTreeError
+    // if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
-    const [hydratedRepoTree, authors, commits] = hydrateResult
+    // const [hydratedRepoTree, authors] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -291,7 +296,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       authorsUnion,
       repo: repoName,
       branch: branchName,
-      commit: hydratedRepoTree,
+      commit: repoTree as HydratedGitCommitObject,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
