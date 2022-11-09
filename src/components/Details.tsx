@@ -16,6 +16,7 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { PeopleAlt, OpenInNew } from "@styled-icons/material"
 import { EyeClosed } from "@styled-icons/octicons"
+import { FileHistoryElement } from "./FileHistoryElement"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -74,6 +75,8 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
       <Spacer xl />
+      <FileHistoryElement state={state} clickedObject={clickedObject} />
+      <Spacer />
       <Button onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
@@ -180,7 +183,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Commits</DetailsKey>
-      <DetailsValue>{props.clickedBlob.noCommits > 0 ? props.clickedBlob.noCommits : 0}</DetailsValue>
+      <DetailsValue>{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</DetailsValue>
     </>
   )
 }
@@ -227,7 +230,7 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
   )
 }
 
-const AuthorDistHeader = styled.div`
+export const AuthorDistHeader = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -291,14 +294,14 @@ function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-const DetailsHeading = styled.h3`
+export const DetailsHeading = styled.h3`
   font-size: calc(var(--unit) * 2);
   padding-top: calc(var(--unit));
   padding-bottom: calc(var(--unit) * 0.5);
   font-size: 1.1em;
 `
 
-const AuthorDistEntries = styled.div`
+export const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);

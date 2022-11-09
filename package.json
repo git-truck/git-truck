@@ -43,7 +43,7 @@
     "@types/byte-size": "^8.1.0",
     "@types/d3-hierarchy": "^3.1.0",
     "@types/jest": "^29.1.2",
-    "@types/react": "^18.0.21",
+    "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.6",
     "@types/semver": "^7.3.12",
     "@types/styled-components": "^5.1.26",

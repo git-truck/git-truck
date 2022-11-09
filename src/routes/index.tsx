@@ -1,6 +1,5 @@
-import type { SerializeFrom } from "@remix-run/node"
-import { json } from "@remix-run/node"
-import { Link, useLoaderData, useTransition } from "@remix-run/react"
+import { json, SerializeFrom } from "@remix-run/node";
+import { Link, useLoaderData, useTransition } from "@remix-run/react";
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"

@@ -7,6 +7,7 @@ module.exports = {
     "@react-aria/utils",
     "is-binary-path",
     "yargs-parser",
+    "latest-version",
     "gitignore-parser",
     "latest-version",
     "package-json",

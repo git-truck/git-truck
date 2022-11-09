@@ -244,15 +244,22 @@ export class GitCaller {
     return gitRefs
   }
 
-  async gitLog() {
+  async gitLog(filePath?: string) {
     if (!this.branch) throw Error("branch not set")
-    const result = (await runProcess(this.repo, "git", [
+    const args = [
       "log",
       this.branch,
       "--stat=1000000",
       "--stat-graph-width=1",
-      '--format="author <|%an|> date <|%at|> body <|%b|>"',
-    ])) as string
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+    ]
+
+    if (filePath) {
+      args.push("--follow")
+      args.push(filePath)
+    }
+
+    const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()
   }
 

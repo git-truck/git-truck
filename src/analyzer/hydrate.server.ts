@@ -1,29 +1,29 @@
-import type { GitCommitObject, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
+import type { GitCommitObject, GitLogEntry, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
+import { gitLogRegex, contribRegex } from "./constants"
 
 const renamedFiles = new Map<string, string>()
 
-export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
+export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
   const authors = new Set<string>()
   const data = commit as HydratedGitCommitObject
+  const commits: Record<string, GitLogEntry> = {}
 
   initially_mut(data)
 
   const gitLogResult = await GitCaller.getInstance().gitLog()
-
-  const gitLogRegex =
-    /"author\s+<\|(?<author>.+?)\|>\s+date\s+<\|(?<date>\d+)\|>\s+body\s+<\|(?<body>(?:\s|.)*?)\|>"\s+(?<contributions>(?:\s*.+\s+\|.*)+).*/gm
-  const contribRegex = /(?<file>.*?)\s*\|\s*((?<contribs>\d+)|(?<bin>Bin)).*/gm
-
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {
     const groups = match.groups ?? {}
     const author = groups.author
     const time = Number(groups.date)
     const body = groups.body
+    const message = groups.message
+    const hash = groups.hash
+    commits[hash] =  {author, time, body, message, hash}
     const contributionsString = groups.contributions
     const coauthors = body ? getCoAuthors(body) : []
 
@@ -53,7 +53,8 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
       if (!blob) {
         continue
       }
-
+      if (!blob.commits) blob.commits = []
+      blob.commits.push(hash)
       blob.noCommits = (blob.noCommits ?? 0) + 1
       if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
 
@@ -75,7 +76,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     }
   }
 
-  return [data, Array.from(authors)]
+  return [data, Array.from(authors), commits]
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
