@@ -1,4 +1,4 @@
-import { GitLogEntry, HydratedGitBlobObject } from "~/analyzer/model"
+import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { DetailsKey, DetailsValue, LegendLabel } from "./util"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
@@ -10,16 +10,21 @@ import { useData } from "~/contexts/DataContext"
 
 interface props {
   state: "idle" | "submitting" | "loading"
-  clickedObject: HydratedGitBlobObject
+  clickedObject: HydratedGitObject
 }
 
 export function FileHistoryElement(props: props) {
   const { analyzerData } = useData()
 
-  const fileCommits: GitLogEntry[] = []
-  for (const hash of props.clickedObject.commits) {
-    const found = analyzerData.commits[hash]
-    if (found) fileCommits.push(found)
+  let fileCommits: GitLogEntry[] = []
+  if (props.clickedObject.type === "blob") {
+    fileCommits = props.clickedObject.commits.map(c => analyzerData.commits[c])
+  } else {
+    try {
+      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject)).map(c => analyzerData.commits[c]).sort((a, b) => b.time - a.time)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   return (
@@ -104,4 +109,23 @@ const OtherText = styled.span<{ grow?: boolean }>`
 export function CommitDistOther(props: CommitDistOtherProps) {
   if (!props.show) return null
   return <OtherText onClick={props.toggle}>+ {props.items.length} more</OtherText>
+}
+
+function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
+  const commitSet = new Set<string>()
+  subTree(tree)
+  function subTree(tree: HydratedGitTreeObject) {
+    for (const child of tree.children) {
+      if (!child) continue
+      if (child.type === "blob") {
+        if (!child.commits) continue
+        for (const commit of child.commits) {
+          commitSet.add(commit)
+        }
+      } else if (child.type === "tree") {
+        subTree(child)
+      }
+    }
+  }
+  return commitSet
 }

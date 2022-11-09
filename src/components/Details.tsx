@@ -74,13 +74,8 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
-      {isBlob ? 
-        <>
-          <Spacer xl />
-          <FileHistoryElement state={state} clickedObject={clickedObject} />
-        </>
-        : null
-      }
+      <Spacer xl />
+      <FileHistoryElement state={state} clickedObject={clickedObject} />
       <Spacer />
       <Button onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
