@@ -183,7 +183,9 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
       <DetailsKey grow>Commits</DetailsKey>
-      <DetailsValue>{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</DetailsValue>
+      <DetailsValue>
+        {props.clickedBlob.commits && props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}
+      </DetailsValue>
     </>
   )
 }

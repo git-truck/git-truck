@@ -17,15 +17,15 @@ export function FileHistoryElement(props: props) {
   const { analyzerData } = useData()
 
   let fileCommits: GitLogEntry[] = []
-  if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits.map(c => analyzerData.commits[c])
-  } else {
-    try {
-      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject)).map(c => analyzerData.commits[c]).sort((a, b) => b.time - a.time)
-    } catch (e) {
-      console.log(e)
-    }
-  }
+  // if (props.clickedObject.type === "blob") {
+  //   fileCommits = props.clickedObject.commits.map(c => analyzerData.commits[c])
+  // } else {
+  //   try {
+  //     fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject)).map(c => analyzerData.commits[c]).sort((a, b) => b.time - a.time)
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // }
 
   return (
     <CommitHistory commits={fileCommits} />
@@ -38,8 +38,7 @@ interface CommitDistFragProps {
 }
 
 export function CommitDistFragment(props: CommitDistFragProps) {
-  if (!props.show) return null
-
+  if (!props.show || !props.items) return null
   return (
     <>
       {props.items.map((commit) => {

@@ -4,83 +4,23 @@ import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
+import { Worker } from "worker_threads"
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Worker } = require("worker_threads")
-
-const renamedFiles = new Map<string, string>()
-
-export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
-  const authors = new Set<string>()
+const worker = new Worker("./src/analyzer/backgroundable/worker.mjs")
+let authors: Set<string> = undefined
+let commits: Record<string, GitLogEntry> = undefined
+export async function hydrateData(commit: GitCommitObject): Promise<IterableIterator<RegExpMatchArray>> {
   const data = commit as HydratedGitCommitObject
-  const commits: Record<string, GitLogEntry> = {}
-  const worker = new Worker("./src/analyzer/backgroundable/worker.tsx", { workerData: "Dawid" })
-
   initially_mut(data)
-
   const gitLogResult = await GitCaller.getInstance().gitLog()
   const matches = gitLogResult.matchAll(gitLogRegex)
-  for (const match of matches) {
-    const groups = match.groups ?? {}
-    const author = groups.author
-    const time = Number(groups.date)
-    const body = groups.body
-    const message = groups.message
-    const hash = groups.hash
-    commits[hash] =  {author, time, body, message, hash}
-    const contributionsString = groups.contributions
-    const coauthors = body ? getCoAuthors(body) : []
+  authors = new Set<string>()
+  commits = {}
+  worker.on("message", (result) => {
+    console.log(result)
+  })
 
-    log.debug(`Checking commit from ${time}`)
-
-    authors.add(author)
-    coauthors.forEach((coauthor) => authors.add(coauthor.name))
-
-    const contribMatches = contributionsString.matchAll(contribRegex)
-    for (const contribMatch of contribMatches) {
-      const file = contribMatch.groups?.file.trim()
-      const isBinary = contribMatch.groups?.bin !== undefined
-      if (!file) throw Error("file not found")
-
-      const hasBeenMoved = file.includes("=>")
-
-      let filePath = file
-      if (hasBeenMoved) {
-        filePath = analyzeRenamedFile(filePath, renamedFiles)
-      }
-
-      const newestPath = renamedFiles.get(filePath) ?? filePath
-
-      const contribs = Number(contribMatch.groups?.contribs)
-      if (contribs < 1) continue
-      const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
-      if (!blob) {
-        continue
-      }
-      if (!blob.commits) blob.commits = []
-      blob.commits.push(hash)
-      blob.noCommits = (blob.noCommits ?? 0) + 1
-      if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
-
-      if (isBinary) {
-        blob.isBinary = true
-        blob.authors[author] = (blob.authors[author] ?? 0) + 1
-
-        for (const coauthor of coauthors) {
-          blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
-        }
-        continue
-      }
-
-      blob.authors[author] = (blob.authors[author] ?? 0) + contribs
-
-      for (const coauthor of coauthors) {
-        blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
-      }
-    }
-  }
-
-  return [data, Array.from(authors), commits]
+  return matches
 }
 
 function initially_mut(data: HydratedGitCommitObject) {
@@ -88,6 +28,10 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.newestLatestChangeEpoch = Number.MIN_VALUE
 
   addAuthorsField_mut(data.tree)
+}
+
+export function workerTest(repoTree: any, commit: any) {
+  worker.postMessage({ repoTree, commit })
 }
 
 function addAuthorsField_mut(tree: HydratedGitTreeObject) {

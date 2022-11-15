@@ -9,3 +9,4 @@ data.json
 coverage
 .eslintcache
 cli.js
+yarn.lock

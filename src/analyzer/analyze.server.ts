@@ -13,10 +13,10 @@ import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
-import { emptyGitCommitHash, gitLogRegex } from "./constants"
+import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
-import { hydrateData } from "./hydrate.server"
+import { hydrateData, workerTest } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
@@ -24,9 +24,6 @@ import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Worker } = require("worker_threads")
 
 let repoDir = "."
 
@@ -266,18 +263,16 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (repoTreeError) throw repoTreeError
 
-    // const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob(
-    //   () => hydrateData(repoTree),
-    //   "Hydrating commit tree",
-    //   "Commit tree hydrated",
-    //   "Error hydrating commit tree"
-    // )
-     const authors = []
-    //  const worker = new Worker("./src/analyzer/backgroundable/worker.tsx", { workerData: "Dawid" })
+    const matches = await hydrateData(repoTree)
+    for (const match of matches) {
+      workerTest(repoTree, match)
+    }
 
     // if (hydratedRepoTreeError) throw hydratedRepoTreeError
+    const authors = []
+    const commits = []
 
-    // const [hydratedRepoTree, authors] = hydrateResult
+    // const [hydratedRepoTree, authors, commits] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -300,7 +295,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits
+      commits,
     }
 
     await describeAsyncJob(
