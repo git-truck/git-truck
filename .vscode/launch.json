@@ -6,20 +6,20 @@
     "configurations": [
         {
             "name": "Debug Remix App",
-            "program": "${workspaceFolder}/build/index.js",
+            "program": "${workspaceFolder}/cli.js",
             "request": "launch",
-            "args": ["--log", "info"],
+            "args": ["--log", "debug"],
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "type": "pwa-node"
+            "type": "node"
         },
         {
-            "type": "pwa-chrome",
+            "type": "chrome",
             "request": "launch",
             "name": "Launch visualization in chrome",
             "url": "http://localhost",
             "webRoot": "${workspaceFolder}"
         }
     ]
-}
+  }
