@@ -2,6 +2,7 @@ import { memo, useMemo, useRef } from "react"
 import { useMouse } from "react-use"
 import styled from "styled-components"
 import type { HydratedGitBlobObject } from "~/analyzer/model"
+import { sidePanelWidthUnits } from "~/const"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
@@ -59,9 +60,7 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
 
   const toolTipWidth = tooltipContainerRef.current ? tooltipContainerRef.current.getBoundingClientRect().width : 0
 
-  const sidePanelWidth =
-    Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
-  const right = mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidth * unit
+  const right = mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidthUnits * unit
 
   const visible = hoveredBlob !== null
   const transformStyles = { transform: "none" }

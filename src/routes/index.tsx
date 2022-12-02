@@ -22,7 +22,7 @@ interface IndexData {
 }
 
 export const loader = async () => {
-  const args = await getArgsWithDefaults()
+  const args = getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)

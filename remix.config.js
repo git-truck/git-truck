@@ -3,7 +3,7 @@ module.exports = {
   ignoredRouteFiles: ["**/.*", "components/*"],
   serverDependenciesToBundle: process.env.NODE_ENV === "development" ? [
     "styled-components",
-    "d3-hierarchy",
+    /d3-.*/,
     "@react-aria/utils",
     "is-binary-path",
     "yargs-parser",

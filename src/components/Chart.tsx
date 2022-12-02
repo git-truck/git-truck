@@ -1,7 +1,8 @@
-import { animated } from "@react-spring/web"
+import { to, animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
-import { memo, useEffect, useMemo, useState } from "react"
+import { interpolatePath } from "d3-interpolate-path"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import styled from "styled-components"
 import type {
   HydratedGitBlobObject,
@@ -10,7 +11,7 @@ import type {
   HydratedGitTreeObject,
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useToggleableSpring } from "~/hooks"
+import { useChartSize, useToggleableSpring } from "~/hooks"
 import {
   bubblePadding,
   EstimatedLetterHeightForDirText,
@@ -32,7 +33,7 @@ type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | Hiera
 const SVG = styled.svg<{ chartType: ChartType }>`
   display: grid;
   place-items: center;
-  padding: ${(props) => getPaddingFromChartType(props.chartType)}px;
+  /* padding: ${(props) => getPaddingFromChartType(props.chartType)}px; */
   width: 100%;
   height: 100%;
 `
@@ -41,7 +42,11 @@ interface ChartProps {
   size: { width: number; height: number }
 }
 
+type textIsTooLongFunction = (text: string) => boolean
+
 export function Chart(props: ChartProps) {
+  const size = props.size
+  console.log(size)
   const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(null)
   const { analyzerData } = useData()
   const { chartType } = useOptions()
@@ -50,10 +55,12 @@ export function Chart(props: ChartProps) {
   const { setPath } = usePath()
 
   const nodes = useMemo(() => {
-    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(props.size, chartType), chartType, path)
-  }, [chartType, analyzerData.commit, props.size, path])
+    console.log("chart useMemo")
 
-  useEffect(() => setHoveredBlob(null), [chartType, analyzerData.commit, props.size])
+    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(size, chartType), chartType, path)
+  }, [analyzerData.commit, size, chartType, path])
+
+  useEffect(() => setHoveredBlob(null), [chartType, analyzerData.commit, size])
 
   const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
     isBlob(d.data)
@@ -71,42 +78,43 @@ export function Chart(props: ChartProps) {
           onMouseOut: () => setHoveredBlob(null),
         }
 
+  const paddedSizeProps = getPaddedSizeProps(size, chartType)
+
   return (
     <>
       <SVG
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
+        viewBox={`-${paddedSizeProps.padding} -${paddedSizeProps.padding} ${size.width} ${size.height}`}
       >
         {nodes?.descendants().map((d, i) => {
           return (
-            <G
-              blink={clickedObject?.path === d.data.path}
-              key={`${chartType}${d.data.path}`}
-              {...createGroupHandlers(d)}
-            >
+            <G $blink={clickedObject?.path === d.data.path} key={`${d.data.path}`} {...createGroupHandlers(d)}>
               <Node isRoot={i === 0} d={d} />
             </G>
           )
         })}
       </SVG>
-      {typeof document !== "undefined" ? <Tooltip hoveredBlob={hoveredBlob} /> : null}
+      <Tooltip hoveredBlob={hoveredBlob} />
     </>
   )
 }
 
-const G = styled.g<{ blink: boolean }>`
-  animation-name: ${(props) => (props.blink ? blinkAnimation : "none")};
+const G = styled.g<{ $blink: boolean }>`
+  animation-name: ${(props) => (props.$blink ? blinkAnimation : "none")};
   animation-duration: 2s;
   animation-iteration-count: infinite;
 `
 
-const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo<{ d: CircleOrRectHiearchyNode; isRoot: boolean }>(function Node({ d, isRoot }) {
   const { chartType } = useOptions()
-  let showLabel = isTree(d.data)
+  const [metricsData] = useMetrics()
+  const { metricType, authorshipType } = useOptions()
   const { path } = usePath()
+  const isSearchMatch = d.data.isSearchResult ?? false
+
+  let showLabel = isTree(d.data)
   let displayText = d.data.name
-  type textIsTooLongFunction = (text: string) => boolean
 
   if (isRoot) {
     const pathSteps = path.split("/")
@@ -124,37 +132,64 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
     displayText = dispSteps.slice(ds - 1).join("/")
   }
 
+  const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+  const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
+
   switch (chartType) {
     case "BUBBLE_CHART":
-      const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
       collapseDisplayText_mut((text: string) => circleDatum.r * Math.PI < text.length * estimatedLetterWidth)
-
-      return (
-        <>
-          <Circle d={circleDatum} isSearchMatch={d.data.isSearchResult ?? false} />
-          {showLabel ? (
-            <CircleText d={circleDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} />
-          ) : null}
-        </>
-      )
+      break
     case "TREE_MAP":
-      const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
       collapseDisplayText_mut(
         (text: string) => rectDatum.x1 - rectDatum.x0 < displayText.length * estimatedLetterWidth,
         (text: string) => rectDatum.y1 - rectDatum.y0 < EstimatedLetterHeightForDirText
       )
-
-      return (
-        <>
-          <Rect d={rectDatum} isSearchMatch={d.data.isSearchResult ?? false} />
-          {showLabel ? (
-            <RectText d={rectDatum} displayText={displayText} isSearchMatch={d.data.isSearchResult ?? false} />
-          ) : null}
-        </>
-      )
-    default:
-      throw Error("Unknown chart type")
+      break
   }
+
+  // window.interpolateString = interopolateString
+
+  // d = chartType === "BUBBLE_CHART" ? circleDatum : rectDatum
+  const pathD = circleDatum.x
+    ? fourArcsCirclePathFromCircle(circleDatum.x, circleDatum.y, circleDatum.r)
+    : rectPathFromRect(rectDatum.x0, rectDatum.y0, rectDatum.x1, rectDatum.y1)
+
+  const prevPath = useRef(pathD)
+  const currD = useRef(pathD)
+  useEffect(() => {
+    prevPath.current = pathD
+  }, [pathD])
+
+  const pathInterpolator = useMemo(() => interpolatePath(prevPath.current, pathD), [prevPath.current, pathD])
+
+  // const labelPathD = useMemo(() => circleDatum.x
+  //   ? fourArcsCirclePathFromCircle(circleDatum.x, circleDatum.y, circleDatum.r + textSpacingFromCircle)
+  //   : rectPathFromRect(rectDatum.x0 + 4, rectDatum.y0 + 12, rectDatum.x1, rectDatum.y1))
+
+  // const prevLabelPath = useRef(labelPathD)
+  // const labelPathInterpolator = useMemo(() => interpolatePath(prevPath.current, pathD), [prevPath.current, pathD])
+
+  const { t } = useToggleableSpring({
+    from: { t: 0 },
+    to: {
+      t: 1,
+    },
+    config: {
+      // duration: 5000,
+    },
+    reset: currD.current !== pathD,
+    onChange: ({ t }) => {
+      currD.current = pathInterpolator(t)
+    },
+  })
+
+  // console.log({ prev: prevPath.current, pathD })
+
+  const props = useToggleableSpring({
+    stroke: isSearchMatch ? searchMatchColor : "transparent",
+    strokeWidth: "1px",
+    fill: metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey",
+  })
 
   function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction, textIsTooTall?: textIsTooLongFunction) {
     if (textIsTooLong(displayText)) {
@@ -172,131 +207,82 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       }
     }
   }
-})
 
-function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObject>; isSearchMatch: boolean }) {
-  const [metricsData] = useMetrics()
-  const { metricType, authorshipType } = useOptions()
-
-  const props = useToggleableSpring({
-    cx: d.x,
-    cy: d.y,
-    r: Math.max(d.r - 1, 0),
-    stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: "1px",
-    fill: metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey",
+  const textPathProps = useToggleableSpring({
+    d: circleDatum.x
+      ? fourArcsCirclePathFromCircle(circleDatum.x, circleDatum.y, circleDatum.r + textSpacingFromCircle)
+      : rectPathFromRect(rectDatum.x0 + 4, rectDatum.y0 + 12, rectDatum.x1, rectDatum.y1),
   })
 
-  return <CircleSVG pulse={isSearchMatch} {...props} className={d.data.type} />
-}
-
-const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
-  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-`
-
-function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObject>; isSearchMatch: boolean }) {
-  const [metricsData] = useMetrics()
-  const { metricType, authorshipType } = useOptions()
-
-  const props = useToggleableSpring({
-    x: d.x0,
-    y: d.y0,
-    width: d.x1 - d.x0,
-    height: d.y1 - d.y0,
-
-    stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: "1px",
-
-    fill:
-      d.data.type === "blob"
-        ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
-        : "transparent",
-  })
-
-  return <RectSVG pulse={isSearchMatch} {...props} className={d.data.type} />
-}
-
-const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
-  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-`
-
-function CircleText({
-  d,
-  displayText,
-  isSearchMatch,
-}: {
-  d: HierarchyCircularNode<HydratedGitObject>
-  displayText: string
-  isSearchMatch: boolean
-}) {
-  const props = useToggleableSpring({
-    d: circlePathFromCircle(d.x, d.y, d.r + textSpacingFromCircle),
-  })
+  const textProps = useToggleableSpring(
+    // rectDatum.x0
+    //   ?
+    {
+      // x: rectDatum.x0 + 4,
+      // y: rectDatum.y0 + 12,
+      fill: isSearchMatch ? searchMatchColor : "#333",
+    }
+    // : {}
+  )
 
   return (
     <>
-      <animated.path {...props} id={d.data.path} className="name-path" />
-      <Text
-        style={{
-          stroke: "var(--global-bg-color)",
-        }}
-        strokeWidth="7"
-        strokeLinecap="round"
-      >
-        <textPath
-          fill={isSearchMatch ? searchMatchColor : "#333"}
-          className="object-name"
-          startOffset="50%"
-          dominantBaseline="central"
-          textAnchor="middle"
-          xlinkHref={`#${d.data.path}`}
-        >
-          {displayText}
-        </textPath>
-      </Text>
-      <Text>
-        <textPath
-          fill={isSearchMatch ? searchMatchColor : "#333"}
-          className="object-name"
-          startOffset="50%"
-          dominantBaseline="central"
-          textAnchor="middle"
-          xlinkHref={`#${d.data.path}`}
-        >
-          {displayText}
-        </textPath>
-      </Text>
+      <PathSVG $pulse={isSearchMatch} className={d.data.type} d={to(t, pathInterpolator)} {...props} />
+      {showLabel ? (
+        <>
+          <animated.path
+            d={to(t, pathInterpolator)}
+            // {...textPathProps}
+            id={d.data.path}
+            className="name-path"
+          />
+          {circleDatum.x ? (
+            <Text
+              style={{
+                stroke: "var(--global-bg-color)",
+              }}
+              strokeWidth="7"
+              strokeLinecap="round"
+            >
+              <textPath
+                // startOffset="50%"
+                dominantBaseline="central"
+                textAnchor="middle"
+                xlinkHref={`#${d.data.path}`}
+              >
+                {displayText}
+              </textPath>
+            </Text>
+          ) : null}
+
+          <Text className="object-name" {...textProps}>
+            {/* {circleDatum.x ? ( */}
+            <textPath
+              fill={isSearchMatch ? searchMatchColor : "#333"}
+              // className="object-name"
+              // startOffset="50%"
+              dominantBaseline="central"
+              textAnchor="middle"
+              xlinkHref={`#${d.data.path}`}
+            >
+              {displayText}
+            </textPath>
+            {/* ) : (
+              displayText
+            )} */}
+          </Text>
+        </>
+      ) : null}
     </>
   )
-}
+})
 
-function RectText({
-  d,
-  displayText,
-  isSearchMatch,
-}: {
-  d: HierarchyRectangularNode<HydratedGitObject>
-  displayText: string
-  isSearchMatch: boolean
-}) {
-  const props = useToggleableSpring({
-    x: d.x0 + 4,
-    y: d.y0 + 12,
-    fill: isSearchMatch ? searchMatchColor : "#333",
-  })
-
-  return (
-    <Text {...props} className="object-name">
-      {displayText}
-    </Text>
-  )
-}
+const PathSVG = styled(animated.path)<{ $pulse: boolean }>`
+  animation-name: ${(props) => (props.$pulse ? pulseAnimation : "none")};
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+`
 
 function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
@@ -376,6 +362,13 @@ function filterTree(
   }
 }
 
+// Produces a circle concisting of 4 arcs
+function fourArcsCirclePathFromCircle(x: number, y: number, r: number) {
+  return `M${x},${y - r}A${r},${r} 0 0,1 ${x + r},${y}A${r},${r} 0 0,1 ${x},${y + r}A${r},${r} 0 0,1 ${
+    x - r
+  },${y}A${r},${r} 0 0,1 ${x},${y - r}`
+}
+
 // a rx ry angle large-arc-flag sweep-flag dx dy
 // rx and ry are the two radii of the ellipse
 // angle represents a rotation (in degrees) of the ellipse relative to the x-axis;
@@ -394,11 +387,20 @@ function circlePathFromCircle(x: number, y: number, r: number) {
           a${r},${r} 0 1,1 0,${r * 2}`
 }
 
+function rectPathFromRect(x0: number, y0: number, x1: number, y1: number) {
+  return `M${x0},${y0}
+          L${x1},${y0}
+          L${x1},${y1}
+          L${x0},${y1}
+          L${x0},${y0}`
+}
+
 function getPaddedSizeProps(sizeProps: { height: number; width: number }, chartType: ChartType) {
-  const padding = getPaddingFromChartType(chartType)
+  const padding = 8 // getPaddingFromChartType(chartType)
   return {
     height: sizeProps.height - padding * 2,
     width: sizeProps.width - padding * 2,
+    padding,
   }
 }
 

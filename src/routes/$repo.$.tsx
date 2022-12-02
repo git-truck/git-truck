@@ -233,7 +233,7 @@ export default function Repo() {
           <SearchBar />
           <Spacer />
         </SidePanel>
-        {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]} /> : <div />}
+        <Main fullscreenState={[isFullscreen, setIsFullscreen]} />
         <SidePanel>
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />

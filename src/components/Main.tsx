@@ -1,9 +1,11 @@
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
-import { useComponentSize } from "../hooks"
+import { useChartSize, useComponentSize } from "../hooks"
 import { Chart } from "./Chart"
 import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
+import { ClientOnly } from "~/components/ClientOnly"
+import anitruck from "~/assets/truck.gif"
 import type { Dispatch, SetStateAction } from "react"
 
 export const MainRoot = styled.main`
@@ -117,7 +119,9 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
         </IconButton>
       </TopBar>
       <ChartWrapper ref={ref}>
-        <Chart size={size} />
+        <ClientOnly fallback={<img src={anitruck} alt={"🚛"} width={400} />}>
+          <Chart size={size} />
+        </ClientOnly>
       </ChartWrapper>
     </MainRoot>
   )
