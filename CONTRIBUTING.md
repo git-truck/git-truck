@@ -12,11 +12,28 @@ To run the fullstack application by itself, you can run `npm run dev` _or using 
 
 For arguments, see [Arguments](README.md#arguments).
 
+## Commits
+Please provide the following prefixes in your commits, in order to trigger automatic version bumping:
+```
+  patch-wording: "Fix,fix,Patch,patch"
+  minor-wording: "Feat,feat,NewVersion"
+  major-wording:  'BREAKING CHANGE'
+```
+
+**Example commit messages:**
+
+| Major | Minor | Patch |
+|-|-|-|
+| `BREAKING CHANGE: Removed support for specifying option` | `feat: Added new button` | `fix: Button does not work correctly` |
+| This will bump the major version (e.g., from 1.0.0 to 2.0.0) | This will bump the minor version (e.g., from 1.0.0 to 1.1.0) | This will bump the patch version (e.g., from 1.0.0 to 1.0.1) |
+
+To enforce this automatically, you can use tools such as [Commitizen](https://github.com/commitizen/cz-cli).
+
 # Publish
-To publish production ready versions, the following steps should be taken:
- - Features should be merged back into main using a peer-reviewed pull request
- - This will automatically bump the minor version
- - Then, a new release can be published from the main branch by running `npm publish`
+To publish production ready versions, execute the [build and publish workflow](https://github.com/git-truck/git-truck/actions/workflows/bump-version-and-publish.yml)
+The version will automatically be bumped, according to the rules described in the [commits section](README.md#commits)
+
+This means that if any commits include the corresponding words, the version will be bumped accordingly. 
 
 ## Prerelease and Experimental releases
 To publish experimental releases, run
