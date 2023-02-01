@@ -59,6 +59,11 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           animationsEnabled: enabled,
         })),
+      setLabelsVisible: (visible: boolean) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptions()),
+          labelsVisible: visible,
+        })),
     }),
     [options]
   )

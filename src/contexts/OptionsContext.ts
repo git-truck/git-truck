@@ -14,10 +14,12 @@ export interface Options {
   chartType: ChartType
   authorshipType: AuthorshipType
   animationsEnabled: boolean
+  labelsVisible: boolean
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
   setAuthorshipType: (authorshipType: AuthorshipType) => void
   setAnimationsEnabled: (animationsEnabled: boolean) => void
+  setLabelsVisible: (labelsVisible: boolean) => void
 }
 
 export const OptionsContext = createContext<Options | undefined>(undefined)
@@ -36,6 +38,7 @@ export function getDefaultOptions(): Options {
     chartType: Object.keys(Chart)[0] as ChartType,
     authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
     animationsEnabled: true,
+    labelsVisible: true,
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
     },
@@ -48,5 +51,8 @@ export function getDefaultOptions(): Options {
     setAnimationsEnabled: () => {
       throw new Error("No animationsEnabledSetter provided")
     },
+    setLabelsVisible: () => {
+      throw new Error("No labelsVisibleSetter provided")
+    }
   }
 }

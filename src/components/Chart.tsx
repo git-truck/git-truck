@@ -102,8 +102,8 @@ const G = styled.g<{ blink: boolean }>`
 `
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
-  const { chartType } = useOptions()
-  let showLabel = isTree(d.data)
+  const { chartType, labelsVisible } = useOptions()
+  let showLabel = isTree(d.data) && labelsVisible
   const { path } = usePath()
   let displayText = d.data.name
   type textIsTooLongFunction = (text: string) => boolean
