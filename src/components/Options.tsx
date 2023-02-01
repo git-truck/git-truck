@@ -21,7 +21,12 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 }
 
 export function Options() {
-  const { animationsEnabled, setAnimationsEnabled, setMetricType, setChartType } = useOptions()
+  const {
+    animationsEnabled, setAnimationsEnabled,
+    labelsVisible, setLabelsVisible,
+    setMetricType,
+    setChartType
+  } = useOptions()
 
   return (
     <Box>
@@ -43,6 +48,15 @@ export function Options() {
           onChange={(e) => setAnimationsEnabled(e.target.checked)}
         />
         <span>Enable animations</span>
+      </label>
+      <Spacer />
+      <label>
+        <Checkbox
+          type="checkbox"
+          checked={labelsVisible}
+          onChange={(e) => setLabelsVisible(e.target.checked)}
+        />
+        <span>Show labels</span>
       </label>
     </Box>
   )
