@@ -1,10 +1,10 @@
-import { json, SerializeFrom } from "@remix-run/node";
-import { Link, useLoaderData, useTransition } from "@remix-run/react";
+import { json, SerializeFrom } from "@remix-run/node"
+import { Link, useLoaderData, useTransition } from "@remix-run/react"
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import { Actions, Box, BoxSubTitle, Code, Grower } from "~/components/util"
+import { Actions, Code, Grower } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import type { Repository } from "~/analyzer/model"
@@ -89,15 +89,16 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
 
   return (
     <Li key={repo.name}>
-      <Box
+      <div
+        className="box"
         style={{
           outline: branchIsAnalyzed ? "1px solid green" : undefined,
         }}
       >
-        <BoxSubTitle title={repo.name}>
+        <h3 className="box__subtitle" title={repo.name}>
           {repo.name}
           {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
-        </BoxSubTitle>
+        </h3>
         <Spacer />
         <RevisionSelect
           value={head}
@@ -111,7 +112,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           <Grower />
           <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
         </Actions>
-      </Box>
+      </div>
     </Li>
   )
 }

@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .side-panel {
+    @apply flex overflow-y-auto p-2 gap-2 flex-col;
+  }
+  .box {
+    @apply p-4 w-auto rounded-lg bg-white relative shadow-md;
+  }
+
+  .btn {
+    @apply grid grid-flow-col items-center gap-2 px-4 py-2 rounded-md text-sm font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:opacity-100;
+
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+  }
+
+  .box-p {
+    @apply text-sm opacity-70;
+  }
+  .box__title {
+    @apply text-base-styles text-lg;
+  }
+
+  .box__subtitle {
+    @apply text-base-styles text-base;
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+  }
+
+  .btn:enabled:hover {
+    background-color: var(--button-hovered-bg);
+  }
+}
+
+@layer utilities {
+  .text-base-styles {
+    font-weight: bold;
+    color: var(--title-color);
+    text-overflow: ellipsis;
+    word-break: keep-all;
+    white-space: nowrap;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

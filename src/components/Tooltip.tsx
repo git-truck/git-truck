@@ -1,47 +1,19 @@
 import { memo, useMemo, useRef } from "react"
 import { useMouse } from "react-use"
-import styled from "styled-components"
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
 import { dateFormatRelative } from "../util"
-import { Spacer } from "./Spacer"
-import { Box, BoxSubTitle, LegendDot } from "./util"
-
-const TooltipBox = styled(Box)<{
-  visible: boolean
-  right: boolean
-}>`
-  padding: calc(0.5 * var(--unit)) var(--unit);
-  min-width: 0;
-  width: max-content;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  will-change: transform visibility;
-  display: flex;
-  border-radius: calc(2 * var(--unit));
-  align-items: center;
-
-  pointer-events: none;
-  visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
-`
-
-const TooltipContainer = styled.div`
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-`
+import { LegendDot } from "./util"
 
 interface TooltipProps {
   hoveredBlob: HydratedGitBlobObject | null
 }
 
 export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
-  const tooltipContainerRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType, authorshipType } = useOptions()
   const documentElementRef = useRef(document.documentElement)
   const mouse = useMouse(documentElementRef)
@@ -57,12 +29,11 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
     return color
   }, [hoveredBlob, metricsData, metricType, authorshipType])
 
-  const toolTipWidth = tooltipContainerRef.current ? tooltipContainerRef.current.getBoundingClientRect().width : 0
+  const toolTipWidth = tooltipRef.current ? tooltipRef.current.getBoundingClientRect().width : 0
 
   const sidePanelWidth =
     Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
   const right = mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidth * unit
-
   const visible = hoveredBlob !== null
   const transformStyles = { transform: "none" }
   if (visible) {
@@ -73,15 +44,19 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
   }
 
   return (
-    <TooltipContainer>
-      <TooltipBox ref={tooltipContainerRef} right={right} visible={visible} style={transformStyles}>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        className={`box absolute top-0 left-0 flex min-w-0 max-w-max place-items-center gap-2 rounded-full py-0 pl-1 pr-2 will-change-transform ${
+          visible ? "visible" : "hidden"
+        }`}
+        ref={tooltipRef}
+        style={transformStyles}
+      >
         {color ? <LegendDot dotColor={color} /> : null}
-        <Spacer horizontal />
-        <BoxSubTitle>{hoveredBlob?.name}</BoxSubTitle>
-        <Spacer horizontal />
+        <span className="box-subtitle">{hoveredBlob?.name}</span>
         <ColorMetricDependentInfo metric={metricType} hoveredBlob={hoveredBlob} authorshipType={authorshipType} />
-      </TooltipBox>
-    </TooltipContainer>
+      </div>
+    </div>
   )
 })
 

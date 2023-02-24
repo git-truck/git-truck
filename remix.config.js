@@ -1,5 +1,9 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
+  future: {
+    unstable_tailwind: true,
+    unstable_postcss: true
+  },
   ignoredRouteFiles: ["**/.*", "components/*"],
   serverDependenciesToBundle: process.env.NODE_ENV === "development" ? [
     "styled-components",

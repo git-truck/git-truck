@@ -2,13 +2,10 @@ import { useBoolean } from "react-use"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { ExpandUp } from "./Toggle"
-import { Box, BoxSubTitle, BoxSpan, IconButton } from "./util"
+import { BoxSpan, IconButton } from "./util"
 import { Spacer } from "~/components/Spacer"
-import { Form, useLocation, useTransition } from "@remix-run/react";
-import {
-  VisibilityOff as HiddenIcon,
-  Visibility as ShownIcon
-} from "@styled-icons/material"
+import { Form, useLocation, useTransition } from "@remix-run/react"
+import { VisibilityOff as HiddenIcon, Visibility as ShownIcon } from "@styled-icons/material"
 
 const Line = styled.div`
   display: grid;
@@ -49,8 +46,8 @@ export function HiddenFiles() {
   const transitionState = useTransition()
   const { analyzerData } = useData()
   return (
-    <Box>
-      <BoxSubTitle>Hidden files ({analyzerData.hiddenFiles.length})</BoxSubTitle>
+    <div className="box">
+      <h3 className="box__subtitle">Hidden files ({analyzerData.hiddenFiles.length})</h3>
       <Spacer />
       <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       {!collapse ? (
@@ -69,6 +66,6 @@ export function HiddenFiles() {
           ))}
         </div>
       ) : null}
-    </Box>
+    </div>
   )
 }

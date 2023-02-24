@@ -6,7 +6,7 @@ import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { Button, CloseButton, Box, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
+import { CloseButton, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MergeType as MergeIcon } from "@styled-icons/material"
@@ -82,12 +82,22 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   if (!visible) return null
 
+  /*
+position: relative;
+  margin: auto;
+  max-width: 1000px;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  */
+
   return (
     <ModalWrapper onClick={handleModalWrapperClick}>
-      <Modal>
-        <ModalHeader>
-          <ModalTitle>Merge duplicate users</ModalTitle>
-        </ModalHeader>
+      <div className="box relative max-w-screen-lg overflow-hidden flex max-h-full">
+        <div>
+          <h2>Merge duplicate users</h2>
+        </div>
         <Spacer xl />
         <h3>Ungrouped users</h3>
         <Spacer sm />
@@ -120,14 +130,14 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
         <Spacer xl />
         {ungroupedUsersSorted.length > 0 ? (
           <Actions>
-            <Button
+            <button className="btn"
               onClick={mergeSelectedUsers}
               title={`Merge the selected users`}
               disabled={disabled || selectedAuthors.length === 0}
             >
               <MergeIcon display="inline-block" height="1rem" />
               Merge
-            </Button>
+            </button>
           </Actions>
         ) : null}
         <Spacer />
@@ -142,7 +152,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               const disabled = transitionData.state !== "idle"
               const color = getColorFromDisplayName(displayName)
               return (
-                <StyledBox key={aliasGroupIndex}>
+                <div className="box flex m-0" key={aliasGroupIndex}>
                   <DisplayName>
                     <LegendDot dotColor={color} />
                     <Spacer horizontal />
@@ -163,21 +173,21 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
                   <Grower />
                   <Actions>
                     <Grower />
-                    <Button
+                    <button className="btn"
                       onClick={() => unmergeGroup(aliasGroupIndex)}
                       title="Unmerge this group"
                       disabled={disabled}
                     >
                       Unmerge
-                    </Button>
+                    </button>
                   </Actions>
-                </StyledBox>
+                </div>
               )
             })
           )}
         </GroupedUsers>
         <CloseButton onClick={onClose} />
-      </Modal>
+      </div>
     </ModalWrapper>
   )
 
@@ -230,17 +240,7 @@ const ModalWrapper = styled.div`
   padding: calc(4 * var(--unit));
   background-color: hsla(0, 0%, 0%, 0.5);
 `
-const Modal = styled(Box)`
-  position: relative;
-  margin: auto;
-  max-width: 1000px;
-  max-height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-`
-const ModalHeader = styled.div``
-const ModalTitle = styled.h2``
+
 const GroupedUsers = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -249,12 +249,6 @@ const GroupedUsers = styled.div`
 
 const UngroupedUsers = styled.div`
   overflow-y: auto;
-`
-
-const StyledBox = styled(Box)`
-  margin: 0;
-  display: flex;
-  flex-direction: column;
 `
 
 const DisplayName = styled.div`
