@@ -1,6 +1,8 @@
 {
-  "editor.formatOnSave": false,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "editor.formatOnSave": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}",
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.experimental.tsserver.web.enableProjectWideIntellisense": false,
+  "files.autoSave": "off"
 }

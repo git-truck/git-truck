@@ -1,5 +1,5 @@
 import { Close as CloseIcon } from "@styled-icons/material"
-import styled, { css } from "styled-components"
+import styled from "styled-components"
 import { compare, valid, clean } from "semver"
 
 export const branchCompare = (a: string, b: string): number => {
@@ -24,29 +24,16 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const titleBaseStyles = css`
-  font-weight: bold;
-  margin-bottom: 0;
-  margin-top: 0;
-  color: var(--title-color);
-  text-overflow: ellipsis;
-  word-break: keep-all;
-  white-space: nowrap;
-  overflow-x: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`
 
-export const BoxTitle = styled.h2`
-  ${titleBaseStyles}
-  font-size: 1.5em;
-`
+// export const BoxTitle = styled.h2`
+//   ${titleBaseStyles}
+//   font-size: 1.5em;
+// `
 
-export const BoxSubTitle = styled.h2`
-  ${titleBaseStyles}
-  font-size: 1em;
-`
+// export const BoxSubTitle = styled.h2`
+//   ${titleBaseStyles}
+//   font-size: 1em;
+// `
 
 export const BoxSubTitleAndIconWrapper = styled.div`
   display: grid;
@@ -61,39 +48,35 @@ export const BoxSpan = styled.span`
   opacity: 0.7;
 `
 
-export const BoxP = styled.p`
-  font-size: 0.9em;
-  opacity: 0.7;
-`
 
-export const Button = styled.button`
-  display: grid;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: var(--unit);
+// export const Button = styled.button`
+//   display: grid;
+//   grid-auto-flow: column;
+//   align-items: center;
+//   gap: var(--unit);
 
-  padding: var(--unit) calc(2 * var(--unit));
-  background-color: var(--button-bg);
-  border: none;
-  border-radius: calc(0.75 * var(--unit));
+//   padding: var(--unit) calc(2 * var(--unit));
+//   background-color: var(--button-bg);
+//   border: none;
+//   border-radius: calc(0.75 * var(--unit));
 
-  color: var(--button-text-color);
-  font-size: 0.8rem;
-  text-decoration: none;
-  font-weight: bold;
+//   color: var(--button-text-color);
+//   font-size: 0.8rem;
+//   text-decoration: none;
+//   font-weight: bold;
 
-  cursor: pointer;
+//   cursor: pointer;
 
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
+//   &:disabled {
+//     cursor: not-allowed;
+//     opacity: 0.5;
+//   }
 
-  &:enabled:hover {
-    background-color: var(--button-hovered-bg);
-    opacity: 100%;
-  }
-`
+//   &:enabled:hover {
+//     background-color: var(--button-hovered-bg);
+//     opacity: 100%;
+//   }
+// `
 
 export const IconButton = styled.button`
   display: inline-grid;
@@ -107,19 +90,6 @@ export const IconButton = styled.button`
   &:hover > * {
     opacity: 1;
   }
-`
-
-export const SearchResultButton = styled(Button)`
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: left;
-  text-transform: none;
-
-  background: none;
-  padding: 1px;
-  padding-left: var(--unit);
-  width: 100%;
-  text-align: left;
 `
 
 export const SearchResultSpan = styled.span`
@@ -141,17 +111,6 @@ export const CloseButton = styled(IconButton)`
   cursor: pointer;
 `
 CloseButton.defaultProps = { children: <CloseIcon display="inline-block" height="1em" /> }
-
-export const Box = styled.div`
-  margin: var(--unit);
-  color: var(--text-color);
-  width: auto;
-  background-color: #fff;
-  border-radius: var(--unit);
-  padding: calc(2 * var(--unit));
-  position: relative;
-  box-shadow: var(--shadow);
-`
 
 export const Stack = styled.div`
   display: flex;

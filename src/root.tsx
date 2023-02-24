@@ -9,6 +9,7 @@ import indexStyles from "~/styles/index.css"
 import chartStyles from "~/styles/Chart.css"
 import { useEffect } from "react"
 import { Code } from "./components/util"
+import tailwindStylesheet from "~/tailwind.css"
 
 export const meta: MetaFunction = () => {
   return { title: "Git Truck" }
@@ -16,7 +17,7 @@ export const meta: MetaFunction = () => {
 
 export function links() {
   return [
-    ...[appStyles, varsStyles, indexStyles, chartStyles].map((x) => ({
+    ...[appStyles, varsStyles, indexStyles, chartStyles, tailwindStylesheet].map((x) => ({
       rel: "stylesheet",
       href: x,
     })),

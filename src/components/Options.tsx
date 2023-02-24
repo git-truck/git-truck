@@ -1,6 +1,5 @@
 import type { MetricType } from "../metrics/metrics"
 import { Metric } from "../metrics/metrics"
-import { Box } from "./util"
 import { EnumSelect } from "./EnumSelect"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
@@ -21,15 +20,11 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 }
 
 export function Options() {
-  const {
-    animationsEnabled, setAnimationsEnabled,
-    labelsVisible, setLabelsVisible,
-    setMetricType,
-    setChartType
-  } = useOptions()
+  const { animationsEnabled, setAnimationsEnabled, labelsVisible, setLabelsVisible, setMetricType, setChartType } =
+    useOptions()
 
   return (
-    <Box>
+    <div className="box">
       <EnumSelect label="Chart type" enum={Chart} onChange={(chartType: ChartType) => setChartType(chartType)} />
       <Spacer />
       <EnumSelect label="Metric" enum={Metric} onChange={(metric: MetricType) => setMetricType(metric)} />
@@ -47,17 +42,13 @@ export function Options() {
           checked={animationsEnabled}
           onChange={(e) => setAnimationsEnabled(e.target.checked)}
         />
-        <span>Enable animations</span>
+        <span>Enable animationss</span>
       </label>
       <Spacer />
       <label>
-        <Checkbox
-          type="checkbox"
-          checked={labelsVisible}
-          onChange={(e) => setLabelsVisible(e.target.checked)}
-        />
+        <Checkbox type="checkbox" checked={labelsVisible} onChange={(e) => setLabelsVisible(e.target.checked)} />
         <span>Show labels</span>
       </label>
-    </Box>
+    </div>
   )
 }

@@ -1,5 +1,4 @@
-import { SearchField, Box, BoxP, SearchResultButton } from "./util"
-import styled from "styled-components"
+import { SearchField } from "./util"
 import { Fragment, memo, useEffect, useRef, useTransition } from "react"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
@@ -10,11 +9,6 @@ import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
 import { Folder as FolderIcon, TextSnippet as FileIcon } from "@styled-icons/material"
-
-const StyledBox = styled(Box)`
-  display: flex;
-  flex-direction: column;
-`
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   const searchResults: HydratedGitObject[] = []
@@ -54,7 +48,7 @@ export default function SearchBar() {
   }, [])
 
   return (
-    <StyledBox>
+    <div className="box flex flex-col">
       <SearchField
         ref={searchFieldRef}
         id={id}
@@ -68,10 +62,10 @@ export default function SearchBar() {
           })
         }}
       />
-      <BoxP>{isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}</BoxP>
+      <p className="box-p">{isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}</p>
       {searchResults.length > 0 ? <Spacer /> : null}
       <SearchResults />
-    </StyledBox>
+    </div>
   )
 }
 
@@ -94,14 +88,14 @@ const SearchResults = memo(function SearchResults() {
     <>
       {searchResults.map((result) => (
         <Fragment key={result.path}>
-          <SearchResultButton title={result.path} value={result.path} onClick={() => onClick(result)}>
+          <button className="grid grid-flow-col justify-start pl-2 w-full text-left" title={result.path} value={result.path} onClick={() => onClick(result)}>
             {result.type === "tree" ? (
               <FolderIcon display="inline-block" height="1rem" />
             ) : (
               <FileIcon display="inline-block" height="1rem" />
             )}
             <span>{result.name}</span>
-          </SearchResultButton>
+          </button>
           <Spacer xs />
         </Fragment>
       ))}

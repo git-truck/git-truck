@@ -1,19 +1,12 @@
-import styled from "styled-components"
 import { Spacer } from "~/components/Spacer"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"
 import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
-import { Box, BoxP, BoxSubTitle, Button } from "../util"
 import { PeopleAlt } from "@styled-icons/material"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
-
-const StyledBox = styled(Box)`
-  position: sticky;
-  bottom: 0;
-`
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
@@ -39,22 +32,22 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
   }
 
   return (
-    <StyledBox>
-      <BoxSubTitle>{Metric[metricType]}</BoxSubTitle>
+    <div className="box sticky bottom-0">
+      <h3 className="box__subtitle">{Metric[metricType]}</h3>
       <Spacer />
-      <BoxP>{getMetricDescription(metricType, authorshipType)}</BoxP>
+      <p className="box-p">{getMetricDescription(metricType, authorshipType)}</p>
       <Spacer lg />
       {metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR" ? (
         <>
-          <Button onClick={props.showUnionAuthorsModal}>
+          <button className="btn" onClick={props.showUnionAuthorsModal}>
             <PeopleAlt display="inline-block" height="1rem" />
             Merge duplicate users
-          </Button>
+          </button>
           <Spacer lg />
         </>
       ) : null}
       {legend}
-    </StyledBox>
+    </div>
   )
 }
 

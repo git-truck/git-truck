@@ -1,8 +1,8 @@
-import { Form, Link, useLocation, useNavigate, useTransition } from "@remix-run/react";
+import { Form, Link, useLocation, useNavigate, useTransition } from "@remix-run/react"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { Spacer } from "./Spacer"
-import { Box, BoxTitle, SelectWithIconWrapper, Button } from "./util"
+import { SelectWithIconWrapper } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
@@ -35,7 +35,7 @@ export function GlobalInfo() {
   }, [transitionState.state])
 
   return (
-    <Box>
+    <div className="box">
       <SelectWithIconWrapper>
         <StyledLink to=".." title="See all repositories">
           <FolderIcon display="inline-block" height="1rem" />
@@ -43,7 +43,7 @@ export function GlobalInfo() {
         </StyledLink>
       </SelectWithIconWrapper>
       <Spacer />
-      <BoxTitle>{repo.name}</BoxTitle>
+      <h2 className="box__title">{repo.name}</h2>
       <Spacer />
       <RevisionSelect
         key={repo.currentHead}
@@ -71,12 +71,12 @@ export function GlobalInfo() {
         }}
       >
         <input type="hidden" name="refresh" value="true" />
-        <Button disabled={transitionState.state !== "idle"}>
+        <button className="btn" disabled={transitionState.state !== "idle"}>
           <RefreshIcon display="inline-block" height="1rem" />
           {isAnalyzing ? "Analyzing..." : "Reanalyze"}
-        </Button>
+        </button>
       </Form>
-    </Box>
+    </div>
   )
 }
 

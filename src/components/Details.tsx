@@ -6,7 +6,7 @@ import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
-import { Box, BoxTitle, DetailsKey, DetailsValue, CloseButton, Button } from "~/components/util"
+import { DetailsKey, DetailsValue, CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -52,9 +52,9 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <Box>
+    <div className="box">
       <CloseButton onClick={() => setClickedObject(null)} />
-      <BoxTitle title={clickedObject.name}>{clickedObject.name}</BoxTitle>
+      <h2 className="box__title" title={clickedObject.name}>{clickedObject.name}</h2>
       <Spacer xl />
       <DetailsEntries>
         {isBlob ? (
@@ -77,16 +77,16 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       <Spacer xl />
       <FileHistoryElement state={state} clickedObject={clickedObject} />
       <Spacer />
-      <Button onClick={props.showUnionAuthorsModal}>
+      <button className="btn" onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
         Merge duplicate users
-      </Button>
+      </button>
       <Spacer />
       {isBlob ? (
         <>
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <Button
+            <button className="btn"
               type="submit"
               disabled={state !== "idle"}
               onClick={() => {
@@ -95,14 +95,14 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
             >
               <EyeClosed display="inline-block" height="1rem" />
               Hide this file
-            </Button>
+            </button>
           </Form>
           {clickedObject.name.includes(".") ? (
             <>
               <Spacer />
               <Form method="post" action={location.pathname}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
-                <Button
+                <button className="btn"
                   type="submit"
                   disabled={state !== "idle"}
                   onClick={() => {
@@ -111,23 +111,23 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
                 >
                   <EyeClosed display="inline-block" height="1rem" />
                   <span>Hide .{extension} files</span>
-                </Button>
+                </button>
               </Form>
             </>
           ) : null}
           <Spacer />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
-            <Button disabled={state !== "idle"}>
+            <button className="btn" disabled={state !== "idle"}>
               <OpenInNew display="inline-block" height="1rem" />
               Open file
-            </Button>
+            </button>
           </Form>
         </>
       ) : (
         <Form method="post" action={location.pathname}>
           <input type="hidden" name="ignore" value={clickedObject.path} />
-          <Button
+          <button className="btn"
             type="submit"
             disabled={state !== "idle"}
             onClick={() => {
@@ -137,10 +137,10 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           >
             <EyeClosed display="inline-block" height="1rem" />
             Hide this folder
-          </Button>
+          </button>
         </Form>
       )}
-    </Box>
+    </div>
   )
 }
 

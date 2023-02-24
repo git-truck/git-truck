@@ -17,19 +17,14 @@ import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
-import { Main, MainRoot } from "~/components/Main"
+import { Main } from "~/components/Main"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
-import { SidePanel, SidePanelRoot } from "~/components/SidePanel"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import {
-  Box,
-  BoxP,
-  BoxSubTitle,
   BoxSubTitleAndIconWrapper,
-  Button,
   Code,
   Grower,
   semverCompare,
@@ -155,7 +150,7 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   return (
     <Container isFullscreen={false}>
       <div />
-      <Box>
+      <div className="box">
         <h1>An error occured!</h1>
         <p>See console for more infomation.</p>
         <Code>{error.stack}</Code>
@@ -165,7 +160,7 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
         <div>
           <Link to="..">Go back</Link>
         </div>
-      </Box>
+      </div>
     </Container>
   )
 }
@@ -176,13 +171,13 @@ function openInNewTab(url: string) {
 
 function Feedback() {
   return (
-    <Box>
+    <div className="box">
       <BoxSubTitleAndIconWrapper>
         <ReviewIcon display="inline-block" height="1rem" />
-        <BoxSubTitle>Help improve Git Truck</BoxSubTitle>
+        <h3 className="box__subtitle">Help improve Git Truck</h3>
       </BoxSubTitleAndIconWrapper>
       <Spacer xl />
-      <Button
+      <button className="btn"
         onClick={() =>
           openInNewTab(
             "https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
@@ -190,25 +185,25 @@ function Feedback() {
         }
       >
         Answer questionnaire
-      </Button>
+      </button>
       <Spacer />
-      <Button onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}>
+      <button className="btn" onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}>
         Open an issue
-      </Button>
-    </Box>
+      </button>
+    </div>
   )
 }
 
 function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   return (
-    <Box>
+    <div className="box">
       <p>Update available: {gitTruckInfo.latestVersion}</p>
-      <BoxP>Currently installed: {gitTruckInfo.version}</BoxP>
-      <BoxP>
+      <p className="box-p">Currently installed: {gitTruckInfo.version}</p>
+      <p className="box-p">
         To update, close application and run: <Code inline>npx git-truck@latest</Code>
-      </BoxP>
-    </Box>
+      </p>
+    </div>
   )
 }
 
@@ -226,15 +221,15 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <Container isFullscreen={isFullscreen}>
-        <SidePanel>
+        <aside className="side-panel">
           <GlobalInfo />
           <Feedback />
           <Options />
           <SearchBar />
           <Spacer />
-        </SidePanel>
+        </aside>
         {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]} /> : <div />}
-        <SidePanel>
+        <aside className="side-panel">
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
@@ -242,7 +237,7 @@ export default function Repo() {
           <Details showUnionAuthorsModal={showUnionAuthorsModal} />
           <Grower />
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
-        </SidePanel>
+        </aside>
       </Container>
       <UnionAuthorsModal
         visible={unionAuthorsModalOpen}
@@ -263,15 +258,15 @@ const Container = styled.div<{ isFullscreen: boolean }>`
     props.isFullscreen ? "0px 1fr 0px" : "var(--side-panel-width) 1fr var(--side-panel-width)"};
   grid-template-rows: 1fr;
 
-  & > ${MainRoot} {
+  & > main {
     grid-area: main;
   }
 
-  & > ${SidePanelRoot}:first-of-type() {
+  & > aside:first-of-type() {
     grid-area: left;
   }
 
-  & > ${SidePanelRoot}:last-of-type() {
+  & > aside:last-of-type() {
     grid-area: right;
   }
 
