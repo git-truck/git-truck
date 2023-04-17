@@ -1,4 +1,10 @@
-import type { GitCommitObject, GitLogEntry, HydratedGitBlobObject, HydratedGitCommitObject, HydratedGitTreeObject } from "./model"
+import type {
+  GitCommitObject,
+  GitLogEntry,
+  HydratedGitBlobObject,
+  HydratedGitCommitObject,
+  HydratedGitTreeObject,
+} from "./model"
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
@@ -7,7 +13,9 @@ import { gitLogRegex, contribRegex } from "./constants"
 
 const renamedFiles = new Map<string, string>()
 
-export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
+export async function hydrateData(
+  commit: GitCommitObject
+): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
   const authors = new Set<string>()
   const data = commit as HydratedGitCommitObject
   const commits: Record<string, GitLogEntry> = {}
@@ -23,7 +31,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     const body = groups.body
     const message = groups.message
     const hash = groups.hash
-    commits[hash] =  {author, time, body, message, hash}
+    commits[hash] = { author, time, body, message, hash }
     const contributionsString = groups.contributions
     const coauthors = body ? getCoAuthors(body) : []
 

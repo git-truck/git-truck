@@ -4,17 +4,10 @@
 
 @layer components {
   .side-panel {
-    @apply flex overflow-y-auto p-2 gap-2 flex-col;
+    @apply flex flex-col gap-2 overflow-y-auto p-2;
   }
   .box {
-    @apply p-4 w-auto rounded-lg bg-white relative shadow-md;
-  }
-
-  .btn {
-    @apply grid grid-flow-col items-center gap-2 px-4 py-2 rounded-md text-sm font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:opacity-100;
-
-    background-color: var(--button-bg);
-    color: var(--button-text-color);
+    @apply relative w-auto rounded-lg bg-white p-4 shadow-md;
   }
 
   .box-p {
@@ -28,12 +21,38 @@
     @apply text-base-styles text-base;
   }
 
+  /* Inputs */
+
+  .btn {
+    @apply grid h-8 cursor-pointer grid-flow-col items-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 enabled:hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .btn:disabled {
     cursor: not-allowed;
   }
 
+  .btn--primary {
+    @apply bg-blue-500 text-white;
+  }
+
+  .btn--danger {
+    @apply bg-red-500 text-white;
+  }
+
   .btn:enabled:hover {
-    background-color: var(--button-hovered-bg);
+    @apply bg-gray-300;
+  }
+
+  .btn--primary:enabled:hover {
+    @apply bg-blue-600;
+  }
+
+  .btn--danger:enabled:hover {
+    @apply bg-red-600;
+  }
+
+  .input {
+    @apply h-8 flex-grow rounded border border-gray-300 px-3 text-sm;
   }
 }
 

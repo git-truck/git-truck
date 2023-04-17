@@ -1,10 +1,11 @@
-import { json, SerializeFrom } from "@remix-run/node"
+import type { SerializeFrom } from "@remix-run/node"
+import { json } from "@remix-run/node"
 import { Link, useLoaderData, useTransition } from "@remix-run/react"
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import { Actions, Code, Grower } from "~/components/util"
+import { Code, Grower } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import type { Repository } from "~/analyzer/model"
@@ -46,11 +47,11 @@ export default function Index() {
   return (
     <Wrapper>
       <Spacer />
-      <H1>Welcome to Git Truck!</H1>
+      <h1 className="text-4xl">🚛 Git Truck</h1>
 
       <Spacer />
       <p>
-        Found {repositories.length} git repositories in the folder{" "}
+        Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
         <Code inline title={baseDir}>
           {baseDirName}
         </Code>
@@ -108,10 +109,10 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           analyzedHeads={repo.analyzedHeads}
         />
         <Spacer />
-        <Actions>
+        <div className="flex">
           <Grower />
           <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
-        </Actions>
+        </div>
       </div>
     </Li>
   )
@@ -125,9 +126,6 @@ const Wrapper = styled.div`
   @media (max-width: 1000px) {
     width: 100vw;
   }
-`
-const H1 = styled.h1`
-  font-weight: normal;
 `
 
 const Ul = styled.ul`

@@ -54,7 +54,9 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   return (
     <div className="box">
       <CloseButton onClick={() => setClickedObject(null)} />
-      <h2 className="box__title" title={clickedObject.name}>{clickedObject.name}</h2>
+      <h2 className="box__title" title={clickedObject.name}>
+        {clickedObject.name}
+      </h2>
       <Spacer xl />
       <DetailsEntries>
         {isBlob ? (
@@ -79,14 +81,15 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       <Spacer />
       <button className="btn" onClick={props.showUnionAuthorsModal}>
         <PeopleAlt display="inline-block" height="1rem" />
-        Merge duplicate users
+        Group authors
       </button>
       <Spacer />
       {isBlob ? (
         <>
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
-            <button className="btn"
+            <button
+              className="btn"
               type="submit"
               disabled={state !== "idle"}
               onClick={() => {
@@ -102,7 +105,8 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
               <Spacer />
               <Form method="post" action={location.pathname}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
-                <button className="btn"
+                <button
+                  className="btn"
                   type="submit"
                   disabled={state !== "idle"}
                   onClick={() => {
@@ -127,7 +131,8 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <Form method="post" action={location.pathname}>
           <input type="hidden" name="ignore" value={clickedObject.path} />
-          <button className="btn"
+          <button
+            className="btn"
             type="submit"
             disabled={state !== "idle"}
             onClick={() => {
