@@ -1,6 +1,7 @@
 import { Close as CloseIcon } from "@styled-icons/material"
 import styled from "styled-components"
 import { compare, valid, clean } from "semver"
+import { useId } from "react"
 
 export const branchCompare = (a: string, b: string): number => {
   const defaultBranchNames = ["main", "master"]
@@ -24,7 +25,6 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-
 // export const BoxTitle = styled.h2`
 //   ${titleBaseStyles}
 //   font-size: 1.5em;
@@ -47,36 +47,6 @@ export const BoxSpan = styled.span`
   font-size: 0.9em;
   opacity: 0.7;
 `
-
-
-// export const Button = styled.button`
-//   display: grid;
-//   grid-auto-flow: column;
-//   align-items: center;
-//   gap: var(--unit);
-
-//   padding: var(--unit) calc(2 * var(--unit));
-//   background-color: var(--button-bg);
-//   border: none;
-//   border-radius: calc(0.75 * var(--unit));
-
-//   color: var(--button-text-color);
-//   font-size: 0.8rem;
-//   text-decoration: none;
-//   font-weight: bold;
-
-//   cursor: pointer;
-
-//   &:disabled {
-//     cursor: not-allowed;
-//     opacity: 0.5;
-//   }
-
-//   &:enabled:hover {
-//     background-color: var(--button-hovered-bg);
-//     opacity: 100%;
-//   }
-// `
 
 export const IconButton = styled.button`
   display: inline-grid;
@@ -120,7 +90,6 @@ export const Stack = styled.div`
 export const Label = styled.label`
   padding-left: calc(var(--unit) + var(--border-width));
   font-weight: bold;
-  font-size: 0.8em;
   cursor: pointer;
 `
 
@@ -257,6 +226,21 @@ export const SelectPlaceholder = styled.div`
   border: 1px solid transparent;
 `
 
-export const Actions = styled.div`
-  display: flex;
-`
+export function CheckboxWithLabel({
+  children,
+  checked,
+  onChange,
+  ...props
+}: {
+  children: React.ReactNode
+  checked: boolean
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "checked">) {
+  const id = useId()
+  return (
+    <div {...props}>
+      <input type="checkbox" checked={checked} onChange={onChange} id={id} />
+      <Label htmlFor={id}>{children}</Label>
+    </div>
+  )
+}

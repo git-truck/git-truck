@@ -34,9 +34,16 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
         <LegendLabel title={maxValueAltFormat}>{maxValue}</LegendLabel>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
-      <GradArrow visible={offset !== -1} position={offset}>
-        {"\u25B2"}
-      </GradArrow>
+      {offset !== -1 ? (
+        <i
+          className="relative bottom-3 transition-all"
+          style={{
+            left: `calc(${offset * 100}% - ${estimatedLetterWidth}px)`,
+          }}
+        >
+          {"\u25B2"}
+        </i>
+      ) : null}
     </>
   )
 }
@@ -48,12 +55,3 @@ function getLightness(hsl: string): number {
   const res = parseFloat(ent?.next().value[1] ?? "-1")
   return res
 }
-
-const GradArrow = styled.i<{ visible: boolean; position: number }>`
-  display: ${({ visible }) => (visible ? "initital" : "none")};
-  transition: 500ms;
-  position: relative;
-  bottom: 11px;
-  left: calc(${({ position }) => position * 100}% - ${estimatedLetterWidth}px);
-  filter: drop-shadow(0px -2px 0px #fff);
-`

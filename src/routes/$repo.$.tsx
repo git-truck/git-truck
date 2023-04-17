@@ -23,12 +23,7 @@ import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import {
-  BoxSubTitleAndIconWrapper,
-  Code,
-  Grower,
-  semverCompare,
-} from "~/components/util"
+import { BoxSubTitleAndIconWrapper, Code, Grower, semverCompare } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 
 let invalidateCache = false
@@ -177,7 +172,8 @@ function Feedback() {
         <h3 className="box__subtitle">Help improve Git Truck</h3>
       </BoxSubTitleAndIconWrapper>
       <Spacer xl />
-      <button className="btn"
+      <button
+        className="btn"
         onClick={() =>
           openInNewTab(
             "https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
@@ -187,7 +183,10 @@ function Feedback() {
         Answer questionnaire
       </button>
       <Spacer />
-      <button className="btn" onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}>
+      <button
+        className="btn"
+        onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
+      >
         Open an issue
       </button>
     </div>

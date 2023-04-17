@@ -1,25 +1,23 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug Remix App",
-            "program": "${workspaceFolder}/cli.js",
-            "request": "launch",
-            "args": ["--log", "debug"],
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch visualization in chrome",
-            "url": "http://localhost",
-            "webRoot": "${workspaceFolder}"
-        }
-    ]
-  }
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Remix App",
+      "program": "${workspaceFolder}/cli.js",
+      "request": "launch",
+      "args": ["--log", "debug", "--headless"],
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch visualization in chrome",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

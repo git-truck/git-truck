@@ -7,13 +7,12 @@ import type {
   AnalyzerData,
   TruckUserConfig,
   TruckConfig,
-  GitLogEntry,
 } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
-import { emptyGitCommitHash, gitLogRegex } from "./constants"
+import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
 import { performance } from "perf_hooks"
 import { hydrateData } from "./hydrate.server"
@@ -295,7 +294,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits
+      commits,
     }
 
     await describeAsyncJob(

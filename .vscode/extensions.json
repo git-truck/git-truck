@@ -1,7 +1,3 @@
 {
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "styled-components.vscode-styled-components",
-    "Orta.vscode-jest"
-  ]
+  "recommendations": ["esbenp.prettier-vscode", "bradlc.vscode-tailwindcss", "Orta.vscode-jest"]
 }

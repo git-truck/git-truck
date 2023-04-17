@@ -35,13 +35,6 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
     Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
   const right = mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidth * unit
   const visible = hoveredBlob !== null
-  const transformStyles = { transform: "none" }
-  if (visible) {
-    if (right)
-      transformStyles.transform = `translate(calc(var(--unit) + ${mouse.docX}px), calc(var(--unit) + ${mouse.docY}px))`
-    else
-      transformStyles.transform = `translate(calc(var(--unit) * -1 + ${mouse.docX}px - 100%), calc(var(--unit) + ${mouse.docY}px))`
-  }
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -50,10 +43,16 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
           visible ? "visible" : "hidden"
         }`}
         ref={tooltipRef}
-        style={transformStyles}
+        style={{
+          transform: !visible
+            ? "none"
+            : right
+            ? `translate(calc(1rem + ${mouse.docX}px), calc(1rem + ${mouse.docY}px))`
+            : `translate(calc(-1rem + ${mouse.docX}px - 100%), calc(1rem + ${mouse.docY}px))`,
+        }}
       >
         {color ? <LegendDot dotColor={color} /> : null}
-        <span className="box-subtitle">{hoveredBlob?.name}</span>
+        <span className="box__subtitle">{hoveredBlob?.name}</span>
         <ColorMetricDependentInfo metric={metricType} hoveredBlob={hoveredBlob} authorshipType={authorshipType} />
       </div>
     </div>

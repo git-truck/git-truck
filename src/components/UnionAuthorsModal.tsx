@@ -1,15 +1,15 @@
-import { useId } from "react"
+import { useId, useTransition } from "react"
 import type { MouseEvent } from "react"
 import { useState } from "react"
-import { useSubmit, useTransition } from "@remix-run/react"
+import { useNavigation, useSubmit } from "@remix-run/react"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { CloseButton, Label, Actions, Grower, IconButton, LegendDot } from "~/components/util"
+import { CloseButton, Label, Grower, IconButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
-import { MergeType as MergeIcon } from "@styled-icons/material"
+import { MergeType as GroupIcon } from "@styled-icons/material"
 import { useKey } from "react-use"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
@@ -18,13 +18,18 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   const { authors } = analyzerData
   const authorUnions = truckConfig.unionedAuthors ?? []
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
+  const [filter, setFilter] = useState("")
+  const navigationData = useNavigation()
+  const [, authorColors] = useMetrics()
+  const [, startTransition] = useTransition()
+
   const flattedUnionedAuthors = authorUnions
     .reduce((acc, union) => {
       return [...acc, ...union]
     }, [] as string[])
     .sort(stringSorter)
 
-  function unmergeGroup(groupToUnGroup: number) {
+  function ungroup(groupToUnGroup: number) {
     const newAuthorUnions = authorUnions.filter((_, i) => i !== groupToUnGroup)
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
@@ -35,7 +40,17 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     })
   }
 
-  function mergeSelectedUsers() {
+  function ungroupAll() {
+    const form = new FormData()
+    form.append("unionedAuthors", JSON.stringify([]))
+
+    submit(form, {
+      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
+      method: "post",
+    })
+  }
+
+  function groupSelectedAuthors() {
     if (selectedAuthors.length === 0) return
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
@@ -63,11 +78,9 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     })
   }
 
-  const transitionData = useTransition()
-  const disabled = transitionData.state !== "idle"
-  const [, authorColors] = useMetrics()
+  const disabled = navigationData.state !== "idle"
 
-  const ungroupedUsersSorted = authors
+  const ungroupedAuthorsSorted = authors
     .filter((a) => !flattedUnionedAuthors.includes(a))
     .slice(0)
     .sort(stringSorter)
@@ -82,113 +95,142 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   if (!visible) return null
 
-  /*
-position: relative;
-  margin: auto;
-  max-width: 1000px;
-  max-height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  */
+  const ungroupedAuthorsMessage =
+    ungroupedAuthorsSorted.length === 0
+      ? "All detected authors have been grouped"
+      : "Select the authors that you know are the same person"
+
+  const groupedAuthorsMessage = authorUnions.length === 0 ? "No authors have been grouped yet" : ""
+
+  const ungroupedAuthersEntries = ungroupedAuthorsSorted
+    .filter((author) => author.toLowerCase().includes(filter.toLowerCase()))
+    .map((author) => (
+      <CheckboxWithLabel
+        key={author}
+        checked={selectedAuthors.includes(author)}
+        onChange={(e) => {
+          const newSelectedAuthors = e.target?.checked
+            ? [...selectedAuthors, author]
+            : selectedAuthors.filter((a) => a !== author)
+          setSelectedAuthors(newSelectedAuthors)
+        }}
+      >
+        <div className="inline-flex flex-row place-items-center">
+          <LegendDot dotColor={getColorFromDisplayName(author)} />
+          <Spacer horizontal />
+          {author}
+        </div>
+      </CheckboxWithLabel>
+    ))
+
+  const groupedAuthorsEntries = authorUnions.map((aliasGroup, aliasGroupIndex) => {
+    const displayName = aliasGroup[0]
+    const disabled = navigationData.state !== "idle"
+    const color = getColorFromDisplayName(displayName)
+
+    return (
+      <div className="box m-0 flex flex-col p-2" key={aliasGroupIndex}>
+        <div className="inline-flex flex-row place-items-center gap-2">
+          <LegendDot dotColor={color} />
+          <b>{displayName}</b>
+        </div>
+        {aliasGroup
+          .slice(1)
+          .sort(stringSorter)
+          .map((alias) => (
+            <AliasEntry
+              key={alias}
+              alias={alias}
+              onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
+              disabled={disabled}
+            />
+          ))}
+        <Grower />
+        <div className="flex justify-end">
+          <button className="btn" onClick={() => ungroup(aliasGroupIndex)} title="Ungroup" disabled={disabled}>
+            Ungroup
+          </button>
+        </div>
+      </div>
+    )
+  })
 
   return (
-    <ModalWrapper onClick={handleModalWrapperClick}>
-      <div className="box relative max-w-screen-lg overflow-hidden flex max-h-full">
-        <div>
-          <h2>Merge duplicate users</h2>
-        </div>
-        <Spacer xl />
-        <h3>Ungrouped users</h3>
-        <Spacer sm />
-        <p>
-          {ungroupedUsersSorted.length === 0
-            ? "All detected users have been grouped"
-            : "Select the users that you know are the same person"}
-        </p>
-        <Spacer xl />
-        <UngroupedUsers>
-          {ungroupedUsersSorted.map((author) => (
-            <CheckboxWithLabel
-              key={author}
-              checked={selectedAuthors.includes(author)}
-              onChange={(e) => {
-                const newSelectedAuthors = e.target.checked
-                  ? [...selectedAuthors, author]
-                  : selectedAuthors.filter((a) => a !== author)
-                setSelectedAuthors(newSelectedAuthors)
-              }}
+    <div className="fixed inset-0 grid bg-black/50 p-2" onClick={handleModalWrapperClick}>
+      <div className="box relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
+        <h2 className="col-span-2 text-2xl">Group authors</h2>
+
+        {/* <div className="flex flex-col gap-2"> */}
+        <h3 className="text-lg font-bold">Ungrouped authors</h3>
+
+        {ungroupedAuthorsSorted.length > 0 ? (
+          <div className="flex justify-end gap-2">
+            <input
+              className="input"
+              type="search"
+              placeholder="Filter..."
+              onChange={(e) => startTransition(() => setFilter(e.target.value))}
+            />
+            <button
+              disabled={disabled || selectedAuthors.length === 0}
+              onClick={() => setSelectedAuthors([])}
+              className="btn flex-grow"
             >
-              <DisplayName>
-                <LegendDot dotColor={getColorFromDisplayName(author)} />
-                <Spacer horizontal />
-                {author}
-              </DisplayName>
-            </CheckboxWithLabel>
-          ))}
-        </UngroupedUsers>
-        <Spacer xl />
-        {ungroupedUsersSorted.length > 0 ? (
-          <Actions>
-            <button className="btn"
-              onClick={mergeSelectedUsers}
-              title={`Merge the selected users`}
+              Clear
+            </button>
+            <button
+              className="btn btn--primary"
+              onClick={groupSelectedAuthors}
+              title="Group the selected authors"
               disabled={disabled || selectedAuthors.length === 0}
             >
-              <MergeIcon display="inline-block" height="1rem" />
-              Merge
+              <GroupIcon display="inline-block" height="1rem" />
+              Group
             </button>
-          </Actions>
-        ) : null}
-        <Spacer />
-        <h3>Grouped users</h3>
-        <Spacer sm />
-        <GroupedUsers>
-          {authorUnions.length === 0 ? (
-            <p>There are no grouped users</p>
+          </div>
+        ) : (
+          <div />
+        )}
+        <p>{ungroupedAuthorsMessage}</p>
+        {/* </div> */}
+
+        <div className="min-h-0 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">{ungroupedAuthersEntries}</div>
+
+        <div></div>
+
+        {/* <div className="flex flex-col gap-2"> */}
+        <h3 className="text-lg font-bold">Grouped authors</h3>
+        <div className="mr-6 flex justify-end gap-4">
+          {authorUnions.length > 0 ? (
+            <button
+              className="btn btn--danger"
+              disabled={disabled}
+              onClick={() => {
+                if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
+              }}
+            >
+              Ungroup all
+            </button>
           ) : (
-            authorUnions.map((aliasGroup, aliasGroupIndex) => {
-              const displayName = aliasGroup[0]
-              const disabled = transitionData.state !== "idle"
-              const color = getColorFromDisplayName(displayName)
-              return (
-                <div className="box flex m-0" key={aliasGroupIndex}>
-                  <DisplayName>
-                    <LegendDot dotColor={color} />
-                    <Spacer horizontal />
-                    <b>{displayName}</b>
-                  </DisplayName>
-                  <Spacer />
-                  {aliasGroup
-                    .slice(1)
-                    .sort(stringSorter)
-                    .map((alias) => (
-                      <AliasEntry
-                        key={alias}
-                        alias={alias}
-                        onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
-                        disabled={disabled}
-                      />
-                    ))}
-                  <Grower />
-                  <Actions>
-                    <Grower />
-                    <button className="btn"
-                      onClick={() => unmergeGroup(aliasGroupIndex)}
-                      title="Unmerge this group"
-                      disabled={disabled}
-                    >
-                      Unmerge
-                    </button>
-                  </Actions>
-                </div>
-              )
-            })
+            <div />
           )}
-        </GroupedUsers>
+        </div>
+        <p>{groupedAuthorsMessage}</p>
+        {/* </div> */}
+
+        <div className="flex flex-col gap-4 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">
+          {authorUnions.length > 0 ? groupedAuthorsEntries : null}
+        </div>
+
+        <div className="mr-6 flex justify-end gap-4">
+          <button className="btn" onClick={onClose}>
+            Done
+          </button>
+        </div>
+
         <CloseButton onClick={onClose} />
       </div>
-    </ModalWrapper>
+    </div>
   )
 
   function AliasEntry({
@@ -201,63 +243,19 @@ position: relative;
     onClick: () => void
   }): JSX.Element {
     return (
-      <AliasEntryRoot key={alias}>
+      <div className="flex" key={alias}>
         <div>
-          <StyledIconButton disabled={disabled} onClick={onClick} title="Make display name for this group">
+          <StyledIconButton disabled={disabled} onClick={onClick} title="Make display name for this grouping">
             <ArrowUp display="inline-block" height="1rem" />
             <Label>{alias}</Label>
           </StyledIconButton>
         </div>
-      </AliasEntryRoot>
+      </div>
     )
   }
 }
 
-// Checkbox with label
-function CheckboxWithLabel({
-  children,
-  checked,
-  onChange,
-}: {
-  children: React.ReactNode
-  checked: boolean
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}) {
-  const id = useId()
-  return (
-    <CheckboxWrapper>
-      <Checkbox checked={checked} onChange={onChange} id={id} />
-      <Label htmlFor={id}>{children}</Label>
-    </CheckboxWrapper>
-  )
-}
-
 const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
-
-const ModalWrapper = styled.div`
-  position: fixed;
-  inset: 0;
-  padding: calc(4 * var(--unit));
-  background-color: hsla(0, 0%, 0%, 0.5);
-`
-
-const GroupedUsers = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  grid-gap: var(--unit);
-`
-
-const UngroupedUsers = styled.div`
-  overflow-y: auto;
-`
-
-const DisplayName = styled.div`
-  display: inline-flex;
-  flex-direction: row;
-  place-items: center;
-  line-height: 100%;
-  margin: 0px;
-`
 
 const StyledIconButton = styled(IconButton)`
   grid-auto-flow: column;
@@ -268,9 +266,3 @@ const StyledIconButton = styled(IconButton)`
     opacity: 1;
   }
 `
-
-const AliasEntryRoot = styled.div`
-  display: flex;
-`
-const CheckboxWrapper = styled.div``
-const Checkbox = styled.input.attrs({ type: "checkbox" })``

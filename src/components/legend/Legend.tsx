@@ -41,7 +41,7 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
         <>
           <button className="btn" onClick={props.showUnionAuthorsModal}>
             <PeopleAlt display="inline-block" height="1rem" />
-            Merge duplicate users
+            Group authors
           </button>
           <Spacer lg />
         </>
