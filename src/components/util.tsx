@@ -3,14 +3,6 @@ import styled from "styled-components"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
 
-export const BoxSubTitleAndIconWrapper = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: left;
-  align-items: center;
-  gap: calc(var(--unit) * 0.5);
-`
-
 export const SearchResultSpan = styled.span`
   overflow: hidden;
   white-space: nowrap;

@@ -23,7 +23,7 @@ import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { BoxSubTitleAndIconWrapper, Code, Grower } from "~/components/util"
+import { Code, Grower } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
 
@@ -168,10 +168,10 @@ function openInNewTab(url: string) {
 function Feedback() {
   return (
     <div className="box">
-      <BoxSubTitleAndIconWrapper>
+      <div className="grid grid-flow-col items-center justify-start gap-1">
         <ReviewIcon display="inline-block" height="1rem" />
         <h3 className="box__subtitle">Help improve Git Truck</h3>
-      </BoxSubTitleAndIconWrapper>
+      </div>
       <Spacer xl />
       <button
         className="btn"
