@@ -1,7 +1,7 @@
 import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { GradientLegendDiv, LegendGradient, LegendLabel } from "../util"
+import { GradientLegendDiv, LegendGradient } from "../util"
 import type { MetricLegendProps } from "./Legend"
 
 export type GradLegendData = [
@@ -30,8 +30,12 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
   return (
     <>
       <GradientLegendDiv>
-        <LegendLabel title={minValueAltFormat}>{minValue}</LegendLabel>
-        <LegendLabel title={maxValueAltFormat}>{maxValue}</LegendLabel>
+        <span className="font-bold" title={minValueAltFormat}>
+          {minValue}
+        </span>
+        <span className="font-bold" title={maxValueAltFormat}>
+          {maxValue}
+        </span>
       </GradientLegendDiv>
       <LegendGradient min={minColor} max={maxColor} />
       {offset !== -1 ? (

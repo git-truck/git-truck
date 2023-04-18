@@ -19,20 +19,10 @@ export const LegendDot = ({
   dotColor,
 }: { dotColor: string } & HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={`aspect-square h-4 w-4 rounded-full shadow ${className}`}
+    className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className}`}
     style={{ ...style, backgroundColor: dotColor }}
   />
 )
-
-export const LegendLabel = styled.p`
-  padding: 0px;
-  margin: 0px;
-  font-weight: bold;
-  cursor: default;
-  overflow: hidden;
-  white-space: pre;
-  text-overflow: ellipsis;
-`
 
 export const LegendGradient = styled.div<{ min: string; max: string }>`
   background-image: linear-gradient(to right, ${(props) => `${props.min},${props.max}`});

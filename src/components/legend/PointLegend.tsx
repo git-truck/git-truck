@@ -2,7 +2,7 @@ import { useState } from "react"
 import { ExpandUp } from "../Toggle"
 import type { MetricLegendProps } from "./Legend"
 import { Spacer } from "../Spacer"
-import { LegendDot, LegendLabel } from "../util"
+import { LegendDot } from "../util"
 import styled from "styled-components"
 
 const legendCutoff = 3
@@ -54,10 +54,9 @@ function PointLegendFragment(props: PointLegendFragProps) {
         const [label, info] = legendItem
         return (
           <div key={label}>
-            <div className="relative flex items-center text-sm leading-none">
+            <div className="relative flex items-center gap-2 text-sm leading-none">
               <LegendDot dotColor={info.color} />
-              <Spacer horizontal />
-              <LegendLabel>{label}</LegendLabel>
+              <span className="font-bold">{label}</span>
             </div>
             <Spacer />
           </div>
@@ -85,9 +84,9 @@ function PointLegendOther(props: LegendOtherProps) {
 
   return (
     <LegendOtherDiv>
-      <div className="relative flex items-center text-sm leading-none" onClick={props.toggle}>
+      <div className="relative flex items-center gap-2 text-sm leading-none" onClick={props.toggle}>
         {props.items.slice(0, 14).map(([label, info], i) => {
-          const margin = i === 0 ? 0 : -10
+          const margin = i === 0 ? 0 : -16
           return (
             <LegendDot
               key={`dot${label}`}
@@ -98,8 +97,7 @@ function PointLegendOther(props: LegendOtherProps) {
             />
           )
         })}
-        <Spacer horizontal />
-        <LegendLabel>{props.items.length} more</LegendLabel>
+        <span className="font-bold">{props.items.length} more</span>
       </div>
     </LegendOtherDiv>
   )
