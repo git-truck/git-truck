@@ -5,7 +5,7 @@ import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { CloseButton, Grower, LegendDot, CheckboxWithLabel } from "~/components/util"
+import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { PeopleAlt } from "@styled-icons/material"
@@ -144,7 +144,6 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               disabled={disabled}
             />
           ))}
-        <Grower />
         <div className="flex justify-end">
           <button className="btn" onClick={() => ungroup(aliasGroupIndex)} title="Ungroup" disabled={disabled}>
             Ungroup

@@ -23,7 +23,7 @@ import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { Code, Grower } from "~/components/util"
+import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
 
@@ -235,7 +235,6 @@ export default function Repo() {
           ) : null}
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Details showUnionAuthorsModal={showUnionAuthorsModal} />
-          <Grower />
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
         </aside>
       </Container>

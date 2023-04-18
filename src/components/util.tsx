@@ -33,10 +33,6 @@ export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAt
   />
 )
 
-export const Grower = styled.div`
-  flex-grow: 1;
-`
-
 export const SelectWithEllipsis = styled.select<{ inline?: boolean }>`
   text-overflow: ellipsis;
   overflow: scroll;

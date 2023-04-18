@@ -5,7 +5,7 @@ import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Spacer } from "~/components/Spacer"
-import { Code, Grower } from "~/components/util"
+import { Code } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
 import type { Repository } from "~/analyzer/model"
@@ -69,11 +69,11 @@ export default function Index() {
         <>
           <Spacer xxl />
           <nav>
-            <Ul>
+            <ul className="grid grid-cols-[repeat(auto-fit,minmax(225px,1fr))] gap-2">
               {repositories.map((repo) => (
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
-            </Ul>
+            </ul>
           </nav>
         </>
       )}
@@ -109,8 +109,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           analyzedHeads={repo.analyzedHeads}
         />
         <Spacer />
-        <div className="flex">
-          <Grower />
+        <div className="flex justify-end">
           <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
         </div>
       </div>
@@ -126,12 +125,6 @@ const Wrapper = styled.div`
   @media (max-width: 1000px) {
     width: 100vw;
   }
-`
-
-const Ul = styled.ul`
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
 `
 
 const Li = styled.li`
