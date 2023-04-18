@@ -108,13 +108,13 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
               })
             : null}
         </Breadcrumb>
-        <IconButton onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
+        <button className="btn--icon" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
           {isFullscreen ? (
             <CloseFullscreenIcon display="inline-block" height="1.5em" />
           ) : (
             <FullscreenIcon display="inline-block" height="1.5em" />
           )}
-        </IconButton>
+        </button>
       </TopBar>
       <ChartWrapper ref={ref}>
         <Chart size={size} />
@@ -122,18 +122,3 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
     </MainRoot>
   )
 }
-
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  margin: 0;
-  padding: 0;
-  color: var(--button-text-color);
-  cursor: pointer;
-
-  &:hover {
-    border-radius: calc(0.75 * var(--unit));
-    background-color: white;
-    color: var(--text-color);
-  }
-`

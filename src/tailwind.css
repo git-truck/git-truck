@@ -39,6 +39,34 @@
     @apply bg-red-500 text-white;
   }
 
+  .btn--icon {
+    @apply inline-grid cursor-pointer place-items-center;
+  }
+
+  .btn--icon > * {
+    @apply opacity-50;
+  }
+  .btn--icon:hover > * {
+    @apply opacity-100;
+  }
+
+  .btn--hover-swap .hover-swap {
+    display: none;
+  }
+
+  .btn--hover-swap > .hover-swap {
+    display: none;
+  }
+  .btn--hover-swap > :not(.hover-swap) {
+    opacity: 0.5;
+  }
+  .btn--hover-swap:hover > .hover-swap {
+    display: block;
+  }
+  .btn--hover-swap:hover > :not(.hover-swap) {
+    display: none;
+  }
+
   .btn:enabled:hover {
     @apply bg-gray-300;
   }
