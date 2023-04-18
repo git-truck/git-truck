@@ -2,7 +2,6 @@ import { Form, Link, useLocation, useNavigate, useTransition } from "@remix-run/
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { Spacer } from "./Spacer"
-import { SelectWithIconWrapper } from "./util"
 import styled from "styled-components"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
@@ -36,12 +35,12 @@ export function GlobalInfo() {
 
   return (
     <div className="box">
-      <SelectWithIconWrapper>
+      <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
         <StyledLink to=".." title="See all repositories">
           <FolderIcon display="inline-block" height="1rem" />
           <StyledP>See more repositories</StyledP>
         </StyledLink>
-      </SelectWithIconWrapper>
+      </div>
       <Spacer />
       <h2 className="box__title">{repo.name}</h2>
       <Spacer />

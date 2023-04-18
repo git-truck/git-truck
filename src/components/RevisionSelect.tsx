@@ -1,4 +1,4 @@
-import { SelectPlaceholder, SelectWithIconWrapper } from "./util"
+import { SelectPlaceholder } from "./util"
 import type { SelectHTMLAttributes } from "react"
 import type { GitRefs } from "~/analyzer/model"
 import { GitBranch } from "@styled-icons/octicons/GitBranch"
@@ -25,7 +25,7 @@ export function RevisionSelect({
   }, [])
 
   return (
-    <SelectWithIconWrapper>
+    <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
       <GitBranch display="inline-block" height="1em" color={iconColor ?? "#333"} />
       {allEntriesFlattened.length === 1 ? (
         <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
@@ -52,6 +52,6 @@ export function RevisionSelect({
           )}
         </select>
       )}
-    </SelectWithIconWrapper>
+    </div>
   )
 }

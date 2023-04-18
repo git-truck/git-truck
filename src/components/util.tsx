@@ -33,14 +33,6 @@ export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAt
   />
 )
 
-export const SelectWithIconWrapper = styled.div`
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5em;
-  place-items: center left;
-`
-
 export const SelectPlaceholder = styled.div`
   font-size: 0.9em;
   padding: 0.2em 0;
