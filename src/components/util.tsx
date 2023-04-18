@@ -24,12 +24,14 @@ export const LegendDot = ({
   />
 )
 
-export const Code = styled.code<{ inline?: boolean }>`
-  display: ${(props) => (props.inline ? "inline-block" : "block")};
-  font-family: monospace;
-  font-size: 1.2em;
-  white-space: pre;
-`
+export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
+  <code
+    className={`rounded-md bg-gray-100 p-1 font-mono text-sm text-gray-900 ${
+      inline ? "inline-block" : "block"
+    } whitespace-pre-wrap`}
+    {...props}
+  />
+)
 
 export const Grower = styled.div`
   flex-grow: 1;
