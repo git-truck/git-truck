@@ -1,6 +1,7 @@
 import { Close as CloseIcon } from "@styled-icons/material"
 import styled from "styled-components"
 import { compare, valid, clean } from "semver"
+import type { HTMLAttributes } from "react"
 import { useId } from "react"
 
 export const branchCompare = (a: string, b: string): number => {
@@ -25,41 +26,12 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-// export const BoxTitle = styled.h2`
-//   ${titleBaseStyles}
-//   font-size: 1.5em;
-// `
-
-// export const BoxSubTitle = styled.h2`
-//   ${titleBaseStyles}
-//   font-size: 1em;
-// `
-
 export const BoxSubTitleAndIconWrapper = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: left;
   align-items: center;
   gap: calc(var(--unit) * 0.5);
-`
-
-export const BoxSpan = styled.span`
-  font-size: 0.9em;
-  opacity: 0.7;
-`
-
-export const IconButton = styled.button`
-  display: inline-grid;
-  place-items: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  & > * {
-    opacity: 0.5;
-  }
-  &:hover > * {
-    opacity: 1;
-  }
 `
 
 export const SearchResultSpan = styled.span`
@@ -69,18 +41,15 @@ export const SearchResultSpan = styled.span`
   text-overflow: ellipsis;
 `
 
-export const CloseButton = styled(IconButton)`
-  color: #000;
-  text-decoration: none;
-  background-color: transparent;
-  border: none;
-  font-size: larger;
-  position: absolute;
-  top: calc(var(--unit));
-  right: calc(var(--unit));
-  cursor: pointer;
-`
-CloseButton.defaultProps = { children: <CloseIcon display="inline-block" height="1em" /> }
+export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
+  <button
+    className={`absolute top-2 right-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
+    title="Close"
+    {...props}
+  >
+    <CloseIcon display="inline-block" height="1em" />
+  </button>
+)
 
 export const Stack = styled.div`
   display: flex;

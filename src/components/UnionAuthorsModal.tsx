@@ -2,11 +2,10 @@ import { useId, useTransition } from "react"
 import type { MouseEvent } from "react"
 import { useState } from "react"
 import { useNavigation, useSubmit } from "@remix-run/react"
-import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { CloseButton, Label, Grower, IconButton, LegendDot, CheckboxWithLabel } from "~/components/util"
+import { CloseButton, Label, Grower, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MergeType as GroupIcon } from "@styled-icons/material"
@@ -245,10 +244,15 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     return (
       <div className="flex" key={alias}>
         <div>
-          <StyledIconButton disabled={disabled} onClick={onClick} title="Make display name for this grouping">
+          <button
+            className="btn--icon grid-flow-col [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
+            disabled={disabled}
+            onClick={onClick}
+            title="Make display name for this grouping"
+          >
             <ArrowUp display="inline-block" height="1rem" />
             <Label>{alias}</Label>
-          </StyledIconButton>
+          </button>
         </div>
       </div>
     )
@@ -256,13 +260,3 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 }
 
 const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
-
-const StyledIconButton = styled(IconButton)`
-  grid-auto-flow: column;
-  & > svg {
-    opacity: 0;
-  }
-  &:hover > svg {
-    opacity: 1;
-  }
-`
