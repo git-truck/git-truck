@@ -33,12 +33,6 @@ export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAt
   />
 )
 
-export const SelectPlaceholder = styled.div`
-  font-size: 0.9em;
-  padding: 0.2em 0;
-  border: 1px solid transparent;
-`
-
 export function CheckboxWithLabel({
   children,
   checked,

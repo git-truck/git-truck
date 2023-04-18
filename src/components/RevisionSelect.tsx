@@ -1,4 +1,3 @@
-import { SelectPlaceholder } from "./util"
 import type { SelectHTMLAttributes } from "react"
 import type { GitRefs } from "~/analyzer/model"
 import { GitBranch } from "@styled-icons/octicons/GitBranch"
@@ -27,31 +26,27 @@ export function RevisionSelect({
   return (
     <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
       <GitBranch display="inline-block" height="1em" color={iconColor ?? "#333"} />
-      {allEntriesFlattened.length === 1 ? (
-        <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
-      ) : (
-        <select className={`input ${className}`} {...props}>
-          {groupsEntries.map(([group, heads]) =>
-            Object.entries(heads).length > 0 ? (
-              <optgroup key={group} label={group}>
-                {Object.entries(heads).map(([headName, head]) => {
-                  const isAnalyzed = analyzedHeads[head]
-                  return (
-                    <option
-                      key={headName}
-                      value={headName}
-                      disabled={disabled}
-                      title={isAnalyzed ? "Analyzed" : "Not analyzed"}
-                    >
-                      {headName}
-                    </option>
-                  )
-                })}
-              </optgroup>
-            ) : null
-          )}
-        </select>
-      )}
+      <select className={`input ${className}`} {...props}>
+        {groupsEntries.map(([group, heads]) =>
+          Object.entries(heads).length > 0 ? (
+            <optgroup key={group} label={group}>
+              {Object.entries(heads).map(([headName, head]) => {
+                const isAnalyzed = analyzedHeads[head]
+                return (
+                  <option
+                    key={headName}
+                    value={headName}
+                    disabled={disabled}
+                    title={isAnalyzed ? "Analyzed" : "Not analyzed"}
+                  >
+                    {headName}
+                  </option>
+                )
+              })}
+            </optgroup>
+          ) : null
+        )}
+      </select>
     </div>
   )
 }
