@@ -1,4 +1,3 @@
-import { SearchField } from "./util"
 import { Fragment, memo, useEffect, useRef, useTransition } from "react"
 import { Spacer } from "./Spacer"
 import { useSearch } from "../contexts/SearchContext"
@@ -49,7 +48,8 @@ export default function SearchBar() {
 
   return (
     <div className="box flex flex-col">
-      <SearchField
+      <input
+        className="input"
         ref={searchFieldRef}
         id={id}
         type="search"
@@ -62,7 +62,9 @@ export default function SearchBar() {
           })
         }}
       />
-      <p className="box-p">{isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}</p>
+      <p className="box-p">
+        {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}
+      </p>
       {searchResults.length > 0 ? <Spacer /> : null}
       <SearchResults />
     </div>
@@ -88,7 +90,12 @@ const SearchResults = memo(function SearchResults() {
     <>
       {searchResults.map((result) => (
         <Fragment key={result.path}>
-          <button className="grid grid-flow-col justify-start pl-2 w-full text-left" title={result.path} value={result.path} onClick={() => onClick(result)}>
+          <button
+            className="grid w-full grid-flow-col justify-start pl-2 text-left"
+            title={result.path}
+            value={result.path}
+            onClick={() => onClick(result)}
+          >
             {result.type === "tree" ? (
               <FolderIcon display="inline-block" height="1rem" />
             ) : (

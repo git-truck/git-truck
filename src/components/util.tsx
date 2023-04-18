@@ -13,13 +13,6 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
   </button>
 )
 
-export const SearchField = styled.input`
-  border: 1px var(--border-color) solid;
-  flex-grow: 1;
-  border-radius: calc(0.5 * var(--unit));
-  padding: var(--unit);
-`
-
 export const LegendEntry = styled.div`
   font-size: small;
   position: relative;
