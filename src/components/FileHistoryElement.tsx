@@ -1,5 +1,4 @@
 import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { DetailsValue } from "./util"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { Spacer } from "./Spacer"
@@ -51,7 +50,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
             >
               {commit.message}
             </div>
-            <DetailsValue>{dateFormatLong(commit.time)}</DetailsValue>
+            <p className="break-all text-sm">{dateFormatLong(commit.time)}</p>
           </Fragment>
         )
       })}

@@ -5,7 +5,7 @@ import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } 
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { ExpandDown } from "~/components/Toggle"
-import { DetailsValue, CloseButton } from "~/components/util"
+import { CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -171,11 +171,11 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Files
       </div>
-      <DetailsValue>{fileCount}</DetailsValue>
+      <p className="break-all text-sm">{fileCount}</p>
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Folders
       </div>
-      <DetailsValue>{folderCount}</DetailsValue>
+      <p className="break-all text-sm">{folderCount}</p>
     </>
   )
 }
@@ -186,7 +186,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Commits
       </div>
-      <DetailsValue>{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</DetailsValue>
+      <p className="break-all text-sm">{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</p>
     </>
   )
 }
@@ -197,7 +197,7 @@ function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Last changed
       </div>
-      <DetailsValue>{dateFormatLong(props.clickedBlob.lastChangeEpoch)}</DetailsValue>
+      <p className="break-all text-sm">{dateFormatLong(props.clickedBlob.lastChangeEpoch)}</p>
     </>
   )
 }
@@ -208,7 +208,9 @@ function PathEntry(props: { path: string }) {
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Located at
       </div>
-      <DetailsValue title={props.path}>{props.path}</DetailsValue>
+      <p className="break-all text-sm" title={props.path}>
+        {props.path}
+      </p>
     </>
   )
 }
@@ -224,7 +226,7 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
       <div className="flex items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Size
       </div>
-      <DetailsValue>
+      <p className="break-all text-sm">
         {size.value} {size.unit}{" "}
         <StyledSpan>
           {props.isBinary ? (
@@ -234,7 +236,7 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
             </>
           ) : null}
         </StyledSpan>
-      </DetailsValue>
+      </p>
     </>
   )
 }
@@ -312,7 +314,7 @@ export const AuthorDistEntries = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
-  & > ${DetailsValue} {
+  & > p {
     text-align: right;
   }
 `
