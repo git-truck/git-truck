@@ -13,14 +13,16 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
   </button>
 )
 
-export const LegendDot = styled.div<{ dotColor: string }>`
-  height: 1em;
-  aspect-ratio: 1;
-  width: 1em;
-  border-radius: 50%;
-  background-color: ${({ dotColor }) => dotColor};
-  box-shadow: var(--small-shadow);
-`
+export const LegendDot = ({
+  className = "",
+  style = {},
+  dotColor,
+}: { dotColor: string } & HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={`aspect-square h-4 w-4 rounded-full shadow ${className}`}
+    style={{ ...style, backgroundColor: dotColor }}
+  />
+)
 
 export const LegendLabel = styled.p`
   padding: 0px;
