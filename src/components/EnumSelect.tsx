@@ -1,6 +1,5 @@
 import { useId } from "react"
 import { Spacer } from "./Spacer"
-import { SelectWithEllipsis } from "./util"
 
 interface EnumSelectProps<T extends string> {
   label: string
@@ -19,13 +18,13 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
         {props.label}
       </label>
       <Spacer xs />
-      <SelectWithEllipsis id={id} onChange={(event) => props.onChange(event.target.value as T)}>
+      <select className="input" id={id} onChange={(event) => props.onChange(event.target.value as T)}>
         {enumEntries.map(([key, value]) => (
           <option key={value} value={key}>
             {value}
           </option>
         ))}
-      </SelectWithEllipsis>
+      </select>
     </div>
   )
 }
