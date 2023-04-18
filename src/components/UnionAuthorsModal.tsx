@@ -5,7 +5,7 @@ import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
-import { CloseButton, Label, Grower, LegendDot, CheckboxWithLabel } from "~/components/util"
+import { CloseButton, Grower, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MergeType as GroupIcon } from "@styled-icons/material"
@@ -251,7 +251,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
             title="Make display name for this grouping"
           >
             <ArrowUp display="inline-block" height="1rem" />
-            <Label>{alias}</Label>
+            <label className="label">{alias}</label>
           </button>
         </div>
       </div>

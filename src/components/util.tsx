@@ -13,12 +13,6 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
   </button>
 )
 
-export const Label = styled.label`
-  padding-left: calc(var(--unit) + var(--border-width));
-  font-weight: bold;
-  cursor: pointer;
-`
-
 export const Select = styled.select`
   width: 100%;
   display: block;
@@ -166,7 +160,9 @@ export function CheckboxWithLabel({
   return (
     <div {...props}>
       <input type="checkbox" checked={checked} onChange={onChange} id={id} />
-      <Label htmlFor={id}>{children}</Label>
+      <label className="label" htmlFor={id}>
+        {children}
+      </label>
     </div>
   )
 }
