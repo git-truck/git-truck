@@ -13,14 +13,6 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
   </button>
 )
 
-export const Select = styled.select`
-  width: 100%;
-  display: block;
-  padding: var(--unit);
-  border: 1px var(--border-color) solid;
-  border-radius: calc(0.5 * var(--unit));
-`
-
 export const SearchField = styled.input`
   border: 1px var(--border-color) solid;
   flex-grow: 1;
