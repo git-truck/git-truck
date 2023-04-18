@@ -6,7 +6,7 @@ import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
-import { DetailsKey, DetailsValue, CloseButton } from "~/components/util"
+import { DetailsValue, CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -176,9 +176,13 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
 
   return (
     <>
-      <DetailsKey grow>Files</DetailsKey>
+      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Files
+      </div>
       <DetailsValue>{fileCount}</DetailsValue>
-      <DetailsKey grow>Folders</DetailsKey>
+      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Folders
+      </div>
       <DetailsValue>{folderCount}</DetailsValue>
     </>
   )
@@ -187,7 +191,9 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
 function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
-      <DetailsKey grow>Commits</DetailsKey>
+      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Commits
+      </div>
       <DetailsValue>{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</DetailsValue>
     </>
   )
@@ -196,7 +202,9 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
 function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
   return (
     <>
-      <DetailsKey grow>Last changed</DetailsKey>
+      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Last changed
+      </div>
       <DetailsValue>{dateFormatLong(props.clickedBlob.lastChangeEpoch)}</DetailsValue>
     </>
   )
@@ -205,7 +213,7 @@ function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
 function PathEntry(props: { path: string }) {
   return (
     <>
-      <DetailsKey>Located at</DetailsKey>
+      <div>Located at</div>
       <DetailsValue title={props.path}>{props.path}</DetailsValue>
     </>
   )
@@ -219,7 +227,9 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
   const size = byteSize(props.size ?? 0)
   return (
     <>
-      <DetailsKey grow>Size</DetailsKey>
+      <div className="flex items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Size
+      </div>
       <DetailsValue>
         {size.value} {size.unit}{" "}
         <StyledSpan>

@@ -24,16 +24,6 @@ export const LegendDot = ({
   />
 )
 
-export const DetailsKey = styled.div<{ grow?: boolean }>`
-  display: flex;
-  align-items: center;
-  font-size: 0.9em;
-  font-weight: 500;
-  white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`
-
 export const DetailsValue = styled.p`
   overflow-wrap: anywhere;
   word-wrap: break-word;
