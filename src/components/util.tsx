@@ -1,30 +1,7 @@
 import { Close as CloseIcon } from "@styled-icons/material"
 import styled from "styled-components"
-import { compare, valid, clean } from "semver"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
-
-export const branchCompare = (a: string, b: string): number => {
-  const defaultBranchNames = ["main", "master"]
-
-  if (defaultBranchNames.includes(a)) return -1
-  if (defaultBranchNames.includes(b)) return 1
-
-  return a.toLowerCase().localeCompare(b.toLowerCase())
-}
-
-export const semverCompare = (a: string, b: string): number => {
-  const validA = valid(clean(a))
-  const validB = valid(clean(b))
-
-  if (!validA || !validB) {
-    if (validA) return 1
-    if (validB) return -1
-    return a.toLowerCase().localeCompare(b.toLowerCase())
-  }
-
-  return compare(validA, validB)
-}
 
 export const BoxSubTitleAndIconWrapper = styled.div`
   display: grid;
@@ -50,11 +27,6 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
     <CloseIcon display="inline-block" height="1em" />
   </button>
 )
-
-export const Stack = styled.div`
-  display: flex;
-  flex-direction: column;
-`
 
 export const Label = styled.label`
   padding-left: calc(var(--unit) + var(--border-width));

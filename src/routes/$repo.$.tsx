@@ -23,8 +23,9 @@ import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
 import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { BoxSubTitleAndIconWrapper, Code, Grower, semverCompare } from "~/components/util"
+import { BoxSubTitleAndIconWrapper, Code, Grower } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
+import { semverCompare } from "~/util"
 
 let invalidateCache = false
 
