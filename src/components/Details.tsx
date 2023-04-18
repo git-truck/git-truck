@@ -4,7 +4,6 @@ import styled from "styled-components"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { AuthorDistOther } from "~/components/AuthorDistOther"
-import { Spacer } from "~/components/Spacer"
 import { ExpandDown } from "~/components/Toggle"
 import { DetailsValue, CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -52,38 +51,11 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="box">
+    <div className="box flex flex-col gap-2">
       <CloseButton onClick={() => setClickedObject(null)} />
       <h2 className="box__title" title={clickedObject.name}>
         {clickedObject.name}
       </h2>
-      <Spacer xl />
-      <DetailsEntries>
-        {isBlob ? (
-          <>
-            <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
-            <CommitsEntry clickedBlob={clickedObject} />
-            <LastchangedEntry clickedBlob={clickedObject} />
-          </>
-        ) : (
-          <FileAndSubfolderCountEntries clickedTree={clickedObject} />
-        )}
-        <PathEntry path={clickedObject.path} />
-      </DetailsEntries>
-      <Spacer />
-      {isBlob ? (
-        <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
-      ) : (
-        <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
-      )}
-      <Spacer xl />
-      <FileHistoryElement state={state} clickedObject={clickedObject} />
-      <Spacer />
-      <button className="btn" onClick={props.showUnionAuthorsModal}>
-        <PeopleAlt display="inline-block" height="1rem" />
-        Group authors
-      </button>
-      <Spacer />
       {isBlob ? (
         <>
           <Form method="post" action={location.pathname}>
@@ -102,7 +74,6 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           </Form>
           {clickedObject.name.includes(".") ? (
             <>
-              <Spacer />
               <Form method="post" action={location.pathname}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
                 <button
@@ -119,7 +90,6 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
               </Form>
             </>
           ) : null}
-          <Spacer />
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
             <button className="btn" disabled={state !== "idle"}>
@@ -145,6 +115,28 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           </button>
         </Form>
       )}
+      <DetailsEntries>
+        {isBlob ? (
+          <>
+            <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
+            <CommitsEntry clickedBlob={clickedObject} />
+            <LastchangedEntry clickedBlob={clickedObject} />
+          </>
+        ) : (
+          <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+        )}
+        <PathEntry path={clickedObject.path} />
+      </DetailsEntries>
+      {isBlob ? (
+        <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
+      ) : (
+        <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+      )}
+      <button className="btn grow-0" onClick={props.showUnionAuthorsModal}>
+        <PeopleAlt display="inline-block" height="1rem" />
+        Group authors
+      </button>
+      <FileHistoryElement state={state} clickedObject={clickedObject} />
     </div>
   )
 }
@@ -213,7 +205,9 @@ function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
 function PathEntry(props: { path: string }) {
   return (
     <>
-      <div>Located at</div>
+      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        Located at
+      </div>
       <DetailsValue title={props.path}>{props.path}</DetailsValue>
     </>
   )
@@ -259,39 +253,37 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
     a[1] < b[1] ? 1 : -1
   )
 
-  if (contribDist.length <= authorCutoff + 1) {
-    return (
-      <>
-        <DetailsHeading>Author distribution</DetailsHeading>
-        <Spacer />
-        <AuthorDistEntries>
-          {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
-            <AuthorDistFragment show={true} items={contribDist} />
-          ) : (
-            <p>No authors found</p>
-          )}
-        </AuthorDistEntries>
-      </>
-    )
-  }
+  const authorsAreCutoff = contribDist.length > authorCutoff + 1
   return (
-    <>
+    <div className="flex flex-col gap-2">
       <AuthorDistHeader>
         <DetailsHeading>Author distribution</DetailsHeading>
-        <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+        {authorsAreCutoff ? (
+          <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+        ) : null}
       </AuthorDistHeader>
-      <Spacer xs />
       <AuthorDistEntries>
-        <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
-        <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
-        <Spacer />
-        <AuthorDistOther
-          show={collapse}
-          items={contribDist.slice(authorCutoff)}
-          toggle={() => setCollapse(!collapse)}
-        />
+        {authorsAreCutoff ? (
+          <>
+            <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
+            <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
+            <AuthorDistOther
+              show={collapse}
+              items={contribDist.slice(authorCutoff)}
+              toggle={() => setCollapse(!collapse)}
+            />
+          </>
+        ) : (
+          <>
+            {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
+              <AuthorDistFragment show={true} items={contribDist} />
+            ) : (
+              <p>No authors found</p>
+            )}
+          </>
+        )}
       </AuthorDistEntries>
-    </>
+    </div>
   )
 }
 
