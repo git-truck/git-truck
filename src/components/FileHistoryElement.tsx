@@ -1,5 +1,5 @@
 import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { DetailsKey, DetailsValue, LegendLabel } from "./util"
+import { DetailsKey, DetailsValue } from "./util"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { Spacer } from "./Spacer"
@@ -18,18 +18,18 @@ export function FileHistoryElement(props: props) {
 
   let fileCommits: GitLogEntry[] = []
   if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits.map(c => analyzerData.commits[c])
+    fileCommits = props.clickedObject.commits.map((c) => analyzerData.commits[c])
   } else {
     try {
-      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject)).map(c => analyzerData.commits[c]).sort((a, b) => b.time - a.time)
+      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
+        .map((c) => analyzerData.commits[c])
+        .sort((a, b) => b.time - a.time)
     } catch (e) {
       console.log(e)
     }
   }
 
-  return (
-    <CommitHistory commits={fileCommits} />
-  )
+  return <CommitHistory commits={fileCommits} />
 }
 
 interface CommitDistFragProps {
@@ -46,7 +46,9 @@ export function CommitDistFragment(props: CommitDistFragProps) {
         return (
           <Fragment key={commit.time.toString() + commit.message}>
             <DetailsKey title={commit.message + " (" + commit.author + ")"} grow>
-              <LegendLabel style={{ opacity: 0.7 }}>{commit.message}</LegendLabel>
+              <span className="overflow-hidden overflow-ellipsis whitespace-pre font-bold" style={{ opacity: 0.7 }}>
+                {commit.message}
+              </span>
             </DetailsKey>
             <DetailsValue>{dateFormatLong(commit.time)}</DetailsValue>
           </Fragment>
@@ -85,10 +87,9 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
         <Spacer />
         <CommitDistOther show={collapse} items={commits.slice(commitCutoff)} toggle={() => setCollapse(!collapse)} />
       </AuthorDistEntries>
-      </>
+    </>
   )
 }
-
 
 interface CommitDistOtherProps {
   toggle: () => void

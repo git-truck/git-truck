@@ -2,7 +2,7 @@ import { Fragment } from "react"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { Spacer } from "./Spacer"
-import { DetailsKey, DetailsValue, LegendDot, LegendLabel } from "./util"
+import { DetailsKey, DetailsValue, LegendDot } from "./util"
 
 interface AuthorDistFragProps {
   items: [string, number][]
@@ -29,7 +29,9 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
                   <Spacer horizontal />
                 </>
               ) : null}
-              <LegendLabel style={{ opacity: 0.7 }}>{author}</LegendLabel>
+              <span className="overflow-hidden overflow-ellipsis whitespace-pre font-bold" style={{ opacity: 0.7 }}>
+                {author}
+              </span>
             </DetailsKey>
             <DetailsValue>{roundedContrib === 0 ? "<1" : roundedContrib}%</DetailsValue>
           </Fragment>
