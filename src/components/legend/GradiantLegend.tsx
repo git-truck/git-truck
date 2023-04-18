@@ -1,7 +1,5 @@
-import styled from "styled-components"
 import { estimatedLetterWidth } from "~/const"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { GradientLegendDiv, LegendGradient } from "../util"
 import type { MetricLegendProps } from "./Legend"
 
 export type GradLegendData = [
@@ -29,25 +27,31 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
 
   return (
     <>
-      <GradientLegendDiv>
+      <div className="flex justify-between">
         <span className="font-bold" title={minValueAltFormat}>
           {minValue}
         </span>
         <span className="font-bold" title={maxValueAltFormat}>
           {maxValue}
         </span>
-      </GradientLegendDiv>
-      <LegendGradient min={minColor} max={maxColor} />
-      {offset !== -1 ? (
-        <i
-          className="relative bottom-3 transition-all"
-          style={{
-            left: `calc(${offset * 100}% - ${estimatedLetterWidth}px)`,
-          }}
-        >
-          {"\u25B2"}
-        </i>
-      ) : null}
+      </div>
+      <div
+        className="h-4 w-full rounded-full"
+        style={{
+          backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`,
+        }}
+      >
+        {offset !== -1 ? (
+          <i
+            className="relative bottom-3 transition-all"
+            style={{
+              left: `calc(${offset * 100}% - ${estimatedLetterWidth}px)`,
+            }}
+          >
+            {"\u25B2"}
+          </i>
+        ) : null}
+      </div>
     </>
   )
 }

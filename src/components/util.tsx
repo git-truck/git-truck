@@ -24,19 +24,6 @@ export const LegendDot = ({
   />
 )
 
-export const LegendGradient = styled.div<{ min: string; max: string }>`
-  background-image: linear-gradient(to right, ${(props) => `${props.min},${props.max}`});
-  width: 100%;
-  height: 20px;
-  border-radius: calc(var(--unit) * 0.5);
-`
-
-export const GradientLegendDiv = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-`
-
 export const DetailsKey = styled.div<{ grow?: boolean }>`
   display: flex;
   align-items: center;
