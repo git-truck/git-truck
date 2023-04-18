@@ -82,6 +82,10 @@
   .input {
     @apply h-8 flex-grow rounded border border-gray-300 px-3 text-sm;
   }
+
+  .label {
+    @apply cursor-pointer pl-[9px] font-bold;
+  }
 }
 
 @layer utilities {
