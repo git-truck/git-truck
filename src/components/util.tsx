@@ -33,11 +33,6 @@ export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAt
   />
 )
 
-export const OptionWithEllipsis = styled.option`
-  text-overflow: ellipsis;
-  overflow: scroll;
-`
-
 export const SelectWithIconWrapper = styled.div`
   width: 100%;
   display: grid;
