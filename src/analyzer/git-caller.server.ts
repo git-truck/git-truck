@@ -4,7 +4,7 @@ import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/components/util"
+import { branchCompare, semverCompare } from "~/util"
 import os from "os"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
