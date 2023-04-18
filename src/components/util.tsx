@@ -3,13 +3,6 @@ import styled from "styled-components"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
 
-export const SearchResultSpan = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
-  display: block;
-  text-overflow: ellipsis;
-`
-
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
     className={`absolute top-2 right-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
