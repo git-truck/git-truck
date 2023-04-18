@@ -80,7 +80,7 @@
   }
 
   .input {
-    @apply h-8 flex-grow rounded border border-gray-300 px-3 text-sm;
+    @apply h-8 w-full flex-grow overflow-scroll text-ellipsis rounded border border-gray-300 px-3 text-sm transition-colors enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
   }
 
   .label {

@@ -1,4 +1,4 @@
-import { OptionWithEllipsis, SelectPlaceholder, SelectWithEllipsis, SelectWithIconWrapper } from "./util"
+import { OptionWithEllipsis, SelectPlaceholder, SelectWithIconWrapper } from "./util"
 import type { SelectHTMLAttributes } from "react"
 import type { GitRefs } from "~/analyzer/model"
 import { GitBranch } from "@styled-icons/octicons/GitBranch"
@@ -15,6 +15,7 @@ export function RevisionSelect({
   analyzedHeads,
   iconColor,
   disabled,
+  className = "",
   ...props
 }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const groupsEntries = Object.entries(headGroups)
@@ -29,7 +30,7 @@ export function RevisionSelect({
       {allEntriesFlattened.length === 1 ? (
         <SelectPlaceholder>{allEntriesFlattened[0]}</SelectPlaceholder>
       ) : (
-        <SelectWithEllipsis inline={true} {...props}>
+        <select className={`input ${className}`} {...props}>
           {groupsEntries.map(([group, heads]) =>
             Object.entries(heads).length > 0 ? (
               <optgroup key={group} label={group}>
@@ -49,7 +50,7 @@ export function RevisionSelect({
               </optgroup>
             ) : null
           )}
-        </SelectWithEllipsis>
+        </select>
       )}
     </SelectWithIconWrapper>
   )

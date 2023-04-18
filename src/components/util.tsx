@@ -33,35 +33,6 @@ export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAt
   />
 )
 
-export const SelectWithEllipsis = styled.select<{ inline?: boolean }>`
-  text-overflow: ellipsis;
-  overflow: scroll;
-  width: 100%;
-
-  font-size: 0.9em;
-  color: inherit;
-  padding: ${(props) => (props.inline ? "0.2em" : "var(--unit) calc(0.5 * var(--unit))")};
-
-  background: none;
-  border-radius: 4px;
-
-  transition: border-color 0.1s;
-  border: 1px solid hsla(0, 0%, 50%, 0.3);
-
-  &:enabled {
-    cursor: pointer;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
-
-  &:enabled:hover,
-  &:enabled:active {
-    border: 1px solid hsla(0, 0%, 50%, 1);
-  }
-`
-
 export const OptionWithEllipsis = styled.option`
   text-overflow: ellipsis;
   overflow: scroll;
