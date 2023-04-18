@@ -32,7 +32,7 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
   }
 
   return (
-    <div className="box sticky bottom-0">
+    <div className="box sticky bottom-0 self-end">
       <h3 className="box__subtitle">{Metric[metricType]}</h3>
       <Spacer />
       <p className="box-p">{getMetricDescription(metricType, authorshipType)}</p>
