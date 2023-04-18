@@ -1,4 +1,4 @@
-import { OptionWithEllipsis, SelectPlaceholder, SelectWithIconWrapper } from "./util"
+import { SelectPlaceholder, SelectWithIconWrapper } from "./util"
 import type { SelectHTMLAttributes } from "react"
 import type { GitRefs } from "~/analyzer/model"
 import { GitBranch } from "@styled-icons/octicons/GitBranch"
@@ -37,14 +37,14 @@ export function RevisionSelect({
                 {Object.entries(heads).map(([headName, head]) => {
                   const isAnalyzed = analyzedHeads[head]
                   return (
-                    <OptionWithEllipsis
+                    <option
                       key={headName}
                       value={headName}
                       disabled={disabled}
                       title={isAnalyzed ? "Analyzed" : "Not analyzed"}
                     >
                       {headName}
-                    </OptionWithEllipsis>
+                    </option>
                   )
                 })}
               </optgroup>
