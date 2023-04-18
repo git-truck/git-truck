@@ -2,7 +2,7 @@ import { Fragment } from "react"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { Spacer } from "./Spacer"
-import { DetailsValue, LegendDot } from "./util"
+import { LegendDot } from "./util"
 
 interface AuthorDistFragProps {
   items: [string, number][]
@@ -36,7 +36,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
                 {author}
               </span>
             </div>
-            <DetailsValue>{roundedContrib === 0 ? "<1" : roundedContrib}%</DetailsValue>
+            <p className="break-all text-sm">{roundedContrib === 0 ? "<1" : roundedContrib}%</p>
           </Fragment>
         )
       })}

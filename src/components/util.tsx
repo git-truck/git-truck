@@ -5,7 +5,7 @@ import { useId } from "react"
 
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
-    className={`absolute top-2 right-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
+    className={`absolute right-2 top-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
     title="Close"
     {...props}
   >
@@ -23,13 +23,6 @@ export const LegendDot = ({
     style={{ ...style, backgroundColor: dotColor }}
   />
 )
-
-export const DetailsValue = styled.p`
-  overflow-wrap: anywhere;
-  word-wrap: break-word;
-  overflow: hidden;
-  font-size: 0.9em;
-`
 
 export const Code = styled.code<{ inline?: boolean }>`
   display: ${(props) => (props.inline ? "inline-block" : "block")};
