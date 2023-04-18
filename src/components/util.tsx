@@ -1,5 +1,4 @@
 import { Close as CloseIcon } from "@styled-icons/material"
-import styled from "styled-components"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
 
