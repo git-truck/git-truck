@@ -13,16 +13,6 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
   </button>
 )
 
-export const LegendEntry = styled.div`
-  font-size: small;
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  place-items: center;
-  line-height: 100%;
-  margin: 0px;
-`
-
 export const LegendDot = styled.div<{ dotColor: string }>`
   height: 1em;
   aspect-ratio: 1;
