@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Form, useLocation, useTransition } from "@remix-run/react"
+import { Form, useLocation, useNavigation } from "@remix-run/react"
 import styled from "styled-components"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
@@ -30,7 +30,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
   const { authorshipType } = useOptions()
-  const { state } = useTransition()
+  const { state } = useNavigation()
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
