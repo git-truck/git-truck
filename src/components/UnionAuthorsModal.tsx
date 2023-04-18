@@ -8,7 +8,7 @@ import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, Grower, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
-import { MergeType as GroupIcon } from "@styled-icons/material"
+import { PeopleAlt } from "@styled-icons/material"
 import { useKey } from "react-use"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
@@ -183,7 +183,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               title="Group the selected authors"
               disabled={disabled || selectedAuthors.length === 0}
             >
-              <GroupIcon display="inline-block" height="1rem" />
+              <PeopleAlt display="inline-block" height="1rem" />
               Group
             </button>
           </div>
