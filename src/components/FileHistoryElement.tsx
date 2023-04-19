@@ -1,9 +1,8 @@
 import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
-import { Spacer } from "./Spacer"
 import { ExpandDown } from "./Toggle"
-import { AuthorDistEntries, AuthorDistHeader, DetailsHeading } from "./Details"
+import { AuthorDistEntries } from "./Details"
 import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 
@@ -44,12 +43,12 @@ export function CommitDistFragment(props: CommitDistFragProps) {
       {props.items.map((commit) => {
         return (
           <Fragment key={commit.time.toString() + commit.message}>
-            <div
-              className="overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold"
+            <span
+              className="overflow-hidden overflow-ellipsis whitespace-pre text-sm font-bold opacity-70"
               title={commit.message + " (" + commit.author + ")"}
             >
               {commit.message}
-            </div>
+            </span>
             <p className="break-all text-sm">{dateFormatLong(commit.time)}</p>
           </Fragment>
         )
@@ -65,26 +64,23 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
 
   if (commits.length <= commitCutoff + 1) {
     return (
-      <>
-        <DetailsHeading>Commit History</DetailsHeading>
-        <Spacer />
+      <div>
+        <h3>Commit History</h3>
         <AuthorDistEntries>
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
         </AuthorDistEntries>
-      </>
+      </div>
     )
   }
   return (
     <>
-      <AuthorDistHeader>
-        <DetailsHeading>Commit History</DetailsHeading>
+      <div className="flex justify-between">
+        <h3 className="font-bold">Commit History</h3>
         <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
-      </AuthorDistHeader>
-      <Spacer xs />
+      </div>
       <AuthorDistEntries>
         <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />
         <CommitDistFragment show={!collapse} items={commits.slice(commitCutoff)} />
-        <Spacer />
         <CommitDistOther show={collapse} items={commits.slice(commitCutoff)} toggle={() => setCollapse(!collapse)} />
       </AuthorDistEntries>
     </>

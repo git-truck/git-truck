@@ -1,4 +1,3 @@
-import { Spacer } from "~/components/Spacer"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"
@@ -10,7 +9,13 @@ import { GradientLegend } from "./GradiantLegend"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
-export function Legend(props: { showUnionAuthorsModal: () => void }) {
+export function Legend({
+  showUnionAuthorsModal,
+  className = "",
+}: {
+  showUnionAuthorsModal: () => void
+  className?: string
+}) {
   const { metricType, authorshipType } = useOptions()
   const [metricsData] = useMetrics()
 
@@ -21,30 +26,25 @@ export function Legend(props: { showUnionAuthorsModal: () => void }) {
   let legend: JSX.Element = <></>
   switch (getMetricLegendType(metricType)) {
     case "POINT":
-      legend = <PointLegend metricCache={metricCache}></PointLegend>
+      legend = <PointLegend metricCache={metricCache} />
       break
     case "GRADIENT":
-      legend = <GradientLegend metricCache={metricCache}></GradientLegend>
+      legend = <GradientLegend metricCache={metricCache} />
       break
     case "SEGMENTS":
-      legend = <SegmentLegend metricCache={metricCache}></SegmentLegend>
+      legend = <SegmentLegend metricCache={metricCache} />
       break
   }
 
   return (
-    <div className="box sticky bottom-0 self-end">
+    <div className={`box bottom-0 ${className}`}>
       <h3 className="box__subtitle">{Metric[metricType]}</h3>
-      <Spacer />
       <p className="box-p">{getMetricDescription(metricType, authorshipType)}</p>
-      <Spacer lg />
       {metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR" ? (
-        <>
-          <button className="btn" onClick={props.showUnionAuthorsModal}>
-            <PeopleAlt display="inline-block" height="1rem" />
-            Group authors
-          </button>
-          <Spacer lg />
-        </>
+        <button className="btn" onClick={showUnionAuthorsModal}>
+          <PeopleAlt />
+          Group authors
+        </button>
       ) : null}
       {legend}
     </div>

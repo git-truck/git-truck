@@ -1,7 +1,5 @@
 import styled, { css } from "styled-components"
-import {
-  ExpandLess as ExpandIcon,
-} from "@styled-icons/material"
+import { ExpandLess as ExpandIcon } from "@styled-icons/material"
 
 interface ToggleProps {
   toggle: () => void
@@ -12,7 +10,7 @@ interface ToggleProps {
 export function ExpandDown({ relative = false, collapse, toggle }: ToggleProps) {
   return (
     <ToggleButton relative={relative} collapse={collapse} onClick={toggle} up={false}>
-      <ExpandIcon display="inline-block" height="1.5rem" />
+      <ExpandIcon height="1.5rem" />
     </ToggleButton>
   )
 }
@@ -20,7 +18,7 @@ export function ExpandDown({ relative = false, collapse, toggle }: ToggleProps) 
 export function ExpandUp({ relative = false, collapse, toggle }: ToggleProps) {
   return (
     <ToggleButton relative={relative} collapse={collapse} onClick={toggle} up={true}>
-      <ExpandIcon display="inline-block" height="1.5rem" />
+      <ExpandIcon height="1.5rem" />
     </ToggleButton>
   )
 }

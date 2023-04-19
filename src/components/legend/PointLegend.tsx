@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { ExpandUp } from "../Toggle"
 import type { MetricLegendProps } from "./Legend"
-import { Spacer } from "../Spacer"
 import { LegendDot } from "../util"
 import styled from "styled-components"
 
@@ -58,7 +57,6 @@ function PointLegendFragment(props: PointLegendFragProps) {
               <LegendDot dotColor={info.color} />
               <span className="font-bold">{label}</span>
             </div>
-            <Spacer />
           </div>
         )
       })}

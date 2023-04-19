@@ -25,7 +25,7 @@ export function RevisionSelect({
 
   return (
     <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
-      <GitBranch display="inline-block" height="1em" color={iconColor ?? "#333"} />
+      <GitBranch height="1em" color={iconColor ?? "#333"} />
       <select className={`input ${className}`} {...props}>
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (

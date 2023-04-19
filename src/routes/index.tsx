@@ -4,7 +4,6 @@ import { Link, useLoaderData, useTransition } from "@remix-run/react"
 import styled, { css } from "styled-components"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
-import { Spacer } from "~/components/Spacer"
 import { Code } from "~/components/util"
 import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
 import { resolve } from "path"
@@ -46,10 +45,8 @@ export default function Index() {
   if (transitionData.state !== "idle") return <AnalyzingIndicator />
   return (
     <Wrapper>
-      <Spacer />
       <h1 className="text-4xl">🚛 Git Truck</h1>
 
-      <Spacer />
       <p>
         Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
         <Code inline title={baseDir}>
@@ -57,17 +54,14 @@ export default function Index() {
         </Code>
         .
       </p>
-      <Spacer />
       {repositories.length === 0 ? (
         <>
-          <Spacer />
           <p>
             Try running <Code inline>git-truck</Code> in another folder or provide another path as argument.
           </p>
         </>
       ) : (
         <>
-          <Spacer xxl />
           <nav>
             <ul className="grid grid-cols-[repeat(auto-fit,minmax(225px,1fr))] gap-2">
               {repositories.map((repo) => (
@@ -100,7 +94,6 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           {repo.name}
           {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
         </h3>
-        <Spacer />
         <RevisionSelect
           value={head}
           onChange={(e) => setHead(e.target.value)}
@@ -108,7 +101,6 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           iconColor={iconColor}
           analyzedHeads={repo.analyzedHeads}
         />
-        <Spacer />
         <div className="flex justify-end">
           <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
         </div>

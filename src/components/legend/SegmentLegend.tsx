@@ -27,7 +27,7 @@ export function SegmentLegend({ metricCache }: MetricLegendProps) {
   return (
     <>
       <div style={{ display: `flex`, flexDirection: `row` }}>
-        {[...Array(steps).fill(1)].map((_, i) => {
+        {[...Array(steps)].map((_, i) => {
           return steps >= 4 ? (
             <MetricSegment
               key={`legend-${i}`}

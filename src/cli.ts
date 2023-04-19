@@ -6,7 +6,7 @@ import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
 import { createApp } from "@remix-run/serve"
-import { semverCompare } from "./components/util"
+import { semverCompare } from "./util"
 import { describeAsyncJob } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 
@@ -88,10 +88,10 @@ for usage instructions.`)
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension ?? "")
       log.debug(`Opening ${openURL}`)
-      let err : Error | null = null
+      let err: Error | null = null
 
       if (!args.headless) {
-        [, err] = await describeAsyncJob(
+        ;[, err] = await describeAsyncJob(
           () => open(openURL),
           "Opening Git Truck in your browser",
           `Succesfully opened Git Truck in your browser`,

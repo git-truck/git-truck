@@ -8,7 +8,7 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
     title="Close"
     {...props}
   >
-    <CloseIcon display="inline-block" height="1em" />
+    <CloseIcon height="1em" />
   </button>
 )
 
@@ -36,6 +36,7 @@ export function CheckboxWithLabel({
   children,
   checked,
   onChange,
+  className = "",
   ...props
 }: {
   children: React.ReactNode
@@ -44,11 +45,11 @@ export function CheckboxWithLabel({
 } & Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "checked">) {
   const id = useId()
   return (
-    <div {...props}>
-      <input type="checkbox" checked={checked} onChange={onChange} id={id} />
+    <div className={`flex items-center justify-between gap-2 ${className}`} {...props}>
       <label className="label" htmlFor={id}>
         {children}
       </label>
+      <input type="checkbox" checked={checked} onChange={onChange} id={id} />
     </div>
   )
 }
