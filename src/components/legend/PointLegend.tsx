@@ -70,19 +70,12 @@ interface LegendOtherProps {
   show: boolean
 }
 
-const LegendOtherDiv = styled.div`
-  width: fit-content;
-  &:hover {
-    cursor: pointer;
-  }
-`
-
 function PointLegendOther(props: LegendOtherProps) {
   if (!props.show) return null
 
   return (
-    <LegendOtherDiv>
-      <div className="relative flex items-center gap-2 text-sm leading-none" onClick={props.toggle}>
+    <button className="w-fit hover:opacity-70" onClick={props.toggle}>
+      <div className="relative flex items-center gap-2 text-sm leading-none">
         {props.items.slice(0, 14).map(([label, info], i) => {
           const margin = i === 0 ? 0 : -16
           return (
@@ -97,6 +90,6 @@ function PointLegendOther(props: LegendOtherProps) {
         })}
         <span className="font-bold">{props.items.length} more</span>
       </div>
-    </LegendOtherDiv>
+    </button>
   )
 }
