@@ -64,12 +64,12 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
 
   if (commits.length <= commitCutoff + 1) {
     return (
-      <div>
-        <h3>Commit History</h3>
+      <>
+        <h3 className="font-bold">Commit History</h3>
         <AuthorDistEntries>
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
         </AuthorDistEntries>
-      </div>
+      </>
     )
   }
   return (
