@@ -1,5 +1,4 @@
 import { useId } from "react"
-import { Spacer } from "./Spacer"
 
 interface EnumSelectProps<T extends string> {
   label: string
@@ -13,11 +12,10 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
   const enumEntries = Object.entries(props.enum) as [T, string][]
 
   return (
-    <div style={props.hidden ? { display: "none" } : {}}>
-      <label className="label" htmlFor={id}>
+    <div className={`flex flex-col gap-2 ${props.hidden ? "hidden" : ""}`}>
+      <label className="label pl-[9px]" htmlFor={id}>
         {props.label}
       </label>
-      <Spacer xs />
       <select className="input" id={id} onChange={(event) => props.onChange(event.target.value as T)}>
         {enumEntries.map(([key, value]) => (
           <option key={value} value={key}>

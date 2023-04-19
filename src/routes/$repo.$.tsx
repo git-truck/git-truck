@@ -21,7 +21,6 @@ import { Main } from "~/components/Main"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import SearchBar from "~/components/SearchBar"
-import { Spacer } from "~/components/Spacer"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
@@ -169,27 +168,25 @@ function Feedback() {
   return (
     <div className="box">
       <div className="grid grid-flow-col items-center justify-start gap-1">
-        <ReviewIcon display="inline-block" height="1rem" />
+        <ReviewIcon />
         <h3 className="box__subtitle">Help improve Git Truck</h3>
       </div>
-      <Spacer xl />
-      <button
+      <a
         className="btn"
-        onClick={() =>
-          openInNewTab(
-            "https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
-          )
-        }
+        href="https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         Answer questionnaire
-      </button>
-      <Spacer />
-      <button
+      </a>
+      <a
         className="btn"
-        onClick={() => openInNewTab("https://github.com/git-truck/git-truck/issues/new?template=user-issue.md")}
+        href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         Open an issue
-      </button>
+      </a>
     </div>
   )
 }
@@ -226,9 +223,8 @@ export default function Repo() {
           <Feedback />
           <Options />
           <SearchBar />
-          <Spacer />
         </aside>
-        {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]} /> : <div />}
+        {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]}></Main> : <div />}
         <aside className="side-panel">
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />

@@ -1,5 +1,4 @@
-import { Fragment, memo, useEffect, useRef, useTransition } from "react"
-import { Spacer } from "./Spacer"
+import { memo, useEffect, useRef, useTransition } from "react"
 import { useSearch } from "../contexts/SearchContext"
 import { useId } from "react"
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
@@ -47,27 +46,30 @@ export default function SearchBar() {
   }, [])
 
   return (
-    <div className="box flex flex-col">
-      <input
-        className="input"
-        ref={searchFieldRef}
-        id={id}
-        type="search"
-        placeholder="Search for a file or folder..."
-        onChange={(event) => {
-          const value = event.target.value
-          startTransition(() => {
-            setSearchText(value)
-            setSearchResults(findSearchResults(analyzerData.commit.tree, value))
-          })
-        }}
-      />
-      <p className="box-p">
-        {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}
-      </p>
-      {searchResults.length > 0 ? <Spacer /> : null}
-      <SearchResults />
-    </div>
+    <>
+      <div className="box sticky top-0 z-10 flex flex-col gap-2">
+        <input
+          className="input"
+          ref={searchFieldRef}
+          id={id}
+          type="search"
+          placeholder="Search for a file or folder..."
+          onChange={(event) => {
+            const value = event.target.value
+            startTransition(() => {
+              setSearchText(value)
+              setSearchResults(findSearchResults(analyzerData.commit.tree, value))
+            })
+          }}
+        />
+        {isTransitioning || searchText.length > 0 ? (
+          <p className="box-p">
+            {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}
+          </p>
+        ) : null}
+      </div>
+      {searchResults.length > 0 ? <SearchResults /> : null}
+    </>
   )
 }
 
@@ -87,25 +89,19 @@ const SearchResults = memo(function SearchResults() {
   }
 
   return (
-    <>
+    <div className="box relative gap-0">
       {searchResults.map((result) => (
-        <Fragment key={result.path}>
-          <button
-            className="grid w-full grid-flow-col justify-start pl-2 text-left"
-            title={result.path}
-            value={result.path}
-            onClick={() => onClick(result)}
-          >
-            {result.type === "tree" ? (
-              <FolderIcon display="inline-block" height="1rem" />
-            ) : (
-              <FileIcon display="inline-block" height="1rem" />
-            )}
-            <span>{result.name}</span>
-          </button>
-          <Spacer xs />
-        </Fragment>
+        <button
+          className="flex items-center justify-start gap-2 text-sm font-bold opacity-70 hover:opacity-100"
+          key={result.path}
+          title={result.path}
+          value={result.path}
+          onClick={() => onClick(result)}
+        >
+          {result.type === "tree" ? <FolderIcon height="1rem" /> : <FileIcon height="1rem" />}
+          <span>{result.name}</span>
+        </button>
       ))}
-    </>
+    </div>
   )
 })

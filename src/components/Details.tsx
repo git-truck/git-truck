@@ -68,7 +68,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
                 isProcessingHideRef.current = true
               }}
             >
-              <EyeClosed display="inline-block" height="1rem" />
+              <EyeClosed className="justify-self-start" />
               Hide this file
             </button>
           </Form>
@@ -84,7 +84,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
                     isProcessingHideRef.current = true
                   }}
                 >
-                  <EyeClosed display="inline-block" height="1rem" />
+                  <EyeClosed />
                   <span>Hide .{extension} files</span>
                 </button>
               </Form>
@@ -93,7 +93,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
             <button className="btn" disabled={state !== "idle"}>
-              <OpenInNew display="inline-block" height="1rem" />
+              <OpenInNew />
               Open file
             </button>
           </Form>
@@ -110,7 +110,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
               setPath(OneFolderOut(path))
             }}
           >
-            <EyeClosed display="inline-block" height="1rem" />
+            <EyeClosed />
             Hide this folder
           </button>
         </Form>
@@ -132,8 +132,8 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
-      <button className="btn grow-0" onClick={props.showUnionAuthorsModal}>
-        <PeopleAlt display="inline-block" height="1rem" />
+      <button className="btn" onClick={props.showUnionAuthorsModal}>
+        <PeopleAlt />
         Group authors
       </button>
       <FileHistoryElement state={state} clickedObject={clickedObject} />
@@ -258,12 +258,12 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
   return (
     <div className="flex flex-col gap-2">
-      <AuthorDistHeader>
-        <DetailsHeading>Author distribution</DetailsHeading>
+      <div className="flex justify-between">
+        <h3 className="font-bold">Author distribution</h3>
         {authorsAreCutoff ? (
           <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
         ) : null}
-      </AuthorDistHeader>
+      </div>
       <AuthorDistEntries>
         {authorsAreCutoff ? (
           <>

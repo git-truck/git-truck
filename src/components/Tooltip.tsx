@@ -39,7 +39,7 @@ export const Tooltip = memo(function Tooltip({ hoveredBlob }: TooltipProps) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        className={`box absolute top-0 left-0 flex min-w-0 max-w-max place-items-center gap-2 rounded-full py-0 pl-1 pr-2 will-change-transform ${
+        className={`box absolute top-0 left-0 flex min-w-0 max-w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
           visible ? "visible" : "hidden"
         }`}
         ref={tooltipRef}

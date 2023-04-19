@@ -1,9 +1,8 @@
-import { useId, useTransition } from "react"
+import { useTransition } from "react"
 import type { MouseEvent } from "react"
 import { useState } from "react"
 import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
-import { Spacer } from "./Spacer"
 import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { ArrowUp } from "@styled-icons/octicons"
@@ -105,6 +104,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     .filter((author) => author.toLowerCase().includes(filter.toLowerCase()))
     .map((author) => (
       <CheckboxWithLabel
+        className="hover:opacity-70"
         key={author}
         checked={selectedAuthors.includes(author)}
         onChange={(e) => {
@@ -114,9 +114,8 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
           setSelectedAuthors(newSelectedAuthors)
         }}
       >
-        <div className="inline-flex flex-row place-items-center">
+        <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={getColorFromDisplayName(author)} />
-          <Spacer horizontal />
           {author}
         </div>
       </CheckboxWithLabel>
@@ -154,7 +153,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   })
 
   return (
-    <div className="fixed inset-0 grid bg-black/50 p-2" onClick={handleModalWrapperClick}>
+    <div className="fixed inset-0 z-10 grid bg-black/50 p-2" onClick={handleModalWrapperClick}>
       <div className="box relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
         <h2 className="col-span-2 text-2xl">Group authors</h2>
 
@@ -182,7 +181,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               title="Group the selected authors"
               disabled={disabled || selectedAuthors.length === 0}
             >
-              <PeopleAlt display="inline-block" height="1rem" />
+              <PeopleAlt />
               Group
             </button>
           </div>
@@ -249,7 +248,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
             onClick={onClick}
             title="Make display name for this grouping"
           >
-            <ArrowUp display="inline-block" height="1rem" />
+            <ArrowUp />
             <label className="label">{alias}</label>
           </button>
         </div>

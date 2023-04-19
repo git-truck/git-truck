@@ -109,11 +109,7 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
             : null}
         </Breadcrumb>
         <button className="btn--icon" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
-          {isFullscreen ? (
-            <CloseFullscreenIcon display="inline-block" height="1.5em" />
-          ) : (
-            <FullscreenIcon display="inline-block" height="1.5em" />
-          )}
+          {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
         </button>
       </TopBar>
       <ChartWrapper ref={ref}>

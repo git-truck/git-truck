@@ -33,17 +33,28 @@ export function GlobalInfo() {
 
   return (
     <div className="box flex flex-col gap-2">
-      <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
-        <Link
-          className="flex items-center gap-2 text-gray-400 hover:text-gray-600"
-          to=".."
-          title="See all repositories"
-        >
-          <FolderIcon display="inline-block" height="1rem" />
+      <div className="grid w-full gap-2">
+        <Link className="btn" to=".." title="See all repositories">
+          <FolderIcon />
           <p>See more repositories</p>
         </Link>
       </div>
-      <h2 className="box__title">{repo.name}</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="box__title">{repo.name}</h2>
+        <Form
+          method="post"
+          action={location.pathname}
+          onSubmit={() => {
+            setIsAnalyzing(true)
+          }}
+        >
+          <input type="hidden" name="refresh" value="true" />
+          <button className="btn" disabled={transitionState.state !== "idle"}>
+            <RefreshIcon />
+            {isAnalyzing ? "Analyzing..." : "Refresh"}
+          </button>
+        </Form>
+      </div>
       <RevisionSelect
         key={repo.currentHead}
         disabled={isAnalyzing}
@@ -64,19 +75,6 @@ export function GlobalInfo() {
         <strong>Files analyzed: </strong>
         <span>{analyzerData.commit.fileCount ?? 0}</span>
       </div>
-      <Form
-        method="post"
-        action={location.pathname}
-        onSubmit={() => {
-          setIsAnalyzing(true)
-        }}
-      >
-        <input type="hidden" name="refresh" value="true" />
-        <button className="btn" disabled={transitionState.state !== "idle"}>
-          <RefreshIcon display="inline-block" height="1rem" />
-          {isAnalyzing ? "Analyzing..." : "Reanalyze"}
-        </button>
-      </Form>
     </div>
   )
 }

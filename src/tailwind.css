@@ -7,7 +7,7 @@
     @apply flex flex-col gap-2 overflow-y-auto p-2;
   }
   .box {
-    @apply relative w-auto rounded-lg bg-white p-4 shadow-md;
+    @apply relative flex w-auto flex-col gap-2 rounded-lg bg-white p-3 shadow-md;
   }
 
   .box-p {
@@ -24,7 +24,11 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer grid-flow-col items-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 enabled:hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 enabled:hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn > svg {
+    @apply inline-block h-4 w-4;
   }
 
   .btn:disabled {
@@ -67,7 +71,8 @@
     display: none;
   }
 
-  .btn:enabled:hover {
+  .btn:enabled:hover,
+  a.btn:hover {
     @apply bg-gray-300;
   }
 
@@ -80,11 +85,15 @@
   }
 
   .input {
-    @apply h-8 w-full flex-grow overflow-scroll text-ellipsis rounded border border-gray-300 px-3 text-sm transition-colors enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
+    @apply h-8 w-full flex-grow overflow-scroll text-ellipsis rounded border border-gray-300 px-1 text-sm transition-colors enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
+  }
+
+  .input:not(select) {
+    @apply px-2;
   }
 
   .label {
-    @apply cursor-pointer pl-[9px] font-bold;
+    @apply cursor-pointer font-bold;
   }
 }
 
