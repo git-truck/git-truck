@@ -168,7 +168,7 @@ function Feedback() {
   return (
     <div className="box">
       <div className="grid grid-flow-col items-center justify-start gap-1">
-        <ReviewIcon />
+        <ReviewIcon height="1rem" />
         <h3 className="box__subtitle">Help improve Git Truck</h3>
       </div>
       <a

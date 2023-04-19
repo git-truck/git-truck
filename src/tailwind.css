@@ -24,7 +24,7 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 enabled:hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn > svg {
@@ -35,8 +35,20 @@
     cursor: not-allowed;
   }
 
+  .btn--outlined {
+    @apply border border-current bg-transparent text-black/50 hover:bg-transparent hover:text-black/80;
+  }
+
+  .btn--outlined--light {
+    @apply border border-current bg-transparent text-white/80 hover:bg-transparent hover:text-white/100;
+  }
+
   .btn--primary {
-    @apply bg-blue-500 text-white;
+    @apply bg-blue-500 text-white enabled:hover:bg-blue-600;
+  }
+
+  .btn--success {
+    @apply bg-green-500 text-white;
   }
 
   .btn--danger {
@@ -48,10 +60,7 @@
   }
 
   .btn--icon > * {
-    @apply opacity-50;
-  }
-  .btn--icon:hover > * {
-    @apply opacity-100;
+    @apply opacity-50 hover:opacity-100;
   }
 
   .btn--hover-swap .hover-swap {
@@ -71,19 +80,6 @@
     display: none;
   }
 
-  .btn:enabled:hover,
-  a.btn:hover {
-    @apply bg-gray-300;
-  }
-
-  .btn--primary:enabled:hover {
-    @apply bg-blue-600;
-  }
-
-  .btn--danger:enabled:hover {
-    @apply bg-red-600;
-  }
-
   .input {
     @apply h-8 w-full flex-grow overflow-scroll text-ellipsis rounded border border-gray-300 px-1 text-sm transition-colors enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
   }
@@ -93,7 +89,7 @@
   }
 
   .label {
-    @apply cursor-pointer font-bold;
+    @apply cursor-pointer font-bold hover:opacity-80;
   }
 }
 

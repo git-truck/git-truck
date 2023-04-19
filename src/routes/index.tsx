@@ -1,7 +1,6 @@
 import type { SerializeFrom } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { Link, useLoaderData, useTransition } from "@remix-run/react"
-import styled, { css } from "styled-components"
+import { Link, useLoaderData, useNavigation } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Code } from "~/components/util"
@@ -40,20 +39,21 @@ export const loader = async () => {
 export default function Index() {
   const loaderData = useLoaderData<typeof loader>()
   const { repositories, baseDir, baseDirName } = loaderData
-  const transitionData = useTransition()
+  const transitionData = useNavigation()
 
   if (transitionData.state !== "idle") return <AnalyzingIndicator />
   return (
-    <Wrapper>
-      <h1 className="text-4xl">🚛 Git Truck</h1>
-
-      <p>
-        Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
-        <Code inline title={baseDir}>
-          {baseDirName}
-        </Code>
-        .
-      </p>
+    <main className="m-auto flex w-full max-w-7xl flex-col gap-2 p-2">
+      <div className="box">
+        <h1 className="text-4xl">🚛 Git Truck</h1>
+        <p>
+          Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
+          <Code inline title={baseDir}>
+            {baseDirName}
+          </Code>
+          .
+        </p>
+      </div>
       {repositories.length === 0 ? (
         <>
           <p>
@@ -67,11 +67,26 @@ export default function Index() {
               {repositories.map((repo) => (
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
+              <li className="box gap-3 p-0">
+                <h3 className="box__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
+                  Add repository
+                  <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
+                    Coming soon
+                  </span>
+                </h3>
+                <div className="flex flex-col gap-2 p-3 pt-0">
+                  <input type="text" className="input" placeholder="git@github.com/owner/repo.git" />
+
+                  <button className="btn" disabled title="Coming soon!">
+                    Clone
+                  </button>
+                </div>
+              </li>
             </ul>
           </nav>
         </>
       )}
-    </Wrapper>
+    </main>
   )
 }
 
@@ -83,73 +98,34 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
   const iconColor = branchIsAnalyzed ? "green" : undefined
 
   return (
-    <Li key={repo.name}>
-      <div
-        className="box"
-        style={{
-          outline: branchIsAnalyzed ? "1px solid green" : undefined,
-        }}
-      >
-        <h3 className="box__subtitle" title={repo.name}>
+    <div key={repo.name}>
+      <div className={`box gap-3 p-0`}>
+        <h3
+          className={`box__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
+            branchIsAnalyzed ? " from-green-500  to-green-600 " : "from-gray-500 to-gray-600"
+          }`}
+          title={repo.name}
+        >
           {repo.name}
-          {branchIsAnalyzed ? <AnalyzedTag>Analyzed</AnalyzedTag> : null}
+          <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
+            {branchIsAnalyzed ? "Ready" : "Not analyzed"}
+          </span>
         </h3>
-        <RevisionSelect
-          value={head}
-          onChange={(e) => setHead(e.target.value)}
-          headGroups={repo.refs}
-          iconColor={iconColor}
-          analyzedHeads={repo.analyzedHeads}
-        />
-        <div className="flex justify-end">
-          <SLink to={path}>{branchIsAnalyzed ? "View" : "Analyze"}</SLink>
+        <div className="flex flex-col gap-2 p-3 pt-0">
+          <RevisionSelect
+            value={head}
+            onChange={(e) => setHead(e.target.value)}
+            headGroups={repo.refs}
+            iconColor={iconColor}
+            analyzedHeads={repo.analyzedHeads}
+          />
+          <div className="grid">
+            <Link className={`btn transition-colors ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>
+              {branchIsAnalyzed ? "View" : "Analyze"}
+            </Link>
+          </div>
         </div>
       </div>
-    </Li>
+    </div>
   )
 }
-
-const Wrapper = styled.div`
-  width: calc(100vw - 2 * var(--side-panel-width));
-  margin: auto;
-  padding: var(--unit);
-
-  @media (max-width: 1000px) {
-    width: 100vw;
-  }
-`
-
-const Li = styled.li`
-  margin: 0;
-`
-
-const SLink = styled(Link)<{ green?: boolean }>`
-  line-height: 100%;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 0.9em;
-  color: ${(props) => (props.green ? " green" : css`var(--text-color)`)};
-  opacity: 75%;
-  cursor: pointer;
-  &:hover {
-    opacity: 100%;
-  }
-`
-
-const AnalyzedTag = styled.span`
-  text-transform: uppercase;
-  font-weight: normal;
-  font-size: 0.6rem;
-  border: 1px solid currentColor;
-  color: green;
-  border-radius: 100000px;
-  padding: 2px 4px;
-  letter-spacing: 1px;
-  user-select: none;
-  font-weight: bold;
-  display: flex;
-  place-items: center;
-  line-height: 100%;
-  vertical-align: middle;
-  align-content: flex-start;
-`
