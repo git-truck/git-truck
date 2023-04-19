@@ -12,21 +12,16 @@ type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export function RevisionSelect({
   headGroups,
   analyzedHeads,
-  iconColor,
   disabled,
   className = "",
   ...props
 }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const groupsEntries = Object.entries(headGroups)
 
-  const allEntriesFlattened = groupsEntries.reduce<string[]>((acc, heads) => {
-    return acc.concat(Object.keys(heads))
-  }, [])
-
   return (
     <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
-      <GitBranch height="1em" color={iconColor ?? "#333"} />
-      <select className={`input ${className}`} {...props}>
+      <GitBranch height="1em" />
+      <select className={`input text-gray-800 ${className}`} {...props}>
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>

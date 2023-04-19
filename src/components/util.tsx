@@ -8,7 +8,7 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
     title="Close"
     {...props}
   >
-    <CloseIcon height="1em" />
+    <CloseIcon height="1rem" />
   </button>
 )
 
