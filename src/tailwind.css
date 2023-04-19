@@ -91,7 +91,6 @@
 @layer utilities {
   .text-base-styles {
     font-weight: bold;
-    color: var(--title-color);
     text-overflow: ellipsis;
     word-break: keep-all;
     white-space: nowrap;

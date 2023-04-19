@@ -41,7 +41,7 @@ export default function App() {
         <Links />
         {typeof document === "undefined" ? "__STYLES__" : null}
       </head>
-      <body>
+      <body className="text-gray-600">
         <Outlet />
         <ScrollRestoration />
         <Scripts />
