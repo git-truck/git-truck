@@ -3,7 +3,6 @@ import { Form, useLocation, useNavigation } from "@remix-run/react"
 import styled from "styled-components"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
-import { AuthorDistOther } from "~/components/AuthorDistOther"
 import { ExpandDown } from "~/components/Toggle"
 import { CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -250,7 +249,7 @@ export const AuthorDistHeader = styled.div`
 const authorCutoff = 2
 
 function AuthorDistribution(props: { authors: Record<string, number> | undefined }) {
-  const [collapse, setCollapse] = useState<boolean>(true)
+  const [collapsed, setCollapsed] = useState<boolean>(true)
   const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
     a[1] < b[1] ? 1 : -1
   )
@@ -261,19 +260,22 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
       <div className="flex justify-between">
         <h3 className="font-bold">Author distribution</h3>
         {authorsAreCutoff ? (
-          <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+          <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
         ) : null}
       </div>
       <AuthorDistEntries>
         {authorsAreCutoff ? (
           <>
             <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
-            <AuthorDistFragment show={!collapse} items={contribDist.slice(authorCutoff)} />
-            <AuthorDistOther
-              show={collapse}
-              items={contribDist.slice(authorCutoff)}
-              toggle={() => setCollapse(!collapse)}
-            />
+            <AuthorDistFragment show={!collapsed} items={contribDist.slice(authorCutoff)} />
+            {collapsed ? (
+              <button
+                className="text-left text-xs opacity-70 hover:opacity-100"
+                onClick={() => setCollapsed(!collapsed)}
+              >
+                + {contribDist.slice(authorCutoff).length} more
+              </button>
+            ) : null}
           </>
         ) : (
           <>

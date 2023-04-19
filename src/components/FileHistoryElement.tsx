@@ -58,7 +58,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
 }
 
 function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
-  const [collapse, setCollapse] = useState<boolean>(true)
+  const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
   const commitCutoff = 2
 
@@ -76,36 +76,19 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
     <>
       <div className="flex justify-between">
         <h3 className="font-bold">Commit History</h3>
-        <ExpandDown relative={true} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+        <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
       </div>
       <AuthorDistEntries>
         <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />
-        <CommitDistFragment show={!collapse} items={commits.slice(commitCutoff)} />
-        <CommitDistOther show={collapse} items={commits.slice(commitCutoff)} toggle={() => setCollapse(!collapse)} />
+        <CommitDistFragment show={!collapsed} items={commits.slice(commitCutoff)} />
+        {collapsed ? (
+          <button className="text-left text-xs opacity-70 hover:opacity-100" onClick={() => setCollapsed(!collapsed)}>
+            + {commits.slice(commitCutoff).length} more
+          </button>
+        ) : null}
       </AuthorDistEntries>
     </>
   )
-}
-
-interface CommitDistOtherProps {
-  toggle: () => void
-  items: GitLogEntry[]
-  show: boolean
-}
-
-const OtherText = styled.span<{ grow?: boolean }>`
-  white-space: pre;
-  font-size: 0.7em;
-  font-weight: 500;
-  opacity: 0.7;
-  &:hover {
-    cursor: pointer;
-  }
-`
-
-export function CommitDistOther(props: CommitDistOtherProps) {
-  if (!props.show) return null
-  return <OtherText onClick={props.toggle}>+ {props.items.length} more</OtherText>
 }
 
 function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
