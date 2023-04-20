@@ -58,6 +58,11 @@ export const allExceptLast = <T>(arr: T[]) => {
   return arr.slice(0, arr.length - 1)
 }
 
+export const allExceptFirst = <T>(arr: T[]) => {
+  if (arr.length <= 1) return []
+  return arr.slice(1)
+}
+
 export function getSeparator(path: string) {
   if (path.includes("\\")) return "\\"
   return "/"

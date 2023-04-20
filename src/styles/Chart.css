@@ -8,9 +8,6 @@
 .tree {
   stroke: var(--border-color);
   fill: transparent;
-}
-
-.tree:not(.root) {
   cursor: zoom-in;
 }
 
