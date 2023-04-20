@@ -2,7 +2,6 @@ import { useState } from "react"
 import { ExpandUp } from "../Toggle"
 import type { MetricLegendProps } from "./Legend"
 import { LegendDot } from "../util"
-import styled from "styled-components"
 
 const legendCutoff = 3
 

@@ -48,8 +48,9 @@ const ToggleButton = styled.button<{
   transition-duration: 0.4s;
   color: grey;
   transform-origin: 50% 55%;
-  transform: ${(props) => (props.collapse !== props.up ? "rotate(180deg)" : "none")};
+  transform: ${(props) => (props.collapse === props.up ? "rotate(180deg)" : "none")};
   font-size: large;
+  z-index: 10;
   &:hover {
     color: #606060;
     cursor: pointer;

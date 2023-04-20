@@ -2,6 +2,9 @@ import { Close as CloseIcon } from "@styled-icons/material"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
 
+import { Icon } from "@mdi/react"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline } from "@mdi/js"
+
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
     className={`absolute right-2 top-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
@@ -46,10 +49,11 @@ export function CheckboxWithLabel({
   const id = useId()
   return (
     <div className={`flex items-center justify-between gap-2 ${className}`} {...props}>
-      <label className="label" htmlFor={id}>
+      <label className="label flex w-full justify-between" htmlFor={id}>
         {children}
+        {checked ? <Icon path={mdiCheckboxOutline} size={1} /> : <Icon path={mdiCheckboxBlankOutline} size={1} />}
+        <input type="checkbox" checked={checked} onChange={onChange} id={id} className="hidden" />
       </label>
-      <input type="checkbox" checked={checked} onChange={onChange} id={id} />
     </div>
   )
 }

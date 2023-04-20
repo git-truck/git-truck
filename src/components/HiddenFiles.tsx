@@ -17,7 +17,7 @@ export function HiddenFiles() {
   const { analyzerData } = useData()
   return (
     <div className="box flex flex-col gap-2">
-      <h3 className="box__subtitle">Hidden files ({analyzerData.hiddenFiles.length})</h3>
+      <h2 className="box__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
       <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       {!collapse ? (
         <div>

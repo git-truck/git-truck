@@ -7,6 +7,8 @@ import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
 import { Folder as FolderIcon, TextSnippet as FileIcon } from "@styled-icons/material"
+import Icon from "@mdi/react"
+import { mdiFileSearchOutline } from "@mdi/js"
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   const searchResults: HydratedGitObject[] = []
@@ -48,6 +50,10 @@ export default function SearchBar() {
   return (
     <>
       <div className="box sticky top-0 z-10 flex flex-col gap-2">
+        <h2 className="box__title justify-between gap-2">
+          Search
+          <Icon path={mdiFileSearchOutline} size={1} />
+        </h2>
         <input
           className="input"
           ref={searchFieldRef}

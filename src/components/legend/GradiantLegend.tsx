@@ -43,7 +43,7 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
       >
         {offset !== -1 ? (
           <i
-            className="relative bottom-3 transition-all"
+            className="relative bottom-3 w-min transition-all"
             style={{
               left: `calc(${offset * 100}% - ${estimatedLetterWidth}px)`,
             }}

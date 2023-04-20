@@ -167,9 +167,9 @@ function openInNewTab(url: string) {
 function Feedback() {
   return (
     <div className="box">
-      <div className="grid grid-flow-col items-center justify-start gap-1">
-        <ReviewIcon height="1rem" />
+      <div className="flex items-center justify-between">
         <h3 className="box__subtitle">Help improve Git Truck</h3>
+        <ReviewIcon height="1rem" />
       </div>
       <a
         className="btn"

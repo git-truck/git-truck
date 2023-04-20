@@ -4,6 +4,7 @@ import { useData } from "../contexts/DataContext"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { Refresh as RefreshIcon, Folder as FolderIcon } from "@styled-icons/material"
+import { ArrowUpLeft } from "@styled-icons/octicons"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -34,13 +35,16 @@ export function GlobalInfo() {
   return (
     <div className="box flex flex-col gap-2">
       <div className="grid w-full gap-2">
-        <Link className="btn" to=".." title="See all repositories">
-          <FolderIcon />
+        <Link className="btn btn--primary" to=".." title="See all repositories">
+          <ArrowUpLeft />
           <p>See more repositories</p>
         </Link>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="box__title">{repo.name}</h2>
+        <h2 className="box__title gap-2">
+          <FolderIcon />
+          {repo.name}
+        </h2>
         <Form
           method="post"
           action={location.pathname}

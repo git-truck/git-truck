@@ -21,13 +21,18 @@
     @apply text-base-styles text-base;
   }
 
+  .box .box__title {
+    @apply text-blue-800/70;
+  }
+
   /* Inputs */
 
   .btn {
     @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .btn > svg {
+  .btn > svg,
+  h2 svg {
     @apply inline-block h-4 w-4;
   }
 

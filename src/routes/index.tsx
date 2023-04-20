@@ -68,12 +68,12 @@ export default function Index() {
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
               <li className="box gap-3 p-0">
-                <h3 className="box__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
+                <h2 className="box__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
                   Add repository
                   <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
                     Coming soon
                   </span>
-                </h3>
+                </h2>
                 <div className="flex flex-col gap-2 p-3 pt-0">
                   <input type="text" className="input" placeholder="git@github.com/owner/repo.git" />
 
@@ -100,7 +100,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
   return (
     <div key={repo.name}>
       <div className={`box gap-3 p-0`}>
-        <h3
+        <h2
           className={`box__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
             branchIsAnalyzed ? " from-green-500  to-green-600 " : "from-gray-500 to-gray-600"
           }`}
@@ -110,7 +110,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
             {branchIsAnalyzed ? "Ready" : "Not analyzed"}
           </span>
-        </h3>
+        </h2>
         <div className="flex flex-col gap-2 p-3 pt-0">
           <RevisionSelect
             value={head}
