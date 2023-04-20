@@ -12,14 +12,14 @@ function hiddenFileFormat(ignored: string) {
 
 export function HiddenFiles() {
   const location = useLocation()
-  const [collapse, setCollapse] = useBoolean(false)
+  const [expanded, setExpanded] = useBoolean(false)
   const navigationState = useNavigation()
   const { analyzerData } = useData()
   return (
     <div className="card flex flex-col gap-2">
       <h2 className="card__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
-      <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
-      {!collapse ? (
+      <ExpandUp collapse={!expanded} toggle={() => setExpanded(!expanded)} />
+      {expanded ? (
         <div>
           {analyzerData.hiddenFiles.map((hidden) => (
             <div className="grid grid-cols-[auto_1fr] gap-2" key={hidden} title={hidden}>
