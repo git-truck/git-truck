@@ -4,6 +4,8 @@ import { EnumSelect } from "./EnumSelect"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
+import { Icon } from "@mdi/react"
+import { mdiChartBubble, mdiDatabaseOutline, mdiCogOutline } from "@mdi/js"
 
 function isMetricWithHistoricalOption(metric: MetricType) {
   switch (metric) {
@@ -20,8 +22,30 @@ export function Options() {
 
   return (
     <div className="box">
-      <EnumSelect label="Visualization" enum={Metric} onChange={(metric: MetricType) => setMetricType(metric)} />
-      <EnumSelect label="Layout" enum={Chart} onChange={(chartType: ChartType) => setChartType(chartType)} />
+      <h2 className="box__title">
+        Options
+        <Icon path={mdiCogOutline} size={1} />
+      </h2>
+      <EnumSelect
+        label={
+          <div className="flex justify-between gap-2">
+            Visualization
+            <Icon path={mdiDatabaseOutline} size={1} />
+          </div>
+        }
+        enum={Metric}
+        onChange={(metric: MetricType) => setMetricType(metric)}
+      />
+      <EnumSelect
+        label={
+          <div className="flex justify-between gap-2">
+            Layout
+            <Icon path={mdiChartBubble} size={1} />
+          </div>
+        }
+        enum={Chart}
+        onChange={(chartType: ChartType) => setChartType(chartType)}
+      />
       {/* <EnumSelect
         label="Authorship data"
         enum={Authorship}

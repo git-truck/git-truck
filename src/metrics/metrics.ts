@@ -21,12 +21,12 @@ export const Authorship = {
 export type AuthorshipType = keyof typeof Authorship
 
 export const Metric = {
-  FILE_EXTENSION: "File extension",
-  MOST_COMMITS: "Number of commits",
-  LAST_CHANGED: "Last changed",
-  SINGLE_AUTHOR: "Single author",
-  TOP_CONTRIBUTOR: "Top contributor",
   TRUCK_FACTOR: "Truck factor",
+  TOP_CONTRIBUTOR: "Top contributor",
+  MOST_COMMITS: "Number of commits",
+  SINGLE_AUTHOR: "Single author",
+  FILE_TYPE: "File type",
+  LAST_CHANGED: "Last changed",
 }
 
 export type MetricType = keyof typeof Metric
@@ -45,7 +45,7 @@ export function createMetricData(data: AnalyzerData): MetricsData {
 
 export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
   switch (metric) {
-    case "FILE_EXTENSION":
+    case "FILE_TYPE":
       return "Where are different types of files located?"
     case "MOST_COMMITS":
       return "Which files have had the most commits, throughout the repository's history?"
@@ -60,7 +60,7 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
         ? "Which person has made the most line-changes to a file, throughout the repository's history?"
         : "Which person has made the most line-changes to a file, in the newest version?"
     case "TRUCK_FACTOR":
-      return "How many have contributed to a file?"
+      return "How many authors have contributed to a given file?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -68,7 +68,7 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
 
 export function getMetricLegendType(metric: MetricType): LegendType {
   switch (metric) {
-    case "FILE_EXTENSION":
+    case "FILE_TYPE":
     case "TOP_CONTRIBUTOR":
     case "SINGLE_AUTHOR":
       return "POINT"
@@ -132,7 +132,7 @@ export function getMetricCalcs(
 
   return [
     [
-      "FILE_EXTENSION",
+      "FILE_TYPE",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>()

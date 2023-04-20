@@ -1,7 +1,7 @@
-import { useId } from "react"
+import { ReactNode, useId } from "react"
 
 interface EnumSelectProps<T extends string> {
-  label: string
+  label: ReactNode
   enum: Record<T, string>
   onChange: (metric: T) => void
   hidden?: boolean
