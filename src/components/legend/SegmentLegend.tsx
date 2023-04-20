@@ -1,8 +1,7 @@
-import styled from "styled-components"
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import { estimatedLetterWidth } from "~/const"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
+import { LegendBarIndicator } from "../util"
 
 export type SegmentLegendData = [
   steps: number,
@@ -26,41 +25,32 @@ export function SegmentLegend({ metricCache }: MetricLegendProps) {
 
   return (
     <>
-      <div style={{ display: `flex`, flexDirection: `row` }}>
-        {[...Array(steps)].map((_, i) => {
-          return steps >= 4 ? (
-            <MetricSegment
-              key={`legend-${i}`}
-              width={width}
-              color={colorGenerator(i)}
-              text={textGenerator(i)}
-              top={i % 2 === 0}
-            ></MetricSegment>
-          ) : (
-            <TopMetricSegment
-              key={`legend-${i}`}
-              width={width}
-              color={colorGenerator(i)}
-              text={textGenerator(i)}
-            ></TopMetricSegment>
-          )
-        })}
+      <div className="relative">
+        <div className="flex">
+          {[...Array(steps)].map((_, i) => {
+            return steps >= 4 ? (
+              <MetricSegment
+                key={`legend-${i}`}
+                width={width}
+                color={colorGenerator(i)}
+                text={textGenerator(i)}
+                top={i % 2 === 0}
+              ></MetricSegment>
+            ) : (
+              <TopMetricSegment
+                key={`legend-${i}`}
+                width={width}
+                color={colorGenerator(i)}
+                text={textGenerator(i)}
+              ></TopMetricSegment>
+            )
+          })}
+        </div>
+        <LegendBarIndicator offset={arrowOffset} visible={arrowVisible} />
       </div>
-      <SegmentArrow visible={arrowVisible} position={arrowOffset} height={steps >= 4 ? 50 : 10}>
-        {"\u25B2"}
-      </SegmentArrow>
     </>
   )
 }
-
-const SegmentArrow = styled.i<{ visible: boolean; position: number; height: number }>`
-  display: ${({ visible }) => (visible ? "initital" : "none")};
-  transition: 500ms;
-  position: relative;
-  bottom: ${({ height }) => `${height}px`};
-  left: calc(${({ position }) => position}% - ${estimatedLetterWidth}px);
-  filter: drop-shadow(0px -2px 0px #fff);
-`
 
 interface SegmentMetricProps {
   width: number

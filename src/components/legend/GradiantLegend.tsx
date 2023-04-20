@@ -1,6 +1,6 @@
-import { estimatedLetterWidth } from "~/const"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
+import { LegendBarIndicator } from "../util"
 
 export type GradLegendData = [
   minValue: string,
@@ -36,21 +36,12 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
         </span>
       </div>
       <div
-        className="h-4 w-full rounded-full"
+        className="relative h-6 w-full rounded-full"
         style={{
           backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`,
         }}
       >
-        {offset !== -1 ? (
-          <i
-            className="relative bottom-3 w-min transition-all"
-            style={{
-              left: `calc(${offset * 100}% - ${estimatedLetterWidth}px)`,
-            }}
-          >
-            {"\u25B2"}
-          </i>
-        ) : null}
+        <LegendBarIndicator offset={offset * 100} visible={offset !== -1} />
       </div>
     </>
   )

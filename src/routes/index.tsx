@@ -99,7 +99,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
 
   return (
     <div key={repo.name}>
-      <div className={`card gap-3 p-0`}>
+      <div className="card gap-3 p-0">
         <h2
           className={`card__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
             branchIsAnalyzed ? " from-green-500  to-green-600 " : "from-gray-500 to-gray-600"
