@@ -90,7 +90,9 @@
   }
 
   .input {
-    @apply h-8 w-full flex-grow overflow-scroll text-ellipsis rounded border border-gray-300 px-1 text-sm transition-colors enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
+    @apply h-8 w-full flex-grow;
+    @apply overflow-scroll text-ellipsis rounded border border-gray-300 px-1 text-sm transition-colors;
+    @apply enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
   }
 
   .input:not(select) {
@@ -100,15 +102,64 @@
   .label {
     @apply cursor-pointer font-bold hover:opacity-70;
   }
+
+  .app-container {
+    @apply grid h-auto w-full grid-cols-1 grid-rows-[50vh,auto,auto] transition-all;
+    @apply md:h-screen md:grid-cols-[var(--side-panel-width),1fr,var(--side-panel-width)] md:grid-rows-[1fr] md:overflow-hidden;
+    grid-template-areas: "left main right";
+  }
+
+  /* 768px = md */
+  @media (max-width: 768px) {
+    .app-container {
+      grid-template-areas: "main" "left" "right";
+    }
+  }
+
+  .app-container > main {
+    grid-area: main;
+  }
+
+  .app-container > aside {
+    @apply md:transition-transform;
+  }
+
+  .app-container > aside:first-of-type {
+    grid-area: left;
+  }
+
+  .app-container > aside:last-of-type {
+    grid-area: right;
+  }
+
+  .app-container.fullscreen {
+    @apply grid-rows-[100vh,auto,auto];
+  }
+
+  .app-container.fullscreen > main {
+    /* Span all available columns */
+    grid-column: 1 / -1;
+  }
+
+  .app-container.fullscreen > aside:first-of-type {
+    @apply md:-translate-x-80;
+  }
+
+  .app-container.fullscreen > aside:last-of-type {
+    @apply md:translate-x-80;
+  }
+
+  /* Small screens */
 }
 
 @layer utilities {
   .text-base-styles {
     font-weight: bold;
-    text-overflow: ellipsis;
+    @apply line-clamp-1;
+    /* text-overflow: ellipsis;
     word-break: keep-all;
     white-space: nowrap;
-    overflow-x: hidden;
+    overflow-x: hidden; */
     display: flex;
     align-items: center;
     justify-content: space-between;
