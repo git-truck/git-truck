@@ -143,7 +143,7 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   console.error(error.message)
   console.error(error.stack)
   return (
-    <Container isFullscreen={false}>
+    <div className="app-container">
       <div />
       <div className="card">
         <h1>An error occured!</h1>
@@ -156,12 +156,8 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
           <Link to="..">Go back</Link>
         </div>
       </div>
-    </Container>
+    </div>
   )
-}
-
-function openInNewTab(url: string) {
-  window.open(url, "_blank")
 }
 
 function Feedback() {
@@ -217,7 +213,7 @@ export default function Repo() {
 
   return (
     <Providers data={data}>
-      <Container isFullscreen={isFullscreen}>
+      <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
         <aside className="side-panel">
           <GlobalInfo />
           <Feedback />
@@ -233,7 +229,7 @@ export default function Repo() {
           <Details showUnionAuthorsModal={showUnionAuthorsModal} />
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
         </aside>
-      </Container>
+      </div>
       <UnionAuthorsModal
         visible={unionAuthorsModalOpen}
         onClose={() => {
@@ -243,35 +239,3 @@ export default function Repo() {
     </Providers>
   )
 }
-
-const Container = styled.div<{ isFullscreen: boolean }>`
-  height: 100vh;
-  display: grid;
-  transition: 0.5s;
-  grid-template-areas: "left main right";
-  grid-template-columns: ${(props) =>
-    props.isFullscreen ? "0px 1fr 0px" : "var(--side-panel-width) 1fr var(--side-panel-width)"};
-  grid-template-rows: 1fr;
-
-  & > main {
-    grid-area: main;
-  }
-
-  & > aside:first-of-type() {
-    grid-area: left;
-  }
-
-  & > aside:last-of-type() {
-    grid-area: right;
-  }
-
-  @media (max-width: 660px) {
-    height: auto;
-    grid-template-areas:
-      "main"
-      "left"
-      "right";
-    grid-template-columns: none;
-    grid-template-rows: ${(props) => (props.isFullscreen ? "100vh auto auto" : "50vh auto auto")};
-  }
-`
