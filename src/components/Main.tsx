@@ -5,6 +5,8 @@ import { useComponentSize } from "../hooks"
 import { Chart } from "./Chart"
 import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
 import type { Dispatch, SetStateAction } from "react"
+import { Icon } from "@mdi/react"
+import { mdiHome, mdiChevronRight } from "@mdi/js"
 
 export const MainRoot = styled.main`
   display: grid;
@@ -20,27 +22,6 @@ const TopBar = styled.div`
   align-items: center;
   justify-content: space-between;
   margin: var(--unit);
-`
-
-const Breadcrumb = styled.div`
-  height: 1.5em;
-  & > * {
-    margin: 0 calc(var(--unit) * 0.5);
-  }
-`
-
-export const ClickableText = styled.button`
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-weight: inherit;
-  font-size: inherit;
-  color: hsl(210, 10%, 50%);
-  cursor: pointer;
-  &:hover {
-    color: #8080ff;
-    text-decoration-color: #8080ff;
-  }
 `
 
 export const NonClickableText = styled.span`
@@ -84,30 +65,42 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
   return (
     <MainRoot>
       <TopBar>
-        <Breadcrumb>
+        <div className="flex items-center gap-1">
           {paths.length > 1
             ? paths.reverse().map(([name, p], i) => {
                 if (p === "" || i === paths.length - 1)
                   if (p === "")
                     return (
                       <>
-                        <NonClickableText key={p}>{name}</NonClickableText>
-                        <span>{"\u203A"}</span>
+                        <span className="font-bold" key={p}>
+                          {name}
+                        </span>
+                        <Icon path={mdiChevronRight} size={1} />
                       </>
                     )
-                  else return <NonClickableText key={p}>{name}</NonClickableText>
+                  else
+                    return (
+                      <span className="font-bold" key={p}>
+                        {name}
+                      </span>
+                    )
                 else
                   return (
                     <>
-                      <ClickableText key={p} onClick={() => setPath(p)}>
+                      <button
+                        className="card flex flex-row gap-2 py-1 px-2 font-bold hover:opacity-70"
+                        key={p}
+                        onClick={() => setPath(p)}
+                      >
+                        {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
                         {name}
-                      </ClickableText>
-                      <span>{"\u203A"}</span>
+                      </button>
+                      <Icon path={mdiChevronRight} size={1} />
                     </>
                   )
               })
             : null}
-        </Breadcrumb>
+        </div>
         <button className="btn--icon" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
           {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
         </button>
