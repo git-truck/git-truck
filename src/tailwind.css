@@ -154,12 +154,8 @@
 
 @layer utilities {
   .text-base-styles {
-    font-weight: bold;
     @apply line-clamp-1;
-    /* text-overflow: ellipsis;
-    word-break: keep-all;
-    white-space: nowrap;
-    overflow-x: hidden; */
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: space-between;
