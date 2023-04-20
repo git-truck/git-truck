@@ -43,7 +43,7 @@ interface ChartProps {
 }
 
 export function Chart(props: ChartProps) {
-  const [hoveredBlob, setHoveredBlob] = useState<HydratedGitBlobObject | null>(null)
+  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const { analyzerData } = useData()
   const { chartType } = useOptions()
   const { path } = usePath()
@@ -54,19 +54,20 @@ export function Chart(props: ChartProps) {
     return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(props.size, chartType), chartType, path)
   }, [chartType, analyzerData.commit, props.size, path])
 
-  useEffect(() => setHoveredBlob(null), [chartType, analyzerData.commit, props.size])
+  useEffect(() => setHoveredObject(null), [chartType, analyzerData.commit, props.size])
 
   const createGroupHandlers: (
-    d: CircleOrRectHiearchyNode
-  ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d) =>
-    isBlob(d.data)
+    d: CircleOrRectHiearchyNode,
+    isRoot: boolean
+  ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d, isRoot) => {
+    return isBlob(d.data)
       ? {
           onClick: (evt) => {
             evt.stopPropagation()
             return setClickedObject(d.data)
           },
-          onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
-          onMouseOut: () => setHoveredBlob(null),
+          onMouseOver: () => setHoveredObject(d.data as HydratedGitObject),
+          onMouseOut: () => setHoveredObject(null),
         }
       : {
           onClick: (evt) => {
@@ -74,9 +75,10 @@ export function Chart(props: ChartProps) {
             setClickedObject(d.data)
             setPath(d.data.path)
           },
-          onMouseOver: () => setHoveredBlob(null),
-          onMouseOut: () => setHoveredBlob(null),
+          onMouseOver: () => !isRoot && setHoveredObject(d.data as HydratedGitObject),
+          onMouseOut: () => setHoveredObject(null),
         }
+  }
 
   return (
     <>
@@ -97,15 +99,14 @@ export function Chart(props: ChartProps) {
             <G
               blink={clickedObject?.path === d.data.path}
               key={`${chartType}${d.data.path}`}
-              {...createGroupHandlers(d)}
-              className={i === 0 ? "root" : ""}
+              {...createGroupHandlers(d, i === 0)}
             >
               <Node isRoot={i === 0} d={d} />
             </G>
           )
         })}
       </SVG>
-      {typeof document !== "undefined" ? <Tooltip hoveredBlob={hoveredBlob} /> : null}
+      {typeof document !== "undefined" ? <Tooltip hoveredObject={hoveredObject} /> : null}
     </>
   )
 }
