@@ -50,9 +50,9 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="box flex flex-col gap-2">
+    <div className="card flex flex-col gap-2">
       <CloseButton onClick={() => setClickedObject(null)} />
-      <h2 className="box__title" title={clickedObject.name}>
+      <h2 className="card__title" title={clickedObject.name}>
         {clickedObject.name}
       </h2>
       {isBlob ? (

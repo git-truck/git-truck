@@ -145,7 +145,7 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   return (
     <Container isFullscreen={false}>
       <div />
-      <div className="box">
+      <div className="card">
         <h1>An error occured!</h1>
         <p>See console for more infomation.</p>
         <Code>{error.stack}</Code>
@@ -166,9 +166,9 @@ function openInNewTab(url: string) {
 
 function Feedback() {
   return (
-    <div className="box">
+    <div className="card">
       <div className="flex items-center justify-between">
-        <h3 className="box__subtitle">Help improve Git Truck</h3>
+        <h3 className="card__subtitle">Help improve Git Truck</h3>
         <ReviewIcon height="1rem" />
       </div>
       <a
@@ -194,10 +194,10 @@ function Feedback() {
 function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   return (
-    <div className="box">
+    <div className="card">
       <p>Update available: {gitTruckInfo.latestVersion}</p>
-      <p className="box-p">Currently installed: {gitTruckInfo.version}</p>
-      <p className="box-p">
+      <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
+      <p className="card-p">
         To update, close application and run: <Code inline>npx git-truck@latest</Code>
       </p>
     </div>

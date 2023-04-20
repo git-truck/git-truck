@@ -16,8 +16,8 @@ export function HiddenFiles() {
   const navigationState = useNavigation()
   const { analyzerData } = useData()
   return (
-    <div className="box flex flex-col gap-2">
-      <h2 className="box__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
+    <div className="card flex flex-col gap-2">
+      <h2 className="card__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
       <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
       {!collapse ? (
         <div>

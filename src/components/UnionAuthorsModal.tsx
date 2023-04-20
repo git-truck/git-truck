@@ -127,7 +127,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     const color = getColorFromDisplayName(displayName)
 
     return (
-      <div className="box m-0 flex flex-col p-2" key={aliasGroupIndex}>
+      <div className="card m-0 flex flex-col p-2" key={aliasGroupIndex}>
         <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={color} />
           <b>{displayName}</b>
@@ -154,7 +154,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   return (
     <div className="fixed inset-0 z-10 grid bg-black/50 p-2" onClick={handleModalWrapperClick}>
-      <div className="box relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
+      <div className="card relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
         <h2 className="col-span-2 text-2xl">Group authors</h2>
 
         {/* <div className="flex flex-col gap-2"> */}

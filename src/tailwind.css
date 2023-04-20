@@ -6,23 +6,27 @@
   .side-panel {
     @apply flex flex-col gap-2 overflow-y-auto p-2;
   }
-  .box {
+  .card {
     @apply relative flex w-auto flex-col gap-2 rounded-lg bg-white p-3 shadow-md;
   }
 
-  .box-p {
+  .card__header {
+    @apply flex flex-row items-center gap-2;
+  }
+
+  .card__content {
+    @apply flex flex-col gap-2;
+  }
+
+  .card-p {
     @apply text-sm opacity-70;
   }
-  .box__title {
-    @apply text-base-styles text-lg;
+  .card__title {
+    @apply text-base-styles border-b pb-1 text-lg;
   }
 
-  .box__subtitle {
+  .card__subtitle {
     @apply text-base-styles text-base;
-  }
-
-  .box .box__title {
-    @apply text-blue-800/70;
   }
 
   /* Inputs */

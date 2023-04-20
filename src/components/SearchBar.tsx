@@ -49,8 +49,8 @@ export default function SearchBar() {
 
   return (
     <>
-      <div className="box sticky top-0 z-10 flex flex-col gap-2">
-        <h2 className="box__title justify-between gap-2">
+      <div className="card sticky top-0 z-10 flex flex-col gap-2">
+        <h2 className="card__title justify-between gap-2">
           Search
           <Icon path={mdiFileSearchOutline} size={1} />
         </h2>
@@ -69,7 +69,7 @@ export default function SearchBar() {
           }}
         />
         {isTransitioning || searchText.length > 0 ? (
-          <p className="box-p">
+          <p className="card-p">
             {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}
           </p>
         ) : null}
@@ -95,7 +95,7 @@ const SearchResults = memo(function SearchResults() {
   }
 
   return (
-    <div className="box relative gap-0">
+    <div className="card relative gap-0">
       {searchResults.map((result) => (
         <button
           className="flex items-center justify-start gap-2 text-sm font-bold opacity-70 hover:opacity-100"

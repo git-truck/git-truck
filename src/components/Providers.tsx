@@ -54,10 +54,10 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptions()),
           clickedObject: object,
         })),
-      setAnimationsEnabled: (enabled: boolean) =>
+      setTransitionsEnabled: (enabled: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptions()),
-          animationsEnabled: enabled,
+          transitionsEnabled: enabled,
         })),
       setLabelsVisible: (visible: boolean) =>
         setOptions((prevOptions) => ({
