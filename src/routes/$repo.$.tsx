@@ -6,7 +6,6 @@ import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link } from "@remix-run/react"
-import styled from "styled-components"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
@@ -207,7 +206,7 @@ export default function Repo() {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
-  const showUnionAuthorsModal = () => setUnionAuthorsModalOpen(true)
+  const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
   if (!analyzerData) return null
 
@@ -216,7 +215,6 @@ export default function Repo() {
       <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
         <aside className="side-panel">
           <GlobalInfo />
-          <Feedback />
           <Options />
           <SearchBar />
         </aside>
@@ -225,9 +223,10 @@ export default function Repo() {
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
+          <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Details showUnionAuthorsModal={showUnionAuthorsModal} />
-          <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
+          <Feedback />
         </aside>
       </div>
       <UnionAuthorsModal
