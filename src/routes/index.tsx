@@ -44,7 +44,7 @@ export default function Index() {
   if (transitionData.state !== "idle") return <AnalyzingIndicator />
   return (
     <main className="m-auto flex w-full max-w-7xl flex-col gap-2 p-2">
-      <div className="box">
+      <div className="card">
         <h1 className="text-4xl">🚛 Git Truck</h1>
         <p>
           Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
@@ -67,8 +67,8 @@ export default function Index() {
               {repositories.map((repo) => (
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
-              <li className="box gap-3 p-0">
-                <h2 className="box__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
+              <li className="card gap-3 p-0">
+                <h2 className="card__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
                   Add repository
                   <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
                     Coming soon
@@ -99,9 +99,9 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
 
   return (
     <div key={repo.name}>
-      <div className={`box gap-3 p-0`}>
+      <div className={`card gap-3 p-0`}>
         <h2
-          className={`box__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
+          className={`card__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
             branchIsAnalyzed ? " from-green-500  to-green-600 " : "from-gray-500 to-gray-600"
           }`}
           title={repo.name}

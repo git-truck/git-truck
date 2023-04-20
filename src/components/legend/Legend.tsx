@@ -37,10 +37,10 @@ export function Legend({
   }
 
   return (
-    <div className={`box bottom-0 ${className}`}>
-      <h2 className="box__title">Legend</h2>
-      <h3 className="box__subtitle">{Metric[metricType]}</h3>
-      <p className="box-p">{getMetricDescription(metricType, authorshipType)}</p>
+    <div className={`card bottom-0 ${className}`}>
+      <h2 className="card__title">Legend</h2>
+      <h3 className="card__subtitle">{Metric[metricType]}</h3>
+      <p className="card-p">{getMetricDescription(metricType, authorshipType)}</p>
       {metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR" ? (
         <button className="btn" onClick={showUnionAuthorsModal}>
           <PeopleAlt />

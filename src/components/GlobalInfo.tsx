@@ -33,7 +33,7 @@ export function GlobalInfo() {
   }, [transitionState.state])
 
   return (
-    <div className="box flex flex-col gap-2">
+    <div className="card flex flex-col gap-2">
       <div className="grid w-full gap-2">
         <Link className="btn btn--primary" to=".." title="See all repositories">
           <ArrowUpLeft />
@@ -41,7 +41,7 @@ export function GlobalInfo() {
         </Link>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="box__title gap-2">
+        <h2 className="card__title gap-2" title={repo.name}>
           <FolderIcon />
           {repo.name}
         </h2>

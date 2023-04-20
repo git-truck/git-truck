@@ -17,12 +17,18 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 }
 
 export function Options() {
-  const { animationsEnabled, setAnimationsEnabled, labelsVisible, setLabelsVisible, setMetricType, setChartType } =
-    useOptions()
+  const {
+    transitionsEnabled: transitionsEnabled,
+    setTransitionsEnabled,
+    labelsVisible,
+    setLabelsVisible,
+    setMetricType,
+    setChartType,
+  } = useOptions()
 
   return (
-    <div className="box">
-      <h2 className="box__title">
+    <div className="card">
+      <h2 className="card__title">
         Options
         <Icon path={mdiCogOutline} size={1} />
       </h2>
@@ -54,17 +60,19 @@ export function Options() {
       />*/}
       <CheckboxWithLabel
         className="pl-[9px]"
-        checked={animationsEnabled}
-        onChange={(e) => setAnimationsEnabled(e.target.checked)}
+        checked={transitionsEnabled}
+        onChange={(e) => setTransitionsEnabled(e.target.checked)}
+        title="Disable to improve performance when zooming"
       >
-        Enable animations
+        Transitions
       </CheckboxWithLabel>
       <CheckboxWithLabel
         className="pl-[9px]"
         checked={labelsVisible}
         onChange={(e) => setLabelsVisible(e.target.checked)}
+        title="Disable to improve performance"
       >
-        Show labels
+        Labels
       </CheckboxWithLabel>
     </div>
   )

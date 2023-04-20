@@ -19,7 +19,7 @@ export function useCSSVar(varName: string) {
 }
 
 export function useToggleableSpring(props: unknown) {
-  const { animationsEnabled } = useOptions()
+  const { transitionsEnabled } = useOptions()
   const [initialRender, setInitialRender] = useBoolean(true)
   useEffect(() => {
     setTimeout(() => setInitialRender(false), 0)
@@ -27,6 +27,6 @@ export function useToggleableSpring(props: unknown) {
 
   return useSpring({
     ...(typeof props === "object" ? props : {}),
-    immediate: initialRender || !animationsEnabled,
+    immediate: initialRender || !transitionsEnabled,
   })
 }

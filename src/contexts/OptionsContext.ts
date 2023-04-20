@@ -13,12 +13,12 @@ export interface Options {
   metricType: MetricType
   chartType: ChartType
   authorshipType: AuthorshipType
-  animationsEnabled: boolean
+  transitionsEnabled: boolean
   labelsVisible: boolean
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
   setAuthorshipType: (authorshipType: AuthorshipType) => void
-  setAnimationsEnabled: (animationsEnabled: boolean) => void
+  setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
 }
 
@@ -37,7 +37,7 @@ export function getDefaultOptions(): Options {
     metricType: Object.keys(Metric)[0] as MetricType,
     chartType: Object.keys(Chart)[0] as ChartType,
     authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
-    animationsEnabled: true,
+    transitionsEnabled: true,
     labelsVisible: true,
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
@@ -48,11 +48,11 @@ export function getDefaultOptions(): Options {
     setAuthorshipType: () => {
       throw new Error("No AuthorshipTypeSetter provided")
     },
-    setAnimationsEnabled: () => {
-      throw new Error("No animationsEnabledSetter provided")
+    setTransitionsEnabled: () => {
+      throw new Error("No transitionsEnabledSetter provided")
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
-    }
+    },
   }
 }
