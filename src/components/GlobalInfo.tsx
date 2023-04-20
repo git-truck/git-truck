@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { Refresh as RefreshIcon, Folder as FolderIcon } from "@styled-icons/material"
 import { ArrowUpLeft } from "@styled-icons/octicons"
+import { Code } from "./util"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -32,6 +33,7 @@ export function GlobalInfo() {
     }
   }, [transitionState.state])
 
+  const isoString = new Date(analyzerData.lastRunEpoch).toISOString()
   return (
     <div className="card flex flex-col gap-2">
       <div className="grid w-full gap-2">
@@ -67,17 +69,19 @@ export function GlobalInfo() {
         headGroups={repo.refs}
         analyzedHeads={repo.analyzedHeads}
       />
-      <div>
-        <strong>Analyzed: </strong>
-        <span>{dateTimeFormatShort(analyzerData.lastRunEpoch)}</span>
-      </div>
-      <div>
-        <strong>As of commit: </strong>
-        <span title={analyzerData.commit.message ?? "No commit message"}>{analyzerData.commit.hash.slice(0, 7)}</span>
-      </div>
-      <div>
-        <strong>Files analyzed: </strong>
-        <span>{analyzerData.commit.fileCount ?? 0}</span>
+      <div className="grid auto-rows-fr grid-cols-2">
+        <strong>Analyzed </strong>
+        <time className="text-right" dateTime={isoString} title={isoString}>
+          {dateTimeFormatShort(analyzerData.lastRunEpoch)}
+        </time>
+
+        <strong>As of commit </strong>
+        <span className="text-right" title={analyzerData.commit.message ?? "No commit message"}>
+          <Code inline>#{analyzerData.commit.hash.slice(0, 7)}</Code>
+        </span>
+
+        <strong>Files analyzed </strong>
+        <span className="text-right">{analyzerData.commit.fileCount ?? 0}</span>
       </div>
     </div>
   )
