@@ -43,7 +43,7 @@ export function GlobalInfo() {
         </Link>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="card__title gap-2" title={repo.name}>
+        <h2 className="card__title grow justify-start gap-2" title={repo.name}>
           <FolderIcon />
           {repo.name}
         </h2>
