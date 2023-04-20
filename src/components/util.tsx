@@ -1,9 +1,8 @@
 import { Close as CloseIcon } from "@styled-icons/material"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
-
 import { Icon } from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline } from "@mdi/js"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp } from "@mdi/js"
 
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
@@ -57,3 +56,22 @@ export function CheckboxWithLabel({
     </div>
   )
 }
+
+export const LegendBarIndicator = ({
+  visible: arrowVisible,
+  offset: arrowOffset,
+}: {
+  visible: boolean
+  offset: number
+}) => (
+  <div
+    className={`absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all ${
+      arrowVisible ? "opacity-100" : "opacity-0"
+    }`}
+    style={{
+      left: `${arrowOffset}%`,
+    }}
+  >
+    <Icon path={mdiMenuUp} size={2} className="stroke-white" />
+  </div>
+)
