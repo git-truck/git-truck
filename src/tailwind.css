@@ -32,7 +32,7 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn > svg,
@@ -98,7 +98,7 @@
   }
 
   .label {
-    @apply cursor-pointer font-bold hover:opacity-80;
+    @apply cursor-pointer font-bold hover:opacity-70;
   }
 }
 
