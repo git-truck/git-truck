@@ -10,7 +10,12 @@
   fill: transparent;
 }
 
-.blob:hover, .tree:hover {
+.tree:not(.root) {
+  cursor: zoom-in;
+}
+
+.blob:hover,
+.tree:hover {
   stroke: darkslategray;
 }
 

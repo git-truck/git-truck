@@ -1,7 +1,7 @@
 import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
-import { memo, useEffect, useMemo, useState } from "react"
+import { MouseEventHandler, memo, useEffect, useMemo, useState } from "react"
 import styled from "styled-components"
 import type {
   HydratedGitBlobObject,
@@ -35,6 +35,7 @@ const SVG = styled.svg<{ chartType: ChartType }>`
   padding: ${(props) => getPaddingFromChartType(props.chartType)}px;
   width: 100%;
   height: 100%;
+  cursor: zoom-out;
 `
 
 interface ChartProps {
@@ -55,15 +56,21 @@ export function Chart(props: ChartProps) {
 
   useEffect(() => setHoveredBlob(null), [chartType, analyzerData.commit, props.size])
 
-  const createGroupHandlers = (d: CircleOrRectHiearchyNode) =>
+  const createGroupHandlers: (
+    d: CircleOrRectHiearchyNode
+  ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d) =>
     isBlob(d.data)
       ? {
-          onClick: () => setClickedObject(d.data),
+          onClick: (evt) => {
+            evt.stopPropagation()
+            return setClickedObject(d.data)
+          },
           onMouseOver: () => setHoveredBlob(d.data as HydratedGitBlobObject),
           onMouseOut: () => setHoveredBlob(null),
         }
       : {
-          onClick: () => {
+          onClick: (evt) => {
+            evt.stopPropagation()
             setClickedObject(d.data)
             setPath(d.data.path)
           },
@@ -77,6 +84,13 @@ export function Chart(props: ChartProps) {
         chartType={chartType}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
+        onClick={() => {
+          // Move up to parent
+          const parentPath = path.split("/").slice(0, -1).join("/")
+          // Check if parent is root
+          if (parentPath === "") setPath("/")
+          else setPath(parentPath)
+        }}
       >
         {nodes?.descendants().map((d, i) => {
           return (
@@ -84,6 +98,7 @@ export function Chart(props: ChartProps) {
               blink={clickedObject?.path === d.data.path}
               key={`${chartType}${d.data.path}`}
               {...createGroupHandlers(d)}
+              className={i === 0 ? "root" : ""}
             >
               <Node isRoot={i === 0} d={d} />
             </G>
