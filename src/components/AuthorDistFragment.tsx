@@ -31,7 +31,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
               ) : null}
               <span className="overflow-hidden overflow-ellipsis whitespace-pre font-bold opacity-70">{author}</span>
             </div>
-            <p className="break-all text-sm">{contribPercentage}%</p>
+            <p className="break-all text-right text-sm">{contribPercentage}%</p>
           </Fragment>
         )
       })}

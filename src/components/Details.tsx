@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
-import styled from "styled-components"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ExpandDown } from "~/components/Toggle"
@@ -114,7 +113,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           </button>
         </Form>
       )}
-      <DetailsEntries>
+      <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
         {isBlob ? (
           <>
             <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
@@ -125,7 +124,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
           <FileAndSubfolderCountEntries clickedTree={clickedObject} />
         )}
         <PathEntry path={clickedObject.path} />
-      </DetailsEntries>
+      </div>
       {isBlob ? (
         <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
       ) : (
@@ -253,7 +252,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
           <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
         ) : null}
       </div>
-      <AuthorDistEntries>
+      <div className="grid grid-cols-[1fr,auto] gap-1">
         {authorsAreCutoff ? (
           <>
             <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
@@ -276,7 +275,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
             )}
           </>
         )}
-      </AuthorDistEntries>
+      </div>
     </div>
   )
 }
@@ -294,28 +293,6 @@ function makePercentResponsibilityDistribution(
 
   return newAuthorsEntries
 }
-
-export const DetailsHeading = styled.h3`
-  font-size: calc(var(--unit) * 2);
-  padding-top: calc(var(--unit));
-  padding-bottom: calc(var(--unit) * 0.5);
-  font-size: 1.1em;
-`
-
-export const AuthorDistEntries = styled.div`
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: calc(0.5 * var(--unit)) calc(var(--unit) * 3);
-  & > p {
-    text-align: right;
-  }
-`
-
-const DetailsEntries = styled.div`
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--unit) calc(var(--unit) * 3);
-`
 
 function hasZeroContributions(authors?: Record<string, number>) {
   if (!authors) return true
