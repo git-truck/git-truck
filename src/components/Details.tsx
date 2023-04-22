@@ -214,10 +214,6 @@ function PathEntry(props: { path: string }) {
   )
 }
 
-const StyledSpan = styled.span`
-  opacity: 0.5;
-`
-
 function SizeEntry(props: { size: number; isBinary?: boolean }) {
   const size = byteSize(props.size ?? 0)
   return (
@@ -227,24 +223,18 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
       </div>
       <p className="break-all text-sm">
         {size.value} {size.unit}{" "}
-        <StyledSpan>
+        <span className="opacity-50">
           {props.isBinary ? (
             <>
               <br />
               (binary file)
             </>
           ) : null}
-        </StyledSpan>
+        </span>
       </p>
     </>
   )
 }
-
-export const AuthorDistHeader = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-`
 
 const authorCutoff = 2
 
