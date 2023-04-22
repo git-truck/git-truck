@@ -1,4 +1,4 @@
-.tree,
+.tree:not(.root),
 .blob {
   position: relative;
   cursor: pointer;
@@ -8,6 +8,10 @@
 .tree {
   stroke: var(--border-color);
   fill: transparent;
+  cursor: zoom-in;
+}
+
+:not(.root) > .tree {
   cursor: zoom-in;
 }
 

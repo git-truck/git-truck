@@ -1,8 +1,7 @@
 import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
-import { MouseEventHandler, memo, useEffect, useMemo, useState } from "react"
-import styled from "styled-components"
+import { MouseEventHandler, SVGAttributes, memo, useEffect, useMemo, useState } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -24,19 +23,9 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { blinkAnimation, pulseAnimation } from "./Animations"
 import { Tooltip } from "./Tooltip"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
-
-const SVG = styled.svg<{ chartType: ChartType }>`
-  display: grid;
-  place-items: center;
-  padding: ${(props) => getPaddingFromChartType(props.chartType)}px;
-  width: 100%;
-  height: 100%;
-  cursor: zoom-out;
-`
 
 interface ChartProps {
   size: { width: number; height: number }
@@ -75,15 +64,21 @@ export function Chart(props: ChartProps) {
             setClickedObject(d.data)
             setPath(d.data.path)
           },
-          onMouseOver: () => !isRoot && setHoveredObject(d.data as HydratedGitObject),
+          onMouseOver: (evt) => {
+            evt.stopPropagation()
+            if (!isRoot) setHoveredObject(d.data as HydratedGitObject)
+            else if (hoveredObject) setHoveredObject(null)
+          },
           onMouseOut: () => setHoveredObject(null),
         }
   }
 
   return (
     <>
-      <SVG
-        chartType={chartType}
+      <svg
+        className={`grid h-full w-full place-items-center p-[${getPaddingFromChartType(chartType)}px] ${
+          path.includes("/") ? "cursor-zoom-out" : ""
+        }`}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
         onClick={() => {
@@ -96,26 +91,20 @@ export function Chart(props: ChartProps) {
       >
         {nodes?.descendants().map((d, i) => {
           return (
-            <G
-              blink={clickedObject?.path === d.data.path}
+            <g
+              className={`${i === 0 ? "root" : ""} ${clickedObject?.path === d.data.path ? "animate-blink" : ""}`}
               key={`${chartType}${d.data.path}`}
               {...createGroupHandlers(d, i === 0)}
             >
               <Node isRoot={i === 0} d={d} />
-            </G>
+            </g>
           )
         })}
-      </SVG>
+      </svg>
       {typeof document !== "undefined" ? <Tooltip hoveredObject={hoveredObject} /> : null}
     </>
   )
 }
-
-const G = styled.g<{ blink: boolean }>`
-  animation-name: ${(props) => (props.blink ? blinkAnimation : "none")};
-  animation-duration: 2s;
-  animation-iteration-count: infinite;
-`
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType, labelsVisible } = useOptions()
@@ -206,12 +195,9 @@ function Circle({ d, isSearchMatch }: { d: HierarchyCircularNode<HydratedGitObje
   return <CircleSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const CircleSVG = styled(animated.circle)<{ pulse: boolean }>`
-  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-`
+const CircleSVG = ({ pulse, className = "", ...props }: { pulse: boolean } & SVGAttributes<SVGCircleElement>) => {
+  return <animated.circle {...props} className={`${className} ${pulse ? "animate-stroke-pulse" : ""}`} />
+}
 
 function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObject>; isSearchMatch: boolean }) {
   const [metricsData] = useMetrics()
@@ -235,12 +221,9 @@ function Rect({ d, isSearchMatch }: { d: HierarchyRectangularNode<HydratedGitObj
   return <RectSVG pulse={isSearchMatch} {...props} className={d.data.type} />
 }
 
-const RectSVG = styled(animated.rect)<{ pulse: boolean }>`
-  animation-name: ${(props) => (props.pulse ? pulseAnimation : "none")};
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-`
+const RectSVG = ({ pulse, className = "", ...props }: { pulse: boolean } & SVGAttributes<SVGRectElement>) => {
+  return <animated.rect {...props} className={`${className} ${pulse ? "animate-stroke-pulse" : ""}`} />
+}
 
 function CircleText({
   d,
@@ -258,7 +241,8 @@ function CircleText({
   return (
     <>
       <animated.path {...props} id={d.data.path} className="name-path" />
-      <Text
+      <animated.text
+        className="pointer-events-none"
         style={{
           stroke: "var(--global-bg-color)",
         }}
@@ -275,8 +259,8 @@ function CircleText({
         >
           {displayText}
         </textPath>
-      </Text>
-      <Text>
+      </animated.text>
+      <animated.text className="pointer-events-none">
         <textPath
           fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
@@ -287,7 +271,7 @@ function CircleText({
         >
           {displayText}
         </textPath>
-      </Text>
+      </animated.text>
     </>
   )
 }
@@ -308,9 +292,9 @@ function RectText({
   })
 
   return (
-    <Text {...props} className="object-name">
+    <animated.text {...props} className="object-name pointer-events-none">
       {displayText}
-    </Text>
+    </animated.text>
   )
 }
 
@@ -431,6 +415,3 @@ function getPaddingFromChartType(chartType: ChartType) {
 
 const isTree = (d: HydratedGitObject): d is HydratedGitTreeObject => d.type === "tree"
 const isBlob = (d: HydratedGitObject): d is HydratedGitBlobObject => d.type === "blob"
-const Text = styled(animated.text)`
-  pointer-events: none;
-`
