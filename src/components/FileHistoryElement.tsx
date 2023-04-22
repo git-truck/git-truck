@@ -2,8 +2,6 @@ import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyze
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { ExpandDown } from "./Toggle"
-import { AuthorDistEntries } from "./Details"
-import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 
 interface props {
@@ -49,7 +47,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
             >
               {commit.message}
             </span>
-            <p className="break-all text-sm">{dateFormatLong(commit.time)}</p>
+            <p className="break-all text-right text-sm">{dateFormatLong(commit.time)}</p>
           </Fragment>
         )
       })}
@@ -66,9 +64,9 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
     return (
       <>
         <h3 className="font-bold">Commit History</h3>
-        <AuthorDistEntries>
+        <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
-        </AuthorDistEntries>
+        </div>
       </>
     )
   }
@@ -78,7 +76,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
         <h3 className="font-bold">Commit History</h3>
         <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
       </div>
-      <AuthorDistEntries>
+      <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
         <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />
         <CommitDistFragment show={!collapsed} items={commits.slice(commitCutoff)} />
         {collapsed ? (
@@ -86,7 +84,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
             + {commits.slice(commitCutoff).length} more
           </button>
         ) : null}
-      </AuthorDistEntries>
+      </div>
     </>
   )
 }
