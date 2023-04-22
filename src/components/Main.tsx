@@ -4,7 +4,7 @@ import { usePath } from "~/contexts/PathContext"
 import { useComponentSize } from "../hooks"
 import { Chart } from "./Chart"
 import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
-import { Dispatch, SetStateAction, useMemo } from "react"
+import { Dispatch, Fragment, SetStateAction, useMemo } from "react"
 import { Icon } from "@mdi/react"
 import { mdiHome, mdiChevronRight } from "@mdi/js"
 
@@ -87,12 +87,10 @@ function Breadcrumb() {
             if (p === "" || i === paths.length - 1)
               if (p === "")
                 return (
-                  <>
-                    <span className="font-bold" key={p}>
-                      {name}
-                    </span>
+                  <Fragment key={p}>
+                    <span className="font-bold">{name}</span>
                     <Icon path={mdiChevronRight} size={1} />
-                  </>
+                  </Fragment>
                 )
               else
                 return (

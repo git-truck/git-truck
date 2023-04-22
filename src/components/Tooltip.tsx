@@ -1,11 +1,11 @@
-import { memo, useMemo, useRef } from "react"
+import { Fragment, memo, useMemo, useRef } from "react"
 import { useMouse } from "react-use"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { useCSSVar } from "../hooks"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, removeRoot } from "../util"
+import { allExceptFirst, dateFormatRelative } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
@@ -41,7 +41,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        className={`card absolute top-0 left-0 flex min-w-0 max-w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
+        className={`card absolute left-0 top-0 flex min-w-0 max-w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
           visible ? "visible" : "hidden"
         }`}
         ref={tooltipRef}
@@ -64,14 +64,14 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
           {hoveredObject?.type === "blob"
             ? hoveredObject?.name
             : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
-                <>
+                <Fragment key={`segment-${index}${segment}`}>
                   {segment}
                   {segments.length > 1 && index < segments.length - 1 ? (
                     <>
                       <Icon path={mdiMenuRight} size={1} />
                     </>
                   ) : null}
-                </>
+                </Fragment>
               ))}
         </span>
         {hoveredObject?.type === "blob" ? (
