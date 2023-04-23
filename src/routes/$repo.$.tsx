@@ -11,7 +11,7 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
-import { Details } from "~/components/Details"
+import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
@@ -218,7 +218,7 @@ export default function Repo() {
           ) : null}
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-          <Details showUnionAuthorsModal={showUnionAuthorsModal} />
+          <DetailsCard showUnionAuthorsModal={showUnionAuthorsModal} />
           <FeedbackCard />
         </aside>
       </div>

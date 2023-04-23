@@ -23,7 +23,7 @@ function OneFolderOut(path: string) {
   return path
 }
 
-export function Details(props: { showUnionAuthorsModal: () => void }) {
+export function DetailsCard(props: { showUnionAuthorsModal: () => void }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
   const { authorshipType } = useOptions()
