@@ -1,8 +1,7 @@
-import { Close as CloseIcon } from "@styled-icons/material"
 import type { HTMLAttributes } from "react"
 import { useId } from "react"
 import { Icon } from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp } from "@mdi/js"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
@@ -10,7 +9,7 @@ export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLBut
     title="Close"
     {...props}
   >
-    <CloseIcon height="1rem" />
+    <Icon path={mdiClose} />
   </button>
 )
 

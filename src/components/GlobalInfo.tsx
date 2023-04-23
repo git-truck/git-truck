@@ -3,9 +3,9 @@ import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
-import { Refresh as RefreshIcon, Folder as FolderIcon } from "@styled-icons/material"
-import { ArrowUpLeft } from "@styled-icons/octicons"
+import { mdiFolder, mdiRefresh, mdiArrowTopLeft } from "@mdi/js"
 import { Code } from "./util"
+import { Icon } from "@mdi/react"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -38,13 +38,13 @@ export function GlobalInfo() {
     <div className="card flex flex-col gap-2">
       <div className="grid w-full gap-2">
         <Link className="btn btn--primary" to=".." title="See all repositories">
-          <ArrowUpLeft />
+          <Icon path={mdiArrowTopLeft} />
           <p>See more repositories</p>
         </Link>
       </div>
       <div className="flex items-center justify-between gap-2">
         <h2 className="card__title grow justify-start gap-2" title={repo.name}>
-          <FolderIcon />
+          <Icon path={mdiFolder} />
           {repo.name}
         </h2>
         <Form
@@ -56,7 +56,7 @@ export function GlobalInfo() {
         >
           <input type="hidden" name="refresh" value="true" />
           <button className="btn" disabled={transitionState.state !== "idle"}>
-            <RefreshIcon />
+            <Icon path={mdiRefresh} />
             {isAnalyzing ? "Analyzing..." : "Refresh"}
           </button>
         </Form>

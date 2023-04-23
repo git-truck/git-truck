@@ -22,10 +22,11 @@ import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
-import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
+import { mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
 import { Chart } from "~/components/Chart"
+import { Icon } from "@mdi/react"
 
 let invalidateCache = false
 
@@ -200,8 +201,12 @@ export default function Repo() {
         <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] overflow-hidden">
           <header className="grid grid-flow-col items-center justify-between gap-2 px-1 py-2">
             <Breadcrumb />
-            <button className="card btn--icon p-1" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
-              {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
+            <button
+              className="card btn--icon p-1"
+              onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
+              title="Toggle full view"
+            >
+              <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
             </button>
           </header>
           {isClient ? <Chart /> : <div />}

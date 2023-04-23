@@ -6,9 +6,8 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
-import { Folder as FolderIcon, TextSnippet as FileIcon } from "@styled-icons/material"
-import Icon from "@mdi/react"
-import { mdiFileSearchOutline } from "@mdi/js"
+import { Icon } from "@mdi/react"
+import { mdiFolder, mdiFileSearchOutline, mdiFileOutline } from "@mdi/js"
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   const searchResults: HydratedGitObject[] = []
@@ -104,7 +103,7 @@ const SearchResults = memo(function SearchResults() {
           value={result.path}
           onClick={() => onClick(result)}
         >
-          {result.type === "tree" ? <FolderIcon height="1rem" /> : <FileIcon height="1rem" />}
+          <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} />
           <span>{result.name}</span>
         </button>
       ))}

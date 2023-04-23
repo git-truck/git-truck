@@ -1,8 +1,10 @@
 import { useBoolean } from "react-use"
 import { useData } from "~/contexts/DataContext"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
-import { VisibilityOff as HiddenIcon, Visibility as ShownIcon } from "@styled-icons/material"
+import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
+import { Icon } from "@mdi/react"
+import { useId } from "react"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -15,10 +17,21 @@ export function HiddenFiles() {
   const [expanded, setExpanded] = useBoolean(false)
   const navigationState = useNavigation()
   const { analyzerData } = useData()
+  const expandHiddenFilesButtonId = useId()
+
   return (
     <div className="card flex flex-col gap-2">
-      <h2 className="card__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
-      <ChevronButton className="absolute bottom-2 right-2" open={expanded} onClick={() => setExpanded(!expanded)} />
+      <h2 className="card__title cursor-pointer hover:opacity-70">
+        <label className="label cursor-pointer" htmlFor={expandHiddenFilesButtonId}>
+          Hidden files ({analyzerData.hiddenFiles.length})
+        </label>
+        <ChevronButton
+          id={expandHiddenFilesButtonId}
+          className="absolute right-2 top-2"
+          open={expanded}
+          onClick={() => setExpanded(!expanded)}
+        />
+      </h2>
       {expanded ? (
         <div>
           {analyzerData.hiddenFiles.map((hidden) => (
@@ -30,8 +43,8 @@ export function HiddenFiles() {
                   title="Show file"
                   disabled={navigationState.state !== "idle"}
                 >
-                  <HiddenIcon className="inline-block h-full" />
-                  <ShownIcon className="hover-swap inline-block h-full" />
+                  <Icon path={mdiEyeOff} className="inline-block h-full" />
+                  <Icon path={mdiEye} className="hover-swap inline-block h-full" />
                 </button>
               </Form>
               <span className="text-sm opacity-70">{hiddenFileFormat(hidden)}</span>

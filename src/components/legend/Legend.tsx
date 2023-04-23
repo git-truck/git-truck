@@ -2,7 +2,8 @@ import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"
 import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
-import { PeopleAlt } from "@styled-icons/material"
+import { mdiAccountMultiple } from "@mdi/js"
+import { Icon } from "@mdi/react"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
@@ -43,7 +44,7 @@ export function Legend({
       <p className="card-p">{getMetricDescription(metricType, authorshipType)}</p>
       {metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR" ? (
         <button className="btn" onClick={showUnionAuthorsModal}>
-          <PeopleAlt />
+          <Icon path={mdiAccountMultiple} />
           Group authors
         </button>
       ) : null}
