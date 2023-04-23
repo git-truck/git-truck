@@ -24,14 +24,12 @@ import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { Tooltip } from "./Tooltip"
+import { useComponentSize } from "../hooks"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
-interface ChartProps {
-  size: { width: number; height: number }
-}
-
-export function Chart(props: ChartProps) {
+export function Chart() {
+  const [ref, size] = useComponentSize()
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const { analyzerData } = useData()
   const { chartType } = useOptions()
@@ -40,10 +38,10 @@ export function Chart(props: ChartProps) {
   const { setPath } = usePath()
 
   const nodes = useMemo(() => {
-    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(props.size, chartType), chartType, path)
-  }, [chartType, analyzerData.commit, props.size, path])
+    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(size, chartType), chartType, path)
+  }, [chartType, analyzerData.commit, size, path])
 
-  useEffect(() => setHoveredObject(null), [chartType, analyzerData.commit, props.size])
+  useEffect(() => setHoveredObject(null), [chartType, analyzerData.commit, size])
 
   const createGroupHandlers: (
     d: CircleOrRectHiearchyNode,
@@ -74,13 +72,13 @@ export function Chart(props: ChartProps) {
   }
 
   return (
-    <>
+    <div className="grid place-items-center overflow-hidden" ref={ref}>
       <svg
         className={`grid h-full w-full place-items-center p-[${getPaddingFromChartType(chartType)}px] ${
           path.includes("/") ? "cursor-zoom-out" : ""
         }`}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${props.size.width} ${props.size.height}`}
+        viewBox={`0 ${-EstimatedLetterHeightForDirText} ${size.width} ${size.height}`}
         onClick={() => {
           // Move up to parent
           const parentPath = path.split("/").slice(0, -1).join("/")
@@ -102,7 +100,7 @@ export function Chart(props: ChartProps) {
         })}
       </svg>
       {typeof document !== "undefined" ? <Tooltip hoveredObject={hoveredObject} /> : null}
-    </>
+    </div>
   )
 }
 

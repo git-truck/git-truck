@@ -27,7 +27,7 @@ function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   return searchResults
 }
 
-export default function SearchBar() {
+export function SearchCard() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
   const [isTransitioning, startTransition] = useTransition()
   const { setSearchText, searchText, searchResults, setSearchResults } = useSearch()
