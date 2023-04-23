@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
@@ -236,6 +236,8 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
 const authorCutoff = 2
 
 function AuthorDistribution(props: { authors: Record<string, number> | undefined }) {
+  const authorDistributionExpandId = useId()
+
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
     a[1] < b[1] ? 1 : -1
@@ -244,9 +246,13 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex justify-between">
-        <h3 className="font-bold">Author distribution</h3>
-        {authorsAreCutoff ? <ChevronButton open={!collapsed} onClick={() => setCollapsed(!collapsed)} /> : null}
+      <div className={`flex justify-between ${authorCutoff ? "cursor-pointer hover:opacity-70" : ""}`}>
+        <label className="label grow" htmlFor={authorDistributionExpandId}>
+          <h3 className="font-bold">Author distribution</h3>
+        </label>
+        {authorsAreCutoff ? (
+          <ChevronButton id={authorDistributionExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
+        ) : null}
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-1">
         {authorsAreCutoff ? (
