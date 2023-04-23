@@ -30,3 +30,11 @@ export function useToggleableSpring(props: unknown) {
     immediate: initialRender || !transitionsEnabled,
   })
 }
+
+export function useClient() {
+  const [client, setClient] = useBoolean(false)
+  useEffect(() => {
+    setClient(true)
+  }, [setClient])
+  return client
+}

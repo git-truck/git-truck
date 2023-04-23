@@ -26,7 +26,7 @@ export function dateFormatShort(epochTime: number) {
 }
 
 export function dateTimeFormatShort(epochTime: number) {
-  return new Date(epochTime).toLocaleString("en-gb", {
+  return new Date(epochTime).toLocaleString("da-dk", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
