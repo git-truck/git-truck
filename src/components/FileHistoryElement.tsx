@@ -1,5 +1,5 @@
 import type { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { Fragment, useState } from "react"
+import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { useData } from "~/contexts/DataContext"
 import { ChevronButton } from "./ChevronButton"
@@ -56,14 +56,16 @@ export function CommitDistFragment(props: CommitDistFragProps) {
 }
 
 function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
+  const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
   const commitCutoff = 2
 
-  if (commits.length <= commitCutoff + 1) {
+  const lessThanCutOff = commits.length <= commitCutoff + 1
+  if (lessThanCutOff) {
     return (
       <>
-        <h3 className="font-bold">Commit History</h3>
+        <h3 className="font-bold">Commit history</h3>
         <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
         </div>
@@ -72,9 +74,11 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
   }
   return (
     <>
-      <div className="flex justify-between">
-        <h3 className="font-bold">Commit History</h3>
-        <ChevronButton open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
+      <div className="flex cursor-pointer justify-between hover:opacity-70">
+        <label className="label grow" htmlFor={commitHistoryExpandId}>
+          <h3 className="font-bold">Commit history</h3>
+        </label>
+        <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
         <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />
