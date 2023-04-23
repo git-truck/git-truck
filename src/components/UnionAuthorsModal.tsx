@@ -5,10 +5,10 @@ import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
-import { ArrowUp } from "@styled-icons/octicons"
 import { useMetrics } from "~/contexts/MetricContext"
-import { PeopleAlt } from "@styled-icons/material"
 import { useKey } from "react-use"
+import { Icon } from "@mdi/react"
+import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -181,7 +181,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
               title="Group the selected authors"
               disabled={disabled || selectedAuthors.length === 0}
             >
-              <PeopleAlt />
+              <Icon path={mdiAccountMultiple} size={1} />
               Group
             </button>
           </div>
@@ -240,19 +240,16 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     onClick: () => void
   }): JSX.Element {
     return (
-      <div className="flex" key={alias}>
-        <div>
-          <button
-            className="btn--icon grid-flow-col [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
-            disabled={disabled}
-            onClick={onClick}
-            title="Make display name for this grouping"
-          >
-            <ArrowUp />
-            <label className="label">{alias}</label>
-          </button>
-        </div>
-      </div>
+      <button
+        key={alias}
+        className="btn--icon flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
+        disabled={disabled}
+        onClick={onClick}
+        title="Make display name for this grouping"
+      >
+        <Icon path={mdiArrowUp} size={0.75} />
+        <label className="label">{alias}</label>
+      </button>
     )
   }
 }

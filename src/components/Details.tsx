@@ -11,8 +11,8 @@ import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, last } from "~/util"
 import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
-import { PeopleAlt, OpenInNew } from "@styled-icons/material"
-import { EyeClosed } from "@styled-icons/octicons"
+import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline } from "@mdi/js"
+import { Icon } from "@mdi/react"
 import { FileHistoryElement } from "./FileHistoryElement"
 
 function OneFolderOut(path: string) {
@@ -66,32 +66,30 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
                 isProcessingHideRef.current = true
               }}
             >
-              <EyeClosed className="justify-self-start" />
+              <Icon path={mdiEyeOffOutline} />
               Hide this file
             </button>
           </Form>
           {clickedObject.name.includes(".") ? (
-            <>
-              <Form method="post" action={location.pathname}>
-                <input type="hidden" name="ignore" value={`*.${extension}`} />
-                <button
-                  className="btn"
-                  type="submit"
-                  disabled={state !== "idle"}
-                  onClick={() => {
-                    isProcessingHideRef.current = true
-                  }}
-                >
-                  <EyeClosed />
-                  <span>Hide .{extension} files</span>
-                </button>
-              </Form>
-            </>
+            <Form method="post" action={location.pathname}>
+              <input type="hidden" name="ignore" value={`*.${extension}`} />
+              <button
+                className="btn"
+                type="submit"
+                disabled={state !== "idle"}
+                onClick={() => {
+                  isProcessingHideRef.current = true
+                }}
+              >
+                <Icon path={mdiEyeOffOutline} />
+                <span>Hide .{extension} files</span>
+              </button>
+            </Form>
           ) : null}
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="open" value={clickedObject.path} />
             <button className="btn" disabled={state !== "idle"}>
-              <OpenInNew />
+              <Icon path={mdiOpenInNew} />
               Open file
             </button>
           </Form>
@@ -108,7 +106,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
               setPath(OneFolderOut(path))
             }}
           >
-            <EyeClosed />
+            <Icon path={mdiEyeOffOutline} />
             Hide this folder
           </button>
         </Form>
@@ -131,7 +129,7 @@ export function Details(props: { showUnionAuthorsModal: () => void }) {
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
       <button className="btn" onClick={props.showUnionAuthorsModal}>
-        <PeopleAlt />
+        <Icon path={mdiAccountMultiple} />
         Group authors
       </button>
       <FileHistoryElement state={state} clickedObject={clickedObject} />

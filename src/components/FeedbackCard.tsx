@@ -1,11 +1,12 @@
-import { RateReview as ReviewIcon } from "@styled-icons/material"
+import { mdiMessageDraw, mdiAlert, mdiTimelineQuestionOutline, mdiAlertCircleOutline, mdiForum } from "@mdi/js"
+import Icon from "@mdi/react"
 
 export function FeedbackCard() {
   return (
     <div className="card">
       <div className="flex items-center justify-between">
         <h3 className="card__subtitle">Help improve Git Truck</h3>
-        <ReviewIcon height="1rem" />
+        <Icon path={mdiForum} size={1} />
       </div>
       <a
         className="btn"
@@ -13,6 +14,7 @@ export function FeedbackCard() {
         target="_blank"
         rel="noopener noreferrer"
       >
+        <Icon path={mdiMessageDraw} />
         Answer questionnaire
       </a>
       <a
@@ -21,6 +23,7 @@ export function FeedbackCard() {
         target="_blank"
         rel="noopener noreferrer"
       >
+        <Icon path={mdiAlertCircleOutline} />
         Open an issue
       </a>
     </div>
