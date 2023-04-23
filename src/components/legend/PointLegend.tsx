@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { ExpandUp } from "../Toggle"
 import type { MetricLegendProps } from "./Legend"
 import { LegendDot } from "../util"
+import { ChevronButton } from "../ChevronButton"
 
 const legendCutoff = 3
 
@@ -33,7 +33,7 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
         <PointLegendFragment show={true} items={items.slice(0, legendCutoff)} />
         <PointLegendFragment show={!collapse} items={items.slice(legendCutoff)} />
         <PointLegendOther show={collapse} items={items.slice(legendCutoff)} toggle={() => setCollapse(!collapse)} />
-        <ExpandUp collapse={collapse} toggle={() => setCollapse(!collapse)} />
+        <ChevronButton className="absolute bottom-2 right-2" open={!collapse} onClick={() => setCollapse(!collapse)} />
       </>
     )
   }

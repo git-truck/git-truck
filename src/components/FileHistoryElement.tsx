@@ -1,8 +1,8 @@
 import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
-import { ExpandDown } from "./Toggle"
 import { useData } from "~/contexts/DataContext"
+import { ChevronButton } from "./ChevronButton"
 
 interface props {
   state: "idle" | "submitting" | "loading"
@@ -74,7 +74,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
     <>
       <div className="flex justify-between">
         <h3 className="font-bold">Commit History</h3>
-        <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
+        <ChevronButton open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
         <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
-import { ExpandDown } from "~/components/Toggle"
+import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
@@ -248,9 +248,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
     <div className="flex flex-col gap-2">
       <div className="flex justify-between">
         <h3 className="font-bold">Author distribution</h3>
-        {authorsAreCutoff ? (
-          <ExpandDown relative={true} collapse={collapsed} toggle={() => setCollapsed(!collapsed)} />
-        ) : null}
+        {authorsAreCutoff ? <ChevronButton open={!collapsed} onClick={() => setCollapsed(!collapsed)} /> : null}
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-1">
         {authorsAreCutoff ? (
