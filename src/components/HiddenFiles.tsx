@@ -1,8 +1,8 @@
 import { useBoolean } from "react-use"
 import { useData } from "~/contexts/DataContext"
-import { ExpandUp } from "./Toggle"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
 import { VisibilityOff as HiddenIcon, Visibility as ShownIcon } from "@styled-icons/material"
+import { ChevronButton } from "./ChevronButton"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -18,7 +18,7 @@ export function HiddenFiles() {
   return (
     <div className="card flex flex-col gap-2">
       <h2 className="card__title">Hidden files ({analyzerData.hiddenFiles.length})</h2>
-      <ExpandUp collapse={!expanded} toggle={() => setExpanded(!expanded)} />
+      <ChevronButton className="absolute bottom-2 right-2" open={expanded} onClick={() => setExpanded(!expanded)} />
       {expanded ? (
         <div>
           {analyzerData.hiddenFiles.map((hidden) => (

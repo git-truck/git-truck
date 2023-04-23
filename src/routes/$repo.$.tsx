@@ -1,5 +1,5 @@
 import { resolve } from "path"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useBoolean } from "react-use"
 import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -175,6 +175,7 @@ function UpdateNotifier() {
 }
 
 export default function Repo() {
+  const [isClient, setIsClient] = useState(false)
   const data = useTypedLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
@@ -182,6 +183,8 @@ export default function Repo() {
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
+
+  useEffect(() => setIsClient(true), [])
 
   if (!analyzerData) return null
 
@@ -201,7 +204,7 @@ export default function Repo() {
               {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
             </button>
           </header>
-          {typeof document !== "undefined" ? <Chart /> : <div />}
+          {isClient ? <Chart /> : <div />}
         </main>
 
         <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-1">
