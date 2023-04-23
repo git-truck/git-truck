@@ -69,7 +69,7 @@
   }
 
   .btn--icon > * {
-    @apply opacity-50 hover:opacity-100;
+    @apply hover:opacity-70;
   }
 
   .btn--hover-swap .hover-swap {

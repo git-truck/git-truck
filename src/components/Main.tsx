@@ -1,4 +1,3 @@
-import styled from "styled-components"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useComponentSize } from "../hooks"
@@ -8,33 +7,6 @@ import { Dispatch, Fragment, SetStateAction, useMemo } from "react"
 import { Icon } from "@mdi/react"
 import { mdiHome, mdiChevronRight } from "@mdi/js"
 
-export const MainRoot = styled.main`
-  display: grid;
-  grid-template-rows: auto 1fr;
-  overflow: hidden;
-  min-width: 100px;
-  height: 100%;
-`
-
-const TopBar = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  align-items: center;
-  justify-content: space-between;
-  margin: var(--unit);
-`
-
-export const NonClickableText = styled.span`
-  color: hsl(210, 10%, 30%);
-  cursor: default;
-`
-
-const ChartWrapper = styled.div`
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-`
-
 interface MainProps {
   fullscreenState: [boolean, Dispatch<SetStateAction<boolean>>]
 }
@@ -43,17 +15,17 @@ export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainP
   const [ref, size] = useComponentSize()
 
   return (
-    <MainRoot>
-      <TopBar>
+    <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] overflow-hidden">
+      <header className="grid grid-flow-col items-center justify-between gap-2 p-2">
         <Breadcrumb />
-        <button className="btn--icon" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
+        <button className="card btn--icon p-1" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
           {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
         </button>
-      </TopBar>
-      <ChartWrapper ref={ref}>
+      </header>
+      <div className="grid place-items-center overflow-hidden" ref={ref}>
         <Chart size={size} />
-      </ChartWrapper>
-    </MainRoot>
+      </div>
+    </main>
   )
 }
 
