@@ -1,7 +1,8 @@
 import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
-import { MouseEventHandler, SVGAttributes, memo, useEffect, useMemo, useState } from "react"
+import type { MouseEventHandler, SVGAttributes} from "react";
+import { memo, useEffect, useMemo, useState } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
