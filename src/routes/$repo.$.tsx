@@ -188,7 +188,7 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
-        <aside className="flex flex-col gap-2 overflow-y-auto px-1 py-2">
+        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pr-1">
           <GlobalInfo />
           <Options />
           <SearchCard />
@@ -203,7 +203,8 @@ export default function Repo() {
           </header>
           {typeof document !== "undefined" ? <Chart /> : <div />}
         </main>
-        <aside className="flex flex-col gap-2 overflow-y-auto px-1 py-2">
+
+        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-1">
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
