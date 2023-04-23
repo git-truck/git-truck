@@ -27,6 +27,7 @@ import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
 import { Chart } from "~/components/Chart"
 import { Icon } from "@mdi/react"
+import { useClient } from "~/hooks"
 
 let invalidateCache = false
 
@@ -176,7 +177,7 @@ function UpdateNotifier() {
 }
 
 export default function Repo() {
-  const [isClient, setIsClient] = useState(false)
+  const client = useClient()
   const data = useTypedLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
 
@@ -184,8 +185,6 @@ export default function Repo() {
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
-
-  useEffect(() => setIsClient(true), [])
 
   if (!analyzerData) return null
 
@@ -209,7 +208,7 @@ export default function Repo() {
               <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
             </button>
           </header>
-          {isClient ? <Chart /> : <div />}
+          {client ? <Chart /> : <div />}
         </main>
 
         <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-1">

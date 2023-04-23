@@ -6,11 +6,13 @@ import { RevisionSelect } from "./RevisionSelect"
 import { mdiFolder, mdiRefresh, mdiArrowTopLeft } from "@mdi/js"
 import { Code } from "./util"
 import { Icon } from "@mdi/react"
+import { useClient } from "~/hooks"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
 export function GlobalInfo() {
+  const client = useClient()
   const { analyzerData, repo } = useData()
   const transitionState = useNavigation()
 
@@ -72,7 +74,7 @@ export function GlobalInfo() {
       <div className="grid auto-rows-fr grid-cols-2">
         <strong>Analyzed </strong>
         <time className="text-right" dateTime={isoString} title={isoString}>
-          {dateTimeFormatShort(analyzerData.lastRunEpoch)}
+          {client ? dateTimeFormatShort(analyzerData.lastRunEpoch) : ""}
         </time>
 
         <strong>As of commit </strong>
