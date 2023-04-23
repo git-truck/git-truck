@@ -1,4 +1,3 @@
-import { RateReview as ReviewIcon } from "@styled-icons/material"
 import { resolve } from "path"
 import { useState } from "react"
 import { useBoolean } from "react-use"
@@ -16,14 +15,17 @@ import { Details } from "~/components/Details"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
-import { Main } from "~/components/Main"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
-import SearchBar from "~/components/SearchBar"
+import { SearchCard } from "~/components/SearchCard"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
+import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
+import { Breadcrumb } from "~/components/Breadcrumb"
+import { FeedbackCard } from "~/components/FeedbackCard"
+import { Chart } from "~/components/Chart"
 
 let invalidateCache = false
 
@@ -159,33 +161,6 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   )
 }
 
-function Feedback() {
-  return (
-    <div className="card">
-      <div className="flex items-center justify-between">
-        <h3 className="card__subtitle">Help improve Git Truck</h3>
-        <ReviewIcon height="1rem" />
-      </div>
-      <a
-        className="btn"
-        href="https://docs.google.com/forms/d/e/1FAIpQLSclLnUCPb0wLZx5RulQLaI_N_4wjNkd6z7YLkA3BzNVFjfiEg/viewform?usp=sf_link"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Answer questionnaire
-      </a>
-      <a
-        className="btn"
-        href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Open an issue
-      </a>
-    </div>
-  )
-}
-
 function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   return (
@@ -213,20 +188,29 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
-        <aside className="side-panel">
+        <aside className="flex flex-col gap-2 overflow-y-auto px-1 py-2">
           <GlobalInfo />
           <Options />
-          <SearchBar />
+          <SearchCard />
         </aside>
-        {typeof document !== "undefined" ? <Main fullscreenState={[isFullscreen, setIsFullscreen]}></Main> : <div />}
-        <aside className="side-panel">
+
+        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] overflow-hidden">
+          <header className="grid grid-flow-col items-center justify-between gap-2 px-1 py-2">
+            <Breadcrumb />
+            <button className="card btn--icon p-1" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
+              {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
+            </button>
+          </header>
+          {typeof document !== "undefined" ? <Chart /> : <div />}
+        </main>
+        <aside className="flex flex-col gap-2 overflow-y-auto px-1 py-2">
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <Details showUnionAuthorsModal={showUnionAuthorsModal} />
-          <Feedback />
+          <FeedbackCard />
         </aside>
       </div>
       <UnionAuthorsModal

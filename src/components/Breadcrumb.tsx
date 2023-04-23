@@ -1,35 +1,10 @@
+import { mdiChevronRight, mdiHome } from "@mdi/js"
+import Icon from "@mdi/react"
+import { useMemo, Fragment } from "react"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
-import { useComponentSize } from "../hooks"
-import { Chart } from "./Chart"
-import { Fullscreen as FullscreenIcon, CloseFullscreen as CloseFullscreenIcon } from "@styled-icons/material"
-import { Dispatch, Fragment, SetStateAction, useMemo } from "react"
-import { Icon } from "@mdi/react"
-import { mdiHome, mdiChevronRight } from "@mdi/js"
 
-interface MainProps {
-  fullscreenState: [boolean, Dispatch<SetStateAction<boolean>>]
-}
-
-export function Main({ fullscreenState: [isFullscreen, setIsFullscreen] }: MainProps) {
-  const [ref, size] = useComponentSize()
-
-  return (
-    <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] overflow-hidden">
-      <header className="grid grid-flow-col items-center justify-between gap-2 p-2">
-        <Breadcrumb />
-        <button className="card btn--icon p-1" onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}>
-          {isFullscreen ? <CloseFullscreenIcon height="1.5em" /> : <FullscreenIcon height="1.5em" />}
-        </button>
-      </header>
-      <div className="grid place-items-center overflow-hidden" ref={ref}>
-        <Chart size={size} />
-      </div>
-    </main>
-  )
-}
-
-function Breadcrumb() {
+export function Breadcrumb() {
   const { repo } = useData()
   const { path, setPath } = usePath()
   let temppath = path

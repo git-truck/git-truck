@@ -3,9 +3,6 @@
 @tailwind utilities;
 
 @layer components {
-  .side-panel {
-    @apply flex flex-col gap-2 overflow-y-auto p-2;
-  }
   .card {
     @apply relative flex w-auto flex-col gap-2 rounded-lg bg-white p-3 shadow-md;
   }
