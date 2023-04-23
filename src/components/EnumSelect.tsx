@@ -1,4 +1,5 @@
-import { ReactNode, useId } from "react"
+import type { ReactNode} from "react";
+import { useId } from "react"
 
 interface EnumSelectProps<T extends string> {
   label: ReactNode

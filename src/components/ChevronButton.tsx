@@ -1,6 +1,6 @@
 import { mdiChevronDown } from "@mdi/js"
 import { Icon } from "@mdi/react"
-import { HTMLAttributes } from "react"
+import type { HTMLAttributes } from "react"
 
 export function ChevronButton({
   onClick,

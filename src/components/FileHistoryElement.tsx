@@ -1,4 +1,4 @@
-import { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { useData } from "~/contexts/DataContext"

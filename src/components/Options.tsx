@@ -18,7 +18,7 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 
 export function Options() {
   const {
-    transitionsEnabled: transitionsEnabled,
+    transitionsEnabled,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,

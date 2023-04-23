@@ -91,7 +91,7 @@ for usage instructions.`)
       let err: Error | null = null
 
       if (!args.headless) {
-        ;[, err] = await describeAsyncJob(
+        [, err] = await describeAsyncJob(
           () => open(openURL),
           "Opening Git Truck in your browser",
           `Succesfully opened Git Truck in your browser`,
