@@ -38,7 +38,7 @@ export function GlobalInfo() {
     <div className="card flex flex-col gap-2">
       <div className="grid w-full gap-2">
         <Link className="btn btn--primary" to=".." title="See all repositories">
-          <Icon path={mdiArrowTopLeft} />
+          <Icon path={mdiArrowTopLeft} size={0.75} />
           <p>See more repositories</p>
         </Link>
       </div>
