@@ -103,7 +103,7 @@ const SearchResults = memo(function SearchResults() {
           value={result.path}
           onClick={() => onClick(result)}
         >
-          <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} />
+          <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
           <span>{result.name}</span>
         </button>
       ))}
