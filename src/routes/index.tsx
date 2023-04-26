@@ -68,9 +68,12 @@ export default function Index() {
                 <RepositoryEntry key={repo.path} repo={repo} />
               ))}
               <li className="card gap-3 p-0">
-                <h2 className="card__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors">
-                  Add repository
-                  <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
+                <h2
+                  className="card__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors"
+                  title="Add repository"
+                >
+                  <span className="line-clamp-1 break-all">Add repository</span>
+                  <span className="align-content-start right-0 top-0 flex min-w-max select-none place-items-center rounded-full  bg-white/20 px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-white/90">
                     Coming soon
                   </span>
                 </h2>
@@ -101,13 +104,13 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
     <div key={repo.name}>
       <div className="card gap-3 p-0">
         <h2
-          className={`card__title rounded-t bg-gradient-to-r p-3 text-white transition-colors ${
+          className={`card__title rounded-t bg-gradient-to-r p-3 text-white ${
             branchIsAnalyzed ? " from-green-500  to-green-600 " : "from-gray-500 to-gray-600"
           }`}
           title={repo.name}
         >
-          {repo.name}
-          <span className="align-content-start flex select-none place-items-center rounded-full border border-current px-2 py-1 text-xs font-bold uppercase leading-none tracking-widest">
+          <span className="line-clamp-1 break-all">{repo.name}</span>
+          <span className="align-content-start right-0 top-0 flex min-w-max select-none place-items-center rounded-full  bg-white/20 px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-white/90">
             {branchIsAnalyzed ? "Ready" : "Not analyzed"}
           </span>
         </h2>
@@ -120,7 +123,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
             analyzedHeads={repo.analyzedHeads}
           />
           <div className="grid">
-            <Link className={`btn transition-colors ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>
+            <Link className={`btn ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>
               {branchIsAnalyzed ? "View" : "Analyze"}
             </Link>
           </div>
