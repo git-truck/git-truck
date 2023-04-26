@@ -18,6 +18,8 @@ function isMetricWithHistoricalOption(metric: MetricType) {
 
 export function Options() {
   const {
+    metricType,
+    chartType,
     transitionsEnabled,
     setTransitionsEnabled,
     labelsVisible,
@@ -40,6 +42,7 @@ export function Options() {
           </div>
         }
         enum={Metric}
+        defaultValue={metricType}
         onChange={(metric: MetricType) => setMetricType(metric)}
       />
       <EnumSelect
@@ -50,6 +53,7 @@ export function Options() {
           </div>
         }
         enum={Chart}
+        defaultValue={chartType}
         onChange={(chartType: ChartType) => setChartType(chartType)}
       />
       {/* <EnumSelect
