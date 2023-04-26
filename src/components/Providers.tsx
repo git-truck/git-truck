@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import type { ChartType, Options } from "../contexts/OptionsContext"
+import type { ChartType, OptionsContextType } from "../contexts/OptionsContext"
 import { getDefaultOptions, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData as createMetricsData } from "../metrics/metrics"
+import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -17,7 +18,7 @@ interface ProvidersProps {
 }
 
 export function Providers({ children, data }: ProvidersProps) {
-  const [options, setOptions] = useState<Options | null>(null)
+  const [options, setOptions] = useState<OptionsContextType | null>(null)
   const [searchText, setSearchText] = useState("")
   const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
   const [path, setPath] = useState(data.repo.name)
@@ -67,6 +68,13 @@ export function Providers({ children, data }: ProvidersProps) {
     }),
     [options]
   )
+
+  useEffect(() => {
+    // Persist options to local storage
+    if (options) {
+      localStorage.setItem(OPTIONS_LOCAL_STORAGE_KEY, JSON.stringify(options))
+    }
+  }, [options])
 
   return (
     <DataContext.Provider value={data}>

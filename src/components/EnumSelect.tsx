@@ -1,9 +1,10 @@
-import type { ReactNode} from "react";
+import type { ReactNode } from "react"
 import { useId } from "react"
 
 interface EnumSelectProps<T extends string> {
   label: ReactNode
   enum: Record<T, string>
+  defaultValue: T
   onChange: (metric: T) => void
   hidden?: boolean
 }
@@ -17,7 +18,12 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
       <label className="label pl-[9px]" htmlFor={id}>
         {props.label}
       </label>
-      <select className="input" id={id} onChange={(event) => props.onChange(event.target.value as T)}>
+      <select
+        className="input"
+        id={id}
+        defaultValue={props.defaultValue}
+        onChange={(event) => props.onChange(event.target.value as T)}
+      >
         {enumEntries.map(([key, value]) => (
           <option key={value} value={key}>
             {value}
