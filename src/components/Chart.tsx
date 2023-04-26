@@ -1,7 +1,7 @@
 import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
-import type { MouseEventHandler, SVGAttributes} from "react";
+import { MouseEventHandler, SVGAttributes, useDeferredValue } from "react"
 import { memo, useEffect, useMemo, useState } from "react"
 import type {
   HydratedGitBlobObject,
@@ -30,7 +30,8 @@ import { useComponentSize } from "../hooks"
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
 export function Chart() {
-  const [ref, size] = useComponentSize()
+  const [ref, rawSize] = useComponentSize()
+  const size = useDeferredValue(rawSize)
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const { analyzerData } = useData()
   const { chartType } = useOptions()
