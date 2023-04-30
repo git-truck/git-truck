@@ -16,7 +16,7 @@ export function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCach
     }
     cache.colormap.set(blob.path, color)
   } else {
-    if (!legend.has("Other")) legend.set("Other", new PointInfo("grey", 0))
-    cache.colormap.set(blob.path, "grey")
+    if (!legend.has("Other")) legend.set("Other", new PointInfo("#808080", 0))
+    cache.colormap.set(blob.path, "#808080")
   }
 }

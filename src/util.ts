@@ -91,3 +91,57 @@ export const semverCompare = (a: string, b: string): number => {
 
   return compare(validA, validB)
 }
+
+const brightnessCalculationCache = new Map<`#${string}`, `#${string}`>()
+
+export function weightedDistanceIn3D(hex: `#${string}`) {
+  const rgb = hexToRgb(hex)
+  return Math.sqrt(Math.pow(rgb[0], 2) * 0.241 + Math.pow(rgb[1], 2) * 0.691 + Math.pow(rgb[2], 2) * 0.068)
+}
+
+function hexToRgb(hexString: `#${string}`) {
+  const hex = hexString.replace("#", "")
+  const c = hex.length === 3 ? hex.split("").map((x) => x + x) : hex.split("")
+  const r = parseInt(c[0] + c[1], 16)
+  const g = parseInt(c[2] + c[3], 16)
+  const b = parseInt(c[4] + c[5], 16)
+  return [r, g, b]
+}
+
+export const getTextColorFromBackground = (color: `#${string}`) => {
+  // Verify that the color is a hex color
+  if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
+    return "#000000"
+  }
+  const cachedColor = brightnessCalculationCache.get(color)
+  if (cachedColor) {
+    return cachedColor
+  }
+
+  const brightness = weightedDistanceIn3D(color)
+  const foreground = brightness > 186 ? "#000000" : "#ffffff"
+  brightnessCalculationCache.set(color, foreground)
+
+  return foreground
+}
+
+const colorCache = new Map<string, `#${string}`>()
+
+export function hslToHex(h: number, s: number, ll: number): `#${string}` {
+  const key = `${h},${s},${ll}`
+  const cachedColor = colorCache.get(key)
+  if (cachedColor) return cachedColor
+  const l = ll / 100
+  const a = (s * Math.min(l, 1 - l)) / 100
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, "0") // convert to Hex and prefix "0" if needed
+  }
+
+  const color = `#${f(0)}${f(8)}${f(4)}` as const
+  colorCache.set(key, color)
+  return color
+}

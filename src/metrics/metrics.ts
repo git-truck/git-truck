@@ -10,6 +10,7 @@ import { TruckFactorTranslater } from "./truckFactor"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
+import { getTextColorFromBackground } from "~/util"
 
 export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
 
@@ -84,20 +85,19 @@ export function getMetricLegendType(metric: MetricType): LegendType {
 
 export interface MetricCache {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
-  colormap: Map<string, string>
+  colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[]): Map<string, string> {
+export function generateAuthorColors(authors: string[]): Map<string, `#${string}`> {
   const authorsMap: Record<string, number> = {}
   for (const author of Object.keys(authors)) authorsMap[author] = 0
 
   const palette = distinctColors({ count: authors.length })
   let index = 0
-  const map = new Map<string, string>()
+  const map = new Map<string, `#${string}`>()
   for (const author of authors) {
-    const color = palette[index++].rgb(true)
-    const colorString = `rgb(${color[0]},${color[1]},${color[2]})`
-    map.set(author, colorString)
+    const color = palette[index++].hex() as `#${string}`
+    map.set(author, color)
   }
   return map
 }
@@ -121,7 +121,7 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
 export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
-  authorColors: Map<string, string>
+  authorColors: Map<string, `#${string}`>
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
 
@@ -231,13 +231,13 @@ function setupMetricsCacheRec(
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
-              colormap: new Map<string, string>(),
+              colormap: new Map<string, `#${string}`>(),
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
               legend: undefined,
-              colormap: new Map<string, string>(),
+              colormap: new Map<string, `#${string}`>(),
             }
           )
         }

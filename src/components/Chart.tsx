@@ -26,6 +26,7 @@ import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { Tooltip } from "./Tooltip"
 import { useComponentSize } from "../hooks"
+import { getTextColorFromBackground } from "~/util"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -108,7 +109,7 @@ export function Chart() {
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType, labelsVisible } = useOptions()
-  let showLabel = isTree(d.data) && labelsVisible
+  let showLabel = labelsVisible
   const { path } = usePath()
   let displayText = d.data.name
   type textIsTooLongFunction = (text: string) => boolean
@@ -244,13 +245,12 @@ function CircleText({
       <animated.text
         className="pointer-events-none"
         style={{
-          stroke: "var(--global-bg-color)",
+          stroke: "white",
         }}
         strokeWidth="7"
         strokeLinecap="round"
       >
         <textPath
-          fill={isSearchMatch ? searchMatchColor : "#333"}
           className="object-name"
           startOffset="50%"
           dominantBaseline="central"
@@ -285,10 +285,17 @@ function RectText({
   displayText: string
   isSearchMatch: boolean
 }) {
+  const [metricsData] = useMetrics()
+  const { authorshipType, metricType } = useOptions()
+  const backgroundColor = metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333"
   const props = useToggleableSpring({
     x: d.x0 + 4,
     y: d.y0 + 12,
-    fill: isSearchMatch ? searchMatchColor : "#333",
+    fill: isSearchMatch
+      ? searchMatchColor
+      : d.data.type === "blob"
+      ? getTextColorFromBackground(backgroundColor)
+      : "#333",
   })
 
   return (

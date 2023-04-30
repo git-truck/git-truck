@@ -4,7 +4,7 @@ import { PointInfo } from "~/components/legend/PointLegend"
 import type { AuthorshipType, MetricCache } from "./metrics"
 
 export function setDominantAuthorColor(
-  authorColors: Map<string, string>,
+  authorColors: Map<string, `#${string}`>,
   blob: HydratedGitBlobObject,
   cache: MetricCache,
   authorshipType: AuthorshipType
@@ -26,7 +26,7 @@ export function setDominantAuthorColor(
 
   const [dom] = sorted[0]
   const legend = cache.legend as PointLegendData
-  const color = authorColors.get(dom) ?? "grey"
+  const color = authorColors.get(dom) ?? "#808080"
 
   cache.colormap.set(blob.path, color)
   blob.dominantAuthor?.set(authorshipType, sorted[0])
