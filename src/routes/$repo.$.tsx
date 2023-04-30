@@ -1,5 +1,5 @@
 import { resolve } from "path"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useBoolean } from "react-use"
 import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -191,14 +191,14 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
-        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pr-1">
+        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pr-0">
           <GlobalInfo />
           <Options />
           <SearchCard />
         </aside>
 
-        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] overflow-hidden">
-          <header className="grid grid-flow-col items-center justify-between gap-2 px-1 py-2">
+        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-hidden p-2">
+          <header className="grid grid-flow-col items-center justify-between gap-2">
             <Breadcrumb />
             <button
               className="card btn--icon p-1"
@@ -208,10 +208,10 @@ export default function Repo() {
               <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
             </button>
           </header>
-          {client ? <Chart /> : <div />}
+          <div className="card grid overflow-hidden p-2">{client ? <Chart /> : <div />}</div>
         </main>
 
-        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-1">
+        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-0">
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
