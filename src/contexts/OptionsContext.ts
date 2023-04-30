@@ -73,14 +73,19 @@ function getSavedOptionsOrDefault(): Options {
   try {
     const newLocal = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
     if (!newLocal) return options
-    const savedOptions = JSON.parse(newLocal) as Options
+    const savedOptions = JSON.parse(newLocal) as Partial<Options>
 
     Object.entries(savedOptions).forEach(([key, value]) => {
       if (value !== undefined) {
         options = { ...options, [key]: value }
       }
     })
-  } finally {
+
+    return options
+  } catch (e) {
+    try {
+      localStorage.removeItem(OPTIONS_LOCAL_STORAGE_KEY)
+    } catch (e) {}
     return options
   }
 }
