@@ -26,6 +26,7 @@ import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { Tooltip } from "./Tooltip"
 import { useComponentSize } from "../hooks"
+import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground } from "~/util"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
@@ -39,10 +40,10 @@ export function Chart() {
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
-
   const nodes = useMemo(() => {
-    return createPartitionedHiearchy(analyzerData.commit, getPaddedSizeProps(size, chartType), chartType, path)
-  }, [chartType, analyzerData.commit, size, path])
+    if (size.width === 0 || size.height === 0) return []
+    return createPartitionedHiearchy(analyzerData.commit, size, chartType, path).descendants()
+  }, [analyzerData.commit, size, chartType, path])
 
   useEffect(() => setHoveredObject(null), [chartType, analyzerData.commit, size])
 
@@ -90,10 +91,11 @@ export function Chart() {
           else setPath(parentPath)
         }}
       >
-        {nodes?.descendants().map((d, i) => {
+        {nodes.map((d, i) => {
           return (
             <g
-              className={`${i === 0 ? "root" : ""} ${clickedObject?.path === d.data.path ? "animate-blink" : ""}`}
+              className={`${i === 0 ? "root" : ""} ${clickedObject?.path === d.data.path ? "animate-blink" : ""}
+              `}
               key={`${chartType}${d.data.path}`}
               {...createGroupHandlers(d, i === 0)}
             >
@@ -307,7 +309,7 @@ function RectText({
 
 function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
-  paddedSizeProps: { height: number; width: number },
+  size: { height: number; width: number },
   chartType: ChartType,
   path: string
 ) {
@@ -341,7 +343,8 @@ function createPartitionedHiearchy(
   switch (chartType) {
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
-        .size([paddedSizeProps.width, paddedSizeProps.height])
+        .tile(treemapBinary)
+        .size([size.width, size.height])
         .paddingInner(2)
         .paddingOuter(4)
         .paddingTop(treemapPadding)
@@ -356,9 +359,7 @@ function createPartitionedHiearchy(
       return tmPartition
 
     case "BUBBLE_CHART":
-      const bubbleChartPartition = pack<HydratedGitObject>()
-        .size([paddedSizeProps.width, paddedSizeProps.height])
-        .padding(bubblePadding)
+      const bubbleChartPartition = pack<HydratedGitObject>().size([size.width, size.height]).padding(bubblePadding)
 
       const bPartition = bubbleChartPartition(hiearchy)
 
