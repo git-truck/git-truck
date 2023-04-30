@@ -1,5 +1,6 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import type { MetricCache } from "./metrics"
+import { hslToHex } from "~/util"
 
 export class TruckFactorTranslater {
   private readonly min_lightness = 50
@@ -13,9 +14,13 @@ export class TruckFactorTranslater {
         : (this.step = (this.max_lighness - this.min_lightness) / Math.floor(Math.log2(author_count)))
   }
 
-  getColor(value: number) {
+  getColor(value: number): `#${string}` {
     const level = Math.floor(Math.log2(value))
-    return `hsl(0,75%,${this.min_lightness + level * this.step}%)`
+    const lightness = this.min_lightness + level * this.step
+    const hue = 0
+    const saturation = 75
+
+    return hslToHex(hue, saturation, lightness)
   }
 
   setColor(blob: HydratedGitBlobObject, cache: MetricCache) {

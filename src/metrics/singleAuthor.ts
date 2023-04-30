@@ -4,9 +4,9 @@ import { PointInfo } from "~/components/legend/PointLegend"
 import type { AuthorshipType, MetricCache } from "./metrics"
 
 export function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorshipType: AuthorshipType) {
-  const dominatedColor = "red"
-  const defaultColor = "hsl(210, 38%, 85%)"
-  const nocreditColor = "teal"
+  const dominatedColor = "#b91c1c"
+  const defaultColor = "#fecaca"
+  const nocreditColor = "#14b8a6"
 
   const authorUnion = blob.unionedAuthors?.[authorshipType] ?? {}
 
