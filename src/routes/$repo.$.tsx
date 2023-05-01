@@ -28,6 +28,7 @@ import { FeedbackCard } from "~/components/FeedbackCard"
 import { Chart } from "~/components/Chart"
 import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
+import clsx from "clsx"
 
 let invalidateCache = false
 
@@ -211,13 +212,23 @@ export default function Repo() {
           <div className="card grid overflow-hidden p-2">{client ? <Chart /> : <div />}</div>
         </main>
 
-        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pl-0">
+        <aside
+          className={clsx("flex flex-col gap-2 p-2 pl-0", {
+            "overflow-y-auto": !isFullscreen,
+          })}
+        >
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
           <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-          <DetailsCard showUnionAuthorsModal={showUnionAuthorsModal} />
+          <DetailsCard
+            className={clsx({
+              "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                isFullscreen,
+            })}
+            showUnionAuthorsModal={showUnionAuthorsModal}
+          />
           <FeedbackCard />
         </aside>
       </div>

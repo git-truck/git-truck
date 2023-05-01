@@ -14,6 +14,7 @@ import type { AuthorshipType } from "~/metrics/metrics"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import { FileHistoryElement } from "./FileHistoryElement"
+import clsx from "clsx"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -23,7 +24,13 @@ function OneFolderOut(path: string) {
   return path
 }
 
-export function DetailsCard(props: { showUnionAuthorsModal: () => void }) {
+export function DetailsCard({
+  className = "",
+  showUnionAuthorsModal,
+}: {
+  className?: string
+  showUnionAuthorsModal: () => void
+}) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
   const { authorshipType } = useOptions()
@@ -49,7 +56,7 @@ export function DetailsCard(props: { showUnionAuthorsModal: () => void }) {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="card flex flex-col gap-2">
+    <div className={clsx(className, "card flex flex-col gap-2")}>
       <CloseButton onClick={() => setClickedObject(null)} />
       <h2 className="card__title animate-blink" title={clickedObject.name}>
         {clickedObject.name}
@@ -128,7 +135,7 @@ export function DetailsCard(props: { showUnionAuthorsModal: () => void }) {
       ) : (
         <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
       )}
-      <button className="btn" onClick={props.showUnionAuthorsModal}>
+      <button className="btn" onClick={showUnionAuthorsModal}>
         <Icon path={mdiAccountMultiple} />
         Group authors
       </button>
@@ -246,7 +253,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
   return (
     <div className="flex flex-col gap-2">
-      <div className={`flex justify-between ${authorCutoff ? "cursor-pointer hover:opacity-70" : ""}`}>
+      <div className={`flex justify-between ${authorsAreCutoff ? "cursor-pointer hover:opacity-70" : ""}`}>
         <label className="label grow" htmlFor={authorDistributionExpandId}>
           <h3 className="font-bold">Author distribution</h3>
         </label>
