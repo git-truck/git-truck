@@ -5,11 +5,11 @@ import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from
 
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
-    className={`absolute right-2 top-2 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
+    className={`absolute right-2 top-2 z-10 inline-grid text-lg leading-none text-gray-900 hover:text-gray-500 ${className}`}
     title="Close"
     {...props}
   >
-    <Icon path={mdiClose} />
+    <Icon path={mdiClose} size={1} />
   </button>
 )
 

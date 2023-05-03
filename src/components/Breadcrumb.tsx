@@ -7,8 +7,8 @@ import { usePath } from "~/contexts/PathContext"
 export function Breadcrumb() {
   const { repo } = useData()
   const { path, setPath } = usePath()
-  let temppath = path
   const paths = useMemo<[string, string][]>(() => {
+    let temppath = path
     let paths: [string, string][] = []
     for (let i = 0; i < 8; i++) {
       if (temppath === "") {

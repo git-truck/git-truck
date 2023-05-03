@@ -10,7 +10,6 @@ import { TruckFactorTranslater } from "./truckFactor"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
-import { getTextColorFromBackground } from "~/util"
 
 export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
 

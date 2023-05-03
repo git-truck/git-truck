@@ -181,9 +181,7 @@ export default function Repo() {
   const client = useClient()
   const data = useTypedLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
-
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
-
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
