@@ -15,7 +15,7 @@ interface TooltipProps {
   w: number
 }
 
-export const Tooltip = memo(function Tooltip({ hoveredObject, x, y, w }: TooltipProps) {
+export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType, authorshipType } = useOptions()
   const [metricsData] = useMetrics()
@@ -28,22 +28,20 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y, w }: Tooltip
     return color
   }, [hoveredObject, metricsData, metricType, authorshipType])
 
-  const right = useMemo(() => x < w / 2, [x, w])
+  const right = useMemo(() => x < window.innerWidth / 2, [x])
+  const top = useMemo(() => y < window.innerHeight / 2, [y])
+  const xTransform = useMemo(() => (right ? `calc(1rem + ${x}px)` : `calc(-1rem + ${x}px - 100%)`), [right, x])
+  const yTransform = useMemo(() => (top ? `calc(1rem + ${y}px)` : `calc(-1rem + ${y}px - 100%)`), [top, y])
   const visible = hoveredObject !== null
 
   return (
-    // <div className="pointer-events-none absolute inset-0 overflow-hidden">
     <div
       className={`card absolute left-0 top-0 flex w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
         visible ? "visible" : "hidden"
       }`}
       ref={tooltipRef}
       style={{
-        transform: !visible
-          ? "none"
-          : right
-          ? `translate(calc(1rem + ${x}px), calc(1rem + ${y}px))`
-          : `translate(calc(-1rem + ${x}px - 100%), calc(1rem + ${y}px))`,
+        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none",
       }}
     >
       {hoveredObject?.type === "blob" ? (
@@ -71,7 +69,6 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y, w }: Tooltip
           })
         : null}
     </div>
-    // </div>
   )
 })
 
