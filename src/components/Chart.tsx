@@ -94,11 +94,7 @@ export const Chart = memo(function Chart({
           "cursor-zoom-out": path.includes("/"),
         })}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={
-          chartType === "BUBBLE_CHART"
-            ? `${estimatedLetterHeightForDirText} 0 ${size.width} ${size.height - estimatedLetterHeightForDirText}`
-            : `0 0 ${size.width} ${size.height}`
-        }
+        viewBox={`0 0 ${size.width} ${size.height}`}
         onClick={() => {
           // Move up to parent
           const parentPath = path.split("/").slice(0, -1).join("/")
@@ -232,7 +228,7 @@ function Path({
   const dProp = useMemo(() => {
     if (chartType === "BUBBLE_CHART") {
       const datum = d as HierarchyCircularNode<HydratedGitObject>
-      return circlePathFromCircle(datum.x, datum.y, datum.r - 1)
+      return circlePathFromCircle(datum.x, datum.y + estimatedLetterHeightForDirText - 1, datum.r - 1)
     } else {
       const datum = d as HierarchyRectangularNode<HydratedGitObject>
       return roundedRectPathFromRect(
@@ -282,7 +278,7 @@ function CircleText({
   const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
 
   const props = useToggleableSpring({
-    d: circlePathFromCircle(d.x, d.y, d.r - yOffset),
+    d: circlePathFromCircle(d.x, d.y + estimatedLetterHeightForDirText - 1, d.r - yOffset),
   })
 
   const textProps = useToggleableSpring({
