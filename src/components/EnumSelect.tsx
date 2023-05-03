@@ -19,6 +19,7 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
         {props.label}
       </label>
       <select
+        key={props.defaultValue}
         className="input"
         id={id}
         defaultValue={props.defaultValue}

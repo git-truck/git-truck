@@ -1,7 +1,6 @@
 import { createContext, useContext } from "react"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
 import { Authorship, Metric } from "../metrics/metrics"
-import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -17,8 +16,6 @@ export type Options = {
   transitionsEnabled: boolean
   labelsVisible: boolean
 }
-
-type OptionKeys = keyof Options
 
 export type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
@@ -38,10 +35,17 @@ export function useOptions() {
   return context
 }
 
-export function getDefaultOptions(): OptionsContextType {
-  const savedOptions = getSavedOptionsOrDefault()
+const defaultOptions: Options = {
+  metricType: Object.keys(Metric)[0] as MetricType,
+  chartType: Object.keys(Chart)[0] as ChartType,
+  authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
+  transitionsEnabled: true,
+  labelsVisible: true,
+}
 
+export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
   return {
+    ...defaultOptions,
     ...savedOptions,
     setChartType: () => {
       throw new Error("No chartTypeSetter provided")
@@ -58,34 +62,5 @@ export function getDefaultOptions(): OptionsContextType {
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
     },
-  }
-}
-
-function getSavedOptionsOrDefault(): Options {
-  let options: Options = {
-    metricType: Object.keys(Metric)[0] as MetricType,
-    chartType: Object.keys(Chart)[0] as ChartType,
-    authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
-    transitionsEnabled: true,
-    labelsVisible: true,
-  }
-
-  try {
-    const newLocal = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
-    if (!newLocal) return options
-    const savedOptions = JSON.parse(newLocal) as Partial<Options>
-
-    Object.entries(savedOptions).forEach(([key, value]) => {
-      if (value !== undefined) {
-        options = { ...options, [key]: value }
-      }
-    })
-
-    return options
-  } catch (e) {
-    try {
-      localStorage.removeItem(OPTIONS_LOCAL_STORAGE_KEY)
-    } catch (e) {}
-    return options
   }
 }

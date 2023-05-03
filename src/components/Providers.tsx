@@ -5,7 +5,7 @@ import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import type { ChartType, OptionsContextType } from "../contexts/OptionsContext"
-import { getDefaultOptions, OptionsContext } from "../contexts/OptionsContext"
+import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
@@ -28,41 +28,41 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const optionsValue = useMemo(
     () => ({
-      ...getDefaultOptions(),
+      ...getDefaultOptionsContextValue(),
       ...options,
       setMetricType: (metricType: MetricType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           metricType,
         })),
       setChartType: (chartType: ChartType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           chartType,
         })),
       setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           authorshipType,
         })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           hoveredBlob: blob,
         })),
       setClickedObject: (object: HydratedGitObject | null) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           clickedObject: object,
         })),
       setTransitionsEnabled: (enabled: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           transitionsEnabled: enabled,
         })),
       setLabelsVisible: (visible: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptions()),
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
           labelsVisible: visible,
         })),
     }),
@@ -70,11 +70,25 @@ export function Providers({ children, data }: ProvidersProps) {
   )
 
   useEffect(() => {
+    let canceled = false
     // Persist options to local storage
     if (options) {
-      localStorage.setItem(OPTIONS_LOCAL_STORAGE_KEY, JSON.stringify(options))
+      requestIdleCallback(() => {
+        if (canceled) return
+        localStorage.setItem(OPTIONS_LOCAL_STORAGE_KEY, JSON.stringify(options))
+      })
+    }
+    return () => {
+      canceled = true
     }
   }, [options])
+
+  useEffect(() => {
+    const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
+    if (savedOptions) {
+      setOptions(getDefaultOptionsContextValue(JSON.parse(savedOptions)))
+    }
+  }, [])
 
   return (
     <DataContext.Provider value={data}>
