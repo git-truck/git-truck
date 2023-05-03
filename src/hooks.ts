@@ -14,10 +14,6 @@ export function useComponentSize() {
   return size
 }
 
-export function useCSSVar(varName: string) {
-  return getComputedStyle(document.documentElement).getPropertyValue(varName)
-}
-
 export function useToggleableSpring(props: unknown) {
   const { transitionsEnabled } = useOptions()
   const [initialRender, setInitialRender] = useBoolean(true)
