@@ -12,6 +12,7 @@
   ],
   "hiddenFiles": [
     "*.json",
-    "*.pdf"
+    "*.pdf",
+    "*.gif"
   ]
 }
