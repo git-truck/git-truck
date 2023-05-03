@@ -95,7 +95,7 @@ export const semverCompare = (a: string, b: string): number => {
 
 const brightnessCalculationCache = new Map<`#${string}`, `#${string}`>()
 
-export function weightedDistanceIn3D(hex: `#${string}`) {
+function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
   return Math.sqrt(Math.pow(rgb[0], 2) * 0.241 + Math.pow(rgb[1], 2) * 0.691 + Math.pow(rgb[2], 2) * 0.068)
 }
@@ -147,5 +147,9 @@ export function hslToHex(h: number, s: number, ll: number): `#${string}` {
   return color
 }
 
-export const isTree = (d: HydratedGitObject): d is HydratedGitTreeObject => d.type === "tree"
-export const isBlob = (d: HydratedGitObject): d is HydratedGitBlobObject => d.type === "blob"
+export function getLightness(hex: `#${string}`): number {
+  return weightedDistanceIn3D(hex) / 255
+}
+
+export const isTree = (d: HydratedGitObject | null = null): d is HydratedGitTreeObject => d?.type === "tree"
+export const isBlob = (d: HydratedGitObject | null = null): d is HydratedGitBlobObject => d?.type === "blob"

@@ -1,14 +1,16 @@
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
+import { useMemo } from "react"
+import { getLightness } from "~/util"
 
 export type GradLegendData = [
   minValue: string,
   maxValue: string,
   minValueAltFormat: string | undefined,
   maxValueAltFormat: string | undefined,
-  minColor: string,
-  maxColor: string
+  minColor: `#${string}`,
+  maxColor: `#${string}`
 ]
 
 export function GradientLegend({ metricCache }: MetricLegendProps) {
@@ -17,13 +19,18 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
 
   const { clickedObject } = useClickedObject()
 
-  const blobLightness = getLightness(metricCache.colormap.get(clickedObject?.path ?? "") ?? "")
-  let offset = -1
-  if (blobLightness !== -1) {
+  const color = clickedObject?.path ? metricCache.colormap.get(clickedObject.path) : null
+  const blobLightness = color ? getLightness(color) : -1
+
+  const offset = useMemo(() => {
     const min = getLightness(minColor)
     const max = getLightness(maxColor)
-    offset = (blobLightness - min) / (max - min)
-  }
+    const diff = max - min
+    if (diff === 0) return 1
+    return (blobLightness - min) / diff
+  }, [blobLightness, maxColor, minColor])
+
+  const visible = offset !== -1
 
   return (
     <>
@@ -41,16 +48,8 @@ export function GradientLegend({ metricCache }: MetricLegendProps) {
           backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`,
         }}
       >
-        <LegendBarIndicator offset={offset * 100} visible={offset !== -1} />
+        <LegendBarIndicator offset={offset * 100} visible={visible} />
       </div>
     </>
   )
-}
-
-function getLightness(hsl: string): number {
-  const regex = /%,((?:\d|\.)+?)%\)/gm
-  const ent = regex.exec(hsl)?.entries()
-  ent?.next()
-  const res = parseFloat(ent?.next().value[1] ?? "-1")
-  return res
 }
