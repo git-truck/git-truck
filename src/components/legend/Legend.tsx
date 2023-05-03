@@ -38,7 +38,7 @@ export function Legend({
   }
 
   return (
-    <div className={`card bottom-0 ${className}`}>
+    <div className={`card flex-shrink-0 overflow-hidden ${className}`}>
       <h2 className="card__title">Legend</h2>
       <h3 className="card__subtitle">{Metric[metricType]}</h3>
       <p className="card-p">{getMetricDescription(metricType, authorshipType)}</p>
