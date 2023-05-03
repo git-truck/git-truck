@@ -1,6 +1,12 @@
-export const treemapPadding = 17
+export const treemapPaddingTop = 20
+export const treemapNodeBorderRadius = 8
+export const treemapTreeTextOffsetX = 13
+export const treemapTreeTextOffsetY = 15
+export const treemapBlobTextOffsetX = 10
+export const treemapBlobTextOffsetY = 16
 export const bubblePadding = 10
-export const textSpacingFromCircle = 0
+export const circleTreeTextOffsetY = 0
+export const circleBlobTextOffsetY = 10
 export const searchMatchColor = "red"
-export const estimatedLetterWidth = 7
-export const EstimatedLetterHeightForDirText = 14
+export const estimatedLetterWidth = 10
+export const estimatedLetterHeightForDirText = 14

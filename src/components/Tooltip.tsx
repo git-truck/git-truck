@@ -1,26 +1,23 @@
 import { Fragment, memo, useMemo, useRef } from "react"
-import { useMouse } from "react-use"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
-import { useCSSVar } from "../hooks"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative } from "../util"
+import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
 
 interface TooltipProps {
   hoveredObject: HydratedGitObject | null
+  x: number
+  y: number
+  w: number
 }
 
-export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
+export const Tooltip = memo(function Tooltip({ hoveredObject, x, y, w }: TooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType, authorshipType } = useOptions()
-  const documentElementRef = useRef(document.documentElement)
-  const mouse = useMouse(documentElementRef)
-  const unitRaw = useCSSVar("--unit")
-  const unit = unitRaw ? Number(unitRaw.replace("px", "")) : 0
   const [metricsData] = useMetrics()
   const color = useMemo(() => {
     if (!hoveredObject) {
@@ -31,17 +28,13 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
     return color
   }, [hoveredObject, metricsData, metricType, authorshipType])
 
-  const toolTipWidth = tooltipRef.current ? tooltipRef.current.getBoundingClientRect().width : 0
-
-  const sidePanelWidth =
-    Number.parseInt(getComputedStyle(document.documentElement).getPropertyValue("--side-panel-width-units")) || 0
-  const right = mouse.docX + toolTipWidth < window.innerWidth - sidePanelWidth * unit
+  const right = useMemo(() => x < w / 2, [x, w])
   const visible = hoveredObject !== null
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        className={`card absolute left-0 top-0 flex min-w-0 max-w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
+        className={`card absolute left-0 top-0 flex w-max flex-row place-items-center rounded-full py-0 pl-1 pr-2 will-change-transform ${
           visible ? "visible" : "hidden"
         }`}
         ref={tooltipRef}
@@ -49,8 +42,8 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
           transform: !visible
             ? "none"
             : right
-            ? `translate(calc(1rem + ${mouse.docX}px), calc(1rem + ${mouse.docY}px))`
-            : `translate(calc(-1rem + ${mouse.docX}px - 100%), calc(1rem + ${mouse.docY}px))`,
+            ? `translate(calc(1rem + ${x}px), calc(1rem + ${y}px))`
+            : `translate(calc(-1rem + ${x}px - 100%), calc(1rem + ${y}px))`,
         }}
       >
         {hoveredObject?.type === "blob" ? (
@@ -61,26 +54,22 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: TooltipProps) {
           <Icon className="ml-0.5" path={mdiFolder} size={0.75} />
         )}
         <span className="card__subtitle items-center">
-          {hoveredObject?.type === "blob"
+          {hoveredObject && isBlob(hoveredObject)
             ? hoveredObject?.name
             : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
                 <Fragment key={`segment-${index}${segment}`}>
                   {segment}
-                  {segments.length > 1 && index < segments.length - 1 ? (
-                    <>
-                      <Icon path={mdiMenuRight} size={1} />
-                    </>
-                  ) : null}
+                  {segments.length > 1 && index < segments.length - 1 ? <Icon path={mdiMenuRight} size={1} /> : null}
                 </Fragment>
               ))}
         </span>
-        {hoveredObject?.type === "blob" ? (
-          <ColorMetricDependentInfo
-            metric={metricType}
-            hoveredBlob={hoveredObject as HydratedGitBlobObject}
-            authorshipType={authorshipType}
-          />
-        ) : null}
+        {hoveredObject?.type === "blob"
+          ? ColorMetricDependentInfo({
+              metric: metricType,
+              hoveredBlob: hoveredObject as HydratedGitBlobObject,
+              authorshipType: authorshipType,
+            })
+          : null}
       </div>
     </div>
   )
@@ -95,11 +84,7 @@ function ColorMetricDependentInfo(props: {
     case "MOST_COMMITS":
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
-      return (
-        <>
-          {noCommits} commit{noCommits > 1 ? <>s</> : null}
-        </>
-      )
+      return `${noCommits} commit${noCommits > 1 ? "s" : null}`
     case "LAST_CHANGED":
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
@@ -112,9 +97,9 @@ function ColorMetricDependentInfo(props: {
         case 0:
           return null
         case 1:
-          return <>{authors[0][0]} is the only author</>
+          return `${authors[0][0]} is the only author`
         default:
-          return <>{authors.length} authors</>
+          return `${authors.length} authors`
       }
     case "TOP_CONTRIBUTOR":
       const dominant = props.hoveredBlob?.dominantAuthor?.get(props.authorshipType) ?? undefined
@@ -126,9 +111,9 @@ function ColorMetricDependentInfo(props: {
         case 0:
           return null
         case 1:
-          return <>1 author</>
+          return "1 author"
         default:
-          return <>{authorCount} authors</>
+          return `${authorCount} authors`
       }
     default:
       return null
