@@ -7,13 +7,16 @@ import { Icon } from "@mdi/react"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
+import type { HydratedGitObject } from "~/analyzer/model"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend({
+  hoveredObject,
   showUnionAuthorsModal,
   className = "",
 }: {
+  hoveredObject: HydratedGitObject | null
   showUnionAuthorsModal: () => void
   className?: string
 }) {
@@ -27,13 +30,13 @@ export function Legend({
   let legend: JSX.Element = <></>
   switch (getMetricLegendType(metricType)) {
     case "POINT":
-      legend = <PointLegend metricCache={metricCache} />
+      legend = <PointLegend metricCache={metricCache} hoveredObject={hoveredObject} />
       break
     case "GRADIENT":
-      legend = <GradientLegend metricCache={metricCache} />
+      legend = <GradientLegend metricCache={metricCache} hoveredObject={hoveredObject} />
       break
     case "SEGMENTS":
-      legend = <SegmentLegend metricCache={metricCache} />
+      legend = <SegmentLegend metricCache={metricCache} hoveredObject={hoveredObject} />
       break
   }
 
@@ -54,5 +57,6 @@ export function Legend({
 }
 
 export interface MetricLegendProps {
+  hoveredObject: HydratedGitObject | null
   metricCache: MetricCache
 }

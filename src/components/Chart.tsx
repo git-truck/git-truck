@@ -3,7 +3,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import { useDeferredValue } from "react"
-import { memo, useEffect, useMemo, useState } from "react"
+import { memo, useEffect, useMemo } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -31,20 +31,20 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { Tooltip } from "./Tooltip"
 import { useComponentSize } from "../hooks"
 import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
-import { useMouse } from "react-use"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
-export function Chart() {
+export const Chart = memo(function Chart({
+  setHoveredObject,
+}: {
+  setHoveredObject: (obj: HydratedGitObject | null) => void
+}) {
   const [ref, rawSize] = useComponentSize()
-  const mouse = useMouse(ref)
   const size = useDeferredValue(rawSize)
-  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const { analyzerData } = useData()
   const { chartType } = useOptions()
   const { path } = usePath()
@@ -55,7 +55,9 @@ export function Chart() {
     return createPartitionedHiearchy(analyzerData.commit, size, chartType, path).descendants()
   }, [analyzerData.commit, size, chartType, path])
 
-  useEffect(() => setHoveredObject(null), [chartType, analyzerData.commit, size])
+  useEffect(() => {
+    setHoveredObject(null)
+  }, [chartType, analyzerData.commit, size, setHoveredObject])
 
   const createGroupHandlers: (
     d: CircleOrRectHiearchyNode,
@@ -79,7 +81,7 @@ export function Chart() {
           onMouseOver: (evt) => {
             evt.stopPropagation()
             if (!isRoot) setHoveredObject(d.data as HydratedGitObject)
-            else if (hoveredObject) setHoveredObject(null)
+            else setHoveredObject(null)
           },
           onMouseOut: () => setHoveredObject(null),
         }
@@ -121,12 +123,9 @@ export function Chart() {
           )
         })}
       </svg>
-      {typeof document !== "undefined" ? (
-        <Tooltip hoveredObject={hoveredObject} x={mouse.elX} y={mouse.elY} w={mouse.elW} />
-      ) : null}
     </div>
   )
-}
+})
 
 const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType, labelsVisible } = useOptions()

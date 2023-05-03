@@ -13,13 +13,14 @@ export type GradLegendData = [
   maxColor: `#${string}`
 ]
 
-export function GradientLegend({ metricCache }: MetricLegendProps) {
+export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps) {
   const [minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor] =
     metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
 
-  const color = clickedObject?.path ? metricCache.colormap.get(clickedObject.path) : null
+  const path = clickedObject?.path ?? hoveredObject?.path ?? null
+  const color = path ? metricCache.colormap.get(path) : null
   const blobLightness = color ? getLightness(color) : -1
 
   const offset = useMemo(() => {

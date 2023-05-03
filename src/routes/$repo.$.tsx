@@ -1,6 +1,6 @@
 import { resolve } from "path"
-import { useState } from "react"
-import { useBoolean } from "react-use"
+import { useRef, useState } from "react"
+import { useBoolean, useMouse } from "react-use"
 import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
@@ -8,7 +8,7 @@ import { Link } from "@remix-run/react"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { AnalyzerData, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
@@ -29,6 +29,8 @@ import { Chart } from "~/components/Chart"
 import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
+import { Tooltip } from "~/components/Tooltip"
+import { createPortal } from "react-dom"
 
 let invalidateCache = false
 
@@ -183,6 +185,7 @@ export default function Repo() {
   const { analyzerData, gitTruckInfo } = data
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
   if (!analyzerData) return null
@@ -196,7 +199,7 @@ export default function Repo() {
           <SearchCard />
         </aside>
 
-        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-hidden p-2">
+        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
           <header className="grid grid-flow-col items-center justify-between gap-2">
             <Breadcrumb />
             <button
@@ -207,7 +210,7 @@ export default function Repo() {
               <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
             </button>
           </header>
-          <div className="card grid overflow-hidden p-2">{client ? <Chart /> : <div />}</div>
+          {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
         </main>
 
         <aside
@@ -218,7 +221,7 @@ export default function Repo() {
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
-          <Legend showUnionAuthorsModal={showUnionAuthorsModal} />
+          <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
           {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <DetailsCard
             className={clsx({
@@ -237,5 +240,27 @@ export default function Repo() {
         }}
       />
     </Providers>
+  )
+}
+
+function ChartWrapper({
+  hoveredObject,
+  setHoveredObject,
+}: {
+  hoveredObject: HydratedGitObject | null
+  setHoveredObject: (obj: HydratedGitObject | null) => void
+}) {
+  const chartWrapperRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLElement>(document.body)
+  const mouse = useMouse(bodyRef)
+
+  return (
+    <div className="card grid overflow-y-hidden p-2" ref={chartWrapperRef}>
+      <Chart setHoveredObject={setHoveredObject} />
+      {createPortal(
+        <Tooltip hoveredObject={hoveredObject} x={mouse.docX} y={mouse.docY} w={window.innerWidth} />,
+        document.body
+      )}
+    </div>
   )
 }
