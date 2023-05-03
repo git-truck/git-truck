@@ -2,6 +2,7 @@ import type { HTMLAttributes } from "react"
 import { useId } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
+import clsx from "clsx"
 
 export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
   <button
@@ -56,19 +57,13 @@ export function CheckboxWithLabel({
   )
 }
 
-export const LegendBarIndicator = ({
-  visible: arrowVisible,
-  offset: arrowOffset,
-}: {
-  visible: boolean
-  offset: number
-}) => (
+export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offset: number }) => (
   <div
-    className={`absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all ${
-      arrowVisible ? "opacity-100" : "opacity-0"
-    }`}
+    className={clsx("absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all", {
+      "opacity-0": !visible,
+    })}
     style={{
-      left: `${arrowOffset}%`,
+      left: `${offset}%`,
     }}
   >
     <Icon path={mdiMenuUp} size={2} className="stroke-white" />

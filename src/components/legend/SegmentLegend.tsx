@@ -2,6 +2,7 @@ import type { HydratedGitBlobObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
+import { isBlob } from "~/util"
 
 export type SegmentLegendData = [
   steps: number,
@@ -18,7 +19,7 @@ export function SegmentLegend({ metricCache }: MetricLegendProps) {
   let arrowOffset = 0
   const { clickedObject } = useClickedObject()
 
-  if (clickedObject?.type == "blob") {
+  if (isBlob(clickedObject)) {
     arrowVisible = true
     arrowOffset = width / 2 + width * offsetStepCalc(clickedObject)
   }
