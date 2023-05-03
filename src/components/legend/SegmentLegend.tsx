@@ -11,13 +11,13 @@ export type SegmentLegendData = [
   offsetStepCalc: (blob: HydratedGitBlobObject) => number
 ]
 
-export function SegmentLegend({ metricCache }: MetricLegendProps) {
+export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {
   const [steps, textGenerator, colorGenerator, offsetStepCalc] = metricCache.legend as SegmentLegendData
   const width = 100 / steps
 
   let arrowVisible = false
   let arrowOffset = 0
-  const { clickedObject } = useClickedObject()
+  const clickedObject = useClickedObject().clickedObject ?? hoveredObject ?? null
 
   if (isBlob(clickedObject)) {
     arrowVisible = true

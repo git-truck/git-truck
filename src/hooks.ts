@@ -1,5 +1,6 @@
 import { useSpring } from "@react-spring/web"
 import type { MutableRefObject } from "react"
+import { useState } from "react"
 import { useEffect, useMemo } from "react"
 import { useBoolean } from "react-use"
 import { useComponentSize as useCompSize } from "react-use-size"
@@ -28,7 +29,7 @@ export function useToggleableSpring(props: unknown) {
 }
 
 export function useClient() {
-  const [client, setClient] = useBoolean(false)
+  const [client, setClient] = useState(false)
   useEffect(() => {
     setClient(true)
   }, [setClient])
