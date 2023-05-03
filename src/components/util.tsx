@@ -57,15 +57,17 @@ export function CheckboxWithLabel({
   )
 }
 
-export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offset: number }) => (
-  <div
-    className={clsx("absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all", {
-      "opacity-0": !visible,
-    })}
-    style={{
-      left: `${offset}%`,
-    }}
-  >
-    <Icon path={mdiMenuUp} size={2} className="stroke-white" />
-  </div>
-)
+export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offset: number }) => {
+  return (
+    <div
+      className={clsx("absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all", {
+        "opacity-0": !visible,
+      })}
+      style={{
+        left: `${offset <= 100 ? offset : -20}%`,
+      }}
+    >
+      <Icon path={mdiMenuUp} size={2} className="stroke-white" />
+    </div>
+  )
+}

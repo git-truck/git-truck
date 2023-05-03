@@ -31,7 +31,7 @@ export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps
     return (blobLightness - min) / diff
   }, [blobLightness, maxColor, minColor])
 
-  const visible = offset !== -1
+  const visible = path !== null
 
   return (
     <>
