@@ -21,11 +21,11 @@ export const Authorship = {
 export type AuthorshipType = keyof typeof Authorship
 
 export const Metric = {
+  FILE_TYPE: "File type",
   TRUCK_FACTOR: "Truck factor",
   TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Number of commits",
   SINGLE_AUTHOR: "Single author",
-  FILE_TYPE: "File type",
   LAST_CHANGED: "Last changed",
 }
 
