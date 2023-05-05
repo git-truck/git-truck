@@ -1,10 +1,10 @@
 import { resolve } from "path"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
-import type { ActionFunction, ErrorBoundaryComponent, LoaderArgs } from "@remix-run/node"
+import type { ActionFunction, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
-import { Link } from "@remix-run/react"
+import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
@@ -145,16 +145,46 @@ export const action: ActionFunction = async ({ request, params }) => {
   return null
 }
 
-export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
-  console.error(error.message)
-  console.error(error.stack)
+export const ErrorBoundary = () => {
+  const error = useRouteError()
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div className="app-container">
+        <div />
+        <div className="card">
+          <h1>An error occured!</h1>
+          <p>See console for more infomation.</p>
+          <p>Message: {error.data.message}</p>
+          <Code>{error.data.message}</Code>
+          <div>
+            <Link to=".">Retry</Link>
+          </div>
+          <div>
+            <Link to="..">Go back</Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  let errorMessage = "Unknown error"
+  if (typeof error === "string") {
+    errorMessage = error
+  } else if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
+    errorMessage = error.message
+  }
+
   return (
     <div className="app-container">
       <div />
       <div className="card">
         <h1>An error occured!</h1>
         <p>See console for more infomation.</p>
-        <Code>{error.stack}</Code>
+        <Code>{errorMessage}</Code>
         <div>
           <Link to=".">Retry</Link>
         </div>

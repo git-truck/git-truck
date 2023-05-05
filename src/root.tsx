@@ -1,11 +1,18 @@
 import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
-import type { ErrorBoundaryComponent } from "@remix-run/node"
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from "@remix-run/react"
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
+  useRouteError,
+} from "@remix-run/react"
 
 import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/index.css"
-import { useEffect } from "react"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
 
@@ -60,43 +67,40 @@ export default function App() {
   )
 }
 
-export function CatchBoundary() {
-  const caught = useCatch()
+export const ErrorBoundary = () => {
+  const error = useRouteError()
 
-  return (
-    <html>
-      <head>
-        <title>Oops! An error wasn't handled</title>
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <h1>
-          {caught.status} {caught.statusText}
-        </h1>
-        <Scripts />
-      </body>
-    </html>
-  )
-}
-
-export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
-  useEffect(() => {
-    console.error(error.message)
-  }, [error])
-
-  return (
-    <html>
-      <head>
-        <title>Oops! An error wasn't handled</title>
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <h1>{error.message}</h1>
-        <Code>{error.stack}</Code>
-        <Scripts />
-      </body>
-    </html>
-  )
+  if (isRouteErrorResponse(error)) {
+    return (
+      <html>
+        <head>
+          <title>Oops! An error wasn't handled</title>
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <h1>Error: {error.status}</h1>
+          <Code>{error.data.message}</Code>
+          <Scripts />
+        </body>
+      </html>
+    )
+  } else if (error instanceof Error) {
+    return (
+      <html>
+        <head>
+          <title>Oops! An error wasn't handled</title>
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <h1>{error.message}</h1>
+          <Code>{error.stack}</Code>
+          <Scripts />
+        </body>
+      </html>
+    )
+  } else {
+    return null
+  }
 }
