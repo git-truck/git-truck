@@ -1,5 +1,5 @@
 /** @type {import('@remix-run/dev').AppConfig} */
-module.exports = {
+export default {
   future: {
     v2_errorBoundary: true,
     v2_meta: true,
@@ -11,8 +11,10 @@ module.exports = {
   tailwind: true,
   postcss: true,
   appDirectory: "src",
-  // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
-  // publicPath: "/build/",
-  // devServerPort: 8002
+  publicPath: "/build/",
+  serverBuildPath: "build/index.js",
+  serverMainFields: ["main", "module"],
+  serverModuleFormat: "cjs",
+  serverPlatform: "node",
+  serverMinify: false,
 }
