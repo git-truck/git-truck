@@ -98,7 +98,6 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
   const path = getPathFromRepoAndHead(repo.name, head)
 
   const branchIsAnalyzed = repo.analyzedHeads[head]
-  const iconColor = branchIsAnalyzed ? "green" : undefined
 
   return (
     <div key={repo.name}>
@@ -119,7 +118,6 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
             value={head}
             onChange={(e) => setHead(e.target.value)}
             headGroups={repo.refs}
-            iconColor={iconColor}
             analyzedHeads={repo.analyzedHeads}
           />
           <div className="grid">

@@ -7,7 +7,6 @@ type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs
   analyzedHeads: Record<string, boolean>
   iconGroupColorMap?: Record<string, string>
-  iconColor?: string
 }
 
 export function RevisionSelect({
