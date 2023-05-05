@@ -73,7 +73,7 @@ export function Providers({ children, data }: ProvidersProps) {
     let canceled = false
     // Persist options to local storage
     if (options) {
-      requestIdleCallback(() => {
+      requestAnimationFrame(() => {
         if (canceled) return
         localStorage.setItem(OPTIONS_LOCAL_STORAGE_KEY, JSON.stringify(options))
       })
