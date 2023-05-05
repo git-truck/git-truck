@@ -29,7 +29,7 @@ let repoDir = "."
 export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
   const rawContent = await GitCaller.getInstance().catFileCached(hash)
   const commitRegex =
-    /tree (?<tree>.*)\s*(?:parent (?<parent>.*)\s*)?(?:parent (?<parent2>.*)\s*)?author (?<authorName>.*?) <(?<authorEmail>.*?)> (?<authorTimeStamp>\d*?) (?<authorTimeZone>.*?)\s*committer (?<committerName>.*?) <(?<committerEmail>.*?)> (?<committerTimeStamp>\d*?) (?<committerTimeZone>.*)\s*(?:gpgsig (?:.|\s)*?-----END PGP SIGNATURE-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
+    /tree (?<tree>.*)\s*(?:parent (?<parent>.*)\s*)?(?:parent (?<parent2>.*)\s*)?author (?<authorName>.*?) <(?<authorEmail>.*?)> (?<authorTimeStamp>\d*?) (?<authorTimeZone>.*?)\s*committer (?<committerName>.*?) <(?<committerEmail>.*?)> (?<committerTimeStamp>\d*?) (?<committerTimeZone>.*)\s*(?:gpgsig (?:.|\s)*?-----END (?:PGP SIGNATURE|SIGNED MESSAGE)-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
 
   const match = commitRegex.exec(rawContent)
   const groups = match?.groups ?? {}
