@@ -1,25 +1,11 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
-  future: {
-    unstable_tailwind: true,
-    unstable_postcss: true
-  },
+  future: {},
   ignoredRouteFiles: ["**/.*", "components/*"],
-  serverDependenciesToBundle: process.env.NODE_ENV === "development" ? [
-    "styled-components",
-    "d3-hierarchy",
-    "@react-aria/utils",
-    "is-binary-path",
-    "yargs-parser",
-    "latest-version",
-    "gitignore-parser",
-    "latest-version",
-    "package-json",
-    "registry-url"
-  ] : [
-    /.*/
-  ],
-  appDirectory: "src"
+  serverDependenciesToBundle: "all",
+  tailwind: true,
+  postcss: true,
+  appDirectory: "src",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
