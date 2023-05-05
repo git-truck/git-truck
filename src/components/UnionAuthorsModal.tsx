@@ -157,7 +157,6 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
       <div className="card relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
         <h2 className="col-span-2 text-2xl">Group authors</h2>
 
-        {/* <div className="flex flex-col gap-2"> */}
         <h3 className="text-lg font-bold">Ungrouped authors</h3>
 
         {ungroupedAuthorsSorted.length > 0 ? (
@@ -189,13 +188,11 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
           <div />
         )}
         <p>{ungroupedAuthorsMessage}</p>
-        {/* </div> */}
 
         <div className="min-h-0 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">{ungroupedAuthersEntries}</div>
 
-        <div></div>
+        <div />
 
-        {/* <div className="flex flex-col gap-2"> */}
         <h3 className="text-lg font-bold">Grouped authors</h3>
         <div className="mr-6 flex justify-end gap-4">
           {authorUnions.length > 0 ? (
@@ -213,7 +210,6 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
           )}
         </div>
         <p>{groupedAuthorsMessage}</p>
-        {/* </div> */}
 
         <div className="flex flex-col gap-4 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">
           {authorUnions.length > 0 ? groupedAuthorsEntries : null}
