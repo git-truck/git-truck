@@ -1,5 +1,5 @@
 import { useKonami } from "react-konami-code"
-import type { MetaFunction } from "@remix-run/node"
+import type { V2_MetaFunction } from "@remix-run/node"
 import {
   Links,
   LiveReload,
@@ -16,8 +16,8 @@ import indexStyles from "~/styles/index.css"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
 
-export const meta: MetaFunction = () => {
-  return { title: "Git Truck" }
+export const meta: V2_MetaFunction = () => {
+  return [{ title: "Git Truck" }]
 }
 
 export function links() {
