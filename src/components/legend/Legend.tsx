@@ -8,6 +8,7 @@ import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
 import type { HydratedGitObject } from "~/analyzer/model"
+import { useDeferredValue } from "react"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
@@ -22,6 +23,7 @@ export function Legend({
 }) {
   const { metricType, authorshipType } = useOptions()
   const [metricsData] = useMetrics()
+  const deferredHoveredObject = useDeferredValue(hoveredObject)
 
   const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
 
@@ -30,13 +32,13 @@ export function Legend({
   let legend: JSX.Element = <></>
   switch (getMetricLegendType(metricType)) {
     case "POINT":
-      legend = <PointLegend metricCache={metricCache} hoveredObject={hoveredObject} />
+      legend = <PointLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
       break
     case "GRADIENT":
-      legend = <GradientLegend metricCache={metricCache} hoveredObject={hoveredObject} />
+      legend = <GradientLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
       break
     case "SEGMENTS":
-      legend = <SegmentLegend metricCache={metricCache} hoveredObject={hoveredObject} />
+      legend = <SegmentLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
       break
   }
 
