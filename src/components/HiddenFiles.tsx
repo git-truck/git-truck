@@ -4,7 +4,7 @@ import { Form, useLocation, useNavigation } from "@remix-run/react"
 import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
 import { Icon } from "@mdi/react"
-import { useId } from "react"
+import { memo, useId } from "react"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -12,7 +12,7 @@ function hiddenFileFormat(ignored: string) {
   return split[split.length - 1]
 }
 
-export function HiddenFiles() {
+export const HiddenFiles = memo(function HiddenFiles() {
   const location = useLocation()
   const [expanded, setExpanded] = useBoolean(false)
   const navigationState = useNavigation()
@@ -54,4 +54,4 @@ export function HiddenFiles() {
       ) : null}
     </div>
   )
-}
+})

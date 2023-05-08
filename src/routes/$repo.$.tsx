@@ -1,5 +1,6 @@
 import { resolve } from "path"
-import { useEffect, useRef, useState } from "react"
+import type { Dispatch, SetStateAction } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
 import type { ActionFunction, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -196,7 +197,7 @@ export const ErrorBoundary = () => {
   )
 }
 
-function UpdateNotifier() {
+const UpdateNotifier = memo(function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   return (
     <div className="card">
@@ -207,7 +208,7 @@ function UpdateNotifier() {
       </p>
     </div>
   )
-}
+})
 
 export default function Repo() {
   const client = useClient()
@@ -232,13 +233,7 @@ export default function Repo() {
         <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
           <header className="grid grid-flow-col items-center justify-between gap-2">
             <Breadcrumb />
-            <button
-              className="card btn--icon p-1"
-              onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
-              title="Toggle full view"
-            >
-              <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
-            </button>
+            <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
           </header>
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
         </main>
@@ -272,6 +267,24 @@ export default function Repo() {
     </Providers>
   )
 }
+
+const FullscreenButton = memo(function FullscreenButton({
+  setIsFullscreen,
+  isFullscreen,
+}: {
+  setIsFullscreen: Dispatch<SetStateAction<boolean>>
+  isFullscreen: boolean
+}) {
+  return (
+    <button
+      className="card btn--icon p-1"
+      onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
+      title="Toggle full view"
+    >
+      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
+    </button>
+  )
+})
 
 function ChartWrapper({
   hoveredObject,

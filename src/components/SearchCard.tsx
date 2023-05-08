@@ -26,7 +26,7 @@ function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   return searchResults
 }
 
-export function SearchCard() {
+export const SearchCard = memo(function SearchCard() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
   const [isTransitioning, startTransition] = useTransition()
   const { setSearchText, searchText, searchResults, setSearchResults } = useSearch()
@@ -76,7 +76,7 @@ export function SearchCard() {
       {searchResults.length > 0 ? <SearchResults /> : null}
     </>
   )
-}
+})
 
 const SearchResults = memo(function SearchResults() {
   const { setPath } = usePath()
