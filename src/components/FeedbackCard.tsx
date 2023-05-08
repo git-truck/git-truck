@@ -1,7 +1,8 @@
-import { mdiMessageDraw, mdiAlert, mdiTimelineQuestionOutline, mdiAlertCircleOutline, mdiForum } from "@mdi/js"
+import { mdiMessageDraw, mdiAlertCircleOutline, mdiForum } from "@mdi/js"
 import Icon from "@mdi/react"
+import { memo } from "react"
 
-export function FeedbackCard() {
+export const FeedbackCard = memo(function FeedbackCard() {
   return (
     <div className="card">
       <div className="flex items-center justify-between">
@@ -28,4 +29,4 @@ export function FeedbackCard() {
       </a>
     </div>
   )
-}
+})

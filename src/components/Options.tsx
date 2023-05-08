@@ -6,6 +6,7 @@ import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { mdiChartBubble, mdiDatabaseOutline, mdiCogOutline } from "@mdi/js"
+import { memo } from "react"
 
 function isMetricWithHistoricalOption(metric: MetricType) {
   switch (metric) {
@@ -16,7 +17,7 @@ function isMetricWithHistoricalOption(metric: MetricType) {
   return false
 }
 
-export function Options() {
+export const Options = memo(function Options() {
   const {
     metricType,
     chartType,
@@ -80,4 +81,4 @@ export function Options() {
       </CheckboxWithLabel>
     </div>
   )
-}
+})

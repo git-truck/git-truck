@@ -1,7 +1,7 @@
 import { Form, Link, useLocation, useNavigate, useNavigation } from "@remix-run/react"
 import { dateTimeFormatShort } from "~/util"
 import { useData } from "../contexts/DataContext"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { mdiFolder, mdiRefresh, mdiArrowTopLeft } from "@mdi/js"
 import { Code } from "./util"
@@ -11,7 +11,7 @@ import { useClient } from "~/hooks"
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
-export function GlobalInfo() {
+export const GlobalInfo = memo(function GlobalInfo() {
   const client = useClient()
   const { analyzerData, repo } = useData()
   const transitionState = useNavigation()
@@ -87,4 +87,4 @@ export function GlobalInfo() {
       </div>
     </div>
   )
-}
+})
