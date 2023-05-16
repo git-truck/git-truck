@@ -1,5 +1,6 @@
 import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
+import colorConvert from "color-convert"
 import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
@@ -100,13 +101,16 @@ function weightedDistanceIn3D(hex: `#${string}`) {
   return Math.sqrt(Math.pow(rgb[0], 2) * 0.241 + Math.pow(rgb[1], 2) * 0.691 + Math.pow(rgb[2], 2) * 0.068)
 }
 
-function hexToRgb(hexString: `#${string}`) {
-  const hex = hexString.replace("#", "")
-  const c = hex.length === 3 ? hex.split("").map((x) => x + x) : hex.split("")
-  const r = parseInt(c[0] + c[1], 16)
-  const g = parseInt(c[2] + c[3], 16)
-  const b = parseInt(c[4] + c[5], 16)
-  return [r, g, b]
+const hexToRgbCache = new Map<`#${string}`, [number, number, number]>()
+
+function hexToRgb(hexString: `#${string}`): [number, number, number] {
+  const cachedColor = hexToRgbCache.get(hexString)
+  if (cachedColor) {
+    return cachedColor
+  }
+  const rgb = colorConvert.hex.rgb(hexString);
+  hexToRgbCache.set(hexString, rgb)
+  return rgb
 }
 
 export const getTextColorFromBackground = (color: `#${string}`) => {
@@ -128,23 +132,17 @@ export const getTextColorFromBackground = (color: `#${string}`) => {
 
 const colorCache = new Map<string, `#${string}`>()
 
-export function hslToHex(h: number, s: number, ll: number): `#${string}` {
-  const key = `${h},${s},${ll}`
+export function hslToHex(h: number, s: number, l: number): `#${string}` {
+  const key = `${h}-${s}-${l}`
   const cachedColor = colorCache.get(key)
-  if (cachedColor) return cachedColor
-  const l = ll / 100
-  const a = (s * Math.min(l, 1 - l)) / 100
-  const f = (n: number) => {
-    const k = (n + h / 30) % 12
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
-    return Math.round(255 * color)
-      .toString(16)
-      .padStart(2, "0") // convert to Hex and prefix "0" if needed
+
+  if (cachedColor) {
+    return cachedColor
   }
 
-  const color = `#${f(0)}${f(8)}${f(4)}` as const
-  colorCache.set(key, color)
-  return color
+  const hex: `#${string}` = `#${colorConvert.hsl.hex([h, s, l])}`
+  colorCache.set(key, hex)
+  return hex
 }
 
 export function getLightness(hex: `#${string}`): number {
