@@ -35,6 +35,7 @@ import { useComponentSize } from "../hooks"
 import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
+import type { SizeMetricType } from "~/metrics/size-metric"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -46,14 +47,14 @@ export const Chart = memo(function Chart({
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType } = useOptions()
+  const { chartType, sizeMetric } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(analyzerData.commit, size, chartType, path).descendants()
-  }, [analyzerData.commit, size, chartType, path])
+    return createPartitionedHiearchy(analyzerData.commit, size, chartType, sizeMetric, path).descendants()
+  }, [size, analyzerData.commit, chartType, sizeMetric, path])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -363,6 +364,7 @@ function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
   size: { height: number; width: number },
   chartType: ChartType,
+  sizeMetricType: SizeMetricType,
   path: string
 ) {
   const root = data.tree as HydratedGitTreeObject
@@ -387,8 +389,19 @@ function createPartitionedHiearchy(
 
   const hiearchy = hierarchy(castedTree)
     .sum((d) => {
-      const lineCount = (d as HydratedGitBlobObject).sizeInBytes
-      return lineCount ? lineCount : 1
+      const hydratedBlob = d as HydratedGitBlobObject
+      switch (sizeMetricType) {
+        case "FILE_SIZE":
+          return hydratedBlob.sizeInBytes ?? 1
+        case "MOST_COMMITS":
+          return hydratedBlob.noCommits
+        case "EQUAL_SIZE":
+          return 1
+        case "RANDOM":
+          return Math.random() * 100
+        case "NUMBER_OF_AUTHORS":
+          return Object.keys(hydratedBlob.authors ?? {}).length
+      }
     })
     .sort((a, b) => (b.value !== undefined && a.value !== undefined ? b.value - a.value : 0))
 
