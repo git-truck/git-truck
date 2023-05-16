@@ -1,6 +1,8 @@
 import { createContext, useContext } from "react"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
 import { Authorship, Metric } from "../metrics/metrics"
+import type { SizeMetricType } from "~/metrics/size-metric"
+import { SizeMetric } from "~/metrics/size-metric"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -10,8 +12,10 @@ export const Chart = {
 export type ChartType = keyof typeof Chart
 
 export type Options = {
+  hasLoadedSavedOptions: boolean
   metricType: MetricType
   chartType: ChartType
+  sizeMetric: SizeMetricType
   authorshipType: AuthorshipType
   transitionsEnabled: boolean
   labelsVisible: boolean
@@ -20,6 +24,7 @@ export type Options = {
 export type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
+  setSizeMetricType: (sizeMetricType: SizeMetricType) => void
   setAuthorshipType: (authorshipType: AuthorshipType) => void
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
@@ -36,8 +41,10 @@ export function useOptions() {
 }
 
 const defaultOptions: Options = {
+  hasLoadedSavedOptions: false,
   metricType: Object.keys(Metric)[0] as MetricType,
   chartType: Object.keys(Chart)[0] as ChartType,
+  sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
   labelsVisible: true,
@@ -53,6 +60,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     setMetricType: () => {
       throw new Error("No metricTypeSetter provided")
     },
+    setSizeMetricType: () => {
+      throw new Error("No sizeMetricTypeSetter provided")
+    },
     setAuthorshipType: () => {
       throw new Error("No AuthorshipTypeSetter provided")
     },
@@ -61,6 +71,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
-    },
+    }
   }
 }

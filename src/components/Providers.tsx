@@ -11,6 +11,7 @@ import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
+import type { SizeMetricType } from "~/metrics/size-metric"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -26,7 +27,7 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData), [data])
 
-  const optionsValue = useMemo(
+  const optionsValue = useMemo<OptionsContextType>(
     () => ({
       ...getDefaultOptionsContextValue(),
       ...options,
@@ -45,6 +46,8 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           authorshipType,
         })),
+      setSizeMetricType: (sizeMetric: SizeMetricType) =>
+        setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
@@ -64,7 +67,7 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           labelsVisible: visible,
-        })),
+        }))
     }),
     [options]
   )
@@ -86,7 +89,10 @@ export function Providers({ children, data }: ProvidersProps) {
   useEffect(() => {
     const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
     if (savedOptions) {
-      setOptions(getDefaultOptionsContextValue(JSON.parse(savedOptions)))
+      setOptions({
+        ...getDefaultOptionsContextValue(JSON.parse(savedOptions)),
+        hasLoadedSavedOptions: true,
+      })
     }
   }, [])
 

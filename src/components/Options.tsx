@@ -5,8 +5,10 @@ import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
-import { mdiChartBubble, mdiDatabaseOutline, mdiCogOutline } from "@mdi/js"
 import { memo } from "react"
+import { mdiChartBubble, mdiDatabaseOutline, mdiImageSizeSelectSmall, mdiCogOutline } from "@mdi/js"
+import type { SizeMetricType } from "~/metrics/size-metric"
+import { SizeMetric } from "~/metrics/size-metric"
 
 function isMetricWithHistoricalOption(metric: MetricType) {
   switch (metric) {
@@ -21,12 +23,14 @@ export const Options = memo(function Options() {
   const {
     metricType,
     chartType,
+    sizeMetric,
     transitionsEnabled,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,
     setMetricType,
     setChartType,
+    setSizeMetricType,
   } = useOptions()
 
   return (
@@ -45,6 +49,17 @@ export const Options = memo(function Options() {
         enum={Metric}
         defaultValue={metricType}
         onChange={(metric: MetricType) => setMetricType(metric)}
+      />
+      <EnumSelect
+        label={
+          <div className="flex justify-between gap-2">
+            Size metric
+            <Icon path={mdiImageSizeSelectSmall} size={1} />
+          </div>
+        }
+        enum={SizeMetric}
+        defaultValue={sizeMetric}
+        onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
       />
       <EnumSelect
         label={

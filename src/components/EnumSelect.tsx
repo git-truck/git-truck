@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { useId } from "react"
+import { useOptions } from "~/contexts/OptionsContext"
 
 interface EnumSelectProps<T extends string> {
   label: ReactNode
@@ -12,6 +13,7 @@ interface EnumSelectProps<T extends string> {
 export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
   const id = useId()
   const enumEntries = Object.entries(props.enum) as [T, string][]
+  const { hasLoadedSavedOptions } = useOptions()
 
   return (
     <div className={`flex flex-col gap-2 ${props.hidden ? "hidden" : ""}`}>
@@ -19,7 +21,7 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
         {props.label}
       </label>
       <select
-        key={props.defaultValue}
+        key={hasLoadedSavedOptions.toString()}
         className="input"
         id={id}
         defaultValue={props.defaultValue}
