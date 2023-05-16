@@ -6,7 +6,6 @@ on:
     paths:
       - demo.tape
       - .github/workflows/demo-gif.yml
-      - package.json
 jobs:
   vhs:
     runs-on: ubuntu-latest
