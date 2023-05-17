@@ -26,8 +26,18 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
 function setIntialLogLevel() {
-  if (typeof process.env.LOG_LEVEL === "string") return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
-  if (typeof process.env.LOG_LEVEL === "number") return process.env.LOG_LEVEL
+  if (typeof process.env.LOG_LEVEL === "string") {
+    setTimeout(() => {
+      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
+    })
+    return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
+  }
+  if (typeof process.env.LOG_LEVEL === "number") {
+    setTimeout(() => {
+      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
+    })
+    return process.env.LOG_LEVEL
+  }
   return null
 }
 
@@ -85,18 +95,18 @@ export function raw(message: unknown) {
 
 function prefix(label: LOG_LEVEL_LABEL): string {
   const formatPrefix = (label: LOG_LEVEL_LABEL, colorFn = (s: string) => s) =>
-  `${colorFn(` ${label} `)} `
+    `${colorFn(` ${new Date().toLocaleTimeString()} ${label} `)} `
 
   if (process.env.COLOR === "0") return `[${label}] `
   switch (label) {
     case LOG_LEVEL_LABEL.ERROR:
-      return formatPrefix(LOG_LEVEL_LABEL.ERROR, c.bgRedBright.black)
+      return formatPrefix(LOG_LEVEL_LABEL.ERROR, c.bgRedBright.black.bold)
     case LOG_LEVEL_LABEL.WARN:
-      return formatPrefix(LOG_LEVEL_LABEL.WARN, c.bgYellow.black)
+      return formatPrefix(LOG_LEVEL_LABEL.WARN, c.bgYellow.black.bold)
     case LOG_LEVEL_LABEL.INFO:
-      return formatPrefix(LOG_LEVEL_LABEL.INFO, c.bgBlueBright.black)
+      return formatPrefix(LOG_LEVEL_LABEL.INFO, c.bgBlueBright.black.bold)
     case LOG_LEVEL_LABEL.DEBUG:
-      return formatPrefix(LOG_LEVEL_LABEL.DEBUG, c.bgBlack.white)
+      return formatPrefix(LOG_LEVEL_LABEL.DEBUG, c.bgWhite.bold)
     default:
       throw Error("Invalid log level")
   }
