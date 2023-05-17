@@ -1,3 +1,5 @@
+import c from "ansi-colors"
+
 export enum LOG_LEVEL {
   SILENT,
   ERROR,
@@ -82,7 +84,22 @@ export function raw(message: unknown) {
 }
 
 function prefix(label: LOG_LEVEL_LABEL): string {
-  return `[${label}] `
+  const formatPrefix = (label: LOG_LEVEL_LABEL, colorFn = (s: string) => s) =>
+  `${colorFn(` ${label} `)} `
+
+  if (process.env.COLOR === "0") return `[${label}] `
+  switch (label) {
+    case LOG_LEVEL_LABEL.ERROR:
+      return formatPrefix(LOG_LEVEL_LABEL.ERROR, c.bgRedBright.black)
+    case LOG_LEVEL_LABEL.WARN:
+      return formatPrefix(LOG_LEVEL_LABEL.WARN, c.bgYellow.black)
+    case LOG_LEVEL_LABEL.INFO:
+      return formatPrefix(LOG_LEVEL_LABEL.INFO, c.bgBlueBright.black)
+    case LOG_LEVEL_LABEL.DEBUG:
+      return formatPrefix(LOG_LEVEL_LABEL.DEBUG, c.bgBlack.white)
+    default:
+      throw Error("Invalid log level")
+  }
 }
 
 export const log = {
