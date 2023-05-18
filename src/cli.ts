@@ -66,8 +66,8 @@ for usage instructions.`)
   const onListen = async () => {
     const url = `http://localhost:${port}`
 
-    const [extension, extensionError] = await describeAsyncJob(
-      async () => {
+    const [extension, extensionError] = await describeAsyncJob({
+      job: async () => {
         // If CWD or path argument is a git repo, go directly to that repo in the visualizer
         if (await GitCaller.isGitRepo(options.path)) {
           const repo = await GitCaller.getRepoMetadata(options.path)
@@ -76,10 +76,10 @@ for usage instructions.`)
           } else return ""
         }
       },
-      "Checking for git repo",
-      "Done checking for git repo",
-      "Failed to check for git repo"
-    )
+      beforeMsg: "Checking for git repo",
+      afterMsg: "Done checking for git repo",
+      errorMsg: "Failed to check for git repo",
+    })
 
     if (extensionError) {
       console.error(extensionError)
@@ -91,19 +91,19 @@ for usage instructions.`)
       let err: Error | null = null
 
       if (!args.headless) {
-        [, err] = await describeAsyncJob(
-          () => open(openURL),
-          "Opening Git Truck in your browser",
-          `Succesfully opened Git Truck in your browser`,
-          `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`
-        )
+        ;[, err] = await describeAsyncJob({
+          job: () => open(openURL),
+          beforeMsg: "Opening Git Truck in your browser",
+          afterMsg: `Succesfully opened Git Truck in your browser`,
+          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`,
+        })
       }
       if (!err) console.log(`\nApplication available at ${url}`)
     }
   }
 
-  describeAsyncJob(
-    async () => {
+  describeAsyncJob({
+    job: async () => {
       const app = createApp(
         path.join(__dirname, "build"),
         process.env.NODE_ENV ?? "production",
@@ -112,15 +112,14 @@ for usage instructions.`)
       )
 
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
-
       ;["SIGTERM", "SIGINT"].forEach((signal) => {
         process.once(signal, () => server?.close(console.error))
       })
     },
-    "Starting Git Truck",
-    "Git Truck started",
-    "Failed to start Git Truck"
-  )
+    beforeMsg: "Starting Git Truck",
+    afterMsg: "Git Truck started",
+    errorMsg: "Failed to start Git Truck",
+  })
 }
 
 main()

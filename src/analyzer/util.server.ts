@@ -7,6 +7,7 @@ import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
 import { performance } from "perf_hooks"
 import { resolve as resolvePath } from "path"
+import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
 
@@ -118,12 +119,19 @@ export function createTruckSpinner() {
 
 let spinner: null | Spinner = null
 
-export async function describeAsyncJob<T>(
-  job: () => Promise<T>,
-  beforeMsg: string,
-  afterMsg: string,
+export async function describeAsyncJob<T>({
+  job = async () => null as T,
+  beforeMsg = "",
+  afterMsg = "",
+  errorMsg = "",
+  ms = null,
+}: {
+  job: () => Promise<T>
+  beforeMsg: string
+  afterMsg: string
   errorMsg: string
-): Promise<[T, null] | [null, Error]> {
+  ms?: number | null
+}): Promise<[T, null] | [null, Error]> {
   spinner = createTruckSpinner()
   const success = (text: string, final = false) => {
     if (getLogLevel() === LOG_LEVEL.SILENT) return
@@ -148,7 +156,7 @@ export async function describeAsyncJob<T>(
     const startTime = performance.now()
     const result = await job()
     const stopTime = performance.now()
-    const suffix = `[${formatMs(stopTime - startTime)}]`
+    const suffix = c.gray(`${formatMs(!ms ? stopTime - startTime : ms)}`)
     success(`${afterMsg} ${suffix}`, true)
     return [result, null]
   } catch (e) {

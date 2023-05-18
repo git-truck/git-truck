@@ -171,24 +171,24 @@ export class GitCaller {
 
   static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
-    const [pathIsRepo] = await describeAsyncJob(
-      () => GitCaller.isGitRepo(argPath),
-      "Checking if path is a git repo...",
-      "Done checking if path is a git repo",
-      "Error checking if path is a git repo"
-    )
+    const [pathIsRepo] = await describeAsyncJob({
+      job: () => GitCaller.isGitRepo(argPath),
+      beforeMsg: "Checking if path is a git repo...",
+      afterMsg: "Done checking if path is a git repo",
+      errorMsg: "Error checking if path is a git repo",
+    })
 
     const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
 
     const entries = await fs.readdir(baseDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
 
-    const [repoOrNull, repoOrNullError] = await describeAsyncJob(
-      () => Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo)))),
-      "Scanning for repositories...",
-      "Done scanning for repositories",
-      "Error scanning for repositories"
-    )
+    const [repoOrNull, repoOrNullError] = await describeAsyncJob({
+      job: () => Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo)))),
+      beforeMsg: "Scanning for repositories...",
+      afterMsg: "Done scanning for repositories",
+      errorMsg: "Error scanning for repositories",
+    })
 
     if (repoOrNullError) {
       throw repoOrNullError
