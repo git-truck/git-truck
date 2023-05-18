@@ -208,12 +208,12 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   const hiddenFiles = args.hiddenFiles
 
   const start = performance.now()
-  const [findBranchHeadResult, findBranchHeadError] = await describeAsyncJob(
-    () => git.findBranchHead(branch),
-    "Finding branch head",
-    "Found branch head",
-    "Error finding branch head"
-  )
+  const [findBranchHeadResult, findBranchHeadError] = await describeAsyncJob({
+    job: () => git.findBranchHead(branch),
+    beforeMsg: "Finding branch head",
+    afterMsg: "Found branch head",
+    errorMsg: "Error finding branch head",
+  })
   const repoName = getDirName(repoDir)
 
   if (findBranchHeadError) throw findBranchHeadError
@@ -253,21 +253,21 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     await git.setGitSetting("diff.renameLimit", "1000000")
 
     const runDateEpoch = Date.now()
-    const [repoTree, repoTreeError] = await describeAsyncJob(
-      () => analyzeCommit(repoName, branchHead),
-      "Analyzing commit tree",
-      "Commit tree analyzed",
-      "Error analyzing commit tree"
-    )
+    const [repoTree, repoTreeError] = await describeAsyncJob({
+      job: () => analyzeCommit(repoName, branchHead),
+      beforeMsg: "Analyzing commit tree",
+      afterMsg: "Commit tree analyzed",
+      errorMsg: "Error analyzing commit tree",
+    })
 
     if (repoTreeError) throw repoTreeError
 
-    const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob(
-      () => hydrateData(repoTree),
-      "Hydrating commit tree",
-      "Commit tree hydrated",
-      "Error hydrating commit tree"
-    )
+    const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
+      job: () => hydrateData(repoTree),
+      beforeMsg: "Hydrating commit tree",
+      afterMsg: "Commit tree hydrated",
+      errorMsg: "Error hydrating commit tree",
+    })
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
@@ -297,16 +297,16 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       commits,
     }
 
-    await describeAsyncJob(
-      () =>
+    await describeAsyncJob({
+      job: () =>
         writeRepoToFile(outPath, {
           ...data,
           cached: true,
         } as AnalyzerData),
-      "Writing data to file",
-      `Wrote data to ${resolve(outPath)}`,
-      `Error writing data to file ${outPath}`
-    )
+      beforeMsg: "Writing data to file",
+      afterMsg: `Wrote data to ${resolve(outPath)}`,
+      errorMsg: `Error writing data to file ${outPath}`,
+    })
   }
 
   const truckignore = ignore().add(hiddenFiles)
@@ -317,7 +317,13 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
   const stop = performance.now()
 
-  log.raw(`\nDone in ${formatMs(stop - start)}`)
+  await describeAsyncJob({
+    job: () => Promise.resolve(),
+    beforeMsg: "",
+    afterMsg: `Ready in`,
+    errorMsg: "",
+    ms: stop - start,
+  })
 
   return data
 }
