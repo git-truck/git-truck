@@ -10,7 +10,7 @@ import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo } from "~/analyzer/util.server"
+import { getGitTruckInfo, promiseHelper } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -66,7 +66,7 @@ export const loader = async ({ params }: LoaderArgs) => {
   )
 
   invalidateCache = false
-  const repo = await GitCaller.getRepoMetadata(options.path)
+  const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
 
   if (!repo) {
     throw Error("Error loading repo")
