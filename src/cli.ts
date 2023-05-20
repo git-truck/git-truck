@@ -71,8 +71,8 @@ for usage instructions.`)
         // If CWD or path argument is a git repo, go directly to that repo in the visualizer
         if (await GitCaller.isGitRepo(options.path)) {
           const repoName = getDirName(options.path)
-          const currentHead = await GitCaller._getRepositoryHead(options.path)
           if (repoName) {
+            const currentHead = await GitCaller._getRepositoryHead(options.path)
             return `/${getPathFromRepoAndHead(repoName, currentHead)}`
           } else return ""
         }
@@ -88,10 +88,10 @@ for usage instructions.`)
 
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension ?? "")
-      log.debug(`Opening ${openURL}`)
       let err: Error | null = null
 
       if (!args.headless) {
+        log.debug(`Opening ${openURL}`)
         ;[, err] = await describeAsyncJob({
           job: () => open(openURL),
           beforeMsg: "Opening Git Truck in your browser",
