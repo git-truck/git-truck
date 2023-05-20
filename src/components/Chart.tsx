@@ -399,7 +399,7 @@ function createPartitionedHiearchy(
           return 1
         case "RANDOM":
           return Math.random() * 100
-        case "NUMBER_OF_AUTHORS":
+        case "TRUCK_FACTOR":
           return Object.keys(hydratedBlob.authors ?? {}).length
       }
     })
