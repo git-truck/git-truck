@@ -297,16 +297,18 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       commits,
     }
 
-    await describeAsyncJob({
-      job: () =>
-        writeRepoToFile(outPath, {
-          ...data,
-          cached: true,
-        } as AnalyzerData),
-      beforeMsg: "Writing data to file",
-      afterMsg: `Wrote data to ${resolve(outPath)}`,
-      errorMsg: `Error writing data to file ${outPath}`,
-    })
+    if (!args.invalidateCache) {
+      await describeAsyncJob({
+        job: () =>
+          writeRepoToFile(outPath, {
+            ...data,
+            cached: true,
+          } as AnalyzerData),
+        beforeMsg: "Writing data to file",
+        afterMsg: `Wrote data to ${resolve(outPath)}`,
+        errorMsg: `Error writing data to file ${outPath}`,
+      })
+    }
   }
 
   const truckignore = ignore().add(hiddenFiles)
