@@ -114,10 +114,12 @@ export class GitCaller {
     return result.trim()
   }
 
-  static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
+  static async getRepoMetadata(repoPath: string, invalidateCache: boolean): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
-    const [isRepo] = await promiseHelper(GitCaller.isGitRepo(repoPath))
-    if (!isRepo) return null
+    const isRepo = await GitCaller.isGitRepo(repoPath)
+    if (!isRepo) {
+      return null
+    }
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
@@ -126,6 +128,7 @@ export class GitCaller {
           repo: getDirName(repoPath),
           branch: headName,
           branchHead: head,
+          invalidateCache,
         })
         return {
           headName,
@@ -159,6 +162,7 @@ export class GitCaller {
           repo: repoDir,
           branch,
           branchHead,
+          invalidateCache,
         })
         repo.data = data
         repo.reasons = reasons
@@ -169,7 +173,10 @@ export class GitCaller {
     return repo
   }
 
-  static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
+  static async scanDirectoryForRepositories(
+    argPath: string,
+    invalidateCache: boolean
+  ): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const [pathIsRepo] = await describeAsyncJob({
       job: () => GitCaller.isGitRepo(argPath),
@@ -183,24 +190,29 @@ export class GitCaller {
     const entries = await fs.readdir(baseDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
 
-    const [repoOrNull, repoOrNullError] = await describeAsyncJob({
-      job: () => Promise.all(dirs.map((repo) => GitCaller.getRepoMetadata(join(baseDir, repo)))),
+    const [repoResults] = (await describeAsyncJob({
+      job: () =>
+        Promise.allSettled(
+          dirs.map(async (repo) => {
+            const result = await GitCaller.getRepoMetadata(join(baseDir, repo), invalidateCache)
+            if (!result) throw Error("Not a git repo")
+            return result
+          })
+        ),
       beforeMsg: "Scanning for repositories...",
       afterMsg: "Done scanning for repositories",
       errorMsg: "Error scanning for repositories",
-    })
+    })) as [PromiseSettledResult<Repository>[], null]
 
-    if (repoOrNullError) {
-      throw repoOrNullError
-    }
-
-    const onlyRepos: Repository[] = repoOrNull.filter((currentRepo) => {
-      if (currentRepo === null) return false
-      if (pathIsRepo && currentRepo.name === getDirName(argPath)) {
-        userRepo = currentRepo
-      }
-      return true
-    }) as Repository[]
+    const onlyRepos = (
+      repoResults.filter((currentRepo) => {
+        if (currentRepo.status === "rejected") return false
+        if (pathIsRepo && currentRepo.value.name === getDirName(argPath)) {
+          userRepo = currentRepo.value
+        }
+        return true
+      }) as PromiseFulfilledResult<Repository>[]
+    ).map((result) => result.value)
 
     return [userRepo, onlyRepos]
   }
@@ -267,11 +279,16 @@ export class GitCaller {
     repo,
     branch,
     branchHead,
+    invalidateCache = false,
   }: {
     repo: string
     branch: string
     branchHead: string
+    invalidateCache: boolean
   }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
+    if (invalidateCache) {
+      return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
+    }
     const reasons = []
     const cachedDataPath = GitCaller.getCachePath(repo, branch)
     if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]

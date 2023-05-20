@@ -20,8 +20,8 @@ interface IndexData {
 }
 
 export const loader = async () => {
-  const args = await getArgsWithDefaults()
-  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
+  const args = getArgsWithDefaults()
+  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path, args.invalidateCache)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   const repositoriesResponse = json<IndexData>({

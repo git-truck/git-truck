@@ -7,7 +7,7 @@ import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
 import { createApp } from "@remix-run/serve"
 import { semverCompare } from "./util"
-import { describeAsyncJob } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 
 async function main() {
@@ -70,9 +70,10 @@ for usage instructions.`)
       job: async () => {
         // If CWD or path argument is a git repo, go directly to that repo in the visualizer
         if (await GitCaller.isGitRepo(options.path)) {
-          const repo = await GitCaller.getRepoMetadata(options.path)
-          if (repo) {
-            return `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`
+          const repoName = getDirName(options.path)
+          const currentHead = await GitCaller._getRepositoryHead(options.path)
+          if (repoName) {
+            return `/${getPathFromRepoAndHead(repoName, currentHead)}`
           } else return ""
         }
       },
