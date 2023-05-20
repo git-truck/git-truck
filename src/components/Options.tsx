@@ -6,7 +6,22 @@ import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { memo } from "react"
-import { mdiChartBubble, mdiDatabaseOutline, mdiImageSizeSelectSmall, mdiCogOutline } from "@mdi/js"
+import {
+  mdiChartBubble,
+  mdiCogOutline,
+  mdiChartTree,
+  mdiPodiumGold,
+  mdiThermometer,
+  mdiFileCodeOutline,
+  mdiTruckFastOutline,
+  mdiUpdate,
+  mdiResize,
+  mdiSourceCommit,
+  mdiAccountGroupOutline,
+  mdiDice3Outline,
+  mdiScaleBalance,
+  mdiAccountAlertOutline,
+} from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/size-metric"
 import { SizeMetric } from "~/metrics/size-metric"
 
@@ -33,6 +48,28 @@ export const Options = memo(function Options() {
     setSizeMetricType,
   } = useOptions()
 
+  const visualizationIcons: Record<MetricType, string> = {
+    FILE_TYPE: mdiFileCodeOutline,
+    LAST_CHANGED: mdiUpdate,
+    MOST_COMMITS: mdiThermometer,
+    SINGLE_AUTHOR: mdiAccountAlertOutline,
+    TOP_CONTRIBUTOR: mdiPodiumGold,
+    TRUCK_FACTOR: mdiTruckFastOutline,
+  }
+
+  const sizeMetricIcons: Record<SizeMetricType, string> = {
+    FILE_SIZE: mdiResize,
+    EQUAL_SIZE: mdiScaleBalance,
+    MOST_COMMITS: mdiSourceCommit,
+    NUMBER_OF_AUTHORS: mdiAccountGroupOutline,
+    RANDOM: mdiDice3Outline,
+  }
+
+  const chartTypeIcons: Record<ChartType, string> = {
+    BUBBLE_CHART: mdiChartBubble,
+    TREE_MAP: mdiChartTree,
+  }
+
   return (
     <div className="card">
       <h2 className="card__title">
@@ -43,7 +80,7 @@ export const Options = memo(function Options() {
         label={
           <div className="flex justify-between gap-2">
             Visualization
-            <Icon path={mdiDatabaseOutline} size={1} />
+            <Icon path={visualizationIcons[metricType]} size={1} />
           </div>
         }
         enum={Metric}
@@ -54,7 +91,7 @@ export const Options = memo(function Options() {
         label={
           <div className="flex justify-between gap-2">
             Size metric
-            <Icon path={mdiImageSizeSelectSmall} size={1} />
+            <Icon path={sizeMetricIcons[sizeMetric]} size={1} />
           </div>
         }
         enum={SizeMetric}
@@ -64,8 +101,8 @@ export const Options = memo(function Options() {
       <EnumSelect
         label={
           <div className="flex justify-between gap-2">
-            Layout
-            <Icon path={mdiChartBubble} size={1} />
+            Chart layout
+            <Icon path={chartTypeIcons[chartType]} size={1} />
           </div>
         }
         enum={Chart}
