@@ -1,8 +1,8 @@
 export const SizeMetric = {
-  EQUAL_SIZE: "Equal",
   FILE_SIZE: "File size",
-  MOST_COMMITS: "Number of commits",
   TRUCK_FACTOR: "Truck factor",
+  MOST_COMMITS: "Number of commits",
+  EQUAL_SIZE: "Equal",
   RANDOM: "Random",
 }
 

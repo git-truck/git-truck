@@ -5,15 +5,13 @@ import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
-import { memo } from "react"
+import { memo, useState } from "react"
 import {
   mdiChartBubble,
   mdiCogOutline,
   mdiChartTree,
   mdiPodiumGold,
-  mdiThermometer,
   mdiFileCodeOutline,
-  mdiTruckFastOutline,
   mdiUpdate,
   mdiResize,
   mdiSourceCommit,
@@ -21,9 +19,13 @@ import {
   mdiDice3Outline,
   mdiScaleBalance,
   mdiAccountAlertOutline,
+  mdiTruckFastOutline,
+  mdiLink,
+  mdiLinkOff,
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/size-metric"
 import { SizeMetric } from "~/metrics/size-metric"
+import { useLocalStorage } from "react-use"
 
 function isMetricWithHistoricalOption(metric: MetricType) {
   switch (metric) {
@@ -48,10 +50,15 @@ export const Options = memo(function Options() {
     setSizeMetricType,
   } = useOptions()
 
+  const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
+    "LINK_METRIC_AND_SIZE_METRIC",
+    true
+  )
+
   const visualizationIcons: Record<MetricType, string> = {
     FILE_TYPE: mdiFileCodeOutline,
     LAST_CHANGED: mdiUpdate,
-    MOST_COMMITS: mdiThermometer,
+    MOST_COMMITS: mdiSourceCommit,
     SINGLE_AUTHOR: mdiAccountAlertOutline,
     TOP_CONTRIBUTOR: mdiPodiumGold,
     TRUCK_FACTOR: mdiTruckFastOutline,
@@ -61,13 +68,22 @@ export const Options = memo(function Options() {
     FILE_SIZE: mdiResize,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
-    NUMBER_OF_AUTHORS: mdiAccountGroupOutline,
+    TRUCK_FACTOR: mdiAccountGroupOutline,
     RANDOM: mdiDice3Outline,
   }
 
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
     TREE_MAP: mdiChartTree,
+  }
+
+  const relatedSizeMetric: Partial<Record<MetricType, SizeMetricType>> = {
+    FILE_TYPE: "FILE_SIZE",
+    TRUCK_FACTOR: "TRUCK_FACTOR",
+    TOP_CONTRIBUTOR: "TRUCK_FACTOR",
+    MOST_COMMITS: "MOST_COMMITS",
+    SINGLE_AUTHOR: "TRUCK_FACTOR",
+    LAST_CHANGED: "EQUAL_SIZE",
   }
 
   return (
@@ -77,37 +93,43 @@ export const Options = memo(function Options() {
         <Icon path={mdiCogOutline} size={1} />
       </h2>
       <EnumSelect
-        label={
-          <div className="flex justify-between gap-2">
-            Visualization
-            <Icon path={visualizationIcons[metricType]} size={1} />
-          </div>
-        }
+        label={<div className="flex justify-between gap-2">Color</div>}
         enum={Metric}
         defaultValue={metricType}
-        onChange={(metric: MetricType) => setMetricType(metric)}
+        onChange={(metric: MetricType) => {
+          setMetricType(metric)
+          if (!linkMetricAndSizeMetric) {
+            return
+          }
+          const relatedSizeMetricType = relatedSizeMetric[metric]
+          if (relatedSizeMetricType) {
+            setSizeMetricType(relatedSizeMetricType)
+          }
+        }}
+        iconMap={visualizationIcons}
       />
+      <CheckboxWithLabel
+        className="gap-1"
+        checked={Boolean(linkMetricAndSizeMetric)}
+        onChange={(e) => setLinkMetricAndSizeMetric(e.target.checked)}
+        checkedIcon={mdiLink}
+        uncheckedIcon={mdiLinkOff}
+      >
+        <span>Link size metric to color metric</span>
+      </CheckboxWithLabel>
       <EnumSelect
-        label={
-          <div className="flex justify-between gap-2">
-            Size metric
-            <Icon path={sizeMetricIcons[sizeMetric]} size={1} />
-          </div>
-        }
+        label={<div className="flex justify-between gap-2">Size</div>}
         enum={SizeMetric}
         defaultValue={sizeMetric}
         onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
+        iconMap={sizeMetricIcons}
       />
       <EnumSelect
-        label={
-          <div className="flex justify-between gap-2">
-            Chart layout
-            <Icon path={chartTypeIcons[chartType]} size={1} />
-          </div>
-        }
+        label={<div className="flex justify-between gap-2">Chart layout</div>}
         enum={Chart}
         defaultValue={chartType}
         onChange={(chartType: ChartType) => setChartType(chartType)}
+        iconMap={chartTypeIcons}
       />
       {/* <EnumSelect
         label="Authorship data"

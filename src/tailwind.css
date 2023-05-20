@@ -29,7 +29,7 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply border grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn > svg,
@@ -42,11 +42,11 @@
   }
 
   .btn--outlined {
-    @apply border border-current bg-transparent text-black/50 hover:bg-transparent hover:text-black/80;
+    @apply border-current bg-transparent text-black/50 hover:bg-transparent hover:text-black/80;
   }
 
   .btn--outlined--light {
-    @apply border border-current bg-transparent text-white/80 hover:bg-transparent hover:text-white/100;
+    @apply border-current bg-transparent text-white/80 hover:bg-transparent hover:text-white/100;
   }
 
   .btn--primary {
