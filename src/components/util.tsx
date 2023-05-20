@@ -39,21 +39,22 @@ export function CheckboxWithLabel({
   checked,
   onChange,
   className = "",
+  checkedIcon = mdiCheckboxOutline,
+  uncheckedIcon = mdiCheckboxBlankOutline,
   ...props
 }: {
   children: React.ReactNode
   checked: boolean
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-} & Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "checked">) {
-  const id = useId()
+  checkedIcon?: string
+  uncheckedIcon?: string
+} & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
   return (
-    <div className={`flex items-center justify-between gap-2 ${className}`} {...props}>
-      <label className="label flex w-full justify-between" htmlFor={id}>
-        {children}
-        {checked ? <Icon path={mdiCheckboxOutline} size={1} /> : <Icon path={mdiCheckboxBlankOutline} size={1} />}
-        <input type="checkbox" checked={checked} onChange={onChange} id={id} className="hidden" />
-      </label>
-    </div>
+    <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
+      <span className="flex grow gap-2">{children}</span>
+      <Icon className="place-self-end" path={checked ? checkedIcon : uncheckedIcon} size={1} />
+      <input type="checkbox" checked={checked} onChange={onChange} className="hidden" />
+    </label>
   )
 }
 
