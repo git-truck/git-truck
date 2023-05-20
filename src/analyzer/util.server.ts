@@ -151,7 +151,9 @@ export async function describeAsyncJob<T>({
 
   const error = (text: string) => (spinner === null ? log.error(text) : spinner.error({ text }))
 
-  output(beforeMsg)
+  if (beforeMsg.length > 0) {
+    output(beforeMsg)
+  }
   try {
     const startTime = performance.now()
     const result = await job()
