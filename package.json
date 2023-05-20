@@ -14,7 +14,10 @@
     "cli.js"
   ],
   "scripts": {
-    "test": "jest --coverage",
+    "test": "npm run test:e2e && npm run test:unit",
+    "test:unit": "jest --coverage",
+    "test:e2e": "npx playwright test",
+    "pretest:e2e": "npm run build",
     "build": "remix build && npm run build-cli",
     "build-cli": "node ./scripts/build-cli.js",
     "dev": "remix dev",
@@ -31,6 +34,7 @@
   "devDependencies": {
     "@mdi/js": "^7.2.96",
     "@mdi/react": "^1.6.1",
+    "@playwright/test": "^1.33.0",
     "@react-spring/web": "^9.7.2",
     "@remix-run/dev": "^1.16.1",
     "@remix-run/eslint-config": "^1.16.1",

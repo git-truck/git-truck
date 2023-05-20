@@ -9,3 +9,9 @@ data.json
 coverage
 .eslintcache
 cli.js
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/test-results/
+/playwright-report/
+/playwright/.cache/

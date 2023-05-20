@@ -228,6 +228,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       repo: repoName,
       branch: branchName,
       branchHead: branchHead,
+      invalidateCache: args.invalidateCache,
     })
 
     if (cachedData) {
