@@ -10,7 +10,7 @@ import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo, promiseHelper } from "~/analyzer/util.server"
+import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -227,6 +227,7 @@ export default function Repo() {
         <aside className="flex flex-col gap-2 overflow-y-auto p-2 pr-0">
           <GlobalInfo />
           <Options />
+          {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <SearchCard />
         </aside>
 
@@ -246,8 +247,6 @@ export default function Repo() {
           {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
             <UpdateNotifier />
           ) : null}
-          <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-          {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
           <DetailsCard
             className={clsx({
               "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
@@ -255,6 +254,7 @@ export default function Repo() {
             })}
             showUnionAuthorsModal={showUnionAuthorsModal}
           />
+          <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
           <FeedbackCard />
         </aside>
       </div>
