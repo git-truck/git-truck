@@ -5,23 +5,25 @@ import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
-import { memo, useState } from "react"
+import { memo } from "react"
 import {
   mdiChartBubble,
-  mdiCogOutline,
   mdiChartTree,
   mdiPodiumGold,
   mdiFileCodeOutline,
   mdiUpdate,
   mdiResize,
   mdiSourceCommit,
-  mdiAccountGroupOutline,
-  mdiDice3Outline,
   mdiScaleBalance,
   mdiAccountAlertOutline,
   mdiTruckFastOutline,
   mdiLink,
-  mdiLinkOff,
+  mdiTransition,
+  mdiLabel,
+  mdiPalette,
+  mdiImageSizeSelectSmall,
+  mdiPuzzle,
+  mdiCog,
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/size-metric"
 import { SizeMetric } from "~/metrics/size-metric"
@@ -68,8 +70,8 @@ export const Options = memo(function Options() {
     FILE_SIZE: mdiResize,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
-    TRUCK_FACTOR: mdiAccountGroupOutline,
-    RANDOM: mdiDice3Outline,
+    TRUCK_FACTOR: mdiTruckFastOutline,
+    LAST_CHANGED: mdiUpdate,
   }
 
   const chartTypeIcons: Record<ChartType, string> = {
@@ -77,82 +79,125 @@ export const Options = memo(function Options() {
     TREE_MAP: mdiChartTree,
   }
 
-  const relatedSizeMetric: Partial<Record<MetricType, SizeMetricType>> = {
+  const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
     FILE_TYPE: "FILE_SIZE",
     TRUCK_FACTOR: "TRUCK_FACTOR",
     TOP_CONTRIBUTOR: "TRUCK_FACTOR",
     MOST_COMMITS: "MOST_COMMITS",
     SINGLE_AUTHOR: "TRUCK_FACTOR",
-    LAST_CHANGED: "EQUAL_SIZE",
+    LAST_CHANGED: "LAST_CHANGED",
   }
 
   return (
-    <div className="card">
-      <h2 className="card__title">
+    <>
+      {/* <h2 className="card__title">
         Options
         <Icon path={mdiCogOutline} size={1} />
-      </h2>
+      </h2> */}
+      <div className="card">
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiPuzzle} size="1.25em" />
+            Layout
+          </legend>
+          <EnumSelect
+            enum={Chart}
+            defaultValue={chartType}
+            onChange={(chartType: ChartType) => setChartType(chartType)}
+            iconMap={chartTypeIcons}
+          />
+        </fieldset>
+        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiPalette} size="1.25em" />
+            Color
+          </legend>
+          <EnumSelect
+            enum={Metric}
+            defaultValue={metricType}
+            onChange={(metric: MetricType) => {
+              setMetricType(metric)
+              if (!linkMetricAndSizeMetric) {
+                return
+              }
+              const relatedSizeMetricType = relatedSizeMetric[metric]
+              if (relatedSizeMetricType) {
+                setSizeMetricType(relatedSizeMetricType)
+              }
+            }}
+            iconMap={visualizationIcons}
+          />
+        </fieldset>
+        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiImageSizeSelectSmall} size="1.25em" />
+            Size
+          </legend>
+          <EnumSelect
+            enum={SizeMetric}
+            defaultValue={sizeMetric}
+            onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
+            iconMap={sizeMetricIcons}
+          />
+        </fieldset>
+        {/* </div> */}
+
+        {/* 
+      <div className={`card flex flex-col gap-0 rounded-lg border p-1 ${props.hidden ? "hidden" : ""}`}>
+      <legend className="text-sm font-bold">{props.label}</legend>
       <EnumSelect
-        label={<div className="flex justify-between gap-2">Color</div>}
-        enum={Metric}
-        defaultValue={metricType}
-        onChange={(metric: MetricType) => {
-          setMetricType(metric)
-          if (!linkMetricAndSizeMetric) {
-            return
-          }
-          const relatedSizeMetricType = relatedSizeMetric[metric]
-          if (relatedSizeMetricType) {
-            setSizeMetricType(relatedSizeMetricType)
-          }
-        }}
-        iconMap={visualizationIcons}
-      />
-      <CheckboxWithLabel
-        className="gap-1"
-        checked={Boolean(linkMetricAndSizeMetric)}
-        onChange={(e) => setLinkMetricAndSizeMetric(e.target.checked)}
-        checkedIcon={mdiLink}
-        uncheckedIcon={mdiLinkOff}
-      >
-        <span>Link size metric to color metric</span>
-      </CheckboxWithLabel>
-      <EnumSelect
-        label={<div className="flex justify-between gap-2">Size</div>}
-        enum={SizeMetric}
-        defaultValue={sizeMetric}
-        onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
-        iconMap={sizeMetricIcons}
-      />
-      <EnumSelect
-        label={<div className="flex justify-between gap-2">Chart layout</div>}
-        enum={Chart}
-        defaultValue={chartType}
-        onChange={(chartType: ChartType) => setChartType(chartType)}
-        iconMap={chartTypeIcons}
-      />
-      {/* <EnumSelect
         label="Authorship data"
         enum={Authorship}
         onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
         hidden={!isMetricWithHistoricalOption(metricType)}
-      />*/}
-      <CheckboxWithLabel
-        className="pl-[9px]"
-        checked={transitionsEnabled}
-        onChange={(e) => setTransitionsEnabled(e.target.checked)}
-        title="Disable to improve performance when zooming"
-      >
-        Transitions
-      </CheckboxWithLabel>
-      <CheckboxWithLabel
-        className="pl-[9px]"
-        checked={labelsVisible}
-        onChange={(e) => setLabelsVisible(e.target.checked)}
-        title="Disable to improve performance"
-      >
-        Labels
-      </CheckboxWithLabel>
-    </div>
+      />
+      </div>
+      */}
+
+        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiCog} size="1.25em" />
+            Settings
+          </legend>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={Boolean(linkMetricAndSizeMetric)}
+            onChange={(e) => {
+              setLinkMetricAndSizeMetric(e.target.checked)
+              if (e.target.checked) {
+                setSizeMetricType(relatedSizeMetric[metricType])
+              }
+            }}
+            // checkedIcon={mdiLink}
+            // uncheckedIcon={mdiLinkOff}
+            title="Enable to sync size metric with color metric"
+          >
+            <Icon className="ml-1.5" path={mdiLink} size="1.25em" />
+            <span>Link size and color option</span>
+          </CheckboxWithLabel>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={transitionsEnabled}
+            onChange={(e) => setTransitionsEnabled(e.target.checked)}
+            title="Disable to improve performance when zooming"
+          >
+            <Icon className="ml-1.5" path={mdiTransition} size="1.25em" />
+            Transitions
+          </CheckboxWithLabel>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={labelsVisible}
+            onChange={(e) => setLabelsVisible(e.target.checked)}
+            title="Disable to improve performance"
+          >
+            <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
+            Labels
+          </CheckboxWithLabel>
+        </fieldset>
+      </div>
+    </>
   )
 })

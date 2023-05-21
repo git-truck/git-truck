@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
 import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
@@ -8,13 +8,14 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
-import { dateFormatLong, last } from "~/util"
+import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
 import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
-import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline } from "@mdi/js"
+import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import { FileHistoryElement } from "./FileHistoryElement"
 import clsx from "clsx"
+import { useMetrics } from "~/contexts/MetricContext"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -33,7 +34,7 @@ export function DetailsCard({
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
-  const { authorshipType } = useOptions()
+  const { metricType, authorshipType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
@@ -51,95 +52,146 @@ export function DetailsCard({
     setClickedObject((clickedObject) => findObjectInTree(analyzerData.commit.tree, clickedObject))
   }, [analyzerData, setClickedObject])
 
+  const [metricsData] = useMetrics()
+  const { backgroundColor, color, lightBackground } = useMemo(() => {
+    if (!clickedObject) {
+      return {
+        backgroundColor: null,
+        color: null,
+        lightBackground: true,
+      }
+    }
+    const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
+    const backgroundColor = colormap?.get(clickedObject.path) ?? ("#808080" as `#${string}`)
+    const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
+    return {
+      backgroundColor: backgroundColor,
+      color: color,
+      lightBackground: color === "#000000",
+    }
+  }, [clickedObject, metricsData, metricType, authorshipType])
+
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className={clsx(className, "card flex flex-col gap-2")}>
-      <CloseButton onClick={() => setClickedObject(null)} />
-      <h2 className="card__title animate-blink" title={clickedObject.name}>
-        {clickedObject.name}
-      </h2>
-      {isBlob ? (
-        <>
-          <Form method="post" action={location.pathname}>
-            <input type="hidden" name="ignore" value={clickedObject.path} />
-            <button
-              className="btn"
-              type="submit"
-              disabled={state !== "idle"}
-              onClick={() => {
-                isProcessingHideRef.current = true
-              }}
-            >
-              <Icon path={mdiEyeOffOutline} />
-              Hide this file
-            </button>
-          </Form>
-          {clickedObject.name.includes(".") ? (
-            <Form method="post" action={location.pathname}>
-              <input type="hidden" name="ignore" value={`*.${extension}`} />
+    <div
+      className={clsx(className, "card flex grow flex-col gap-2 transition-colors")}
+      style={
+        color
+          ? {
+              backgroundColor: backgroundColor,
+              color: color,
+            }
+          : {}
+      }
+    >
+      <div className="flex grow flex-col gap-2">
+        <h2 className="card__title grid grid-cols-[auto,1fr,auto] gap-2">
+          <Icon path={clickedObject.type === "blob" ? mdiFile : mdiFolder} size="1.25em" />
+          <span className="truncate" title={clickedObject.name}>
+            {clickedObject.name}
+          </span>
+          <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
+        </h2>
+        <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+          {isBlob ? (
+            <>
+              <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
+              <CommitsEntry clickedBlob={clickedObject} />
+              <LastchangedEntry clickedBlob={clickedObject} />
+            </>
+          ) : (
+            <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+          )}
+          <PathEntry path={clickedObject.path} />
+        </div>
+        <div className="card bg-white/70 text-black">
+          {isBlob ? (
+            <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
+          ) : (
+            <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+          )}
+        </div>
+        <button
+          className={clsx("btn", {
+            "btn--outlined--light": !lightBackground,
+            "btn--outlined": lightBackground,
+          })}
+          onClick={showUnionAuthorsModal}
+        >
+          <Icon path={mdiAccountMultiple} />
+          Group authors
+        </button>
+        <div className="card bg-white/70 text-black">
+          <FileHistoryElement state={state} clickedObject={clickedObject} />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        {isBlob ? (
+          <>
+            <Form className="w-max" method="post" action={location.pathname}>
+              <input type="hidden" name="ignore" value={clickedObject.path} />
               <button
-                className="btn"
+                className={clsx("btn", {
+                  "btn--outlined--light": !lightBackground,
+                  "btn--outlined": lightBackground,
+                })}
                 type="submit"
                 disabled={state !== "idle"}
                 onClick={() => {
                   isProcessingHideRef.current = true
                 }}
+                title="Hide this file"
               >
                 <Icon path={mdiEyeOffOutline} />
-                <span>Hide .{extension} files</span>
+                Hide
               </button>
             </Form>
-          ) : null}
-          <Form method="post" action={location.pathname}>
-            <input type="hidden" name="open" value={clickedObject.path} />
-            <button className="btn" disabled={state !== "idle"}>
-              <Icon path={mdiOpenInNew} />
-              Open file
-            </button>
-          </Form>
-        </>
-      ) : (
-        <Form method="post" action={location.pathname}>
-          <input type="hidden" name="ignore" value={clickedObject.path} />
-          <button
-            className="btn"
-            type="submit"
-            disabled={state !== "idle"}
-            onClick={() => {
-              isProcessingHideRef.current = true
-              setPath(OneFolderOut(path))
-            }}
-          >
-            <Icon path={mdiEyeOffOutline} />
-            Hide this folder
-          </button>
-        </Form>
-      )}
-      <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
-        {isBlob ? (
-          <>
-            <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
-            <CommitsEntry clickedBlob={clickedObject} />
-            <LastchangedEntry clickedBlob={clickedObject} />
+            {clickedObject.name.includes(".") ? (
+              <Form className="w-max" method="post" action={location.pathname}>
+                <input type="hidden" name="ignore" value={`*.${extension}`} />
+                <button
+                  className={clsx("btn", {
+                    "btn--outlined--light": !lightBackground,
+                    "btn--outlined": lightBackground,
+                  })}
+                  type="submit"
+                  disabled={state !== "idle"}
+                  onClick={() => {
+                    isProcessingHideRef.current = true
+                  }}
+                >
+                  <Icon path={mdiEyeOffOutline} />
+                  <span>Hide .{extension} files</span>
+                </button>
+              </Form>
+            ) : null}
           </>
         ) : (
-          <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+          <>
+            <Form method="post" action={location.pathname}>
+              <input type="hidden" name="ignore" value={clickedObject.path} />
+              <button
+                className={clsx("btn", {
+                  "btn--outlined--light": !lightBackground,
+                  "btn--outlined": lightBackground,
+                })}
+                type="submit"
+                disabled={state !== "idle"}
+                onClick={() => {
+                  isProcessingHideRef.current = true
+                  setPath(OneFolderOut(path))
+                }}
+              >
+                <Icon path={mdiEyeOffOutline} />
+                Hide this folder
+              </button>
+            </Form>
+          </>
         )}
-        <PathEntry path={clickedObject.path} />
       </div>
-      {isBlob ? (
-        <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
-      ) : (
-        <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
-      )}
-      <button className="btn" onClick={showUnionAuthorsModal}>
-        <Icon path={mdiAccountMultiple} />
-        Group authors
-      </button>
-      <FileHistoryElement state={state} clickedObject={clickedObject} />
     </div>
   )
 }
@@ -206,14 +258,30 @@ function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
 }
 
 function PathEntry(props: { path: string }) {
+  const { state } = useNavigation()
+  const { clickedObject } = useClickedObject()
+  if (!clickedObject) return null
   return (
     <>
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Located at
       </div>
-      <p className="break-all text-sm" title={props.path}>
-        {props.path}
-      </p>
+      <div className="grid grid-cols-[1fr,auto] items-center justify-between gap-2 break-all text-sm">
+        <p className="truncate" title={props.path}>
+          {props.path}
+        </p>
+        <Form method="post" action={location.pathname} title={clickedObject.name}>
+          <input type="hidden" name="open" value={clickedObject.path} />
+          <button className="btn--icon" disabled={state !== "idle"}>
+            <Icon
+              path={mdiOpenInNew}
+              size="1.25em"
+              className="w-max"
+              title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
+            />
+          </button>
+        </Form>
+      </div>
     </>
   )
 }

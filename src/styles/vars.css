@@ -1,7 +1,7 @@
 :root {
-  --unit: 8px;
+  --unit: 4px;
   --global-bg-color: hsl(210, 38%, 95%);
-  --side-panel-width-units: 48;
+  --side-panel-width-units: 90;
   --side-panel-width: calc(var(--side-panel-width-units) * var(--unit));
   --title-color: hsl(200, 5%, 30%);
   --text-color: hsl(200, 5%, 25%);
@@ -19,3 +19,4 @@
   --hover-transition-duration: 200ms;
   --button-text-color: hsl(216, 0%, 30%);
 }
+ 

@@ -7,7 +7,7 @@ import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
 import { Icon } from "@mdi/react"
-import { mdiFolder, mdiFileSearchOutline, mdiFileOutline } from "@mdi/js"
+import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
   const searchResults: HydratedGitObject[] = []
@@ -49,24 +49,39 @@ export const SearchCard = memo(function SearchCard() {
   return (
     <>
       <div className="card sticky top-0 z-10 flex flex-col gap-2">
-        <h2 className="card__title justify-between gap-2">
+        <h2 className="card__title justify-start gap-2">
+          <Icon path={mdiMagnify} size="1.25em" />
           Search
-          <Icon path={mdiFileSearchOutline} size={1} />
         </h2>
-        <input
-          className="input"
-          ref={searchFieldRef}
-          id={id}
-          type="search"
-          placeholder="Search for a file or folder..."
-          onChange={(event) => {
-            const value = event.target.value
-            startTransition(() => {
-              setSearchText(value)
-              setSearchResults(findSearchResults(analyzerData.commit.tree, value))
-            })
-          }}
-        />
+        <div className="flex gap-2">
+          <input
+            className="input"
+            ref={searchFieldRef}
+            id={id}
+            type="search"
+            placeholder="Search for a file or folder..."
+            onChange={(event) => {
+              const value = event.target.value
+              startTransition(() => {
+                setSearchText(value)
+                setSearchResults(findSearchResults(analyzerData.commit.tree, value))
+              })
+            }}
+          />
+          <button
+            className="btn btn--primary"
+            onClick={() => {
+              if (searchFieldRef.current) {
+                searchFieldRef.current.value = ""
+                setSearchText("")
+                setSearchResults([])
+              }
+            }}
+            disabled={!searchFieldRef.current || searchFieldRef.current.value === ""}
+          >
+            Clear
+          </button>
+        </div>
         {isTransitioning || searchText.length > 0 ? (
           <p className="card-p">
             {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}

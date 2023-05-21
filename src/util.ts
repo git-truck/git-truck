@@ -94,7 +94,7 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const brightnessCalculationCache = new Map<`#${string}`, `#${string}`>()
+const brightnessCalculationCache = new Map<`#${string}`, "#000000" | "#ffffff">()
 
 function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
@@ -108,12 +108,12 @@ function hexToRgb(hexString: `#${string}`): [number, number, number] {
   if (cachedColor) {
     return cachedColor
   }
-  const rgb = colorConvert.hex.rgb(hexString);
+  const rgb = colorConvert.hex.rgb(hexString)
   hexToRgbCache.set(hexString, rgb)
   return rgb
 }
 
-export const getTextColorFromBackground = (color: `#${string}`) => {
+export const getTextColorFromBackground = (color: `#${string}`): "#000000" | "#ffffff" => {
   // Verify that the color is a hex color
   if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
     return "#000000"

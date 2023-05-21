@@ -6,7 +6,7 @@ export const FeedbackCard = memo(function FeedbackCard() {
   return (
     <div className="card">
       <div className="flex items-center justify-between">
-        <h3 className="card__subtitle">Help improve Git Truck</h3>
+        <h3 className="card__title">Help improve Git Truck</h3>
         <Icon path={mdiForum} size={1} />
       </div>
       <a
