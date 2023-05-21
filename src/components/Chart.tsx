@@ -384,8 +384,8 @@ function createPartitionedHiearchy(
           return hydratedBlob.noCommits
         case "EQUAL_SIZE":
           return 1
-        case "RANDOM":
-          return Math.random() * 100
+        case "LAST_CHANGED":
+          return (hydratedBlob.lastChangeEpoch ?? data.oldestLatestChangeEpoch) - data.oldestLatestChangeEpoch
         case "TRUCK_FACTOR":
           return Object.keys(hydratedBlob.authors ?? {}).length
       }
