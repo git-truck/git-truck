@@ -1,5 +1,4 @@
 import type { HTMLAttributes } from "react"
-import { useId } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
@@ -51,7 +50,7 @@ export function CheckboxWithLabel({
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
   return (
     <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
-      <span className="flex grow gap-2">{children}</span>
+      <span className="flex grow items-center gap-2">{children}</span>
       <Icon className="place-self-end" path={checked ? checkedIcon : uncheckedIcon} size={1} />
       <input type="checkbox" checked={checked} onChange={onChange} className="hidden" />
     </label>
