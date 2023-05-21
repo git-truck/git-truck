@@ -179,17 +179,12 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
       />
       {showLabel ? (
         chartType === "BUBBLE_CHART" ? (
-          <CircleText
-            d={d as HierarchyCircularNode<HydratedGitObject>}
-            displayText={displayText}
-            isSearchMatch={d.data.isSearchResult ?? false}
-          />
+          <CircleText d={d as HierarchyCircularNode<HydratedGitObject>} displayText={displayText} />
         ) : (
           <RectText
             className="font-mono"
             d={d as HierarchyRectangularNode<HydratedGitObject>}
             displayText={displayText}
-            isSearchMatch={d.data.isSearchResult ?? false}
           />
         )
       ) : null}
@@ -266,12 +261,10 @@ function Path({
 function CircleText({
   d,
   displayText,
-  isSearchMatch,
   className = "",
 }: {
   d: HierarchyCircularNode<HydratedGitObject>
   displayText: string
-  isSearchMatch: boolean
   className?: string
 }) {
   const [metricsData] = useMetrics()
@@ -283,9 +276,7 @@ function CircleText({
   })
 
   const textProps = useToggleableSpring({
-    fill: isSearchMatch
-      ? searchMatchColor
-      : isBlob(d.data)
+    fill: isBlob(d.data)
       ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
       : "#333",
   })
@@ -324,12 +315,10 @@ function CircleText({
 function RectText({
   d,
   displayText,
-  isSearchMatch,
   className = "",
 }: {
   d: HierarchyRectangularNode<HydratedGitObject>
   displayText: string
-  isSearchMatch: boolean
   className?: string
 }) {
   const [metricsData] = useMetrics()
@@ -341,9 +330,7 @@ function RectText({
   const props = useToggleableSpring({
     x: d.x0 + xOffset,
     y: d.y0 + yOffset,
-    fill: isSearchMatch
-      ? searchMatchColor
-      : isBlob(d.data)
+    fill: isBlob(d.data)
       ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
       : "#333",
   })
