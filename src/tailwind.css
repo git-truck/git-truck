@@ -4,7 +4,7 @@
 
 @layer components {
   .card {
-    @apply relative flex w-auto flex-col gap-2 rounded-lg bg-white p-3 shadow-md;
+    @apply relative flex w-auto flex-col gap-2 rounded-lg bg-white p-2 shadow-md;
   }
 
   .card__header {
@@ -16,10 +16,10 @@
   }
 
   .card-p {
-    @apply text-sm opacity-70;
+    @apply text-sm opacity-80;
   }
   .card__title {
-    @apply text-base-styles border-b pb-1 text-lg;
+    @apply select-none text-base-styles text-sm uppercase tracking-widest font-bold opacity-80;
   }
 
   .card__subtitle {
@@ -29,7 +29,7 @@
   /* Inputs */
 
   .btn {
-    @apply border grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-3 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply select-none border grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md bg-gray-200 px-2 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn > svg,
@@ -42,15 +42,19 @@
   }
 
   .btn--outlined {
-    @apply border-current bg-transparent text-black/50 hover:bg-transparent hover:text-black/80;
+    @apply border-current bg-transparent text-black/90 hover:bg-transparent hover:text-black/50;
   }
 
   .btn--outlined--light {
-    @apply border-current bg-transparent text-white/80 hover:bg-transparent hover:text-white/100;
+    @apply border-current bg-transparent text-white/90 hover:bg-transparent hover:text-white/50;
   }
 
-  .btn--primary {
-    @apply bg-blue-500 text-white enabled:hover:bg-blue-600;
+  .btn.btn--primary {
+    @apply bg-blue-500 border-blue-500 text-white enabled:hover:bg-blue-600;
+  }
+
+  .btn--icon.btn--primary {
+    @apply text-blue-500;
   }
 
   .btn--success {
@@ -97,7 +101,7 @@
   }
 
   .label {
-    @apply cursor-pointer font-bold hover:opacity-70;
+    @apply select-none cursor-pointer font-bold hover:opacity-70;
   }
 
   .app-container {
@@ -139,11 +143,11 @@
   }
 
   .app-container.fullscreen > aside:first-of-type {
-    @apply md:-translate-x-80;
+    @apply md:-translate-x-[var(--side-panel-width)];
   }
 
   .app-container.fullscreen > aside:last-of-type {
-    @apply md:translate-x-80;
+    @apply md:translate-x-[var(--side-panel-width)];
   }
 
   /* Small screens */
@@ -152,7 +156,7 @@
 @layer utilities {
   .text-base-styles {
     @apply line-clamp-1;
-    font-weight: bold;
+    /* font-weight: bold; */
     display: flex;
     align-items: center;
     justify-content: space-between;

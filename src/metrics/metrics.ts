@@ -24,7 +24,7 @@ export const Metric = {
   FILE_TYPE: "File type",
   TRUCK_FACTOR: "Truck factor",
   TOP_CONTRIBUTOR: "Top contributor",
-  MOST_COMMITS: "Number of commits",
+  MOST_COMMITS: "Commits",
   SINGLE_AUTHOR: "Single author",
   LAST_CHANGED: "Last changed",
 }

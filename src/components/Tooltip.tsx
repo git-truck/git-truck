@@ -51,7 +51,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
       ) : (
         <Icon className="ml-0.5" path={mdiFolder} size={0.75} />
       )}
-      <span className="card__subtitle items-center">
+      <span className="card__subtitle items-center font-bold">
         {hoveredObject && isBlob(hoveredObject)
           ? hoveredObject?.name
           : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (

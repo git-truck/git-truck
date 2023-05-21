@@ -42,7 +42,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
         return (
           <Fragment key={commit.time.toString() + commit.message}>
             <span
-              className="overflow-hidden overflow-ellipsis whitespace-pre text-sm font-bold opacity-70"
+              className="overflow-hidden overflow-ellipsis whitespace-pre text-sm font-bold opacity-80"
               title={commit.message + " (" + commit.author + ")"}
             >
               {commit.message}

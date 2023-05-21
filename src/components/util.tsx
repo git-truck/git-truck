@@ -3,9 +3,15 @@ import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 
-export const CloseButton = ({ className = "", ...props }: HTMLAttributes<HTMLButtonElement>) => (
+export const CloseButton = ({
+  className = "",
+  absolute = true,
+  ...props
+}: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
   <button
-    className={`absolute right-2 top-2 z-10 inline-grid text-lg leading-none hover:opacity-80 ${className}`}
+    className={clsx(className, "inline-grid text-lg leading-none hover:opacity-80", {
+      "absolute right-2 top-2 z-10": absolute,
+    })}
     title="Close"
     {...props}
   >
