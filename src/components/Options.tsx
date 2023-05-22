@@ -54,7 +54,7 @@ export const Options = memo(function Options() {
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
     "LINK_METRIC_AND_SIZE_METRIC",
-    true
+    false
   )
 
   const visualizationIcons: Record<MetricType, string> = {
