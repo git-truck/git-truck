@@ -1,8 +1,8 @@
-import { animated } from "@react-spring/web"
+import { animated, to } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue } from "react"
+import { useDeferredValue, useRef } from "react"
 import { memo, useEffect, useMemo } from "react"
 import type {
   HydratedGitBlobObject,
@@ -35,6 +35,7 @@ import { useComponentSize } from "../hooks"
 import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
+import { interpolatePath } from "d3-interpolate-path"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -106,15 +107,15 @@ export const Chart = memo(function Chart({
         {nodes.map((d, i) => {
           return (
             <g
+              role="button"
               className={clsx("hover:opacity-60", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path,
               })}
-              key={`${chartType}${d.data.path}`}
+              key={`${d.data.path}`}
               {...createGroupHandlers(d, i === 0)}
             >
-              <Node isRoot={i === 0} d={d} />
+              <Node isRoot={i === 0} d={d} className={clickedObject?.path === d.data.path ? "stroke-black" : ""} />
             </g>
           )
         })}
@@ -123,7 +124,15 @@ export const Chart = memo(function Chart({
   )
 })
 
-const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo(function Node({
+  d,
+  isRoot,
+  className = "",
+}: {
+  d: CircleOrRectHiearchyNode
+  isRoot: boolean
+  className: string
+}) {
   const { chartType, labelsVisible } = useOptions()
   let showLabel = labelsVisible
   const { path } = usePath()
@@ -170,7 +179,9 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
   return (
     <>
       <Path
+        // key={chartType}
         className={clsx({
+          className,
           "cursor-pointer": isBlob(d.data),
         })}
         d={d}
@@ -241,8 +252,38 @@ function Path({
     }
   }, [chartType, d])
 
+  const prevPath = useRef(dProp)
+  const currD = useRef(dProp)
+  useEffect(() => {
+    prevPath.current = dProp
+  }, [dProp])
+
+  const pathInterpolator = useMemo(() => interpolatePath(prevPath.current, dProp), [prevPath.current, dProp])
+
+  // const labelPathD = useMemo(() => circleDatum.x
+  //   ? fourArcsCirclePathFromCircle(circleDatum.x, circleDatum.y, circleDatum.r + textSpacingFromCircle)
+  //   : rectPathFromRect(rectDatum.x0 + 4, rectDatum.y0 + 12, rectDatum.x1, rectDatum.y1))
+
+  // const prevLabelPath = useRef(labelPathD)
+  // const labelPathInterpolator = useMemo(() => interpolatePath(prevPath.current, pathD), [prevPath.current, pathD])
+
+  const { t } = useToggleableSpring({
+    from: { t: 0 },
+    to: {
+      t: 1,
+    },
+    config: {
+      // duration: 5000,
+    },
+    reset: currD.current !== dProp,
+    onChange: ({ t }) => {
+      currD.current = pathInterpolator(t)
+    },
+  })
+
+  // console.log({ prev: prevPath.current, pathD })
+
   const props = useToggleableSpring({
-    d: dProp,
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: "1px",
 
@@ -254,6 +295,7 @@ function Path({
   return (
     <animated.path
       {...props}
+      d={to(t, pathInterpolator)}
       className={clsx(className, {
         "animate-stroke-pulse": isSearchMatch,
         "stroke-black/20": isTree(d.data),
@@ -450,11 +492,23 @@ function filterTree(
  * @returns A string meant to be passed as the d attribute to a path element
  */
 function circlePathFromCircle(x: number, y: number, r: number) {
-  return `M${x},${y}
-          m0,${r}
-          a${r},${r} 0 1,1 0,${-r * 2}
-          a${r},${r} 0 1,1 0,${r * 2}`
+  return `M ${x},${y + r}
+          A ${r},${r} 0 0 1 ${x - r * Math.sin(Math.PI / 4)},${y + r * Math.cos(Math.PI / 4)}
+          A ${r},${r} 0 0 1 ${x - r},${y}
+          A ${r},${r} 0 0 1 ${x - r * Math.sin(Math.PI / 4)},${y - r * Math.cos(Math.PI / 4)}
+          A ${r},${r} 0 0 1 ${x},${y - r}
+          A ${r},${r} 0 0 1 ${x + r * Math.sin(Math.PI / 4)},${y - r * Math.cos(Math.PI / 4)}
+          A ${r},${r} 0 0 1 ${x + r},${y}
+          A ${r},${r} 0 0 1 ${x + r * Math.sin(Math.PI / 4)},${y + r * Math.cos(Math.PI / 4)}
+          A ${r},${r} 0 0 1 ${x},${y + r}
+          Z`
 }
+// function circlePathFromCircle(x: number, y: number, r: number) {
+//   return `M${x},${y}
+//           m0,${r}
+//           a${r},${r} 0 1,1 0,${-r * 2}
+//           a${r},${r} 0 1,1 0,${r * 2}`
+// }
 
 function roundedRectPathFromRect(x: number, y: number, width: number, height: number, radius: number) {
   radius = Math.min(radius, Math.floor(width / 3), Math.floor(height / 3))
