@@ -1,5 +1,6 @@
-import { memo, useEffect, useRef, useTransition } from "react"
-import { useSearch } from "../contexts/SearchContext"
+import { memo, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import type { SearchResults } from "~/contexts/SearchContext"
+import { useSearch } from "~/contexts/SearchContext"
 import { useId } from "react"
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { useData } from "~/contexts/DataContext"
@@ -9,13 +10,12 @@ import { allExceptLast, getSeparator } from "~/util"
 import { Icon } from "@mdi/react"
 import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 
-function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
-  const searchResults: HydratedGitObject[] = []
+function findSearchResults(tree: HydratedGitTreeObject, searchString: string): SearchResults {
+  const searchResults: Record<string, HydratedGitObject> = {}
   function subTreeSearch(subTree: HydratedGitTreeObject) {
     for (const child of subTree.children) {
       if (child.name.toLowerCase().includes(searchString.toLowerCase()) && searchString) {
-        searchResults.push(child)
-        child.isSearchResult = true
+        searchResults[child.path] = child
       } else {
         child.isSearchResult = false
       }
@@ -29,7 +29,9 @@ function findSearchResults(tree: HydratedGitTreeObject, searchString: string) {
 export const SearchCard = memo(function SearchCard() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
   const [isTransitioning, startTransition] = useTransition()
-  const { setSearchText, searchText, searchResults, setSearchResults } = useSearch()
+  const [searchText, setSearchText] = useState("")
+  const { searchResults, setSearchResults } = useSearch()
+  const searchResultsArray = useMemo(() => Object.values(searchResults), [searchResults])
   const id = useId()
   const { analyzerData } = useData()
 
@@ -60,10 +62,12 @@ export const SearchCard = memo(function SearchCard() {
             id={id}
             type="search"
             placeholder="Search for a file or folder..."
+            value={searchText}
             onChange={(event) => {
               const value = event.target.value
+              setSearchText(value)
               startTransition(() => {
-                setSearchText(value)
+                if (value.trim() === "") setSearchResults({})
                 setSearchResults(findSearchResults(analyzerData.commit.tree, value))
               })
             }}
@@ -72,28 +76,29 @@ export const SearchCard = memo(function SearchCard() {
             className="btn btn--primary"
             onClick={() => {
               if (searchFieldRef.current) {
-                searchFieldRef.current.value = ""
                 setSearchText("")
-                setSearchResults([])
+                startTransition(() => {
+                  setSearchResults({})
+                })
               }
             }}
-            disabled={!searchFieldRef.current || searchFieldRef.current.value === ""}
+            disabled={searchText.trim() === ""}
           >
             Clear
           </button>
         </div>
         {isTransitioning || searchText.length > 0 ? (
           <p className="card-p">
-            {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResults.length} results` : null}
+            {isTransitioning ? "Searching..." : searchText.length > 0 ? `${searchResultsArray.length} results` : null}
           </p>
         ) : null}
       </div>
-      {searchResults.length > 0 ? <SearchResults /> : null}
+      {searchResultsArray.length > 0 ? <SearchResultsList /> : null}
     </>
   )
 })
 
-const SearchResults = memo(function SearchResults() {
+const SearchResultsList = memo(function SearchResults() {
   const { setPath } = usePath()
   const { setClickedObject } = useClickedObject()
   const { searchResults } = useSearch()
@@ -110,7 +115,7 @@ const SearchResults = memo(function SearchResults() {
 
   return (
     <div className="card relative gap-0">
-      {searchResults.map((result) => (
+      {Object.values(searchResults).map((result) => (
         <button
           className="flex items-center justify-start gap-2 text-sm font-bold opacity-70 hover:opacity-100"
           key={result.path}
@@ -119,7 +124,7 @@ const SearchResults = memo(function SearchResults() {
           onClick={() => onClick(result)}
         >
           <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
-          <span>{result.name}</span>
+          <span className="truncate">{result.name}</span>
         </button>
       ))}
     </div>

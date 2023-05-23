@@ -20,8 +20,7 @@ interface ProvidersProps {
 
 export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<OptionsContextType | null>(null)
-  const [searchText, setSearchText] = useState("")
-  const [searchResults, setSearchResults] = useState<HydratedGitObject[]>([])
+  const [searchResults, setSearchResults] = useState<Record<string, HydratedGitObject>>({})
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
@@ -67,7 +66,7 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           labelsVisible: visible,
-        }))
+        })),
     }),
     [options]
   )
@@ -102,8 +101,6 @@ export function Providers({ children, data }: ProvidersProps) {
         <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider
             value={{
-              searchText,
-              setSearchText,
               searchResults,
               setSearchResults,
             }}

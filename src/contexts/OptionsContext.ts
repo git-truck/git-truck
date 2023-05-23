@@ -35,7 +35,7 @@ export const OptionsContext = createContext<OptionsContextType | undefined>(unde
 export function useOptions() {
   const context = useContext(OptionsContext)
   if (!context) {
-    throw new Error("useSearch must be used within a SearchProvider")
+    throw new Error("useOptions must be used within a SearchProvider")
   }
   return context
 }
@@ -71,6 +71,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
-    }
+    },
   }
 }

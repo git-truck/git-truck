@@ -36,6 +36,7 @@ import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/size-metric"
+import { useSearch } from "~/contexts/SearchContext"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -45,6 +46,7 @@ export const Chart = memo(function Chart({
   setHoveredObject: (obj: HydratedGitObject | null) => void
 }) {
   const [ref, rawSize] = useComponentSize()
+  const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
   const { chartType, sizeMetric } = useOptions()
@@ -115,7 +117,7 @@ export const Chart = memo(function Chart({
               key={`${chartType}${d.data.path}`}
               {...createGroupHandlers(d, i === 0)}
             >
-              <Node isRoot={i === 0} d={d} />
+              <Node isRoot={i === 0} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
             </g>
           )
         })}
@@ -124,7 +126,15 @@ export const Chart = memo(function Chart({
   )
 })
 
-const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+const Node = memo(function Node({
+  d,
+  isRoot,
+  isSearchMatch,
+}: {
+  d: CircleOrRectHiearchyNode
+  isRoot: boolean
+  isSearchMatch: boolean
+}) {
   const { chartType, labelsVisible } = useOptions()
   let showLabel = labelsVisible
   const { path } = usePath()
@@ -175,7 +185,7 @@ const Node = memo(function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; is
           "cursor-pointer": isBlob(d.data),
         })}
         d={d}
-        isSearchMatch={d.data.isSearchResult ?? false}
+        isSearchMatch={isSearchMatch}
       />
       {showLabel ? (
         chartType === "BUBBLE_CHART" ? (
