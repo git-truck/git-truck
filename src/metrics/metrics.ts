@@ -184,7 +184,7 @@ export function getMetricCalcs(
     [
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = new Map<AuthorshipType, [string, number]>()
+        if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
       },

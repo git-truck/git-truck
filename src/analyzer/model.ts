@@ -75,7 +75,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   lastChangeEpoch?: number
   isBinary?: boolean
   unionedAuthors?: Record<AuthorshipType, Record<string, number>>
-  dominantAuthor?: Map<AuthorshipType, [string, number]>
+  dominantAuthor?: Record<AuthorshipType, [string, number]>
   isSearchResult?: boolean
   commits: string[]
 }

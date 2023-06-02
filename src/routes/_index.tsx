@@ -1,16 +1,17 @@
 import type { SerializeFrom } from "@remix-run/node"
-import { json } from "@remix-run/node"
-import { Link, useLoaderData, useNavigation } from "@remix-run/react"
+import { defer, json } from "@remix-run/node"
+import { Await, Link, useAsyncValue, useLoaderData, useNavigation } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Code } from "~/components/util"
-import { AnalyzingIndicator } from "~/components/AnalyzingIndicator"
+import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { resolve } from "path"
 import type { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
+import gitTruckLogo from "~/assets/truck.png"
 
 interface IndexData {
   repositories: Repository[]
@@ -19,77 +20,102 @@ interface IndexData {
   repo: Repository | null
 }
 
-export const loader = async () => {
+async function getResponse(): Promise<IndexData> {
   const args = getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path, args.invalidateCache)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
-  const repositoriesResponse = json<IndexData>({
+  return {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
     repo,
+  }
+}
+
+export const loader = async () => {
+  return defer({
+    repositoriesResponse: getResponse(),
   })
-
-  const response = repositoriesResponse
-
-  return response
 }
 
 export default function Index() {
-  const loaderData = useLoaderData<typeof loader>()
-  const { repositories, baseDir, baseDirName } = loaderData
+  const data = useLoaderData<typeof loader>()
   const transitionData = useNavigation()
 
-  if (transitionData.state !== "idle") return <AnalyzingIndicator />
+  if (transitionData.state !== "idle")
+    return (
+      <div className="grid h-screen place-items-center">
+        <LoadingIndicator loadingText="Analyzing" />
+      </div>
+    )
   return (
-    <main className="m-auto flex w-full max-w-7xl flex-col gap-2 p-2">
+    <main className="m-auto flex min-h-screen w-full max-w-7xl flex-col gap-2 p-2">
       <div className="card">
-        <h1 className="text-4xl">🚛 Git Truck</h1>
+        <h1 className="flex items-center text-4xl">
+          <img src={gitTruckLogo} alt="Git Truck" className="mr-2 inline-block h-12" />
+          Git Truck
+        </h1>
         <p>
-          Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
-          <Code inline title={baseDir}>
-            {baseDirName}
-          </Code>
-          .
+          <Suspense>
+            <Await resolve={data.repositoriesResponse} errorElement={<p>Error</p>}>
+              {({ repositories, baseDir, baseDirName }) => (
+                <>
+                  Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
+                  <Code inline title={baseDir}>
+                    {baseDirName}
+                  </Code>
+                  .
+                </>
+              )}
+            </Await>
+          </Suspense>
         </p>
       </div>
-      {repositories.length === 0 ? (
-        <>
-          <p>
-            Try running <Code inline>git-truck</Code> in another folder or provide another path as argument.
-          </p>
-        </>
-      ) : (
-        <>
-          <nav>
-            <ul className="grid grid-cols-[repeat(auto-fit,minmax(225px,1fr))] gap-2">
-              {repositories.map((repo) => (
-                <RepositoryEntry key={repo.path} repo={repo} />
-              ))}
-              <li className="card gap-3 p-0">
-                <h2
-                  className="card__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors"
-                  title="Add repository"
-                >
-                  <span className="line-clamp-1 break-all">Add repository</span>
-                  <span className="align-content-start right-0 top-0 flex min-w-max select-none place-items-center rounded-full  bg-white/20 px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-white/90">
-                    Coming soon
-                  </span>
-                </h2>
-                <div className="flex flex-col gap-2 p-3 pt-0">
-                  <input type="text" className="input" placeholder="git@github.com/owner/repo.git" />
-
-                  <button className="btn" disabled title="Coming soon!">
-                    Clone
-                  </button>
-                </div>
-              </li>
-            </ul>
-          </nav>
-        </>
-      )}
+      <Suspense fallback={<LoadingIndicator className="grow" />}>
+        <Await resolve={data.repositoriesResponse} errorElement={<p>Error loading repositories</p>}>
+          {(repositoriesResponse) => <RepositoryGrid repositories={repositoriesResponse.repositories} />}
+        </Await>
+      </Suspense>
     </main>
+  )
+}
+
+function RepositoryGrid({ repositories }: { repositories: Repository[] }) {
+  return repositories.length === 0 ? (
+    <>
+      <p>
+        Try running <Code inline>git-truck</Code> in another folder or provide another path as argument.
+      </p>
+    </>
+  ) : (
+    <>
+      <nav>
+        <ul className="grid grid-cols-[repeat(auto-fit,minmax(225px,1fr))] gap-2">
+          {repositories.map((repo) => (
+            <RepositoryEntry key={repo.path} repo={repo} />
+          ))}
+          <li className="card gap-3 p-0">
+            <h2
+              className="card__title rounded-t bg-gradient-to-r from-blue-500 to-blue-600 p-3 pb-3 text-white transition-colors"
+              title="Add repository"
+            >
+              <span className="line-clamp-1 break-all">Add repository</span>
+              <span className="align-content-start right-0 top-0 flex min-w-max select-none place-items-center rounded-full  bg-white/20 px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-white/90">
+                Coming soon
+              </span>
+            </h2>
+            <div className="flex flex-col gap-2 p-3 pt-0">
+              <input type="text" className="input" placeholder="git@github.com/owner/repo.git" />
+
+              <button className="btn" disabled title="Coming soon!">
+                Clone
+              </button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </>
   )
 }
 
