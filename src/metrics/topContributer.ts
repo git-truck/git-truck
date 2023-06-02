@@ -29,7 +29,9 @@ export function setDominantAuthorColor(
   const color = authorColors.get(dom) ?? "#808080"
 
   cache.colormap.set(blob.path, color)
-  blob.dominantAuthor?.set(authorshipType, sorted[0])
+  if (blob.dominantAuthor) {
+    blob.dominantAuthor[authorshipType] = sorted[0]
+  }
 
   if (legend.has(dom)) {
     legend.get(dom)?.add(1)
