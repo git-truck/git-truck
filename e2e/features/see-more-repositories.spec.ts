@@ -7,7 +7,7 @@ test("see more repositories", async ({ page }) => {
   // Click the get started link.
   await page.getByRole("link", { name: "See more repositories" }).click()
   await page.waitForLoadState("domcontentloaded")
-  await page.waitForSelector("text=🚛 Git Truck")
+  await page.getByRole("heading", { name: /Git Truck/ }).waitFor()
   // Expect to have navigated to the home page.
   await expect(page).toHaveURL("/")
 })
