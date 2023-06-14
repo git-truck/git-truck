@@ -134,7 +134,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): JSX.Ele
           }`}
           title={repo.name}
         >
-          <span className="line-clamp-1 break-all">{repo.name}</span>
+          <h2 className="line-clamp-1 break-all">{repo.name}</h2>
           <span className="align-content-start right-0 top-0 flex min-w-max select-none place-items-center rounded-full  bg-white/20 px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-white/90">
             {branchIsAnalyzed ? "Ready" : "Not analyzed"}
           </span>
