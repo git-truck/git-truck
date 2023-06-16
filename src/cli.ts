@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import path from "path"
 import pkg from "../package.json"
 import open from "open"
