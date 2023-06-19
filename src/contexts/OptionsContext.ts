@@ -1,8 +1,9 @@
 import { createContext, useContext } from "react"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
 import { Authorship, Metric } from "../metrics/metrics"
-import type { SizeMetricType } from "~/metrics/size-metric"
-import { SizeMetric } from "~/metrics/size-metric"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { SizeMetric } from "~/metrics/sizeMetric"
+import { Depth, type DepthType } from "~/metrics/chartDepth"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
@@ -15,6 +16,7 @@ export type Options = {
   hasLoadedSavedOptions: boolean
   metricType: MetricType
   chartType: ChartType
+  depthType: DepthType,
   sizeMetric: SizeMetricType
   authorshipType: AuthorshipType
   transitionsEnabled: boolean
@@ -28,6 +30,7 @@ export type OptionsContextType = Options & {
   setAuthorshipType: (authorshipType: AuthorshipType) => void
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
+  setDepthType: (depthType: DepthType) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -44,6 +47,7 @@ const defaultOptions: Options = {
   hasLoadedSavedOptions: false,
   metricType: Object.keys(Metric)[0] as MetricType,
   chartType: Object.keys(Chart)[0] as ChartType,
+  depthType: Object.keys(Depth)[0] as DepthType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
@@ -65,6 +69,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setAuthorshipType: () => {
       throw new Error("No AuthorshipTypeSetter provided")
+    },
+    setDepthType: () => {
+      throw new Error("No DepthTypeSetter provided")
     },
     setTransitionsEnabled: () => {
       throw new Error("No transitionsEnabledSetter provided")

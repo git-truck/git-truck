@@ -23,11 +23,13 @@ import {
   mdiPalette,
   mdiImageSizeSelectSmall,
   mdiPuzzle,
+  mdiViewModule,
   mdiCog,
 } from "@mdi/js"
-import type { SizeMetricType } from "~/metrics/size-metric"
-import { SizeMetric } from "~/metrics/size-metric"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
+import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
 
 function isMetricWithHistoricalOption(metric: MetricType) {
   switch (metric) {
@@ -42,6 +44,7 @@ export const Options = memo(function Options() {
   const {
     metricType,
     chartType,
+    depthType,
     sizeMetric,
     transitionsEnabled,
     setTransitionsEnabled,
@@ -49,6 +52,7 @@ export const Options = memo(function Options() {
     setLabelsVisible,
     setMetricType,
     setChartType,
+    setDepthType,
     setSizeMetricType,
   } = useOptions()
 
@@ -140,6 +144,18 @@ export const Options = memo(function Options() {
             defaultValue={sizeMetric}
             onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
             iconMap={sizeMetricIcons}
+          />
+        </fieldset>
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiViewModule} size="1.25em" />
+            Chart depth
+          </legend>
+          <EnumSelect
+            enum={Depth}
+            defaultValue={depthType}
+            onChange={(depthType: DepthType) => setDepthType(depthType)}
+            iconMap={depthTypeIcons}
           />
         </fieldset>
         {/* </div> */}

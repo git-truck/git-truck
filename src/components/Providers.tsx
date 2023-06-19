@@ -11,7 +11,8 @@ import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
-import type { SizeMetricType } from "~/metrics/size-metric"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import type { DepthType } from "~/metrics/chartDepth"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -39,6 +40,11 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           chartType,
+        })),
+      setDepthType: (depthType: DepthType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          depthType,
         })),
       setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
