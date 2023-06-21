@@ -149,7 +149,7 @@ export const Options = memo(function Options() {
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiViewModule} size="1.25em" />
-            Chart depth
+            Depth
           </legend>
           <EnumSelect
             enum={Depth}
