@@ -35,7 +35,7 @@ import { useComponentSize } from "../hooks"
 import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
-import type { SizeMetricType } from "~/metrics/size-metric"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
@@ -49,10 +49,33 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric } = useOptions()
+  const { chartType, sizeMetric, depthType } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
+
+  let numberOfDepthLevels: number | undefined = undefined
+  switch (depthType) {
+    case "One":
+      numberOfDepthLevels = 1
+      break
+    case "Two":
+      numberOfDepthLevels = 2
+      break
+    case "Three":
+      numberOfDepthLevels = 3
+      break
+    case "Four":
+      numberOfDepthLevels = 4
+      break
+    case "Five":
+      numberOfDepthLevels = 5
+      break
+    case "Full":
+    default:
+      numberOfDepthLevels = undefined
+  }
+
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
     return createPartitionedHiearchy(analyzerData.commit, size, chartType, sizeMetric, path).descendants()
@@ -107,6 +130,7 @@ export const Chart = memo(function Chart({
         }}
       >
         {nodes.map((d, i) => {
+          if (numberOfDepthLevels !== undefined && d.depth > numberOfDepthLevels) return null
           return (
             <g
               className={clsx("hover:opacity-60", {
