@@ -34,13 +34,11 @@ async function getResponse(): Promise<IndexData> {
 }
 
 export const loader = async () => {
-  return defer({
-    repositoriesResponse: getResponse(),
-  })
+  return await getResponse()
 }
 
 export default function Index() {
-  const data = useLoaderData<typeof loader>()
+  const { repositories, baseDir, baseDirName } = useLoaderData<typeof loader>()
   const transitionData = useNavigation()
 
   if (transitionData.state !== "idle")
@@ -57,26 +55,16 @@ export default function Index() {
           Git Truck
         </h1>
         <p>
-          <Suspense>
-            <Await resolve={data.repositoriesResponse} errorElement={<p>Error</p>}>
-              {({ repositories, baseDir, baseDirName }) => (
-                <>
-                  Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
-                  <Code inline title={baseDir}>
-                    {baseDirName}
-                  </Code>
-                  .
-                </>
-              )}
-            </Await>
-          </Suspense>
+          <>
+            Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
+            <Code inline title={baseDir}>
+              {baseDirName}
+            </Code>
+            .
+          </>
         </p>
       </div>
-      <Suspense fallback={<LoadingIndicator className="grow" />}>
-        <Await resolve={data.repositoriesResponse} errorElement={<p>Error loading repositories</p>}>
-          {(repositoriesResponse) => <RepositoryGrid repositories={repositoriesResponse.repositories} />}
-        </Await>
-      </Suspense>
+      <RepositoryGrid repositories={repositories} />
     </main>
   )
 }
