@@ -1,8 +1,8 @@
 import type { MetricType } from "../metrics/metrics"
 import { Metric } from "../metrics/metrics"
 import { EnumSelect } from "./EnumSelect"
-import type { ChartType } from "../contexts/OptionsContext"
-import { Chart, useOptions } from "../contexts/OptionsContext"
+import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
+import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { memo } from "react"
@@ -25,6 +25,8 @@ import {
   mdiPuzzle,
   mdiViewModule,
   mdiCog,
+  mdiFileTree,
+  mdiFamilyTree,
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -46,6 +48,7 @@ export const Options = memo(function Options() {
     chartType,
     depthType,
     sizeMetric,
+    hierarchyType,
     transitionsEnabled,
     setTransitionsEnabled,
     labelsVisible,
@@ -53,6 +56,7 @@ export const Options = memo(function Options() {
     setMetricType,
     setChartType,
     setDepthType,
+    setHierarchyType,
     setSizeMetricType,
   } = useOptions()
 
@@ -81,6 +85,11 @@ export const Options = memo(function Options() {
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
     TREE_MAP: mdiChartTree,
+  }
+
+  const hiearchyIcons: Record<HierarchyType, string> = {
+    NESTED: mdiFileTree,
+    FLAT: mdiChartTree,
   }
 
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
@@ -148,16 +157,32 @@ export const Options = memo(function Options() {
         </fieldset>
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiViewModule} size="1.25em" />
-            Depth
+            <Icon path={mdiFamilyTree} size="1.25em" />
+            Hiearchy
           </legend>
           <EnumSelect
-            enum={Depth}
-            defaultValue={depthType}
-            onChange={(depthType: DepthType) => setDepthType(depthType)}
-            iconMap={depthTypeIcons}
+            enum={Hierarchy}
+            defaultValue={hierarchyType}
+            onChange={(hiearchyType: HierarchyType) => {
+              return setHierarchyType(hiearchyType)
+            }}
+            iconMap={hiearchyIcons}
           />
         </fieldset>
+        {hierarchyType === "NESTED" ? (
+          <fieldset className="rounded-lg border p-2">
+            <legend className="card__title ml-1.5 justify-start gap-2">
+              <Icon path={mdiViewModule} size="1.25em" />
+              Depth
+            </legend>
+            <EnumSelect
+              enum={Depth}
+              defaultValue={depthType}
+              onChange={(depthType: DepthType) => setDepthType(depthType)}
+              iconMap={depthTypeIcons}
+            />
+          </fieldset>
+        ) : null}
         {/* </div> */}
 
         {/* 

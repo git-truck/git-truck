@@ -12,11 +12,19 @@ export const Chart = {
 
 export type ChartType = keyof typeof Chart
 
+export const Hierarchy = {
+  NESTED: "Nested",
+  FLAT: "Flat",
+}
+
+export type HierarchyType = keyof typeof Hierarchy
+
 export type Options = {
   hasLoadedSavedOptions: boolean
   metricType: MetricType
   chartType: ChartType
-  depthType: DepthType,
+  depthType: DepthType
+  hierarchyType: HierarchyType
   sizeMetric: SizeMetricType
   authorshipType: AuthorshipType
   transitionsEnabled: boolean
@@ -31,6 +39,7 @@ export type OptionsContextType = Options & {
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
   setDepthType: (depthType: DepthType) => void
+  setHierarchyType: (hierarchyType: HierarchyType) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -48,6 +57,7 @@ const defaultOptions: Options = {
   metricType: Object.keys(Metric)[0] as MetricType,
   chartType: Object.keys(Chart)[0] as ChartType,
   depthType: Object.keys(Depth)[0] as DepthType,
+  hierarchyType: Object.keys(Hierarchy)[0] as HierarchyType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
@@ -72,6 +82,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setDepthType: () => {
       throw new Error("No DepthTypeSetter provided")
+    },
+    setHierarchyType: () => {
+      throw new Error("No HiearchyTypeSetter provided")
     },
     setTransitionsEnabled: () => {
       throw new Error("No transitionsEnabledSetter provided")
