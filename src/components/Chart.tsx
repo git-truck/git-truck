@@ -1,9 +1,8 @@
 import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
-import { hierarchy, pack, treemap } from "d3-hierarchy"
+import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue } from "react"
-import { memo, useEffect, useMemo } from "react"
+import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -11,7 +10,7 @@ import type {
   HydratedGitTreeObject,
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useToggleableSpring } from "~/hooks"
+import { useToggleableSpring, useComponentSize } from "~/hooks"
 import {
   bubblePadding,
   estimatedLetterHeightForDirText,
@@ -31,8 +30,6 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { useComponentSize } from "../hooks"
-import { treemapBinary } from "d3-hierarchy"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
@@ -49,7 +46,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -78,8 +75,18 @@ export const Chart = memo(function Chart({
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(analyzerData.commit, size, chartType, sizeMetric, path).descendants()
-  }, [size, analyzerData.commit, chartType, sizeMetric, path])
+    const commit =
+      hierarchyType === "NESTED"
+        ? analyzerData.commit
+        : {
+            ...analyzerData.commit,
+            tree: {
+              ...analyzerData.commit.tree,
+              children: flatten(analyzerData.commit.tree),
+            },
+          }
+    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path).descendants()
+  }, [size, hierarchyType, analyzerData.commit, chartType, sizeMetric, path])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -502,4 +509,16 @@ function roundedRectPathFromRect(x: number, y: number, width: number, height: nu
           v${-height + radius * 2}
           a${radius},${radius} 0 0 1 ${radius},${-radius}
           z`
+}
+
+function flatten(tree: HydratedGitTreeObject) {
+  const flattened: HydratedGitBlobObject[] = []
+  for (const child of tree.children) {
+    if (child.type === "blob") {
+      flattened.push(child)
+    } else {
+      flattened.push(...flatten(child))
+    }
+  }
+  return flattened
 }
