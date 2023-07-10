@@ -1,6 +1,6 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
-import { Fragment, memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
 import type { ActionFunction, LoaderArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -32,7 +32,7 @@ import { useClient } from "~/hooks"
 import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
-import { hierarchy, treemap, treemapBinary } from "d3-hierarchy"
+import { mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 
 let invalidateCache = false
 
@@ -215,6 +215,8 @@ export default function Repo() {
   const client = useClient()
   const data = useTypedLoaderData<RepoData>()
   const { analyzerData, gitTruckInfo } = data
+  const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
+  const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
@@ -222,14 +224,44 @@ export default function Repo() {
 
   if (!analyzerData) return null
 
+  function defineTheContainerClass(): string {
+    // The fullscreen overrides the collapses
+    if (isFullscreen) {
+      return "fullscreen"
+    }
+
+    // The classes for collapses
+    if (isLeftPanelCollapse && isRightPanelCollapse) {
+      return "both-collapse"
+    } else if (isLeftPanelCollapse) {
+      return "left-collapse"
+    } else if (isRightPanelCollapse) {
+      return "right-collapse"
+    }
+
+    // The default class is none
+    return ""
+  }
+
   return (
     <Providers data={data}>
-      <div className={`app-container ${isFullscreen ? "fullscreen" : ""}`}>
-        <aside className="flex flex-col gap-2 overflow-y-auto p-2 pr-0">
-          <GlobalInfo />
-          <Options />
-          {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-          <SearchCard />
+      <div className={`app-container ${defineTheContainerClass()}`}>
+        <aside>
+          {!isFullscreen ? (
+          <div className="relative z-10">
+            <div onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)} className="absolute left-97 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
+              <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
+            </div>
+          </div>
+          ) : null}
+          {!isLeftPanelCollapse ? (
+          <div className="flex flex-col gap-2 overflow-y-auto p-2 pr-0">
+            <GlobalInfo />
+            <Options />
+            {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+            <SearchCard />
+          </div>
+          ) : null}
         </aside>
 
         <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
@@ -240,23 +272,32 @@ export default function Repo() {
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
         </main>
 
-        <aside
-          className={clsx("flex flex-col gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen,
-          })}
-        >
-          {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
-            <UpdateNotifier />
+        <aside>
+          {!isFullscreen ? (
+          <div className="relative z-10">
+            <div onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)} className="absolute right-97 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
+              <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
+            </div>
+          </div>
           ) : null}
-          <DetailsCard
-            className={clsx({
-              "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                isFullscreen,
-            })}
-            showUnionAuthorsModal={showUnionAuthorsModal}
-          />
-          <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-          <FeedbackCard />
+          {!isRightPanelCollapse ? (
+          <div className={clsx("flex flex-col gap-2 p-2 pl-0", {
+            "overflow-y-auto": !isFullscreen,
+          })}>
+            {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
+              <UpdateNotifier />
+            ) : null}
+            <DetailsCard
+              className={clsx({
+                "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                  isFullscreen,
+              })}
+              showUnionAuthorsModal={showUnionAuthorsModal}
+            />
+            <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+            <FeedbackCard />
+          </div>
+          ) : null}
         </aside>
       </div>
       <UnionAuthorsModal

@@ -133,6 +133,18 @@
     grid-area: right;
   }
 
+  .app-container.both-collapse {
+    @apply md:h-screen md:grid-cols-[0,1fr,0] md:grid-rows-[1fr] md:overflow-hidden;
+  }
+
+  .app-container.left-collapse {
+    @apply md:h-screen md:grid-cols-[0,1fr,var(--side-panel-width)] md:grid-rows-[1fr] md:overflow-hidden;
+  }
+
+  .app-container.right-collapse {
+    @apply md:h-screen md:grid-cols-[var(--side-panel-width),1fr,0] md:grid-rows-[1fr] md:overflow-hidden;
+  }
+
   .app-container.fullscreen {
     @apply grid-rows-[100vh,auto,auto];
   }
