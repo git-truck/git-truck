@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import type { AccordionData } from "./Accordion"
 import clsx from "clsx"
 
@@ -13,16 +12,6 @@ function AccordionItem({
     btnOnClick: () => void
     titleLabels?: boolean
 }) {
-    const [ height, setHeight ] = useState("")
-
-    useEffect(() => {
-        if (isOpen) {
-            setHeight("auto")
-        } else {
-            setHeight("0")
-        }
-    }, [ isOpen ])
-
     const afterStyle = "after:content-[''] after:shrink-0 after:w-[14px] after:h-[14px] after:ml-auto after:transition-[transform] after:duration-[200ms] after:ease-out after:bg-[length:14px_14px] after:bg-no-repeat after:bg-arrow";
     return (
         <li className="border-0 ">
@@ -36,7 +25,7 @@ function AccordionItem({
                     { data.title }
                 </div>
             </h2>
-            <ul className="block m-0 p-0 text-sm transition-[height] duration-[200ms] ease-out" style={ { height } }>
+            <ul className="block m-0 p-0 text-sm transition-[height] duration-[200ms] ease-out" style={ { height: isOpen ? "auto" : "0" } }>
                 { isOpen && <div>{ data.content }</div> }
             </ul>
         </li>
