@@ -84,3 +84,7 @@ You can also define files to ignore.
   "invalidateCache": true
 }
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=git-truck/git-truck&type=Date)](https://star-history.com/#git-truck/git-truck&Date)
