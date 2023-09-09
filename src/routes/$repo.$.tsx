@@ -246,21 +246,25 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <div className={`app-container ${defineTheContainerClass()}`}>
-        <aside>
+        <aside className={clsx("flex flex-col gap-2 p-2 pl-0", {
+            "overflow-y-auto": !isFullscreen,
+          })}>
           {!isFullscreen ? (
-          <div className="relative z-10">
-            <div onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)} className="absolute left-97 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
+          <div className="absolute z-10">
+            <div onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)} className={clsx("absolute top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500", {
+              "left-arrow-space": !isLeftPanelCollapse
+            })}>
               <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
             </div>
           </div>
           ) : null}
           {!isLeftPanelCollapse ? (
-          <div className="flex flex-col gap-2 overflow-y-auto p-2 pr-0">
+          <>
             <GlobalInfo />
             <Options />
             {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
             <SearchCard />
-          </div>
+          </>
           ) : null}
         </aside>
 
@@ -272,18 +276,18 @@ export default function Repo() {
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
         </main>
 
-        <aside>
+        <aside className={clsx("flex flex-col gap-2 p-2 pl-0", {
+            "overflow-y-auto": !isFullscreen,
+          })}>
           {!isFullscreen ? (
-          <div className="relative z-10">
-            <div onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)} className="absolute right-97 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
+          <div className="absolute z-10">
+            <div onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)} className="absolute right-0 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
               <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
             </div>
           </div>
           ) : null}
           {!isRightPanelCollapse ? (
-          <div className={clsx("flex flex-col gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen,
-          })}>
+          <>
             {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
               <UpdateNotifier />
             ) : null}
@@ -296,7 +300,7 @@ export default function Repo() {
             />
             <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
             <FeedbackCard />
-          </div>
+          </>
           ) : null}
         </aside>
       </div>

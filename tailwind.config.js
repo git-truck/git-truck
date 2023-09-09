@@ -10,7 +10,6 @@ module.exports = {
       },
       inset: {
         "half-screen": "50vh",
-        "97": "97%",
       },
       fontFamily: {
         mono: ["Roboto Mono", "monospace"],

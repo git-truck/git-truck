@@ -153,6 +153,10 @@
     /* Span all available columns */
     grid-column: 1 / -1;
   }
+  
+  .left-arrow-space {
+    left: var(--side-panel-width);
+  }
 
   .app-container.fullscreen > aside:first-of-type {
     @apply md:-translate-x-[var(--side-panel-width)];
