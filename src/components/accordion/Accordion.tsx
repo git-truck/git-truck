@@ -63,7 +63,6 @@ function Accordion({
               if (actionClickLabels) actionClickLabels(idx);
             }}
           />
-          <br />
         </>
       ))}
       <ShowMoreLabel

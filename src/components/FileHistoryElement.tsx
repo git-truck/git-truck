@@ -1,10 +1,11 @@
 import type { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
-import { Fragment } from "react"
+import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { useData } from "~/contexts/DataContext"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion";
 import Accordion from "./accordion/Accordion"
+import { ChevronButton } from "./ChevronButton"
 
 export type SortCommitsMethods = "date" | "author"
 
@@ -30,14 +31,13 @@ export function FileHistoryElement(props: props) {
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
-  show: boolean
   commitCutoff: number
   sortBy?: SortCommitsMethods
   handleOnClick?: (commit: GitLogEntry) => void
 }
 
 export function CommitDistFragment(props: CommitDistFragProps) {
-  if (!props.show || !props.items) return null
+  if (!props.items) return null
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
   const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
@@ -68,7 +68,6 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   }
 
   return (
-    <>
       <Fragment key={ items.length.toString() + sortMethod + props.commitCutoff.toString() + new Date().toDateString() }>
         <Accordion
           titleLabels={ true }
@@ -78,11 +77,12 @@ export function CommitDistFragment(props: CommitDistFragProps) {
           itemsCutoff={ props.commitCutoff }
         ></Accordion>
       </Fragment>
-    </>
   )
 }
 
 function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
+  const commitHistoryExpandId = useId()
+  const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
   const commitCutoff = 3
 
@@ -102,9 +102,10 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
         <label className="label grow">
           <h3 className="font-bold">Commit history</h3>
         </label>
+        <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
-        <CommitDistFragment commitCutoff={ commitCutoff } show={ true } items={ commits } />
+        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } />
       </div>
     </>
   )
