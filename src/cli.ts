@@ -7,7 +7,7 @@ import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
-import { createApp } from "@remix-run/serve"
+// import { createApp } from "@remix-run/serve"
 import { semverCompare } from "./util"
 import { describeAsyncJob, getDirName } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
@@ -65,64 +65,46 @@ for usage instructions.`)
 
   // Serve application build
 
-  const onListen = async () => {
-    const url = `http://localhost:${port}`
+  process.argv[2] = path.join(__dirname, "build", "index.js")
+  void new Promise(() => require("@remix-run/serve/dist/cli.js"))
 
-    const [extension, extensionError] = await describeAsyncJob({
-      job: async () => {
-        // If CWD or path argument is a git repo, go directly to that repo in the visualizer
-        if (await GitCaller.isGitRepo(options.path)) {
-          const repoName = getDirName(options.path)
-          if (repoName) {
-            const currentHead = await GitCaller._getRepositoryHead(options.path)
-            return `/${getPathFromRepoAndHead(repoName, currentHead)}`
-          } else return ""
-        }
-      },
-      beforeMsg: "Checking for git repo",
-      afterMsg: "Done checking for git repo",
-      errorMsg: "Failed to check for git repo",
-    })
+  const url = `http://localhost:${port}`
 
-    if (extensionError) {
-      console.error(extensionError)
-    }
-
-    if (process.env.NODE_ENV !== "development") {
-      const openURL = url + (extension ?? "")
-      let err: Error | null = null
-
-      if (!args.headless) {
-        log.debug(`Opening ${openURL}`)
-        ;[, err] = await describeAsyncJob({
-          job: () => open(openURL),
-          beforeMsg: "Opening Git Truck in your browser",
-          afterMsg: `Succesfully opened Git Truck in your browser`,
-          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`,
-        })
+  const [extension, extensionError] = await describeAsyncJob({
+    job: async () => {
+      // If CWD or path argument is a git repo, go directly to that repo in the visualizer
+      if (await GitCaller.isGitRepo(options.path)) {
+        const repoName = getDirName(options.path)
+        if (repoName) {
+          const currentHead = await GitCaller._getRepositoryHead(options.path)
+          return `/${getPathFromRepoAndHead(repoName, currentHead)}`
+        } else return ""
       }
-      if (!err) console.log(`\nApplication available at ${url}`)
-    }
+    },
+    beforeMsg: "Checking for git repo",
+    afterMsg: "Done checking for git repo",
+    errorMsg: "Failed to check for git repo",
+  })
+
+  if (extensionError) {
+    console.error(extensionError)
   }
 
-  describeAsyncJob({
-    job: async () => {
-      const app = createApp(
-        path.join(__dirname, "build"),
-        process.env.NODE_ENV ?? "production",
-        "/build",
-        path.join(__dirname, "public", "build")
-      )
+  if (process.env.NODE_ENV !== "development") {
+    const openURL = url + (extension ?? "")
+    let err: Error | null = null
 
-      const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
-      ;["SIGTERM", "SIGINT"].forEach((signal) => {
-        process.once(signal, () => server?.close(console.error))
+    if (!args.headless) {
+      log.debug(`Opening ${openURL}`)
+      ;[, err] = await describeAsyncJob({
+        job: () => open(openURL),
+        beforeMsg: "Opening Git Truck in your browser",
+        afterMsg: `Succesfully opened Git Truck in your browser`,
+        errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}`,
       })
-    },
-    beforeMsg: "Starting Git Truck",
-    afterMsg: "Git Truck started",
-    errorMsg: "Failed to start Git Truck",
-  })
+    }
+    if (!err) console.log(`\nApplication available at ${url}\n`)
+  }
 }
 
 main()
