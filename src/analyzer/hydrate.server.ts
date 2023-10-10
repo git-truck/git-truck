@@ -26,7 +26,7 @@ export async function hydrateData(
   const commitsPerRun = 1000
   for (let commitIndex = 0; commitIndex < commitCount; commitIndex += commitsPerRun) {
     const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitsPerRun)
-
+    
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
       const groups = match.groups ?? {}
@@ -44,6 +44,7 @@ export async function hydrateData(
       authors.add(author)
       coauthors.forEach((coauthor) => authors.add(coauthor.name))
 
+      if (!contributionsString) continue
       const contribMatches = contributionsString.matchAll(contribRegex)
       for (const contribMatch of contribMatches) {
         const file = contribMatch.groups?.file.trim()
