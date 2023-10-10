@@ -256,20 +256,18 @@ export class GitCaller {
     return gitRefs
   }
 
-  async gitLog(filePath?: string) {
+  async gitLog(skip: number, count: number) {
     if (!this.branch) throw Error("branch not set")
     const args = [
       "log",
+      `--skip=${skip}`,
+      `--max-count=${count}`,
       this.branch,
       "--stat=1000000",
       "--stat-graph-width=1",
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 
-    if (filePath) {
-      args.push("--follow")
-      args.push(filePath)
-    }
 
     const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()
@@ -355,6 +353,12 @@ export class GitCaller {
     this.catFileCache.set(hash, result)
 
     return result
+  }
+
+  async getCommitCount() {
+    if (!this.branch) throw Error("Branch is undefined")
+    const result = await runProcess(this.repo, "git", ["rev-list", "--count", this.branch])
+    return result as number
   }
 
   private async blame(path: string) {

@@ -22,68 +22,72 @@ export async function hydrateData(
 
   initially_mut(data)
 
-  const gitLogResult = await GitCaller.getInstance().gitLog()
-  const matches = gitLogResult.matchAll(gitLogRegex)
-  for (const match of matches) {
-    const groups = match.groups ?? {}
-    const author = groups.author
-    const time = Number(groups.date)
-    const body = groups.body
-    const message = groups.message
-    const hash = groups.hash
-    commits[hash] = { author, time, body, message, hash }
-    const contributionsString = groups.contributions
-    const coauthors = body ? getCoAuthors(body) : []
+  const commitCount = await GitCaller.getInstance().getCommitCount()
+  const commitsPerRun = 1000
+  for (let commitIndex = 0; commitIndex < commitCount; commitIndex += commitsPerRun) {
+    const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitsPerRun)
 
-    log.debug(`Checking commit from ${time}`)
+    const matches = gitLogResult.matchAll(gitLogRegex)
+    for (const match of matches) {
+      const groups = match.groups ?? {}
+      const author = groups.author
+      const time = Number(groups.date)
+      const body = groups.body
+      const message = groups.message
+      const hash = groups.hash
+      commits[hash] = { author, time, body, message, hash }
+      const contributionsString = groups.contributions
+      const coauthors = body ? getCoAuthors(body) : []
 
-    authors.add(author)
-    coauthors.forEach((coauthor) => authors.add(coauthor.name))
+      log.debug(`Checking commit from ${time}`)
 
-    const contribMatches = contributionsString.matchAll(contribRegex)
-    for (const contribMatch of contribMatches) {
-      const file = contribMatch.groups?.file.trim()
-      const isBinary = contribMatch.groups?.bin !== undefined
-      if (!file) throw Error("file not found")
+      authors.add(author)
+      coauthors.forEach((coauthor) => authors.add(coauthor.name))
 
-      const hasBeenMoved = file.includes("=>")
+      const contribMatches = contributionsString.matchAll(contribRegex)
+      for (const contribMatch of contribMatches) {
+        const file = contribMatch.groups?.file.trim()
+        const isBinary = contribMatch.groups?.bin !== undefined
+        if (!file) throw Error("file not found")
 
-      let filePath = file
-      if (hasBeenMoved) {
-        filePath = analyzeRenamedFile(filePath, renamedFiles)
-      }
+        const hasBeenMoved = file.includes("=>")
 
-      const newestPath = renamedFiles.get(filePath) ?? filePath
+        let filePath = file
+        if (hasBeenMoved) {
+          filePath = analyzeRenamedFile(filePath, renamedFiles)
+        }
 
-      const contribs = Number(contribMatch.groups?.contribs)
-      if (contribs < 1) continue
-      const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
-      if (!blob) {
-        continue
-      }
-      if (!blob.commits) blob.commits = []
-      blob.commits.push(hash)
-      blob.noCommits = (blob.noCommits ?? 0) + 1
-      if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
+        const newestPath = renamedFiles.get(filePath) ?? filePath
 
-      if (isBinary) {
-        blob.isBinary = true
-        blob.authors[author] = (blob.authors[author] ?? 0) + 1
+        const contribs = Number(contribMatch.groups?.contribs)
+        if (contribs < 1) continue
+        const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
+        if (!blob) {
+          continue
+        }
+        if (!blob.commits) blob.commits = []
+        blob.commits.push(hash)
+        blob.noCommits = (blob.noCommits ?? 0) + 1
+        if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
+
+        if (isBinary) {
+          blob.isBinary = true
+          blob.authors[author] = (blob.authors[author] ?? 0) + 1
+
+          for (const coauthor of coauthors) {
+            blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+          }
+          continue
+        }
+
+        blob.authors[author] = (blob.authors[author] ?? 0) + contribs
 
         for (const coauthor of coauthors) {
-          blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+          blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
         }
-        continue
-      }
-
-      blob.authors[author] = (blob.authors[author] ?? 0) + contribs
-
-      for (const coauthor of coauthors) {
-        blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
       }
     }
   }
-
   return [data, Array.from(authors), commits]
 }
 
