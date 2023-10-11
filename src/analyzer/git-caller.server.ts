@@ -263,8 +263,7 @@ export class GitCaller {
       `--skip=${skip}`,
       `--max-count=${count}`,
       this.branch,
-      "--stat=1000000",
-      "--stat-graph-width=1",
+      "--numstat",
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 

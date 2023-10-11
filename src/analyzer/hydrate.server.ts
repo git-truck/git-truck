@@ -48,7 +48,7 @@ export async function hydrateData(
       const contribMatches = contributionsString.matchAll(contribRegex)
       for (const contribMatch of contribMatches) {
         const file = contribMatch.groups?.file.trim()
-        const isBinary = contribMatch.groups?.bin !== undefined
+        const isBinary = contribMatch.groups?.insertions === "-"
         if (!file) throw Error("file not found")
 
         const hasBeenMoved = file.includes("=>")
@@ -60,7 +60,7 @@ export async function hydrateData(
 
         const newestPath = renamedFiles.get(filePath) ?? filePath
 
-        const contribs = Number(contribMatch.groups?.contribs)
+        const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions) + Number(contribMatch.groups?.deletions)
         if (contribs < 1) continue
         const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
         if (!blob) {
