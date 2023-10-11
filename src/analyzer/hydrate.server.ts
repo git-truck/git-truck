@@ -23,10 +23,10 @@ export async function hydrateData(
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  const commitsPerRun = 1000
+  const commitsPerRun = 20000
   for (let commitIndex = 0; commitIndex < commitCount; commitIndex += commitsPerRun) {
     const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitsPerRun)
-    
+
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
       const groups = match.groups ?? {}
