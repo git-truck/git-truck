@@ -85,6 +85,12 @@ You can also define files to ignore.
 }
 ```
 
+### Very large repositories
+
+If the repository you intend to analyze is very large (300k+ commits), we recommend to increase the memory available to nodejs by setting the environment variable `NODE_OPTIONS` to `--max-old-space-size=4096` before starting Git Truck, otherwise analyzation might crash.
+
+If your repository has more than 1 million commits, it is unlikely that Git Truck can successfully analyze it, even with higher memory limit.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=git-truck/git-truck&type=Date)](https://star-history.com/#git-truck/git-truck&Date)
