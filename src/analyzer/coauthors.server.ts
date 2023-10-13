@@ -1,7 +1,7 @@
 import type { Person } from "./model"
 
 export function getCoAuthors(description: string) {
-  const coauthorRegex = /.*Co-authored-by: (?<name>.*) <(?<email>.*)>/gm
+  const coauthorRegex = /Co-authored-by: (?<name>.*) <(?<email>.*)>/gm
   const coauthormatches = description.matchAll(coauthorRegex)
   let next = coauthormatches.next()
   const coauthors: Person[] = []
