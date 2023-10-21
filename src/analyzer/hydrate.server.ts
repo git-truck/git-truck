@@ -58,29 +58,42 @@ async function hydrateCommitRange(start: number, end: number, data: HydratedGitC
 
         const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions) + Number(contribMatch.groups?.deletions)
         if (contribs < 1) continue
+        // if (!mutexes.has(newestPath)) {
+        //   mutexes.set(newestPath, new Mutex())
+        // }
+        // let mutex
+        // while (!mutex) mutex = mutexes.get(newestPath)
+        // await mutex.acquire()
+
         const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
         if (!blob) {
           continue
         }
-        if (!blob.commits) blob.commits = []
-        blob.commits.push(hash)
-        blob.noCommits = (blob.noCommits ?? 0) + 1
-        if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
+        while (blob.mutex.isLocked());
+        await blob.mutex.acquire()
+        try {
+          if (!blob.commits) blob.commits = []
+          blob.commits.push(hash)
+          blob.noCommits = (blob.noCommits ?? 0) + 1
+          if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
 
-        if (isBinary) {
-          blob.isBinary = true
-          blob.authors[author] = (blob.authors[author] ?? 0) + 1
+          if (isBinary) {
+            blob.isBinary = true
+            blob.authors[author] = (blob.authors[author] ?? 0) + 1
+
+            for (const coauthor of coauthors) {
+              blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+            }
+            continue
+          }
+
+          blob.authors[author] = (blob.authors[author] ?? 0) + contribs
 
           for (const coauthor of coauthors) {
-            blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+            blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
           }
-          continue
-        }
-
-        blob.authors[author] = (blob.authors[author] ?? 0) + contribs
-
-        for (const coauthor of coauthors) {
-          blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
+        } finally {
+          blob.mutex.release()
         }
       }
     }
