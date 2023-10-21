@@ -10,22 +10,18 @@ import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
+import { cpus } from "os"
 
 const renamedFiles = new Map<string, string>()
+const commits: Record<string, GitLogEntry> = {}
+const authors = new Set<string>()
 
-export async function hydrateData(
-  commit: GitCommitObject
-): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
-  const authors = new Set<string>()
-  const data = commit as HydratedGitCommitObject
-  const commits: Record<string, GitLogEntry> = {}
-
-  initially_mut(data)
-
-  const commitCount = await GitCaller.getInstance().getCommitCount()
-  const commitsPerRun = 20000
-  for (let commitIndex = 0; commitIndex < commitCount; commitIndex += commitsPerRun) {
-    const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitsPerRun)
+async function hydrateCommitRange(start: number, end: number, data: HydratedGitCommitObject) {
+  const maxCommitsPerRun = 20000
+  for (let commitIndex = start; commitIndex < end; commitIndex += maxCommitsPerRun) {
+    if (commitIndex > end) commitIndex = end;
+    const commitCountToGet = Math.min(end - commitIndex, maxCommitsPerRun)
+    const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitCountToGet)
 
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
@@ -89,6 +85,30 @@ export async function hydrateData(
       }
     }
   }
+}
+
+export async function hydrateData(
+  commit: GitCommitObject
+): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
+  const data = commit as HydratedGitCommitObject
+
+  initially_mut(data)
+
+  const commitCount = await GitCaller.getInstance().getCommitCount()
+  console.log("true commit count", commitCount)
+  const threadCount = Math.max(cpus().length - 2, 2);
+
+  const sectionSize = Math.ceil(commitCount / threadCount);
+
+  const promises = Array.from({ length: threadCount }, (_, i) => {
+    const sectionStart = i * sectionSize;
+    let sectionEnd = (i + 1) * sectionSize;
+    if (sectionEnd > commitCount) sectionEnd = commitCount
+    return hydrateCommitRange(sectionStart, sectionEnd, data);
+  });
+
+  await Promise.all(promises)
+  console.log("commit count found", Object.keys(commits).length)
   return [data, Array.from(authors), commits]
 }
 
