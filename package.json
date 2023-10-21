@@ -130,5 +130,8 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "dependencies": {
+    "async-mutex": "^0.4.0"
+  }
 }
