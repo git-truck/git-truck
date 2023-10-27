@@ -11,8 +11,7 @@
     ]
   ],
   "hiddenFiles": [
-    "*.json",
-    "*.pdf",
-    "*.gif"
+    "git-truck/git_truck_for_VISSOFT-1.pdf",
+    "git-truck/package-lock.json"
   ]
 }

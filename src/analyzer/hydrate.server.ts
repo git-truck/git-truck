@@ -4,6 +4,7 @@ import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
+  Person,
 } from "./model"
 import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
 import { GitCaller } from "./git-caller.server"
@@ -15,6 +16,7 @@ import { cpus } from "os"
 const renamedFiles = new Map<string, string>()
 const commits: Record<string, GitLogEntry> = {}
 const authors = new Set<string>()
+const skippedBlobs = new Map<string, SkippedContrib>()
 
 async function hydrateCommitRange(start: number, end: number, data: HydratedGitCommitObject) {
   const maxCommitsPerRun = 20000
@@ -58,45 +60,51 @@ async function hydrateCommitRange(start: number, end: number, data: HydratedGitC
 
         const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions) + Number(contribMatch.groups?.deletions)
         if (contribs < 1) continue
-        // if (!mutexes.has(newestPath)) {
-        //   mutexes.set(newestPath, new Mutex())
-        // }
-        // let mutex
-        // while (!mutex) mutex = mutexes.get(newestPath)
-        // await mutex.acquire()
 
-        const blob = lookupFileInTree(data.tree, newestPath) as HydratedGitBlobObject
+        const blob = lookupFileInTree(data.tree, newestPath)
         if (!blob) {
+          skippedBlobs.set(newestPath, {blobPath: newestPath, commitHash: hash, isBinary, contribs, coauthors})
           continue
         }
-        while (blob.mutex.isLocked());
-        await blob.mutex.acquire()
-        try {
-          if (!blob.commits) blob.commits = []
-          blob.commits.push(hash)
-          blob.noCommits = (blob.noCommits ?? 0) + 1
-          if (!blob.lastChangeEpoch) blob.lastChangeEpoch = time
-
-          if (isBinary) {
-            blob.isBinary = true
-            blob.authors[author] = (blob.authors[author] ?? 0) + 1
-
-            for (const coauthor of coauthors) {
-              blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
-            }
-            continue
-          }
-
-          blob.authors[author] = (blob.authors[author] ?? 0) + contribs
-
-          for (const coauthor of coauthors) {
-            blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
-          }
-        } finally {
-          blob.mutex.release()
-        }
+        await updateCreditOnBlob(blob as HydratedGitBlobObject, commits[hash], isBinary, contribs, coauthors)
       }
     }
+  }
+}
+
+interface SkippedContrib {
+  blobPath: string,
+  commitHash: string,
+  isBinary: boolean,
+  contribs: number,
+  coauthors: Person[]
+}
+
+async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, isBinary: boolean, contribs: number, coauthors: Person[]) {
+  await blob.mutex.acquire()
+  try {
+    if (!blob.commits) blob.commits = []
+    blob.commits.push(commit.hash)
+    blob.noCommits = (blob.noCommits ?? 0) + 1
+    if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
+
+    if (isBinary) {
+      blob.isBinary = true
+      blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + 1
+
+      for (const coauthor of coauthors) {
+        blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+      }
+      return
+    }
+
+    blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + contribs
+
+    for (const coauthor of coauthors) {
+      blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + contribs
+    }
+  } finally {
+    blob.mutex.release()
   }
 }
 
@@ -109,7 +117,8 @@ export async function hydrateData(
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
   console.log("true commit count", commitCount)
-  const threadCount = Math.max(cpus().length - 2, 2);
+  // const threadCount = Math.max(cpus().length - 2, 2);
+  const threadCount = 8
 
   const sectionSize = Math.ceil(commitCount / threadCount);
 
@@ -121,6 +130,42 @@ export async function hydrateData(
   });
 
   await Promise.all(promises)
+  
+  // let renameFound = true
+  // while (renameFound) {
+  //   renameFound = false
+  //   for (const [key, skipped] of skippedBlobs) {
+  //     const rename = renamedFiles.get(key)
+  //     if (!rename) {
+  //       continue
+  //     }
+  //     renameFound = true
+  //     const blob = lookupFileInTree(data.tree, rename)
+  //     if (blob) {
+  //       await updateCreditOnBlob(blob as HydratedGitBlobObject, commits[skipped.commitHash], skipped.isBinary, skipped.contribs, skipped.coauthors)
+  //       continue
+  //     }
+  //     const ren = skippedBlobs.get(rename)
+  //     if (ren) {
+  //       await updateCreditOnBlob()
+  //     } else {
+  //       skippedBlobs.delete(rename)
+  //     }
+  //   }
+  // }
+
+  for (const [p, blobContrib] of skippedBlobs) {
+    const path = getNewestPath(p)
+    const foundBlob = lookupFileInTree(data.tree, path)
+    if (!foundBlob) {
+      if (p !== path)
+        console.log("soinks", p, path)
+      continue
+    }
+    console.log("jubii", path)
+    updateCreditOnBlob(foundBlob as HydratedGitBlobObject, commits[blobContrib.commitHash], blobContrib.isBinary, blobContrib.contribs, blobContrib.coauthors)
+  }
+
   console.log("commit count found", Object.keys(commits).length)
   return [data, Array.from(authors), commits]
 }
@@ -130,6 +175,16 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.newestLatestChangeEpoch = Number.MIN_VALUE
 
   addAuthorsField_mut(data.tree)
+}
+
+function getNewestPath(path: string) {
+  let newestPath = path
+  let ren = renamedFiles.get(newestPath)
+  while (ren) {
+    newestPath = ren
+    ren = renamedFiles.get(newestPath)
+  }
+  return newestPath
 }
 
 function addAuthorsField_mut(tree: HydratedGitTreeObject) {
