@@ -40,7 +40,6 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, strin
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
   const groups = match?.groups ?? {}
-
   let oldPath: string
   let newPath: string
 
@@ -54,10 +53,10 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, strin
     newPath = groups["newPath2"] ?? ""
   }
 
-  const newest = renamedFiles.get(newPath) ?? newPath
-  renamedFiles.delete(newPath)
-  renamedFiles.set(oldPath, newest)
-  return newest
+  // const newest = renamedFiles.get(newPath) ?? newPath
+  // renamedFiles.delete(newPath)
+  renamedFiles.set(oldPath, newPath)
+  return newPath
 }
 
 export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObject | undefined {
