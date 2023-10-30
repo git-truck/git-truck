@@ -62,6 +62,7 @@ async function gatherCommitsInRange(start: number, end: number) {
       commits[hash] = { author, time, body, message, hash, coauthors, fileChanges }
     }
   }
+  console.log("done", start)
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
@@ -100,7 +101,6 @@ export async function hydrateData(
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  console.log("true commit count", commitCount)
   // const threadCount = Math.max(cpus().length - 2, 2);
   const threadCount = 8
 
@@ -114,22 +114,15 @@ export async function hydrateData(
   });
 
   await Promise.all(promises)
-  console.log("commit count found", Object.keys(commits).length)
-
 
   const commitvals = Object.values(commits)
-  const promises2 = Array.from({ length: threadCount }, (_, i) => {
-    return hydrateBlobs(data, i, threadCount, commitvals)
-  });
-
-  await Promise.all(promises2)
+  await hydrateBlobs(data, commitvals)
   
   return [data, Array.from(authors), commits]
 }
 
-async function hydrateBlobs(data: HydratedGitCommitObject, startIndex: number, threads: number, commits: GitLogEntry[]) {
-  for (let i = startIndex; i < commits.length; i += threads) {
-    const commit = commits[i]
+async function hydrateBlobs(data: HydratedGitCommitObject, commits: GitLogEntry[]) {
+  for (const commit of commits) {
     for (const change of commit.fileChanges) {
       let recentChange = {path: change.path, timestamp: commit.time}
       // eslint-disable-next-line no-constant-condition
