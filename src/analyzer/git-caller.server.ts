@@ -264,6 +264,7 @@ export class GitCaller {
       `--max-count=${count}`,
       this.branch,
       "--numstat",
+      "--cc", // include file changes for merge commits
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 
