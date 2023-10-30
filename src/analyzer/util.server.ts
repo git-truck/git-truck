@@ -35,7 +35,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
+export function analyzeRenamedFile(file: string, renamedFiles: Map<string, {path: string, timestamp: number}[]>, timestamp: number) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
@@ -53,9 +53,11 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, strin
     newPath = groups["newPath2"] ?? ""
   }
 
-  // const newest = renamedFiles.get(newPath) ?? newPath
-  // renamedFiles.delete(newPath)
-  renamedFiles.set(oldPath, newPath)
+  if (renamedFiles.has(oldPath)) {
+    renamedFiles.get(oldPath)?.push({path: newPath, timestamp})
+  } else {
+    renamedFiles.set(oldPath, [{path: newPath, timestamp}])
+  }
   return newPath
 }
 
