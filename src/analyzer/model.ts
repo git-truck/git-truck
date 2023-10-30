@@ -127,10 +127,18 @@ export type PersonWithTime = Person & {
   timezone: string
 }
 
+export interface FileChange {
+  path: string
+  isBinary: boolean
+  contribs: number
+}
+
 export interface GitLogEntry {
   author: string
   time: number
   body: string
   message: string
   hash: string
+  coauthors: Person[]
+  fileChanges: FileChange[]
 }
