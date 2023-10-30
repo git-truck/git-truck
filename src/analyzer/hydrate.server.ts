@@ -14,9 +14,9 @@ import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
 
-const renamedFiles = new Map<string, {path: string, timestamp: number}[]>()
-const commits: Record<string, GitLogEntry> = {}
-const authors = new Set<string>()
+let renamedFiles: Map<string, {path: string, timestamp: number}[]>
+let commits: Record<string, GitLogEntry>
+let authors: Set<string>
 
 async function gatherCommitsInRange(start: number, end: number) {
   const maxCommitsPerRun = 20000
@@ -40,23 +40,24 @@ async function gatherCommitsInRange(start: number, end: number) {
       log.debug(`Checking commit from ${time}`)
 
       authors.add(author)
-      coauthors.forEach((coauthor) => authors.add(coauthor.name))
+      for (const coauthor of coauthors) authors.add(coauthor.name)
 
-      if (!contributionsString) continue
-      const contribMatches = contributionsString.matchAll(contribRegex)
-      for (const contribMatch of contribMatches) {
-        const file = contribMatch.groups?.file.trim()
-        const isBinary = contribMatch.groups?.insertions === "-"
-        if (!file) throw Error("file not found")
+      if (contributionsString) {
+        const contribMatches = contributionsString.matchAll(contribRegex)
+        for (const contribMatch of contribMatches) {
+          const file = contribMatch.groups?.file.trim()
+          const isBinary = contribMatch.groups?.insertions === "-"
+          if (!file) throw Error("file not found")
 
 
-        let filePath = file
-        if (file.includes("=>")) {
-          filePath = analyzeRenamedFile(filePath, renamedFiles, time)
+          let filePath = file
+          if (file.includes("=>")) {
+            filePath = analyzeRenamedFile(filePath, renamedFiles, time)
+          }
+          
+          const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
+          fileChanges.push({isBinary, contribs, path: filePath})
         }
-        
-        const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-        fileChanges.push({isBinary, contribs, path: filePath})
       }
       commits[hash] = { author, time, body, message, hash, coauthors, fileChanges }
     }
@@ -113,15 +114,22 @@ export async function hydrateData(
   });
 
   await Promise.all(promises)
-
-  await hydrateBlobs(data)
-  
   console.log("commit count found", Object.keys(commits).length)
+
+
+  const commitvals = Object.values(commits)
+  const promises2 = Array.from({ length: threadCount }, (_, i) => {
+    return hydrateBlobs(data, i, threadCount, commitvals)
+  });
+
+  await Promise.all(promises2)
+  
   return [data, Array.from(authors), commits]
 }
 
-async function hydrateBlobs(data: HydratedGitCommitObject) {
-  for (const commit of Object.values(commits)) {
+async function hydrateBlobs(data: HydratedGitCommitObject, startIndex: number, threads: number, commits: GitLogEntry[]) {
+  for (let i = startIndex; i < commits.length; i += threads) {
+    const commit = commits[i]
     for (const change of commit.fileChanges) {
       let recentChange = {path: change.path, timestamp: commit.time}
       // eslint-disable-next-line no-constant-condition
@@ -160,6 +168,9 @@ function getRecentRename(targetTimestamp: number, path: string) {
 function initially_mut(data: HydratedGitCommitObject) {
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
+  authors = new Set()
+  commits = {}
+  renamedFiles = new Map<string, {path: string, timestamp: number}[]>()
 
   addAuthorsField_mut(data.tree)
 }
