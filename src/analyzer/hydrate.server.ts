@@ -64,7 +64,7 @@ async function gatherCommitsInRange(start: number, end: number) {
       commits[hash] = { author, time, body, message, hash, coauthors, fileChanges }
     }
   }
-  console.log("done", start)
+  log.debug(`Finished thread at ${start}`)
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
