@@ -1,13 +1,14 @@
 import type {
   FileChange,
+  GitBlobObject,
   GitCommitObject,
   GitLogEntry,
+  GitTreeObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject,
-  Person,
 } from "./model"
-import { analyzeRenamedFile, lookupFileInTree } from "./util.server"
+import { analyzeRenamedFile } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
@@ -19,6 +20,7 @@ let commits: Record<string, GitLogEntry>
 let authors: Set<string>
 
 async function gatherCommitsInRange(start: number, end: number) {
+  log.debug(`Start thread at ${start}`)
   const maxCommitsPerRun = 20000
   for (let commitIndex = start; commitIndex < end; commitIndex += maxCommitsPerRun) {
     if (commitIndex > end) commitIndex = end;
@@ -97,12 +99,12 @@ export async function hydrateData(
   commit: GitCommitObject
 ): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
   const data = commit as HydratedGitCommitObject
-
+  const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  // const threadCount = Math.max(cpus().length - 2, 2);
-  const threadCount = 8
+  const threadCount = Math.min(Math.max(cpus().length - 2, 2), 8);
+  // const threadCount = 1
 
   const sectionSize = Math.ceil(commitCount / threadCount);
 
@@ -116,12 +118,12 @@ export async function hydrateData(
   await Promise.all(promises)
 
   const commitvals = Object.values(commits)
-  await hydrateBlobs(data, commitvals)
+  await hydrateBlobs(fileMap, commitvals)
   
   return [data, Array.from(authors), commits]
 }
 
-async function hydrateBlobs(data: HydratedGitCommitObject, commits: GitLogEntry[]) {
+async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: GitLogEntry[]) {
   for (const commit of commits) {
     for (const change of commit.fileChanges) {
       let recentChange = {path: change.path, timestamp: commit.time}
@@ -131,11 +133,28 @@ async function hydrateBlobs(data: HydratedGitCommitObject, commits: GitLogEntry[
         if (!rename) break
         recentChange = rename
       }
-      const blob = lookupFileInTree(data.tree, recentChange.path)
+      const blob = files.get(recentChange.path)
       if (!blob) continue
       await updateCreditOnBlob(blob as HydratedGitBlobObject, commit, change)
     }
   }
+}
+
+function convertFileTreeToMap(tree: GitTreeObject) {
+  const map = new Map<string, GitBlobObject>()
+
+  function aux(recTree: GitTreeObject) {
+    for (const child of recTree.children) {
+      if (child.type === "blob") {
+        map.set(child.path.substring(child.path.indexOf("/")+1), child)
+      } else {
+        aux(child)
+      }
+    }
+  }
+
+  aux(tree)
+  return map
 }
 
 function getRecentRename(targetTimestamp: number, path: string) {
