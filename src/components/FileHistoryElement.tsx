@@ -3,7 +3,7 @@ import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { useData } from "~/contexts/DataContext"
 import commitIcon from "~/assets/commit_icon.png"
-import type { AccordionData } from "./accordion/Accordion";
+import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
 
@@ -19,14 +19,14 @@ export function FileHistoryElement(props: props) {
 
   let fileCommits: GitLogEntry[] = []
   if (props.clickedObject.type === "blob") {
-      fileCommits = props.clickedObject.commits.map((c) => analyzerData.commits[ c ])
+    fileCommits = props.clickedObject.commits ? props.clickedObject.commits.map((c) => analyzerData.commits[c]) : []
   } else {
-      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
-        .map((c) => analyzerData.commits[ c ])
-        .sort((a, b) => b.time - a.time)
+    fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
+      .map((c) => analyzerData.commits[c])
+      .sort((a, b) => b.time - a.time)
   }
 
-  return <CommitHistory commits={ fileCommits } />
+  return <CommitHistory commits={fileCommits} />
 }
 
 interface CommitDistFragProps {
@@ -41,43 +41,43 @@ interface CommitDistFragProps {
 export function CommitDistFragment(props: CommitDistFragProps) {
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
-  const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
+  const cleanGroupItems: { [key: string]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
-  for (const [ key, values ] of Object.entries(cleanGroupItems)) {
+  for (const [key, values] of Object.entries(cleanGroupItems)) {
     items.push({
       title: key,
       content: (
         <>
-          { values.map((value: GitLogEntry) => {
+          {values.map((value: GitLogEntry) => {
             return (
-                <li
-                  className="cursor-auto"
-                  style={{listStyleImage: `url(${commitIcon})`}}
-                  onClick={ () => (props.handleOnClick ? props.handleOnClick(value) : null) }
-                  key={ value.hash + "--itemContentAccordion" }
-                >
-                  { value.message }
-                </li>
+              <li
+                className="cursor-auto"
+                style={{ listStyleImage: `url(${commitIcon})` }}
+                onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
+                key={value.hash + "--itemContentAccordion"}
+              >
+                {value.message}
+              </li>
             )
-          }) }
+          })}
         </>
       ),
     })
   }
 
   return (
-      <Fragment key={ items.length.toString() + sortMethod + props.commitCutoff.toString() + new Date().toDateString() }>
-        <Accordion
-          titleLabels={ true }
-          multipleOpen={ true }
-          openByDefault={ true }
-          items={ items }
-          itemsCutoff={ props.commitCutoff }
-          collapsed = {props.collapsed}
-          setCollapsed = { props.setCollapsed}
-        ></Accordion>
-      </Fragment>
+    <Fragment key={items.length.toString() + sortMethod + props.commitCutoff.toString() + new Date().toDateString()}>
+      <Accordion
+        titleLabels={true}
+        multipleOpen={true}
+        openByDefault={true}
+        items={items}
+        itemsCutoff={props.commitCutoff}
+        collapsed={props.collapsed}
+        setCollapsed={props.setCollapsed}
+      ></Accordion>
+    </Fragment>
   )
 }
 
@@ -106,22 +106,27 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
-        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
+        <CommitDistFragment
+          commitCutoff={collapsed ? commitCutoff : commits.length}
+          items={commits}
+          setCollapsed={setCollapsed}
+          collapsed
+        />
       </div>
     </>
   )
 }
 
-function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [ key: string ]: GitLogEntry[] } {
-  const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = {}
+function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [key: string]: GitLogEntry[] } {
+  const cleanGroupItems: { [key: string]: GitLogEntry[] } = {}
   switch (method) {
     case "author":
       items.map((commit) => {
         const author: string = commit.author
-        if (!cleanGroupItems[ author ]) {
-          cleanGroupItems[ author ] = []
+        if (!cleanGroupItems[author]) {
+          cleanGroupItems[author] = []
         }
-        cleanGroupItems[ author ].push(commit)
+        cleanGroupItems[author].push(commit)
         return commit
       })
       break
@@ -129,10 +134,10 @@ function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [ key:
     default:
       items.map((commit) => {
         const date: string = commit.time ? dateFormatLong(commit.time) : "unknown"
-        if (!cleanGroupItems[ date ]) {
-          cleanGroupItems[ date ] = []
+        if (!cleanGroupItems[date]) {
+          cleanGroupItems[date] = []
         }
-        cleanGroupItems[ date ].push(commit)
+        cleanGroupItems[date].push(commit)
         return commit
       })
   }

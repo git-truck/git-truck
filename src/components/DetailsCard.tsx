@@ -250,7 +250,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Commits
       </div>
-      <p className="break-all text-sm">{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</p>
+      <p className="break-all text-sm">{props.clickedBlob.noCommits ? props.clickedBlob.noCommits : 0}</p>
     </>
   )
 }

@@ -274,7 +274,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
-    const [hydratedRepoTree, authors, commits] = hydrateResult
+    const [hydratedRepoTree, authors] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -297,7 +297,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits,
+      commits: {}
     }
 
     if (!args.invalidateCache) {
