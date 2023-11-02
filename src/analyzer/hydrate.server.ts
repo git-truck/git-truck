@@ -16,10 +16,9 @@ import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
 
 let renamedFiles: Map<string, {path: string, timestamp: number}[]>
-let commits: Record<string, GitLogEntry>
 let authors: Set<string>
 
-async function gatherCommitsInRange(start: number, end: number) {
+async function gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
   log.debug(`Start thread at ${start}`)
   const maxCommitsPerRun = 20000
   for (let commitIndex = start; commitIndex < end; commitIndex += maxCommitsPerRun) {
@@ -61,17 +60,15 @@ async function gatherCommitsInRange(start: number, end: number) {
           fileChanges.push({isBinary, contribs, path: filePath})
         }
       }
-      commits[hash] = { author, time, body, message, hash, coauthors, fileChanges }
+      commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
     }
   }
   log.debug(`Finished thread at ${start}`)
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
-  await blob.mutex.acquire()
   try {
-    if (!blob.commits) blob.commits = []
-    blob.commits.push(commit.hash)
+    await blob.mutex.acquire()
     blob.noCommits = (blob.noCommits ?? 0) + 1
     if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
 
@@ -97,39 +94,41 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
 
 export async function hydrateData(
   commit: GitCommitObject
-): Promise<[HydratedGitCommitObject, string[], Record<string, GitLogEntry>]> {
+): Promise<[HydratedGitCommitObject, string[]]> {
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  const threadCount = Math.min(Math.max(cpus().length - 2, 2), 8);
-  // const threadCount = 1
+  // const threadCount = Math.min(Math.max(cpus().length - 2, 2), 8);
+  const threadCount = 4
 
   const sectionSize = Math.ceil(commitCount / threadCount);
+
+  const commits = new Map<string, GitLogEntry>()
 
   const promises = Array.from({ length: threadCount }, (_, i) => {
     const sectionStart = i * sectionSize;
     let sectionEnd = (i + 1) * sectionSize;
     if (sectionEnd > commitCount) sectionEnd = commitCount
-    return gatherCommitsInRange(sectionStart, sectionEnd);
+    return gatherCommitsInRange(sectionStart, sectionEnd, commits);
   });
 
   await Promise.all(promises)
 
-  const commitvals = Object.values(commits)
-  await hydrateBlobs(fileMap, commitvals)
+  await hydrateBlobs(fileMap, commits)
   
-  fileMap.forEach((blob, _) => {
-    (blob as HydratedGitBlobObject).commits.sort((a, b) => {
-      return commits[b].time - commits[a].time
-    })
-  })
-  return [data, Array.from(authors), commits]
+  // fileMap.forEach((blob, _) => {
+  //   (blob as HydratedGitBlobObject).commits.sort((a, b) => {
+  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //     return commits.get(b)!.time - commits.get(a)!.time
+  //   })
+  // })
+  return [data, Array.from(authors)]
 }
 
-async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: GitLogEntry[]) {
-  for (const commit of commits) {
+async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: Map<string, GitLogEntry>) {
+  for (const [_,commit] of commits) {
     for (const change of commit.fileChanges) {
       let recentChange = {path: change.path, timestamp: commit.time}
       // eslint-disable-next-line no-constant-condition
@@ -139,7 +138,9 @@ async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: GitLogEn
         recentChange = rename
       }
       const blob = files.get(recentChange.path)
-      if (!blob) continue
+      if (!blob) {
+        continue
+      }
       await updateCreditOnBlob(blob as HydratedGitBlobObject, commit, change)
     }
   }

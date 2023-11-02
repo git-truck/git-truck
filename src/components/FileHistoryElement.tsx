@@ -14,7 +14,7 @@ export function FileHistoryElement(props: props) {
 
   let fileCommits: GitLogEntry[] = []
   if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits.map((c) => analyzerData.commits[c])
+    fileCommits = props.clickedObject.commits ? props.clickedObject.commits.map((c) => analyzerData.commits[c]) : []
   } else {
     try {
       fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
