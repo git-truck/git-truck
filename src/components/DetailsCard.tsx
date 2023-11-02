@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Form, useLocation, useNavigation } from "@remix-run/react"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
+import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject, GitLogEntry } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -39,6 +39,10 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
+  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[]>([])
+  const [lastClicked, setLastClicked] = useState("")
+
+  const fetcher = useFetcher()
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -46,6 +50,19 @@ export function DetailsCard({
       isProcessingHideRef.current = false
     }
   }, [clickedObject, setClickedObject, state])
+
+  useEffect(() => {
+    if (clickedObject && clickedObject.path !== lastClicked) {
+      setLastClicked(clickedObject.path)
+      fetcher.load("/commits?path="+clickedObject.path)
+    }
+  }, [clickedObject])
+
+  useEffect(() => {
+    if(fetcher.state === "idle") {
+      console.log(fetcher.data)
+    }
+  }, [fetcher.state])
 
   useEffect(() => {
     // Update clickedObject if data changes
