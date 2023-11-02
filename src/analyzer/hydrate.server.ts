@@ -18,6 +18,47 @@ import { cpus } from "os"
 let renamedFiles: Map<string, {path: string, timestamp: number}[]>
 let authors: Set<string>
 
+export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>, handleAuthors: boolean) {
+  const matches = gitLogResult.matchAll(gitLogRegex)
+  for (const match of matches) {
+    const groups = match.groups ?? {}
+    const author = groups.author
+    const time = Number(groups.date)
+    const body = groups.body
+    const message = groups.message
+    const hash = groups.hash
+    const contributionsString = groups.contributions
+    const coauthors = body ? getCoAuthors(body) : []
+    const fileChanges: FileChange[] = []
+    
+    log.debug(`Checking commit from ${time}`)
+
+    if (handleAuthors) {
+      authors.add(author)
+      for (const coauthor of coauthors) authors.add(coauthor.name)
+    }
+
+    if (contributionsString) {
+      const contribMatches = contributionsString.matchAll(contribRegex)
+      for (const contribMatch of contribMatches) {
+        const file = contribMatch.groups?.file.trim()
+        const isBinary = contribMatch.groups?.insertions === "-"
+        if (!file) throw Error("file not found")
+
+
+        let filePath = file
+        if (file.includes("=>")) {
+          filePath = analyzeRenamedFile(filePath, renamedFiles, time)
+        }
+        
+        const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
+        fileChanges.push({isBinary, contribs, path: filePath})
+      }
+    }
+    commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
+  }
+}
+
 async function gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
   log.debug(`Start thread at ${start}`)
   const maxCommitsPerRun = 20000
@@ -26,42 +67,7 @@ async function gatherCommitsInRange(start: number, end: number, commits: Map<str
     const commitCountToGet = Math.min(end - commitIndex, maxCommitsPerRun)
     const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitCountToGet)
 
-    const matches = gitLogResult.matchAll(gitLogRegex)
-    for (const match of matches) {
-      const groups = match.groups ?? {}
-      const author = groups.author
-      const time = Number(groups.date)
-      const body = groups.body
-      const message = groups.message
-      const hash = groups.hash
-      const contributionsString = groups.contributions
-      const coauthors = body ? getCoAuthors(body) : []
-      const fileChanges: FileChange[] = []
-      
-      log.debug(`Checking commit from ${time}`)
-
-      authors.add(author)
-      for (const coauthor of coauthors) authors.add(coauthor.name)
-
-      if (contributionsString) {
-        const contribMatches = contributionsString.matchAll(contribRegex)
-        for (const contribMatch of contribMatches) {
-          const file = contribMatch.groups?.file.trim()
-          const isBinary = contribMatch.groups?.insertions === "-"
-          if (!file) throw Error("file not found")
-
-
-          let filePath = file
-          if (file.includes("=>")) {
-            filePath = analyzeRenamedFile(filePath, renamedFiles, time)
-          }
-          
-          const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({isBinary, contribs, path: filePath})
-        }
-      }
-      commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
-    }
+    gatherCommitsFromGitLog(gitLogResult, commits, true)
   }
   log.debug(`Finished thread at ${start}`)
 }
@@ -187,7 +193,6 @@ function initially_mut(data: HydratedGitCommitObject) {
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
   authors = new Set()
-  commits = {}
   renamedFiles = new Map<string, {path: string, timestamp: number}[]>()
 
   addAuthorsField_mut(data.tree)

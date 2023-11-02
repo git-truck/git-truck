@@ -54,7 +54,7 @@ export function DetailsCard({
   useEffect(() => {
     if (clickedObject && clickedObject.path !== lastClicked) {
       setLastClicked(clickedObject.path)
-      fetcher.load("/commits?path="+clickedObject.path)
+      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitsToShow.length}&count=${5}`)
     }
   }, [clickedObject])
 
