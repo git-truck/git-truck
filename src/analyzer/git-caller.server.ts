@@ -91,6 +91,25 @@ export class GitCaller {
     return await GitCaller._getRepositoryHead(this.repo)
   }
 
+  async getFileCommits(path: string, isFile: boolean, skip: number, count: number) {
+    if (!this.branch) throw Error("branch not set")
+    const args = [
+      "log",
+      `--skip=${skip}`,
+      `--max-count=${count}`,
+      this.branch,
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+    ]
+
+    if (isFile) {
+      args.push("--follow")
+    }
+
+    args.push(path)
+    const result = (await runProcess(this.repo, "git", args)) as string
+    return result.trim()
+  }
+
   static async _getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
     return result.trim()
