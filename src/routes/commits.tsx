@@ -18,12 +18,11 @@ export const loader = async ({ request }: LoaderArgs) => {
     const isFile = url.searchParams.get("isFile") === "true";
     const count = Number(url.searchParams.get("count"))
     const skip = Number(url.searchParams.get("skip"))
-    console.log("jeg er thomas", path, isFile)
     const commits = new Map<string, GitLogEntry>()
     if (path && !Number.isNaN(count) && !Number.isNaN(skip)) {
         const slicedPath = path.substring(path.indexOf("/")+1)
         if (skip === 0) {
-            totalCount = Number(await GitCaller.getInstance().getCommitCount(slicedPath))
+            totalCount = await GitCaller.getInstance().getCommitCount(slicedPath, isFile)
         }
         const gitLogResult = await GitCaller.getInstance().getFileCommits(slicedPath, isFile, skip, count)
         gatherCommitsFromGitLog(gitLogResult, commits, false)
