@@ -39,8 +39,11 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
-  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[]>([])
+  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[] | null>(null)
   const [lastClicked, setLastClicked] = useState("")
+  const [commitIndex, setCommitIndex] = useState(0)
+  const [moreCommitsAvailable, setMoreCommitsAvailable] = useState(true)
+  const commitIncrement = 5
 
   const fetcher = useFetcher()
 
@@ -54,14 +57,19 @@ export function DetailsCard({
   useEffect(() => {
     if (clickedObject && clickedObject.path !== lastClicked) {
       setLastClicked(clickedObject.path)
-      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitsToShow.length}&count=${5}`)
+      setCommitIndex(commitIndex+commitIncrement)
+      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
     }
   }, [clickedObject])
 
   useEffect(() => {
     if(fetcher.state === "idle") {
-      console.log(fetcher.data)
+      setCommitsToShow(fetcher.data)
+    } else if (fetcher.state === "loading") {
+      setCommitIndex(0)
+      setCommitsToShow(null)
     }
+    setMoreCommitsAvailable(commitsToShow !== null && commitsToShow?.length <= commitIndex)
   }, [fetcher.state])
 
   useEffect(() => {
@@ -142,7 +150,7 @@ export function DetailsCard({
           Group authors
         </button>
         <div className="card bg-white/70 text-black">
-          <FileHistoryElement state={state} clickedObject={clickedObject} />
+          <FileHistoryElement state={state} clickedObject={clickedObject} commits={commitsToShow} />
         </div>
       </div>
       <div className="flex gap-2">

@@ -1,31 +1,16 @@
-import type { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitLogEntry, HydratedGitObject } from "~/analyzer/model"
 import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
-import { useData } from "~/contexts/DataContext"
 import { ChevronButton } from "./ChevronButton"
 
 interface props {
   state: "idle" | "submitting" | "loading"
   clickedObject: HydratedGitObject
+  commits: GitLogEntry[] | null
 }
 
 export function FileHistoryElement(props: props) {
-  const { analyzerData } = useData()
-
-  let fileCommits: GitLogEntry[] = []
-  if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits ? props.clickedObject.commits.map((c) => analyzerData.commits[c]) : []
-  } else {
-    try {
-      fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
-        .map((c) => analyzerData.commits[c])
-        .sort((a, b) => b.time - a.time)
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
-  return <CommitHistory commits={fileCommits} />
+  return <CommitHistory commits={props.commits} />
 }
 
 interface CommitDistFragProps {
@@ -55,7 +40,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
+function CommitHistory(props: { commits: GitLogEntry[] | null}) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
@@ -66,9 +51,12 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
+        {props.commits !== null ? (
         <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
         </div>
+        ) : <h3>Loading commits...</h3>
+        }
       </>
     )
   }
@@ -91,23 +79,4 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
       </div>
     </>
   )
-}
-
-function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
-  const commitSet = new Set<string>()
-  subTree(tree)
-  function subTree(tree: HydratedGitTreeObject) {
-    for (const child of tree.children) {
-      if (!child) continue
-      if (child.type === "blob") {
-        if (!child.commits) continue
-        for (const commit of child.commits) {
-          commitSet.add(commit)
-        }
-      } else if (child.type === "tree") {
-        subTree(child)
-      }
-    }
-  }
-  return commitSet
 }
