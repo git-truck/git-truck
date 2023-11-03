@@ -283,7 +283,7 @@ export class GitCaller {
       `--max-count=${count}`,
       this.branch,
       "--numstat",
-      "--cc", // include file changes for merge commits
+      // "--cc", // include file changes for merge commits
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 
@@ -374,14 +374,16 @@ export class GitCaller {
     return result
   }
 
-  async getCommitCount(path?: string) {
+  async getCommitCount(path?: string, isFile?: boolean) {
     if (!this.branch) throw Error("Branch is undefined")
-    const args = ["rev-list", "--count", this.branch]
+    const args = ["log", this.branch, '--format="%at']
     if (path !== undefined) {
+      if (isFile) args.push("--follow")
+      args.push("--")
       args.push(path)
     }
-    const result = await runProcess(this.repo, "git", args)
-    return result as number
+    const result = await runProcess(this.repo, "git", args) as string
+    return result.split(/\s/).length
   }
 
   private async blame(path: string) {
