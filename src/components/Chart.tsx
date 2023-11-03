@@ -1,4 +1,3 @@
-import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
@@ -10,7 +9,7 @@ import type {
   HydratedGitTreeObject,
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useToggleableSpring, useComponentSize } from "~/hooks"
+import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
   estimatedLetterHeightForDirText,
@@ -260,7 +259,7 @@ function Path({
   className?: string
 }) {
   const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType } = useOptions()
+  const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
 
   const dProp = useMemo(() => {
     if (chartType === "BUBBLE_CHART") {
@@ -278,7 +277,7 @@ function Path({
     }
   }, [chartType, d])
 
-  const props = useToggleableSpring({
+  const props = {
     d: dProp,
     stroke: isSearchMatch ? searchMatchColor : "transparent",
     strokeWidth: "1px",
@@ -286,12 +285,13 @@ function Path({
     fill: isBlob(d.data)
       ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
       : "transparent",
-  })
+  }
 
   return (
-    <animated.path
+    <path
       {...props}
       className={clsx(className, {
+        "transition-all duration-500 ease-out": transitionsEnabled,
         "animate-stroke-pulse": isSearchMatch,
         "stroke-black/20": isTree(d.data),
       })}
@@ -312,30 +312,30 @@ function CircleText({
   const { authorshipType, metricType } = useOptions()
   const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
 
-  const props = useToggleableSpring({
+  const props = {
     d: circlePathFromCircle(d.x, d.y + estimatedLetterHeightForDirText - 1, d.r - yOffset),
-  })
+  }
 
-  const textProps = useToggleableSpring({
+  const textProps = {
     fill: isBlob(d.data)
       ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
       : "#333",
-  })
+  }
 
   return (
     <>
-      <animated.path {...props} id={d.data.path} className="pointer-events-none fill-none stroke-none" />
+      <path {...props} id={d.data.path} className="pointer-events-none fill-none stroke-none" />
       {isTree(d.data) ? (
-        <animated.text
+        <text
           className="pointer-events-none stroke-white stroke-[7px] font-mono text-sm font-bold"
           strokeLinecap="round"
         >
           <textPath startOffset="50%" dominantBaseline="central" textAnchor="middle" xlinkHref={`#${d.data.path}`}>
             {displayText}
           </textPath>
-        </animated.text>
+        </text>
       ) : null}
-      <animated.text {...textProps} className="pointer-events-none">
+      <text {...textProps} className="pointer-events-none">
         <textPath
           className={clsx("font-mono", className, {
             "text-sm font-bold": isTree(d.data),
@@ -348,7 +348,7 @@ function CircleText({
         >
           {displayText}
         </textPath>
-      </animated.text>
+      </text>
     </>
   )
 }
@@ -368,23 +368,23 @@ function RectText({
   const xOffset = isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX
   const yOffset = isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY
 
-  const props = useToggleableSpring({
+  const props = {
     x: d.x0 + xOffset,
     y: d.y0 + yOffset,
     fill: isBlob(d.data)
       ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
       : "#333",
-  })
+  }
 
   return (
-    <animated.text
+    <text
       {...props}
       className={clsx("pointer-events-none", className, {
         "font-bold": isTree(d.data),
       })}
     >
       {displayText}
-    </animated.text>
+    </text>
   )
 }
 
