@@ -12,6 +12,7 @@ type SortCommitsMethods = "date" | "author"
 interface props {
   state: "idle" | "submitting" | "loading"
   clickedObject: HydratedGitObject
+  commits: GitLogEntry[] | null
 }
 
 export function FileHistoryElement(props: props) {
@@ -26,7 +27,7 @@ export function FileHistoryElement(props: props) {
       .sort((a, b) => b.time - a.time)
   }
 
-  return <CommitHistory commits={fileCommits} />
+  return <CommitHistory commits={props.commits} />
 }
 
 interface CommitDistFragProps {
@@ -81,7 +82,7 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
+function CommitHistory(props: { commits: GitLogEntry[] | null }) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
@@ -91,9 +92,22 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        <div>
-          <p>No commits found</p>
-        </div>
+        {props.commits !== null ? (
+          <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
+            {commits.length > 0 ? (
+              <CommitDistFragment
+                collapsed={true}
+                setCollapsed={setCollapsed}
+                items={commits}
+                commitCutoff={commitCutoff}
+              />
+            ) : (
+              <p>No commits found</p>
+            )}
+          </div>
+        ) : (
+          <h3>Loading commits...</h3>
+        )}
       </>
     )
   }

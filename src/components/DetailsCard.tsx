@@ -41,8 +41,11 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
-  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[]>([])
+  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[] | null>(null)
   const [lastClicked, setLastClicked] = useState("")
+  const [commitIndex, setCommitIndex] = useState(0)
+  const [moreCommitsAvailable, setMoreCommitsAvailable] = useState(true)
+  const commitIncrement = 5
 
   const fetcher = useFetcher()
 
@@ -56,14 +59,23 @@ export function DetailsCard({
   useEffect(() => {
     if (clickedObject && clickedObject.path !== lastClicked) {
       setLastClicked(clickedObject.path)
-      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitsToShow.length}&count=${5}`)
+      setCommitIndex(commitIndex + commitIncrement)
+      fetcher.load(
+        `/commits?path=+${clickedObject.path}&isFile=${
+          clickedObject.type === "blob"
+        }&skip=${commitIndex}&count=${commitIncrement}`,
+      )
     }
   }, [clickedObject])
 
   useEffect(() => {
-    if(fetcher.state === "idle") {
-      console.log(fetcher.data)
+    if (fetcher.state === "idle") {
+      setCommitsToShow(fetcher.data)
+    } else if (fetcher.state === "loading") {
+      setCommitIndex(0)
+      setCommitsToShow(null)
     }
+    setMoreCommitsAvailable(commitsToShow !== null && commitsToShow?.length <= commitIndex)
   }, [fetcher.state])
 
   useEffect(() => {
@@ -114,6 +126,102 @@ export function DetailsCard({
           </span>
           <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
         </h2>
+        <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+          {isBlob ? (
+            <>
+              <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
+              <CommitsEntry clickedBlob={clickedObject} />
+              <LastchangedEntry clickedBlob={clickedObject} />
+            </>
+          ) : (
+            <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+          )}
+          <PathEntry path={clickedObject.path} />
+        </div>
+        <div className="card bg-white/70 text-black">
+          {isBlob ? (
+            <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
+          ) : (
+            <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+          )}
+        </div>
+        <button
+          className={clsx("btn", {
+            "btn--outlined--light": !lightBackground,
+            "btn--outlined": lightBackground,
+          })}
+          onClick={showUnionAuthorsModal}
+        >
+          <Icon path={mdiAccountMultiple} />
+          Group authors
+        </button>
+        <div className="card bg-white/70 text-black">
+          <FileHistoryElement state={state} clickedObject={clickedObject} commits={commitsToShow} />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        {isBlob ? (
+          <>
+            <Form className="w-max" method="post" action={location.pathname}>
+              <input type="hidden" name="ignore" value={clickedObject.path} />
+              <button
+                className={clsx("btn", {
+                  "btn--outlined--light": !lightBackground,
+                  "btn--outlined": lightBackground,
+                })}
+                type="submit"
+                disabled={state !== "idle"}
+                onClick={() => {
+                  isProcessingHideRef.current = true
+                }}
+                title="Hide this file"
+              >
+                <Icon path={mdiEyeOffOutline} />
+                Hide
+              </button>
+            </Form>
+            {clickedObject.name.includes(".") ? (
+              <Form className="w-max" method="post" action={location.pathname}>
+                <input type="hidden" name="ignore" value={`*.${extension}`} />
+                <button
+                  className={clsx("btn", {
+                    "btn--outlined--light": !lightBackground,
+                    "btn--outlined": lightBackground,
+                  })}
+                  type="submit"
+                  disabled={state !== "idle"}
+                  onClick={() => {
+                    isProcessingHideRef.current = true
+                  }}
+                >
+                  <Icon path={mdiEyeOffOutline} />
+                  <span>Hide .{extension} files</span>
+                </button>
+              </Form>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Form method="post" action={location.pathname}>
+              <input type="hidden" name="ignore" value={clickedObject.path} />
+              <button
+                className={clsx("btn", {
+                  "btn--outlined--light": !lightBackground,
+                  "btn--outlined": lightBackground,
+                })}
+                type="submit"
+                disabled={state !== "idle"}
+                onClick={() => {
+                  isProcessingHideRef.current = true
+                  setPath(OneFolderOut(path))
+                }}
+              >
+                <Icon path={mdiEyeOffOutline} />
+                Hide this folder
+              </button>
+            </Form>
+          </>
+        )}
       </div>
       <MenuTab lightBackground={lightBackground}>
         <MenuItem title="General">
@@ -148,7 +256,7 @@ export function DetailsCard({
               Group authors
             </button>
             <div className="card bg-white/70 text-black">
-              <FileHistoryElement state={state} clickedObject={clickedObject} />
+              <FileHistoryElement commits={commitsToShow} state={state} clickedObject={clickedObject} />
             </div>
           </div>
           <div className="mt-2 flex gap-2">
