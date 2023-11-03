@@ -6,13 +6,14 @@ import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
+import type { CommitsPayload } from "~/routes/commits"
 
 type SortCommitsMethods = "date" | "author"
 
 interface props {
   state: "idle" | "submitting" | "loading"
   clickedObject: HydratedGitObject
-  commits: GitLogEntry[] | null
+  commitsPayload: CommitsPayload | null
 }
 
 export function FileHistoryElement(props: props) {
@@ -27,7 +28,7 @@ export function FileHistoryElement(props: props) {
       .sort((a, b) => b.time - a.time)
   }
 
-  return <CommitHistory commits={props.commits} />
+  return <CommitHistory commitsPayload={props.commitsPayload} />
 }
 
 interface CommitDistFragProps {
@@ -82,21 +83,21 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: { commits: GitLogEntry[] | null }) {
+function CommitHistory(props: { commitsPayload: CommitsPayload | null }) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const commits = props.commits ?? []
+  const commits = props.commitsPayload ? props.commitsPayload.commits : []
   const commitCutoff = 3
 
   if (commits.length == 0) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        {props.commits !== null ? (
+        {props.commitsPayload !== null ? (
           <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
             {commits.length > 0 ? (
               <CommitDistFragment
-                collapsed={true}
+                collapsed={collapsed}
                 setCollapsed={setCollapsed}
                 items={commits}
                 commitCutoff={commitCutoff}
