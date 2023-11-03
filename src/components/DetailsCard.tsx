@@ -16,6 +16,7 @@ import { Icon } from "@mdi/react"
 import { FileHistoryElement } from "./FileHistoryElement"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
+import type { CommitsPayload } from "~/routes/commits"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -39,10 +40,9 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
-  const [commitsToShow, setCommitsToShow] = useState<GitLogEntry[] | null>(null)
+  const [commitsPayload, setCommitsPayload] = useState<CommitsPayload | null>(null)
   const [lastClicked, setLastClicked] = useState("")
   const [commitIndex, setCommitIndex] = useState(0)
-  const [moreCommitsAvailable, setMoreCommitsAvailable] = useState(true)
   const commitIncrement = 5
 
   const fetcher = useFetcher()
@@ -64,12 +64,11 @@ export function DetailsCard({
 
   useEffect(() => {
     if(fetcher.state === "idle") {
-      setCommitsToShow(fetcher.data)
+      setCommitsPayload(fetcher.data)
     } else if (fetcher.state === "loading") {
       setCommitIndex(0)
-      setCommitsToShow(null)
+      setCommitsPayload(null)
     }
-    setMoreCommitsAvailable(commitsToShow !== null && commitsToShow?.length <= commitIndex)
   }, [fetcher.state])
 
   useEffect(() => {
@@ -150,7 +149,7 @@ export function DetailsCard({
           Group authors
         </button>
         <div className="card bg-white/70 text-black">
-          <FileHistoryElement state={state} clickedObject={clickedObject} commits={commitsToShow} />
+          <FileHistoryElement state={state} clickedObject={clickedObject} commitsPayload={commitsPayload} />
         </div>
       </div>
       <div className="flex gap-2">

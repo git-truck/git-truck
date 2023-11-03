@@ -374,9 +374,13 @@ export class GitCaller {
     return result
   }
 
-  async getCommitCount() {
+  async getCommitCount(path?: string) {
     if (!this.branch) throw Error("Branch is undefined")
-    const result = await runProcess(this.repo, "git", ["rev-list", "--count", this.branch])
+    const args = ["rev-list", "--count", this.branch]
+    if (path !== undefined) {
+      args.push(path)
+    }
+    const result = await runProcess(this.repo, "git", args)
     return result as number
   }
 

@@ -2,15 +2,16 @@ import type { GitLogEntry, HydratedGitObject } from "~/analyzer/model"
 import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { ChevronButton } from "./ChevronButton"
+import type { CommitsPayload } from "~/routes/commits"
 
 interface props {
   state: "idle" | "submitting" | "loading"
   clickedObject: HydratedGitObject
-  commits: GitLogEntry[] | null
+  commitsPayload: CommitsPayload | null
 }
 
 export function FileHistoryElement(props: props) {
-  return <CommitHistory commits={props.commits} />
+  return <CommitHistory commitsPayload={props.commitsPayload} />
 }
 
 interface CommitDistFragProps {
@@ -40,10 +41,10 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: { commits: GitLogEntry[] | null}) {
+function CommitHistory(props: { commitsPayload: CommitsPayload | null}) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const commits = props.commits ?? []
+  const commits = (props.commitsPayload) ? props.commitsPayload.commits : []
   const commitCutoff = 2
 
   const lessThanCutOff = commits.length <= commitCutoff + 1
@@ -51,7 +52,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | null}) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        {props.commits !== null ? (
+        {props.commitsPayload !== null ? (
         <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
           {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
         </div>
