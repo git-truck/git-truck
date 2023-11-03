@@ -2,6 +2,7 @@ import type { LoaderArgs } from "@remix-run/node"
 import { GitCaller } from "~/analyzer/git-caller.server";
 import { gatherCommitsFromGitLog } from "~/analyzer/hydrate.server";
 import type { GitLogEntry } from "~/analyzer/model";
+import { getSeparator } from "~/util";
 
 export interface CommitsPayload {
     totalCount: number,
@@ -20,7 +21,10 @@ export const loader = async ({ request }: LoaderArgs) => {
     const skip = Number(url.searchParams.get("skip"))
     const commits = new Map<string, GitLogEntry>()
     if (path && !Number.isNaN(count) && !Number.isNaN(skip)) {
-        const slicedPath = path.substring(path.indexOf("/")+1)
+        const sep = getSeparator(path)
+        const split = path.split(sep)
+        split.shift()
+        const slicedPath = "." + sep + split.join(sep)
         if (skip === 0) {
             totalCount = await GitCaller.getInstance().getCommitCount(slicedPath, isFile)
         }

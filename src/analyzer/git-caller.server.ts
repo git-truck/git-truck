@@ -376,8 +376,8 @@ export class GitCaller {
 
   async getCommitCount(path?: string, isFile?: boolean) {
     if (!this.branch) throw Error("Branch is undefined")
-    const args = ["log", this.branch, '--format="%at']
-    if (path !== undefined) {
+    const args = ["log", this.branch, '--format="%at"']
+    if (path) {
       if (isFile) args.push("--follow")
       args.push("--")
       args.push(path)
