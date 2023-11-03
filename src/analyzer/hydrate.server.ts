@@ -121,7 +121,7 @@ export async function hydrateData(
   await hydrateBlobs(fileMap, commitvals)
   
   fileMap.forEach((blob, _) => {
-    (blob as HydratedGitBlobObject).commits.sort((a, b) => {
+    (blob as HydratedGitBlobObject).commits?.sort((a, b) => {
       return commits[b].time - commits[a].time
     })
   })
