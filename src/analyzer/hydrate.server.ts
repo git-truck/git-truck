@@ -73,6 +73,7 @@ async function gatherCommitsInRange(start: number, end: number, commits: Map<str
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
+  if (!blob.mutex) return
   try {
     await blob.mutex.acquire()
     blob.noCommits = (blob.noCommits ?? 0) + 1
@@ -123,6 +124,7 @@ export async function hydrateData(
   await Promise.all(promises)
 
   await hydrateBlobs(fileMap, commits)
+  cleanUpMutexes(fileMap)
   
   // fileMap.forEach((blob, _) => {
   //   (blob as HydratedGitBlobObject).commits.sort((a, b) => {
@@ -131,6 +133,12 @@ export async function hydrateData(
   //   })
   // })
   return [data, Array.from(authors)]
+}
+
+function cleanUpMutexes(fileMap: Map<string, GitBlobObject>) {
+  fileMap.forEach((blob,_) => {
+    blob.mutex = undefined
+  })
 }
 
 async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: Map<string, GitLogEntry>) {
