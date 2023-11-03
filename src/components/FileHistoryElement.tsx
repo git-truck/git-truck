@@ -2,7 +2,12 @@ import type { GitLogEntry, HydratedGitObject, HydratedGitTreeObject } from "~/an
 import { Fragment, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
 import { useData } from "~/contexts/DataContext"
+import commitIcon from "~/assets/commit_icon.png"
+import type { AccordionData } from "./accordion/Accordion";
+import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
+
+export type SortCommitsMethods = "date" | "author"
 
 interface props {
   state: "idle" | "submitting" | "loading"
@@ -14,44 +19,64 @@ export function FileHistoryElement(props: props) {
 
   let fileCommits: GitLogEntry[] = []
   if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits.map((c) => analyzerData.commits[c])
+      fileCommits = props.clickedObject.commits.map((c) => analyzerData.commits[ c ])
   } else {
-    try {
       fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
-        .map((c) => analyzerData.commits[c])
+        .map((c) => analyzerData.commits[ c ])
         .sort((a, b) => b.time - a.time)
-    } catch (e) {
-      console.log(e)
-    }
   }
 
-  return <CommitHistory commits={fileCommits} />
+  return <CommitHistory commits={ fileCommits } />
 }
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
-  show: boolean
+  commitCutoff: number
+  sortBy?: SortCommitsMethods
+  handleOnClick?: (commit: GitLogEntry) => void
 }
 
 export function CommitDistFragment(props: CommitDistFragProps) {
-  if (!props.show) return null
+  if (!props.items) return null
+  const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
+
+  const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
+
+  const items: Array<AccordionData> = new Array<AccordionData>()
+  for (const [ key, values ] of Object.entries(cleanGroupItems)) {
+    items.push({
+      title: key,
+      content: (
+        <>
+          { values.map((value: GitLogEntry) => {
+            return (
+              <>
+                <li
+                  className="cursor-auto"
+                  style={{listStyleImage: `url(${commitIcon})`}}
+                  onClick={ () => (props.handleOnClick ? props.handleOnClick(value) : null) }
+                  key={ value.time + value.message + "--itemContentAccordion" }
+                >
+                  { value.message }
+                </li>
+              </>
+            )
+          }) }
+        </>
+      ),
+    })
+  }
 
   return (
-    <>
-      {props.items.map((commit) => {
-        return (
-          <Fragment key={commit.time.toString() + commit.message}>
-            <span
-              className="overflow-hidden overflow-ellipsis whitespace-pre text-sm font-bold opacity-80"
-              title={commit.message + " (" + commit.author + ")"}
-            >
-              {commit.message}
-            </span>
-            <p className="break-all text-right text-sm">{dateFormatLong(commit.time)}</p>
-          </Fragment>
-        )
-      })}
-    </>
+      <Fragment key={ items.length.toString() + sortMethod + props.commitCutoff.toString() + new Date().toDateString() }>
+        <Accordion
+          titleLabels={ true }
+          multipleOpen={ true }
+          openByDefault={ true }
+          items={ items }
+          itemsCutoff={ props.commitCutoff }
+        ></Accordion>
+      </Fragment>
   )
 }
 
@@ -59,15 +84,14 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = props.commits ?? []
-  const commitCutoff = 2
+  const commitCutoff = 3
 
-  const lessThanCutOff = commits.length <= commitCutoff + 1
-  if (lessThanCutOff) {
+  if (commits.length == 0) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
-          {commits.length > 0 ? <CommitDistFragment show={true} items={commits} /> : <p>No commits found</p>}
+        <div>
+          <p>No commits found</p>
         </div>
       </>
     )
@@ -75,22 +99,43 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
   return (
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
-        <label className="label grow" htmlFor={commitHistoryExpandId}>
+        <label className="label grow">
           <h3 className="font-bold">Commit history</h3>
         </label>
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
-      <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
-        <CommitDistFragment show={true} items={commits.slice(0, commitCutoff)} />
-        <CommitDistFragment show={!collapsed} items={commits.slice(commitCutoff)} />
-        {collapsed ? (
-          <button className="text-left text-xs opacity-70 hover:opacity-100" onClick={() => setCollapsed(!collapsed)}>
-            + {commits.slice(commitCutoff).length} more
-          </button>
-        ) : null}
+      <div>
+        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } />
       </div>
     </>
   )
+}
+
+function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [ key: string ]: GitLogEntry[] } {
+  const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = {}
+  switch (method) {
+    case "author":
+      items.map((commit) => {
+        const author: string = commit.author
+        if (!cleanGroupItems[ author ]) {
+          cleanGroupItems[ author ] = []
+        }
+        cleanGroupItems[ author ].push(commit)
+        return commit
+      })
+      break
+    case "date":
+    default:
+      items.map((commit) => {
+        const date: string = dateFormatLong(commit.time)
+        if (!cleanGroupItems[ date ]) {
+          cleanGroupItems[ date ] = []
+        }
+        cleanGroupItems[ date ].push(commit)
+        return commit
+      })
+  }
+  return cleanGroupItems
 }
 
 function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
