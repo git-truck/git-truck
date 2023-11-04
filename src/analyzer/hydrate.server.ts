@@ -109,21 +109,25 @@ export async function hydrateData(
   const commitCount = await GitCaller.getInstance().getCommitCount()
   // const threadCount = Math.min(Math.max(cpus().length - 2, 2), 8);
   const threadCount = 4
+  const commitBundleSize = 100000
 
-  const sectionSize = Math.ceil(commitCount / threadCount);
-
-  const commits = new Map<string, GitLogEntry>()
-
-  const promises = Array.from({ length: threadCount }, (_, i) => {
-    const sectionStart = i * sectionSize;
-    let sectionEnd = (i + 1) * sectionSize;
-    if (sectionEnd > commitCount) sectionEnd = commitCount
-    return gatherCommitsInRange(sectionStart, sectionEnd, commits);
-  });
-
-  await Promise.all(promises)
-
-  await hydrateBlobs(fileMap, commits)
+  for (let index = 0; index < commitCount; index += commitBundleSize) {
+    const runCountCommit = Math.min(commitBundleSize, commitCount - index)
+    const sectionSize = Math.ceil(runCountCommit / threadCount);
+    
+    const commits = new Map<string, GitLogEntry>()
+      
+    const promises = Array.from({ length: threadCount }, (_, i) => {
+      const sectionStart = index + i * sectionSize;
+      let sectionEnd = sectionStart + sectionSize;
+      if (sectionEnd > commitCount) sectionEnd = runCountCommit
+      return gatherCommitsInRange(sectionStart, sectionEnd, commits);
+    });
+    
+    await Promise.all(promises)
+    
+    await hydrateBlobs(fileMap, commits)
+  }
   cleanUpMutexes(fileMap)
   
   // fileMap.forEach((blob, _) => {
