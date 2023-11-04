@@ -60,16 +60,8 @@ export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<strin
 }
 
 async function gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
-  log.debug(`Start thread at ${start}`)
-  const maxCommitsPerRun = 20000
-  for (let commitIndex = start; commitIndex < end; commitIndex += maxCommitsPerRun) {
-    if (commitIndex > end) commitIndex = end;
-    const commitCountToGet = Math.min(end - commitIndex, maxCommitsPerRun)
-    const gitLogResult = await GitCaller.getInstance().gitLog(commitIndex, commitCountToGet)
-
+    const gitLogResult = await GitCaller.getInstance().gitLog(start, end - start)
     gatherCommitsFromGitLog(gitLogResult, commits, true)
-  }
-  log.debug(`Finished thread at ${start}`)
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
@@ -107,10 +99,10 @@ export async function hydrateData(
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  // const threadCount = Math.min(Math.max(cpus().length - 2, 2), 8);
-  const threadCount = 4
+  const threadCount = cpus().length > 4 ? 4 : 2;
   const commitBundleSize = 100000
 
+  // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
     const sectionSize = Math.ceil(runCountCommit / threadCount);
@@ -121,21 +113,17 @@ export async function hydrateData(
       const sectionStart = index + i * sectionSize;
       let sectionEnd = sectionStart + sectionSize;
       if (sectionEnd > commitCount) sectionEnd = runCountCommit
+      log.info("start thread " + sectionStart + "-" + sectionEnd)
       return gatherCommitsInRange(sectionStart, sectionEnd, commits);
     });
     
     await Promise.all(promises)
     
     await hydrateBlobs(fileMap, commits)
+    log.info("threads synced")
   }
   cleanUpMutexes(fileMap)
   
-  // fileMap.forEach((blob, _) => {
-  //   (blob as HydratedGitBlobObject).commits.sort((a, b) => {
-  //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  //     return commits.get(b)!.time - commits.get(a)!.time
-  //   })
-  // })
   return [data, Array.from(authors)]
 }
 
