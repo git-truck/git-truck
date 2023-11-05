@@ -2,7 +2,7 @@ import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
 import { memo, useEffect, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
-import type { ActionFunction, LoaderArgs } from "@remix-run/node"
+import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
@@ -23,7 +23,7 @@ import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
-import { mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
+import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
 import { Chart } from "~/components/Chart"
@@ -32,7 +32,6 @@ import { useClient } from "~/hooks"
 import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
-import { mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 
 let invalidateCache = false
 
@@ -46,7 +45,7 @@ export interface RepoData {
   }
 }
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
@@ -63,7 +62,7 @@ export const loader = async ({ params }: LoaderArgs) => {
   }
 
   const analyzerData = await analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
+    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? [])),
   )
 
   invalidateCache = false
@@ -246,25 +245,33 @@ export default function Repo() {
   return (
     <Providers data={data}>
       <div className={`app-container ${defineTheContainerClass()}`}>
-        <aside className={clsx("flex flex-col gap-2 p-2 pl-0", {
+        <aside
+          className={clsx("flex flex-col gap-2 p-2 pl-0", {
             "overflow-y-auto": !isFullscreen,
-          })}>
+          })}
+        >
           {!isFullscreen ? (
-          <div className="absolute z-10">
-            <div onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)} className={clsx("absolute top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500", {
-              "left-arrow-space": !isLeftPanelCollapse
-            })}>
-              <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
+            <div className="absolute z-10">
+              <div
+                onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
+                className={clsx(
+                  "absolute top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white",
+                  {
+                    "left-arrow-space": !isLeftPanelCollapse,
+                  },
+                )}
+              >
+                <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
+              </div>
             </div>
-          </div>
           ) : null}
           {!isLeftPanelCollapse ? (
-          <>
-            <GlobalInfo />
-            <Options />
-            {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-            <SearchCard />
-          </>
+            <>
+              <GlobalInfo />
+              <Options />
+              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              <SearchCard />
+            </>
           ) : null}
         </aside>
 
@@ -276,31 +283,36 @@ export default function Repo() {
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
         </main>
 
-        <aside className={clsx("flex flex-col gap-2 p-2 pl-0", {
+        <aside
+          className={clsx("flex flex-col gap-2 p-2 pl-0", {
             "overflow-y-auto": !isFullscreen,
-          })}>
+          })}
+        >
           {!isFullscreen ? (
-          <div className="absolute z-10">
-            <div onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)} className="absolute right-0 top-half-screen rounded-full bg-white w-8 h-8 flex items-center cursor-pointer justify-center border-solid border-2 border-sky-500">
-              <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
+            <div className="absolute z-10">
+              <div
+                onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
+                className="absolute right-0 top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white"
+              >
+                <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
+              </div>
             </div>
-          </div>
           ) : null}
           {!isRightPanelCollapse ? (
-          <>
-            {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
-              <UpdateNotifier />
-            ) : null}
-            <DetailsCard
-              className={clsx({
-                "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                  isFullscreen,
-              })}
-              showUnionAuthorsModal={showUnionAuthorsModal}
-            />
-            <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-            <FeedbackCard />
-          </>
+            <>
+              {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
+                <UpdateNotifier />
+              ) : null}
+              <DetailsCard
+                className={clsx({
+                  "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                    isFullscreen,
+                })}
+                showUnionAuthorsModal={showUnionAuthorsModal}
+              />
+              <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+              <FeedbackCard />
+            </>
           ) : null}
         </aside>
       </div>
@@ -348,7 +360,7 @@ function ChartWrapper({
       <Chart setHoveredObject={setHoveredObject} />
       {createPortal(
         <Tooltip hoveredObject={hoveredObject} x={mouse.docX} y={mouse.docY} w={window.innerWidth} />,
-        document.body
+        document.body,
       )}
     </div>
   )

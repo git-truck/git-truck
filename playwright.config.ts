@@ -49,7 +49,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: `node . --log info --headless --invalidate-cache`,
+    command: `./cli.js --log info --headless --invalidate-cache`,
     url: "http://127.0.0.1:3000",
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
