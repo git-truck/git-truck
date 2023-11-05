@@ -79,7 +79,7 @@ function Accordion({
 
 export function ShowMoreLabel(props: ShowMoreLabelProps) {
   if (!props.show) return null
-  return <span className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer" onClick={props.toggle}>+{props.items.length} day{props.items.length > 1 ? "s" : ""} more</span>
+  return <span className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer" onClick={props.toggle}>+{props.items.length} more day{props.items.length > 1 ? "s" : ""}</span>
 }
 
 export default Accordion
