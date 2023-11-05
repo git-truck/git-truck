@@ -21,6 +21,8 @@ function Accordion({
   titleLabels,
   currentState,
   actionClickLabels,
+  setCollapsed,
+  collapsed
 }: {
   items: Array<AccordionData>
   itemsCutoff: number
@@ -29,9 +31,10 @@ function Accordion({
   titleLabels?: boolean
   currentState?: Array<boolean>
   actionClickLabels?: (id: number) => void
+  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
+  collapsed: boolean
 }) {
   const [currentIdx, setCurrentIdx] = useState(new Array<number>())
-  const [showFullList, setShowFullList] = useState(false)
   const btnOnClick = (idx: number) => {
     multipleOpen
       ? setCurrentIdx((currentValue) =>
@@ -39,7 +42,7 @@ function Accordion({
         )
       : setCurrentIdx((currentValue) => (currentValue.includes(idx) ? [] : [idx]))
   }
-  const cutItems = showFullList ? items : items.slice(0, itemsCutoff)
+  const cutItems = !collapsed ? items : items.slice(0, itemsCutoff)
   if (openByDefault && !multipleOpen) {
     setCurrentIdx([0]);
   }
@@ -66,9 +69,9 @@ function Accordion({
         </>
       ))}
       <ShowMoreLabel
-        show={!showFullList && items.length > itemsCutoff}
+        show={collapsed && items.length > itemsCutoff}
         items={items.slice(itemsCutoff)}
-        toggle={() => setShowFullList(!showFullList)}
+        toggle={() => setCollapsed(!collapsed)}
       />
     </ul>
   )
@@ -76,7 +79,7 @@ function Accordion({
 
 export function ShowMoreLabel(props: ShowMoreLabelProps) {
   if (!props.show) return null
-  return <span className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer" onClick={props.toggle}>+{props.items.length} day(s) more</span>
+  return <span className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer" onClick={props.toggle}>+{props.items.length} more day{props.items.length > 1 ? "s" : ""}</span>
 }
 
 export default Accordion

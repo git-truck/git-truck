@@ -34,6 +34,8 @@ interface CommitDistFragProps {
   commitCutoff: number
   sortBy?: SortCommitsMethods
   handleOnClick?: (commit: GitLogEntry) => void
+  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
+  collapsed: boolean
 }
 
 export function CommitDistFragment(props: CommitDistFragProps) {
@@ -75,6 +77,8 @@ export function CommitDistFragment(props: CommitDistFragProps) {
           openByDefault={ true }
           items={ items }
           itemsCutoff={ props.commitCutoff }
+          collapsed = {props.collapsed}
+          setCollapsed = { props.setCollapsed}
         ></Accordion>
       </Fragment>
   )
@@ -105,7 +109,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
-        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } />
+        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
       </div>
     </>
   )
