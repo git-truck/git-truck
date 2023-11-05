@@ -81,7 +81,7 @@ function ColorMetricDependentInfo(props: {
     case "MOST_COMMITS":
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
-      return `${noCommits} commit${noCommits > 1 ? "s" : null}`
+      return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
     case "LAST_CHANGED":
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
