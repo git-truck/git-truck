@@ -103,7 +103,7 @@ function CommitHistory(props: { commits: GitLogEntry[] | undefined }) {
   return (
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
-        <label className="label grow">
+        <label className="label grow" htmlFor={commitHistoryExpandId}>
           <h3 className="font-bold">Commit history</h3>
         </label>
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
