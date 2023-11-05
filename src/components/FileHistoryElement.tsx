@@ -11,13 +11,12 @@ import type { CommitsPayload } from "~/routes/commits"
 export type SortCommitsMethods = "date" | "author"
 
 interface props {
-  state: "idle" | "submitting" | "loading"
-  clickedObject: HydratedGitObject
   commitsPayload: CommitsPayload | null
+  commitCutoff: number
 }
 
 export function FileHistoryElement(props: props) {
-  return <CommitHistory commitsPayload={props.commitsPayload} />
+  return <CommitHistory commitsPayload={props.commitsPayload} commitCutoff={props.commitCutoff}/>
 }
 
 interface CommitDistFragProps {
@@ -75,11 +74,10 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: { commitsPayload: CommitsPayload | null}) {
+function CommitHistory(props: props) {
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const commits = (props.commitsPayload) ? props.commitsPayload.commits : []
-  const commitCutoff = 2
 
   if (commits.length == 0) {
     return (
@@ -87,7 +85,7 @@ function CommitHistory(props: { commitsPayload: CommitsPayload | null}) {
         <h3 className="font-bold">Commit history</h3>
         {props.commitsPayload !== null ? (
         <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
-          {commits.length > 0 ? <CommitDistFragment commitCutoff={commitCutoff} collapsed setCollapsed={setCollapsed} items={commits} /> : <p>No commits found</p>}
+          {commits.length > 0 ? <CommitDistFragment commitCutoff={props.commitCutoff} collapsed setCollapsed={setCollapsed} items={commits} /> : <p>No commits found</p>}
         </div>
         ) : <h3>Loading commits...</h3>
         }
@@ -103,7 +101,7 @@ function CommitHistory(props: { commitsPayload: CommitsPayload | null}) {
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
-        <CommitDistFragment commitCutoff={ collapsed ? commitCutoff : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
+        <CommitDistFragment commitCutoff={ collapsed ? props.commitCutoff : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
       </div>
     </>
   )
