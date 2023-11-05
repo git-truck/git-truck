@@ -155,7 +155,7 @@ export function DetailsCard({
           Group authors
         </button>
         <div className="card bg-white/70 text-black">
-          <FileHistoryElement state={state} clickedObject={clickedObject} commitsPayload={commitsPayload} />
+          <FileHistoryElement commitsPayload={commitsPayload} commitCutoff={commitIncrement}/>
         </div>
       </div>
       <div className="flex gap-2">

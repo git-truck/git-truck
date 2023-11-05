@@ -11,23 +11,11 @@ import type { CommitsPayload } from "~/routes/commits"
 type SortCommitsMethods = "date" | "author"
 
 interface props {
-  state: "idle" | "submitting" | "loading"
-  clickedObject: HydratedGitObject
   commitsPayload: CommitsPayload | null
+  commitCutoff: number
 }
 
 export function FileHistoryElement(props: props) {
-  const { analyzerData } = useData()
-
-  let fileCommits: GitLogEntry[] = []
-  if (props.clickedObject.type === "blob") {
-    fileCommits = props.clickedObject.commits ? props.clickedObject.commits.map((c) => analyzerData.commits[c]) : []
-  } else {
-    fileCommits = Array.from(calculateCommitsForSubTree(props.clickedObject))
-      .map((c) => analyzerData.commits[c])
-      .sort((a, b) => b.time - a.time)
-  }
-
   return <CommitHistory commitsPayload={props.commitsPayload} />
 }
 
@@ -96,12 +84,7 @@ function CommitHistory(props: { commitsPayload: CommitsPayload | null }) {
         {props.commitsPayload !== null ? (
           <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
             {commits.length > 0 ? (
-              <CommitDistFragment
-                collapsed={collapsed}
-                setCollapsed={setCollapsed}
-                items={commits}
-                commitCutoff={commitCutoff}
-              />
+              <CommitDistFragment commitCutoff={commitCutoff} collapsed setCollapsed={setCollapsed} items={commits} />
             ) : (
               <p>No commits found</p>
             )}
