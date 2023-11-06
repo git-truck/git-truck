@@ -52,16 +52,14 @@ export function CommitDistFragment(props: CommitDistFragProps) {
         <>
           { values.map((value: GitLogEntry) => {
             return (
-              <>
                 <li
                   className="cursor-auto"
                   style={{listStyleImage: `url(${commitIcon})`}}
                   onClick={ () => (props.handleOnClick ? props.handleOnClick(value) : null) }
-                  key={ value.time + value.message + "--itemContentAccordion" }
+                  key={ value.hash + "--itemContentAccordion" }
                 >
                   { value.message }
                 </li>
-              </>
             )
           }) }
         </>

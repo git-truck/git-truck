@@ -49,7 +49,6 @@ function Accordion({
   return (
     <ul className="block m-0 pl-4 overflow-x-hidden">
       {cutItems.map((item, idx) => (
-        <>
           <AccordionItem
             key={item.title + idx + "--accordion"}
             data={item}
@@ -66,7 +65,6 @@ function Accordion({
               if (actionClickLabels) actionClickLabels(idx);
             }}
           />
-        </>
       ))}
       <ShowMoreLabel
         show={collapsed && items.length > itemsCutoff}
