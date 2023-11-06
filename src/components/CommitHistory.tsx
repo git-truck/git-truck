@@ -1,11 +1,10 @@
-import type { GitLogEntry } from "~/analyzer/model"
-import { Fragment, useEffect, useId, useState } from "react"
+import type { GitLogEntry, HydratedGitBlobObject } from "~/analyzer/model"
+import { Fragment, useEffect, useId, useLayoutEffect, useState } from "react"
 import { dateFormatLong } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion";
 import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
-import type { CommitsPayload } from "~/routes/commits"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext";
 
@@ -72,36 +71,43 @@ export function CommitHistory() {
   const [commitIndex, setCommitIndex] = useState(0)
   const commitIncrement = 5
   const { clickedObject } = useClickedObject()
-
   const fetcher = useFetcher()
+  function requestCommits() {
+    const hashes = (clickedObject as HydratedGitBlobObject).commitsNoTime?.slice(commitIndex, commitIndex + commitIncrement) ?? []
+    fetcher.load(`/commits?commits=${hashes.join(",")}`)
+  }
 
   useEffect(() => {
     if (clickedObject && clickedObject.path !== lastClicked) {
       setLastClicked(clickedObject.path)
       setCommits(null)
+      if (clickedObject.type === "tree") return
       setCommitIndex(0)
+      requestCommits()
     }
   }, [clickedObject])
 
-  useEffect(() => {
-    if (!clickedObject) return 
-    fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
+  useLayoutEffect(() => {
+    if (!clickedObject || commitIndex === 0) return 
+    requestCommits()
   }, [commitIndex])
 
   useEffect(() => {
     if(fetcher.state === "idle") {
-      const data = fetcher.data as CommitsPayload
+      const data = fetcher.data as GitLogEntry[] | undefined | null
       if (!data) return
       if (!commits || commits.length === 0) {
-        setCommits(data.commits)
+        setCommits(data)
       } else {
-        setCommits([...commits, ...data.commits])
+        setCommits([...commits, ...data])
       }
     }
   }, [fetcher.state])
   
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
+
+  if (!clickedObject || clickedObject.type !== "blob") return null
 
   if (!commits) {
     return (
@@ -127,7 +133,7 @@ export function CommitHistory() {
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
         <label className="label grow">
-          <h3 className="font-bold">Commit history</h3>
+          <h3 className="font-bold">Commit history ({Math.min(clickedObject.noCommits,commitIndex + commitIncrement)} of {clickedObject.noCommits} shown)</h3>
         </label>
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
@@ -146,25 +152,23 @@ function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [ key:
   const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = {}
   switch (method) {
     case "author":
-      items.map((commit) => {
+      for (const commit of items) {
         const author: string = commit.author
         if (!cleanGroupItems[ author ]) {
           cleanGroupItems[ author ] = []
         }
         cleanGroupItems[ author ].push(commit)
-        return commit
-      })
+      }
       break
     case "date":
     default:
-      items.map((commit) => {
+      for (const commit of items) {
         const date: string = dateFormatLong(commit.time)
         if (!cleanGroupItems[ date ]) {
           cleanGroupItems[ date ] = []
         }
         cleanGroupItems[ date ].push(commit)
-        return commit
-      })
+      }
   }
   return cleanGroupItems
 }

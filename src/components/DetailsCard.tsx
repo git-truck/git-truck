@@ -125,9 +125,12 @@ export function DetailsCard({
           <Icon path={mdiAccountMultiple} />
           Group authors
         </button>
-        <div className="card bg-white/70 text-black">
-          <CommitHistory clickedObject={clickedObject}/>
-        </div>
+          {clickedObject.type === "blob" ?
+            <div className="card bg-white/70 text-black">
+                <CommitHistory />
+            </div>
+          : null
+        }
       </div>
       <div className="flex gap-2">
         {isBlob ? (
