@@ -69,6 +69,11 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
   try {
     await blob.mutex.acquire()
     blob.noCommits = (blob.noCommits ?? 0) + 1
+    if (blob.commits) {
+      blob.commits.push({hash: commit.hash, time: commit.time})
+    } else {
+      blob.commits = [{hash: commit.hash, time: commit.time}]
+    }
     if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
 
     if (change.isBinary) {
@@ -122,14 +127,20 @@ export async function hydrateData(
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
-  cleanUpMutexes(fileMap)
+  postHydrateCleanup(fileMap)
   
   return [data, Array.from(authors)]
 }
 
-function cleanUpMutexes(fileMap: Map<string, GitBlobObject>) {
+function postHydrateCleanup(fileMap: Map<string, GitBlobObject>) {
   fileMap.forEach((blob,_) => {
-    blob.mutex = undefined
+    const cast = blob as HydratedGitBlobObject
+    cast.commits?.sort((a, b) => {
+      return b.time - a.time
+    })
+    cast.commitsNoTime = cast.commits?.map(({hash, time}) => hash)
+    cast.commits = undefined
+    cast.mutex = undefined
   })
 }
 
@@ -167,6 +178,28 @@ function convertFileTreeToMap(tree: GitTreeObject) {
 
   aux(tree)
   return map
+}
+
+function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
+  const commitMap = new Map<string, number>()
+  subTree(tree)
+  function subTree(tree: HydratedGitTreeObject) {
+    for (const child of tree.children) {
+      if (!child) continue
+      if (child.type === "blob") {
+        if (!child.commits) continue
+        for (const commit of child.commits) {
+          commitMap.set(commit.hash, commit.time)
+        }
+      } else if (child.type === "tree") {
+        subTree(child)
+      }
+    }
+  }
+  const commitArr = []
+  for (const [hash, time] of commitMap) commitArr.push({hash, time})
+  commitArr.sort((a, b) => b.time - a.time)
+  return commitArr
 }
 
 function getRecentRename(targetTimestamp: number, path: string) {

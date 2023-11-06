@@ -91,21 +91,15 @@ export class GitCaller {
     return await GitCaller._getRepositoryHead(this.repo)
   }
 
-  async getFileCommits(path: string, isFile: boolean, skip: number, count: number) {
+  async gitShow(commits: string[]) {
     if (!this.branch) throw Error("branch not set")
     const args = [
-      "log",
-      `--skip=${skip}`,
-      `--max-count=${count}`,
-      this.branch,
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      "show", 
+      "--no-patch", 
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
-    if (isFile) {
-      args.push("--follow")
-    }
-
-    args.push(path)
+    commits.forEach(x => args.push(x))
     const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()
   }
@@ -374,14 +368,9 @@ export class GitCaller {
     return result
   }
 
-  async getCommitCount(path?: string, isFile?: boolean) {
+  async getCommitCount() {
     if (!this.branch) throw Error("Branch is undefined")
     const args = ["log", this.branch, '--format="%at"']
-    if (path) {
-      if (isFile) args.push("--follow")
-      args.push("--")
-      args.push(path)
-    }
     const result = await runProcess(this.repo, "git", args) as string
     return result.split(/\s/).length
   }

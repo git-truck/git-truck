@@ -4,7 +4,7 @@ import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
+import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "perf_hooks"
 import { resolve as resolvePath } from "path"
 import c from "ansi-colors"
@@ -61,7 +61,7 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, {path
   return newPath
 }
 
-export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObject | undefined {
+export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject | undefined {
   const dirs = path.split("/")
 
   if (dirs.length < 2) {
@@ -69,7 +69,6 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObje
     const [file] = dirs
     const result = tree.children.find((x) => x.name === file && x.type === "blob")
     if (!result) return
-    if (result.type === "tree") return undefined
     return result
   }
   const subtree = tree.children.find((x) => x.name === dirs[0])
