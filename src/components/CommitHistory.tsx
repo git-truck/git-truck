@@ -67,7 +67,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
 }
 
 export function CommitHistory() {
-  const [commitsPayload, setCommitsPayload] = useState<CommitsPayload | null>(null)
+  const [commits, setCommits] = useState<GitLogEntry[] | null>(null)
   const [lastClicked, setLastClicked] = useState("")
   const [commitIndex, setCommitIndex] = useState(0)
   const commitIncrement = 5
@@ -78,37 +78,51 @@ export function CommitHistory() {
   useEffect(() => {
     if (clickedObject && clickedObject.path !== lastClicked) {
       setLastClicked(clickedObject.path)
-      setCommitIndex(commitIndex+commitIncrement)
-      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
+      setCommits(null)
+      setCommitIndex(0)
     }
   }, [clickedObject])
 
   useEffect(() => {
+    if (!clickedObject) return 
+    fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
+  }, [commitIndex])
+
+  useEffect(() => {
     if(fetcher.state === "idle") {
-      setCommitsPayload(fetcher.data)
-    } else if (fetcher.state === "loading") {
-      setCommitIndex(0)
-      setCommitsPayload(null)
+      const data = fetcher.data as CommitsPayload
+      if (!data) return
+      if (!commits || commits.length === 0) {
+        setCommits(data.commits)
+      } else {
+        setCommits([...commits, ...data.commits])
+      }
     }
   }, [fetcher.state])
   
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const commits = (commitsPayload) ? commitsPayload.commits : []
 
-  if (commits.length == 0) {
+  if (!commits) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        {commitsPayload !== null ? (
-        <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
-          { <p>No commits found</p>}
-        </div>
-        ) : <h3>Loading commits...</h3>
-        }
+        <h3>Loading commits...</h3>
       </>
     )
   }
+
+  if (commits.length === 0) {
+    return (
+      <>
+        <h3 className="font-bold">Commit history</h3>
+        <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
+          { <p>No commits found</p>}
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
@@ -119,7 +133,10 @@ export function CommitHistory() {
       </div>
       <div>
         <CommitDistFragment commitCutoff={ collapsed ? commitIncrement : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
-        <h3>Load more commits</h3>
+        {fetcher.state === "idle" ?
+              <h3 onClick={() => setCommitIndex(commitIndex + commitIncrement)} className="cursor-pointer justify-between hover:opacity-70">Load more commits</h3>
+          : <h3>Loading commits...</h3>
+        }
       </div>
     </>
   )
