@@ -1,23 +1,15 @@
-import type { GitLogEntry, HydratedGitObject } from "~/analyzer/model"
-import { Fragment, useId, useState } from "react"
+import type { GitLogEntry } from "~/analyzer/model"
+import { Fragment, useEffect, useId, useState } from "react"
 import { dateFormatLong } from "~/util"
-import { useData } from "~/contexts/DataContext"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion";
 import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
 import type { CommitsPayload } from "~/routes/commits"
+import { useFetcher } from "@remix-run/react"
+import { useClickedObject } from "~/contexts/ClickedContext";
 
 export type SortCommitsMethods = "date" | "author"
-
-interface props {
-  commitsPayload: CommitsPayload | null
-  commitCutoff: number
-}
-
-export function FileHistoryElement(props: props) {
-  return <CommitHistory commitsPayload={props.commitsPayload} commitCutoff={props.commitCutoff}/>
-}
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
@@ -28,7 +20,7 @@ interface CommitDistFragProps {
   collapsed: boolean
 }
 
-export function CommitDistFragment(props: CommitDistFragProps) {
+function CommitDistFragment(props: CommitDistFragProps) {
   if (!props.items) return null
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
@@ -74,18 +66,43 @@ export function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-function CommitHistory(props: props) {
+export function CommitHistory() {
+  const [commitsPayload, setCommitsPayload] = useState<CommitsPayload | null>(null)
+  const [lastClicked, setLastClicked] = useState("")
+  const [commitIndex, setCommitIndex] = useState(0)
+  const commitIncrement = 5
+  const { clickedObject } = useClickedObject()
+
+  const fetcher = useFetcher()
+
+  useEffect(() => {
+    if (clickedObject && clickedObject.path !== lastClicked) {
+      setLastClicked(clickedObject.path)
+      setCommitIndex(commitIndex+commitIncrement)
+      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
+    }
+  }, [clickedObject])
+
+  useEffect(() => {
+    if(fetcher.state === "idle") {
+      setCommitsPayload(fetcher.data)
+    } else if (fetcher.state === "loading") {
+      setCommitIndex(0)
+      setCommitsPayload(null)
+    }
+  }, [fetcher.state])
+  
   const commitHistoryExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const commits = (props.commitsPayload) ? props.commitsPayload.commits : []
+  const commits = (commitsPayload) ? commitsPayload.commits : []
 
   if (commits.length == 0) {
     return (
       <>
         <h3 className="font-bold">Commit history</h3>
-        {props.commitsPayload !== null ? (
+        {commitsPayload !== null ? (
         <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">
-          {commits.length > 0 ? <CommitDistFragment commitCutoff={props.commitCutoff} collapsed setCollapsed={setCollapsed} items={commits} /> : <p>No commits found</p>}
+          { <p>No commits found</p>}
         </div>
         ) : <h3>Loading commits...</h3>
         }
@@ -101,7 +118,8 @@ function CommitHistory(props: props) {
         <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
-        <CommitDistFragment commitCutoff={ collapsed ? props.commitCutoff : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
+        <CommitDistFragment commitCutoff={ collapsed ? commitIncrement : commits.length } items={ commits } setCollapsed={setCollapsed} collapsed/>
+        <h3>Load more commits</h3>
       </div>
     </>
   )

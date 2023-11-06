@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject, GitLogEntry } from "~/analyzer/model"
+import { Form, useLocation, useNavigation } from "@remix-run/react"
+import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -13,10 +13,9 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
-import { FileHistoryElement } from "./FileHistoryElement"
+import { CommitHistory } from "./CommitHistory"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
-import type { CommitsPayload } from "~/routes/commits"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -40,12 +39,6 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
   const isProcessingHideRef = useRef(false)
-  const [commitsPayload, setCommitsPayload] = useState<CommitsPayload | null>(null)
-  const [lastClicked, setLastClicked] = useState("")
-  const [commitIndex, setCommitIndex] = useState(0)
-  const commitIncrement = 5
-
-  const fetcher = useFetcher()
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -54,22 +47,6 @@ export function DetailsCard({
     }
   }, [clickedObject, setClickedObject, state])
 
-  useEffect(() => {
-    if (clickedObject && clickedObject.path !== lastClicked) {
-      setLastClicked(clickedObject.path)
-      setCommitIndex(commitIndex+commitIncrement)
-      fetcher.load(`/commits?path=+${clickedObject.path}&isFile=${clickedObject.type === "blob"}&skip=${commitIndex}&count=${commitIncrement}`)
-    }
-  }, [clickedObject])
-
-  useEffect(() => {
-    if(fetcher.state === "idle") {
-      setCommitsPayload(fetcher.data)
-    } else if (fetcher.state === "loading") {
-      setCommitIndex(0)
-      setCommitsPayload(null)
-    }
-  }, [fetcher.state])
 
   useEffect(() => {
     // Update clickedObject if data changes
@@ -149,7 +126,7 @@ export function DetailsCard({
           Group authors
         </button>
         <div className="card bg-white/70 text-black">
-          <FileHistoryElement commitsPayload={commitsPayload} commitCutoff={commitIncrement}/>
+          <CommitHistory clickedObject={clickedObject}/>
         </div>
       </div>
       <div className="flex gap-2">
