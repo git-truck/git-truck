@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useCommitTab } from "~/contexts/CommitTabContext"
-import type { MenuItem } from "./menu/MenuTab";
-import { MenuTab } from "./menu/MenuTab"
+import type { MenuItem } from "./MenuTab";
+import { MenuTab } from "./MenuTab"
 import { generalDetailsCard } from "./GeneralDetailsCard";
 import { getTextColorFromBackground } from "~/util";
 import { useMetrics } from "~/contexts/MetricContext";
@@ -42,7 +42,7 @@ export function DetailsCard(props: { className?: string, showUnionAuthorsModal: 
   } as MenuItem)
   items.push({
     title: "Commits",
-    content: commitDetailsCard({...props, backgroundColor, color, lightBackground }),
+    content: commitDetailsCard(),
   } as MenuItem)
   return (
     <div className="card" 

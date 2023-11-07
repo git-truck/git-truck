@@ -18,7 +18,7 @@ export const MenuTab = ({ items, lightBackground, isSelected }: { items: Array<M
         { items.map((item, idx) => (
           <>
             <div
-              key={ Math.random() + "--tab" }
+              key={ item.title + idx + "--tab" }
               className={clsx("btn rounded-none", {
                         "btn--outlined--light": !lightBackground,
                         "btn--outlined": lightBackground,
