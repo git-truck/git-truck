@@ -13,6 +13,8 @@ import { createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DepthType } from "~/metrics/chartDepth"
+import type { CommitTab } from "~/contexts/CommitTabContext";
+import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -21,11 +23,32 @@ interface ProvidersProps {
 
 export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<OptionsContextType | null>(null)
+  const [commitTab, setCommitTab] = useState<CommitTab | null>(null)
   const [searchResults, setSearchResults] = useState<Record<string, HydratedGitObject>>({})
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
   const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData), [data])
+
+  const commitTabValue = useMemo(
+    () => ({
+      ...getDefaultCommitTab(),
+      ...commitTab,
+      setStartDate: (newDate: number | null) => {
+        setCommitTab((prevValue) => ({
+          ...(prevValue ?? getDefaultCommitTab()),
+          startDate: newDate,
+        }))
+      },
+      setEndDate: (newDate: number | null) => {
+        setCommitTab((prevValue) => ({
+          ...(prevValue ?? getDefaultCommitTab()),
+          endDate: newDate,
+        }))
+      },
+    }),
+    [commitTab]
+  )
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -118,7 +141,7 @@ export function Providers({ children, data }: ProvidersProps) {
           >
             <PathContext.Provider value={{ path, setPath }}>
               <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
-                {children}
+                <CommitTabContext.Provider value={commitTabValue}>{children}</CommitTabContext.Provider>
               </ClickedObjectContext.Provider>
             </PathContext.Provider>
           </SearchContext.Provider>

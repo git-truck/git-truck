@@ -7,7 +7,7 @@ import type { AccordionData } from "./accordion/Accordion";
 import Accordion from "./accordion/Accordion"
 import { ChevronButton } from "./ChevronButton"
 
-export type SortCommitsMethods = "date" | "author"
+type SortCommitsMethods = "date" | "author"
 
 interface props {
   state: "idle" | "submitting" | "loading"
@@ -39,7 +39,6 @@ interface CommitDistFragProps {
 }
 
 export function CommitDistFragment(props: CommitDistFragProps) {
-  if (!props.items) return null
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
   const cleanGroupItems: { [ key: string ]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
