@@ -20,14 +20,14 @@ export function DetailsCard(props: { className?: string, showUnionAuthorsModal: 
    const { backgroundColor, color, lightBackground } = useMemo(() => {
         if (!clickedObject) {
             return {
-                backgroundColor: null,
-                color: null,
-                lightBackground: true,
+                backgroundColor: undefined,
+                color: undefined,
+                lightBackground: undefined,
             }
         }
         const colormap = metricsData[ authorshipType ]?.get(metricType)?.colormap
         const backgroundColor = colormap?.get(clickedObject.path) ?? ("#808080" as `#${ string }`)
-        const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
+        const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : undefined
         return {
             backgroundColor: backgroundColor,
             color: color,

@@ -30,9 +30,9 @@ export function generalDetailsCard({
     color, 
     lightBackground
 }: {
-    backgroundColor: `#${string}` | null 
-    color: `#${string}` | null, 
-    lightBackground: boolean
+    backgroundColor?: `#${string}` 
+    color?: `#${string}`, 
+    lightBackground?: boolean
     showUnionAuthorsModal: () => void
     className?: string
 }) {
