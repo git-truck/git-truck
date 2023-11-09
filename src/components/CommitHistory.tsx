@@ -64,30 +64,27 @@ function CommitDistFragment(props: CommitDistFragProps) {
 
 export function CommitHistory() {
   const [commits, setCommits] = useState<GitLogEntry[] | null>(null)
-  const [lastClicked, setLastClicked] = useState("")
   const [commitIndex, setCommitIndex] = useState(0)
   const commitIncrement = 5
   const { clickedObject } = useClickedObject()
   const fetcher = useFetcher()
-  function requestCommits() {
-    const hashes =
-      (clickedObject as HydratedGitBlobObject).commitsNoTime?.slice(commitIndex, commitIndex + commitIncrement) ?? []
+
+  function requestCommits(index: number) {
+    const hashes = (clickedObject as HydratedGitBlobObject).commitsNoTime?.slice(index, index + commitIncrement) ?? []
     fetcher.load(`/commits?commits=${hashes.join(",")}`)
   }
 
   useEffect(() => {
-    if (clickedObject && clickedObject.path !== lastClicked) {
-      setLastClicked(clickedObject.path)
+    if (clickedObject) {
       setCommits(null)
-      if (clickedObject.type === "tree") return
       setCommitIndex(0)
-      requestCommits()
+      requestCommits(0)
     }
   }, [clickedObject])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!clickedObject || commitIndex === 0) return
-    requestCommits()
+    requestCommits(commitIndex)
   }, [commitIndex])
 
   useEffect(() => {
@@ -103,7 +100,7 @@ export function CommitHistory() {
   }, [fetcher.state])
 
   const commitHistoryExpandId = useId()
-  const [collapsed, setCollapsed] = useState<boolean>(true)
+  const [collapsed, setCollapsed] = useState<boolean>(false)
 
   if (!clickedObject || clickedObject.type !== "blob") return null
 
@@ -143,13 +140,23 @@ export function CommitHistory() {
           setCollapsed={setCollapsed}
           collapsed
         />
-        {fetcher.state === "idle" ? (
-          <h3
-            onClick={() => setCommitIndex(commitIndex + commitIncrement)}
-            className="cursor-pointer justify-between hover:opacity-70"
+
+        {collapsed && commits.length > commitIncrement ? (
+          <span
+            className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
+            onClick={() => setCollapsed(false)}
           >
-            Load more commits
-          </h3>
+            Show more commits
+          </span>
+        ) : fetcher.state === "idle" ? (
+          commitIndex + commitIncrement < clickedObject.noCommits ? (
+            <span
+              onClick={() => setCommitIndex(commitIndex + commitIncrement)}
+              className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
+            >
+              Load more commits
+            </span>
+          ) : null
         ) : (
           <h3>Loading commits...</h3>
         )}
