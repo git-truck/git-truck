@@ -3,7 +3,7 @@ import { FileHistoryElement } from "./FileHistoryElement";
 import { useNavigation } from "@remix-run/react";
 
 // TODO: Replace it with the fully functional commit tab 
-export function commitDetailsCard() {
+export function CommitDetailsCard() {
     const { clickedObject } = useClickedObject()
     const { state } = useNavigation()
     if (!clickedObject) return null

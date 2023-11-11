@@ -1,16 +1,43 @@
 import clsx from "clsx";
-import type { ReactNode } from "react";
-import { useState } from "react"
+import type { PropsWithChildren, ReactNode } from "react";
+import { Children, isValidElement, useState  } from "react"
 
-export type MenuItem = {
+const MenuItemTypeString = "MENUITEM";
+
+type InternalMenuItem = {
   title: string
-  content: ReactNode
-  onChange?: (index: number) => void
+  children: ReactNode
 }
 
-export const MenuTab = ({ items, lightBackground, selectedItemIndex }: { items: MenuItem[], lightBackground?: boolean, selectedItemIndex?: number }) => {
+export type MenuItemProps = {
+  title: string
+  __TYPE: typeof MenuItemTypeString
+}
+
+export type MenuTabProps = {
+  lightBackground?: boolean
+  onChange?: (index: number) => void
+  selectedItemIndex?: number
+}
+
+export const MenuItem = (props: PropsWithChildren<MenuItemProps>) => {
+  return props.children
+}
+
+MenuItem.defaultProps = {
+  "__TYPE": MenuItemTypeString
+}
+
+export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
   const [ currentIdx, setCurrentIdx ] = useState(0)
-  const selectedIdx = selectedItemIndex ? selectedItemIndex : currentIdx
+  const selectedIdx = props.selectedItemIndex ? props.selectedItemIndex : currentIdx
+  const items = Children.toArray(props.children).map(item => {
+    if(!isValidElement(item)) return false
+    console.log(item);
+    if (item.props.__TYPE && item.props.__TYPE == MenuItemTypeString) {
+      return { title: item.props.title, children: item.props.children }
+    }
+  }) as InternalMenuItem[];
   return (
     <>
       <div className="flex flex-row justify-center overflow-hidden w-full">
@@ -20,16 +47,16 @@ export const MenuTab = ({ items, lightBackground, selectedItemIndex }: { items: 
               href="#"
               key={ item.title + idx + "--tab" }
               className={clsx("flex-1 btn", {
-                        "btn--outlined--light": !lightBackground,
-                        "btn--outlined": lightBackground,
+                        "btn--outlined--light": !props.lightBackground,
+                        "btn--outlined": props.lightBackground,
                         "opacity-50": selectedIdx == idx,
                         "rounded-tr-none rounded-br-none": idx != (items.length-1),
                         "rounded-tl-none rounded-bl-none": idx == (items.length-1)
                     })}
               onClick={(event) => {
                 event.preventDefault();
-                if (item.onChange) {
-                  item.onChange(idx)
+                if (props.onChange) {
+                  props.onChange(idx)
                 }
                 setCurrentIdx((currentValue) => (currentValue !== idx ? idx : currentValue))
               } }
@@ -40,7 +67,7 @@ export const MenuTab = ({ items, lightBackground, selectedItemIndex }: { items: 
         )) }
       </div>
       { items.map((item, idx) => (
-        idx == selectedIdx ? <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>{ item.content }</div> : null
+        idx == selectedIdx ? <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>{ item.children }</div> : null
       )) }
     </>
   )
