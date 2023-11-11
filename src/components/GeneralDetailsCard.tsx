@@ -23,7 +23,7 @@ function OneFolderOut(path: string) {
     return path
 }
 
-export function generalDetailsCard({
+export function GeneralDetailsCard({
     className = "",
     showUnionAuthorsModal,
     backgroundColor, 

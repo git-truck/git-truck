@@ -128,7 +128,7 @@ function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [ key:
     case "date":
     default:
       items.map((commit) => {
-        const date: string = dateFormatLong(commit.time)
+        const date: string = commit.time ? dateFormatLong(commit.time) : "unknown"
         if (!cleanGroupItems[ date ]) {
           cleanGroupItems[ date ] = []
         }

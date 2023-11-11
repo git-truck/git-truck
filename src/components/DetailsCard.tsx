@@ -4,7 +4,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useCommitTab } from "~/contexts/CommitTabContext"
 import type { MenuItem } from "./MenuTab";
 import { MenuTab } from "./MenuTab"
-import { generalDetailsCard } from "./GeneralDetailsCard";
+import { GeneralDetailsCard } from "./GeneralDetailsCard";
 import { getTextColorFromBackground } from "~/util";
 import { useMetrics } from "~/contexts/MetricContext";
 import { useOptions } from "~/contexts/OptionsContext";
@@ -38,7 +38,7 @@ export function DetailsCard(props: { className?: string, showUnionAuthorsModal: 
   const items: Array<MenuItem> = new Array<MenuItem>()
   items.push({
     title: "General",
-    content: generalDetailsCard({...props, backgroundColor, color, lightBackground }),
+    content: GeneralDetailsCard({...props, backgroundColor, color, lightBackground }),
   } as MenuItem)
   items.push({
     title: "Commits",

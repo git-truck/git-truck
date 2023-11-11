@@ -8,25 +8,26 @@ export type MenuItem = {
   onChange?: (index: number) => void
 }
 
-export const MenuTab = ({ items, lightBackground, isSelected }: { items: Array<MenuItem>, lightBackground?: boolean, isSelected?: number }) => {
+export const MenuTab = ({ items, lightBackground, selectedItemIndex }: { items: MenuItem[], lightBackground?: boolean, selectedItemIndex?: number }) => {
   const [ currentIdx, setCurrentIdx ] = useState(0)
-  const equalSplitValue = 100 / items.length + "%"
-  const selectedIdx = isSelected ? isSelected : currentIdx
+  const selectedIdx = selectedItemIndex ? selectedItemIndex : currentIdx
   return (
     <>
-      <div className="flex flex-row justify-center overflow-hidden">
+      <div className="flex flex-row justify-center overflow-hidden w-full">
         { items.map((item, idx) => (
           <>
-            <div
+            <a
+              href="#"
               key={ item.title + idx + "--tab" }
-              className={clsx("btn rounded-none", {
+              className={clsx("flex-1 btn", {
                         "btn--outlined--light": !lightBackground,
                         "btn--outlined": lightBackground,
                         "opacity-50": selectedIdx == idx,
-                        "underline": selectedIdx == idx
+                        "rounded-tr-none rounded-br-none": idx != (items.length-1),
+                        "rounded-tl-none rounded-bl-none": idx == (items.length-1)
                     })}
-              style={{ width: equalSplitValue }}
-              onClick={ () => {
+              onClick={(event) => {
+                event.preventDefault();
                 if (item.onChange) {
                   item.onChange(idx)
                 }
@@ -34,12 +35,12 @@ export const MenuTab = ({ items, lightBackground, isSelected }: { items: Array<M
               } }
             >
               { item.title }
-            </div>
+            </a>
           </>
         )) }
       </div>
       { items.map((item, idx) => (
-        <>{ idx == selectedIdx && <div className="border-t-0">{ item.content }</div> }</>
+        idx == selectedIdx ? <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>{ item.content }</div> : null
       )) }
     </>
   )
