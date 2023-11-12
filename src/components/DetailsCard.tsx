@@ -17,7 +17,7 @@ import { FileHistoryElement } from "./FileHistoryElement"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MenuItem, MenuTab } from "./MenuTab"
-import { CommitDetailsCard } from "./CommitDetailsCard"
+import { CommitsCard } from "./CommitsCard"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -199,7 +199,7 @@ export function DetailsCard({
             )}
           </div>
         </MenuItem>
-        <MenuItem title="Commits">{CommitDetailsCard()}</MenuItem>
+        <MenuItem title="Commits">{CommitsCard()}</MenuItem>
       </MenuTab>
     </div>
   )
