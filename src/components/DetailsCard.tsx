@@ -16,6 +16,8 @@ import { Icon } from "@mdi/react"
 import { FileHistoryElement } from "./FileHistoryElement"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
+import { MenuItem, MenuTab } from "./MenuTab"
+import { CommitsCard } from "./CommitsCard"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -77,7 +79,7 @@ export function DetailsCard({
 
   return (
     <div
-      className={clsx(className, "card flex grow flex-col gap-2 transition-colors")}
+      className={clsx(className, "card flex flex-col gap-2 transition-colors")}
       style={
         color
           ? {
@@ -87,7 +89,7 @@ export function DetailsCard({
           : {}
       }
     >
-      <div className="flex grow flex-col gap-2">
+      <div className="flex">
         <h2 className="card__title grid grid-cols-[auto,1fr,auto] gap-2">
           <Icon path={clickedObject.type === "blob" ? mdiFile : mdiFolder} size="1.25em" />
           <span className="truncate" title={clickedObject.name}>
@@ -95,103 +97,110 @@ export function DetailsCard({
           </span>
           <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
         </h2>
-        <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
-          {isBlob ? (
-            <>
-              <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
-              <CommitsEntry clickedBlob={clickedObject} />
-              <LastchangedEntry clickedBlob={clickedObject} />
-            </>
-          ) : (
-            <FileAndSubfolderCountEntries clickedTree={clickedObject} />
-          )}
-          <PathEntry path={clickedObject.path} />
-        </div>
-        <div className="card bg-white/70 text-black">
-          {isBlob ? (
-            <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
-          ) : (
-            <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
-          )}
-        </div>
-        <button
-          className={clsx("btn", {
-            "btn--outlined--light": !lightBackground,
-            "btn--outlined": lightBackground,
-          })}
-          onClick={showUnionAuthorsModal}
-        >
-          <Icon path={mdiAccountMultiple} />
-          Group authors
-        </button>
-        <div className="card bg-white/70 text-black">
-          <FileHistoryElement state={state} clickedObject={clickedObject} />
-        </div>
       </div>
-      <div className="flex gap-2">
-        {isBlob ? (
-          <>
-            <Form className="w-max" method="post" action={location.pathname}>
-              <input type="hidden" name="ignore" value={clickedObject.path} />
-              <button
-                className={clsx("btn", {
-                  "btn--outlined--light": !lightBackground,
-                  "btn--outlined": lightBackground,
-                })}
-                type="submit"
-                disabled={state !== "idle"}
-                onClick={() => {
-                  isProcessingHideRef.current = true
-                }}
-                title="Hide this file"
-              >
-                <Icon path={mdiEyeOffOutline} />
-                Hide
-              </button>
-            </Form>
-            {clickedObject.name.includes(".") ? (
-              <Form className="w-max" method="post" action={location.pathname}>
-                <input type="hidden" name="ignore" value={`*.${extension}`} />
-                <button
-                  className={clsx("btn", {
-                    "btn--outlined--light": !lightBackground,
-                    "btn--outlined": lightBackground,
-                  })}
-                  type="submit"
-                  disabled={state !== "idle"}
-                  onClick={() => {
-                    isProcessingHideRef.current = true
-                  }}
-                >
-                  <Icon path={mdiEyeOffOutline} />
-                  <span>Hide .{extension} files</span>
-                </button>
-              </Form>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <Form method="post" action={location.pathname}>
-              <input type="hidden" name="ignore" value={clickedObject.path} />
-              <button
-                className={clsx("btn", {
-                  "btn--outlined--light": !lightBackground,
-                  "btn--outlined": lightBackground,
-                })}
-                type="submit"
-                disabled={state !== "idle"}
-                onClick={() => {
-                  isProcessingHideRef.current = true
-                  setPath(OneFolderOut(path))
-                }}
-              >
-                <Icon path={mdiEyeOffOutline} />
-                Hide this folder
-              </button>
-            </Form>
-          </>
-        )}
-      </div>
+      <MenuTab lightBackground={lightBackground}>
+        <MenuItem title="General">
+          <div className="flex grow flex-col gap-2">
+            <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+              {isBlob ? (
+                <>
+                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
+                  <CommitsEntry clickedBlob={clickedObject} />
+                  <LastchangedEntry clickedBlob={clickedObject} />
+                </>
+              ) : (
+                <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+              )}
+              <PathEntry path={clickedObject.path} />
+            </div>
+            <div className="card bg-white/70 text-black">
+              {isBlob ? (
+                <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
+              ) : (
+                <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+              )}
+            </div>
+            <button
+              className={clsx("btn", {
+                "btn--outlined--light": !lightBackground,
+                "btn--outlined": lightBackground,
+              })}
+              onClick={showUnionAuthorsModal}
+            >
+              <Icon path={mdiAccountMultiple} />
+              Group authors
+            </button>
+            <div className="card bg-white/70 text-black">
+              <FileHistoryElement state={state} clickedObject={clickedObject} />
+            </div>
+          </div>
+          <div className="mt-2 flex gap-2">
+            {isBlob ? (
+              <>
+                <Form className="w-max" method="post" action={location.pathname}>
+                  <input type="hidden" name="ignore" value={clickedObject.path} />
+                  <button
+                    className={clsx("btn", {
+                      "btn--outlined--light": !lightBackground,
+                      "btn--outlined": lightBackground,
+                    })}
+                    type="submit"
+                    disabled={state !== "idle"}
+                    onClick={() => {
+                      isProcessingHideRef.current = true
+                    }}
+                    title="Hide this file"
+                  >
+                    <Icon path={mdiEyeOffOutline} />
+                    Hide
+                  </button>
+                </Form>
+                {clickedObject.name.includes(".") ? (
+                  <Form className="w-max" method="post" action={location.pathname}>
+                    <input type="hidden" name="ignore" value={`*.${extension}`} />
+                    <button
+                      className={clsx("btn", {
+                        "btn--outlined--light": !lightBackground,
+                        "btn--outlined": lightBackground,
+                      })}
+                      type="submit"
+                      disabled={state !== "idle"}
+                      onClick={() => {
+                        isProcessingHideRef.current = true
+                      }}
+                    >
+                      <Icon path={mdiEyeOffOutline} />
+                      <span>Hide .{extension} files</span>
+                    </button>
+                  </Form>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <Form method="post" action={location.pathname}>
+                  <input type="hidden" name="ignore" value={clickedObject.path} />
+                  <button
+                    className={clsx("btn", {
+                      "btn--outlined--light": !lightBackground,
+                      "btn--outlined": lightBackground,
+                    })}
+                    type="submit"
+                    disabled={state !== "idle"}
+                    onClick={() => {
+                      isProcessingHideRef.current = true
+                      setPath(OneFolderOut(path))
+                    }}
+                  >
+                    <Icon path={mdiEyeOffOutline} />
+                    Hide this folder
+                  </button>
+                </Form>
+              </>
+            )}
+          </div>
+        </MenuItem>
+        <MenuItem title="Commits">{CommitsCard()}</MenuItem>
+      </MenuTab>
     </div>
   )
 }
@@ -315,7 +324,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
-    a[1] < b[1] ? 1 : -1
+    a[1] < b[1] ? 1 : -1,
   )
 
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
@@ -358,7 +367,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
 }
 
 function makePercentResponsibilityDistribution(
-  unionedAuthors: Record<string, number> | undefined
+  unionedAuthors: Record<string, number> | undefined,
 ): Record<string, number> {
   if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
