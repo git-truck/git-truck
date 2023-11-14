@@ -150,12 +150,14 @@ export const Chart = memo(function Chart({
               {...createGroupHandlers(d, i === 0)}
             >
               {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
-                <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
-              )}
-              {labelsVisible && (
-                <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
-                  {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
-                </NodeText>
+                <>
+                  <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+                  {labelsVisible && (
+                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
+                      {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                    </NodeText>
+                  )}
+                </>
               )}
             </g>
           )
