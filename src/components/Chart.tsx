@@ -1,4 +1,3 @@
-import { animated } from "@react-spring/web"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
@@ -10,7 +9,7 @@ import type {
   HydratedGitTreeObject,
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useToggleableSpring, useComponentSize } from "~/hooks"
+import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
   estimatedLetterHeightForDirText,
@@ -46,7 +45,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -73,20 +72,22 @@ export const Chart = memo(function Chart({
       numberOfDepthLevels = undefined
   }
 
+  const commit = useMemo(() => {
+    if (hierarchyType === "NESTED") return analyzerData.commit
+
+    return {
+      ...analyzerData.commit,
+      tree: {
+        ...analyzerData.commit.tree,
+        children: flatten(analyzerData.commit.tree),
+      },
+    }
+  }, [analyzerData.commit, hierarchyType])
+
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    const commit =
-      hierarchyType === "NESTED"
-        ? analyzerData.commit
-        : {
-            ...analyzerData.commit,
-            tree: {
-              ...analyzerData.commit.tree,
-              children: flatten(analyzerData.commit.tree),
-            },
-          }
     return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path).descendants()
-  }, [size, hierarchyType, analyzerData.commit, chartType, sizeMetric, path])
+  }, [size, commit, chartType, sizeMetric, path])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -123,6 +124,7 @@ export const Chart = memo(function Chart({
   return (
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
+        key={`svg|${size.width}|${size.height}`}
         className={clsx("grid h-full w-full place-items-center", {
           "cursor-zoom-out": path.includes("/"),
         })}
@@ -137,18 +139,26 @@ export const Chart = memo(function Chart({
         }}
       >
         {nodes.map((d, i) => {
-          if (numberOfDepthLevels !== undefined && d.depth > numberOfDepthLevels) return null
           return (
             <g
-              className={clsx("hover:opacity-60", {
+              key={d.data.path}
+              className={clsx("transition-opacity hover:opacity-60", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
                 "animate-blink": clickedObject?.path === d.data.path,
               })}
-              key={`${chartType}${d.data.path}`}
               {...createGroupHandlers(d, i === 0)}
             >
-              <Node isRoot={i === 0} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+              {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
+                <>
+                  <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+                  {labelsVisible && (
+                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
+                      {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                    </NodeText>
+                  )}
+                </>
+              )}
             </g>
           )
         })}
@@ -157,20 +167,86 @@ export const Chart = memo(function Chart({
   )
 })
 
-const Node = memo(function Node({
+function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
+  const [metricsData] = useMetrics()
+  const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
+
+  const commonProps = useMemo(() => {
+    let props: JSX.IntrinsicElements["rect"] = {
+      stroke: isSearchMatch ? searchMatchColor : "transparent",
+      strokeWidth: "1px",
+      fill: isBlob(d.data)
+        ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
+        : "transparent",
+    }
+
+    if (chartType === "BUBBLE_CHART") {
+      const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+      props = {
+        ...props,
+        x: circleDatum.x - circleDatum.r,
+        y: circleDatum.y - circleDatum.r + estimatedLetterHeightForDirText - 1,
+        width: circleDatum.r * 2,
+        height: circleDatum.r * 2,
+        rx: circleDatum.r,
+        ry: circleDatum.r,
+      }
+    } else {
+      const datum = d as HierarchyRectangularNode<HydratedGitObject>
+
+      props = {
+        ...props,
+        x: datum.x0,
+        y: datum.y0,
+        width: datum.x1 - datum.x0,
+        height: datum.y1 - datum.y0,
+        rx: treemapNodeBorderRadius,
+        ry: treemapNodeBorderRadius,
+      }
+    }
+    return props
+  }, [d, isSearchMatch, metricsData, authorshipType, metricType, chartType])
+
+  return (
+    <rect
+      {...commonProps}
+      className={clsx({
+        "cursor-pointer": isBlob(d.data),
+        "transition-all duration-1000 ease-in-out": transitionsEnabled,
+        "animate-stroke-pulse": isSearchMatch,
+        "stroke-black/20": isTree(d.data),
+      })}
+    />
+  )
+}
+
+function collapseText({
   d,
   isRoot,
-  isSearchMatch,
+  path,
+  displayText,
+  chartType,
 }: {
   d: CircleOrRectHiearchyNode
   isRoot: boolean
-  isSearchMatch: boolean
-}) {
-  const { chartType, labelsVisible } = useOptions()
-  let showLabel = labelsVisible
-  const { path } = usePath()
-  let displayText = d.data.name
-  type textIsTooLongFunction = (text: string) => boolean
+  path: string
+  displayText: string
+  chartType: ChartType
+}): string | null {
+  let textIsTooLong: (text: string) => boolean
+  let textIsTooTall: (text: string) => boolean
+  if (chartType === "BUBBLE_CHART") {
+    const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+    textIsTooLong = (text: string) => circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidth
+    textIsTooTall = () => false
+  } else {
+    const datum = d as HierarchyRectangularNode<HydratedGitObject>
+    textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
+    textIsTooTall = (text: string) => {
+      const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
+      return heightAvailable < estimatedLetterHeightForDirText
+    }
+  }
 
   if (isRoot) {
     const pathSteps = path.split("/")
@@ -188,204 +264,89 @@ const Node = memo(function Node({
     displayText = dispSteps.slice(ds - 1).join("/")
   }
 
-  switch (chartType) {
-    case "BUBBLE_CHART":
-      const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
-      collapseDisplayText_mut(
-        (text: string) => circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidth
-      )
-      break
-    case "TREE_MAP":
-      const rectDatum = d as HierarchyRectangularNode<HydratedGitObject>
-      const xOffset = isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX
-      const yOffset = isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY
-
-      collapseDisplayText_mut(
-        (_: string) => rectDatum.x1 - rectDatum.x0 - xOffset * 2 < displayText.length * estimatedLetterWidth,
-        (_: string) => rectDatum.y1 - rectDatum.y0 - yOffset < estimatedLetterHeightForDirText
-      )
-      break
-    default:
-      throw Error("Unknown chart type")
-  }
-
-  return (
-    <>
-      <Path
-        className={clsx({
-          "cursor-pointer": isBlob(d.data),
-        })}
-        d={d}
-        isSearchMatch={isSearchMatch}
-      />
-      {showLabel ? (
-        chartType === "BUBBLE_CHART" ? (
-          <CircleText d={d as HierarchyCircularNode<HydratedGitObject>} displayText={displayText} />
-        ) : (
-          <RectText
-            className="font-mono"
-            d={d as HierarchyRectangularNode<HydratedGitObject>}
-            displayText={displayText}
-          />
-        )
-      ) : null}
-    </>
-  )
-
-  function collapseDisplayText_mut(textIsTooLong: textIsTooLongFunction, textIsTooTall?: textIsTooLongFunction) {
+  if (textIsTooLong(displayText)) {
+    displayText = displayText.replace(/\/.+\//gm, "/.../")
     if (textIsTooLong(displayText)) {
-      displayText = displayText.replace(/\/.+\//gm, "/.../")
-      if (textIsTooLong(displayText)) {
-        showLabel = false
-      }
-    }
-
-    if (textIsTooTall && textIsTooTall(displayText)) {
-      displayText = displayText.replace(/\/.+\//gm, "/.../")
-
-      if (textIsTooTall(displayText)) {
-        showLabel = false
-      }
+      return null
     }
   }
-})
 
-function Path({
-  d,
-  isSearchMatch,
-  className = "",
-}: {
-  d: CircleOrRectHiearchyNode
-  isSearchMatch: boolean
-  className?: string
-}) {
-  const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType } = useOptions()
+  if (textIsTooTall && textIsTooTall(displayText)) {
+    displayText = displayText.replace(/\/.+\//gm, "/.../")
 
-  const dProp = useMemo(() => {
-    if (chartType === "BUBBLE_CHART") {
-      const datum = d as HierarchyCircularNode<HydratedGitObject>
-      return circlePathFromCircle(datum.x, datum.y + estimatedLetterHeightForDirText - 1, datum.r - 1)
-    } else {
-      const datum = d as HierarchyRectangularNode<HydratedGitObject>
-      return roundedRectPathFromRect(
-        datum.x0,
-        datum.y0,
-        datum.x1 - datum.x0,
-        datum.y1 - datum.y0,
-        treemapNodeBorderRadius
-      )
+    if (textIsTooTall(displayText)) {
+      return null
     }
-  }, [chartType, d])
+  }
 
-  const props = useToggleableSpring({
-    d: dProp,
-    stroke: isSearchMatch ? searchMatchColor : "transparent",
-    strokeWidth: "1px",
-
-    fill: isBlob(d.data)
-      ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
-      : "transparent",
-  })
-
-  return (
-    <animated.path
-      {...props}
-      className={clsx(className, {
-        "animate-stroke-pulse": isSearchMatch,
-        "stroke-black/20": isTree(d.data),
-      })}
-    />
-  )
+  return displayText
 }
 
-function CircleText({
-  d,
-  displayText,
-  className = "",
-}: {
-  d: HierarchyCircularNode<HydratedGitObject>
-  displayText: string
-  className?: string
-}) {
+function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
   const [metricsData] = useMetrics()
   const { authorshipType, metricType } = useOptions()
-  const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
+  const isBubbleChart = isCircularNode(d)
 
-  const props = useToggleableSpring({
-    d: circlePathFromCircle(d.x, d.y + estimatedLetterHeightForDirText - 1, d.r - yOffset),
-  })
+  if (children === null) return null
 
-  const textProps = useToggleableSpring({
-    fill: isBlob(d.data)
-      ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
-      : "#333",
-  })
+  let textPathData: string
+
+  if (isBubbleChart) {
+    const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
+    const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+    textPathData = circlePathFromCircle(circleDatum.x, circleDatum.y + yOffset, circleDatum.r)
+  } else {
+    const datum = d as HierarchyRectangularNode<HydratedGitObject>
+    textPathData = roundedRectPathFromRect(
+      datum.x0 + (isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX),
+      datum.y0 + (isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY),
+      datum.x1 - datum.x0,
+      datum.y1 - datum.y0,
+      0
+    )
+  }
+
+  const fillColor = isBlob(d.data)
+    ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
+    : "#333"
+
+  const textPathBaseProps = {
+    startOffset: isBubbleChart ? "50%" : undefined,
+    dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
+    textAnchor: isBubbleChart ? "middle" : "start",
+    href: `#path-${d.data.path}`,
+  }
 
   return (
     <>
-      <animated.path {...props} id={d.data.path} className="pointer-events-none fill-none stroke-none" />
+      <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
       {isTree(d.data) ? (
-        <animated.text
-          className="pointer-events-none stroke-white stroke-[7px] font-mono text-sm font-bold"
+        <text
+          className={clsx("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
+            "stroke-white": isBubbleChart,
+          })}
           strokeLinecap="round"
         >
-          <textPath startOffset="50%" dominantBaseline="central" textAnchor="middle" xlinkHref={`#${d.data.path}`}>
-            {displayText}
-          </textPath>
-        </animated.text>
+          <textPath {...textPathBaseProps}>{children}</textPath>
+        </text>
       ) : null}
-      <animated.text {...textProps} className="pointer-events-none">
+      <text fill={fillColor} className="pointer-events-none">
         <textPath
-          className={clsx("font-mono", className, {
+          {...textPathBaseProps}
+          className={clsx("font-mono", {
             "text-sm font-bold": isTree(d.data),
             "text-xs": !isTree(d.data),
           })}
-          startOffset="50%"
-          dominantBaseline="central"
-          textAnchor="middle"
-          xlinkHref={`#${d.data.path}`}
         >
-          {displayText}
+          {children}
         </textPath>
-      </animated.text>
+      </text>
     </>
   )
 }
 
-function RectText({
-  d,
-  displayText,
-  className = "",
-}: {
-  d: HierarchyRectangularNode<HydratedGitObject>
-  displayText: string
-  className?: string
-}) {
-  const [metricsData] = useMetrics()
-  const { authorshipType, metricType } = useOptions()
-
-  const xOffset = isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX
-  const yOffset = isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY
-
-  const props = useToggleableSpring({
-    x: d.x0 + xOffset,
-    y: d.y0 + yOffset,
-    fill: isBlob(d.data)
-      ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
-      : "#333",
-  })
-
-  return (
-    <animated.text
-      {...props}
-      className={clsx("pointer-events-none", className, {
-        "font-bold": isTree(d.data),
-      })}
-    >
-      {displayText}
-    </animated.text>
-  )
+function isCircularNode(d: CircleOrRectHiearchyNode) {
+  return typeof (d as HierarchyCircularNode<HydratedGitObject>).r === "number"
 }
 
 function createPartitionedHiearchy(
@@ -415,23 +376,21 @@ function createPartitionedHiearchy(
 
   const castedTree = currentTree as HydratedGitObject
 
-  const hiearchy = hierarchy(castedTree)
-    .sum((d) => {
-      const hydratedBlob = d as HydratedGitBlobObject
-      switch (sizeMetricType) {
-        case "FILE_SIZE":
-          return hydratedBlob.sizeInBytes ?? 1
-        case "MOST_COMMITS":
-          return hydratedBlob.noCommits
-        case "EQUAL_SIZE":
-          return 1
-        case "LAST_CHANGED":
-          return (hydratedBlob.lastChangeEpoch ?? data.oldestLatestChangeEpoch) - data.oldestLatestChangeEpoch
-        case "TRUCK_FACTOR":
-          return Object.keys(hydratedBlob.authors ?? {}).length
-      }
-    })
-    .sort((a, b) => (b.value !== undefined && a.value !== undefined ? b.value - a.value : 0))
+  const hiearchy = hierarchy(castedTree).sum((d) => {
+    const hydratedBlob = d as HydratedGitBlobObject
+    switch (sizeMetricType) {
+      case "FILE_SIZE":
+        return hydratedBlob.sizeInBytes ?? 1
+      case "MOST_COMMITS":
+        return hydratedBlob.noCommits
+      case "EQUAL_SIZE":
+        return 1
+      case "LAST_CHANGED":
+        return (hydratedBlob.lastChangeEpoch ?? data.oldestLatestChangeEpoch) - data.oldestLatestChangeEpoch
+      case "TRUCK_FACTOR":
+        return Object.keys(hydratedBlob.authors ?? {}).length
+    }
+  })
 
   switch (chartType) {
     case "TREE_MAP":
