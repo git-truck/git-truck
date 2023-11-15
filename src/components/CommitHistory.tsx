@@ -1,10 +1,9 @@
 import type { GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
-import { Fragment, useEffect, useId, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 import { dateFormatLong } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
-import { ChevronButton } from "./ChevronButton"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 
@@ -12,11 +11,8 @@ type SortCommitsMethods = "date" | "author"
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
-  commitCutoff: number
   sortBy?: SortCommitsMethods
   handleOnClick?: (commit: GitLogEntry) => void
-  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>
-  collapsed: boolean
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
@@ -48,17 +44,12 @@ function CommitDistFragment(props: CommitDistFragProps) {
   }
 
   return (
-    <Fragment key={items.length.toString() + sortMethod + props.commitCutoff.toString() + new Date().toDateString()}>
-      <Accordion
+      <Accordion key={items.length > 0 ? items[0].title : new Date().toDateString()}
         titleLabels={true}
         multipleOpen={true}
         openByDefault={true}
         items={items}
-        itemsCutoff={props.commitCutoff}
-        collapsed={props.collapsed}
-        setCollapsed={props.setCollapsed}
-      ></Accordion>
-    </Fragment>
+      />
   )
 }
 
@@ -129,8 +120,6 @@ export function CommitHistory() {
     }
   }, [fetcher.state])
 
-  const commitHistoryExpandId = useId()
-  const [collapsed, setCollapsed] = useState<boolean>(false)
 
   const headerText = useMemo<string>(() => {
     if (!clickedObject) return ""
@@ -150,39 +139,25 @@ export function CommitHistory() {
 
   if (commits.length === 0) {
     return (
-      <>
-        <h3 className="font-bold">Commit history</h3>
-        <div className="grid grid-cols-[1fr,auto] gap-x-1 gap-y-1.5">{<p>No commits found</p>}</div>
-      </>
+        <h3 className="font-bold">No commit history</h3>
     )
   }
 
   return (
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
-        <label className="label grow" htmlFor={commitHistoryExpandId}>
+        <label className="label grow">
           <h3 className="font-bold">
             {headerText}
           </h3>
         </label>
-        <ChevronButton id={commitHistoryExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
       </div>
       <div>
         <CommitDistFragment
-          commitCutoff={collapsed ? commitIncrement : commits.length}
           items={commits}
-          setCollapsed={setCollapsed}
-          collapsed
         />
 
-        {collapsed && commits.length > commitIncrement ? (
-          <span
-            className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
-            onClick={() => setCollapsed(false)}
-          >
-            Show more commits
-          </span>
-        ) : fetcher.state === "idle" ? (
+        {fetcher.state === "idle" ? (
           commitIndex + commitIncrement < totalCommitHashes.length? (
             <span
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
