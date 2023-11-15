@@ -1,12 +1,12 @@
 import type { Ignore } from "ignore"
-import type { HydratedGitTreeObject, AnalyzerData } from "./model"
+import type { HydratedGitTreeObject, GitTreeObject, HydratedAnalyzerData } from "./model"
 
-export function initMetrics(data: AnalyzerData) {
+export function initMetrics(data: HydratedAnalyzerData) {
   data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.commit.newestLatestChangeEpoch = Number.MIN_VALUE
 }
 
-export function applyMetrics(data: AnalyzerData, currentTree: HydratedGitTreeObject): HydratedGitTreeObject {
+export function applyMetrics(data: HydratedAnalyzerData, currentTree: HydratedGitTreeObject): HydratedGitTreeObject {
   return {
     ...currentTree,
     children: currentTree.children.map((current) => {
@@ -25,7 +25,7 @@ export function applyMetrics(data: AnalyzerData, currentTree: HydratedGitTreeObj
   }
 }
 
-export function applyIgnore(tree: HydratedGitTreeObject, truckIgnore: Ignore): HydratedGitTreeObject {
+export function applyIgnore(tree: GitTreeObject, truckIgnore: Ignore): GitTreeObject {
   return {
     ...tree,
     children: tree.children
@@ -39,7 +39,7 @@ export function applyIgnore(tree: HydratedGitTreeObject, truckIgnore: Ignore): H
   }
 }
 
-export function TreeCleanup(tree: HydratedGitTreeObject) {
+export function TreeCleanup(tree: GitTreeObject) {
   for (const child of tree.children) {
     if (child.type === "tree") {
       const ctree = child as HydratedGitTreeObject

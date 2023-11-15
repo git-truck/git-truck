@@ -9,7 +9,7 @@ import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { UnfinishedAnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
@@ -37,7 +37,7 @@ import { mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 let invalidateCache = false
 
 export interface RepoData {
-  analyzerData: AnalyzerData
+  analyzerData: UnfinishedAnalyzerData
   repo: Repository
   truckConfig: TruckUserConfig
   gitTruckInfo: {
@@ -62,9 +62,10 @@ export const loader = async ({ params }: LoaderArgs) => {
     options.branch = params["*"]
   }
 
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
-  )
+  const analyzerData = await analyze({ ...args, ...options })
+  // .then((data) =>
+  //   addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
+  // )
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))

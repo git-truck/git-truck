@@ -11,8 +11,7 @@ interface AuthorDistFragProps {
 export function AuthorDistFragment(props: AuthorDistFragProps) {
   const [, authorColors] = useMetrics()
   const { metricType } = useOptions()
-
-  if (!props.show) return null
+  if (!props.show || !authorColors) return null
 
   return (
     <>

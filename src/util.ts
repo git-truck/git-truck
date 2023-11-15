@@ -1,7 +1,7 @@
 import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model"
+import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject, UnfinishedAnalyzerData, FinishedAnalyzerData } from "./analyzer/model"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
@@ -51,6 +51,13 @@ export function dateFormatRelative(epochTime: number) {
   if (hours > 1) return `${hours} hours ago`
   if (hours === 1) return "1 hour ago"
   return "<1 hour ago"
+}
+
+export function getFinishedData(data: UnfinishedAnalyzerData) {
+  if ("hydrationFinished" in data && (data as FinishedAnalyzerData).hydrationFinished) {
+    return data as FinishedAnalyzerData
+  }
+  return undefined
 }
 
 export const last = <T>(arr: T[]) => arr[arr.length - 1]

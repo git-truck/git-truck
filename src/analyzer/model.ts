@@ -5,7 +5,7 @@ import type { Mutex } from "async-mutex"
 export interface Repository {
   path: string
   name: string
-  data: AnalyzerData | null
+  data: UnfinishedAnalyzerData | null
   currentHead: string
   refs: GitRefs
   reasons: ANALYZER_CACHE_MISS_REASONS[]
@@ -42,18 +42,23 @@ export interface TruckConfig {
 // Bump this if changes are made to this file
 export const AnalyzerDataInterfaceVersion = 14
 
-export interface AnalyzerData {
-  cached: boolean
-  interfaceVersion: typeof AnalyzerDataInterfaceVersion
-  hiddenFiles: string[]
+export interface FinishedAnalyzerData extends UnfinishedAnalyzerData {
+  authors: string[]
+  commit: HydratedGitCommitObject
+  authorsUnion: string[]
+  commits: Record<string, GitLogEntry>
+  hydrationFinished: true
+}
+
+export interface UnfinishedAnalyzerData {
   repo: string
   branch: string
-  commit: HydratedGitCommitObject
-  authors: string[]
-  authorsUnion: string[]
-  currentVersion: string
+  hiddenFiles: string[]
+  cached: boolean
+  interfaceVersion: typeof AnalyzerDataInterfaceVersion
+  commit: GitCommitObject
   lastRunEpoch: number
-  commits: Record<string, GitLogEntry>
+  currentVersion: string
 }
 
 type RefType = "Branches" | "Tags"
@@ -68,6 +73,8 @@ export interface GitBlobObject extends AbstractGitObject {
   blameAuthors: Record<string, number>
   mutex: Mutex | undefined
 }
+
+
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
 

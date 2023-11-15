@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState, useTransition } from "react
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 import { useId } from "react"
-import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitTreeObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -10,7 +10,7 @@ import { allExceptLast, getSeparator } from "~/util"
 import { Icon } from "@mdi/react"
 import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 
-function findSearchResults(tree: HydratedGitTreeObject, searchString: string): SearchResults {
+function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, HydratedGitObject> = {}
   function subTreeSearch(subTree: HydratedGitTreeObject) {
     for (const child of subTree.children) {

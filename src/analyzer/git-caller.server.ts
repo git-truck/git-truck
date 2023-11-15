@@ -2,7 +2,7 @@ import { log } from "./log.server"
 import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "path"
 import { promises as fs, existsSync } from "fs"
-import type { AnalyzerData, GitRefs, Repository } from "./model"
+import type { UnfinishedAnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "~/util"
 import os from "os"
@@ -296,7 +296,7 @@ export class GitCaller {
     branch: string
     branchHead: string
     invalidateCache: boolean
-  }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
+  }): Promise<[UnfinishedAnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
     if (invalidateCache) {
       return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
     }
@@ -304,7 +304,7 @@ export class GitCaller {
     const cachedDataPath = GitCaller.getCachePath(repo, branch)
     if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
 
-    const cachedData = JSON.parse(await fs.readFile(cachedDataPath, "utf8")) as AnalyzerData
+    const cachedData = JSON.parse(await fs.readFile(cachedDataPath, "utf8")) as UnfinishedAnalyzerData
 
     // Check if the current branchHead matches the hash of the analyzed commit from the cache
     const branchHeadMatches = branchHead === cachedData.commit.hash

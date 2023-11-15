@@ -4,6 +4,9 @@ import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type {
+  GitBlobObject,
+  GitCommitObject,
+  GitTreeObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitObject,
@@ -85,7 +88,7 @@ export const Chart = memo(function Chart({
               children: flatten(analyzerData.commit.tree),
             },
           }
-    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path).descendants()
+    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path, "hydrationFinished" in analyzerData).descendants()
   }, [size, hierarchyType, analyzerData.commit, chartType, sizeMetric, path])
 
   useEffect(() => {
@@ -364,14 +367,13 @@ function RectText({
 }) {
   const [metricsData] = useMetrics()
   const { authorshipType, metricType } = useOptions()
-
   const xOffset = isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX
   const yOffset = isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY
 
   const props = useToggleableSpring({
     x: d.x0 + xOffset,
     y: d.y0 + yOffset,
-    fill: isBlob(d.data)
+    fill: isBlob(d.data) && metricsData
       ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
       : "#333",
   })
@@ -389,13 +391,14 @@ function RectText({
 }
 
 function createPartitionedHiearchy(
-  data: HydratedGitCommitObject,
+  data: GitCommitObject,
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
-  path: string
+  path: string,
+  hydrationFinished: boolean
 ) {
-  const root = data.tree as HydratedGitTreeObject
+  const root = data.tree as GitTreeObject
 
   let currentTree = root
   const steps = path.substring(data.tree.name.length + 1).split("/")
@@ -418,6 +421,8 @@ function createPartitionedHiearchy(
   const hiearchy = hierarchy(castedTree)
     .sum((d) => {
       const hydratedBlob = d as HydratedGitBlobObject
+      const castData = data as HydratedGitCommitObject
+      if (!hydrationFinished) return hydratedBlob.sizeInBytes ?? 1
       switch (sizeMetricType) {
         case "FILE_SIZE":
           return hydratedBlob.sizeInBytes ?? 1
@@ -426,7 +431,7 @@ function createPartitionedHiearchy(
         case "EQUAL_SIZE":
           return 1
         case "LAST_CHANGED":
-          return (hydratedBlob.lastChangeEpoch ?? data.oldestLatestChangeEpoch) - data.oldestLatestChangeEpoch
+          return (hydratedBlob.lastChangeEpoch ?? castData.oldestLatestChangeEpoch) - castData.oldestLatestChangeEpoch
         case "TRUCK_FACTOR":
           return Object.keys(hydratedBlob.authors ?? {}).length
       }
@@ -511,8 +516,8 @@ function roundedRectPathFromRect(x: number, y: number, width: number, height: nu
           z`
 }
 
-function flatten(tree: HydratedGitTreeObject) {
-  const flattened: HydratedGitBlobObject[] = []
+function flatten(tree: GitTreeObject) {
+  const flattened: GitBlobObject[] = []
   for (const child of tree.children) {
     if (child.type === "blob") {
       flattened.push(child)

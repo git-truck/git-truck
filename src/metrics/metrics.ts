@@ -1,5 +1,5 @@
 import distinctColors from "distinct-colors"
-import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { FinishedAnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
 import { setDominanceColor } from "./singleAuthor"
@@ -31,7 +31,7 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData): MetricsData {
+export function createMetricData(data: FinishedAnalyzerData): MetricsData {
   const authorColors = generateAuthorColors(data.authors)
 
   return [
@@ -118,7 +118,7 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
 }
 
 export function getMetricCalcs(
-  data: AnalyzerData,
+  data: FinishedAnalyzerData,
   authorshipType: AuthorshipType,
   authorColors: Map<string, `#${string}`>
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {

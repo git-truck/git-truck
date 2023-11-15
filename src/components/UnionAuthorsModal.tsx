@@ -9,17 +9,23 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useKey } from "react-use"
 import { Icon } from "@mdi/react"
 import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
+import { FinishedAnalyzerData } from "~/analyzer/model"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
   const submit = useSubmit()
-  const { authors } = analyzerData
   const authorUnions = truckConfig.unionedAuthors ?? []
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
   const [filter, setFilter] = useState("")
   const navigationData = useNavigation()
   const [, authorColors] = useMetrics()
   const [, startTransition] = useTransition()
+  useKey("Escape", onClose)
+  
+  if (!("hydrationFinished" in analyzerData)) return null
+  const castData = analyzerData as FinishedAnalyzerData
+
+  const { authors } = castData
 
   const flattedUnionedAuthors = authorUnions
     .reduce((acc, union) => {
@@ -86,8 +92,6 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   function handleModalWrapperClick(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) onClose()
   }
-
-  useKey("Escape", onClose)
 
   const getColorFromDisplayName = (displayName: string) => authorColors.get(displayName) ?? "#333"
 

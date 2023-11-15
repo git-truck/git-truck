@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import type { FinishedAnalyzerData, GitObject, HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
@@ -9,10 +9,11 @@ import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/Optio
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
-import { createMetricData as createMetricsData } from "../metrics/metrics"
+import { createMetricData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DepthType } from "~/metrics/chartDepth"
+import { getFinishedData } from "~/util"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -23,9 +24,14 @@ export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<OptionsContextType | null>(null)
   const [searchResults, setSearchResults] = useState<Record<string, HydratedGitObject>>({})
   const [path, setPath] = useState(data.repo.name)
-  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
+  const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData), [data])
+  const metricsData: MetricsData | undefined = useMemo(() => {
+    const finishedData = getFinishedData(data.analyzerData)
+    if (finishedData)
+      return createMetricData(finishedData)
+    return undefined
+  }, [data])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({

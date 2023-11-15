@@ -1,4 +1,4 @@
-import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { FinishedAnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 
 export const makeDupeMap = (authors: string[][]): Record<string, string> => {
   const dupeMap: Record<string, string> = {}
@@ -43,7 +43,7 @@ export function nameUnion(names: string[], authorAliasMap: Record<string, string
   return collector
 }
 
-export function addAuthorUnion(data: AnalyzerData, dupeMap: Record<string, string>) {
+export function addAuthorUnion(data: FinishedAnalyzerData, dupeMap: Record<string, string>) {
   data.commit.tree = addAuthorUnionRec(data.commit.tree, dupeMap)
   return data
 }

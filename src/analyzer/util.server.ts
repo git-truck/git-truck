@@ -4,7 +4,7 @@ import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
 import { dirname, resolve, sep } from "path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
+import type { GitTreeObject, GitObject, UnfinishedAnalyzerData } from "./model"
 import { performance } from "perf_hooks"
 import { resolve as resolvePath } from "path"
 import c from "ansi-colors"
@@ -76,7 +76,7 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject |
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
-export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
+export async function writeRepoToFile(outPath: string, analyzedData: UnfinishedAnalyzerData) {
   const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
   if (!existsSync(dir)) {

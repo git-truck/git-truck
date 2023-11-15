@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitObject, GitTreeObject, HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -50,7 +50,9 @@ export function DetailsCard({
 
   useEffect(() => {
     // Update clickedObject if data changes
-    setClickedObject((clickedObject) => findObjectInTree(analyzerData.commit.tree, clickedObject))
+    setClickedObject((clickedObject) => 
+      findObjectInTree(analyzerData.commit.tree, clickedObject)
+    )
   }, [analyzerData, setClickedObject])
 
   const [metricsData] = useMetrics()
@@ -62,7 +64,7 @@ export function DetailsCard({
         lightBackground: true,
       }
     }
-    const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
+    const colormap = metricsData ? metricsData[authorshipType]?.get(metricType)?.colormap : undefined
     const backgroundColor = colormap?.get(clickedObject.path) ?? ("#808080" as `#${string}`)
     const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
     return {
@@ -100,7 +102,10 @@ export function DetailsCard({
           {isBlob ? (
             <>
               <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
-              <CommitsEntry clickedBlob={clickedObject} />
+              { typeof clickedObject === "HydratedGitBlobObject" ?
+                <CommitsEntry clickedBlob={clickedObject} />
+                : null
+              }
               <LastchangedEntry clickedBlob={clickedObject} />
             </>
           ) : (
@@ -200,7 +205,7 @@ export function DetailsCard({
   )
 }
 
-function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject | null) {
+function findObjectInTree(tree: GitTreeObject, object: GitObject | null): GitObject | null {
   if (object === null) return null
   let currentTree = tree
   const steps = object.path.split("/")

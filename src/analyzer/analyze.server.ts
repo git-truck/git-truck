@@ -4,9 +4,9 @@ import type {
   GitCommitObject,
   GitCommitObjectLight,
   GitTreeObject,
-  AnalyzerData,
   TruckUserConfig,
   TruckConfig,
+  UnfinishedAnalyzerData,
 } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -194,7 +194,7 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
+export async function analyze(args: TruckConfig): Promise<UnfinishedAnalyzerData> {
   GitCaller.initInstance(args.path)
   const git = GitCaller.getInstance()
 
@@ -223,7 +223,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   const [branchHead, branchName] = findBranchHeadResult
   git.branch = branchName
 
-  let data: AnalyzerData | null = null
+  let data: UnfinishedAnalyzerData | null = null
 
   if (!args.invalidateCache) {
     const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
@@ -265,16 +265,16 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     if (repoTreeError) throw repoTreeError
 
-    const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
-      job: () => hydrateData(repoTree),
-      beforeMsg: "Hydrating commit tree",
-      afterMsg: "Commit tree hydrated",
-      errorMsg: "Error hydrating commit tree",
-    })
+    // const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
+    //   job: () => hydrateData(repoTree),
+    //   beforeMsg: "Hydrating commit tree",
+    //   afterMsg: "Commit tree hydrated",
+    //   errorMsg: "Error hydrating commit tree",
+    // })
 
-    if (hydratedRepoTreeError) throw hydratedRepoTreeError
+    // if (hydratedRepoTreeError) throw hydratedRepoTreeError
 
-    const [hydratedRepoTree, authors] = hydrateResult
+    // const [hydratedRepoTree, authors] = hydrateResult
 
     await git.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await git.resetGitSetting("diff.renames", renamesDefaultValue)
@@ -284,21 +284,22 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     let outPath = resolve((args.out as string) ?? defaultOutPath)
     if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
 
-    const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
+    // const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
 
     data = {
       cached: false,
       hiddenFiles,
-      authors,
-      authorsUnion,
+      // authors,
+      // authorsUnion,
       repo: repoName,
       branch: branchName,
-      commit: hydratedRepoTree,
+      commit: repoTree,
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits: {}
-    }
+      hydrationFinished: false
+      // commits: {}
+    } as UnfinishedAnalyzerData
 
     if (!args.invalidateCache) {
       await describeAsyncJob({
@@ -306,7 +307,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
           writeRepoToFile(outPath, {
             ...data,
             cached: true,
-          } as AnalyzerData),
+          } as UnfinishedAnalyzerData),
         beforeMsg: "Writing data to file",
         afterMsg: `Wrote data to ${resolve(outPath)}`,
         errorMsg: `Error writing data to file ${outPath}`,
@@ -317,8 +318,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   const truckignore = ignore().add(hiddenFiles)
   data.commit.tree = applyIgnore(data.commit.tree, truckignore)
   TreeCleanup(data.commit.tree)
-  initMetrics(data)
-  data.commit.tree = applyMetrics(data, data.commit.tree)
+  // initMetrics(data)
+  // data.commit.tree = applyMetrics(data, data.commit.tree)
 
   const stop = performance.now()
 
