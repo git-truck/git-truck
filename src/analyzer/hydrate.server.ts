@@ -138,8 +138,6 @@ function postHydrateCleanup(fileMap: Map<string, GitBlobObject>) {
     cast.commits?.sort((a, b) => {
       return b.time - a.time
     })
-    cast.commitsNoTime = cast.commits?.map(({hash, time}) => hash)
-    cast.commits = undefined
     cast.mutex = undefined
   })
 }
@@ -178,28 +176,6 @@ function convertFileTreeToMap(tree: GitTreeObject) {
 
   aux(tree)
   return map
-}
-
-function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
-  const commitMap = new Map<string, number>()
-  subTree(tree)
-  function subTree(tree: HydratedGitTreeObject) {
-    for (const child of tree.children) {
-      if (!child) continue
-      if (child.type === "blob") {
-        if (!child.commits) continue
-        for (const commit of child.commits) {
-          commitMap.set(commit.hash, commit.time)
-        }
-      } else if (child.type === "tree") {
-        subTree(child)
-      }
-    }
-  }
-  const commitArr = []
-  for (const [hash, time] of commitMap) commitArr.push({hash, time})
-  commitArr.sort((a, b) => b.time - a.time)
-  return commitArr
 }
 
 function getRecentRename(targetTimestamp: number, path: string) {
