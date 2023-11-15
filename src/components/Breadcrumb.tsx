@@ -47,17 +47,16 @@ export function Breadcrumb() {
                 )
             else
               return (
-                <>
+                <Fragment key={p}>
                   <button
                     className="card flex flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
-                    key={p}
                     onClick={() => setPath(p)}
                   >
                     {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
                     {name}
                   </button>
                   <Icon path={mdiChevronRight} size={1} />
-                </>
+                </Fragment>
               )
           })
         : null}

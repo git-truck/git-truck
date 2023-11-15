@@ -33,7 +33,6 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
   const selectedIdx = props.selectedItemIndex ? props.selectedItemIndex : currentIdx
   const items = Children.toArray(props.children).map(item => {
     if(!isValidElement(item)) return false
-    console.log(item);
     if (item.props.__TYPE && item.props.__TYPE == MenuItemTypeString) {
       return { title: item.props.title, children: item.props.children }
     }
@@ -42,7 +41,6 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
     <>
       <div className="flex flex-row justify-center overflow-hidden w-full">
         { items.map((item, idx) => (
-          <>
             <a
               href="#"
               key={ item.title + idx + "--tab" }
@@ -63,7 +61,6 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
             >
               { item.title }
             </a>
-          </>
         )) }
       </div>
       { items.map((item, idx) => (
