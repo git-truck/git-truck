@@ -1,6 +1,5 @@
 import type { AuthorshipType } from "~/metrics/metrics"
 import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
-import type { Mutex } from "async-mutex"
 
 export interface Repository {
   path: string
@@ -66,7 +65,6 @@ export interface GitBlobObject extends AbstractGitObject {
   path: string
   sizeInBytes: number
   blameAuthors: Record<string, number>
-  mutex: Mutex | undefined
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject

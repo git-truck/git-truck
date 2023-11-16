@@ -23,7 +23,6 @@ import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
-import { Mutex } from "async-mutex"
 
 let repoDir = "."
 
@@ -149,7 +148,6 @@ async function analyzeTree(path: string, name: string, hash: string) {
           name: newName,
           sizeInBytes: child.size as number,
           blameAuthors: {},
-          mutex: new Mutex()
         }
         // Don't block the current loop, just add the job to the queue and await it later
         // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())

@@ -24,7 +24,6 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
   content: undefined,
   hash: "",
   commits: [],
-  mutex: undefined
 })
 
 function sumContributions(authors: HydratedGitBlobObject["authors"]) {
@@ -60,7 +59,6 @@ describe("unionAuthors", () => {
       noCommits: 30,
       lastChangeEpoch: 1646818775,
       commits: [],
-      mutex: undefined
     }
     const sumBefore = sumContributions(parseTS.authors)
     const authors = unionAuthors(parseTS.authors, makeDupeMap(authorUnionsTwo))

@@ -99,7 +99,7 @@ export class GitCaller {
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
-    commits.forEach(x => args.push(x))
+    args.push(...commits)
     const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()
   }
@@ -370,9 +370,8 @@ export class GitCaller {
 
   async getCommitCount() {
     if (!this.branch) throw Error("Branch is undefined")
-    const args = ["log", this.branch, '--format="%at"']
-    const result = await runProcess(this.repo, "git", args) as string
-    return result.split(/\s/).length
+    const result = await runProcess(this.repo, "git", ["rev-list", "--count", this.branch])
+    return result as number
   }
 
   private async blame(path: string) {

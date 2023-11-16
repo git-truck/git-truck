@@ -38,7 +38,7 @@ function setIntialLogLevel() {
     })
     return process.env.LOG_LEVEL
   }
-  return LOG_LEVEL.WARN
+  return null
 }
 
 let logLevel = setIntialLogLevel()

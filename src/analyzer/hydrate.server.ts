@@ -47,7 +47,8 @@ export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<strin
 
 
         let filePath = file
-        if (file.includes("=>")) {
+        const fileHasMoved = file.includes("=>")
+        if (fileHasMoved) {
           filePath = analyzeRenamedFile(filePath, renamedFiles, time)
         }
         
@@ -65,34 +66,28 @@ async function gatherCommitsInRange(start: number, end: number, commits: Map<str
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
-  if (!blob.mutex) return
-  try {
-    await blob.mutex.acquire()
-    blob.noCommits = (blob.noCommits ?? 0) + 1
-    if (blob.commits) {
-      blob.commits.push({hash: commit.hash, time: commit.time})
-    } else {
-      blob.commits = [{hash: commit.hash, time: commit.time}]
-    }
-    if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
+  blob.noCommits = (blob.noCommits ?? 0) + 1
+  if (blob.commits) {
+    blob.commits.push({hash: commit.hash, time: commit.time})
+  } else {
+    blob.commits = [{hash: commit.hash, time: commit.time}]
+  }
+  if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
 
-    if (change.isBinary) {
-      blob.isBinary = true
-      blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + 1
-
-      for (const coauthor of commit.coauthors) {
-        blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
-      }
-      return
-    }
-
-    blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
+  if (change.isBinary) {
+    blob.isBinary = true
+    blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + 1
 
     for (const coauthor of commit.coauthors) {
-      blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + change.contribs
+      blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
     }
-  } finally {
-    blob.mutex.release()
+    return
+  }
+
+  blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
+
+  for (const coauthor of commit.coauthors) {
+    blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + change.contribs
   }
 }
 
@@ -129,18 +124,17 @@ export async function hydrateData(
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
-  postHydrateCleanup(fileMap)
+  sortCommits(fileMap)
   
   return [data, Array.from(authors)]
 }
 
-function postHydrateCleanup(fileMap: Map<string, GitBlobObject>) {
+function sortCommits(fileMap: Map<string, GitBlobObject>) {
   fileMap.forEach((blob,_) => {
     const cast = blob as HydratedGitBlobObject
     cast.commits?.sort((a, b) => {
       return b.time - a.time
     })
-    cast.mutex = undefined
   })
 }
 
