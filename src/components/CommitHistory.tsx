@@ -112,14 +112,15 @@ export function CommitHistory() {
     if (fetcher.state === "idle") {
       const data = fetcher.data as GitLogEntry[] | undefined | null
       if (!data) return
-      if (!commits || commits.length === 0) {
-        setCommits(data)
-      } else {
-        setCommits([...commits, ...data])
-      }
+      setCommits((prevCommits) => {
+        if (!prevCommits || prevCommits.length === 0) {
+          return data
+        } else {
+          return [...prevCommits, ...data]
+        }
+      })
     }
-  }, [fetcher.state])
-
+  }, [fetcher.data, fetcher.state])
 
   const headerText = useMemo<string>(() => {
     if (!clickedObject) return ""
