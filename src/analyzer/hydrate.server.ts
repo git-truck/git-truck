@@ -107,6 +107,8 @@ export async function hydrateData(
   const threadCount = cpus().length > 4 ? 4 : 2;
   const commitBundleSize = 100000
 
+  if (commitCount > 500000) log.warn("This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck")
+
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
