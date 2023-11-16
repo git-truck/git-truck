@@ -96,10 +96,10 @@ export class GitCaller {
     const args = [
       "show", 
       "--no-patch", 
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      ...commits
     ]
 
-    args.push(...commits)
     const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()
   }
