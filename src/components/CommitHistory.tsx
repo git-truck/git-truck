@@ -6,6 +6,7 @@ import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { useData } from "~/contexts/DataContext"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -44,12 +45,13 @@ function CommitDistFragment(props: CommitDistFragProps) {
   }
 
   return (
-      <Accordion key={items.length > 0 ? items[0].title : new Date().toDateString()}
-        titleLabels={true}
-        multipleOpen={true}
-        openByDefault={true}
-        items={items}
-      />
+    <Accordion
+      key={items.length > 0 ? items[0].title : new Date().toDateString()}
+      titleLabels={true}
+      multipleOpen={true}
+      openByDefault={true}
+      items={items}
+    />
   )
 }
 
@@ -70,13 +72,14 @@ function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
     }
   }
   const commitArr = []
-  for (const [hash, time] of commitMap) commitArr.push({hash, time})
+  for (const [hash, time] of commitMap) commitArr.push({ hash, time })
   commitArr.sort((a, b) => b.time - a.time)
   return commitArr
 }
 
 export function CommitHistory() {
   const [totalCommitHashes, setTotalCommitHashes] = useState<string[]>([])
+  const analyzerData = useData()
   const [commits, setCommits] = useState<GitLogEntry[] | null>(null)
   const [commitIndex, setCommitIndex] = useState(0)
   const commitIncrement = 5
@@ -84,15 +87,18 @@ export function CommitHistory() {
   const fetcher = useFetcher()
 
   function requestCommits(index: number, commitHashes?: string[]) {
-    if (commitHashes) fetcher.load(`/commits?commits=${commitHashes.slice(index, index + commitIncrement).join(",")}`)
-    else fetcher.load(`/commits?commits=${totalCommitHashes.slice(index, index + commitIncrement).join(",")}`)
+    const searchParams = new URLSearchParams()
+    const commitHashesToRequest = commitHashes ?? totalCommitHashes
+    searchParams.set("commits", commitHashesToRequest.slice(index, index + commitIncrement).join(","))
+    searchParams.set("branch", analyzerData.repo.currentHead)
+    fetcher.load(`/commits?${searchParams.toString()}`)
   }
 
   useEffect(() => {
     if (clickedObject) {
       let commitHashes: string[] = []
       if (clickedObject.type === "blob") {
-        commitHashes = clickedObject.commits.map(a => a.hash)
+        commitHashes = clickedObject.commits.map((a) => a.hash)
       } else {
         commitHashes = calculateCommitsForSubTree(clickedObject).map((a) => a.hash)
       }
@@ -124,7 +130,9 @@ export function CommitHistory() {
 
   const headerText = useMemo<string>(() => {
     if (!clickedObject) return ""
-    return `Commit history (${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${totalCommitHashes.length} shown)`
+    return `Commit history (${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
+      totalCommitHashes.length
+    } shown)`
   }, [clickedObject, totalCommitHashes, commitIndex])
 
   if (!clickedObject) return null
@@ -139,27 +147,21 @@ export function CommitHistory() {
   }
 
   if (commits.length === 0) {
-    return (
-        <h3 className="font-bold">No commit history</h3>
-    )
+    return <h3 className="font-bold">No commit history</h3>
   }
 
   return (
     <>
       <div className="flex cursor-pointer justify-between hover:opacity-70">
         <label className="label grow">
-          <h3 className="font-bold">
-            {headerText}
-          </h3>
+          <h3 className="font-bold">{headerText}</h3>
         </label>
       </div>
       <div>
-        <CommitDistFragment
-          items={commits}
-        />
+        <CommitDistFragment items={commits} />
 
         {fetcher.state === "idle" ? (
-          commitIndex + commitIncrement < totalCommitHashes.length? (
+          commitIndex + commitIncrement < totalCommitHashes.length ? (
             <span
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
               className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
