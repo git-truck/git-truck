@@ -69,7 +69,7 @@ export default function Index() {
   )
 }
 
-function RepositoryGrid({ repositories }: { repositories: Repository[] }) {
+function RepositoryGrid({ repositories }: { repositories: SerializeFrom<Repository>[] }) {
   return repositories.length === 0 ? (
     <>
       <p>
