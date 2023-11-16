@@ -16,6 +16,7 @@ export function last<T>(array: T[]) {
 }
 
 export function runProcess(dir: string, command: string, args: string[]) {
+  log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
