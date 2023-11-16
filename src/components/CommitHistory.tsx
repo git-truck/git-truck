@@ -34,6 +34,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
                 style={{ listStyleImage: `url(${commitIcon})` }}
                 onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
                 key={value.hash + "--itemContentAccordion"}
+                title={`By: ${value.author}`}
               >
                 {value.message}
               </li>
