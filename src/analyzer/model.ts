@@ -39,7 +39,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 12
+export const AnalyzerDataInterfaceVersion = 14
 
 export interface AnalyzerData {
   cached: boolean
@@ -77,7 +77,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   unionedAuthors?: Record<AuthorshipType, Record<string, number>>
   dominantAuthor?: Record<AuthorshipType, [string, number]>
   isSearchResult?: boolean
-  commits: string[]
+  commits: {hash: string, time: number}[]
 }
 
 export interface GitTreeObject extends AbstractGitObject {
@@ -125,10 +125,18 @@ export type PersonWithTime = Person & {
   timezone: string
 }
 
+export interface FileChange {
+  path: string
+  isBinary: boolean
+  contribs: number
+}
+
 export interface GitLogEntry {
   author: string
   time: number
   body: string
   message: string
   hash: string
+  coauthors: Person[]
+  fileChanges: FileChange[]
 }

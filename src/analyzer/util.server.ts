@@ -2,11 +2,10 @@ import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve, sep } from "path"
+import { dirname, resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitBlobObject, GitTreeObject, AnalyzerData } from "./model"
+import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "perf_hooks"
-import { resolve as resolvePath } from "path"
 import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
@@ -16,6 +15,7 @@ export function last<T>(array: T[]) {
 }
 
 export function runProcess(dir: string, command: string, args: string[]) {
+  log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
@@ -35,12 +35,15 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export function analyzeRenamedFile(file: string, renamedFiles: Map<string, string>) {
+export function analyzeRenamedFile(
+  file: string,
+  renamedFiles: Map<string, { path: string; timestamp: number }[]>,
+  timestamp: number,
+) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
   const groups = match?.groups ?? {}
-
   let oldPath: string
   let newPath: string
 
@@ -54,13 +57,15 @@ export function analyzeRenamedFile(file: string, renamedFiles: Map<string, strin
     newPath = groups["newPath2"] ?? ""
   }
 
-  const newest = renamedFiles.get(newPath) ?? newPath
-  renamedFiles.delete(newPath)
-  renamedFiles.set(oldPath, newest)
-  return newest
+  if (renamedFiles.has(oldPath)) {
+    renamedFiles.get(oldPath)?.push({ path: newPath, timestamp })
+  } else {
+    renamedFiles.set(oldPath, [{ path: newPath, timestamp }])
+  }
+  return newPath
 }
 
-export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObject | undefined {
+export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject | undefined {
   const dirs = path.split("/")
 
   if (dirs.length < 2) {
@@ -68,7 +73,6 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitBlobObje
     const [file] = dirs
     const result = tree.children.find((x) => x.name === file && x.type === "blob")
     if (!result) return
-    if (result.type === "tree") return undefined
     return result
   }
   const subtree = tree.children.find((x) => x.name === dirs[0])
@@ -87,7 +91,7 @@ export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerDat
 }
 
 export function getDirName(dir: string) {
-  return resolve(dir).split(sep).slice().reverse()[0]
+  return resolvePath(dir).split(sep).slice().reverse()[0]
 }
 
 export const formatMs = (ms: number) => {
@@ -168,8 +172,8 @@ export async function describeAsyncJob<T>({
   }
 }
 
-export const getBaseDirFromPath = (path: string) => resolve(path, "..")
-export const getSiblingRepository = (path: string, repo: string) => resolve(getBaseDirFromPath(path), repo)
+export const getBaseDirFromPath = (path: string) => resolvePath(path, "..")
+export const getSiblingRepository = (path: string, repo: string) => resolvePath(getBaseDirFromPath(path), repo)
 
 /**
  * This functions handles try / catch for you, so your code stays flat.

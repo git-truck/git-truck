@@ -91,6 +91,19 @@ export class GitCaller {
     return await GitCaller._getRepositoryHead(this.repo)
   }
 
+  async gitShow(commits: string[]) {
+    if (!this.branch) throw Error("branch not set")
+    const args = [
+      "show", 
+      "--no-patch", 
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      ...commits
+    ]
+
+    const result = (await runProcess(this.repo, "git", args)) as string
+    return result.trim()
+  }
+
   static async _getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
     return result.trim()
@@ -264,6 +277,7 @@ export class GitCaller {
       `--max-count=${count}`,
       this.branch,
       "--numstat",
+      // "--cc", // include file changes for merge commits
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
 

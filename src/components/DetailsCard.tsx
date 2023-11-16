@@ -13,7 +13,7 @@ import byteSize from "byte-size"
 import type { AuthorshipType } from "~/metrics/metrics"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
-import { FileHistoryElement } from "./FileHistoryElement"
+import { CommitHistory } from "./CommitHistory"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MenuItem, MenuTab } from "./MenuTab"
@@ -130,9 +130,6 @@ export function DetailsCard({
               <Icon path={mdiAccountMultiple} />
               Group authors
             </button>
-            <div className="card bg-white/70 text-black">
-              <FileHistoryElement state={state} clickedObject={clickedObject} />
-            </div>
           </div>
           <div className="mt-2 flex gap-2">
             {isBlob ? (
@@ -199,7 +196,9 @@ export function DetailsCard({
             )}
           </div>
         </MenuItem>
-        <MenuItem title="Commits">{CommitsCard()}</MenuItem>
+        <MenuItem title="Commits">
+          <CommitsCard />
+        </MenuItem>
       </MenuTab>
     </div>
   )
@@ -250,7 +249,7 @@ function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Commits
       </div>
-      <p className="break-all text-sm">{props.clickedBlob.commits.length > 0 ? props.clickedBlob.commits.length : 0}</p>
+      <p className="break-all text-sm">{props.clickedBlob.noCommits ? props.clickedBlob.noCommits : 0}</p>
     </>
   )
 }
