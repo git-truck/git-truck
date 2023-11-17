@@ -22,7 +22,7 @@
     "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts",
     "dev": "remix dev",
     "watch": "remix watch",
-    "start": "remix-serve build",
+    "start": "npm run build && node .",
     "clean": "rimraf -rf build public/build .cache .temp",
     "tsc": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
