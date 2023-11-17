@@ -65,7 +65,6 @@
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
     "d3-hierarchy": "^3.1.2",
-    "distinct-colors": "^3.0.0",
     "dotenv": "^16.3.1",
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^9.0.0",
@@ -101,6 +100,7 @@
     "ts-jest": "^29.1.1",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
+    "uniqolor": "^1.1.0",
     "yargs": "^17.7.2"
   },
   "jest": {
