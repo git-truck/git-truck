@@ -11,7 +11,7 @@ import type { HydratedGitObject } from "~/analyzer/model"
 import { useDeferredValue } from "react"
 import { getPathFromRepoAndHead } from "~/util"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit } from "@remix-run/react"
+import { useNavigation, useSubmit } from "@remix-run/react"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
@@ -29,6 +29,7 @@ export function Legend({
   const [metricsData] = useMetrics()
   const deferredHoveredObject = useDeferredValue(hoveredObject)
   const { repo } = useData()
+  const transitionState = useNavigation()
 
   const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
 
@@ -68,7 +69,7 @@ export function Legend({
             <Icon path={mdiAccountMultiple} />
             Group authors
           </button>
-          <button className="btn" onClick={rerollColors}>
+          <button className="btn" disabled={transitionState.state !== "idle"} onClick={rerollColors}>
             <Icon path={mdiDiceMultipleOutline} />
             Generate new author colors
           </button>
