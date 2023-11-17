@@ -1,46 +1,48 @@
-name: "Bump version"
+name: "Release"
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - "main"
 
 jobs:
   bump-version:
-      name: "Bump Version on main"
-      runs-on: ubuntu-latest
+    name: "Build, bump and release"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-      steps:
-        - name: "Checkout source code"
-          uses: "actions/checkout@v2"
-          with:
-            ref: ${{ github.ref }}
-            token: ${{ secrets.TOKEN }}
-        - name: "cat package.json"
-          run: cat ./package.json
-        - name: "Setup Node.js"
-          uses: "actions/setup-node@v2"
-          with:
-            node-version: 16
-        - name: Update version in package.json
-          uses: "phips28/gh-action-bump-version@v9.0.31"
-          with:
-            patch-wording: "Fix,fix,Patch,patch"
-            minor-wording: "Feat,feat,NewVersion"
-            major-wording:  'BREAKING CHANGE'
-            commit-message: "Bump version to {{version}} [skip ci]"
-            tag-prefix:  'v'
-          env:
-            GITHUB_TOKEN: ${{ secrets.TOKEN }}
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2"
+        with:
+          ref: ${{ github.ref }}
+      - name: "cat package.json"
+        run: cat ./package.json
+      - name: Update version in package.json
+        uses: "phips28/gh-action-bump-version@v10.1.1"
+        with:
+          patch-wording: "Fix,fix,Patch,patch"
+          minor-wording: "Add,Feat,feat,NewVersion"
+          major-wording: "BREAKING CHANGE"
+          commit-message: "Bump version to {{version}} [skip ci]"
+          tag-prefix: "v"
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
-        - run: npm install --package-lock-only --ignore-scripts
-        - run: git add package-lock.json
-        - run: git config user.email "version-bot@example.com"
-        - run: git config user.name "Version Bot"
-        - run: git commit --amend --no-edit
-        - run: git push --tags
+      - name: "Setup Node.js"
+        uses: "actions/setup-node@v2"
+        with:
+          node-version: 18
+      - run: npm install --package-lock-only --ignore-scripts
+      - run: git add package-lock.json
+      - run: git config user.email "version-bot@example.com"
+      - run: git config user.name "Version Bot"
+      - run: git commit --amend --no-edit
+      - run: git push --tags
 
-        - run: npm ci
-        - run: npm run test:unit
-        - uses: JS-DevTools/npm-publish@v1
-          with:
-            token: ${{ secrets.NPM_TOKEN }}
-            
+      - run: npm ci
+      - run: npm run test:unit
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
