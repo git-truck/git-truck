@@ -26,6 +26,7 @@ export interface TruckUserConfig {
   unionedAuthors?: string[][]
   hiddenFiles?: string[]
   invalidateCache?: boolean
+  colorSeed?: string
 }
 
 export interface TruckConfig {
@@ -36,6 +37,7 @@ export interface TruckConfig {
   unionedAuthors: string[][]
   hiddenFiles: string[]
   invalidateCache: boolean
+  colorSeed?: string
 }
 
 // Bump this if changes are made to this file

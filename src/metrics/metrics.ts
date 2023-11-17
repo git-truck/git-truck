@@ -31,8 +31,8 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData): MetricsData {
-  const authorColors = generateAuthorColors(data.authors)
+export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
+  const authorColors = generateAuthorColors(data.authors, colorSeed)
 
   return [
     {
@@ -87,11 +87,12 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[]): Map<string, `#${string}`> {
+export function generateAuthorColors(authors: string[], colorSeed: string | undefined): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
-    const color = uniqolor(author).color as `#${string}`
+    const seed = colorSeed ?? ""
+    const color = uniqolor(author + seed).color as `#${string}`
     map.set(author, color)
   }
   return map
