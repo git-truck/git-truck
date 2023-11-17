@@ -1,4 +1,3 @@
-import distinctColors from "distinct-colors"
 import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
@@ -10,6 +9,7 @@ import { TruckFactorTranslater } from "./truckFactor"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
+import uniqolor from "uniqolor"
 
 export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
 
@@ -31,8 +31,8 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData): MetricsData {
-  const authorColors = generateAuthorColors(data.authors)
+export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
+  const authorColors = generateAuthorColors(data.authors, colorSeed)
 
   return [
     {
@@ -87,15 +87,12 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[]): Map<string, `#${string}`> {
-  const authorsMap: Record<string, number> = {}
-  for (const author of Object.keys(authors)) authorsMap[author] = 0
-
-  const palette = distinctColors({ count: authors.length })
-  let index = 0
+export function generateAuthorColors(authors: string[], colorSeed: string | undefined): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
-  for (const author of authors) {
-    const color = palette[index++].hex() as `#${string}`
+  for (let i = 0; i < authors.length; i++) {
+    const author = authors[i]
+    const seed = colorSeed ?? ""
+    const color = uniqolor(author + seed).color as `#${string}`
     map.set(author, color)
   }
   return map

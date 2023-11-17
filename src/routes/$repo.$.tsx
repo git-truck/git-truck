@@ -32,6 +32,7 @@ import { useClient } from "~/hooks"
 import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
+import randomstring from "randomstring"
 
 let invalidateCache = false
 
@@ -90,6 +91,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   const ignore = formData.get("ignore")
   const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
+  const rerollColors = formData.get("rerollColors")
 
   if (refresh) {
     invalidateCache = true
@@ -142,6 +144,18 @@ export const action: ActionFunction = async ({ request, params }) => {
     } catch (e) {
       console.error(e)
     }
+    return null
+  }
+
+  if (typeof rerollColors === "string") {
+    const newSeed = randomstring.generate(6)
+    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
+      return {
+        ...prevConfig,
+        colorSeed: newSeed,
+      }
+    })
+    return null
   }
   return null
 }
