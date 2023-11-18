@@ -1,8 +1,8 @@
-import clsx from "clsx";
-import type { PropsWithChildren, ReactNode } from "react";
-import { Children, isValidElement, useState  } from "react"
+import clsx from "clsx"
+import type { PropsWithChildren, ReactNode } from "react"
+import { Children, isValidElement, useState } from "react"
 
-const MenuItemTypeString = "MENUITEM";
+const MenuItemTypeString = "MENUITEM"
 
 type InternalMenuItem = {
   title: string
@@ -25,47 +25,50 @@ export const MenuItem = (props: PropsWithChildren<MenuItemProps>) => {
 }
 
 MenuItem.defaultProps = {
-  "__TYPE": MenuItemTypeString
+  __TYPE: MenuItemTypeString
 }
 
 export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
-  const [ currentIdx, setCurrentIdx ] = useState(0)
+  const [currentIdx, setCurrentIdx] = useState(0)
   const selectedIdx = props.selectedItemIndex ? props.selectedItemIndex : currentIdx
-  const items = Children.toArray(props.children).map(item => {
-    if(!isValidElement(item)) return false
+  const items = Children.toArray(props.children).map((item) => {
+    if (!isValidElement(item)) return false
     if (item.props.__TYPE && item.props.__TYPE == MenuItemTypeString) {
       return { title: item.props.title, children: item.props.children }
     }
-  }) as InternalMenuItem[];
+    return false
+  }) as InternalMenuItem[]
   return (
     <>
-      <div className="flex flex-row justify-center overflow-hidden w-full">
-        { items.map((item, idx) => (
-            <a
-              href="#"
-              key={ item.title + idx + "--tab" }
-              className={clsx("flex-1 btn", {
-                        "btn--outlined--light": !props.lightBackground,
-                        "btn--outlined": props.lightBackground,
-                        "opacity-50": selectedIdx == idx,
-                        "rounded-tr-none rounded-br-none": idx != (items.length-1),
-                        "rounded-tl-none rounded-bl-none": idx == (items.length-1)
-                    })}
-              onClick={(event) => {
-                event.preventDefault();
-                if (props.onChange) {
-                  props.onChange(idx)
-                }
-                setCurrentIdx((currentValue) => (currentValue !== idx ? idx : currentValue))
-              } }
-            >
-              { item.title }
-            </a>
-        )) }
+      <div className="flex w-full flex-row justify-center overflow-hidden">
+        {items.map((item, idx) => (
+          <button
+            key={item.title + idx + "--tab"}
+            className={clsx("btn flex-1", {
+              "btn--outlined--light": !props.lightBackground,
+              "btn--outlined": props.lightBackground,
+              "opacity-50": selectedIdx === idx,
+              "rounded-br-none rounded-tr-none": idx !== items.length - 1,
+              "rounded-bl-none rounded-tl-none": idx === items.length - 1
+            })}
+            onClick={() => {
+              if (props.onChange) {
+                props.onChange(idx)
+              }
+              setCurrentIdx((currentValue) => (currentValue !== idx ? idx : currentValue))
+            }}
+          >
+            {item.title}
+          </button>
+        ))}
       </div>
-      { items.map((item, idx) => (
-        idx == selectedIdx ? <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>{ item.children }</div> : null
-      )) }
+      {items.map((item, idx) =>
+        idx == selectedIdx ? (
+          <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>
+            {item.children}
+          </div>
+        ) : null
+      )}
     </>
   )
 }

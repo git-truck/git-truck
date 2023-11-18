@@ -17,12 +17,12 @@ describe("getCoAuthors", () => {
     const expected = [
       {
         name: "Bob Bobby",
-        email: "bob@example.com",
+        email: "bob@example.com"
       },
       {
         name: "Alice Lmao",
-        email: "alice@example.com",
-      },
+        email: "alice@example.com"
+      }
     ]
     const actual = getCoAuthors(sampleDescription)
     expect(actual).toStrictEqual(expected)

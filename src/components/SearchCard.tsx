@@ -1,7 +1,7 @@
-import { memo, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { memo, useEffect, useMemo, useRef, useState, useTransition, useId } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
-import { useId } from "react"
+
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"

@@ -26,7 +26,7 @@ function handleBrowserRequest(
           resolve(
             new Response(createReadableStreamFromReadable(body), {
               headers: responseHeaders,
-              status: responseStatusCode,
+              status: responseStatusCode
             })
           )
 
@@ -38,7 +38,7 @@ function handleBrowserRequest(
         onError(error: unknown) {
           console.error(error)
           responseStatusCode = 500
-        },
+        }
       }
     )
 

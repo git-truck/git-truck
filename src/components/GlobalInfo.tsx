@@ -52,7 +52,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
             </button>
             <div
               className={clsx("card absolute left-0 top-0 z-10 h-max w-max shadow transition-opacity", {
-                "hidden opacity-0": !analysisDetailsVisible,
+                "hidden opacity-0": !analysisDetailsVisible
               })}
             >
               <h2 className="card__title">Analysis details</h2>

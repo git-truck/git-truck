@@ -53,7 +53,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
   const options: TruckUserConfig = {
-    invalidateCache: invalidateCache || args.invalidateCache,
+    invalidateCache: invalidateCache || args.invalidateCache
   }
   options.path = resolve(args.path, params["repo"])
   options.branch = params["*"]
@@ -63,7 +63,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
 
   const analyzerData = await analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? [])),
+    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
 
   invalidateCache = false
@@ -77,7 +77,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     analyzerData,
     repo,
     gitTruckInfo: await getGitTruckInfo(),
-    truckConfig,
+    truckConfig
   })
 }
 
@@ -108,7 +108,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
       return {
         ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values()),
+        hiddenFiles: Array.from(hiddenFilesSet.values())
       }
     })
     return null
@@ -121,7 +121,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
       return {
         ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values()),
+        hiddenFiles: Array.from(hiddenFilesSet.values())
       }
     })
     return null
@@ -138,7 +138,7 @@ export const action: ActionFunction = async ({ request, params }) => {
       await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
         return {
           ...prevConfig,
-          unionedAuthors: json,
+          unionedAuthors: json
         }
       })
     } catch (e) {
@@ -152,7 +152,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
       return {
         ...prevConfig,
-        colorSeed: newSeed,
+        colorSeed: newSeed
       }
     })
     return null
@@ -261,7 +261,7 @@ export default function Repo() {
       <div className={`app-container ${defineTheContainerClass()}`}>
         <aside
           className={clsx("flex flex-col gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen,
+            "overflow-y-auto": !isFullscreen
           })}
         >
           {!isFullscreen ? (
@@ -271,8 +271,8 @@ export default function Repo() {
                 className={clsx(
                   "absolute top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white",
                   {
-                    "left-arrow-space": !isLeftPanelCollapse,
-                  },
+                    "left-arrow-space": !isLeftPanelCollapse
+                  }
                 )}
               >
                 <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
@@ -299,7 +299,7 @@ export default function Repo() {
 
         <aside
           className={clsx("flex flex-col gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen,
+            "overflow-y-auto": !isFullscreen
           })}
         >
           {!isFullscreen ? (
@@ -320,7 +320,7 @@ export default function Repo() {
               <DetailsCard
                 className={clsx({
                   "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                    isFullscreen,
+                    isFullscreen
                 })}
                 showUnionAuthorsModal={showUnionAuthorsModal}
               />
@@ -342,7 +342,7 @@ export default function Repo() {
 
 const FullscreenButton = memo(function FullscreenButton({
   setIsFullscreen,
-  isFullscreen,
+  isFullscreen
 }: {
   setIsFullscreen: Dispatch<SetStateAction<boolean>>
   isFullscreen: boolean
@@ -360,7 +360,7 @@ const FullscreenButton = memo(function FullscreenButton({
 
 function ChartWrapper({
   hoveredObject,
-  setHoveredObject,
+  setHoveredObject
 }: {
   hoveredObject: HydratedGitObject | null
   setHoveredObject: (obj: HydratedGitObject | null) => void
@@ -374,7 +374,7 @@ function ChartWrapper({
       <Chart setHoveredObject={setHoveredObject} />
       {createPortal(
         <Tooltip hoveredObject={hoveredObject} x={mouse.docX} y={mouse.docY} w={window.innerWidth} />,
-        document.body,
+        document.body
       )}
     </div>
   )

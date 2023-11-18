@@ -3,7 +3,7 @@ import anitruck from "~/assets/truck.gif"
 
 export function LoadingIndicator({
   loadingText = "Loading",
-  className = "",
+  className = ""
 }: {
   loadingText?: string
   className?: string
@@ -12,7 +12,7 @@ export function LoadingIndicator({
     <div
       className={clsx("grid h-full w-full place-items-center", className)}
       style={{
-        backgroundColor: "var(--global-bg-color)",
+        backgroundColor: "var(--global-bg-color)"
       }}
     >
       <div className="flex animate-hide-initially flex-col px-2 py-2 opacity-0">

@@ -1,6 +1,6 @@
-import { useTransition } from "react"
+import { useTransition, useState } from "react"
 import type { MouseEvent } from "react"
-import { useState } from "react"
+
 import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
@@ -34,7 +34,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
     submit(form, {
       action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post",
+      method: "post"
     })
   }
 
@@ -44,7 +44,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
     submit(form, {
       action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post",
+      method: "post"
     })
   }
 
@@ -55,7 +55,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
     submit(form, {
       action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post",
+      method: "post"
     })
     setSelectedAuthors([])
   }
@@ -72,7 +72,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
     submit(form, {
       action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post",
+      method: "post"
     })
   }
 
@@ -229,7 +229,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   function AliasEntry({
     alias,
     onClick,
-    disabled,
+    disabled
   }: {
     alias: string
     disabled?: boolean

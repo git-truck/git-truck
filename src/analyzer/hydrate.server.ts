@@ -6,7 +6,7 @@ import type {
   GitTreeObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
-  HydratedGitTreeObject,
+  HydratedGitTreeObject
 } from "./model"
 import { analyzeRenamedFile } from "./util.server"
 import { GitCaller } from "./git-caller.server"
@@ -15,10 +15,14 @@ import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
 
-let renamedFiles: Map<string, {path: string, timestamp: number}[]>
+let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
 
-export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>, handleAuthors: boolean) {
+export function gatherCommitsFromGitLog(
+  gitLogResult: string,
+  commits: Map<string, GitLogEntry>,
+  handleAuthors: boolean
+) {
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {
     const groups = match.groups ?? {}
@@ -30,7 +34,7 @@ export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<strin
     const contributionsString = groups.contributions
     const coauthors = body ? getCoAuthors(body) : []
     const fileChanges: FileChange[] = []
-    
+
     log.debug(`Checking commit from ${time}`)
 
     if (handleAuthors) {
@@ -45,15 +49,16 @@ export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<strin
         const isBinary = contribMatch.groups?.insertions === "-"
         if (!file) throw Error("file not found")
 
-
         let filePath = file
         const fileHasMoved = file.includes("=>")
         if (fileHasMoved) {
           filePath = analyzeRenamedFile(filePath, renamedFiles, time)
         }
-        
-        const contribs = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-        fileChanges.push({isBinary, contribs, path: filePath})
+
+        const contribs = isBinary
+          ? 1
+          : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
+        fileChanges.push({ isBinary, contribs, path: filePath })
       }
     }
     commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
@@ -61,16 +66,16 @@ export function gatherCommitsFromGitLog(gitLogResult: string, commits: Map<strin
 }
 
 async function gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
-    const gitLogResult = await GitCaller.getInstance().gitLog(start, end - start)
-    gatherCommitsFromGitLog(gitLogResult, commits, true)
+  const gitLogResult = await GitCaller.getInstance().gitLog(start, end - start)
+  gatherCommitsFromGitLog(gitLogResult, commits, true)
 }
 
 async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
   blob.noCommits = (blob.noCommits ?? 0) + 1
   if (blob.commits) {
-    blob.commits.push({hash: commit.hash, time: commit.time})
+    blob.commits.push({ hash: commit.hash, time: commit.time })
   } else {
-    blob.commits = [{hash: commit.hash, time: commit.time}]
+    blob.commits = [{ hash: commit.hash, time: commit.time }]
   }
   if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
 
@@ -91,46 +96,47 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
   }
 }
 
-export async function hydrateData(
-  commit: GitCommitObject
-): Promise<[HydratedGitCommitObject, string[]]> {
+export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
-  const threadCount = cpus().length > 4 ? 4 : 2;
+  const threadCount = cpus().length > 4 ? 4 : 2
   const commitBundleSize = 100000
 
-  if (commitCount > 500000) log.warn("This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck")
+  if (commitCount > 500000)
+    log.warn(
+      "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
+    )
 
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
-    const sectionSize = Math.ceil(runCountCommit / threadCount);
-    
+    const sectionSize = Math.ceil(runCountCommit / threadCount)
+
     const commits = new Map<string, GitLogEntry>()
-      
+
     const promises = Array.from({ length: threadCount }, (_, i) => {
-      const sectionStart = index + i * sectionSize;
-      let sectionEnd = sectionStart + sectionSize;
+      const sectionStart = index + i * sectionSize
+      let sectionEnd = sectionStart + sectionSize
       if (sectionEnd > commitCount) sectionEnd = runCountCommit
       log.info("start thread " + sectionStart + "-" + sectionEnd)
-      return gatherCommitsInRange(sectionStart, sectionEnd, commits);
-    });
-    
+      return gatherCommitsInRange(sectionStart, sectionEnd, commits)
+    })
+
     await Promise.all(promises)
-    
+
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
   sortCommits(fileMap)
-  
+
   return [data, Array.from(authors)]
 }
 
 function sortCommits(fileMap: Map<string, GitBlobObject>) {
-  fileMap.forEach((blob,_) => {
+  fileMap.forEach((blob, _) => {
     const cast = blob as HydratedGitBlobObject
     cast.commits?.sort((a, b) => {
       return b.time - a.time
@@ -139,9 +145,9 @@ function sortCommits(fileMap: Map<string, GitBlobObject>) {
 }
 
 async function hydrateBlobs(files: Map<string, GitBlobObject>, commits: Map<string, GitLogEntry>) {
-  for (const [_,commit] of commits) {
+  for (const [, commit] of commits) {
     for (const change of commit.fileChanges) {
-      let recentChange = {path: change.path, timestamp: commit.time}
+      let recentChange = { path: change.path, timestamp: commit.time }
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const rename = getRecentRename(recentChange.timestamp, recentChange.path)
@@ -163,7 +169,7 @@ function convertFileTreeToMap(tree: GitTreeObject) {
   function aux(recTree: GitTreeObject) {
     for (const child of recTree.children) {
       if (child.type === "blob") {
-        map.set(child.path.substring(child.path.indexOf("/")+1), child)
+        map.set(child.path.substring(child.path.indexOf("/") + 1), child)
       } else {
         aux(child)
       }
@@ -175,30 +181,29 @@ function convertFileTreeToMap(tree: GitTreeObject) {
 }
 
 function getRecentRename(targetTimestamp: number, path: string) {
-  const renames = renamedFiles.get(path);
-  if (!renames) return undefined;
+  const renames = renamedFiles.get(path)
+  if (!renames) return undefined
 
-  let minTimestamp = Infinity;
-  let resultRename = undefined;
+  let minTimestamp = Infinity
+  let resultRename = undefined
 
   for (const rename of renames) {
-    const currentTimestamp = rename.timestamp;
+    const currentTimestamp = rename.timestamp
     if (currentTimestamp > targetTimestamp && currentTimestamp < minTimestamp) {
-      minTimestamp = currentTimestamp;
-      resultRename = rename;
+      minTimestamp = currentTimestamp
+      resultRename = rename
     }
   }
 
-  if (minTimestamp === Infinity) return undefined;
-  return resultRename;
+  if (minTimestamp === Infinity) return undefined
+  return resultRename
 }
-
 
 function initially_mut(data: HydratedGitCommitObject) {
   data.oldestLatestChangeEpoch = Number.MAX_VALUE
   data.newestLatestChangeEpoch = Number.MIN_VALUE
   authors = new Set()
-  renamedFiles = new Map<string, {path: string, timestamp: number}[]>()
+  renamedFiles = new Map<string, { path: string; timestamp: number }[]>()
 
   addAuthorsField_mut(data.tree)
 }

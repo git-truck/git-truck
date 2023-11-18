@@ -21,7 +21,7 @@ export function unionAuthors(authors: Record<string, number>, authorAliasMap: Re
         const credits = (newAuthorObject[author] ?? 0) + contributionCount
         return {
           ...newAuthorObject,
-          [author]: credits,
+          [author]: credits
         }
       }
 
@@ -52,7 +52,7 @@ function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Record<str
   for (const child of tree.children) {
     if (child.type === "blob") {
       child.unionedAuthors = {
-        HISTORICAL: unionAuthors(child.authors, authorUnions),
+        HISTORICAL: unionAuthors(child.authors, authorUnions)
         // BLAME: unionAuthors(child.blameAuthors, authorUnions),
       }
     } else {

@@ -1,8 +1,5 @@
 import Icon from "@mdi/react"
 import clsx from "clsx"
-import type { ReactNode } from "react"
-import { useId } from "react"
-import { useOptions } from "~/contexts/OptionsContext"
 
 interface EnumSelectProps<T extends string> {
   enum: Record<T, string>
@@ -22,7 +19,7 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
           key={key}
           className={clsx("btn flex h-auto w-max justify-between gap-2 rounded-lg px-1 py-1 text-xs/none", {
             "btn--primary": key === props.defaultValue,
-            "btn--outlined border-transparent hover:text-blue-500": key !== props.defaultValue,
+            "btn--outlined border-transparent hover:text-blue-500": key !== props.defaultValue
           })}
           onClick={() => props.onChange(key)}
         >

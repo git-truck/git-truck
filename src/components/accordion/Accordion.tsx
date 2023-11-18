@@ -1,4 +1,4 @@
-import type { ReactNode} from "react";
+import type { ReactNode } from "react"
 import { useState } from "react"
 import AccordionItem from "./AccordionItem"
 
@@ -7,19 +7,13 @@ export type AccordionData = {
   content: ReactNode
 }
 
-export type ShowMoreLabelProps = {
-  toggle: () => void
-  items: Array<any>
-  show: boolean
-}
-
 function Accordion({
   items,
   multipleOpen,
   openByDefault,
   titleLabels,
   currentState,
-  actionClickLabels,
+  actionClickLabels
 }: {
   items: Array<AccordionData>
   multipleOpen: boolean
@@ -37,31 +31,30 @@ function Accordion({
       : setCurrentIdx((currentValue) => (currentValue.includes(idx) ? [] : [idx]))
   }
   if (openByDefault && !multipleOpen) {
-    setCurrentIdx([0]);
+    setCurrentIdx([0])
   }
   return (
-    <ul className="block m-0 pl-4 overflow-x-hidden">
+    <ul className="m-0 block overflow-x-hidden pl-4">
       {items.map((item, idx) => (
-          <AccordionItem
-            key={item.title + idx + "--accordion"}
-            data={item}
-            isOpen={
-              currentState && currentState[idx]
-                ? currentState[idx]
-                : openByDefault && multipleOpen
-                ? !currentIdx.includes(idx)
-                : currentIdx.includes(idx)
-            }
-            titleLabels={titleLabels}
-            btnOnClick={() => {
-              btnOnClick(idx)
-              if (actionClickLabels) actionClickLabels(idx);
-            }}
-          />
+        <AccordionItem
+          key={item.title + idx + "--accordion"}
+          data={item}
+          isOpen={
+            currentState && currentState[idx]
+              ? currentState[idx]
+              : openByDefault && multipleOpen
+              ? !currentIdx.includes(idx)
+              : currentIdx.includes(idx)
+          }
+          titleLabels={titleLabels}
+          btnOnClick={() => {
+            btnOnClick(idx)
+            if (actionClickLabels) actionClickLabels(idx)
+          }}
+        />
       ))}
     </ul>
   )
 }
-
 
 export default Accordion

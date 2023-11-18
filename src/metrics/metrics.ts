@@ -14,7 +14,7 @@ import uniqolor from "uniqolor"
 export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
 
 export const Authorship = {
-  HISTORICAL: "Complete history",
+  HISTORICAL: "Complete history"
   // BLAME: "Newest version",
 }
 
@@ -26,7 +26,7 @@ export const Metric = {
   TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Commits",
   SINGLE_AUTHOR: "Single author",
-  LAST_CHANGED: "Last changed",
+  LAST_CHANGED: "Last changed"
 }
 
 export type MetricType = keyof typeof Metric
@@ -36,10 +36,10 @@ export function createMetricData(data: AnalyzerData, colorSeed: string | undefin
 
   return [
     {
-      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors)),
+      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors))
       // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
     },
-    authorColors,
+    authorColors
   ]
 }
 
@@ -134,14 +134,14 @@ export function getMetricCalcs(
           cache.legend = new Map<string, PointInfo>()
         }
         setExtensionColor(blob, cache)
-      },
+      }
     ],
     [
       "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache, authorshipType)
-      },
+      }
     ],
     [
       "MOST_COMMITS",
@@ -153,11 +153,11 @@ export function getMetricCalcs(
             undefined,
             undefined,
             commitmapper.getColor(mincom),
-            commitmapper.getColor(maxcom),
+            commitmapper.getColor(maxcom)
           ]
         }
         commitmapper.setColor(blob, cache)
-      },
+      }
     ],
     [
       "LAST_CHANGED",
@@ -169,14 +169,14 @@ export function getMetricCalcs(
             getLastChangedIndex(groupings, newestEpoch, data.commit.oldestLatestChangeEpoch) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1,
+            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
           ]
         }
         cache.colormap.set(
           blob.path,
           groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
         )
-      },
+      }
     ],
     [
       "TOP_CONTRIBUTOR",
@@ -184,7 +184,7 @@ export function getMetricCalcs(
         if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, authorshipType)
-      },
+      }
     ],
     [
       "TRUCK_FACTOR",
@@ -194,12 +194,12 @@ export function getMetricCalcs(
             Math.floor(Math.log2(data.authorsUnion.length)) + 1,
             (n) => `${Math.pow(2, n)}`,
             (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length)),
+            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
           ]
         }
         truckmapper.setColor(blob, cache)
-      },
-    ],
+      }
+    ]
   ]
 }
 
@@ -227,13 +227,13 @@ function setupMetricsCacheRec(
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>(),
+              colormap: new Map<string, `#${string}`>()
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>(),
+              colormap: new Map<string, `#${string}`>()
             }
           )
         }

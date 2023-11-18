@@ -63,7 +63,7 @@ for usage instructions.`)
   const getPortLib = await import("get-port")
   const getPort = getPortLib.default
   const port = await getPort({
-    port: [...getPortLib.portNumbers(3000, 4000)],
+    port: [...getPortLib.portNumbers(3000, 4000)]
   })
 
   // Serve application build
@@ -84,7 +84,7 @@ for usage instructions.`)
       },
       beforeMsg: "Checking for git repo",
       afterMsg: "Done checking for git repo",
-      errorMsg: "Failed to check for git repo",
+      errorMsg: "Failed to check for git repo"
     })
 
     if (extensionError) {
@@ -100,7 +100,7 @@ for usage instructions.`)
           job: () => open(openURL),
           beforeMsg: "Opening Git Truck in your browser",
           afterMsg: "Opened Git Truck in your browser",
-          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`,
+          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
         })
       } else {
         console.log(`Application available at ${url}`)
@@ -114,7 +114,7 @@ for usage instructions.`)
         "./build/index.js",
         process.env.NODE_ENV ?? "production",
         "/build",
-        path.join(__dirname, "public", "build"),
+        path.join(__dirname, "public", "build")
       )
 
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
@@ -124,7 +124,7 @@ for usage instructions.`)
     },
     beforeMsg: "Starting app",
     afterMsg: "App started",
-    errorMsg: "Failed to start app",
+    errorMsg: "Failed to start app"
   })
 }
 
@@ -134,7 +134,7 @@ function createApp(
   buildPath: string,
   mode = "production",
   publicPath = "/build/",
-  assetsBuildDirectory = "public/build/",
+  assetsBuildDirectory = "public/build/"
 ) {
   const app = express()
 

@@ -6,7 +6,7 @@ const authorUnionsTwo = [
   ["joglr", "Jonas Glerup Røssum", "Jonas Røssum"],
   ["tjomson", "Thomas Hoffmann Kilbak", "Thomas Kilbak"],
   ["hojelse", "Kristoffer Højelse"],
-  ["emiljapelt", "Emil Jäpelt"],
+  ["emiljapelt", "Emil Jäpelt"]
 ]
 
 const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
@@ -14,7 +14,7 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
   authors: {
     author1Dupe: 25,
     author2: 50,
-    author1: 25,
+    author1: 25
   },
   blameAuthors: {},
   noCommits: 0,
@@ -23,7 +23,7 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
   path: "",
   content: undefined,
   hash: "",
-  commits: [],
+  commits: []
 })
 
 function sumContributions(authors: HydratedGitBlobObject["authors"]) {
@@ -52,13 +52,13 @@ describe("unionAuthors", () => {
         tjomson: 19,
         emiljapelt: 40,
         joglr: 40,
-        "Jonas Røssum": 125,
+        "Jonas Røssum": 125
       },
       blameAuthors: {},
       sizeInBytes: 249,
       noCommits: 30,
       lastChangeEpoch: 1646818775,
-      commits: [],
+      commits: []
     }
     const sumBefore = sumContributions(parseTS.authors)
     const authors = unionAuthors(parseTS.authors, makeDupeMap(authorUnionsTwo))

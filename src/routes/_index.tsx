@@ -1,6 +1,5 @@
 import type { SerializeFrom } from "@remix-run/node"
-import { defer, json } from "@remix-run/node"
-import { Await, Link, useAsyncValue, useLoaderData, useNavigation } from "@remix-run/react"
+import { Link, useLoaderData, useNavigation } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Code } from "~/components/util"
@@ -9,7 +8,7 @@ import { resolve } from "path"
 import type { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
-import { Suspense, useState } from "react"
+import { useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 
@@ -29,7 +28,7 @@ async function getResponse(): Promise<IndexData> {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
-    repo,
+    repo
   }
 }
 

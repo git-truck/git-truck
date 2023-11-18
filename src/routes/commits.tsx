@@ -25,7 +25,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     job: () => instance.gitShow(commitHashes),
     beforeMsg: "Loading commits",
     afterMsg: "Loaded commits",
-    errorMsg: "Failed to load commits",
+    errorMsg: "Failed to load commits"
   })
 
   if (gitShowError) {
