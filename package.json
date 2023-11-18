@@ -28,7 +28,7 @@
     "pub-pre": "npm version prerelease && npm publish --tag next",
     "pub-exp": "node ./scripts/publish-experimental.js",
     "prepublishOnly": "npm run clean && npm run build",
-    "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --loglevel warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
+    "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --log-level warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
     "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
   },
   "devDependencies": {

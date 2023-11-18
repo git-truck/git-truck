@@ -1,6 +1,6 @@
 import type { MutableRefObject } from "react"
-import { useState } from "react"
-import { useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
+
 import { useComponentSize as useCompSize } from "react-use-size"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

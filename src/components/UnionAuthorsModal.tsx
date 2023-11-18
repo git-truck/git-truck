@@ -1,6 +1,6 @@
-import { useTransition } from "react"
+import { useTransition, useState } from "react"
 import type { MouseEvent } from "react"
-import { useState } from "react"
+
 import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"

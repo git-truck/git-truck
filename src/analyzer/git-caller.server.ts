@@ -94,10 +94,10 @@ export class GitCaller {
   async gitShow(commits: string[]) {
     if (!this.branch) throw Error("branch not set")
     const args = [
-      "show", 
-      "--no-patch", 
+      "show",
+      "--no-patch",
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
-      ...commits
+      ...commits,
     ]
 
     const result = (await runProcess(this.repo, "git", args)) as string
@@ -148,13 +148,13 @@ export class GitCaller {
           head,
           isAnalyzed: result !== null,
         }
-      })
+      }),
     )
     const analyzedHeads = headsWithCaches
       .filter((head) => head.isAnalyzed)
       .reduce(
         (acc, headEntry) => ({ ...acc, [headEntry.head]: true, [headEntry.headName]: true }),
-        {} as { [branch: string]: boolean }
+        {} as { [branch: string]: boolean },
       )
 
     const repo: Repository = {
@@ -188,7 +188,7 @@ export class GitCaller {
 
   static async scanDirectoryForRepositories(
     argPath: string,
-    invalidateCache: boolean
+    invalidateCache: boolean,
   ): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const [pathIsRepo] = await describeAsyncJob({
@@ -210,7 +210,7 @@ export class GitCaller {
             const result = await GitCaller.getRepoMetadata(join(baseDir, repo), invalidateCache)
             if (!result) throw Error("Not a git repo")
             return result
-          })
+          }),
         ),
       beforeMsg: "Scanning for repositories...",
       afterMsg: "Done scanning for repositories",
@@ -280,7 +280,6 @@ export class GitCaller {
       // "--cc", // include file changes for merge commits
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
     ]
-
 
     const result = (await runProcess(this.repo, "git", args)) as string
     return result.trim()

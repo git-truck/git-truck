@@ -4,7 +4,6 @@ const { execSync } = require("child_process")
 const hasUncommittedChanges = execSync("git status --porcelain", { stdio: "pipe" })?.toString().trim().length > 0
 
 async function main() {
-
   if (hasUncommittedChanges) {
     console.error("You have uncommitted changes. Please commit or stash them before publishing.")
     process.exit(1)
@@ -17,7 +16,6 @@ async function main() {
 
   const commitHash = execSync("git rev-parse --short HEAD", { stdio: "pipe" }).toString().trim()
   const versionTag = `0.0.0-${commitHash}`
-
 
   console.log(`Tagging version ${versionTag}...`)
   execSync(`npm version ${versionTag} --no-git-tag-version`, { stdio: "pipe" })

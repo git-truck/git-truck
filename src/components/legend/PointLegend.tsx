@@ -6,7 +6,11 @@ import { ChevronButton } from "../ChevronButton"
 const legendCutoff = 3
 
 export class PointInfo {
-  constructor(public readonly color: `#${string}`, public weight: number) {}
+  // eslint-disable-next-line no-useless-constructor
+  constructor(
+    public readonly color: `#${string}`,
+    public weight: number,
+  ) {}
 
   add(value: number) {
     this.weight += value

@@ -33,14 +33,14 @@ import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
 import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
 
-function isMetricWithHistoricalOption(metric: MetricType) {
-  switch (metric) {
-    case "SINGLE_AUTHOR":
-    case "TOP_CONTRIBUTOR":
-      return true
-  }
-  return false
-}
+// function isMetricWithHistoricalOption(metric: MetricType) {
+//   switch (metric) {
+//     case "SINGLE_AUTHOR":
+//     case "TOP_CONTRIBUTOR":
+//       return true
+//   }
+//   return false
+// }
 
 export const Options = memo(function Options() {
   const {
@@ -62,7 +62,7 @@ export const Options = memo(function Options() {
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
     "LINK_METRIC_AND_SIZE_METRIC",
-    false
+    false,
   )
 
   const visualizationIcons: Record<MetricType, string> = {

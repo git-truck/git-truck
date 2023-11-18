@@ -10,7 +10,7 @@ import type {
 } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
-import { describeAsyncJob, formatMs, writeRepoToFile, getDirName } from "./util.server"
+import { describeAsyncJob, writeRepoToFile, getDirName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
 import { resolve, isAbsolute, sep } from "path"
@@ -238,7 +238,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       }
     } else {
       log.info(
-        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
+        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`,
       )
     }
   } else {
@@ -295,7 +295,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits: {}
+      commits: {},
     }
 
     if (!args.invalidateCache) {

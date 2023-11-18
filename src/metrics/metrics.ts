@@ -117,7 +117,7 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
 export function getMetricCalcs(
   data: AnalyzerData,
   authorshipType: AuthorshipType,
-  authorColors: Map<string, `#${string}`>
+  authorColors: Map<string, `#${string}`>,
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
 
@@ -174,7 +174,7 @@ export function getMetricCalcs(
         }
         cache.colormap.set(
           blob.path,
-          groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
+          groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color,
         )
       },
     ],
@@ -205,7 +205,7 @@ export function getMetricCalcs(
 
 export function setupMetricsCache(
   tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
+  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -215,7 +215,7 @@ export function setupMetricsCache(
 function setupMetricsCacheRec(
   tree: HydratedGitTreeObject,
   metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
-  acc: Map<MetricType, MetricCache>
+  acc: Map<MetricType, MetricCache>,
 ) {
   for (const child of tree.children) {
     switch (child.type) {
@@ -234,7 +234,7 @@ function setupMetricsCacheRec(
             acc.get(metricType) ?? {
               legend: undefined,
               colormap: new Map<string, `#${string}`>(),
-            }
+            },
           )
         }
         break

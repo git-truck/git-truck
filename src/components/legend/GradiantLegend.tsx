@@ -10,7 +10,7 @@ export type GradLegendData = [
   minValueAltFormat: string | undefined,
   maxValueAltFormat: string | undefined,
   minColor: `#${string}`,
-  maxColor: `#${string}`
+  maxColor: `#${string}`,
 ]
 
 export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps) {

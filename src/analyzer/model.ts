@@ -79,7 +79,7 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   unionedAuthors?: Record<AuthorshipType, Record<string, number>>
   dominantAuthor?: Record<AuthorshipType, [string, number]>
   isSearchResult?: boolean
-  commits: {hash: string, time: number}[]
+  commits: { hash: string; time: number }[]
 }
 
 export interface GitTreeObject extends AbstractGitObject {

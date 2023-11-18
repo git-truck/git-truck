@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import type { GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import { dateFormatLong } from "~/util"

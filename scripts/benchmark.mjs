@@ -47,7 +47,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
 
     invariant(
       output.toString().includes(`https://github.com/git-truck/git-truck#readme`),
-      `Output does not contain expected string: ${output.toString()}`
+      `Output does not contain expected string: ${output.toString()}`,
     )
 
     // Mark time
@@ -64,7 +64,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
 
     invariant(
       output2.toString().includes(`https://github.com/git-truck/git-truck#readme`),
-      `Output does not contain expected string: ${output2.toString()}`
+      `Output does not contain expected string: ${output2.toString()}`,
     )
 
     // Mark time

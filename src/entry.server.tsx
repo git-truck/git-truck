@@ -12,7 +12,7 @@ function handleBrowserRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext
+  remixContext: EntryContext,
 ) {
   return new Promise((resolve, reject) => {
     const { pipe, abort } = renderToPipeableStream(
@@ -27,7 +27,7 @@ function handleBrowserRequest(
             new Response(createReadableStreamFromReadable(body), {
               headers: responseHeaders,
               status: responseStatusCode,
-            })
+            }),
           )
 
           pipe(body)
@@ -39,7 +39,7 @@ function handleBrowserRequest(
           console.error(error)
           responseStatusCode = 500
         },
-      }
+      },
     )
 
     setTimeout(abort, ABORT_DELAY)

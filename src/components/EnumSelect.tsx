@@ -1,8 +1,5 @@
 import Icon from "@mdi/react"
 import clsx from "clsx"
-import type { ReactNode } from "react"
-import { useId } from "react"
-import { useOptions } from "~/contexts/OptionsContext"
 
 interface EnumSelectProps<T extends string> {
   enum: Record<T, string>

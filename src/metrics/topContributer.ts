@@ -7,7 +7,7 @@ export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
   blob: HydratedGitBlobObject,
   cache: MetricCache,
-  authorshipType: AuthorshipType
+  authorshipType: AuthorshipType,
 ) {
   const authorUnion = blob.unionedAuthors?.[authorshipType]
   let sorted: [string, number][]

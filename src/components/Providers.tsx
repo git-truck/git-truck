@@ -13,7 +13,7 @@ import { createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DepthType } from "~/metrics/chartDepth"
-import type { CommitTab } from "~/contexts/CommitTabContext";
+import type { CommitTab } from "~/contexts/CommitTabContext"
 import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
 
 interface ProvidersProps {
@@ -28,7 +28,10 @@ export function Providers({ children, data }: ProvidersProps) {
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(() => createMetricsData(data.analyzerData, data.truckConfig.colorSeed), [data])
+  const metricsData: MetricsData = useMemo(
+    () => createMetricsData(data.analyzerData, data.truckConfig.colorSeed),
+    [data],
+  )
 
   const commitTabValue = useMemo(
     () => ({
@@ -47,7 +50,7 @@ export function Providers({ children, data }: ProvidersProps) {
         }))
       },
     }),
-    [commitTab]
+    [commitTab],
   )
 
   const optionsValue = useMemo<OptionsContextType>(
@@ -102,7 +105,7 @@ export function Providers({ children, data }: ProvidersProps) {
           labelsVisible: visible,
         })),
     }),
-    [options]
+    [options],
   )
 
   useEffect(() => {
