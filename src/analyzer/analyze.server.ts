@@ -192,7 +192,12 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
+export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
+
+export let analyzationStatus: AnalyzationStatus = "Starting"
+
 export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
+  analyzationStatus = "Starting"
   GitCaller.initInstance(args.path)
   const git = GitCaller.getInstance()
 
@@ -262,6 +267,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     })
 
     if (repoTreeError) throw repoTreeError
+    analyzationStatus = "Hydrating"
 
     const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
       job: () => hydrateData(repoTree),
@@ -271,6 +277,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     })
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
+
+    analyzationStatus = "GeneratingChart"
 
     const [hydratedRepoTree, authors] = hydrateResult
 
@@ -311,6 +319,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       })
     }
   }
+
+  analyzationStatus = "GeneratingChart"
 
   const truckignore = ignore().add(hiddenFiles)
   data.commit.tree = applyIgnore(data.commit.tree, truckignore)

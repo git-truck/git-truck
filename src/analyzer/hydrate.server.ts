@@ -96,12 +96,16 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
   }
 }
 
+export let progress = 0
+export let totalCommitCount = Infinity
+
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
+  totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   const commitBundleSize = 100000
 
@@ -112,6 +116,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
+    progress = index
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
     const sectionSize = Math.ceil(runCountCommit / threadCount)
 
@@ -131,7 +136,6 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     log.info("threads synced")
   }
   sortCommits(fileMap)
-
   return [data, Array.from(authors)]
 }
 
