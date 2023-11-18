@@ -10,7 +10,7 @@ export type GradLegendData = [
   minValueAltFormat: string | undefined,
   maxValueAltFormat: string | undefined,
   minColor: `#${string}`,
-  maxColor: `#${string}`,
+  maxColor: `#${string}`
 ]
 
 export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps) {
@@ -46,7 +46,7 @@ export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps
       <div
         className="relative h-6 w-full rounded-full"
         style={{
-          backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`,
+          backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`
         }}
       >
         <LegendBarIndicator offset={offset * 100} visible={visible} />

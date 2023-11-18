@@ -41,7 +41,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
       }`}
       ref={tooltipRef}
       style={{
-        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none",
+        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none"
       }}
     >
       {hoveredObject?.type === "blob" ? (
@@ -65,7 +65,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
         ? ColorMetricDependentInfo({
             metric: metricType,
             hoveredBlob: hoveredObject as HydratedGitBlobObject,
-            authorshipType: authorshipType,
+            authorshipType: authorshipType
           })
         : null}
     </div>

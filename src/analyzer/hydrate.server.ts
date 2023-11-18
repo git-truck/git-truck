@@ -6,7 +6,7 @@ import type {
   GitTreeObject,
   HydratedGitBlobObject,
   HydratedGitCommitObject,
-  HydratedGitTreeObject,
+  HydratedGitTreeObject
 } from "./model"
 import { analyzeRenamedFile } from "./util.server"
 import { GitCaller } from "./git-caller.server"
@@ -21,7 +21,7 @@ let authors: Set<string>
 export function gatherCommitsFromGitLog(
   gitLogResult: string,
   commits: Map<string, GitLogEntry>,
-  handleAuthors: boolean,
+  handleAuthors: boolean
 ) {
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {
@@ -107,7 +107,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
   if (commitCount > 500000)
     log.warn(
-      "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck",
+      "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
     )
 
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage

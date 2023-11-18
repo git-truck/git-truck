@@ -8,7 +8,7 @@ export const Depth = {
   Two: "2",
   Three: "3",
   Four: "4",
-  Five: "5",
+  Five: "5"
 }
 
 export const depthTypeIcons: Record<DepthType, string> = {
@@ -17,5 +17,5 @@ export const depthTypeIcons: Record<DepthType, string> = {
   Two: mdiNumeric2Box,
   Three: mdiNumeric3Box,
   Four: mdiNumeric4Box,
-  Five: mdiNumeric5Box,
+  Five: mdiNumeric5Box
 }

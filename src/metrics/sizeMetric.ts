@@ -3,7 +3,7 @@ export const SizeMetric = {
   TRUCK_FACTOR: "Truck factor",
   MOST_COMMITS: "Commits",
   LAST_CHANGED: "Last changed",
-  EQUAL_SIZE: "Equal",
+  EQUAL_SIZE: "Equal"
 }
 
 export type SizeMetricType = keyof typeof SizeMetric

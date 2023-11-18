@@ -11,7 +11,7 @@ export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
   NOT_CACHED = "No cache was found",
   BRANCH_HEAD_CHANGED = "Branch head changed",
-  DATA_VERSION_MISMATCH = "Outdated cache",
+  DATA_VERSION_MISMATCH = "Outdated cache"
 }
 
 export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
@@ -97,7 +97,7 @@ export class GitCaller {
       "show",
       "--no-patch",
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
-      ...commits,
+      ...commits
     ]
 
     const result = (await runProcess(this.repo, "git", args)) as string
@@ -141,20 +141,20 @@ export class GitCaller {
           repo: getDirName(repoPath),
           branch: headName,
           branchHead: head,
-          invalidateCache,
+          invalidateCache
         })
         return {
           headName,
           head,
-          isAnalyzed: result !== null,
+          isAnalyzed: result !== null
         }
-      }),
+      })
     )
     const analyzedHeads = headsWithCaches
       .filter((head) => head.isAnalyzed)
       .reduce(
         (acc, headEntry) => ({ ...acc, [headEntry.head]: true, [headEntry.headName]: true }),
-        {} as { [branch: string]: boolean },
+        {} as { [branch: string]: boolean }
       )
 
     const repo: Repository = {
@@ -164,7 +164,7 @@ export class GitCaller {
       reasons: [],
       currentHead: await GitCaller._getRepositoryHead(repoPath),
       refs,
-      analyzedHeads,
+      analyzedHeads
     }
 
     try {
@@ -175,7 +175,7 @@ export class GitCaller {
           repo: repoDir,
           branch,
           branchHead,
-          invalidateCache,
+          invalidateCache
         })
         repo.data = data
         repo.reasons = reasons
@@ -188,14 +188,14 @@ export class GitCaller {
 
   static async scanDirectoryForRepositories(
     argPath: string,
-    invalidateCache: boolean,
+    invalidateCache: boolean
   ): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const [pathIsRepo] = await describeAsyncJob({
       job: () => GitCaller.isGitRepo(argPath),
       beforeMsg: "Checking if path is a git repo...",
       afterMsg: "Done checking if path is a git repo",
-      errorMsg: "Error checking if path is a git repo",
+      errorMsg: "Error checking if path is a git repo"
     })
 
     const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
@@ -210,11 +210,11 @@ export class GitCaller {
             const result = await GitCaller.getRepoMetadata(join(baseDir, repo), invalidateCache)
             if (!result) throw Error("Not a git repo")
             return result
-          }),
+          })
         ),
       beforeMsg: "Scanning for repositories...",
       afterMsg: "Done scanning for repositories",
-      errorMsg: "Error scanning for repositories",
+      errorMsg: "Error scanning for repositories"
     })) as [PromiseSettledResult<Repository>[], null]
 
     const onlyRepos = (
@@ -233,7 +233,7 @@ export class GitCaller {
   static parseRefs(refsAsMultilineString: string): GitRefs {
     const gitRefs: GitRefs = {
       Branches: {},
-      Tags: {},
+      Tags: {}
     }
 
     const regex = /^(?<hash>.*) refs\/(?<ref_type>.*?)\/(?<path>.*)$/gm
@@ -278,7 +278,7 @@ export class GitCaller {
       this.branch,
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
     const result = (await runProcess(this.repo, "git", args)) as string
@@ -289,7 +289,7 @@ export class GitCaller {
     repo,
     branch,
     branchHead,
-    invalidateCache = false,
+    invalidateCache = false
   }: {
     repo: string
     branch: string
@@ -319,7 +319,7 @@ export class GitCaller {
     const cacheConditions = {
       branchHeadMatches,
       dataVersionMatches,
-      repoMatches,
+      repoMatches
     }
 
     // Only return cached data if every criteria is met

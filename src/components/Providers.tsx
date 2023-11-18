@@ -30,7 +30,7 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const metricsData: MetricsData = useMemo(
     () => createMetricsData(data.analyzerData, data.truckConfig.colorSeed),
-    [data],
+    [data]
   )
 
   const commitTabValue = useMemo(
@@ -40,17 +40,17 @@ export function Providers({ children, data }: ProvidersProps) {
       setStartDate: (newDate: number | null) => {
         setCommitTab((prevValue) => ({
           ...(prevValue ?? getDefaultCommitTab()),
-          startDate: newDate,
+          startDate: newDate
         }))
       },
       setEndDate: (newDate: number | null) => {
         setCommitTab((prevValue) => ({
           ...(prevValue ?? getDefaultCommitTab()),
-          endDate: newDate,
+          endDate: newDate
         }))
-      },
+      }
     }),
-    [commitTab],
+    [commitTab]
   )
 
   const optionsValue = useMemo<OptionsContextType>(
@@ -60,52 +60,52 @@ export function Providers({ children, data }: ProvidersProps) {
       setMetricType: (metricType: MetricType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          metricType,
+          metricType
         })),
       setChartType: (chartType: ChartType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          chartType,
+          chartType
         })),
       setDepthType: (depthType: DepthType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          depthType,
+          depthType
         })),
       setHierarchyType: (hierarchyType: HierarchyType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          hierarchyType,
+          hierarchyType
         })),
       setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          authorshipType,
+          authorshipType
         })),
       setSizeMetricType: (sizeMetric: SizeMetricType) =>
         setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),
       setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          hoveredBlob: blob,
+          hoveredBlob: blob
         })),
       setClickedObject: (object: HydratedGitObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          clickedObject: object,
+          clickedObject: object
         })),
       setTransitionsEnabled: (enabled: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          transitionsEnabled: enabled,
+          transitionsEnabled: enabled
         })),
       setLabelsVisible: (visible: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
-          labelsVisible: visible,
-        })),
+          labelsVisible: visible
+        }))
     }),
-    [options],
+    [options]
   )
 
   useEffect(() => {
@@ -127,7 +127,7 @@ export function Providers({ children, data }: ProvidersProps) {
     if (savedOptions) {
       setOptions({
         ...getDefaultOptionsContextValue(JSON.parse(savedOptions)),
-        hasLoadedSavedOptions: true,
+        hasLoadedSavedOptions: true
       })
     }
   }, [])
@@ -139,7 +139,7 @@ export function Providers({ children, data }: ProvidersProps) {
           <SearchContext.Provider
             value={{
               searchResults,
-              setSearchResults,
+              setSearchResults
             }}
           >
             <PathContext.Provider value={{ path, setPath }}>

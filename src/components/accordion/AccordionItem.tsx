@@ -5,7 +5,7 @@ function AccordionItem({
   data,
   isOpen,
   btnOnClick,
-  titleLabels,
+  titleLabels
 }: {
   data: AccordionData
   isOpen: boolean
@@ -22,7 +22,7 @@ function AccordionItem({
             "text-[16px] font-semibold": titleLabels,
             "text-[14px] font-normal": !titleLabels,
             "after:-rotate-180": isOpen,
-            "after:rotate-0": !isOpen,
+            "after:rotate-0": !isOpen
           })}
           onClick={btnOnClick}
           title={data.title}

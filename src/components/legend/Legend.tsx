@@ -18,7 +18,7 @@ export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 export function Legend({
   hoveredObject,
   showUnionAuthorsModal,
-  className = "",
+  className = ""
 }: {
   hoveredObject: HydratedGitObject | null
   showUnionAuthorsModal: () => void
@@ -54,7 +54,7 @@ export function Legend({
 
     submit(form, {
       action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post",
+      method: "post"
     })
   }
 

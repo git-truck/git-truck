@@ -14,7 +14,7 @@ export function lastChangedGroupings(newestEpoch: number): lastChangedGroup[] {
     { epoch: 2629743, text: "+1m", color: "#6baed6" },
     { epoch: 31556926, text: "+1y", color: "#4292c6" },
     { epoch: 31556926 * 2, text: "+2y", color: "#2171b5" },
-    { epoch: 31556926 * 4, text: "+4y", color: "#084594" },
+    { epoch: 31556926 * 4, text: "+4y", color: "#084594" }
   ]
 }
 

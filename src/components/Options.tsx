@@ -26,7 +26,7 @@ import {
   mdiViewModule,
   mdiCog,
   mdiFileTree,
-  mdiFamilyTree,
+  mdiFamilyTree
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -57,12 +57,12 @@ export const Options = memo(function Options() {
     setChartType,
     setDepthType,
     setHierarchyType,
-    setSizeMetricType,
+    setSizeMetricType
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
     "LINK_METRIC_AND_SIZE_METRIC",
-    false,
+    false
   )
 
   const visualizationIcons: Record<MetricType, string> = {
@@ -71,7 +71,7 @@ export const Options = memo(function Options() {
     MOST_COMMITS: mdiSourceCommit,
     SINGLE_AUTHOR: mdiAccountAlertOutline,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    TRUCK_FACTOR: mdiTruckFastOutline,
+    TRUCK_FACTOR: mdiTruckFastOutline
   }
 
   const sizeMetricIcons: Record<SizeMetricType, string> = {
@@ -79,17 +79,17 @@ export const Options = memo(function Options() {
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
     TRUCK_FACTOR: mdiTruckFastOutline,
-    LAST_CHANGED: mdiUpdate,
+    LAST_CHANGED: mdiUpdate
   }
 
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
-    TREE_MAP: mdiChartTree,
+    TREE_MAP: mdiChartTree
   }
 
   const hiearchyIcons: Record<HierarchyType, string> = {
     NESTED: mdiFileTree,
-    FLAT: mdiChartTree,
+    FLAT: mdiChartTree
   }
 
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
@@ -98,7 +98,7 @@ export const Options = memo(function Options() {
     TOP_CONTRIBUTOR: "TRUCK_FACTOR",
     MOST_COMMITS: "MOST_COMMITS",
     SINGLE_AUTHOR: "TRUCK_FACTOR",
-    LAST_CHANGED: "LAST_CHANGED",
+    LAST_CHANGED: "LAST_CHANGED"
   }
 
   return (

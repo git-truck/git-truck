@@ -6,7 +6,7 @@ import type {
   GitTreeObject,
   AnalyzerData,
   TruckUserConfig,
-  TruckConfig,
+  TruckConfig
 } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { log, setLogLevel } from "./log.server"
@@ -41,13 +41,13 @@ export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectL
     name: groups["authorName"],
     email: groups["authorEmail"],
     timestamp: Number(groups["authorTimeStamp"]),
-    timezone: groups["authorTimeZone"],
+    timezone: groups["authorTimeZone"]
   }
   const committer = {
     name: groups["committerName"],
     email: groups["committerEmail"],
     timestamp: Number(groups["committerTimeStamp"]),
-    timezone: groups["committerTimeZone"],
+    timezone: groups["committerTimeZone"]
   }
   const message = groups["message"]
   const description = groups["description"]
@@ -63,7 +63,7 @@ export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectL
     committer,
     message,
     description,
-    coauthors,
+    coauthors
   }
 }
 
@@ -76,7 +76,7 @@ export async function analyzeCommit(repoName: string, hash: string): Promise<Git
   const commitObject = {
     ...commit,
     fileCount,
-    tree: rootTree,
+    tree: rootTree
   }
   return commitObject
 }
@@ -105,7 +105,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
       type: groups["type"] as "blob" | "tree",
       hash: groups["hash"],
       size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-      path: groups["path"],
+      path: groups["path"]
     })
   }
 
@@ -114,7 +114,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
     path,
     name,
     hash,
-    children: [],
+    children: []
   } as GitTreeObject
 
   for (const child of lsTreeEntries) {
@@ -133,7 +133,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
           path: newPath,
           name: newName,
           hash: child.hash,
-          children: [],
+          children: []
         }
 
         currTree.children.push(newTree)
@@ -147,7 +147,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
           path: newPath,
           name: newName,
           sizeInBytes: child.size as number,
-          blameAuthors: {},
+          blameAuthors: {}
         }
         // Don't block the current loop, just add the job to the queue and await it later
         // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
@@ -212,7 +212,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     job: () => git.findBranchHead(branch),
     beforeMsg: "Finding branch head",
     afterMsg: "Found branch head",
-    errorMsg: "Error finding branch head",
+    errorMsg: "Error finding branch head"
   })
   const repoName = getDirName(repoDir)
 
@@ -228,17 +228,17 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       repo: repoName,
       branch: branchName,
       branchHead: branchHead,
-      invalidateCache: args.invalidateCache,
+      invalidateCache: args.invalidateCache
     })
 
     if (cachedData) {
       data = {
         ...cachedData,
-        hiddenFiles,
+        hiddenFiles
       }
     } else {
       log.info(
-        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`,
+        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
       )
     }
   } else {
@@ -258,7 +258,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       job: () => analyzeCommit(repoName, branchHead),
       beforeMsg: "Analyzing commit tree",
       afterMsg: "Commit tree analyzed",
-      errorMsg: "Error analyzing commit tree",
+      errorMsg: "Error analyzing commit tree"
     })
 
     if (repoTreeError) throw repoTreeError
@@ -267,7 +267,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       job: () => hydrateData(repoTree),
       beforeMsg: "Hydrating commit tree",
       afterMsg: "Commit tree hydrated",
-      errorMsg: "Error hydrating commit tree",
+      errorMsg: "Error hydrating commit tree"
     })
 
     if (hydratedRepoTreeError) throw hydratedRepoTreeError
@@ -295,7 +295,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits: {},
+      commits: {}
     }
 
     if (!args.invalidateCache) {
@@ -303,11 +303,11 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
         job: () =>
           writeRepoToFile(outPath, {
             ...data,
-            cached: true,
+            cached: true
           } as AnalyzerData),
         beforeMsg: "Writing data to file",
         afterMsg: `Wrote data to ${resolve(outPath)}`,
-        errorMsg: `Error writing data to file ${outPath}`,
+        errorMsg: `Error writing data to file ${outPath}`
       })
     }
   }
@@ -325,7 +325,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     beforeMsg: "",
     afterMsg: `Ready in`,
     errorMsg: "",
-    ms: stop - start,
+    ms: stop - start
   })
 
   return data

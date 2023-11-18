@@ -10,7 +10,7 @@ export const CloseButton = ({
 }: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
   <button
     className={clsx(className, "inline-grid text-lg leading-none hover:opacity-80", {
-      "absolute right-2 top-2 z-10": absolute,
+      "absolute right-2 top-2 z-10": absolute
     })}
     title="Close"
     {...props}
@@ -22,7 +22,7 @@ export const CloseButton = ({
 export const LegendDot = ({
   className = "",
   style = {},
-  dotColor,
+  dotColor
 }: { dotColor: string } & HTMLAttributes<HTMLDivElement>) => (
   <div
     className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className}`}
@@ -67,10 +67,10 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
   return (
     <div
       className={clsx("absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all", {
-        "opacity-0": !visible,
+        "opacity-0": !visible
       })}
       style={{
-        left: `${offset <= 100 ? offset : -20}%`,
+        left: `${offset <= 100 ? offset : -20}%`
       }}
     >
       <Icon path={mdiMenuUp} size={2} className="stroke-white" />

@@ -42,12 +42,12 @@ for (let i = 0; i < versionsToCompare.length; i++) {
     const start = performance.now()
     // Install module with specific version
     const output = execSync(`npx git-truck@${version} -y -h`, {
-      stdio: "pipe",
+      stdio: "pipe"
     })
 
     invariant(
       output.toString().includes(`https://github.com/git-truck/git-truck#readme`),
-      `Output does not contain expected string: ${output.toString()}`,
+      `Output does not contain expected string: ${output.toString()}`
     )
 
     // Mark time
@@ -64,7 +64,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
 
     invariant(
       output2.toString().includes(`https://github.com/git-truck/git-truck#readme`),
-      `Output does not contain expected string: ${output2.toString()}`,
+      `Output does not contain expected string: ${output2.toString()}`
     )
 
     // Mark time
@@ -81,7 +81,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
   times.push({
     version,
     "npx average time (in ms)": npxAverage,
-    "global install average time (in ms)": globalInstallAverage,
+    "global install average time (in ms)": globalInstallAverage
   })
 }
 

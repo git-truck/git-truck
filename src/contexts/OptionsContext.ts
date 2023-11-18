@@ -7,14 +7,14 @@ import { Depth, type DepthType } from "~/metrics/chartDepth"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
-  TREE_MAP: "Tree map",
+  TREE_MAP: "Tree map"
 }
 
 export type ChartType = keyof typeof Chart
 
 export const Hierarchy = {
   NESTED: "Nested",
-  FLAT: "Flat",
+  FLAT: "Flat"
 }
 
 export type HierarchyType = keyof typeof Hierarchy
@@ -61,7 +61,7 @@ const defaultOptions: Options = {
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
-  labelsVisible: true,
+  labelsVisible: true
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -91,6 +91,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
-    },
+    }
   }
 }

@@ -9,7 +9,7 @@ export class PointInfo {
   // eslint-disable-next-line no-useless-constructor
   constructor(
     public readonly color: `#${string}`,
-    public weight: number,
+    public weight: number
   ) {}
 
   add(value: number) {
@@ -86,7 +86,7 @@ function PointLegendOther(props: LegendOtherProps) {
               key={`dot${label}`}
               dotColor={info.color}
               style={{
-                marginLeft: margin,
+                marginLeft: margin
               }}
             />
           )
