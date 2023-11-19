@@ -95,7 +95,7 @@ export const Chart = memo(function Chart({
 
   const createGroupHandlers: (
     d: CircleOrRectHiearchyNode,
-    isRoot: boolean,
+    isRoot: boolean
   ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d, isRoot) => {
     return isBlob(d.data)
       ? {
@@ -302,7 +302,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
       datum.y0 + (isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY),
       datum.x1 - datum.x0,
       datum.y1 - datum.y0,
-      0,
+      0
     )
   }
 
@@ -354,7 +354,7 @@ function createPartitionedHiearchy(
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
-  path: string,
+  path: string
 ) {
   const root = data.tree as HydratedGitTreeObject
 
@@ -430,7 +430,7 @@ function createPartitionedHiearchy(
 
 function filterTree(
   node: HierarchyNode<HydratedGitObject>,
-  filter: (child: HierarchyNode<HydratedGitObject>) => boolean,
+  filter: (child: HierarchyNode<HydratedGitObject>) => boolean
 ) {
   node.children = node.children?.filter((c) => filter(c))
   for (const child of node.children ?? []) {

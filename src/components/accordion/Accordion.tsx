@@ -26,7 +26,7 @@ function Accordion({
   const btnOnClick = (idx: number) => {
     multipleOpen
       ? setCurrentIdx((currentValue) =>
-          currentValue.includes(idx) ? currentValue.filter((item) => item !== idx) : [...currentValue, idx],
+          currentValue.includes(idx) ? currentValue.filter((item) => item !== idx) : [...currentValue, idx]
         )
       : setCurrentIdx((currentValue) => (currentValue.includes(idx) ? [] : [idx]))
   }

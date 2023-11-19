@@ -8,7 +8,7 @@ export type SegmentLegendData = [
   steps: number,
   textGenerator: (n: number) => string,
   colorGenerator: (n: number) => string,
-  offsetStepCalc: (blob: HydratedGitBlobObject) => number,
+  offsetStepCalc: (blob: HydratedGitBlobObject) => number
 ]
 
 export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {

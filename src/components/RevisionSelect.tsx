@@ -39,7 +39,7 @@ export function RevisionSelect({
                 )
               })}
             </optgroup>
-          ) : null,
+          ) : null
         )}
       </select>
     </div>

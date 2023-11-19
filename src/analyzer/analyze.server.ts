@@ -243,7 +243,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       }
     } else {
       log.info(
-        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`,
+        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
       )
     }
   } else {
@@ -303,7 +303,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       interfaceVersion: AnalyzerDataInterfaceVersion,
       currentVersion: pkg.version,
       lastRunEpoch: runDateEpoch,
-      commits: {},
+      commits: {}
     }
 
     if (!args.invalidateCache) {

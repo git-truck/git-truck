@@ -27,7 +27,7 @@ export function unionAuthors(authors: Record<string, number>, authorAliasMap: Re
 
       return { ...newAuthorObject, [authorOrAlias]: contributionCount }
     },
-    {},
+    {}
   )
 }
 
