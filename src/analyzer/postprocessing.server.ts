@@ -21,7 +21,7 @@ export function applyMetrics(data: AnalyzerData, currentTree: HydratedGitTreeObj
         data.commit.oldestLatestChangeEpoch = current.lastChangeEpoch
       }
       return current
-    }),
+    })
   }
 }
 
@@ -35,7 +35,7 @@ export function applyIgnore(tree: HydratedGitTreeObject, truckIgnore: Ignore): H
       .map((child) => {
         if (child.type === "tree") return applyIgnore(child, truckIgnore)
         return child
-      }),
+      })
   }
 }
 

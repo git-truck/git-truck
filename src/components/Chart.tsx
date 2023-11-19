@@ -6,7 +6,7 @@ import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitObject,
-  HydratedGitTreeObject,
+  HydratedGitTreeObject
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
@@ -22,7 +22,7 @@ import {
   treemapPaddingTop,
   treemapTreeTextOffsetX,
   circleBlobTextOffsetY,
-  treemapTreeTextOffsetY,
+  treemapTreeTextOffsetY
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
@@ -37,7 +37,7 @@ import { useSearch } from "~/contexts/SearchContext"
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
 export const Chart = memo(function Chart({
-  setHoveredObject,
+  setHoveredObject
 }: {
   setHoveredObject: (obj: HydratedGitObject | null) => void
 }) {
@@ -79,8 +79,8 @@ export const Chart = memo(function Chart({
       ...analyzerData.commit,
       tree: {
         ...analyzerData.commit.tree,
-        children: flatten(analyzerData.commit.tree),
-      },
+        children: flatten(analyzerData.commit.tree)
+      }
     }
   }, [analyzerData.commit, hierarchyType])
 
@@ -104,7 +104,7 @@ export const Chart = memo(function Chart({
             return setClickedObject(d.data)
           },
           onMouseOver: () => setHoveredObject(d.data as HydratedGitObject),
-          onMouseOut: () => setHoveredObject(null),
+          onMouseOut: () => setHoveredObject(null)
         }
       : {
           onClick: (evt) => {
@@ -117,7 +117,7 @@ export const Chart = memo(function Chart({
             if (!isRoot) setHoveredObject(d.data as HydratedGitObject)
             else setHoveredObject(null)
           },
-          onMouseOut: () => setHoveredObject(null),
+          onMouseOut: () => setHoveredObject(null)
         }
   }
 
@@ -126,7 +126,7 @@ export const Chart = memo(function Chart({
       <svg
         key={`svg|${size.width}|${size.height}`}
         className={clsx("grid h-full w-full place-items-center", {
-          "cursor-zoom-out": path.includes("/"),
+          "cursor-zoom-out": path.includes("/")
         })}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
@@ -145,7 +145,7 @@ export const Chart = memo(function Chart({
               className={clsx("transition-opacity hover:opacity-60", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path,
+                "animate-blink": clickedObject?.path === d.data.path
               })}
               {...createGroupHandlers(d, i === 0)}
             >
@@ -177,7 +177,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       strokeWidth: "1px",
       fill: isBlob(d.data)
         ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
-        : "transparent",
+        : "transparent"
     }
 
     if (chartType === "BUBBLE_CHART") {
@@ -189,7 +189,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
         width: circleDatum.r * 2,
         height: circleDatum.r * 2,
         rx: circleDatum.r,
-        ry: circleDatum.r,
+        ry: circleDatum.r
       }
     } else {
       const datum = d as HierarchyRectangularNode<HydratedGitObject>
@@ -201,7 +201,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
         width: datum.x1 - datum.x0,
         height: datum.y1 - datum.y0,
         rx: treemapNodeBorderRadius,
-        ry: treemapNodeBorderRadius,
+        ry: treemapNodeBorderRadius
       }
     }
     return props
@@ -214,7 +214,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
         "cursor-pointer": isBlob(d.data),
         "transition-all duration-1000 ease-in-out": transitionsEnabled,
         "animate-stroke-pulse": isSearchMatch,
-        "stroke-black/20": isTree(d.data),
+        "stroke-black/20": isTree(d.data)
       })}
     />
   )
@@ -225,7 +225,7 @@ function collapseText({
   isRoot,
   path,
   displayText,
-  chartType,
+  chartType
 }: {
   d: CircleOrRectHiearchyNode
   isRoot: boolean
@@ -314,7 +314,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
     startOffset: isBubbleChart ? "50%" : undefined,
     dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
     textAnchor: isBubbleChart ? "middle" : "start",
-    href: `#path-${d.data.path}`,
+    href: `#path-${d.data.path}`
   }
 
   return (
@@ -323,7 +323,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
       {isTree(d.data) ? (
         <text
           className={clsx("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
-            "stroke-white": isBubbleChart,
+            "stroke-white": isBubbleChart
           })}
           strokeLinecap="round"
         >
@@ -335,7 +335,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
           {...textPathBaseProps}
           className={clsx("font-mono", {
             "text-sm font-bold": isTree(d.data),
-            "text-xs": !isTree(d.data),
+            "text-xs": !isTree(d.data)
           })}
         >
           {children}

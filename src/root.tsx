@@ -8,7 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
-  useRouteError,
+  useRouteError
 } from "@remix-run/react"
 
 import varsStyles from "~/styles/vars.css"
@@ -24,25 +24,25 @@ export function links() {
   return [
     ...[varsStyles, indexStyles, tailwindStylesheet].map((x) => ({
       rel: "stylesheet",
-      href: x,
+      href: x
     })),
     {
       rel: "favicon",
       type: "image/x-icon",
-      href: "favicon.ico",
+      href: "favicon.ico"
     },
     {
       rel: "preconnect",
-      href: "https://fonts.googleapis.com",
+      href: "https://fonts.googleapis.com"
     },
     {
       rel: "preconnect",
-      href: "https://fonts.gstatic.com",
+      href: "https://fonts.gstatic.com"
     },
     {
       rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Roboto+Mono:wght@400;700&display=swap",
-    },
+      href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Roboto+Mono:wght@400;700&display=swap"
+    }
   ]
 }
 

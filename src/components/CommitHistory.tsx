@@ -42,7 +42,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
             )
           })}
         </>
-      ),
+      )
     })
   }
 

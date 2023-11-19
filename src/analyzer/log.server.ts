@@ -5,14 +5,14 @@ export enum LOG_LEVEL {
   ERROR,
   WARN,
   INFO,
-  DEBUG,
+  DEBUG
 }
 export enum LOG_LEVEL_LABEL {
   SILENT = "",
   ERROR = "ERR",
   WARN = "WRN",
   INFO = "NFO",
-  DEBUG = "DBG",
+  DEBUG = "DBG"
 }
 
 const stringToLevelMap: Record<string, LOG_LEVEL> = {
@@ -20,7 +20,7 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
   ERROR: LOG_LEVEL.ERROR,
   WARN: LOG_LEVEL.WARN,
   INFO: LOG_LEVEL.INFO,
-  DEBUG: LOG_LEVEL.DEBUG,
+  DEBUG: LOG_LEVEL.DEBUG
 }
 
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
@@ -117,5 +117,5 @@ export const log = {
   warn,
   info,
   debug,
-  raw,
+  raw
 }

@@ -25,7 +25,7 @@ export const MenuItem = (props: PropsWithChildren<MenuItemProps>) => {
 }
 
 MenuItem.defaultProps = {
-  __TYPE: MenuItemTypeString,
+  __TYPE: MenuItemTypeString
 }
 
 export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
@@ -49,7 +49,7 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
               "btn--outlined": props.lightBackground,
               "opacity-50": selectedIdx === idx,
               "rounded-br-none rounded-tr-none": idx !== items.length - 1,
-              "rounded-bl-none rounded-tl-none": idx === items.length - 1,
+              "rounded-bl-none rounded-tl-none": idx === items.length - 1
             })}
             onClick={() => {
               if (props.onChange) {
@@ -67,7 +67,7 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
           <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>
             {item.children}
           </div>
-        ) : null,
+        ) : null
       )}
     </>
   )

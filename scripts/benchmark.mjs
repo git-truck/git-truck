@@ -42,7 +42,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
     const start = performance.now()
     // Install module with specific version
     const output = execSync(`npx git-truck@${version} -y -h`, {
-      stdio: "pipe",
+      stdio: "pipe"
     })
 
     invariant(
@@ -81,7 +81,7 @@ for (let i = 0; i < versionsToCompare.length; i++) {
   times.push({
     version,
     "npx average time (in ms)": npxAverage,
-    "global install average time (in ms)": globalInstallAverage,
+    "global install average time (in ms)": globalInstallAverage
   })
 }
 

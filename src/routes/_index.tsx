@@ -28,7 +28,7 @@ async function getResponse(): Promise<IndexData> {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
-    repo,
+    repo
   }
 }
 

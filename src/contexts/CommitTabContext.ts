@@ -26,6 +26,6 @@ export function getDefaultCommitTab(): CommitTab {
     },
     setEndDate: (newDate: number | null) => {
       throw new Error("No setEndDate provided")
-    },
+    }
   }
 }

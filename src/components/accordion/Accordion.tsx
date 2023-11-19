@@ -13,7 +13,7 @@ function Accordion({
   openByDefault,
   titleLabels,
   currentState,
-  actionClickLabels,
+  actionClickLabels
 }: {
   items: Array<AccordionData>
   multipleOpen: boolean

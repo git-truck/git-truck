@@ -9,8 +9,8 @@ import { log } from "./log.server"
 export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   return yargsParser(rawArgs, {
     configuration: {
-      "duplicate-arguments-array": false,
-    },
+      "duplicate-arguments-array": false
+    }
   })
 }
 
@@ -21,7 +21,7 @@ export function getArgsWithDefaults(): TruckConfig {
     hiddenFiles: [] as string[],
     unionedAuthors: [] as string[][],
     invalidateCache: false,
-    ...args,
+    ...args
   }
 
   return tempArgs
@@ -44,8 +44,8 @@ export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig
   return [
     {
       ...args,
-      ...config,
+      ...config
     },
-    config,
+    config
   ]
 }

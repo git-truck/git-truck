@@ -28,7 +28,7 @@ function OneFolderOut(path: string) {
 
 export function DetailsCard({
   className = "",
-  showUnionAuthorsModal,
+  showUnionAuthorsModal
 }: {
   className?: string
   showUnionAuthorsModal: () => void
@@ -59,7 +59,7 @@ export function DetailsCard({
       return {
         backgroundColor: null,
         color: null,
-        lightBackground: true,
+        lightBackground: true
       }
     }
     const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
@@ -68,7 +68,7 @@ export function DetailsCard({
     return {
       backgroundColor: backgroundColor,
       color: color,
-      lightBackground: color === "#000000",
+      lightBackground: color === "#000000"
     }
   }, [clickedObject, metricsData, metricType, authorshipType])
 
@@ -83,7 +83,7 @@ export function DetailsCard({
         color
           ? {
               backgroundColor: backgroundColor,
-              color: color,
+              color: color
             }
           : {}
       }
@@ -122,7 +122,7 @@ export function DetailsCard({
             <button
               className={clsx("btn", {
                 "btn--outlined--light": !lightBackground,
-                "btn--outlined": lightBackground,
+                "btn--outlined": lightBackground
               })}
               onClick={showUnionAuthorsModal}
             >
@@ -138,7 +138,7 @@ export function DetailsCard({
                   <button
                     className={clsx("btn", {
                       "btn--outlined--light": !lightBackground,
-                      "btn--outlined": lightBackground,
+                      "btn--outlined": lightBackground
                     })}
                     type="submit"
                     disabled={state !== "idle"}
@@ -157,7 +157,7 @@ export function DetailsCard({
                     <button
                       className={clsx("btn", {
                         "btn--outlined--light": !lightBackground,
-                        "btn--outlined": lightBackground,
+                        "btn--outlined": lightBackground
                       })}
                       type="submit"
                       disabled={state !== "idle"}
@@ -178,7 +178,7 @@ export function DetailsCard({
                   <button
                     className={clsx("btn", {
                       "btn--outlined--light": !lightBackground,
-                      "btn--outlined": lightBackground,
+                      "btn--outlined": lightBackground
                     })}
                     type="submit"
                     disabled={state !== "idle"}
@@ -322,7 +322,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
   const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
-    a[1] < b[1] ? 1 : -1,
+    a[1] < b[1] ? 1 : -1
   )
 
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
@@ -365,7 +365,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
 }
 
 function makePercentResponsibilityDistribution(
-  unionedAuthors: Record<string, number> | undefined,
+  unionedAuthors: Record<string, number> | undefined
 ): Record<string, number> {
   if (!unionedAuthors) throw Error("unionedAuthors is undefined")
   const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)

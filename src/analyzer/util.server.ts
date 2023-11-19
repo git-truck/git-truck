@@ -19,7 +19,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
-        cwd: resolvePath(dir),
+        cwd: resolvePath(dir)
       })
       const chunks: Uint8Array[] = []
       const errorHandler = (buf: Error): void => reject(buf.toString().trim())
@@ -38,7 +38,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
 export function analyzeRenamedFile(
   file: string,
   renamedFiles: Map<string, { path: string; timestamp: number }[]>,
-  timestamp: number,
+  timestamp: number
 ) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
@@ -116,7 +116,7 @@ export function createTruckSpinner() {
   return getLogLevel() === null
     ? createSpinner("", {
         interval: 1000 / 20,
-        frames: generateTruckFrames(20),
+        frames: generateTruckFrames(20)
       })
     : null
 }
@@ -128,7 +128,7 @@ export async function describeAsyncJob<T>({
   beforeMsg = "",
   afterMsg = "",
   errorMsg = "",
-  ms = null,
+  ms = null
 }: {
   job: () => Promise<T>
   beforeMsg: string
@@ -147,7 +147,7 @@ export async function describeAsyncJob<T>({
     if (spinner) {
       spinner.update({
         text,
-        frames: generateTruckFrames(text.length),
+        frames: generateTruckFrames(text.length)
       })
       spinner.start()
     } else log.info(text)
@@ -192,6 +192,6 @@ export async function getGitTruckInfo() {
   const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
   return {
     version: pkg.version,
-    latestVersion: latestVersion,
+    latestVersion: latestVersion
   }
 }

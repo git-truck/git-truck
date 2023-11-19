@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
@@ -118,6 +118,7 @@
   "prettier": {
     "semi": false,
     "printWidth": 120,
+    "trailingComma": "none",
     "plugins": [
       "prettier-plugin-tailwindcss"
     ]

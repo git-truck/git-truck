@@ -10,7 +10,7 @@ const lowercasedColors = new Map<string, ColorResult>()
 for (const [key, { color }] of Object.entries(gitcolors)) {
   lowercasedColors.set(key.toLowerCase(), {
     color: (color as `#${string}`) ?? null,
-    lang: key,
+    lang: key
   })
 }
 

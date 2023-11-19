@@ -33,7 +33,7 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
     <div
       className={clsx("grid h-full w-full place-items-center", className)}
       style={{
-        backgroundColor: "var(--global-bg-color)",
+        backgroundColor: "var(--global-bg-color)"
       }}
     >
       <div className="flex animate-hide-initially flex-col px-2 py-2 opacity-0">
