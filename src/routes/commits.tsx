@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import invariant from "tiny-invariant"
-import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { gatherCommitsFromGitLog } from "~/analyzer/hydrate.server"
 import { log } from "~/analyzer/log.server"
@@ -8,13 +7,14 @@ import type { GitLogEntry } from "~/analyzer/model"
 import { describeAsyncJob } from "~/analyzer/util.server"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const args = getArgsWithDefaults()
   const url = new URL(request.url)
   const branch = url.searchParams.get("branch")
+  const repo = url.searchParams.get("repo")
 
   invariant(branch, "branch is required")
+  invariant(repo, "repo is required")
 
-  GitCaller.initInstance(args.path)
+  GitCaller.initInstance(repo)
   const instance = GitCaller.getInstance()
   instance.branch = branch
 

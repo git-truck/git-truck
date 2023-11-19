@@ -93,6 +93,7 @@ export function CommitHistory() {
     const commitHashesToRequest = commitHashes ?? totalCommitHashes
     searchParams.set("commits", commitHashesToRequest.slice(index, index + commitIncrement).join(","))
     searchParams.set("branch", analyzerData.repo.currentHead)
+    searchParams.set("repo", analyzerData.repo.path)
     fetcher.load(`/commits?${searchParams.toString()}`)
   }
 
