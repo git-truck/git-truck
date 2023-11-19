@@ -9,12 +9,8 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
 
   // Fetch progress update every 3 sec
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (fetcher.state === "idle") fetcher.load(`/progress`)
-    }, 3000)
-
-    return () => clearInterval(intervalId)
-  }, [])
+    if (fetcher.state === "idle") fetcher.load(`/progress`)
+  }, [fetcher.state])
 
   const progressText = useMemo(() => {
     if (!fetcher.data) return "Starting analyzation"
