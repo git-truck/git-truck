@@ -9,7 +9,7 @@ import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/Optio
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
-import { createMetricData as createMetricsData } from "../metrics/metrics"
+import { createAuthorMetricsData, createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DepthType } from "~/metrics/chartDepth"
@@ -28,10 +28,11 @@ export function Providers({ children, data }: ProvidersProps) {
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(
-    () => createMetricsData(data.analyzerData, data.truckConfig.colorSeed),
-    [data]
-  )
+  const metricsData: MetricsData = useMemo(() => {
+    const { authorColors, authorMetricCache } = createAuthorMetricsData(data.analyzerData, data.truckConfig.colorSeed)
+    const generalMetricData = createMetricsData(data.analyzerData)
+    return [generalMetricData, authorColors]
+  }, [data])
 
   const commitTabValue = useMemo(
     () => ({

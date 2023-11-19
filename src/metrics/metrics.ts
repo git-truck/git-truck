@@ -31,15 +31,20 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
+export function createAuthorMetricsData(data: AnalyzerData, colorSeed: string | undefined) {
   const authorColors = generateAuthorColors(data.authors, colorSeed)
+  const metricCalcs = getAuthorMetricCalcs("HISTORICAL", authorColors)
+  const authorMetricCache = setupMetricsCache(data.commit.tree, [metricCalcs])
+  return { authorColors, authorMetricCache }
+}
 
+export function createMetricData(data: AnalyzerData): MetricsData {
   return [
     {
-      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors))
+      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL"))
       // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
     },
-    authorColors
+    new Map()
   ]
 }
 
@@ -114,10 +119,23 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
   return [min, max]
 }
 
-export function getMetricCalcs(
-  data: AnalyzerData,
+export function getAuthorMetricCalcs(
   authorshipType: AuthorshipType,
   authorColors: Map<string, `#${string}`>
+): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void] {
+  return [
+    "TOP_CONTRIBUTOR",
+    (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
+      if (!cache.legend) cache.legend = new Map<string, PointInfo>()
+      setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+    }
+  ]
+}
+
+export function getMetricCalcs(
+  data: AnalyzerData,
+  authorshipType: AuthorshipType
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
 
@@ -176,14 +194,6 @@ export function getMetricCalcs(
           blob.path,
           groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
         )
-      }
-    ],
-    [
-      "TOP_CONTRIBUTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
-        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, authorshipType)
       }
     ],
     [
