@@ -108,9 +108,9 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
   totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
-  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10000), 150000)
+  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10_000), 150_000)
 
-  if (commitCount > 500000)
+  if (commitCount > 500_000)
     log.warn(
       "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
     )
