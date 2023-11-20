@@ -43,7 +43,7 @@ export default function Index() {
   if (transitionData.state !== "idle")
     return (
       <div className="grid h-screen place-items-center">
-        <LoadingIndicator loadingText="Analyzing" />
+        <LoadingIndicator />
       </div>
     )
   return (

@@ -96,22 +96,28 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
   }
 }
 
+export let progress = 0
+export let totalCommitCount = Infinity
+
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
+  totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
-  const commitBundleSize = 100000
+  // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
+  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10_000), 150_000)
 
-  if (commitCount > 500000)
+  if (commitCount > 500_000)
     log.warn(
       "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
     )
 
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
+    progress = index
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
     const sectionSize = Math.ceil(runCountCommit / threadCount)
 
@@ -131,7 +137,6 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     log.info("threads synced")
   }
   sortCommits(fileMap)
-
   return [data, Array.from(authors)]
 }
 

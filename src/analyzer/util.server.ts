@@ -14,6 +14,12 @@ export function last<T>(array: T[]) {
   return array[array.length - 1]
 }
 
+export function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 export function runProcess(dir: string, command: string, args: string[]) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
