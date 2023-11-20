@@ -107,7 +107,8 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
   const commitCount = await GitCaller.getInstance().getCommitCount()
   totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
-  const commitBundleSize = 100000
+  // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
+  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10000), 150000)
 
   if (commitCount > 500000)
     log.warn(
