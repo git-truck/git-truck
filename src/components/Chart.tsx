@@ -45,7 +45,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -86,8 +86,8 @@ export const Chart = memo(function Chart({
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path).descendants()
-  }, [size, commit, chartType, sizeMetric, path])
+    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path, renderCutoff).descendants()
+  }, [size, commit, chartType, sizeMetric, path, renderCutoff])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -354,7 +354,8 @@ function createPartitionedHiearchy(
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
-  path: string
+  path: string,
+  renderCutoff: number
 ) {
   const root = data.tree as HydratedGitTreeObject
 
@@ -405,7 +406,7 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (cast.x1 - cast.x0) >= 2 && (cast.y1 - cast.y0) >= 2
+        return (cast.x1 - cast.x0) >= renderCutoff && (cast.y1 - cast.y0) >= renderCutoff
       })
 
       return tmPartition
@@ -417,7 +418,7 @@ function createPartitionedHiearchy(
       const bPartition = bubbleChartPartition(hiearchy)
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        return cast.r >= 2
+        return cast.r >= renderCutoff
       })
       return bPartition
     default:

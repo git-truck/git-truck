@@ -29,6 +29,7 @@ export type Options = {
   authorshipType: AuthorshipType
   transitionsEnabled: boolean
   labelsVisible: boolean
+  renderCutoff: number
 }
 
 export type OptionsContextType = Options & {
@@ -40,6 +41,7 @@ export type OptionsContextType = Options & {
   setLabelsVisible: (labelsVisible: boolean) => void
   setDepthType: (depthType: DepthType) => void
   setHierarchyType: (hierarchyType: HierarchyType) => void
+  setRenderCutoff: (renderCutoff: number) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -61,7 +63,8 @@ const defaultOptions: Options = {
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
-  labelsVisible: true
+  labelsVisible: true,
+  renderCutoff: 2
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -91,6 +94,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
+    },
+    setRenderCutoff: () => {
+      throw new Error("No renderCutoffSetter provided")
     }
   }
 }

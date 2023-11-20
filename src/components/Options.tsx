@@ -50,6 +50,7 @@ export const Options = memo(function Options() {
     sizeMetric,
     hierarchyType,
     transitionsEnabled,
+    renderCutoff,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,
@@ -57,7 +58,8 @@ export const Options = memo(function Options() {
     setChartType,
     setDepthType,
     setHierarchyType,
-    setSizeMetricType
+    setSizeMetricType,
+    setRenderCutoff
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
@@ -183,6 +185,13 @@ export const Options = memo(function Options() {
             />
           </fieldset>
         ) : null}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            Render cut-off
+          </legend>
+          <span className="ml-1.5">Pixels:</span>
+          <input type="number" value={renderCutoff} onChange={x =>setRenderCutoff(x.target.valueAsNumber)} className="w-20"/> 
+        </fieldset>
         {/* </div> */}
 
         {/* 
