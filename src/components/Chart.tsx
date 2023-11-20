@@ -405,7 +405,7 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (isBlob(child.data) && cast.x0 >= 1 && cast.y0 >= 1) || isTree(child.data)
+        return (cast.x1 - cast.x0) >= 2 && (cast.y1 - cast.y0) >= 2
       })
 
       return tmPartition
@@ -414,14 +414,11 @@ function createPartitionedHiearchy(
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
-
       const bPartition = bubbleChartPartition(hiearchy)
-
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        return (isBlob(child.data) && cast.r >= 1) || isTree(child.data)
+        return cast.r >= 2
       })
-
       return bPartition
     default:
       throw Error("Invalid chart type")
