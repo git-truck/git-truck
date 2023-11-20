@@ -5,7 +5,9 @@ import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
 import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
-import { memo } from "react"
+import { memo, useTransition } from "react"
+import anitruck from "~/assets/truck.gif"
+
 import {
   mdiChartBubble,
   mdiChartTree,
@@ -103,6 +105,8 @@ export const Options = memo(function Options() {
     SINGLE_AUTHOR: "TRUCK_FACTOR",
     LAST_CHANGED: "LAST_CHANGED"
   }
+
+  const [isTransitioning, startTransition] = useTransition()
 
   return (
     <>
@@ -240,13 +244,22 @@ export const Options = memo(function Options() {
             <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
             Labels
           </CheckboxWithLabel>
-          <div className="font-bold text-sm flex w-full items-center justify-start gap-2">
+          <label
+            className="label flex w-full items-center justify-start gap-2 text-sm"
+            title="Adjust the item rendering size threshold"
+          >
             <span className="flex grow items-center gap-2">
-              <Icon className="ml-1.5" path={mdiContentCut} size="1.25em"/>
-              Pixel render cut-off
+              <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
+              Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
             </span>
-            <input type="number" min={0} value={renderCutoff} className="place-self-end w-12 mr-1" onChange={x =>setRenderCutoff(x.target.valueAsNumber)} />
-          </div>
+            <input
+              type="number"
+              min={0}
+              defaultValue={renderCutoff}
+              className="mr-1 w-12 place-self-end border-b-2"
+              onChange={(x) => startTransition(() => setRenderCutoff(x.target.valueAsNumber))}
+            />
+          </label>
         </fieldset>
       </div>
     </>
