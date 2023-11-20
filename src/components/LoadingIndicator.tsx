@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react"
 import type { AnalyzationStatus } from "~/analyzer/analyze.server"
 import anitruck from "~/assets/truck.gif"
 
-interface ProgressData {
+type ProgressData = {
   progress: number
   totalCommitCount: number
   analyzationStatus: AnalyzationStatus
