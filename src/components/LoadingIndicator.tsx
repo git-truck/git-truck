@@ -4,21 +4,22 @@ import { useEffect, useMemo } from "react"
 import type { AnalyzationStatus } from "~/analyzer/analyze.server"
 import anitruck from "~/assets/truck.gif"
 
-export function LoadingIndicator({ className = "" }: { loadingText?: string; className?: string }) {
-  const fetcher = useFetcher()
+interface ProgressData {
+  progress: number
+  totalCommitCount: number
+  analyzationStatus: AnalyzationStatus
+}
 
-  // Fetch progress update every 3 sec
+export function LoadingIndicator({ className = "" }: { loadingText?: string; className?: string }) {
+  const fetcher = useFetcher<ProgressData>()
+
   useEffect(() => {
     if (fetcher.state === "idle") fetcher.load(`/progress`)
   }, [fetcher.state])
 
   const progressText = useMemo(() => {
     if (!fetcher.data) return "Starting analyzation"
-    const { progress, totalCommitCount, analyzationStatus } = fetcher.data as {
-      progress: number
-      totalCommitCount: number
-      analyzationStatus: AnalyzationStatus
-    }
+    const { progress, totalCommitCount, analyzationStatus } = fetcher.data
     if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analyzation"
     if (analyzationStatus === "GeneratingChart") return "Generating chart"
     const percentage = progress && totalCommitCount ? Math.round((progress / totalCommitCount) * 100) : 0
