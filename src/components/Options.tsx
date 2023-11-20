@@ -26,7 +26,8 @@ import {
   mdiViewModule,
   mdiCog,
   mdiFileTree,
-  mdiFamilyTree
+  mdiFamilyTree,
+  mdiContentCut
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -185,13 +186,6 @@ export const Options = memo(function Options() {
             />
           </fieldset>
         ) : null}
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            Render cut-off
-          </legend>
-          <span className="ml-1.5">Pixels:</span>
-          <input type="number" value={renderCutoff} onChange={x =>setRenderCutoff(x.target.valueAsNumber)} className="w-20"/> 
-        </fieldset>
         {/* </div> */}
 
         {/* 
@@ -246,6 +240,13 @@ export const Options = memo(function Options() {
             <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
             Labels
           </CheckboxWithLabel>
+          <div className="font-bold text-sm flex w-full items-center justify-start gap-2">
+            <span className="flex grow items-center gap-2">
+              <Icon className="ml-1.5" path={mdiContentCut} size="1.25em"/>
+              Pixel render cut-off
+            </span>
+            <input type="number" min={0} value={renderCutoff} className="place-self-end w-12 mr-1" onChange={x =>setRenderCutoff(x.target.valueAsNumber)} />
+          </div>
         </fieldset>
       </div>
     </>
