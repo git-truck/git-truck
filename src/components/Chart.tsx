@@ -392,7 +392,7 @@ function createPartitionedHiearchy(
         return Object.keys(hydratedBlob.authors ?? {}).length
     }
   })
-
+  const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
@@ -406,7 +406,7 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (cast.x1 - cast.x0) >= renderCutoff && (cast.y1 - cast.y0) >= renderCutoff
+        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
       })
 
       return tmPartition
@@ -418,7 +418,7 @@ function createPartitionedHiearchy(
       const bPartition = bubbleChartPartition(hiearchy)
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        return cast.r >= renderCutoff
+        return cast.r >= cutOff
       })
       return bPartition
     default:
