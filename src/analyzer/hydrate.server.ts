@@ -88,7 +88,7 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
     }
     return
   }
-
+  if (change.contribs === 0) return // in case a rename with no changes, this happens 
   blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
 
   for (const coauthor of commit.coauthors) {
