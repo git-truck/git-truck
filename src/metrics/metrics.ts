@@ -140,7 +140,7 @@ export function getMetricCalcs(
       "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorshipType)
+        setDominanceColor(blob, cache, authorshipType, authorColors)
       }
     ],
     [
