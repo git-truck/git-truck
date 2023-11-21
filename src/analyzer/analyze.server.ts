@@ -196,6 +196,10 @@ export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
 export let analyzationStatus: AnalyzationStatus = "Starting"
 
+export function setAnalyzationStatus(newStatus: AnalyzationStatus) {
+  analyzationStatus = newStatus
+}
+
 export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   analyzationStatus = "Starting"
   GitCaller.initInstance(args.path)
@@ -267,7 +271,6 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     })
 
     if (repoTreeError) throw repoTreeError
-    analyzationStatus = "Hydrating"
 
     const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
       job: () => hydrateData(repoTree),
