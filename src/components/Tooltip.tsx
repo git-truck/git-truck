@@ -7,9 +7,9 @@ import type { MetricType } from "../metrics/metrics"
 import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
-import Icon from "@mdi/react"
 import { useData } from "~/contexts/DataContext"
 import type { DatabaseInfo } from "~/routes/$repo.$"
+import { Icon } from "@mdi/react"
 
 interface TooltipProps {
   hoveredObject: GitObject | null
