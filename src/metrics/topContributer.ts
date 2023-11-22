@@ -11,7 +11,7 @@ export function setDominantAuthorColor(
 ) {
   const authorUnion = blob.unionedAuthors?.[authorshipType]
   if (!authorUnion) {
-    console.log("No author union found for file", blob.path)
+    console.warn("No author union found for file", blob.path)
     return
   }
   const sorted = Object.entries(authorUnion).sort(([k1, v1], [k2, v2]) => {
