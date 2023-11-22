@@ -14,6 +14,7 @@ import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
+import { setAnalyzationStatus } from "./analyze.server"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
@@ -114,7 +115,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     log.warn(
       "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
     )
-
+  setAnalyzationStatus("Hydrating")
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
     progress = index

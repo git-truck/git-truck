@@ -45,7 +45,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -86,8 +86,8 @@ export const Chart = memo(function Chart({
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path).descendants()
-  }, [size, commit, chartType, sizeMetric, path])
+    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path, renderCutoff).descendants()
+  }, [size, commit, chartType, sizeMetric, path, renderCutoff])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -354,7 +354,8 @@ function createPartitionedHiearchy(
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
-  path: string
+  path: string,
+  renderCutoff: number
 ) {
   const root = data.tree as HydratedGitTreeObject
 
@@ -391,7 +392,7 @@ function createPartitionedHiearchy(
         return Object.keys(hydratedBlob.authors ?? {}).length
     }
   })
-
+  const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
@@ -405,7 +406,7 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (isBlob(child.data) && cast.x0 >= 1 && cast.y0 >= 1) || isTree(child.data)
+        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
       })
 
       return tmPartition
@@ -414,14 +415,11 @@ function createPartitionedHiearchy(
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
-
       const bPartition = bubbleChartPartition(hiearchy)
-
       filterTree(bPartition, (child) => {
         const cast = child as HierarchyCircularNode<HydratedGitObject>
-        return (isBlob(child.data) && cast.r >= 1) || isTree(child.data)
+        return cast.r >= cutOff
       })
-
       return bPartition
     default:
       throw Error("Invalid chart type")
