@@ -23,7 +23,7 @@
     "build": "npm run build-vite && npm run build-cli",
     "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts",
     "build-vite": "vite build && vite build --ssr",
-    "dev": "vite dev",
+    "dev": "vite dev --open",
     "watch": "remix watch",
     "start": "npm run build && node .",
     "clean": "rimraf -rf build public/build .cache .temp",
