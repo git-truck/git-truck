@@ -103,7 +103,12 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           labelsVisible: visible
-        }))
+        })),
+      setRenderCutoff: (renderCutoff: number) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          renderCutoff: renderCutoff
+        })),
     }),
     [options]
   )

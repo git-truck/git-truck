@@ -1,7 +1,8 @@
-import type { HTMLAttributes } from "react"
+import { useTransition, type HTMLAttributes } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
+import anitruck from "~/assets/truck.gif"
 
 export const CloseButton = ({
   className = "",
@@ -54,11 +55,21 @@ export function CheckboxWithLabel({
   checkedIcon?: string
   uncheckedIcon?: string
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
+  const [isTransitioning, startTransition] = useTransition()
+
   return (
     <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
-      <span className="flex grow items-center gap-2">{children}</span>
+      <span className="flex grow items-center gap-2">
+        {children}
+        {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
+      </span>
       <Icon className="place-self-end" path={checked ? checkedIcon : uncheckedIcon} size={1} />
-      <input type="checkbox" checked={checked} onChange={onChange} className="hidden" />
+      <input
+        type="checkbox"
+        defaultChecked={checked}
+        onChange={(e) => startTransition(() => onChange(e))}
+        className="hidden"
+      />
     </label>
   )
 }
