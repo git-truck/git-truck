@@ -11,7 +11,6 @@ export function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCach
   
   const legend = cache.legend as PointLegendData
   const authors = Object.keys(authorUnion)
-  console.log("authors", blob.path, authors.length)
   switch (authors.length) {
     case 0:
       legend.set("No authors", new PointInfo(noAuthorsColor, 0))
