@@ -8,7 +8,7 @@ import type {
   HydratedGitCommitObject,
   HydratedGitTreeObject
 } from "./model"
-import { analyzeRenamedFile } from "./util.server"
+import { analyzeRenamedFile, memoryAvailable } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
@@ -117,6 +117,10 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
   // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
   for (let index = 0; index < commitCount; index += commitBundleSize) {
+    if (!memoryAvailable(200_000_000)) {
+      console.log("broke out early", index)
+      break
+    }
     progress = index
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
     const sectionSize = Math.ceil(runCountCommit / threadCount)

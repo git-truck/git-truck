@@ -1,5 +1,6 @@
 import { spawn } from "child_process"
-import { existsSync, promises as fs } from "fs"
+import { existsSync, promises as fs, createWriteStream, writeFile, mkdir}from "fs"
+// import fs from "fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
 import { dirname, resolve as resolvePath, sep } from "node:path"
@@ -9,9 +10,18 @@ import { performance } from "perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
+import { freemem } from "os"
+import { getHeapStatistics } from "v8"
+import * as util from 'util';
+import JSONStream from "jsonstream"
+import { writeObjectToPath } from "./bruh"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
+}
+
+export function memoryAvailable(bytes: number) {
+  return freemem() > bytes && getHeapStatistics().total_available_size > bytes 
 }
 
 export function sleep(ms: number) {
@@ -86,15 +96,55 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject |
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
+// async function writeObjectToFile(object: AnalyzerData, filePath: string): Promise<void> {
+//   return new Promise<void>((resolve, reject) => {
+//     const writeStream = fs.createWriteStream(filePath, { encoding: 'utf8' });
+//     const jsonStream = JSONStream.stringify('[', ',', ']');
+
+//     // Pipe the JSONStream to the file
+//     jsonStream.pipe(writeStream);
+
+//     // Write the object to the JSONStream
+//     jsonStream.write(object);
+
+//     // End the JSONStream to close the file
+//     jsonStream.end();
+
+//     // Handle events when the process is finished
+//     writeStream.on('finish', () => {
+//       console.log(`Object written to ${filePath} successfully.`);
+//       resolve();
+//     });
+
+//     // Handle errors
+//     writeStream.on('error', (err) => {
+//       console.error(`Error writing object to ${filePath}:`, err);
+//       reject(err);
+//     });
+//   });
+// }
+
 export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
-  const data = JSON.stringify(analyzedData, null, 2)
   const dir = dirname(outPath)
   if (!existsSync(dir)) {
     await fs.mkdir(dir, { recursive: true })
   }
-  await fs.writeFile(outPath, data)
+  console.log("start write")
+  await writeObjectToPath(analyzedData, outPath)
+  console.log("end write")
   return outPath
 }
+
+// export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
+//   const data = JSON.stringify(analyzedData, null, 2)
+//   console.log("stringified")
+//   const dir = dirname(outPath)
+//   if (!existsSync(dir)) {
+//     await fs.mkdir(dir, { recursive: true })
+//   }
+//   await fs.writeFile(outPath, data)
+//   return outPath
+// }
 
 export function getDirName(dir: string) {
   return resolvePath(dir).split(sep).slice().reverse()[0]
