@@ -8,7 +8,6 @@ import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
-import getLatestVersion from "latest-version"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -195,9 +194,19 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
 }
 
 export async function getGitTruckInfo() {
-  const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
+  const latestVersion = await getLatestVersion()
   return {
     version: pkg.version,
     latestVersion: latestVersion
   }
+}
+
+export async function getLatestVersion() {
+  const [result] = await promiseHelper(
+    fetch("https://unpkg.com/git-truck/package.json")
+      .then((res) => res.json())
+      .then((pkg) => pkg.version)
+  )
+
+  return result
 }
