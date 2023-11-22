@@ -19,7 +19,7 @@ export function setDominantAuthorColor(
     return v2 - v1
   })
   if (!sorted[0]) {
-    console.log("No sorted authors for file", blob.path)
+    console.warn("No sorted authors for file", blob.path)
     return
   }
 
