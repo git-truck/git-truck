@@ -7,7 +7,8 @@ import { Depth, type DepthType } from "~/metrics/chartDepth"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
-  TREE_MAP: "Tree map"
+  TREE_MAP: "Tree map",
+  R3F: "r3f"
 }
 
 export type ChartType = keyof typeof Chart
