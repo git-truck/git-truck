@@ -19,7 +19,7 @@
     "test:e2e": "npx playwright test",
     "pretest:e2e": "npm run build",
     "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts",
-    "build": "vite build && vite build --ssr",
+    "build": "vite build && vite build --ssr && npm run build-cli",
     "dev": "vite dev",
     "watch": "remix watch",
     "start": "npm run build && node .",
