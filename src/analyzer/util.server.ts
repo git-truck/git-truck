@@ -8,8 +8,6 @@ import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./m
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
-import getLatestVersion from "latest-version"
-import ServerInstance from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -114,8 +112,8 @@ export function analyzeRenamedFile(
     oldPath = repo + "/" + file.replace(replaceRegex, oldP).replace("//", "/")
     newPath = repo + "/" + file.replace(replaceRegex, newP).replace("//", "/")
   } else {
-    oldPath = repo + "/" + groups["oldPath2"] ?? ""
-    newPath = repo + "/" + groups["newPath2"] ?? ""
+    oldPath = repo + "/" + (groups["oldPath2"] ?? "")
+    newPath = repo + "/" + (groups["newPath2"] ?? "")
   }
 
   renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime })
@@ -246,7 +244,7 @@ export function isValidURI(uri: string) {
 }
 
 export async function getGitTruckInfo() {
-  const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
+  const latestVersion = await getLatestVersion()
   return {
     version: pkg.version,
     latestVersion: latestVersion
@@ -273,15 +271,12 @@ export function openFile(repoDir: string, path: string) {
   })
 }
 
-export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUserConfig) => TruckUserConfig) {
-  const truckConfigPath = resolvePath(repoDir, "truckconfig.json")
-  let currentConfig: TruckUserConfig = {}
-  try {
-    const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
-    if (configFileContents) currentConfig = JSON.parse(configFileContents)
-  } catch (e) {
-    /* empty */
-  }
-  const updatedConfig = updaterFn(currentConfig)
-  await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
+export async function getLatestVersion() {
+  const [result] = await promiseHelper(
+    fetch("https://unpkg.com/git-truck/package.json")
+      .then((res) => res.json())
+      .then((pkg) => pkg.version)
+  )
+
+  return result
 }
