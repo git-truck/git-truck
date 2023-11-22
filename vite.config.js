@@ -6,6 +6,9 @@ import { installGlobals } from "@remix-run/node";
 installGlobals();
 
 export default defineConfig({
+  ssr: {
+    noExternal: /^(node:|d3)/
+  },
   plugins: [
     remix({
       appDirectory: "src",
