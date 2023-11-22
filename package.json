@@ -20,9 +20,10 @@
     "test:e2e:headed": "npx playwright test --headed",
     "pretest:e2e": "npm run build",
     "pretest:e2e:headed": "npm run build",
-    "build": "remix build && npm run build-cli",
+    "build": "npm run build-vite && npm run build-cli",
     "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts",
-    "dev": "remix dev",
+    "build-vite": "vite build && vite build --ssr",
+    "dev": "vite dev",
     "watch": "remix watch",
     "start": "npm run build && node .",
     "clean": "rimraf -rf build public/build .cache .temp",
@@ -122,6 +123,8 @@
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
     "uniqolor": "^1.1.0",
+    "vite": "^5.0.2",
+    "vite-tsconfig-paths": "^4.2.1",
     "yargs": "^17.7.2"
   },
   "jest": {
