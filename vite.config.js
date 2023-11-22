@@ -6,5 +6,12 @@ import { installGlobals } from "@remix-run/node";
 installGlobals();
 
 export default defineConfig({
-  plugins: [remix(), tsconfigPaths()],
-});
+  plugins: [
+    remix({
+      appDirectory: "src",
+      serverBuildPath: "build/index.js",
+      serverModuleFormat: "cjs"
+    }),
+    tsconfigPaths()
+  ]
+})
