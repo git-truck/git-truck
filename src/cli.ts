@@ -7,11 +7,10 @@ import { createRequestHandler } from "@remix-run/express"
 import path from "path"
 import pkg from "../package.json"
 import open from "open"
-import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { semverCompare, getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName, isValidURI, getLatestVersion } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import type { NextFunction } from "express-serve-static-core"
 import InstanceManager from "./analyzer/InstanceManager.server"
@@ -26,7 +25,7 @@ async function main() {
   const currentV = pkg.version
   let updateMessage = ""
   try {
-    const latestV = await latestVersion(pkg.name)
+    const latestV = await getLatestVersion()
 
     // Soft clear the console
     process.stdout.write("\u001b[2J\u001b[0;0H")
