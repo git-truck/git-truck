@@ -14,7 +14,7 @@ export type SegmentLegendData = [
 export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {
   const [steps, textGenerator, colorGenerator, offsetStepCalc] = metricCache.legend as SegmentLegendData
   const width = 100 / steps
-
+  const fixedSteps = Number.isFinite(steps) && !Number.isNaN(steps) ? steps : 1
   let arrowVisible = false
   let arrowOffset = 0
   const clickedObject = useClickedObject().clickedObject ?? hoveredObject ?? null
@@ -28,8 +28,8 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
     <>
       <div className="relative">
         <div className="flex">
-          {[...Array(steps)].map((_, i) => {
-            return steps >= 4 ? (
+          {[...Array(fixedSteps)].map((_, i) => {
+            return fixedSteps >= 4 ? (
               <MetricSegment
                 key={`legend-${i}`}
                 width={width}

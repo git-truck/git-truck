@@ -37,6 +37,17 @@ export const GlobalInfo = memo(function GlobalInfo() {
     }
   }, [transitionState.state])
 
+
+  
+  useEffect(() => {
+    console.log("here", analyzerData.analyzationFinished, isAnalyzing, transitionState.state)
+    if (!analyzerData.analyzationFinished && !isAnalyzing && transitionState.state === "idle") {
+      console.log("FETCHING!!!!!!!!!!!!!!!!!11")
+      setIsAnalyzing(true)
+      navigate(location.pathname + "?hydrate=true")
+    }
+  }, [transitionState.state, analyzerData])
+
   const isoString = new Date(analyzerData.lastRunEpoch).toISOString()
   return (
     <div className="flex flex-col gap-2">
@@ -84,7 +95,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           </Link>
           <Form
             method="post"
-            action={location.pathname}
+            action={location.pathname + "?hydrate=true"}
             onSubmit={() => {
               setIsAnalyzing(true)
             }}

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { RepoData } from "~/routes/$repo.$"
+import type { RepoData } from "~/routes/$repo.$branch.$"
 
 export const DataContext = createContext<RepoData | undefined>(undefined)
 

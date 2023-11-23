@@ -46,23 +46,24 @@ export interface RepoData {
   }
 }
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params["repo"] || !params["*"]) {
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
+  if (!params["repo"] || !params["branch"]) {
     return redirect("/")
   }
 
+  const url = new URL(request.url);
+  const hydrate = url.searchParams.get("hydrate") === "true";
+  console.log("hydrate", hydrate)
+  const other = params["*"]
+  console.log("other", other)
   const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
   const options: TruckUserConfig = {
     invalidateCache: invalidateCache || args.invalidateCache
   }
   options.path = resolve(args.path, params["repo"])
-  options.branch = params["*"]
+  options.branch = params["branch"]
 
-  if (params["*"]) {
-    options.branch = params["*"]
-  }
-
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
+  const analyzerData = await analyze({ ...args, ...options }, hydrate).then((data) =>
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
 

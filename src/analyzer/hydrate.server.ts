@@ -100,10 +100,11 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
 export let progress = 0
 export let totalCommitCount = Infinity
 
-export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
+export async function hydrateData(commit: GitCommitObject, fullHydrate: boolean): Promise<[HydratedGitCommitObject, string[]]> {
   const data = commit as HydratedGitCommitObject
-  const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
+  if (!fullHydrate) return [data, []]
+  const fileMap = convertFileTreeToMap(data.tree)
 
   const commitCount = await GitCaller.getInstance().getCommitCount()
   totalCommitCount = commitCount

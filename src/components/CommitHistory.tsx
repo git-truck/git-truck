@@ -91,6 +91,7 @@ export function CommitHistory() {
   function requestCommits(index: number, commitHashes?: string[]) {
     const searchParams = new URLSearchParams()
     const commitHashesToRequest = commitHashes ?? totalCommitHashes
+    if (commitHashesToRequest.length < 1) return
     searchParams.set("commits", commitHashesToRequest.slice(index, index + commitIncrement).join(","))
     searchParams.set("branch", analyzerData.repo.currentHead)
     searchParams.set("repo", analyzerData.repo.path)
@@ -101,7 +102,7 @@ export function CommitHistory() {
     if (clickedObject) {
       let commitHashes: string[] = []
       if (clickedObject.type === "blob") {
-        commitHashes = clickedObject.commits.map((a) => a.hash)
+        commitHashes = clickedObject.commits ? clickedObject.commits.map((a) => a.hash) : []
       } else {
         commitHashes = calculateCommitsForSubTree(clickedObject).map((a) => a.hash)
       }
