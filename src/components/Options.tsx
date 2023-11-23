@@ -90,7 +90,8 @@ export const Options = memo(function Options() {
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
     TREE_MAP: mdiChartTree,
-    R3F: mdiChartBubble
+    R3F: mdiChartBubble,
+    R3F2: mdiChartTree,
   }
 
   const hiearchyIcons: Record<HierarchyType, string> = {

@@ -35,9 +35,30 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 
 import * as THREE from "three"
-import { Canvas, useFrame, ThreeElements } from "@react-three/fiber"
+import { Canvas, useFrame, ThreeElements, Object3DNode, extend } from "@react-three/fiber"
 import { OrbitControls, OrthographicCamera } from '@react-three/drei'
-import { is } from "@react-three/fiber/dist/declarations/src/core/utils"
+
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
+import myFont from './Helvetiker.json'
+extend({ TextGeometry })
+
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    textGeometry: Object3DNode<TextGeometry, typeof TextGeometry>;
+  }
+}
+const font = new FontLoader().parse(myFont);
+// export default function Text3D({content, position}: {content: string, position: [number, number, number]}) {
+//   const font = new FontLoader().parse(myFont);
+  
+//   return(
+//     <mesh position={position}>
+//         <textGeometry args={[content, {font, size:5, height: 1}]}/>
+//         <meshLambertMaterial attach='material' color={'gold'}/>
+//     </mesh>
+//   )
+// }
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -126,11 +147,11 @@ export const Chart = memo(function Chart({
         }
   }
 
-  if (chartType === "R3F") {
+  if (chartType.startsWith("R3F")) {
     return (
       <div className="relative grid place-items-center overflow-hidden" ref={ref}>
         <Canvas
-          key={`r3f|${size.width}|${size.height}`}
+          key={`${chartType}|${size.width}|${size.height}`}
           className={clsx("grid h-full w-full place-items-center", {
             "cursor-zoom-out": path.includes("/")
           })}
@@ -138,39 +159,22 @@ export const Chart = memo(function Chart({
             height: size.height,
             width: size.width,
           }}
-          onClick={() => {
-            // Move up to parent
-            const parentPath = path.split("/").slice(0, -1).join("/")
-            // Check if parent is root
-            if (parentPath === "") setPath("/")
-            else setPath(parentPath)
-          }}
         >
           {nodes.map((d, i) => {
             return (
-              <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} canvas_size={size} />
+              <Node
+                key={d.data.path}
+                d={d}
+                isSearchMatch={Boolean(searchResults[d.data.path])}
+                canvas_size={size}
+              />
             )
           })}
           <OrthographicCamera
             makeDefault
-            position={[0, -1000, 1000]}
+            position={[0, 1000, 0]}
           />
           <OrbitControls target={[0, 0, 0]}/>
-          <mesh
-            position={[
-              0,
-              0,
-              0
-            ]}
-            scale={[
-              10,
-              10,
-              10
-            ]}
-          >
-            <sphereGeometry />
-            <meshNormalMaterial />
-          </mesh>
         </Canvas>
       </div>
     )
@@ -257,6 +261,18 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
         rx: datum.r,
         ry: datum.r
       }
+    } else if (chartType === "R3F2") {
+      const datum = d as HierarchyRectangularNode<HydratedGitObject>
+
+      props = {
+        ...props,
+        x: datum.x0 + (datum.x1 - datum.x0)/2 - canvas_size.width/2,
+        y: datum.y0 + (datum.y1 - datum.y0)/2 - canvas_size.height/2,
+        width: datum.x1 - datum.x0,
+        height: datum.y1 - datum.y0,
+        rx: treemapNodeBorderRadius,
+        ry: treemapNodeBorderRadius
+      }
     } else {
       const datum = d as HierarchyRectangularNode<HydratedGitObject>
 
@@ -273,34 +289,103 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
     return props
   }, [isSearchMatch, d, metricsData, authorshipType, metricType, chartType, canvas_size])
 
+  const blah = false
+
   if (chartType === "R3F") {
-    // if (!isTree(d.data))
-      return (
-        <mesh
+    return <>
+      <mesh
+        position={[
+          commonProps.x as number,
+          d.depth * 100,
+          commonProps.y as number,
+        ]}
+        scale={[
+          commonProps.rx as number,
+          100,
+          commonProps.rx as number,
+        ]}
+        rotation={[0, 0, 0]}
+      >
+        <cylinderGeometry />
+        {
+          (blah)
+          ? <meshNormalMaterial />
+          : (!isTree(d.data))
+            ? <meshBasicMaterial color={commonProps.fill}/>
+            : <meshBasicMaterial color={"black"} />
+        }
+      </mesh>
+      {
+        (isTree(d.data) && !blah)
+        ? <mesh
+            position={[
+              commonProps.x as number,
+              d.depth * 100 + 1,
+              commonProps.y as number,
+            ]}
+            scale={[
+              (commonProps.rx as number) - 1,
+              100,
+              (commonProps.rx as number) - 1,
+            ]}
+            rotation={[0, 0, 0]}
+          >
+            <cylinderGeometry />
+            <meshBasicMaterial transparent />
+          </mesh>
+        : null
+      }
+    </>
+  } else if(chartType === "R3F2") {
+    if (isTree(d.data)) {
+      console.log(d.data.name)
+    }
+    const textIsTooLong = (text: string) => (commonProps.width as number)< text.length * estimatedLetterWidth
+    return <>
+      {
+        (!textIsTooLong(d.data.name))
+        ? <mesh
           position={[
-            commonProps.x as number,
-            -(commonProps.y as number),
-            d.depth * 100
+            (commonProps.x as number)-(commonProps.width as number)/2+5,
+            d.depth * 100 + 100,
+            (commonProps.y as number)-(commonProps.height as number)/2+15,
           ]}
-          scale={[
-            commonProps.rx as number,
-            100,
-            commonProps.rx as number,
+          rotation={[
+            -3.14/2,
+            0,
+            0,
           ]}
-          rotation={[3.14/2, 0, 0]}
         >
-          <cylinderGeometry />
-          <meshNormalMaterial />
+          <meshLambertMaterial attach='material' color={'gold'}/>
+          <textGeometry args={[d.data.name, {font, size:10, height: 1}]}/>
         </mesh>
-      )
+        : null
+      }
+      <mesh
+        position={[
+          commonProps.x as number,
+          d.depth * 100,
+          commonProps.y as number,
+        ]}
+        scale={[
+          commonProps.width as number,
+          100,
+          commonProps.height as number,
+        ]}
+        rotation={[0, 0, 0]}
+      >
+        <boxGeometry />
+        {
+          (blah)
+          ? <meshNormalMaterial />
+          : <meshBasicMaterial color={commonProps.fill}/>
+        }
+      </mesh>
+    </>
   } else {
     return (
       <rect
         {...commonProps}
-        onPointerOver={(e) => {
-          console.log(d.data.path, commonProps.x, commonProps.y, commonProps.rx);
-          e.stopPropagation()
-        }}
         className={clsx({
           "cursor-pointer": isBlob(d.data),
           "transition-all duration-500 ease-in-out": transitionsEnabled,
@@ -486,6 +571,7 @@ function createPartitionedHiearchy(
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
+    case "R3F2":
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
         .tile(treemapBinary)
