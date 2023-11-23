@@ -41,6 +41,7 @@ import { OrbitControls, OrthographicCamera } from '@react-three/drei'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import myFont from './Helvetiker.json'
+import { useSearchParams } from "@remix-run/react"
 extend({ TextGeometry })
 
 declare module "@react-three/fiber" {
@@ -49,16 +50,6 @@ declare module "@react-three/fiber" {
   }
 }
 const font = new FontLoader().parse(myFont);
-// export default function Text3D({content, position}: {content: string, position: [number, number, number]}) {
-//   const font = new FontLoader().parse(myFont);
-  
-//   return(
-//     <mesh position={position}>
-//         <textGeometry args={[content, {font, size:5, height: 1}]}/>
-//         <meshLambertMaterial attach='material' color={'gold'}/>
-//     </mesh>
-//   )
-// }
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -159,6 +150,7 @@ export const Chart = memo(function Chart({
             height: size.height,
             width: size.width,
           }}
+          shadows={true}
         >
           {nodes.map((d, i) => {
             return (
@@ -170,8 +162,11 @@ export const Chart = memo(function Chart({
               />
             )
           })}
+          <ambientLight intensity={3} />
+          <pointLight position={[1000, 1000, 1000]} intensity={1000000} />
           <OrthographicCamera
             makeDefault
+            near={0}
             position={[0, 1000, 0]}
           />
           <OrbitControls target={[0, 0, 0]}/>
@@ -289,79 +284,78 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
     return props
   }, [isSearchMatch, d, metricsData, authorshipType, metricType, chartType, canvas_size])
 
-  const blah = false
+  const [searchParams, setSearchParams] = useSearchParams()
+  // /repository/branch?normal
+  const normalMesh = searchParams.get("normal") !== null
 
   if (chartType === "R3F") {
-    return <>
-      <mesh
-        position={[
-          commonProps.x as number,
-          d.depth * 100,
-          commonProps.y as number,
-        ]}
-        scale={[
-          commonProps.rx as number,
-          100,
-          commonProps.rx as number,
-        ]}
-        rotation={[0, 0, 0]}
-      >
-        <cylinderGeometry />
-        {
-          (blah)
-          ? <meshNormalMaterial />
-          : (!isTree(d.data))
-            ? <meshBasicMaterial color={commonProps.fill}/>
-            : <meshBasicMaterial color={"black"} />
-        }
-      </mesh>
-      {
-        (isTree(d.data) && !blah)
-        ? <mesh
-            position={[
-              commonProps.x as number,
-              d.depth * 100 + 1,
-              commonProps.y as number,
-            ]}
-            scale={[
-              (commonProps.rx as number) - 1,
-              100,
-              (commonProps.rx as number) - 1,
-            ]}
-            rotation={[0, 0, 0]}
-          >
-            <cylinderGeometry />
-            <meshBasicMaterial transparent />
-          </mesh>
-        : null
-      }
-    </>
-  } else if(chartType === "R3F2") {
-    if (isTree(d.data)) {
-      console.log(d.data.name)
-    }
-    const textIsTooLong = (text: string) => (commonProps.width as number)< text.length * estimatedLetterWidth
-    return <>
-      {
-        (!textIsTooLong(d.data.name))
-        ? <mesh
+    if (normalMesh) {
+      return <>
+        <mesh
           position={[
-            (commonProps.x as number)-(commonProps.width as number)/2+5,
-            d.depth * 100 + 100,
-            (commonProps.y as number)-(commonProps.height as number)/2+15,
+            commonProps.x as number,
+            d.depth * 100,
+            commonProps.y as number,
           ]}
-          rotation={[
-            -3.14/2,
-            0,
-            0,
+          scale={[
+            commonProps.rx as number,
+            100,
+            commonProps.rx as number,
           ]}
+          rotation={[0, 0, 0]}
         >
-          <meshLambertMaterial attach='material' color={'gold'}/>
-          <textGeometry args={[d.data.name, {font, size:10, height: 1}]}/>
+          <cylinderGeometry />
+          <meshNormalMaterial />
         </mesh>
-        : null
-      }
-      <mesh
+      </>
+    } else {
+      return <>
+        <mesh
+          position={[
+            commonProps.x as number,
+            d.depth * 100,
+            commonProps.y as number,
+          ]}
+          scale={[
+            commonProps.rx as number,
+            100,
+            commonProps.rx as number,
+          ]}
+          rotation={[0, 0, 0]}
+        >
+          <cylinderGeometry />
+          {
+            (isTree(d.data))
+              ? <meshBasicMaterial color={"black"} />
+              : <meshLambertMaterial color={commonProps.fill}/>
+          }
+        </mesh>
+        {
+          (isTree(d.data))
+          ? <mesh
+              position={[
+                commonProps.x as number,
+                d.depth * 100 + 1,
+                commonProps.y as number,
+              ]}
+              scale={[
+                (commonProps.rx as number) - 1,
+                100,
+                (commonProps.rx as number) - 1,
+              ]}
+              rotation={[0, 0, 0]}
+            >
+              <cylinderGeometry />
+              <meshBasicMaterial color={"white"} toneMapped={false} />
+            </mesh>
+          : null
+        }
+      </>
+    }
+  } else if(chartType === "R3F2") {
+    const textIsTooLong = (text: string) => (commonProps.width as number)< text.length * estimatedLetterWidth
+    if (normalMesh) {
+      return <mesh
         position={[
           commonProps.x as number,
           d.depth * 100,
@@ -375,13 +369,71 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
         rotation={[0, 0, 0]}
       >
         <boxGeometry />
-        {
-          (blah)
-          ? <meshNormalMaterial />
-          : <meshBasicMaterial color={commonProps.fill}/>
-        }
+        <meshNormalMaterial />
       </mesh>
-    </>
+    } else {
+      return <>
+        {
+          (!textIsTooLong(d.data.name))
+            ? <mesh
+              position={[
+                (commonProps.x as number)-(commonProps.width as number)/2+5,
+                d.depth * 100 + 100,
+                (commonProps.y as number)-(commonProps.height as number)/2+15,
+              ]}
+              rotation={[
+                -3.14/2,
+                0,
+                0,
+              ]}
+            >
+              <meshBasicMaterial toneMapped={false} attach='material' color={'black'}/>
+              <textGeometry args={[d.data.name, {font, size:10, height: 1}]}/>
+            </mesh>
+            : null
+        }
+        <mesh
+          position={[
+            commonProps.x as number,
+            d.depth * 100,
+            commonProps.y as number,
+          ]}
+          scale={[
+            commonProps.width as number,
+            100,
+            commonProps.height as number,
+          ]}
+          rotation={[0, 0, 0]}
+        >
+          <boxGeometry />
+          {
+            (isTree(d.data))
+              ? <meshBasicMaterial color={"black"} toneMapped={false} />
+              : <meshBasicMaterial color={commonProps.fill}/>
+          }
+        </mesh>
+        {
+          (isTree(d.data))
+            ? <mesh
+                position={[
+                  commonProps.x as number,
+                  d.depth * 100 + 1,
+                  commonProps.y as number,
+                ]}
+                scale={[
+                  (commonProps.width as number) - 1,
+                  100,
+                  (commonProps.height as number) - 1,
+                ]}
+                rotation={[0, 0, 0]}
+              >
+                <boxGeometry />
+                <meshBasicMaterial color={"white"} toneMapped={false} />
+              </mesh>
+            : null
+        }
+      </>
+    }
   } else {
     return (
       <rect
