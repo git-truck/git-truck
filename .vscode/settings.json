@@ -4,6 +4,6 @@
   "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.experimental.tsserver.web.enableProjectWideIntellisense": false,
-  "files.autoSave": "afterDelay",
+  "files.autoSave": "off",
   "css.lint.unknownAtRules": "ignore"
 }
