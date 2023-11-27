@@ -144,6 +144,7 @@
   "homepage": "https://github.com/git-truck/git-truck#readme",
   "dependencies": {
     "@pixi/react": "^7.1.1",
+    "@pixi/react-animated": "^7.1.1",
     "@react-three/drei": "^9.88.17",
     "@react-three/fiber": "^8.15.11",
     "d3": "^7.8.5",
