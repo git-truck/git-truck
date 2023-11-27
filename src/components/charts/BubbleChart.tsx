@@ -17,13 +17,14 @@ function CircleNode(props: {node: HierarchyCircularNode<HydratedGitObject>, setC
         g.lineStyle(1, 0x444444, 1);
     }
     g.drawCircle(0, 0, props.node.r); // Use x and y from springProps
-    if (props.node.data.type === "blob") g.endFill();
     g.interactive = true
     g.hitArea = new pixi.Circle(0, 0, props.node.r)
-    g.addEventListener("click", (e) => {
-      props.setClickedObject(node.data)
-      if (node.data.type === "tree") props.setPath(node.data.path)
+    g.on("click", () => {
+        props.setClickedObject(node.data)
+        if (node.data.type === "tree") props.setPath(node.data.path)
     })
+    g.cursor = "pointer"
+    if (props.node.data.type === "blob") g.endFill();
   }, [props])
 
   return (
@@ -39,7 +40,7 @@ function CircleNode(props: {node: HierarchyCircularNode<HydratedGitObject>, setC
 }
 
 
-export function Bruh(props: {nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]}) {
+export default function BubbleChart(props: {nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]}) {
   const { setClickedObject } = useClickedObject()
   const { setPath } = usePath()
 
