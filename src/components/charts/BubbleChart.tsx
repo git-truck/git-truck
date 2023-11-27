@@ -7,12 +7,15 @@ import type { HydratedGitObject } from '~/analyzer/model';
 import { useClickedObject } from '~/contexts/ClickedContext';
 import { useCallback } from 'react';
 import { usePath } from '~/contexts/PathContext';
+import { useMetrics } from '~/contexts/MetricContext';
+import { useOptions } from '~/contexts/OptionsContext';
 
-function CircleNode(props: {node: HierarchyCircularNode<HydratedGitObject>, setClickedObject: (clicked: HydratedGitObject) => void, setPath: (path: string) => void}) {
+function CircleNode(props: {node: HierarchyCircularNode<HydratedGitObject>, setClickedObject: (clicked: HydratedGitObject) => void, setPath: (path: string) => void, colorMap: Map<string, `#${string}`> | undefined}) {
   const draw = useCallback((g: pixi.Graphics, node: HierarchyCircularNode<HydratedGitObject>) => {
     g.clear();
     if (props.node.data.type === "blob") {
-        g.beginFill(0x5555ff, 0.5);
+        const color = props.colorMap?.get(props.node.data.path) ?? "#444444"
+        g.beginFill(color);
     } else {
         g.lineStyle(1, 0x444444, 1);
     }
@@ -43,12 +46,15 @@ function CircleNode(props: {node: HierarchyCircularNode<HydratedGitObject>, setC
 export default function BubbleChart(props: {nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]}) {
   const { setClickedObject } = useClickedObject()
   const { setPath } = usePath()
+  const [metricsData] = useMetrics()
+  const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
+  const colorMap = metricsData[authorshipType].get(metricType)?.colormap
 
   return (
     <Stage width={600} height={800} options={{ backgroundColor: 0xffffff, antialias: true }}>
       {props.nodes.map((node) => {
         const circleDatum = node as HierarchyCircularNode<HydratedGitObject>
-        return <CircleNode key={node.data.path} node={circleDatum} setClickedObject={setClickedObject} setPath={setPath}/> 
+        return <CircleNode key={node.data.path} node={circleDatum} setClickedObject={setClickedObject} setPath={setPath} colorMap={colorMap}/> 
       })}
     </Stage>
   );
