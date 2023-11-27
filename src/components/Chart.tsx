@@ -43,6 +43,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import myFont from './Helvetiker.json'
 import { useSearchParams } from "@remix-run/react"
 import BubbleChart from "./charts/BubbleChart"
+import TreeMap from "./charts/TreeMap"
 extend({ TextGeometry })
 
 declare module "@react-three/fiber" {
@@ -177,7 +178,8 @@ export const Chart = memo(function Chart({
   } else {
     return (
       <div className="relative grid place-items-center overflow-hidden" ref={ref}>
-        <BubbleChart nodes={nodes}/>
+        {/* <BubbleChart nodes={nodes}/> */}
+        <TreeMap nodes={nodes}/>
         {/* <svg
           key={`svg|${size.width}|${size.height}`}
           className={clsx("grid h-full w-full place-items-center", {
