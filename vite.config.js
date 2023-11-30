@@ -4,7 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   ssr: {
-    noExternal: [/^node:/, /^d3/]
+    noExternal: /.*/
   },
   plugins: [
     remix({
