@@ -1,44 +1,53 @@
 # Git Truck 🚛 &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/git-truck/git-truck/blob/main/LICENSE) [![Git Truck on NPM](https://img.shields.io/npm/v/git-truck)](https://www.npmjs.com/git-truck)
 
-![Demo](demo.gif)
+Git-Truck is a tool that provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/). 
 
-Git-Truck provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/):
-
-| | |
+| Git Truck can help you figure out: | |
 |-|-|
-| The files in your system where you have a single contributor (i.e., truck-factor = 1) | <img width="1912" alt="image" src="https://user-images.githubusercontent.com/464519/167393939-8d683732-4583-44fe-99a3-36c818761bcb.png"> |
-| You can see how the various developers contribute to your codebase | <img width="1913" alt="image" src="https://user-images.githubusercontent.com/464519/167394548-ca66665a-a699-44d7-8a97-bc7309c72f8a.png"> |
-| You can determine which parts of the system that are most often changed | <img width="1912" alt="image" src="https://user-images.githubusercontent.com/464519/167395118-6a4f50f4-5f37-4e0d-bcc8-144797b83e65.png"> |
+| Where the files in your codebase that only have a single contributor are (i.e., truck-factor = 1) | <img width="1912" alt="image" src="https://github.com/git-truck/git-truck/assets/1959615/1cc20716-0927-4aba-8d7d-115626bc445f"> |
+| How the various developers contribute to your codebase | <img width="1913" alt="image" src="https://github.com/git-truck/git-truck/assets/1959615/780852f3-28de-44d2-ab79-e4ef420c3736"> |
+| Which parts of the system that are most often changed | <img width="1912" alt="image" src="https://github.com/git-truck/git-truck/assets/1959615/8ca5f0b9-798f-40cd-b64e-de2fee00a5c3"> |
 
+## [What makes Git Truck different?](#what-makes-git-truck-different)
 
-### What makes Git Truck different?
+🔒 Private by design
 
-- Private by design
-- Works offline
-- Git provider agnostic - Works with any Git repository
-- No tracking, no ads, no data mining, no analytics, no cloud, no servers
+🏝️ Works offline
 
+🤷 Git provider agnostic - works with any git repository
+
+😊 No tracking, no ads, no data mining, no analytics, no cloud, no servers
 
 ## [Prerequisites](#prerequisites)
 
-To use Git Truck, you will need to have the following programs installed:
+> [!IMPORTANT]  
+> To use Git Truck, you will need to have the following programs installed:
+> - [Node.js](https://nodejs.org/en/) 18.0.0 or newer and npm 10.0 or newer
+> - [git](https://git-scm.com/downloads) 2.29 or newer
+> 
+> Check your installed versions using `node --version`, `npm --version` and `git --version`. 
 
-- [Node.js](https://nodejs.org/en/) 18.0.0 or newer
-- npm 10.0 or newer
-- [git](https://git-scm.com/downloads) 2.29 or newer
+> [!TIP]
+> The latests versions of Node and git can be installed from the links above. 
 
-To check if these programs are installed, and what version you have, run `node --version`, `npm --version` and `git --version`. If any of these are not installed on your system, or are just very old, they can be installed from the links above. Note that `npm` is installed along with `node`.
+> [!Note]
+> `npm` is automatically installed along with `node`.
 
 ## [Get started](#get-started)
 
-1. Within a git repository, or a directory containing git repositories, run the command `npx -y git-truck`.
+1. Within a git repository, or a directory containing git repositories, run the command
+
+```bash
+npx -y git-truck
+```
+
 2. The application will now open in your default browser.
 
-**Git Truck is part of a research study, so please fill out our [short survey](https://forms.gle/9wCCAw6zae7wuwZQ6) after trying out the tool. Thanks!**
+![Demo](demo.gif)
 
-## [I got an error or I want to give feedback, what do i do?](#i-got-an-error-or-i-want-to-give-feedback-what-do-i-do)
+## [Feedback](#feedback)
 
-Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem. Please include git version, node version, npm version, operating system, and an image of the problem would be great too!
+Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem or featureq request. For bug reports, please include git version, Node version, npm version, operating system, and an image of the problem would be great too!
 
 If you have any suggestions about new features, or things that you think should be different, also feel free to open an issue.
 
@@ -60,7 +69,8 @@ npx git-truck [args]
 | `--invalidate-cache` |                    bypass analyzer cache manually                     |         -          |
 | `--headless`         |       run the program without opening the browser                     |         -          |
 
-**Note:** Using `--invalidate-cache` will cause the analyzer to run every time the client talks to the server.
+> [!CAUTION]  
+> Using `--invalidate-cache` will cause the analyzer to run every time the client talks to the server. This can be very slow if working with large repositories.
 
 ### [Configuration](#configuration)
 
@@ -85,9 +95,9 @@ You can also define files to ignore.
 
 ### Very large repositories
 
-If the repository you intend to analyze is very large (300k+ commits), we recommend to increase the memory available to nodejs by setting the environment variable `NODE_OPTIONS` to `--max-old-space-size=4096` before starting Git Truck, otherwise analyzation might crash.
-
-If your repository has more than 1 million commits, it is unlikely that Git Truck can successfully analyze it, even with higher memory limit.
+> [!TIP]
+> If the repository you intend to analyze is very large (300k+ commits), we recommend to increase the memory available to nodejs by setting the environment variable `NODE_OPTIONS` to `--max-old-space-size=4096` before starting Git Truck, otherwise analyzation might crash.
+> If your repository has more than 1 million commits, it is unlikely that Git Truck can successfully analyze it, even with higher memory limit.
 
 ## Star History
 
