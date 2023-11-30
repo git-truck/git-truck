@@ -47,7 +47,7 @@ npx -y git-truck
 
 ## [Feedback](#feedback)
 
-Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem or featureq request. For bug reports, please include git version, Node version, npm version, operating system, and an image of the problem would be great too!
+Please open an issue [here](https://github.com/git-truck/git-truck/issues) where you describe your problem or feature request. For bug reports, please include git version, Node version, npm version, operating system, and an image of the problem would be great too!
 
 If you have any suggestions about new features, or things that you think should be different, also feel free to open an issue.
 
