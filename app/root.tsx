@@ -11,10 +11,8 @@ import {
   useRouteError
 } from "@remix-run/react"
 
-import varsStyles from "~/styles/vars.css"
-import indexStyles from "~/styles/index.css"
 import { Code } from "./components/util"
-import tailwindStylesheet from "~/tailwind.css"
+// import styles from "./styles/shared.css"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
@@ -22,15 +20,12 @@ export const meta: MetaFunction = () => {
 
 export function links() {
   return [
-    ...[varsStyles, indexStyles, tailwindStylesheet].map((x) => ({
-      rel: "stylesheet",
-      href: x
-    })),
-    {
-      rel: "favicon",
-      type: "image/x-icon",
-      href: "favicon.ico"
-    },
+    // {rel: "stylesheet", href: styles},
+    // {
+    //   rel: "favicon",
+    //   type: "image/x-icon",
+    //   href: "favicon.ico"
+    // },
     {
       rel: "preconnect",
       href: "https://fonts.googleapis.com"

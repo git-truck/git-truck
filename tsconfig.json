@@ -1,19 +1,29 @@
 {
-  "include": ["remix.env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "remix.env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2019"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "moduleResolution": "node",
-    "module": "CommonJS",
+    "moduleResolution": "Bundler",
+    // "module": "CommonJS",
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "target": "ES2019",
+    "target": "ES2022",
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["src/*"]
+      "~/*": [
+        "./app/*"
+      ]
     },
     "noEmit": true,
     "allowJs": true,

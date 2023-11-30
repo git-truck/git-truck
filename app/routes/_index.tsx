@@ -1,4 +1,4 @@
-import type { SerializeFrom } from "@remix-run/node"
+import type { LinksFunction, SerializeFrom } from "@remix-run/node"
 import { Link, useLoaderData, useNavigation } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
@@ -11,6 +11,7 @@ import { getPathFromRepoAndHead } from "~/util"
 import { useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
+// import styles from "~/styles/index.css"
 
 interface IndexData {
   repositories: Repository[]
@@ -18,6 +19,10 @@ interface IndexData {
   baseDirName: string
   repo: Repository | null
 }
+
+// export const links: LinksFunction = () => [
+//   { rel: "stylesheet", href: styles },
+// ];
 
 async function getResponse(): Promise<IndexData> {
   const args = getArgsWithDefaults()
