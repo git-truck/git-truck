@@ -23,6 +23,7 @@ import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
+import DB from "./DB"
 
 let repoDir = "."
 
@@ -117,6 +118,8 @@ async function analyzeTree(path: string, name: string, hash: string) {
     children: []
   } as GitTreeObject
 
+  await DB.init()
+
   for (const child of lsTreeEntries) {
     log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")
@@ -149,6 +152,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
           sizeInBytes: child.size as number,
           blameAuthors: {}
         }
+        await DB.addFile(blob)
         // Don't block the current loop, just add the job to the queue and await it later
         // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
@@ -157,7 +161,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
   }
 
   // await Promise.all(jobs)
-
+  console.log(await DB.query("from files limit 20;"))
   return { rootTree, fileCount }
 }
 
