@@ -15,6 +15,7 @@ import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
 import { setAnalyzationStatus } from "./analyze.server"
+import { Database } from "duckdb-async"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
@@ -89,7 +90,7 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
     }
     return
   }
-  if (change.contribs === 0) return // in case a rename with no changes, this happens 
+  if (change.contribs === 0) return // in case a rename with no changes, this happens
   blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
 
   for (const coauthor of commit.coauthors) {
@@ -101,6 +102,10 @@ export let progress = 0
 export let totalCommitCount = Infinity
 
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
+  const db = await Database.create(":memory:")
+  const rows = await db.all("select * from range(1,10)")
+  console.log(rows)
+
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
