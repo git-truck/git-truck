@@ -15,7 +15,7 @@
     "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     // "module": "CommonJS",
-    "module": "ES2022",
+    "module": "ESNext",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "target": "ES2022",

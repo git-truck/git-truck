@@ -1,4 +1,4 @@
-import gitcolors from "github-colors/colors.json"
+import gitcolors from "github-colors/colors.json" assert { type: "json" }
 import langMap from "lang-map"
 
 interface ColorResult {

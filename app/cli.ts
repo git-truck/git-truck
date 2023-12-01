@@ -4,7 +4,7 @@ import express from "express"
 import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
-import path from "path"
+import { join, dirname } from "path"
 import pkg from "../package.json"
 import open from "open"
 import latestVersion from "latest-version"
@@ -14,6 +14,7 @@ import { semverCompare, getPathFromRepoAndHead } from "./util"
 import { describeAsyncJob, getDirName } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import type { NextFunction } from "express-serve-static-core"
+import { fileURLToPath } from 'url';
 
 async function main() {
   const args = parseArgs()
@@ -110,11 +111,15 @@ for usage instructions.`)
 
   describeAsyncJob({
     job: async () => {
+      const __filename = fileURLToPath(import.meta.url);
+
+      // Use dirname to get the directory name of the current module
+      const __dirname = dirname(__filename);
       const app = createApp(
         "./build/index.js",
         process.env.NODE_ENV ?? "production",
         "/build",
-        path.join(__dirname, "public", "build")
+        join(__dirname, "public", "build")
       )
 
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
