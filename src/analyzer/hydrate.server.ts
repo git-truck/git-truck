@@ -15,7 +15,7 @@ import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
 import { cpus } from "os"
 import { setAnalyzationStatus } from "./analyze.server"
-import { Database } from "duckdb-async"
+import DB from "./DB"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
@@ -102,9 +102,7 @@ export let progress = 0
 export let totalCommitCount = Infinity
 
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
-  const db = await Database.create(":memory:")
-  const rows = await db.all("select * from range(1,10)")
-  console.log(rows)
+  await DB.init()
 
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
@@ -139,9 +137,19 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
     await Promise.all(promises)
 
+    await DB.addCommits(commits)
+
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
+
+  const rows = await DB.query(`SELECT author, COUNT(*) as commit_count
+  FROM commits
+  GROUP BY author
+  ORDER BY commit_count DESC
+  LIMIT 10;`)
+  console.log(rows)
+
   sortCommits(fileMap)
   return [data, Array.from(authors)]
 }
