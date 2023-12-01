@@ -7,7 +7,7 @@ installGlobals();
 
 export default defineConfig({
   ssr: {
-    noExternal: /.*/
+    noExternal: [/^node:/, /^d3/]
   },
   plugins: [
     remix({
