@@ -1,4 +1,4 @@
-import { useKonami } from "react-konami-code"
+import * as konami from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
 import {
   Links,
@@ -20,6 +20,8 @@ import "react-datepicker/dist/react-datepicker.css"
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
 }
+
+const { useKonami } = konami
 
 export default function App() {
   useKonami(() => window.open("https://fruit-rush.joglr.dev", "_self"))
