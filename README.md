@@ -1,6 +1,6 @@
 # Git Truck 🚛 &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/git-truck/git-truck/blob/main/LICENSE) [![Git Truck on NPM](https://img.shields.io/npm/v/git-truck)](https://www.npmjs.com/git-truck)
 
-Git-Truck is a tool that provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/). 
+Git-Truck is a tool that provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://en.wikipedia.org/wiki/Bus_factor). 
 
 | Git Truck can help you figure out: | |
 |-|-|
