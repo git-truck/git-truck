@@ -36,22 +36,21 @@ import { useSearch } from "~/contexts/SearchContext"
 
 import * as THREE from "three"
 import { Canvas, useFrame, ThreeElements, Object3DNode, extend } from "@react-three/fiber"
-import { OrbitControls, OrthographicCamera } from '@react-three/drei'
+import { OrbitControls, OrthographicCamera } from "@react-three/drei"
 
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
-import myFont from './Helvetiker.json'
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js"
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js"
+import myFont from "./Helvetiker.json"
 import { useSearchParams } from "@remix-run/react"
-import BubbleChart from "./charts/BubbleChart"
-import TreeMap from "./charts/TreeMap"
+import TreeMap from "./HierarchyChart"
 extend({ TextGeometry })
 
 declare module "@react-three/fiber" {
   interface ThreeElements {
-    textGeometry: Object3DNode<TextGeometry, typeof TextGeometry>;
+    textGeometry: Object3DNode<TextGeometry, typeof TextGeometry>
   }
 }
-const font = new FontLoader().parse(myFont);
+const font = new FontLoader().parse(myFont)
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -150,82 +149,40 @@ export const Chart = memo(function Chart({
           })}
           style={{
             height: size.height,
-            width: size.width,
+            width: size.width
           }}
           shadows={true}
         >
           {nodes.map((d, i) => {
             return (
-              <Node
-                key={d.data.path}
-                d={d}
-                isSearchMatch={Boolean(searchResults[d.data.path])}
-                canvas_size={size}
-              />
+              <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} canvas_size={size} />
             )
           })}
           <ambientLight intensity={3} />
           <pointLight position={[1000, 1000, 1000]} intensity={1000000} />
-          <OrthographicCamera
-            makeDefault
-            near={0}
-            position={[0, 1000, 0]}
-          />
-          <OrbitControls target={[0, 0, 0]}/>
+          <OrthographicCamera makeDefault near={0} position={[0, 1000, 0]} />
+          <OrbitControls target={[0, 0, 0]} />
         </Canvas>
       </div>
     )
   } else {
     return (
       <div className="relative grid place-items-center overflow-hidden" ref={ref}>
-        {/* <BubbleChart nodes={nodes}/> */}
-        <TreeMap nodes={nodes}/>
-        {/* <svg
-          key={`svg|${size.width}|${size.height}`}
-          className={clsx("grid h-full w-full place-items-center", {
-            "cursor-zoom-out": path.includes("/")
-          })}
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox={`0 0 ${size.width} ${size.height}`}
-          onClick={() => {
-            // Move up to parent
-            const parentPath = path.split("/").slice(0, -1).join("/")
-            // Check if parent is root
-            if (parentPath === "") setPath("/")
-            else setPath(parentPath)
-          }}
-        >
-          {nodes.map((d, i) => {
-            return (
-              <g
-                key={d.data.path}
-                className={clsx("transition-opacity hover:opacity-60", {
-                  "cursor-pointer": i === 0,
-                  "cursor-zoom-in": i > 0 && isTree(d.data),
-                  "animate-blink": clickedObject?.path === d.data.path
-                })}
-                {...createGroupHandlers(d, i === 0)}
-              >
-                {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
-                  <>
-                    <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} canvas_size={size} />
-                    {labelsVisible && (
-                      <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
-                        {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
-                      </NodeText>
-                    )}
-                  </>
-                )}
-              </g>
-            )
-          })}
-        </svg> */}
+        <TreeMap nodes={nodes} size={size} />
       </div>
     )
   }
 })
 
-function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean, canvas_size: { width: number, height: number } }) {
+function Node({
+  d,
+  isSearchMatch,
+  canvas_size
+}: {
+  d: CircleOrRectHiearchyNode
+  isSearchMatch: boolean
+  canvas_size: { width: number; height: number }
+}) {
   const [metricsData] = useMetrics()
   const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
 
@@ -253,8 +210,8 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
       const datum = d as HierarchyCircularNode<HydratedGitObject>
       props = {
         ...props,
-        x: datum.x - canvas_size.width/2,
-        y: datum.y - canvas_size.height/2,
+        x: datum.x - canvas_size.width / 2,
+        y: datum.y - canvas_size.height / 2,
         width: datum.r * 2,
         height: datum.r * 2,
         rx: datum.r,
@@ -265,8 +222,8 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
 
       props = {
         ...props,
-        x: datum.x0 + (datum.x1 - datum.x0)/2 - canvas_size.width/2,
-        y: datum.y0 + (datum.y1 - datum.y0)/2 - canvas_size.height/2,
+        x: datum.x0 + (datum.x1 - datum.x0) / 2 - canvas_size.width / 2,
+        y: datum.y0 + (datum.y1 - datum.y0) / 2 - canvas_size.height / 2,
         width: datum.x1 - datum.x0,
         height: datum.y1 - datum.y0,
         rx: treemapNodeBorderRadius,
@@ -294,149 +251,95 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
 
   if (chartType === "R3F") {
     if (normalMesh) {
-      return <>
-        <mesh
-          position={[
-            commonProps.x as number,
-            d.depth * 100,
-            commonProps.y as number,
-          ]}
-          scale={[
-            commonProps.rx as number,
-            100,
-            commonProps.rx as number,
-          ]}
-          rotation={[0, 0, 0]}
-        >
-          <cylinderGeometry />
-          <meshNormalMaterial />
-        </mesh>
-      </>
+      return (
+        <>
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.rx as number, 100, commonProps.rx as number]}
+            rotation={[0, 0, 0]}
+          >
+            <cylinderGeometry />
+            <meshNormalMaterial />
+          </mesh>
+        </>
+      )
     } else {
-      return <>
-        <mesh
-          position={[
-            commonProps.x as number,
-            d.depth * 100,
-            commonProps.y as number,
-          ]}
-          scale={[
-            commonProps.rx as number,
-            100,
-            commonProps.rx as number,
-          ]}
-          rotation={[0, 0, 0]}
-        >
-          <cylinderGeometry />
-          {
-            (isTree(d.data))
-              ? <meshBasicMaterial color={"black"} />
-              : <meshLambertMaterial color={commonProps.fill}/>
-          }
-        </mesh>
-        {
-          (isTree(d.data))
-          ? <mesh
-              position={[
-                commonProps.x as number,
-                d.depth * 100 + 1,
-                commonProps.y as number,
-              ]}
-              scale={[
-                (commonProps.rx as number) - 1,
-                100,
-                (commonProps.rx as number) - 1,
-              ]}
+      return (
+        <>
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.rx as number, 100, commonProps.rx as number]}
+            rotation={[0, 0, 0]}
+          >
+            <cylinderGeometry />
+            {isTree(d.data) ? <meshBasicMaterial color={"black"} /> : <meshLambertMaterial color={commonProps.fill} />}
+          </mesh>
+          {isTree(d.data) ? (
+            <mesh
+              position={[commonProps.x as number, d.depth * 100 + 1, commonProps.y as number]}
+              scale={[(commonProps.rx as number) - 1, 100, (commonProps.rx as number) - 1]}
               rotation={[0, 0, 0]}
             >
               <cylinderGeometry />
               <meshBasicMaterial color={"white"} toneMapped={false} />
             </mesh>
-          : null
-        }
-      </>
+          ) : null}
+        </>
+      )
     }
-  } else if(chartType === "R3F2") {
-    const textIsTooLong = (text: string) => (commonProps.width as number)< text.length * estimatedLetterWidth
+  } else if (chartType === "R3F2") {
+    const textIsTooLong = (text: string) => (commonProps.width as number) < text.length * estimatedLetterWidth
     if (normalMesh) {
-      return <mesh
-        position={[
-          commonProps.x as number,
-          d.depth * 100,
-          commonProps.y as number,
-        ]}
-        scale={[
-          commonProps.width as number,
-          100,
-          commonProps.height as number,
-        ]}
-        rotation={[0, 0, 0]}
-      >
-        <boxGeometry />
-        <meshNormalMaterial />
-      </mesh>
-    } else {
-      return <>
-        {
-          (!textIsTooLong(d.data.name))
-            ? <mesh
-              position={[
-                (commonProps.x as number)-(commonProps.width as number)/2+5,
-                d.depth * 100 + 100,
-                (commonProps.y as number)-(commonProps.height as number)/2+15,
-              ]}
-              rotation={[
-                -3.14/2,
-                0,
-                0,
-              ]}
-            >
-              <meshBasicMaterial toneMapped={false} attach='material' color={'black'}/>
-              <textGeometry args={[d.data.name, {font, size:10, height: 1}]}/>
-            </mesh>
-            : null
-        }
+      return (
         <mesh
-          position={[
-            commonProps.x as number,
-            d.depth * 100,
-            commonProps.y as number,
-          ]}
-          scale={[
-            commonProps.width as number,
-            100,
-            commonProps.height as number,
-          ]}
+          position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+          scale={[commonProps.width as number, 100, commonProps.height as number]}
           rotation={[0, 0, 0]}
         >
           <boxGeometry />
-          {
-            (isTree(d.data))
-              ? <meshBasicMaterial color={"black"} toneMapped={false} />
-              : <meshBasicMaterial color={commonProps.fill}/>
-          }
+          <meshNormalMaterial />
         </mesh>
-        {
-          (isTree(d.data))
-            ? <mesh
-                position={[
-                  commonProps.x as number,
-                  d.depth * 100 + 1,
-                  commonProps.y as number,
-                ]}
-                scale={[
-                  (commonProps.width as number) - 1,
-                  100,
-                  (commonProps.height as number) - 1,
-                ]}
-                rotation={[0, 0, 0]}
-              >
-                <boxGeometry />
-                <meshBasicMaterial color={"white"} toneMapped={false} />
-              </mesh>
-            : null
-        }
-      </>
+      )
+    } else {
+      return (
+        <>
+          {!textIsTooLong(d.data.name) ? (
+            <mesh
+              position={[
+                (commonProps.x as number) - (commonProps.width as number) / 2 + 5,
+                d.depth * 100 + 100,
+                (commonProps.y as number) - (commonProps.height as number) / 2 + 15
+              ]}
+              rotation={[-3.14 / 2, 0, 0]}
+            >
+              <meshBasicMaterial toneMapped={false} attach="material" color={"black"} />
+              <textGeometry args={[d.data.name, { font, size: 10, height: 1 }]} />
+            </mesh>
+          ) : null}
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.width as number, 100, commonProps.height as number]}
+            rotation={[0, 0, 0]}
+          >
+            <boxGeometry />
+            {isTree(d.data) ? (
+              <meshBasicMaterial color={"black"} toneMapped={false} />
+            ) : (
+              <meshBasicMaterial color={commonProps.fill} />
+            )}
+          </mesh>
+          {isTree(d.data) ? (
+            <mesh
+              position={[commonProps.x as number, d.depth * 100 + 1, commonProps.y as number]}
+              scale={[(commonProps.width as number) - 1, 100, (commonProps.height as number) - 1]}
+              rotation={[0, 0, 0]}
+            >
+              <boxGeometry />
+              <meshBasicMaterial color={"white"} toneMapped={false} />
+            </mesh>
+          ) : null}
+        </>
+      )
     }
   } else {
     return (

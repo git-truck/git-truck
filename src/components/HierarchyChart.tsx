@@ -8,13 +8,15 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useCallback } from "react"
 import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import { useOptions } from "~/contexts/OptionsContext"
+import { type ChartType, useOptions } from "~/contexts/OptionsContext"
 
 function RectangleNode(props: {
-  node: HierarchyRectangularNode<HydratedGitObject>
+  node: HierarchyRectangularNode<HydratedGitObject> | HierarchyCircularNode<HydratedGitObject>
   setClickedObject: (clicked: HydratedGitObject) => void
   setPath: (path: string) => void
   colorMap: Map<string, `#${string}`> | undefined
+  type: ChartType
+  transitions: boolean
 }) {
   const draw = useCallback(
     (g: pixi.Graphics) => {
@@ -24,9 +26,16 @@ function RectangleNode(props: {
       } else {
         g.lineStyle(1, 0x444444, 1)
       }
-      g.drawRect(0, 0, props.node.x1 - props.node.x0, props.node.y1 - props.node.y0)
       g.interactive = true
-      g.hitArea = new pixi.Rectangle(0, 0, props.node.x1 - props.node.x0, props.node.y1 - props.node.y0)
+      if (props.type === "TREE_MAP") {
+        const node = props.node as HierarchyRectangularNode<HydratedGitObject>
+        g.drawRect(0, 0, node.x1 - node.x0, node.y1 - node.y0)
+        g.hitArea = new pixi.Rectangle(0, 0, node.x1 - node.x0, node.y1 - node.y0)
+      } else {
+        const node = props.node as HierarchyCircularNode<HydratedGitObject>
+        g.drawCircle(0, 0, node.r) // Use x and y from springProps
+        g.hitArea = new pixi.Circle(0, 0, node.r)
+      }
       g.on("click", () => {
         props.setClickedObject(props.node.data)
         if (props.node.data.type === "tree") props.setPath(props.node.data.path)
@@ -37,11 +46,19 @@ function RectangleNode(props: {
     [props]
   )
 
+  const to = { x: 0, y: 0, tint: props.colorMap?.get(props.node.data.path) ?? "#444444" }
+  if (props.type === "TREE_MAP") {
+    const node = props.node as HierarchyRectangularNode<HydratedGitObject>
+    to.x = node.x0
+    to.y = node.y0
+  } else {
+    const node = props.node as HierarchyCircularNode<HydratedGitObject>
+    to.x = node.x
+    to.y = node.y
+  }
+
   return (
-    <Spring
-      to={{ x: props.node.x0, y: props.node.y0, tint: props.colorMap?.get(props.node.data.path) ?? "#444444" }}
-      config={{ mass: 10, tension: 1000, friction: 100 }}
-    >
+    <Spring to={to} config={{ duration: props.transitions ? 3000 : 0 }}>
       {(springProps) => (
         <>
           <Graphics draw={draw} {...springProps} />
@@ -58,6 +75,7 @@ function RectangleNode(props: {
 
 export default function TreeMap(props: {
   nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]
+  size: { width: number; height: number }
 }) {
   const { setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -66,16 +84,17 @@ export default function TreeMap(props: {
   const colorMap = metricsData[authorshipType].get(metricType)?.colormap
 
   return (
-    <Stage width={1000} height={800} options={{ backgroundAlpha: 0, antialias: true }}>
+    <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true }}>
       {props.nodes.map((node) => {
-        const rectDatum = node as HierarchyRectangularNode<HydratedGitObject>
         return (
           <RectangleNode
             key={node.data.path}
-            node={rectDatum}
+            node={node}
             setClickedObject={setClickedObject}
             setPath={setPath}
             colorMap={colorMap}
+            type={chartType}
+            transitions={transitionsEnabled}
           />
         )
       })}
