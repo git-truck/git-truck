@@ -17,7 +17,7 @@ function RectangleNode(props: {
   colorMap: Map<string, `#${string}`> | undefined
 }) {
   const draw = useCallback(
-    (g: pixi.Graphics, node: HierarchyRectangularNode<HydratedGitObject>) => {
+    (g: pixi.Graphics) => {
       g.clear()
       if (props.node.data.type === "blob") {
         g.beginFill(0xffffff)
@@ -28,8 +28,8 @@ function RectangleNode(props: {
       g.interactive = true
       g.hitArea = new pixi.Rectangle(0, 0, props.node.x1 - props.node.x0, props.node.y1 - props.node.y0)
       g.on("click", () => {
-        props.setClickedObject(node.data)
-        if (node.data.type === "tree") props.setPath(node.data.path)
+        props.setClickedObject(props.node.data)
+        if (props.node.data.type === "tree") props.setPath(props.node.data.path)
       })
       g.cursor = "pointer"
       if (props.node.data.type === "blob") g.endFill()
@@ -44,7 +44,7 @@ function RectangleNode(props: {
     >
       {(springProps) => (
         <>
-          <Graphics draw={(g) => draw(g, props.node)} {...springProps} />
+          <Graphics draw={draw} {...springProps} />
           {/* <Text
             text={props.node.data.name}
             {...springProps}
