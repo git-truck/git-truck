@@ -42,7 +42,7 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js"
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js"
 import myFont from "./Helvetiker.json"
 import { useSearchParams } from "@remix-run/react"
-import TreeMap from "./HierarchyChart"
+import HierarchyChart from "./HierarchyChart"
 extend({ TextGeometry })
 
 declare module "@react-three/fiber" {
@@ -168,7 +168,7 @@ export const Chart = memo(function Chart({
   } else {
     return (
       <div className="relative grid place-items-center overflow-hidden" ref={ref}>
-        <TreeMap nodes={nodes} size={size} />
+        <HierarchyChart nodes={nodes} size={size} />
       </div>
     )
   }

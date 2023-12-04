@@ -10,7 +10,7 @@ import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { type ChartType, useOptions } from "~/contexts/OptionsContext"
 
-function RectangleNode(props: {
+function Node(props: {
   node: HierarchyRectangularNode<HydratedGitObject> | HierarchyCircularNode<HydratedGitObject>
   setClickedObject: (clicked: HydratedGitObject) => void
   setPath: (path: string) => void
@@ -58,7 +58,7 @@ function RectangleNode(props: {
   }
 
   return (
-    <Spring to={to} config={{ duration: props.transitions ? 3000 : 0 }}>
+    <Spring to={to} config={{ duration: props.transitions ? 300 : 0 }}>
       {(springProps) => (
         <>
           <Graphics draw={draw} {...springProps} />
@@ -73,7 +73,7 @@ function RectangleNode(props: {
   )
 }
 
-export default function TreeMap(props: {
+export default function HierarchyChart(props: {
   nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]
   size: { width: number; height: number }
 }) {
@@ -87,7 +87,7 @@ export default function TreeMap(props: {
     <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true }}>
       {props.nodes.map((node) => {
         return (
-          <RectangleNode
+          <Node
             key={node.data.path}
             node={node}
             setClickedObject={setClickedObject}
