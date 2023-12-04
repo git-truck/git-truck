@@ -19,6 +19,7 @@ function Node(props: {
   type: ChartType
   transitions: boolean
   isClicked: boolean
+  showText: boolean
 }) {
   const draw = useCallback(
     (g: pixi.Graphics) => {
@@ -66,11 +67,10 @@ function Node(props: {
       {(springProps) => (
         <>
           <Graphics draw={draw} {...springProps} />
-          {/* <Text
-            text={props.node.data.name}
-            {...springProps}
-            style={new pixi.TextStyle({ fontSize: 10, align: "center" })}
-          /> */}
+          {props.showText
+            ? <Text text={props.node.data.name} {...springProps} style={new pixi.TextStyle({ fontSize: 10, align: "center" })} />
+            : null
+          }
         </>
       )}
     </Spring>
@@ -84,7 +84,7 @@ export default function HierarchyChart(props: {
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
+  const { chartType, metricType, authorshipType, transitionsEnabled, labelsVisible } = useOptions()
   const colorMap = metricsData[authorshipType].get(metricType)?.colormap
 
   return (
@@ -100,6 +100,7 @@ export default function HierarchyChart(props: {
             type={chartType}
             transitions={transitionsEnabled}
             isClicked={clickedObject?.path === node.data.path}
+            showText={labelsVisible}
           />
         )
       })}
