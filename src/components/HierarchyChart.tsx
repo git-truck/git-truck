@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js-legacy"
+import * as pixi from "pixi.js"
 import { Graphics, Text } from "@pixi/react-animated"
 import { Stage } from "@pixi/react"
 import { Spring } from "react-spring"
@@ -8,7 +8,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useCallback } from "react"
 import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import { type ChartType, useOptions, RenderMethod } from "~/contexts/OptionsContext"
+import { type ChartType, useOptions } from "~/contexts/OptionsContext"
 import { adjustColorBrightness } from "~/util"
 
 function Node(props: {
@@ -27,18 +27,18 @@ function Node(props: {
       if (props.node.data.type === "blob") {
         g.beginFill(0xffffff)
       } else {
-        g.lineStyle(0.5, 0xaaaaaa, 1)
+        g.lineStyle(0.5, 0xaaaaaa, 0.5)
       }
       // g.interactive = true
       g.eventMode= "dynamic"
       if (props.type === "TREE_MAP") {
         const node = props.node as HierarchyRectangularNode<HydratedGitObject>
         // g.drawRect(0, 0, node.x1 - node.x0, node.y1 - node.y0)
-        g.drawRoundedRect(0, 0, node.x1 - node.x0, node.y1 - node.y0, 8)
+        g.drawRoundedRect(0, 0, Math.round(node.x1 - node.x0), Math.round(node.y1 - node.y0), 8)
         g.hitArea = new pixi.Rectangle(0, 0, node.x1 - node.x0, node.y1 - node.y0)
       } else {
         const node = props.node as HierarchyCircularNode<HydratedGitObject>
-        g.drawCircle(0, 0, node.r) // Use x and y from springProps
+        g.drawCircle(0, 0, Math.round(node.r)) // Use x and y from springProps
         g.hitArea = new pixi.Circle(0, 0, node.r)
       }
       g.on("click", () => {
@@ -54,12 +54,12 @@ function Node(props: {
   const to = { x: 0, y: 0, tint: props.colorMap?.get(props.node.data.path) ?? "#444444" }
   if (props.type === "TREE_MAP") {
     const node = props.node as HierarchyRectangularNode<HydratedGitObject>
-    to.x = node.x0
-    to.y = node.y0
+    to.x = Math.round(node.x0)
+    to.y = Math.round(node.y0)
   } else {
     const node = props.node as HierarchyCircularNode<HydratedGitObject>
-    to.x = node.x
-    to.y = node.y
+    to.x = Math.round(node.x)
+    to.y = Math.round(node.y)
   }
 
   if (props.isClicked) to.tint = adjustColorBrightness(to.tint, 0.5)
@@ -86,11 +86,11 @@ export default function HierarchyChart(props: {
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType, transitionsEnabled, labelsVisible, renderMethod } = useOptions()
+  const { chartType, metricType, authorshipType, transitionsEnabled, labelsVisible } = useOptions()
   const colorMap = metricsData[authorshipType].get(metricType)?.colormap  
 
   return (
-    <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true, forceCanvas: renderMethod === RenderMethod.CANVAS }}>
+    <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true }}>
       {props.nodes.map((node) => {
         return (
           <Node

@@ -16,7 +16,6 @@ export type ChartType = keyof typeof Chart
 
 export const RenderMethod = {
   SVG: "SVG",
-  CANVAS: "Canvas",
   WEBGL: "WebGL"
 }
 
