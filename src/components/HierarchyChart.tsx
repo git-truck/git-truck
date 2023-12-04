@@ -9,6 +9,7 @@ import { useCallback } from "react"
 import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { type ChartType, useOptions } from "~/contexts/OptionsContext"
+import { adjustColorBrightness } from "~/util"
 
 function Node(props: {
   node: HierarchyRectangularNode<HydratedGitObject> | HierarchyCircularNode<HydratedGitObject>
@@ -17,6 +18,7 @@ function Node(props: {
   colorMap: Map<string, `#${string}`> | undefined
   type: ChartType
   transitions: boolean
+  isClicked: boolean
 }) {
   const draw = useCallback(
     (g: pixi.Graphics) => {
@@ -57,6 +59,8 @@ function Node(props: {
     to.y = node.y
   }
 
+  if (props.isClicked) to.tint = adjustColorBrightness(to.tint, 0.5)
+
   return (
     <Spring to={to} config={{ duration: props.transitions ? 300 : 0 }}>
       {(springProps) => (
@@ -77,7 +81,7 @@ export default function HierarchyChart(props: {
   nodes: HierarchyRectangularNode<HydratedGitObject>[] | HierarchyCircularNode<HydratedGitObject>[]
   size: { width: number; height: number }
 }) {
-  const { setClickedObject } = useClickedObject()
+  const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const [metricsData] = useMetrics()
   const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
@@ -95,6 +99,7 @@ export default function HierarchyChart(props: {
             colorMap={colorMap}
             type={chartType}
             transitions={transitionsEnabled}
+            isClicked={clickedObject?.path === node.data.path}
           />
         )
       })}
