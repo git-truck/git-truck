@@ -27,7 +27,7 @@ import {
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
-import { useOptions } from "../contexts/OptionsContext"
+import { RenderMethod, useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
@@ -63,7 +63,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, renderMethod } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -164,6 +164,51 @@ export const Chart = memo(function Chart({
           <OrbitControls target={[0, 0, 0]} />
         </Canvas>
       </div>
+    )
+  } else if (renderMethod === RenderMethod.SVG) {
+    return (
+      <div className="relative grid place-items-center overflow-hidden" ref={ref}>
+        <svg
+          key={`svg|${size.width}|${size.height}`}
+          className={clsx("grid h-full w-full place-items-center", {
+            "cursor-zoom-out": path.includes("/")
+          })}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          onClick={() => {
+            // Move up to parent
+            const parentPath = path.split("/").slice(0, -1).join("/")
+            // Check if parent is root
+            if (parentPath === "") setPath("/")
+            else setPath(parentPath)
+          }}
+        >
+          {nodes.map((d, i) => {
+            return (
+              <g
+                key={d.data.path}
+                className={clsx("transition-opacity hover:opacity-60", {
+                  "cursor-pointer": i === 0,
+                  "cursor-zoom-in": i > 0 && isTree(d.data),
+                  "animate-blink": clickedObject?.path === d.data.path
+                })}
+                {...createGroupHandlers(d, i === 0)}
+              >
+                {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
+                  <>
+                    <Node canvas_size={size} key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+                    {labelsVisible && (
+                      <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
+                        {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                      </NodeText>
+                    )}
+                  </>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+      </div>  
     )
   } else {
     return (

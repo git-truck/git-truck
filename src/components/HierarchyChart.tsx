@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js"
+import * as pixi from "pixi.js-legacy"
 import { Graphics, Text } from "@pixi/react-animated"
 import { Stage } from "@pixi/react"
 import { Spring } from "react-spring"
@@ -8,7 +8,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useCallback } from "react"
 import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import { type ChartType, useOptions } from "~/contexts/OptionsContext"
+import { type ChartType, useOptions, RenderMethod } from "~/contexts/OptionsContext"
 import { adjustColorBrightness } from "~/util"
 
 function Node(props: {
@@ -27,12 +27,14 @@ function Node(props: {
       if (props.node.data.type === "blob") {
         g.beginFill(0xffffff)
       } else {
-        g.lineStyle(1, 0x444444, 1)
+        g.lineStyle(0.5, 0xaaaaaa, 1)
       }
-      g.interactive = true
+      // g.interactive = true
+      g.eventMode= "dynamic"
       if (props.type === "TREE_MAP") {
         const node = props.node as HierarchyRectangularNode<HydratedGitObject>
-        g.drawRect(0, 0, node.x1 - node.x0, node.y1 - node.y0)
+        // g.drawRect(0, 0, node.x1 - node.x0, node.y1 - node.y0)
+        g.drawRoundedRect(0, 0, node.x1 - node.x0, node.y1 - node.y0, 8)
         g.hitArea = new pixi.Rectangle(0, 0, node.x1 - node.x0, node.y1 - node.y0)
       } else {
         const node = props.node as HierarchyCircularNode<HydratedGitObject>
@@ -84,11 +86,11 @@ export default function HierarchyChart(props: {
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType, transitionsEnabled, labelsVisible } = useOptions()
-  const colorMap = metricsData[authorshipType].get(metricType)?.colormap
+  const { chartType, metricType, authorshipType, transitionsEnabled, labelsVisible, renderMethod } = useOptions()
+  const colorMap = metricsData[authorshipType].get(metricType)?.colormap  
 
   return (
-    <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true }}>
+    <Stage {...props.size} options={{ backgroundAlpha: 0, antialias: true, forceCanvas: renderMethod === RenderMethod.CANVAS }}>
       {props.nodes.map((node) => {
         return (
           <Node
