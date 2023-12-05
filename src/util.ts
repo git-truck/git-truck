@@ -10,9 +10,7 @@ export function diagonal(d: HierarchyRectangularNode<unknown>) {
   return Math.sqrt(dx ** 2 + dy ** 2)
 }
 
-export function adjustColorBrightness(hexColor: string, factor: number) {
-  // Ensure the factor is within the range of -1 to 1
-  factor = Math.max(-1, Math.min(1, factor));
+export function brighten(hexColor: string) {
 
   // Parse the hex color into RGB components
   let r: number = parseInt(hexColor.slice(1, 3), 16);
@@ -20,9 +18,9 @@ export function adjustColorBrightness(hexColor: string, factor: number) {
   let b: number = parseInt(hexColor.slice(5, 7), 16);
 
   // Adjust each RGB component based on the brightness factor
-  r = Math.round(r + (factor * 255));
-  g = Math.round(g + (factor * 255));
-  b = Math.round(b + (factor * 255));
+  r = Math.round(r + (255 - r) / 2);
+  g = Math.round(g + (255 - g) / 2);
+  b = Math.round(b + (255 - b) / 2);
 
   // Ensure the RGB values are within the valid range (0 to 255)
   r = Math.max(0, Math.min(255, r));

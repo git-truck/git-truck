@@ -9,7 +9,7 @@ import { useCallback } from "react"
 import { usePath } from "~/contexts/PathContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { type ChartType, useOptions } from "~/contexts/OptionsContext"
-import { adjustColorBrightness } from "~/util"
+import { brighten } from "~/util"
 
 function Node(props: {
   node: HierarchyRectangularNode<HydratedGitObject> | HierarchyCircularNode<HydratedGitObject>
@@ -62,7 +62,7 @@ function Node(props: {
     to.y = Math.round(node.y)
   }
 
-  if (props.isClicked) to.tint = adjustColorBrightness(to.tint, 0.5)
+  if (props.isClicked) to.tint = brighten(to.tint)
 
   return (
     <Spring to={to} config={{ duration: props.transitions ? 300 : 0 }}>
