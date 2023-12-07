@@ -5,6 +5,7 @@ import { LegendDot } from "./util"
 interface AuthorDistFragProps {
   items: [string, number][]
   show: boolean
+  contribSum: number
 }
 
 export function AuthorDistFragment(props: AuthorDistFragProps) {
@@ -16,7 +17,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
     <>
       {props.items.map((legendItem) => {
         const [author, contrib] = legendItem
-        const roundedContrib = Math.round(contrib * 100)
+        const roundedContrib = Math.round((contrib / props.contribSum) * 100)
         const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
         return (
           <Fragment key={author + contrib}>
