@@ -1,5 +1,5 @@
 import { mdiMessageDraw, mdiAlertCircleOutline, mdiForum } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "@mdi/react"
 import { memo } from "react"
 
 export const FeedbackCard = memo(function FeedbackCard() {
