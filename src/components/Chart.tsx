@@ -353,7 +353,11 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
       </>
     }
   } else if(chartType === "R3F2") {
-    const textIsTooLong = (text: string) => (commonProps.width as number)< text.length * estimatedLetterWidth
+    const textIsTooLong = (text: string) => (commonProps.width as number) < text.length * estimatedLetterWidth
+    const textIsTooTall = (text: string) => {
+      const heightAvailable = (commonProps.height as number) - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
+      return heightAvailable < estimatedLetterHeightForDirText
+    }
     if (normalMesh) {
       return <mesh
         position={[
@@ -374,7 +378,7 @@ function Node({ d, isSearchMatch, canvas_size }: { d: CircleOrRectHiearchyNode; 
     } else {
       return <>
         {
-          (!textIsTooLong(d.data.name))
+          (!textIsTooLong(d.data.name) && !textIsTooTall(d.data.name))
             ? <mesh
               position={[
                 (commonProps.x as number)-(commonProps.width as number)/2+5,
