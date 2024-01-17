@@ -1,4 +1,4 @@
-import { mdiSvg, mdiNumeric1Box, mdiNumeric2Box, mdiNumeric3Box, mdiNumeric4Box, mdiNumeric5Box } from "@mdi/js"
+import { mdiNumeric1Box, mdiNumeric2Box, mdiNumeric3Box, mdiNumeric4Box, mdiNumeric5Box, mdiSvg } from "@mdi/js"
 
 export type DepthType = keyof typeof Depth
 

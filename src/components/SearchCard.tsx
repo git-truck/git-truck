@@ -1,14 +1,14 @@
-import { memo, useEffect, useMemo, useRef, useState, useTransition, useId } from "react"
+import { memo, useEffect, useId, useMemo, useRef, useState, useTransition } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
+import { mdiFileOutline, mdiFolder, mdiMagnify } from "@mdi/js"
+import { Icon } from "@mdi/react"
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
-import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/util"
-import { Icon } from "@mdi/react"
-import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 
 function findSearchResults(tree: HydratedGitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, HydratedGitObject> = {}

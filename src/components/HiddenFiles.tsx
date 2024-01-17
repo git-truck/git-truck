@@ -1,10 +1,10 @@
+import { mdiEye, mdiEyeOff } from "@mdi/js"
+import { Icon } from "@mdi/react"
+import { Form, useLocation, useNavigation } from "@remix-run/react"
+import { memo, useId } from "react"
 import { useBoolean } from "react-use"
 import { useData } from "~/contexts/DataContext"
-import { Form, useLocation, useNavigation } from "@remix-run/react"
-import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
-import { Icon } from "@mdi/react"
-import { memo, useId } from "react"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored

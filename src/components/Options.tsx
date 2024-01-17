@@ -1,40 +1,40 @@
-import type { MetricType } from "../metrics/metrics"
-import { Metric } from "../metrics/metrics"
-import { EnumSelect } from "./EnumSelect"
-import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
-import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
-import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { memo, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
+import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
+import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
+import type { MetricType } from "../metrics/metrics"
+import { Metric } from "../metrics/metrics"
+import { EnumSelect } from "./EnumSelect"
+import { CheckboxWithLabel } from "./util"
 
 import {
+  mdiAccountAlertOutline,
   mdiChartBubble,
   mdiChartTree,
-  mdiPodiumGold,
-  mdiFileCodeOutline,
-  mdiUpdate,
-  mdiResize,
-  mdiSourceCommit,
-  mdiScaleBalance,
-  mdiAccountAlertOutline,
-  mdiTruckFastOutline,
-  mdiLink,
-  mdiTransition,
-  mdiLabel,
-  mdiPalette,
-  mdiImageSizeSelectSmall,
-  mdiPuzzle,
-  mdiViewModule,
   mdiCog,
-  mdiFileTree,
+  mdiContentCut,
   mdiFamilyTree,
-  mdiContentCut
+  mdiFileCodeOutline,
+  mdiFileTree,
+  mdiImageSizeSelectSmall,
+  mdiLabel,
+  mdiLink,
+  mdiPalette,
+  mdiPodiumGold,
+  mdiPuzzle,
+  mdiResize,
+  mdiScaleBalance,
+  mdiSourceCommit,
+  mdiTransition,
+  mdiTruckFastOutline,
+  mdiUpdate,
+  mdiViewModule
 } from "@mdi/js"
-import type { SizeMetricType } from "~/metrics/sizeMetric"
-import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
 import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { SizeMetric } from "~/metrics/sizeMetric"
 
 // function isMetricWithHistoricalOption(metric: MetricType) {
 //   switch (metric) {

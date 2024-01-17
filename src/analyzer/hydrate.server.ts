@@ -1,3 +1,9 @@
+import { cpus } from "os"
+import { setAnalyzationStatus } from "./analyze.server"
+import { getCoAuthors } from "./coauthors.server"
+import { contribRegex, gitLogRegex } from "./constants"
+import { GitCaller } from "./git-caller.server"
+import { log } from "./log.server"
 import type {
   FileChange,
   GitBlobObject,
@@ -9,12 +15,6 @@ import type {
   HydratedGitTreeObject
 } from "./model"
 import { analyzeRenamedFile } from "./util.server"
-import { GitCaller } from "./git-caller.server"
-import { getCoAuthors } from "./coauthors.server"
-import { log } from "./log.server"
-import { gitLogRegex, contribRegex } from "./constants"
-import { cpus } from "os"
-import { setAnalyzationStatus } from "./analyze.server"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
@@ -89,7 +89,7 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
     }
     return
   }
-  if (change.contribs === 0) return // in case a rename with no changes, this happens 
+  if (change.contribs === 0) return // in case a rename with no changes, this happens
   blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
 
   for (const coauthor of commit.coauthors) {
@@ -128,7 +128,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
       const sectionStart = index + i * sectionSize
       let sectionEnd = sectionStart + sectionSize
       if (sectionEnd > commitCount) sectionEnd = runCountCommit
-      log.info("start thread " + sectionStart + "-" + sectionEnd)
+      log.info(`start thread ${sectionStart}-${sectionEnd}`)
       return gatherCommitsInRange(sectionStart, sectionEnd, commits)
     })
 

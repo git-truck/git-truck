@@ -1,3 +1,5 @@
+import { mdiFolder, mdiMenuRight } from "@mdi/js"
+import Icon from "@mdi/react"
 import { Fragment, memo, useMemo, useRef } from "react"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
@@ -5,8 +7,6 @@ import { useOptions } from "../contexts/OptionsContext"
 import type { AuthorshipType, MetricType } from "../metrics/metrics"
 import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
 import { LegendDot } from "./util"
-import { mdiFolder, mdiMenuRight } from "@mdi/js"
-import Icon from "@mdi/react"
 
 interface TooltipProps {
   hoveredObject: HydratedGitObject | null
@@ -78,15 +78,17 @@ function ColorMetricDependentInfo(props: {
   authorshipType: AuthorshipType
 }) {
   switch (props.metric) {
-    case "MOST_COMMITS":
+    case "MOST_COMMITS": {
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
-    case "LAST_CHANGED":
+    }
+    case "LAST_CHANGED": {
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
       return <>{dateFormatRelative(epoch)}</>
-    case "SINGLE_AUTHOR":
+    }
+    case "SINGLE_AUTHOR": {
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.unionedAuthors?.[props.authorshipType] ?? [])
         : []
@@ -98,11 +100,13 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authors.length} authors`
       }
-    case "TOP_CONTRIBUTOR":
+    }
+    case "TOP_CONTRIBUTOR": {
       const dominant = props.hoveredBlob?.dominantAuthor?.[props.authorshipType] ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
-    case "TRUCK_FACTOR":
+    }
+    case "TRUCK_FACTOR": {
       const authorCount = Object.entries(props.hoveredBlob?.unionedAuthors?.HISTORICAL ?? []).length
       switch (authorCount) {
         case 0:
@@ -112,6 +116,7 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authorCount} authors`
       }
+    }
     default:
       return null
   }

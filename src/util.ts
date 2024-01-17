@@ -1,7 +1,7 @@
-import type { HierarchyRectangularNode } from "d3-hierarchy"
-import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model"
+import type { HierarchyRectangularNode } from "d3-hierarchy"
+import { clean, compare, valid } from "semver"
+import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "./analyzer/model"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
@@ -98,7 +98,7 @@ const brightnessCalculationCache = new Map<`#${string}`, "#000000" | "#ffffff">(
 
 function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
-  return Math.sqrt(Math.pow(rgb[0], 2) * 0.241 + Math.pow(rgb[1], 2) * 0.691 + Math.pow(rgb[2], 2) * 0.068)
+  return Math.sqrt(rgb[0] ** 2 * 0.241 + rgb[1] ** 2 * 0.691 + rgb[2] ** 2 * 0.068)
 }
 
 const hexToRgbCache = new Map<`#${string}`, [number, number, number]>()

@@ -14,7 +14,7 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
   const fetcher = useFetcher<ProgressData>()
 
   useEffect(() => {
-    if (fetcher.state === "idle") fetcher.load(`/progress`)
+    if (fetcher.state === "idle") fetcher.load("/progress")
   }, [fetcher.state])
 
   const progressText = useMemo(() => {
@@ -23,7 +23,7 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
     if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analyzation"
     if (analyzationStatus === "GeneratingChart") return "Generating chart"
     const percentage = progress && totalCommitCount ? Math.round((progress / totalCommitCount) * 100) : 0
-    return "Analyzing commits: " + percentage + "% done"
+    return `Analyzing commits: ${percentage}% done`
   }, [fetcher.data])
 
   return (

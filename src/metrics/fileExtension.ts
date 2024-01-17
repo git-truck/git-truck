@@ -1,8 +1,8 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import { getColorFromExtension } from "./metricUtils"
-import type { MetricCache } from "./metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
+import { getColorFromExtension } from "./metricUtils"
+import type { MetricCache } from "./metrics"
 
 export function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)

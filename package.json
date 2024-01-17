@@ -6,13 +6,7 @@
   "license": "MIT",
   "main": "./cli.js",
   "bin": "./cli.js",
-  "files": [
-    "LICENSE",
-    "README.md",
-    "build/",
-    "public/",
-    "cli.js"
-  ],
+  "files": ["LICENSE", "README.md", "build/", "public/", "cli.js"],
   "scripts": {
     "test": "npm run test:e2e && npm run test:unit",
     "test:unit": "jest --coverage",
@@ -28,15 +22,19 @@
     "pub-pre": "npm version prerelease && npm publish --tag next",
     "pub-exp": "node ./scripts/publish-experimental.js",
     "prepublishOnly": "npm run clean && npm run build",
-    "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --log-level warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
-    "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
+    "format": "npx @biomejs/biome format src --write",
+    "lint": "npx @biomejs/biome lint src",
+    "lint:fix": "npx @biomejs/biome lint src --apply",
+    "lint:yolo": "npx @biomejs/biome lint --apply-unsafe src",
+    "check": "npx @biomejs/biome check src",
+    "fix": "npx @biomejs/biome check --apply src"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.4.1",
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
     "@playwright/test": "^1.39.0",
     "@remix-run/dev": "2.2.0",
-    "@remix-run/eslint-config": "2.2.0",
     "@remix-run/express": "^2.2.0",
     "@remix-run/node": "2.2.0",
     "@remix-run/react": "2.2.0",
@@ -57,8 +55,6 @@
     "@types/react-dom": "^18.2.14",
     "@types/semver": "^7.5.4",
     "@types/yargs": "^17.0.29",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
     "ansi-colors": "^4.1.3",
     "autoprefixer": "^10.4.16",
     "byte-size": "^8.1.1",
@@ -111,26 +107,17 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "setupFiles": [
-      "dotenv/config"
-    ],
-    "roots": [
-      "<rootDir>/src/"
-    ]
+    "setupFiles": ["dotenv/config"],
+    "roots": ["<rootDir>/src/"]
   },
   "prettier": {
     "semi": false,
     "printWidth": 120,
     "trailingComma": "none",
-    "plugins": [
-      "prettier-plugin-tailwindcss"
-    ]
+    "plugins": ["prettier-plugin-tailwindcss"]
   },
   "lint-staged": {
-    "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ]
+    "{src,scripts}/**/*.{ts,tsx,js,mjs}": ["eslint --cache --fix", "prettier --write"]
   },
   "engines": {
     "node": ">=18.0.0"

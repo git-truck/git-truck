@@ -23,7 +23,7 @@ export function getLastChangedIndex(groupings: lastChangedGroup[], newest: numbe
   let index = 0
   while (index < groupings.length - 1) {
     if (diff < groupings[index + 1].epoch) return index
-    else index++
+    index++
   }
   return index
 }

@@ -1,7 +1,7 @@
-import type { SelectHTMLAttributes } from "react"
-import type { GitRefs } from "~/analyzer/model"
 import { mdiSourceBranch } from "@mdi/js"
 import { Icon } from "@mdi/react"
+import type { SelectHTMLAttributes } from "react"
+import type { GitRefs } from "~/analyzer/model"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs

@@ -1,13 +1,13 @@
+import { useFetcher } from "@remix-run/react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
-import { Fragment, useEffect, useMemo, useState } from "react"
-import { dateFormatLong } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
-import type { AccordionData } from "./accordion/Accordion"
-import Accordion from "./accordion/Accordion"
-import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
+import { dateFormatLong } from "~/util"
+import type { AccordionData } from "./accordion/Accordion"
+import Accordion from "./accordion/Accordion"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -34,7 +34,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
                 className="cursor-auto"
                 style={{ listStyleImage: `url(${commitIcon})` }}
                 onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
-                key={value.hash + "--itemContentAccordion"}
+                key={`${value.hash}--itemContentAccordion`}
                 title={`By: ${value.author}`}
               >
                 {value.message}
@@ -124,9 +124,8 @@ export function CommitHistory() {
       setCommits((prevCommits) => {
         if (!prevCommits || prevCommits.length === 0) {
           return data
-        } else {
-          return [...prevCommits, ...data]
         }
+          return [...prevCommits, ...data]
       })
     }
   }, [fetcher.data, fetcher.state])
@@ -192,7 +191,6 @@ function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [key: 
         cleanGroupItems[author].push(commit)
       }
       break
-    case "date":
     default:
       for (const commit of items) {
         const date: string = dateFormatLong(commit.time)

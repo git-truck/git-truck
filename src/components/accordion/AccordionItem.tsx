@@ -1,5 +1,5 @@
-import type { AccordionData } from "./Accordion"
 import clsx from "clsx"
+import type { AccordionData } from "./Accordion"
 
 function AccordionItem({
   data,
@@ -18,7 +18,7 @@ function AccordionItem({
     <li className="border-0 ">
       <h2 className="m-0 w-full">
         <div
-          className={clsx("b-0 flex w-full cursor-pointer items-center " + afterStyle, {
+          className={clsx(`b-0 flex w-full cursor-pointer items-center ${afterStyle}`, {
             "text-[16px] font-semibold": titleLabels,
             "text-[14px] font-normal": !titleLabels,
             "after:-rotate-180": isOpen,

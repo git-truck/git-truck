@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState } from "react"
+import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
+import type { CommitTab } from "~/contexts/CommitTabContext"
+import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
+import type { DepthType } from "~/metrics/chartDepth"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import type { ChartType, HierarchyType, OptionsContextType } from "../contexts/OptionsContext"
-import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
+import { OptionsContext, getDefaultOptionsContextValue } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
-import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
+import type { AuthorshipType, MetricType, MetricsData } from "../metrics/metrics"
 import { createMetricData as createMetricsData } from "../metrics/metrics"
-import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
-import type { SizeMetricType } from "~/metrics/sizeMetric"
-import type { DepthType } from "~/metrics/chartDepth"
-import type { CommitTab } from "~/contexts/CommitTabContext"
-import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -108,7 +108,7 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
-        })),
+        }))
     }),
     [options]
   )

@@ -1,7 +1,7 @@
-import { useTransition, type HTMLAttributes } from "react"
+import { mdiCheckboxBlankOutline, mdiCheckboxOutline, mdiClose, mdiMenuUp } from "@mdi/js"
 import { Icon } from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
+import { type HTMLAttributes, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 
 export const CloseButton = ({

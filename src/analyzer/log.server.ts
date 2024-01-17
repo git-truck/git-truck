@@ -1,11 +1,11 @@
 import c from "ansi-colors"
 
 export enum LOG_LEVEL {
-  SILENT,
-  ERROR,
-  WARN,
-  INFO,
-  DEBUG
+  SILENT = 0,
+  ERROR = 1,
+  WARN = 2,
+  INFO = 3,
+  DEBUG = 4
 }
 export enum LOG_LEVEL_LABEL {
   SILENT = "",

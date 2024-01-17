@@ -1,4 +1,3 @@
-import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
 import {
   Links,
@@ -10,11 +9,12 @@ import {
   isRouteErrorResponse,
   useRouteError
 } from "@remix-run/react"
+import { useKonami } from "react-konami-code"
 
-import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/index.css"
-import { Code } from "./components/util"
+import varsStyles from "~/styles/vars.css"
 import tailwindStylesheet from "~/tailwind.css"
+import { Code } from "./components/util"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
@@ -85,7 +85,7 @@ export const ErrorBoundary = () => {
         </body>
       </html>
     )
-  } else if (error instanceof Error) {
+  }if (error instanceof Error) {
     return (
       <html>
         <head>
@@ -100,7 +100,6 @@ export const ErrorBoundary = () => {
         </body>
       </html>
     )
-  } else {
-    return null
   }
+    return null
 }

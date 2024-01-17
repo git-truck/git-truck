@@ -1,6 +1,6 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import type { MetricCache } from "./metrics"
 import { hslToHex } from "~/util"
+import type { MetricCache } from "./metrics"
 
 export class TruckFactorTranslater {
   private readonly min_lightness = 50
