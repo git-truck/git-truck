@@ -212,7 +212,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       {...commonProps}
       className={clsx({
         "cursor-pointer": isBlob(d.data),
-        "transition-all duration-1000 ease-in-out": transitionsEnabled,
+        "transition-all duration-500 ease-in-out": transitionsEnabled,
         "animate-stroke-pulse": isSearchMatch,
         "stroke-black/20": isTree(d.data)
       })}
