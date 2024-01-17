@@ -1,8 +1,8 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import type { MetricLegendProps } from "./Legend"
-import { LegendBarIndicator } from "../util"
 import { isBlob } from "~/util"
+import { LegendBarIndicator } from "../util"
+import type { MetricLegendProps } from "./Legend"
 
 export type SegmentLegendData = [
   steps: number,
@@ -36,14 +36,14 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
                 color={colorGenerator(i)}
                 text={textGenerator(i)}
                 top={i % 2 === 0}
-              ></MetricSegment>
+              />
             ) : (
               <TopMetricSegment
                 key={`legend-${i}`}
                 width={width}
                 color={colorGenerator(i)}
                 text={textGenerator(i)}
-              ></TopMetricSegment>
+              />
             )
           })}
         </div>
@@ -66,15 +66,14 @@ export function MetricSegment({ width, color, text, top }: SegmentMetricProps) {
       <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
         <div style={{ textAlign: "left", height: "20px", marginBottom: "-6px" }}>{text}</div>
         <div style={{ textAlign: "left", height: "20px", marginBottom: "-2px" }}>{"/"}</div>
-        <div style={{ backgroundColor: color, height: "20px" }}></div>
-        <div style={{ textAlign: "left", height: "40px" }}></div>
+        <div style={{ backgroundColor: color, height: "20px" }} />
+        <div style={{ textAlign: "left", height: "40px" }} />
       </div>
     )
-  else
     return (
       <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-        <div style={{ textAlign: "left", height: "32px" }}></div>
-        <div style={{ backgroundColor: color, height: "20px" }}></div>
+        <div style={{ textAlign: "left", height: "32px" }} />
+        <div style={{ backgroundColor: color, height: "20px" }} />
         <div style={{ textAlign: "left", height: "20px", marginTop: "-7px" }}>{"\\"}</div>
         <div style={{ textAlign: "left", height: "20px", marginTop: "-4px" }}>{text}</div>
       </div>
@@ -92,7 +91,7 @@ export function TopMetricSegment({ width, color, text }: TopSegmentMetricProps) 
     <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
       <div style={{ textAlign: "left", height: "20px", marginBottom: "-6px" }}>{text}</div>
       <div style={{ textAlign: "left", height: "20px", marginBottom: "-2px" }}>{"/"}</div>
-      <div style={{ backgroundColor: color, height: "20px" }}></div>
+      <div style={{ backgroundColor: color, height: "20px" }} />
     </div>
   )
 }

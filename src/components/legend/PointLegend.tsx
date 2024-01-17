@@ -1,16 +1,13 @@
 import { useState } from "react"
-import type { MetricLegendProps } from "./Legend"
-import { LegendDot } from "../util"
 import { ChevronButton } from "../ChevronButton"
+import { LegendDot } from "../util"
+import type { MetricLegendProps } from "./Legend"
 
 const legendCutoff = 3
 
 export class PointInfo {
   // eslint-disable-next-line no-useless-constructor
-  constructor(
-    public readonly color: `#${string}`,
-    public weight: number
-  ) {}
+  constructor(public readonly color: `#${string}`, public weight: number) {}
 
   add(value: number) {
     this.weight += value
@@ -31,7 +28,7 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
   if (items.length === 0) return null
   if (items.length <= legendCutoff + 1) {
     return <PointLegendFragment show={true} items={items} />
-  } else {
+  }
     return (
       <>
         <PointLegendFragment show={true} items={items.slice(0, legendCutoff)} />
@@ -40,7 +37,6 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
         <ChevronButton className="absolute bottom-2 right-2" open={!collapse} onClick={() => setCollapse(!collapse)} />
       </>
     )
-  }
 }
 
 interface PointLegendFragProps {

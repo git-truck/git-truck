@@ -34,23 +34,23 @@ export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectL
   const match = commitRegex.exec(rawContent)
   const groups = match?.groups ?? {}
 
-  const tree = groups["tree"]
-  const parent = groups["parent"] ?? emptyGitCommitHash
-  const parent2 = groups["parent2"] ?? null
+  const tree = groups.tree
+  const parent = groups.parent ?? emptyGitCommitHash
+  const parent2 = groups.parent2 ?? null
   const author = {
-    name: groups["authorName"],
-    email: groups["authorEmail"],
-    timestamp: Number(groups["authorTimeStamp"]),
-    timezone: groups["authorTimeZone"]
+    name: groups.authorName,
+    email: groups.authorEmail,
+    timestamp: Number(groups.authorTimeStamp),
+    timezone: groups.authorTimeZone
   }
   const committer = {
-    name: groups["committerName"],
-    email: groups["committerEmail"],
-    timestamp: Number(groups["committerTimeStamp"]),
-    timezone: groups["committerTimeZone"]
+    name: groups.committerName,
+    email: groups.committerEmail,
+    timestamp: Number(groups.committerTimeStamp),
+    timezone: groups.committerTimeZone
   }
-  const message = groups["message"]
-  const description = groups["description"]
+  const message = groups.message
+  const description = groups.description
   const coauthors = description ? getCoAuthors(description) : []
 
   return {
@@ -102,10 +102,10 @@ async function analyzeTree(path: string, name: string, hash: string) {
 
     const groups = match.groups
     lsTreeEntries.push({
-      type: groups["type"] as "blob" | "tree",
-      hash: groups["hash"],
-      size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-      path: groups["path"]
+      type: groups.type as "blob" | "tree",
+      hash: groups.hash,
+      size: groups.size === "-" ? undefined : Number(groups.size),
+      path: groups.path
     })
   }
 
@@ -127,7 +127,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
       currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
     }
     switch (child.type) {
-      case "tree":
+      case "tree": {
         const newTree: GitTreeObject = {
           type: "tree",
           path: newPath,
@@ -139,7 +139,8 @@ async function analyzeTree(path: string, name: string, hash: string) {
         currTree.children.push(newTree)
 
         break
-      case "blob":
+      }
+      case "blob": {
         fileCount += 1
         const blob: GitBlobObject = {
           type: "blob",
@@ -153,6 +154,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
         // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
         break
+      }
     }
   }
 
@@ -336,7 +338,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   await describeAsyncJob({
     job: () => Promise.resolve(),
     beforeMsg: "",
-    afterMsg: `Ready in`,
+    afterMsg: "Ready in",
     errorMsg: "",
     ms: stop - start
   })

@@ -1,7 +1,8 @@
+import clsx from "clsx"
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import { memo, useDeferredValue, useEffect, useMemo } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -9,19 +10,22 @@ import type {
   HydratedGitTreeObject
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
+import { useSearch } from "~/contexts/SearchContext"
 import { useComponentSize } from "~/hooks"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import {
   bubblePadding,
+  circleBlobTextOffsetY,
+  circleTreeTextOffsetY,
   estimatedLetterHeightForDirText,
   estimatedLetterWidth,
   searchMatchColor,
-  circleTreeTextOffsetY,
   treemapBlobTextOffsetX,
   treemapBlobTextOffsetY,
   treemapNodeBorderRadius,
   treemapPaddingTop,
   treemapTreeTextOffsetX,
-  circleBlobTextOffsetY,
   treemapTreeTextOffsetY
 } from "../const"
 import { useData } from "../contexts/DataContext"
@@ -29,10 +33,6 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { getTextColorFromBackground, isBlob, isTree } from "~/util"
-import clsx from "clsx"
-import type { SizeMetricType } from "~/metrics/sizeMetric"
-import { useSearch } from "~/contexts/SearchContext"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -67,7 +67,6 @@ export const Chart = memo(function Chart({
     case "Five":
       numberOfDepthLevels = 5
       break
-    case "Full":
     default:
       numberOfDepthLevels = undefined
   }
@@ -271,7 +270,7 @@ function collapseText({
     }
   }
 
-  if (textIsTooTall && textIsTooTall(displayText)) {
+  if (textIsTooTall?.(displayText)) {
     displayText = displayText.replace(/\/.+\//gm, "/.../")
 
     if (textIsTooTall(displayText)) {
@@ -394,7 +393,7 @@ function createPartitionedHiearchy(
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
-    case "TREE_MAP":
+    case "TREE_MAP": {
       const treeMapPartition = treemap<HydratedGitObject>()
         .tile(treemapBinary)
         .size([size.width, size.height])
@@ -406,12 +405,13 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
+        return cast.x1 - cast.x0 >= cutOff && cast.y1 - cast.y0 >= cutOff
       })
 
       return tmPartition
+    }
 
-    case "BUBBLE_CHART":
+    case "BUBBLE_CHART": {
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
@@ -421,6 +421,7 @@ function createPartitionedHiearchy(
         return cast.r >= cutOff
       })
       return bPartition
+    }
     default:
       throw Error("Invalid chart type")
   }

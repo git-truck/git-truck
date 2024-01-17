@@ -8,8 +8,8 @@ export function getCoAuthors(description: string) {
 
   while (next.value !== undefined) {
     coauthors.push({
-      name: next.value.groups["name"].trimEnd(),
-      email: next.value.groups["email"]
+      name: next.value.groups.name.trimEnd(),
+      email: next.value.groups.email
     })
     next = coauthormatches.next()
   }

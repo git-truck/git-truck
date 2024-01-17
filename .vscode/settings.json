@@ -2,8 +2,7 @@
   "editor.formatOnSave": true,
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
   "typescript.experimental.tsserver.web.enableProjectWideIntellisense": false,
-  "files.autoSave": "off",
-  "css.lint.unknownAtRules": "ignore"
+  "files.autoSave": "off"
 }

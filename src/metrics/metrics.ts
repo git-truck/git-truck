@@ -1,15 +1,15 @@
+import uniqolor from "uniqolor"
 import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GradLegendData } from "~/components/legend/GradiantLegend"
+import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
+import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
-import { setDominanceColor } from "./singleAuthor"
-import { CommitAmountTranslater } from "./mostCommits"
 import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
+import { CommitAmountTranslater } from "./mostCommits"
+import { setDominanceColor } from "./singleAuthor"
 import { setDominantAuthorColor } from "./topContributer"
 import { TruckFactorTranslater } from "./truckFactor"
-import type { GradLegendData } from "~/components/legend/GradiantLegend"
-import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
-import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
-import uniqolor from "uniqolor"
 
 export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
 
@@ -62,7 +62,7 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
     default:
-      throw new Error("Uknown metric type: " + metric)
+      throw new Error(`Uknown metric type: ${metric}`)
   }
 }
 
@@ -78,7 +78,7 @@ export function getMetricLegendType(metric: MetricType): LegendType {
     case "TRUCK_FACTOR":
       return "SEGMENTS"
     default:
-      throw new Error("Uknown metric type: " + metric)
+      throw new Error(`Uknown metric type: ${metric}`)
   }
 }
 
@@ -102,10 +102,10 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
   let min = Number.MAX_VALUE
   let max = Number.MIN_VALUE
   tree.children.forEach((element) => {
-    if (element.type == "blob") {
+    if (element.type === "blob") {
       if (element.noCommits > max) max = element.noCommits
       if (element.noCommits < min) min = element.noCommits
-    } else if (element.type == "tree") {
+    } else if (element.type === "tree") {
       const [submin, submax] = FindMinMaxCommit(element)
       if (submax > max) max = submax
       if (submin < min) min = submin
@@ -192,7 +192,7 @@ export function getMetricCalcs(
         if (!cache.legend) {
           cache.legend = [
             Math.floor(Math.log2(data.authorsUnion.length)) + 1,
-            (n) => `${Math.pow(2, n)}`,
+            (n) => `${2 ** n}`,
             (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1))}%)`,
             (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
           ]

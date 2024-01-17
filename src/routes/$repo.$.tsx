@@ -1,39 +1,39 @@
 import { resolve } from "path"
-import type { Dispatch, SetStateAction } from "react"
-import { memo, useEffect, useRef, useState } from "react"
-import { useBoolean, useMouse } from "react-use"
+import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
+import { Icon } from "@mdi/react"
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
-import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
+import clsx from "clsx"
+import randomstring from "randomstring"
+import type { Dispatch, SetStateAction } from "react"
+import { memo, useEffect, useRef, useState } from "react"
+import { Online } from "react-detect-offline"
+import { createPortal } from "react-dom"
+import { useBoolean, useMouse } from "react-use"
+import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo } from "~/analyzer/util.server"
 import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import { Breadcrumb } from "~/components/Breadcrumb"
+import { Chart } from "~/components/Chart"
 import { DetailsCard } from "~/components/DetailsCard"
+import { FeedbackCard } from "~/components/FeedbackCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
-import { Legend } from "~/components/legend/Legend"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
+import { Tooltip } from "~/components/Tooltip"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
+import { Legend } from "~/components/legend/Legend"
 import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
-import { semverCompare } from "~/util"
-import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
-import { Breadcrumb } from "~/components/Breadcrumb"
-import { FeedbackCard } from "~/components/FeedbackCard"
-import { Chart } from "~/components/Chart"
-import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
-import clsx from "clsx"
-import { Tooltip } from "~/components/Tooltip"
-import { createPortal } from "react-dom"
-import randomstring from "randomstring"
-import { Online } from "react-detect-offline";
+import { semverCompare } from "~/util"
 
 let invalidateCache = false
 
@@ -48,15 +48,15 @@ export interface RepoData {
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params["repo"] || !params["*"]) {
+  if (!params.repo || !params["*"]) {
     return redirect("/")
   }
 
-  const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
+  const [args, truckConfig] = await getTruckConfigWithArgs(params.repo as string)
   const options: TruckUserConfig = {
     invalidateCache: invalidateCache || args.invalidateCache
   }
-  options.path = resolve(args.path, params["repo"])
+  options.path = resolve(args.path, params.repo)
   options.branch = params["*"]
 
   if (params["*"]) {
@@ -83,7 +83,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
-  if (!params["repo"]) {
+  if (!params.repo) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
   const formData = await request.formData()
@@ -99,8 +99,8 @@ export const action: ActionFunction = async ({ request, params }) => {
     return null
   }
 
-  const [args] = await getTruckConfigWithArgs(params["repo"])
-  const path = resolve(args.path, params["repo"])
+  const [args] = await getTruckConfigWithArgs(params.repo)
+  const path = resolve(args.path, params.repo)
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
@@ -116,7 +116,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   if (unignore && typeof unignore === "string") {
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
+    await updateTruckConfig(resolve(args.path, params.repo), (prevConfig) => {
       const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
       hiddenFilesSet.delete(unignore.trim())
 
@@ -136,7 +136,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   if (typeof unionedAuthors === "string") {
     try {
       const json = JSON.parse(unionedAuthors)
-      await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
+      await updateTruckConfig(resolve(args.path, params.repo), (prevConfig) => {
         return {
           ...prevConfig,
           unionedAuthors: json
@@ -150,7 +150,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof rerollColors === "string") {
     const newSeed = randomstring.generate(6)
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
+    await updateTruckConfig(resolve(args.path, params.repo), (prevConfig) => {
       return {
         ...prevConfig,
         colorSeed: newSeed
@@ -247,9 +247,9 @@ export default function Repo() {
     // The classes for collapses
     if (isLeftPanelCollapse && isRightPanelCollapse) {
       return "both-collapse"
-    } else if (isLeftPanelCollapse) {
+    }if (isLeftPanelCollapse) {
       return "left-collapse"
-    } else if (isRightPanelCollapse) {
+    }if (isRightPanelCollapse) {
       return "right-collapse"
     }
 

@@ -1,8 +1,8 @@
-import { useClickedObject } from "~/contexts/ClickedContext"
-import type { MetricLegendProps } from "./Legend"
-import { LegendBarIndicator } from "../util"
 import { useMemo } from "react"
+import { useClickedObject } from "~/contexts/ClickedContext"
 import { getLightness } from "~/util"
+import { LegendBarIndicator } from "../util"
+import type { MetricLegendProps } from "./Legend"
 
 export type GradLegendData = [
   minValue: string,

@@ -1,14 +1,14 @@
 import { spawn } from "child_process"
 import { existsSync, promises as fs } from "fs"
+import { dirname, resolve as resolvePath, sep } from "node:path"
+import c from "ansi-colors"
+import getLatestVersion from "latest-version"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
-import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "perf_hooks"
-import c from "ansi-colors"
 import pkg from "../../package.json"
-import getLatestVersion from "latest-version"
+import { LOG_LEVEL, getLogLevel, log } from "./log.server"
+import type { AnalyzerData, GitObject, GitTreeObject } from "./model"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -53,14 +53,14 @@ export function analyzeRenamedFile(
   let oldPath: string
   let newPath: string
 
-  if (groups["oldPath"] || groups["newPath"]) {
-    const oldP = groups["oldPath"] ?? ""
-    const newP = groups["newPath"] ?? ""
+  if (groups.oldPath || groups.newPath) {
+    const oldP = groups.oldPath ?? ""
+    const newP = groups.newPath ?? ""
     oldPath = file.replace(replaceRegex, oldP).replace("//", "/")
     newPath = file.replace(replaceRegex, newP).replace("//", "/")
   } else {
-    oldPath = groups["oldPath2"] ?? ""
-    newPath = groups["newPath2"] ?? ""
+    oldPath = groups.oldPath2 ?? ""
+    newPath = groups.newPath2 ?? ""
   }
 
   if (renamedFiles.has(oldPath)) {
@@ -103,9 +103,8 @@ export function getDirName(dir: string) {
 export const formatMs = (ms: number) => {
   if (ms < 1000) {
     return `${Math.round(ms)}ms`
-  } else {
-    return `${(ms / 1000).toFixed(2)}s`
   }
+    return `${(ms / 1000).toFixed(2)}s`
 }
 
 export function generateTruckFrames(length: number) {

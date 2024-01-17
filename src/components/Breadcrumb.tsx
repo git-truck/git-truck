@@ -1,6 +1,6 @@
 import { mdiChevronRight, mdiHome } from "@mdi/js"
 import Icon from "@mdi/react"
-import { useMemo, Fragment } from "react"
+import { Fragment, useMemo } from "react"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 
@@ -45,7 +45,6 @@ export function Breadcrumb() {
                     {name}
                   </span>
                 )
-            else
               return (
                 <Fragment key={p}>
                   <button

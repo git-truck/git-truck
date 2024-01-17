@@ -1,5 +1,5 @@
 import type { Ignore } from "ignore"
-import type { HydratedGitTreeObject, AnalyzerData } from "./model"
+import type { AnalyzerData, HydratedGitTreeObject } from "./model"
 
 export function initMetrics(data: AnalyzerData) {
   data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE
@@ -48,11 +48,9 @@ export function TreeCleanup(tree: HydratedGitTreeObject) {
   }
   tree.children = tree.children.filter((child) => {
     if (child.type === "blob") return true
-    else {
       const ctree = child as HydratedGitTreeObject
       if (ctree.children.length === 0) return false
       return true
-    }
   })
   if (tree.children.length === 1 && tree.children[0].type === "tree") {
     const temp = tree.children[0]

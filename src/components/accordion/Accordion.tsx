@@ -37,14 +37,14 @@ function Accordion({
     <ul className="m-0 block overflow-x-hidden pl-4">
       {items.map((item, idx) => (
         <AccordionItem
-          key={item.title + idx + "--accordion"}
+          key={`${item.title + idx}--accordion`}
           data={item}
           isOpen={
-            currentState && currentState[idx]
+            currentState?.[idx]
               ? currentState[idx]
               : openByDefault && multipleOpen
-              ? !currentIdx.includes(idx)
-              : currentIdx.includes(idx)
+                ? !currentIdx.includes(idx)
+                : currentIdx.includes(idx)
           }
           titleLabels={titleLabels}
           btnOnClick={() => {

@@ -33,7 +33,7 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
   const selectedIdx = props.selectedItemIndex ? props.selectedItemIndex : currentIdx
   const items = Children.toArray(props.children).map((item) => {
     if (!isValidElement(item)) return false
-    if (item.props.__TYPE && item.props.__TYPE == MenuItemTypeString) {
+    if (item.props.__TYPE && item.props.__TYPE === MenuItemTypeString) {
       return { title: item.props.title, children: item.props.children }
     }
     return false
@@ -43,7 +43,7 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
       <div className="flex w-full flex-row justify-center overflow-hidden">
         {items.map((item, idx) => (
           <button
-            key={item.title + idx + "--tab"}
+            key={`${item.title + idx}--tab`}
             className={clsx("btn flex-1", {
               "btn--outlined--light": !props.lightBackground,
               "btn--outlined": props.lightBackground,
@@ -63,8 +63,8 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
         ))}
       </div>
       {items.map((item, idx) =>
-        idx == selectedIdx ? (
-          <div className="border-t-0" key={selectedIdx + item.title + "--selected"}>
+        idx === selectedIdx ? (
+          <div className="border-t-0" key={`${selectedIdx + item.title}--selected`}>
             {item.children}
           </div>
         ) : null

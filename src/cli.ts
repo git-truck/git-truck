@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import express from "express"
-import compression from "compression"
-import morgan from "morgan"
-import { createRequestHandler } from "@remix-run/express"
 import path from "path"
-import pkg from "../package.json"
-import open from "open"
-import latestVersion from "latest-version"
-import { GitCaller } from "./analyzer/git-caller.server"
-import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
-import { semverCompare, getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName } from "./analyzer/util.server"
-import { log, setLogLevel } from "./analyzer/log.server"
+import { createRequestHandler } from "@remix-run/express"
+import compression from "compression"
+import express from "express"
 import type { NextFunction } from "express-serve-static-core"
+import latestVersion from "latest-version"
+import morgan from "morgan"
+import open from "open"
+import pkg from "../package.json"
+import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
+import { GitCaller } from "./analyzer/git-caller.server"
+import { log, setLogLevel } from "./analyzer/log.server"
+import { describeAsyncJob, getDirName } from "./analyzer/util.server"
+import { getPathFromRepoAndHead, semverCompare } from "./util"
 
 async function main() {
   const args = parseArgs()
@@ -79,7 +79,7 @@ for usage instructions.`)
           if (repoName) {
             const currentHead = await GitCaller._getRepositoryHead(options.path)
             return `/${getPathFromRepoAndHead(repoName, currentHead)}`
-          } else return ""
+          }return ""
         }
       },
       beforeMsg: "Checking for git repo",

@@ -1,11 +1,11 @@
+import { existsSync, promises as fs } from "fs"
+import os from "os"
+import { join, resolve } from "path"
+import { branchCompare, semverCompare } from "~/util"
 import { log } from "./log.server"
-import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
-import { resolve, join } from "path"
-import { promises as fs, existsSync } from "fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/util"
-import os from "os"
+import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -73,7 +73,7 @@ export class GitCaller {
 
     const gitFolder = join(repo, ".git")
     if (!existsSync(gitFolder)) {
-      throw Error("No git folder exists at " + gitFolder)
+      throw Error(`No git folder exists at ${gitFolder}`)
     }
     // Find file containing the branch head
 
@@ -244,9 +244,9 @@ export class GitCaller {
     while (next.value) {
       const groups = next.value.groups
       next = matches.next()
-      const hash: string = groups["hash"]
-      const ref_type: string = groups["ref_type"]
-      const path: string = groups["path"]
+      const hash: string = groups.hash
+      const ref_type: string = groups.ref_type
+      const path: string = groups.path
 
       switch (ref_type) {
         case "heads":

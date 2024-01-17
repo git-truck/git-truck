@@ -1,7 +1,7 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import type { MetricCache } from "./metrics"
-import { SpectrumTranslater } from "./metricUtils"
 import { hslToHex } from "../util"
+import { SpectrumTranslater } from "./metricUtils"
+import type { MetricCache } from "./metrics"
 
 export class CommitAmountTranslater {
   readonly translater: SpectrumTranslater

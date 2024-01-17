@@ -1,14 +1,14 @@
-import { useTransition, useState } from "react"
+import { useState, useTransition } from "react"
 import type { MouseEvent } from "react"
 
-import { useNavigation, useSubmit } from "@remix-run/react"
-import { useData } from "~/contexts/DataContext"
-import { getPathFromRepoAndHead } from "~/util"
-import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
-import { useMetrics } from "~/contexts/MetricContext"
-import { useKey } from "react-use"
+import { mdiAccountMultiple, mdiArrowUp } from "@mdi/js"
 import { Icon } from "@mdi/react"
-import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
+import { useNavigation, useSubmit } from "@remix-run/react"
+import { useKey } from "react-use"
+import { CheckboxWithLabel, CloseButton, LegendDot } from "~/components/util"
+import { useData } from "~/contexts/DataContext"
+import { useMetrics } from "~/contexts/MetricContext"
+import { getPathFromRepoAndHead } from "~/util"
 
 export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
@@ -22,9 +22,12 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   const [, startTransition] = useTransition()
 
   const flattedUnionedAuthors = authorUnions
-    .reduce((acc, union) => {
-      return [...acc, ...union]
-    }, [] as string[])
+    .reduce(
+      (acc, union) => {
+        return [...acc, ...union]
+      },
+      [] as string[]
+    )
     .sort(stringSorter)
 
   function ungroup(groupToUnGroup: number) {
