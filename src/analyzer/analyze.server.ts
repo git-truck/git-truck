@@ -1,4 +1,4 @@
-import { promises as fs } from "fs"
+import { promises as fs } from "node:fs"
 import type {
   GitBlobObject,
   GitCommitObject,
@@ -13,15 +13,15 @@ import { log, setLogLevel } from "./log.server"
 import { describeAsyncJob, writeRepoToFile, getDirName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { emptyGitCommitHash } from "./constants"
-import { resolve, isAbsolute, sep } from "path"
-import { performance } from "perf_hooks"
+import { resolve, isAbsolute, sep } from "node:path"
+import { performance } from "node:perf_hooks"
 import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
 import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
-import { exec } from "child_process"
+import { exec } from "node:child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
 
 let repoDir = "."
