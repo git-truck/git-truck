@@ -13,8 +13,9 @@ import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
 import { gitLogRegex, contribRegex } from "./constants"
-import { cpus } from "os"
+import { cpus } from "node:os"
 import { setAnalyzationStatus } from "./analyze.server"
+import { setFlagsFromString } from "node:v8"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
@@ -101,6 +102,7 @@ export let progress = 0
 export let totalCommitCount = Infinity
 
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
+  setFlagsFromString('--max-old-space-size=4096')
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)

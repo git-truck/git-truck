@@ -321,9 +321,8 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
   const authorDistributionExpandId = useId()
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
-    a[1] < b[1] ? 1 : -1
-  )
+  const contribDist = Object.entries(props.authors ?? {}).sort((a, b) => b[1] - a[1])
+  const contribSum = contribDist.reduce((acc, curr) => acc + curr[1], 0)
 
   const authorsAreCutoff = contribDist.length > authorCutoff + 1
   return (
@@ -339,8 +338,8 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
       <div className="grid grid-cols-[1fr,auto] gap-1">
         {authorsAreCutoff ? (
           <>
-            <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
-            <AuthorDistFragment show={!collapsed} items={contribDist.slice(authorCutoff)} />
+            <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} contribSum={contribSum} />
+            <AuthorDistFragment show={!collapsed} items={contribDist.slice(authorCutoff)} contribSum={contribSum} />
             {collapsed ? (
               <button
                 className="text-left text-xs opacity-70 hover:opacity-100"
@@ -353,7 +352,7 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
         ) : (
           <>
             {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
-              <AuthorDistFragment show={true} items={contribDist} />
+              <AuthorDistFragment show={true} items={contribDist} contribSum={contribSum} />
             ) : (
               <p>No authors found</p>
             )}
@@ -362,20 +361,6 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
       </div>
     </div>
   )
-}
-
-function makePercentResponsibilityDistribution(
-  unionedAuthors: Record<string, number> | undefined
-): Record<string, number> {
-  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
-  const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
-
-  const newAuthorsEntries = Object.entries(unionedAuthors).reduce((newAuthorOject, [author, contrib]) => {
-    const fraction: number = contrib / sum
-    return { ...newAuthorOject, [author]: fraction }
-  }, {})
-
-  return newAuthorsEntries
 }
 
 function hasZeroContributions(authors?: Record<string, number>) {

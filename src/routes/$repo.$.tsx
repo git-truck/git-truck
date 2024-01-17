@@ -33,6 +33,7 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
+import { Online } from "react-detect-offline";
 
 let invalidateCache = false
 
@@ -325,7 +326,9 @@ export default function Repo() {
                 showUnionAuthorsModal={showUnionAuthorsModal}
               />
               <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-              <FeedbackCard />
+              <Online>
+                <FeedbackCard />
+              </Online>
             </>
           ) : null}
         </aside>
