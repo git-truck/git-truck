@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import React, { useDeferredValue, memo, useEffect, useMemo, useRef, useState } from "react"
 import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
@@ -27,12 +27,30 @@ import {
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
-import { useOptions } from "../contexts/OptionsContext"
+import { RenderMethod, useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
 import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
+
+import * as THREE from "three"
+import { Canvas, useFrame, ThreeElements, Object3DNode, extend } from "@react-three/fiber"
+import { OrbitControls, OrthographicCamera } from "@react-three/drei"
+
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js"
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js"
+import myFont from "./Helvetiker.json"
+import { useSearchParams } from "@remix-run/react"
+import HierarchyChart from "./HierarchyChart"
+extend({ TextGeometry })
+
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    textGeometry: Object3DNode<TextGeometry, typeof TextGeometry>
+  }
+}
+const font = new FontLoader().parse(myFont)
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -45,7 +63,7 @@ export const Chart = memo(function Chart({
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { analyzerData } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, renderMethod } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -121,53 +139,95 @@ export const Chart = memo(function Chart({
         }
   }
 
-  return (
-    <div className="relative grid place-items-center overflow-hidden" ref={ref}>
-      <svg
-        key={`svg|${size.width}|${size.height}`}
-        className={clsx("grid h-full w-full place-items-center", {
-          "cursor-zoom-out": path.includes("/")
-        })}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => {
-          // Move up to parent
-          const parentPath = path.split("/").slice(0, -1).join("/")
-          // Check if parent is root
-          if (parentPath === "") setPath("/")
-          else setPath(parentPath)
-        }}
-      >
-        {nodes.map((d, i) => {
-          return (
-            <g
-              key={d.data.path}
-              className={clsx("transition-opacity hover:opacity-60", {
-                "cursor-pointer": i === 0,
-                "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path
-              })}
-              {...createGroupHandlers(d, i === 0)}
-            >
-              {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
-                <>
-                  <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
-                  {labelsVisible && (
-                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
-                      {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
-                    </NodeText>
-                  )}
-                </>
-              )}
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
+  if (chartType.startsWith("R3F")) {
+    return (
+      <div className="relative grid place-items-center overflow-hidden" ref={ref}>
+        <Canvas
+          key={`${chartType}|${size.width}|${size.height}`}
+          className={clsx("grid h-full w-full place-items-center", {
+            "cursor-zoom-out": path.includes("/")
+          })}
+          style={{
+            height: size.height,
+            width: size.width
+          }}
+          shadows={true}
+        >
+          {nodes.map((d, i) => {
+            return (
+              <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} canvas_size={size} />
+            )
+          })}
+          <ambientLight intensity={3} />
+          <pointLight position={[1000, 1000, 1000]} intensity={1000000} />
+          <OrthographicCamera makeDefault near={0} position={[0, 1000, 0]} />
+          <OrbitControls target={[0, 0, 0]} />
+        </Canvas>
+      </div>
+    )
+  } else if (renderMethod === RenderMethod.SVG) {
+    return (
+      <div className="relative grid place-items-center overflow-hidden" ref={ref}>
+        <svg
+          key={`svg|${size.width}|${size.height}`}
+          className={clsx("grid h-full w-full place-items-center", {
+            "cursor-zoom-out": path.includes("/")
+          })}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          onClick={() => {
+            // Move up to parent
+            const parentPath = path.split("/").slice(0, -1).join("/")
+            // Check if parent is root
+            if (parentPath === "") setPath("/")
+            else setPath(parentPath)
+          }}
+        >
+          {nodes.map((d, i) => {
+            return (
+              <g
+                key={d.data.path}
+                className={clsx("transition-opacity hover:opacity-60", {
+                  "cursor-pointer": i === 0,
+                  "cursor-zoom-in": i > 0 && isTree(d.data),
+                  "animate-blink": clickedObject?.path === d.data.path
+                })}
+                {...createGroupHandlers(d, i === 0)}
+              >
+                {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
+                  <>
+                    <Node canvas_size={size} key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+                    {labelsVisible && (
+                      <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
+                        {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                      </NodeText>
+                    )}
+                  </>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+      </div>  
+    )
+  } else {
+    return (
+      <div className="relative grid place-items-center overflow-hidden" ref={ref}>
+        <HierarchyChart nodes={nodes} size={size} />
+      </div>
+    )
+  }
 })
 
-function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
+function Node({
+  d,
+  isSearchMatch,
+  canvas_size
+}: {
+  d: CircleOrRectHiearchyNode
+  isSearchMatch: boolean
+  canvas_size: { width: number; height: number }
+}) {
   const [metricsData] = useMetrics()
   const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
 
@@ -191,6 +251,29 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
         rx: circleDatum.r,
         ry: circleDatum.r
       }
+    } else if (chartType === "R3F") {
+      const datum = d as HierarchyCircularNode<HydratedGitObject>
+      props = {
+        ...props,
+        x: datum.x - canvas_size.width / 2,
+        y: datum.y - canvas_size.height / 2,
+        width: datum.r * 2,
+        height: datum.r * 2,
+        rx: datum.r,
+        ry: datum.r
+      }
+    } else if (chartType === "R3F2") {
+      const datum = d as HierarchyRectangularNode<HydratedGitObject>
+
+      props = {
+        ...props,
+        x: datum.x0 + (datum.x1 - datum.x0) / 2 - canvas_size.width / 2,
+        y: datum.y0 + (datum.y1 - datum.y0) / 2 - canvas_size.height / 2,
+        width: datum.x1 - datum.x0,
+        height: datum.y1 - datum.y0,
+        rx: treemapNodeBorderRadius,
+        ry: treemapNodeBorderRadius
+      }
     } else {
       const datum = d as HierarchyRectangularNode<HydratedGitObject>
 
@@ -205,19 +288,117 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       }
     }
     return props
-  }, [d, isSearchMatch, metricsData, authorshipType, metricType, chartType])
+  }, [isSearchMatch, d, metricsData, authorshipType, metricType, chartType, canvas_size])
 
-  return (
-    <rect
-      {...commonProps}
-      className={clsx({
-        "cursor-pointer": isBlob(d.data),
-        "transition-all duration-500 ease-in-out": transitionsEnabled,
-        "animate-stroke-pulse": isSearchMatch,
-        "stroke-black/20": isTree(d.data)
-      })}
-    />
-  )
+  const [searchParams, setSearchParams] = useSearchParams()
+  // /repository/branch?normal
+  const normalMesh = searchParams.get("normal") !== null
+
+  if (chartType === "R3F") {
+    if (normalMesh) {
+      return (
+        <>
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.rx as number, 100, commonProps.rx as number]}
+            rotation={[0, 0, 0]}
+          >
+            <cylinderGeometry />
+            <meshNormalMaterial />
+          </mesh>
+        </>
+      )
+    } else {
+      return (
+        <>
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.rx as number, 100, commonProps.rx as number]}
+            rotation={[0, 0, 0]}
+          >
+            <cylinderGeometry />
+            {isTree(d.data) ? <meshBasicMaterial color={"black"} /> : <meshLambertMaterial color={commonProps.fill} />}
+          </mesh>
+          {isTree(d.data) ? (
+            <mesh
+              position={[commonProps.x as number, d.depth * 100 + 1, commonProps.y as number]}
+              scale={[(commonProps.rx as number) - 1, 100, (commonProps.rx as number) - 1]}
+              rotation={[0, 0, 0]}
+            >
+              <cylinderGeometry />
+              <meshBasicMaterial color={"white"} toneMapped={false} />
+            </mesh>
+          ) : null}
+        </>
+      )
+    }
+  } else if (chartType === "R3F2") {
+    const textIsTooLong = (text: string) => (commonProps.width as number) < text.length * estimatedLetterWidth
+    if (normalMesh) {
+      return (
+        <mesh
+          position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+          scale={[commonProps.width as number, 100, commonProps.height as number]}
+          rotation={[0, 0, 0]}
+        >
+          <boxGeometry />
+          <meshNormalMaterial />
+        </mesh>
+      )
+    } else {
+      return (
+        <>
+          {!textIsTooLong(d.data.name) ? (
+            <mesh
+              position={[
+                (commonProps.x as number) - (commonProps.width as number) / 2 + 5,
+                d.depth * 100 + 100,
+                (commonProps.y as number) - (commonProps.height as number) / 2 + 15
+              ]}
+              rotation={[-3.14 / 2, 0, 0]}
+            >
+              <meshBasicMaterial toneMapped={false} attach="material" color={"black"} />
+              <textGeometry args={[d.data.name, { font, size: 10, height: 1 }]} />
+            </mesh>
+          ) : null}
+          <mesh
+            position={[commonProps.x as number, d.depth * 100, commonProps.y as number]}
+            scale={[commonProps.width as number, 100, commonProps.height as number]}
+            rotation={[0, 0, 0]}
+          >
+            <boxGeometry />
+            {isTree(d.data) ? (
+              <meshBasicMaterial color={"black"} toneMapped={false} />
+            ) : (
+              <meshBasicMaterial color={commonProps.fill} />
+            )}
+          </mesh>
+          {isTree(d.data) ? (
+            <mesh
+              position={[commonProps.x as number, d.depth * 100 + 1, commonProps.y as number]}
+              scale={[(commonProps.width as number) - 1, 100, (commonProps.height as number) - 1]}
+              rotation={[0, 0, 0]}
+            >
+              <boxGeometry />
+              <meshBasicMaterial color={"white"} toneMapped={false} />
+            </mesh>
+          ) : null}
+        </>
+      )
+    }
+  } else {
+    return (
+      <rect
+        {...commonProps}
+        className={clsx({
+          "cursor-pointer": isBlob(d.data),
+          "transition-all duration-500 ease-in-out": transitionsEnabled,
+          "animate-stroke-pulse": isSearchMatch,
+          "stroke-black/20": isTree(d.data)
+        })}
+      />
+    )
+  }
 }
 
 function collapseText({
@@ -394,6 +575,7 @@ function createPartitionedHiearchy(
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
+    case "R3F2":
     case "TREE_MAP":
       const treeMapPartition = treemap<HydratedGitObject>()
         .tile(treemapBinary)
@@ -406,11 +588,12 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
+        return cast.x1 - cast.x0 >= cutOff && cast.y1 - cast.y0 >= cutOff
       })
 
       return tmPartition
 
+    case "R3F":
     case "BUBBLE_CHART":
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])

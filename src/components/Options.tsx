@@ -1,8 +1,8 @@
 import type { MetricType } from "../metrics/metrics"
 import { Metric } from "../metrics/metrics"
 import { EnumSelect } from "./EnumSelect"
-import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
-import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
+import type { ChartType, HierarchyType, RenderMethodType } from "../contexts/OptionsContext"
+import { Chart, Hierarchy, RenderMethod, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { memo, useTransition } from "react"
@@ -54,6 +54,7 @@ export const Options = memo(function Options() {
     hierarchyType,
     transitionsEnabled,
     renderCutoff,
+    renderMethod,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,
@@ -62,7 +63,8 @@ export const Options = memo(function Options() {
     setDepthType,
     setHierarchyType,
     setSizeMetricType,
-    setRenderCutoff
+    setRenderCutoff,
+    setRenderMethod
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
@@ -89,7 +91,15 @@ export const Options = memo(function Options() {
 
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
-    TREE_MAP: mdiChartTree
+    TREE_MAP: mdiChartTree,
+    R3F: mdiChartBubble,
+    R3F2: mdiChartTree,
+  }
+
+  const renderMethodIcons: Record<RenderMethodType, string> = {
+    SVG: mdiChartBubble,
+    CANVAS: mdiChartBubble,
+    WEBGL: mdiChartBubble
   }
 
   const hiearchyIcons: Record<HierarchyType, string> = {
@@ -127,6 +137,22 @@ export const Options = memo(function Options() {
             iconMap={chartTypeIcons}
           />
         </fieldset>
+        { !chartType.startsWith("R3F") ?
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiPuzzle} size="1.25em" />
+            Render method
+          </legend>
+          <EnumSelect
+            enum={RenderMethod}
+            defaultValue={renderMethod}
+            onChange={(newRenderMethod: RenderMethodType) => setRenderMethod(newRenderMethod)}
+            iconMap={renderMethodIcons}
+            />
+        </fieldset>
+        : null
+        }
+
         {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">

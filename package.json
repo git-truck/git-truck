@@ -47,6 +47,7 @@
     "@types/byte-size": "^8.1.1",
     "@types/color-convert": "^2.0.2",
     "@types/compression": "^1.7.5",
+    "@types/d3": "^7.4.3",
     "@types/d3-hierarchy": "^3.1.5",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.7",
@@ -56,6 +57,7 @@
     "@types/react-detect-offline": "^2.4.5",
     "@types/react-dom": "^18.2.14",
     "@types/semver": "^7.5.4",
+    "@types/three": "^0.158.3",
     "@types/yargs": "^17.0.29",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
@@ -142,5 +144,14 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "dependencies": {
+    "@pixi/react": "^7.1.1",
+    "@pixi/react-animated": "^7.1.1",
+    "@react-three/drei": "^9.88.17",
+    "@react-three/fiber": "^8.15.11",
+    "d3": "^7.8.5",
+    "pixi.js": "^7.3.2",
+    "three": "^0.158.0"
+  }
 }

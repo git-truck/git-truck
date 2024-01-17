@@ -10,6 +10,28 @@ export function diagonal(d: HierarchyRectangularNode<unknown>) {
   return Math.sqrt(dx ** 2 + dy ** 2)
 }
 
+export function brighten(hexColor: string) {
+
+  // Parse the hex color into RGB components
+  let r: number = parseInt(hexColor.slice(1, 3), 16);
+  let g: number = parseInt(hexColor.slice(3, 5), 16);
+  let b: number = parseInt(hexColor.slice(5, 7), 16);
+
+  // Adjust each RGB component based on the brightness factor
+  r = Math.round(r + (255 - r) / 2);
+  g = Math.round(g + (255 - g) / 2);
+  b = Math.round(b + (255 - b) / 2);
+
+  // Ensure the RGB values are within the valid range (0 to 255)
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+
+  // Convert the adjusted RGB values back to hex and return the result
+  const resultColor = `#${(r).toString(16).padStart(2, '0')}${(g).toString(16).padStart(2, '0')}${(b).toString(16).padStart(2, '0')}` as `#${string}`
+  return resultColor;
+}
+
 export function dateFormatLong(epochTime?: number) {
   if (!epochTime) return "Invalid date"
   return new Date(epochTime * 1000).toLocaleString("en-gb", {

@@ -4,7 +4,7 @@ import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import type { ChartType, HierarchyType, OptionsContextType } from "../contexts/OptionsContext"
+import type { ChartType, HierarchyType, OptionsContextType, RenderMethodType } from "../contexts/OptionsContext"
 import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
@@ -108,6 +108,11 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
+        })),
+      setRenderMethod: (newRenderMethod: RenderMethodType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          renderMethod: newRenderMethod
         })),
     }),
     [options]

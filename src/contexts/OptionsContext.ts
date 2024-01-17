@@ -7,10 +7,19 @@ import { Depth, type DepthType } from "~/metrics/chartDepth"
 
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
-  TREE_MAP: "Tree map"
+  TREE_MAP: "Tree map",
+  R3F: "r3f",
+  R3F2: "r3f2",
 }
 
 export type ChartType = keyof typeof Chart
+
+export const RenderMethod = {
+  SVG: "SVG",
+  WEBGL: "WebGL"
+}
+
+export type RenderMethodType = keyof typeof RenderMethod
 
 export const Hierarchy = {
   NESTED: "Nested",
@@ -30,6 +39,7 @@ export type Options = {
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
+  renderMethod: RenderMethodType
 }
 
 export type OptionsContextType = Options & {
@@ -42,6 +52,7 @@ export type OptionsContextType = Options & {
   setDepthType: (depthType: DepthType) => void
   setHierarchyType: (hierarchyType: HierarchyType) => void
   setRenderCutoff: (renderCutoff: number) => void
+  setRenderMethod: (renderMethod: RenderMethodType) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -64,7 +75,8 @@ const defaultOptions: Options = {
   authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   transitionsEnabled: true,
   labelsVisible: true,
-  renderCutoff: 2
+  renderCutoff: 2,
+  renderMethod: Object.keys(RenderMethod)[0] as RenderMethodType,
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -94,6 +106,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setLabelsVisible: () => {
       throw new Error("No labelsVisibleSetter provided")
+    },
+    setRenderMethod: () => {
+      throw new Error("No renderMethodSetter provided")
     },
     setRenderCutoff: () => {
       throw new Error("No renderCutoffSetter provided")

@@ -6,4 +6,5 @@ export default {
   serverModuleFormat: "cjs",
   serverPlatform: "node",
   serverMinify: process.env.NODE_ENV === "production",
+  browserNodeBuiltinsPolyfill: { modules: { url: true }}
 }
