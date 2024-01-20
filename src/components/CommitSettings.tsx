@@ -17,12 +17,12 @@ import type { CommitSortingMethodsType, CommitSortingOrdersType } from "~/contex
 import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 import { useId } from "react"
 
-const sortingMethodsIcons: Record<SortingMethodsType, string> = {
+const sortingMethodsIcons: Record<CommitSortingMethodsType, string> = {
   DATE: mdiCalendarRange,
   AUTHOR: mdiHuman
 }
 
-const sortingOrdersIcons: Record<CommitSortingOrdersType, string> = (isDate: boolean) => {
+function getSortingOrdersIcons(isDate: boolean): Record<CommitSortingOrdersType, string> {
   return {
     ASCENDING: isDate ? mdiSortCalendarAscending : mdiOrderAlphabeticalAscending,
     DESCENDING: isDate ? mdiSortCalendarDescending : mdiOrderAlphabeticalDescending
@@ -71,7 +71,7 @@ export function CommitSettings() {
             onChange={(sortingOrder: CommitSortingOrdersType) => {
               return setCommitSortingOrdersType(sortingOrder)
             }}
-            iconMap={sortingOrdersIcons(isDateSortingMethod)}
+            iconMap={getSortingOrdersIcons(isDateSortingMethod)}
           />
         </fieldset>
         <fieldset className="rounded-lg border p-2">
