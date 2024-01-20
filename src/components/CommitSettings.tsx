@@ -9,27 +9,32 @@ import {
   mdiOrderAlphabeticalDescending,
   mdiOrderBoolAscending,
   mdiSort,
+  mdiSortCalendarAscending,
+  mdiSortCalendarDescending,
   mdiUpdate
 } from "@mdi/js"
-import type { SortingMethodsType, SortingOrdersType } from "~/contexts/OptionsContext"
-import { SortingMethods, SortingOrders } from "~/contexts/OptionsContext"
+import type { CommitSortingMethodsType, CommitSortingOrdersType } from "~/contexts/OptionsContext"
+import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 
 const sortingMethodsIcons: Record<SortingMethodsType, string> = {
   DATE: mdiCalendarRange,
   AUTHOR: mdiHuman
 }
 
-const sortingOrdersIcons: Record<SortingOrdersType, string> = {
-  ASCENDING: mdiOrderAlphabeticalAscending,
-  DESCENDING: mdiOrderAlphabeticalDescending
+const sortingOrdersIcons: Record<CommitSortingOrdersType, string> = (isDate: boolean) => {
+  return {
+    ASCENDING: isDate ? mdiSortCalendarAscending : mdiOrderAlphabeticalAscending,
+    DESCENDING: isDate ? mdiSortCalendarDescending : mdiOrderAlphabeticalDescending
+  }
 }
 
 export function CommitSettings() {
-  const sortingItems: Array<AccordionData> = new Array<AccordionData>()
-  const defaultSortingMethod = Object.keys(SortingMethods)[0] as SortingMethodsType
-  const defaultSortingOrder = Object.keys(SortingOrders(true))[0] as SortingOrdersType
+  const items: Array<AccordionData> = new Array<AccordionData>()
+  const { commitSortingMethodsType, commitSortingOrdersType, setCommitSortingMethodsType, setCommitSortingOrdersType } =
+    useOptions()
+  const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
 
-  sortingItems.push({
+  items.push({
     title: "Sorting and filtering",
     content: (
       <>
@@ -40,9 +45,9 @@ export function CommitSettings() {
           </legend>
           <EnumSelect
             enum={SortingMethods}
-            defaultValue={defaultSortingMethod}
-            onChange={(hiearchyType: SortingMethodsType) => {
-              console.log(hiearchyType)
+            defaultValue={commitSortingMethodsType}
+            onChange={(sortingMethodType: CommitSortingMethodsType) => {
+              return setCommitSortingMethodsType(sortingMethodType)
             }}
             iconMap={sortingMethodsIcons}
           />
@@ -53,12 +58,12 @@ export function CommitSettings() {
             Sorting order
           </legend>
           <EnumSelect
-            enum={SortingOrders(true)}
-            defaultValue={defaultSortingOrder}
-            onChange={(sortingOrder: SortingOrdersType) => {
-              console.log(sortingOrder)
+            enum={SortingOrders(isDateSortingMethod)}
+            defaultValue={commitSortingOrdersType}
+            onChange={(sortingOrder: CommitSortingOrdersType) => {
+              return setCommitSortingOrdersType(sortingOrder)
             }}
-            iconMap={sortingOrdersIcons}
+            iconMap={sortingOrdersIcons(isDateSortingMethod)}
           />
         </fieldset>
         <fieldset className="rounded-lg border p-2">
@@ -79,11 +84,11 @@ export function CommitSettings() {
 
   return (
     <Accordion
-      key={sortingItems.length > 0 ? sortingItems[0].title : new Date().toDateString()}
+      key={items.length > 0 ? items[0].title : new Date().toDateString()}
       titleLabels={true}
       multipleOpen={false}
       openByDefault={false}
-      items={sortingItems}
+      items={items}
     />
   )
 }
