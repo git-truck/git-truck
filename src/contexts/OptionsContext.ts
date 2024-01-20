@@ -40,6 +40,7 @@ export type Options = {
   hierarchyType: HierarchyType
   commitSortingMethodsType: CommitSortingMethodsType
   commitSortingOrdersType: CommitSortingOrdersType
+  commitSearch: string
   sizeMetric: SizeMetricType
   authorshipType: AuthorshipType
   transitionsEnabled: boolean
@@ -58,6 +59,7 @@ export type OptionsContextType = Options & {
   setHierarchyType: (hierarchyType: HierarchyType) => void
   setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) => void
   setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
+  setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
 }
 
@@ -82,6 +84,7 @@ const defaultOptions: Options = {
   commitSortingMethodsType: Object.keys(SortingMethods)[0] as CommitSortingMethodsType,
   // The parameter value is based on default sorting method - date (true) or author (false)
   commitSortingOrdersType: Object.keys(SortingOrders(true))[0] as CommitSortingOrdersType,
+  commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
   renderCutoff: 2
@@ -114,6 +117,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setCommitSortingOrdersType: () => {
       throw new Error("No CommitSortingOrdersTypeSetter provided")
+    },
+    setCommitSearch: () => {
+      throw new Error("No CommitSearchSetter provided")
     },
     setTransitionsEnabled: () => {
       throw new Error("No transitionsEnabledSetter provided")

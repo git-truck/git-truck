@@ -93,6 +93,11 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           commitSortingOrdersType
         })),
+      setCommitSearch: (commitSearch: string) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSearch
+        })),
       setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),

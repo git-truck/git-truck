@@ -4,17 +4,18 @@ import Accordion from "./accordion/Accordion"
 import { EnumSelect } from "./EnumSelect"
 import {
   mdiCalendarRange,
+  mdiChat,
   mdiHuman,
   mdiOrderAlphabeticalAscending,
   mdiOrderAlphabeticalDescending,
   mdiOrderBoolAscending,
   mdiSort,
   mdiSortCalendarAscending,
-  mdiSortCalendarDescending,
-  mdiUpdate
+  mdiSortCalendarDescending
 } from "@mdi/js"
 import type { CommitSortingMethodsType, CommitSortingOrdersType } from "~/contexts/OptionsContext"
 import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
+import { useId } from "react"
 
 const sortingMethodsIcons: Record<SortingMethodsType, string> = {
   DATE: mdiCalendarRange,
@@ -29,9 +30,16 @@ const sortingOrdersIcons: Record<CommitSortingOrdersType, string> = (isDate: boo
 }
 
 export function CommitSettings() {
+  const id = useId()
   const items: Array<AccordionData> = new Array<AccordionData>()
-  const { commitSortingMethodsType, commitSortingOrdersType, setCommitSortingMethodsType, setCommitSortingOrdersType } =
-    useOptions()
+  const {
+    commitSearch,
+    commitSortingMethodsType,
+    commitSortingOrdersType,
+    setCommitSearch,
+    setCommitSortingMethodsType,
+    setCommitSortingOrdersType
+  } = useOptions()
   const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
 
   items.push({
@@ -68,15 +76,20 @@ export function CommitSettings() {
         </fieldset>
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiUpdate} size="1.25em" />
-            Dates
+            <Icon path={mdiChat} size="1.25em" />
+            Part of the message
           </legend>
-          <p className="mb-1">
-            From: <input type="date" />
-          </p>
-          <p>
-            To: <input type="date" />
-          </p>
+          <input
+            className="input"
+            id={id}
+            type="search"
+            placeholder="Search for a commit..."
+            value={commitSearch}
+            onChange={(event) => {
+              const value = event.target.value
+              setCommitSearch(value)
+            }}
+          />
         </fieldset>
       </>
     )

@@ -91,7 +91,7 @@ export function CommitHistory() {
   const commitIncrement = 5
   const { clickedObject } = useClickedObject()
   const fetcher = useFetcher()
-  const { commitSortingMethodsType } = useOptions()
+  const { commitSortingMethodsType, commitSearch } = useOptions()
 
   function requestCommits(index: number, commitHashes?: string[]) {
     const searchParams = new URLSearchParams()
@@ -138,7 +138,9 @@ export function CommitHistory() {
 
   const footerText = useMemo<string>(() => {
     if (!clickedObject) return ""
-    return `(${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${totalCommitHashes.length} shown)`
+    return `(${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
+      totalCommitHashes.length
+    } loaded)`
   }, [clickedObject, totalCommitHashes, commitIndex])
 
   if (!clickedObject) return null
@@ -159,7 +161,14 @@ export function CommitHistory() {
   return (
     <>
       <div>
-        <CommitDistFragment items={commits} sortBy={commitSortingMethodsType} />
+        <CommitDistFragment
+          items={
+            commitSearch != ""
+              ? commits.filter((commit: GitLogEntry) => commit.message.includes(commitSearch))
+              : commits
+          }
+          sortBy={commitSortingMethodsType}
+        />
 
         {fetcher.state === "idle" ? (
           commitIndex + commitIncrement < totalCommitHashes.length ? (
