@@ -16,8 +16,22 @@ export const Hierarchy = {
   NESTED: "Nested",
   FLAT: "Flat"
 }
-
 export type HierarchyType = keyof typeof Hierarchy
+
+export const SortingMethods = {
+  DATE: "By date",
+  AUTHOR: "By author"
+}
+export type SortingMethodsType = keyof typeof SortingMethods
+
+export const SortingOrders = (isDate: boolean) => {
+  return {
+    ASCENDING: isDate ? "Older first" : "Ascending",
+    DESCENDING: isDate ? "Latest first" : "Descending"
+  }
+}
+
+export type SortingOrdersType = keyof typeof SortingOrders
 
 export type Options = {
   hasLoadedSavedOptions: boolean

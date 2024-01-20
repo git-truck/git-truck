@@ -8,17 +8,16 @@ import Accordion from "./accordion/Accordion"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
-
-type SortCommitsMethods = "date" | "author"
+import type { SortingMethodsType } from "~/contexts/OptionsContext"
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
-  sortBy?: SortCommitsMethods
+  sortBy?: SortingMethodsType
   handleOnClick?: (commit: GitLogEntry) => void
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
-  const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
+  const sortMethod: SortingMethodsType = props.sortBy !== undefined ? props.sortBy : "DATE"
 
   const cleanGroupItems: { [key: string]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
 
@@ -131,11 +130,9 @@ export function CommitHistory() {
     }
   }, [fetcher.data, fetcher.state])
 
-  const headerText = useMemo<string>(() => {
+  const footerText = useMemo<string>(() => {
     if (!clickedObject) return ""
-    return `Commit history (${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
-      totalCommitHashes.length
-    } shown)`
+    return `(${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${totalCommitHashes.length} shown)`
   }, [clickedObject, totalCommitHashes, commitIndex])
 
   if (!clickedObject) return null
@@ -155,11 +152,6 @@ export function CommitHistory() {
 
   return (
     <>
-      <div className="flex cursor-pointer justify-between hover:opacity-70">
-        <label className="label grow">
-          <h3 className="font-bold">{headerText}</h3>
-        </label>
-      </div>
       <div>
         <CommitDistFragment items={commits} />
 
@@ -169,9 +161,11 @@ export function CommitHistory() {
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
               className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
             >
-              Load more commits
+              Load more commits {footerText}
             </span>
-          ) : null
+          ) : (
+            <span className="whitespace-pre text-xs font-medium opacity-70">{footerText}</span>
+          )
         ) : (
           <h3>Loading commits...</h3>
         )}
