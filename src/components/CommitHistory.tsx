@@ -164,7 +164,7 @@ export function CommitHistory() {
         <CommitDistFragment
           items={
             commitSearch != ""
-              ? commits.filter((commit: GitLogEntry) => commit.message.includes(commitSearch))
+              ? commits.filter((commit: GitLogEntry) => commit.message.toLowerCase().includes(commitSearch.toLowerCase()))
               : commits
           }
           sortBy={commitSortingMethodsType}
