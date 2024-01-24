@@ -4,7 +4,13 @@ import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import type { ChartType, HierarchyType, OptionsContextType } from "../contexts/OptionsContext"
+import type {
+  ChartType,
+  CommitSortingMethodsType,
+  CommitSortingOrdersType,
+  HierarchyType,
+  OptionsContextType
+} from "../contexts/OptionsContext"
 import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
@@ -77,6 +83,21 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           hierarchyType
         })),
+      setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSortingMethodsType
+        })),
+      setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSortingOrdersType
+        })),
+      setCommitSearch: (commitSearch: string) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSearch
+        })),
       setAuthorshipType: (authorshipType: AuthorshipType) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
@@ -108,7 +129,7 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
-        })),
+        }))
     }),
     [options]
   )

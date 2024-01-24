@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
-import { Fragment, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { dateFormatLong } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion"
@@ -8,17 +8,21 @@ import Accordion from "./accordion/Accordion"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
-
-type SortCommitsMethods = "date" | "author"
+import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
+import type { CommitSortingMethodsType } from "~/contexts/OptionsContext"
 
 interface CommitDistFragProps {
   items: GitLogEntry[]
-  sortBy?: SortCommitsMethods
+  sortBy?: CommitSortingMethodsType
   handleOnClick?: (commit: GitLogEntry) => void
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
-  const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
+  const sortMethod: CommitSortingMethodsType = props.sortBy !== undefined ? props.sortBy : "DATE"
+  const { commitSortingOrdersType, commitSortingMethodsType } = useOptions()
+  const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
+  const isDefaultSortingOrdersSelected: boolean =
+    commitSortingOrdersType == Object.keys(SortingOrders(isDateSortingMethod))[0]
 
   const cleanGroupItems: { [key: string]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
 
@@ -52,7 +56,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       titleLabels={true}
       multipleOpen={true}
       openByDefault={true}
-      items={items}
+      items={isDefaultSortingOrdersSelected ? items : items.reverse()}
     />
   )
 }
@@ -87,6 +91,7 @@ export function CommitHistory() {
   const commitIncrement = 5
   const { clickedObject } = useClickedObject()
   const fetcher = useFetcher()
+  const { commitSortingMethodsType, commitSearch } = useOptions()
 
   function requestCommits(index: number, commitHashes?: string[]) {
     const searchParams = new URLSearchParams()
@@ -131,11 +136,11 @@ export function CommitHistory() {
     }
   }, [fetcher.data, fetcher.state])
 
-  const headerText = useMemo<string>(() => {
+  const footerText = useMemo<string>(() => {
     if (!clickedObject) return ""
-    return `Commit history (${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
+    return `(${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
       totalCommitHashes.length
-    } shown)`
+    } loaded)`
   }, [clickedObject, totalCommitHashes, commitIndex])
 
   if (!clickedObject) return null
@@ -155,13 +160,15 @@ export function CommitHistory() {
 
   return (
     <>
-      <div className="flex cursor-pointer justify-between hover:opacity-70">
-        <label className="label grow">
-          <h3 className="font-bold">{headerText}</h3>
-        </label>
-      </div>
       <div>
-        <CommitDistFragment items={commits} />
+        <CommitDistFragment
+          items={
+            commitSearch != ""
+              ? commits.filter((commit: GitLogEntry) => commit.message.toLowerCase().includes(commitSearch.toLowerCase()))
+              : commits
+          }
+          sortBy={commitSortingMethodsType}
+        />
 
         {fetcher.state === "idle" ? (
           commitIndex + commitIncrement < totalCommitHashes.length ? (
@@ -169,9 +176,11 @@ export function CommitHistory() {
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
               className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
             >
-              Load more commits
+              Load more commits {footerText}
             </span>
-          ) : null
+          ) : (
+            <span className="whitespace-pre text-xs font-medium opacity-70">{footerText}</span>
+          )
         ) : (
           <h3>Loading commits...</h3>
         )}
@@ -180,10 +189,11 @@ export function CommitHistory() {
   )
 }
 
-function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [key: string]: GitLogEntry[] } {
+function sortCommits(items: GitLogEntry[], method: CommitSortingMethodsType): { [key: string]: GitLogEntry[] } {
   const cleanGroupItems: { [key: string]: GitLogEntry[] } = {}
   switch (method) {
-    case "author":
+    // case AUTHOR
+    case Object.keys(SortingMethods)[1]:
       for (const commit of items) {
         const author: string = commit.author
         if (!cleanGroupItems[author]) {
@@ -192,7 +202,8 @@ function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [key: 
         cleanGroupItems[author].push(commit)
       }
       break
-    case "date":
+    // case DATE
+    case Object.keys(SortingMethods)[0]:
     default:
       for (const commit of items) {
         const date: string = dateFormatLong(commit.time)
