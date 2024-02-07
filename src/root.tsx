@@ -12,7 +12,7 @@ import {
 } from "@remix-run/react"
 
 import varsStyles from "~/styles/vars.css"
-import indexStyles from "~/styles/index.css"
+import indexStyles from "~/styles/animations.css"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
 
@@ -57,7 +57,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="text-gray-600">
+      <body className="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300">
         <Outlet />
         <ScrollRestoration />
         <Scripts />

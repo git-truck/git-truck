@@ -1,4 +1,4 @@
-import { useTransition, useState } from "react"
+import { useTransition, useState, useRef, useEffect } from "react"
 import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
@@ -7,8 +7,9 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useKey } from "react-use"
 import { Icon } from "@mdi/react"
 import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
+import { createPortal } from "react-dom"
 
-export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
   const submit = useSubmit()
   const { authors } = analyzerData
@@ -18,6 +19,19 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   const navigationData = useNavigation()
   const [, authorColors] = useMetrics()
   const [, startTransition] = useTransition()
+  const ref = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    if (!ref.current) {
+      return
+    }
+
+    if (open) {
+      ref.current.showModal()
+      return
+    }
+    ref.current.close()
+  }, [open])
 
   const flattedUnionedAuthors = authorUnions
     .reduce((acc, union) => {
@@ -85,17 +99,16 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
 
   const getColorFromDisplayName = (displayName: string) => authorColors.get(displayName) ?? "#333"
 
-  if (!visible) return null
+  if (!open) return null
 
   const ungroupedAuthorsMessage =
     ungroupedAuthorsSorted.length === 0
       ? "All detected authors have been grouped"
       : "Select the authors that you know are the same person"
 
-  const groupedAuthorsMessage = authorUnions.length === 0 ? "No authors have been grouped yet" : ""
-
-  const ungroupedAuthersEntries = ungroupedAuthorsSorted
-    .filter((author) => author.toLowerCase().includes(filter.toLowerCase()))
+  const ungroupedAuthorsFiltered = ungroupedAuthorsSorted
+  .filter((author) => author.toLowerCase().includes(filter.toLowerCase()))
+  const ungroupedAuthorsEntries = ungroupedAuthorsFiltered
     .map((author) => (
       <CheckboxWithLabel
         className="hover:opacity-70"
@@ -146,78 +159,103 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     )
   })
 
-  return (
-    <div className="fixed inset-0 z-10 grid bg-black/50 p-2">
-      <div className="card relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
-        <h2 className="col-span-2 text-2xl">Group authors</h2>
+  return createPortal(
+    <dialog
+      ref={ref}
+      aria-modal
+      onClick={(evt) => {
+        if (evt.currentTarget !== evt.target) {
+          return
+        }
+        onClose()
+      }}
+      className="z-10 m-auto flex h-full flex-col items-start bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
+    >
+      <div className="card m-auto grid h-full w-max max-w-screen-lg grow grid-cols-[1fr,1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden px-4 shadow">
+        <h2 className="text-2xl">Group authors</h2>
+        <CloseButton absolute={false} className="justify-self-end" onClick={onClose} />
 
-        <h3 className="text-lg font-bold">Ungrouped authors</h3>
+        <h3 className="text-lg font-bold">Ungrouped authors ({ungroupedAuthorsSorted.length})</h3>
+        <h3 className="text-lg font-bold">Grouped authors</h3>
 
-        {ungroupedAuthorsSorted.length > 0 ? (
-          <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
+          <button
+            className="btn btn--primary justify-self-end"
+            onClick={groupSelectedAuthors}
+            title="Group the selected authors"
+            disabled={disabled || selectedAuthors.length === 0}
+          >
+            <Icon path={mdiAccountMultiple} size={1} />
+            Create group
+          </button>
+        </div>
+        <div className="mr-6 flex justify-end gap-4">
+          <button
+            className="btn btn--danger"
+            disabled={disabled || authorUnions.length === 0}
+            onClick={() => {
+              if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
+            }}
+          >
+            Ungroup all
+          </button>
+        </div>
+
+        <div className="flex gap-2 h-min min-h-0 flex-col overflow-y-auto rounded-md bg-white p-4 shadow dark:bg-gray-700">
+          <div className="flex gap-2">
             <input
-              className="input"
+              className="input min-w-0"
               type="search"
               placeholder="Filter..."
+              disabled={ungroupedAuthorsSorted.length === 0}
               onChange={(e) => startTransition(() => setFilter(e.target.value))}
             />
             <button
               disabled={disabled || selectedAuthors.length === 0}
               onClick={() => setSelectedAuthors([])}
-              className="btn flex-grow"
+              className="btn btn--outlined w-max flex-grow"
+              title="Clear selection"
             >
               Clear
             </button>
             <button
-              className="btn btn--primary"
-              onClick={groupSelectedAuthors}
-              title="Group the selected authors"
-              disabled={disabled || selectedAuthors.length === 0}
+              disabled={ungroupedAuthorsSorted.length === 0}
+              onClick={() =>
+                selectedAuthors.length === ungroupedAuthorsFiltered.length
+                  ? setSelectedAuthors([])
+                  : setSelectedAuthors(ungroupedAuthorsFiltered)
+              }
+              className="btn btn--outlined w-max flex-grow"
+              title="Clear selection"
             >
-              <Icon path={mdiAccountMultiple} size={1} />
-              Group
+              {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
             </button>
           </div>
-        ) : (
-          <div />
-        )}
-        <p>{ungroupedAuthorsMessage}</p>
-
-        <div className="min-h-0 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">{ungroupedAuthersEntries}</div>
-
-        <div />
-
-        <h3 className="text-lg font-bold">Grouped authors</h3>
-        <div className="mr-6 flex justify-end gap-4">
-          {authorUnions.length > 0 ? (
-            <button
-              className="btn btn--danger"
-              disabled={disabled}
-              onClick={() => {
-                if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
-              }}
-            >
-              Ungroup all
-            </button>
+          {ungroupedAuthorsEntries.length > 0 ? (
+            ungroupedAuthorsEntries
           ) : (
-            <div />
+            <p className="place-self-center">
+              {filter.length > 0 ? "No authors found" : "All authors have been grouped"}
+            </p>
           )}
         </div>
-        <p>{groupedAuthorsMessage}</p>
-
-        <div className="flex flex-col gap-4 overflow-y-auto rounded-md bg-slate-50 p-4 shadow-inner">
-          {authorUnions.length > 0 ? groupedAuthorsEntries : null}
+        <div className="flex h-min min-h-0 flex-col gap-4 overflow-y-auto rounded-md bg-white p-4 shadow dark:bg-gray-700">
+          {authorUnions.length > 0 ? (
+            groupedAuthorsEntries
+          ) : (
+            <p className="place-self-center">No authors have been grouped yet</p>
+          )}
         </div>
 
-        <div className="mr-6 flex justify-end gap-4">
-          <button className="btn" onClick={onClose}>
+        <div className="col-span-2 mr-6 grid w-full grid-cols-2 gap-4">
+          <p>{ungroupedAuthorsMessage}</p>
+          <button className="btn btn--primary justify-self-end" onClick={onClose}>
             Done
           </button>
         </div>
-
-        <CloseButton onClick={onClose} />
       </div>
-    </div>
+    </dialog>,
+    document.body
   )
 
   function AliasEntry({

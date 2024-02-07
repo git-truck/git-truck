@@ -1,5 +1,5 @@
 {
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}",
   "editor.defaultFormatter": "esbenp.prettier-vscode",

@@ -23,7 +23,7 @@ export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
           })}
           onClick={() => props.onChange(key)}
         >
-          <Icon path={props.iconMap[key]} size="1rem" />
+          <Icon path={props.iconMap[key]} size="1rem" color="inherit" />
           {value}
         </button>
       ))}

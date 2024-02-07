@@ -110,10 +110,7 @@ export const Options = memo(function Options() {
 
   return (
     <>
-      {/* <h2 className="card__title">
-        Options
-        <Icon path={mdiCogOutline} size={1} />
-      </h2> */}
+      <h2 className="card__title">Options</h2>
       <div className="card">
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
@@ -192,7 +189,7 @@ export const Options = memo(function Options() {
         ) : null}
         {/* </div> */}
 
-        {/* 
+        {/*
       <div className={`card flex flex-col gap-0 rounded-lg border p-1 ${props.hidden ? "hidden" : ""}`}>
       <legend className="text-sm font-bold">{props.label}</legend>
       <EnumSelect

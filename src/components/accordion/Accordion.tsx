@@ -43,8 +43,8 @@ function Accordion({
             currentState && currentState[idx]
               ? currentState[idx]
               : openByDefault && multipleOpen
-              ? !currentIdx.includes(idx)
-              : currentIdx.includes(idx)
+                ? !currentIdx.includes(idx)
+                : currentIdx.includes(idx)
           }
           titleLabels={titleLabels}
           btnOnClick={() => {
