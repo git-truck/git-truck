@@ -71,7 +71,7 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer select-none grid-flow-col items-center justify-center gap-2 rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200 text-nowrap;
+    @apply grid h-8 cursor-pointer select-none grid-flow-col items-center justify-center gap-2 text-nowrap rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
   }
 
   .btn > svg,
@@ -84,7 +84,7 @@
   }
 
   .btn--outlined {
-    @apply border-current bg-transparent  hover:bg-transparent hover:opacity-50  dark:hover:opacity-50 text-inherit;
+    @apply border-current bg-transparent  text-inherit hover:bg-transparent  hover:opacity-50 dark:hover:opacity-50;
   }
 
   .btn--outlined--light {
@@ -100,11 +100,11 @@
   }
 
   .btn--success {
-    @apply bg-green-500 text-white;
+    @apply border-green-500 bg-green-500 text-white;
   }
 
   .btn--danger {
-    @apply bg-red-500 text-white;
+    @apply border-red-500 bg-red-500 text-white;
   }
 
   .btn--icon {
@@ -135,7 +135,7 @@
   .input {
     @apply h-8 w-full flex-grow;
     @apply overflow-scroll text-ellipsis rounded border border-gray-300 px-1 text-sm transition-colors;
-    @apply enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed;
+    @apply enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50;
     @apply outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white;
   }
 

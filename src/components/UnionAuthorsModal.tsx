@@ -134,10 +134,12 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     const color = getColorFromDisplayName(displayName)
 
     return (
-      <div className="card m-0 flex flex-col p-2" key={aliasGroupIndex}>
+      <div className="card group m-0 flex h-full flex-col p-2" key={aliasGroupIndex}>
         <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={color} />
-          <b>{displayName}</b>
+          <b className="truncate" title={displayName}>
+            {displayName}
+          </b>
         </div>
         {aliasGroup
           .slice(1)
@@ -150,7 +152,31 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
               disabled={disabled}
             />
           ))}
-        <div className="flex justify-end">
+        <div className="grow" />
+        <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <button
+            className="btn"
+            title="Add selected authors to this group"
+            onClick={() => {
+              const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
+                if (i === aliasGroupIndex) {
+                  return [displayName, ...group, ...selectedAuthors]
+                }
+                return [displayName, ...group]
+              })
+              const form = new FormData()
+              form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
+
+              submit(form, {
+                action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
+                method: "post"
+              })
+              setSelectedAuthors([])
+            }}
+            disabled={disabled || selectedAuthors.length === 0}
+          >
+            Add selected
+          </button>
           <button className="btn" onClick={() => ungroup(aliasGroupIndex)} title="Ungroup" disabled={disabled}>
             Ungroup
           </button>
@@ -169,14 +195,14 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         }
         onClose()
       }}
-      className="z-10 m-auto flex h-full flex-col items-start bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
+      className="z-10 m-auto flex h-full w-full flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
     >
-      <div className="card m-auto grid h-full w-max max-w-screen-lg grow grid-cols-[1fr,1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden px-4 shadow">
+      <div className="card m-auto grid h-full w-full max-w-screen-2xl grow grid-cols-[1fr,1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden shadow">
         <h2 className="text-2xl">Group authors</h2>
         <CloseButton absolute={false} className="justify-self-end" onClick={onClose} />
 
-        <h3 className="text-lg font-bold">Ungrouped authors ({ungroupedAuthorsSorted.length})</h3>
-        <h3 className="text-lg font-bold">Grouped authors</h3>
+        <h3 className="text-center text-lg font-bold">Ungrouped authors ({ungroupedAuthorsSorted.length})</h3>
+        <h3 className="text-center text-lg font-bold">Grouped authors</h3>
 
         <div className="flex justify-end gap-2">
           <button
@@ -189,7 +215,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
             Create group
           </button>
         </div>
-        <div className="mr-6 flex justify-end gap-4">
+        <div className="flex justify-end gap-4">
           <button
             className="btn btn--danger"
             disabled={disabled || authorUnions.length === 0}
@@ -202,8 +228,8 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         </div>
 
         <div className="overflow-y-auto">
-          <div className="flex h-min min-h-0 flex-col gap-2 rounded-md bg-white p-4 shadow dark:bg-gray-700">
-            <div className="flex gap-2">
+          <div className="flex h-min min-h-0 flex-col gap-2 rounded-md bg-white p-4 pt-2 shadow dark:bg-gray-700">
+            <div className="sticky top-0 flex gap-2 bg-inherit pt-2">
               <input
                 className="input min-w-0"
                 type="search"
@@ -224,7 +250,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
                 onClick={() =>
                   selectedAuthors.length === ungroupedAuthorsFiltered.length
                     ? setSelectedAuthors([])
-                    : setSelectedAuthors(ungroupedAuthorsFiltered)
+                    : setSelectedAuthors((selected) => Array.from(new Set([...selected, ...ungroupedAuthorsFiltered])))
                 }
                 className="btn btn--outlined w-max flex-grow"
                 title="Clear selection"
@@ -242,7 +268,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         </div>
         <div className="overflow-y-auto">
-          <div className="flex h-min min-h-0 flex-col gap-4 rounded-md bg-white p-4 shadow dark:bg-gray-700">
+          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow lg:grid-cols-2 xl:grid-cols-3  dark:bg-gray-700">
             {authorUnions.length > 0 ? (
               groupedAuthorsEntries
             ) : (
@@ -280,7 +306,9 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         title="Make display name for this grouping"
       >
         <Icon path={mdiArrowUp} size={0.75} />
-        <label className="label">{alias}</label>
+        <label title={alias} className="label truncate">
+          {alias}
+        </label>
       </button>
     )
   }
