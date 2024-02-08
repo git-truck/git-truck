@@ -106,27 +106,27 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
       ? "All detected authors have been grouped"
       : "Select the authors that you know are the same person"
 
-  const ungroupedAuthorsFiltered = ungroupedAuthorsSorted
-  .filter((author) => author.toLowerCase().includes(filter.toLowerCase()))
-  const ungroupedAuthorsEntries = ungroupedAuthorsFiltered
-    .map((author) => (
-      <CheckboxWithLabel
-        className="hover:opacity-70"
-        key={author}
-        checked={selectedAuthors.includes(author)}
-        onChange={(e) => {
-          const newSelectedAuthors = e.target?.checked
-            ? [...selectedAuthors, author]
-            : selectedAuthors.filter((a) => a !== author)
-          setSelectedAuthors(newSelectedAuthors)
-        }}
-      >
-        <div className="inline-flex flex-row place-items-center gap-2">
-          <LegendDot dotColor={getColorFromDisplayName(author)} />
-          {author}
-        </div>
-      </CheckboxWithLabel>
-    ))
+  const ungroupedAuthorsFiltered = ungroupedAuthorsSorted.filter((author) =>
+    author.toLowerCase().includes(filter.toLowerCase())
+  )
+  const ungroupedAuthorsEntries = ungroupedAuthorsFiltered.map((author) => (
+    <CheckboxWithLabel
+      className="hover:opacity-70"
+      key={author}
+      checked={selectedAuthors.includes(author)}
+      onChange={(e) => {
+        const newSelectedAuthors = e.target?.checked
+          ? [...selectedAuthors, author]
+          : selectedAuthors.filter((a) => a !== author)
+        setSelectedAuthors(newSelectedAuthors)
+      }}
+    >
+      <div className="inline-flex flex-row place-items-center gap-2">
+        <LegendDot dotColor={getColorFromDisplayName(author)} />
+        {author}
+      </div>
+    </CheckboxWithLabel>
+  ))
 
   const groupedAuthorsEntries = authorUnions.map((aliasGroup, aliasGroupIndex) => {
     const displayName = aliasGroup[0]
@@ -201,50 +201,54 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
           </button>
         </div>
 
-        <div className="flex gap-2 h-min min-h-0 flex-col overflow-y-auto rounded-md bg-white p-4 shadow dark:bg-gray-700">
-          <div className="flex gap-2">
-            <input
-              className="input min-w-0"
-              type="search"
-              placeholder="Filter..."
-              disabled={ungroupedAuthorsSorted.length === 0}
-              onChange={(e) => startTransition(() => setFilter(e.target.value))}
-            />
-            <button
-              disabled={disabled || selectedAuthors.length === 0}
-              onClick={() => setSelectedAuthors([])}
-              className="btn btn--outlined w-max flex-grow"
-              title="Clear selection"
-            >
-              Clear
-            </button>
-            <button
-              disabled={ungroupedAuthorsSorted.length === 0}
-              onClick={() =>
-                selectedAuthors.length === ungroupedAuthorsFiltered.length
-                  ? setSelectedAuthors([])
-                  : setSelectedAuthors(ungroupedAuthorsFiltered)
-              }
-              className="btn btn--outlined w-max flex-grow"
-              title="Clear selection"
-            >
-              {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
-            </button>
+        <div className="overflow-y-auto">
+          <div className="flex h-min min-h-0 flex-col gap-2 rounded-md bg-white p-4 shadow dark:bg-gray-700">
+            <div className="flex gap-2">
+              <input
+                className="input min-w-0"
+                type="search"
+                placeholder="Filter..."
+                disabled={ungroupedAuthorsSorted.length === 0}
+                onChange={(e) => startTransition(() => setFilter(e.target.value))}
+              />
+              <button
+                disabled={disabled || selectedAuthors.length === 0}
+                onClick={() => setSelectedAuthors([])}
+                className="btn btn--outlined w-max flex-grow"
+                title="Clear selection"
+              >
+                Clear
+              </button>
+              <button
+                disabled={ungroupedAuthorsSorted.length === 0}
+                onClick={() =>
+                  selectedAuthors.length === ungroupedAuthorsFiltered.length
+                    ? setSelectedAuthors([])
+                    : setSelectedAuthors(ungroupedAuthorsFiltered)
+                }
+                className="btn btn--outlined w-max flex-grow"
+                title="Clear selection"
+              >
+                {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
+              </button>
+            </div>
+            {ungroupedAuthorsEntries.length > 0 ? (
+              ungroupedAuthorsEntries
+            ) : (
+              <p className="place-self-center">
+                {filter.length > 0 ? "No authors found" : "All authors have been grouped"}
+              </p>
+            )}
           </div>
-          {ungroupedAuthorsEntries.length > 0 ? (
-            ungroupedAuthorsEntries
-          ) : (
-            <p className="place-self-center">
-              {filter.length > 0 ? "No authors found" : "All authors have been grouped"}
-            </p>
-          )}
         </div>
-        <div className="flex h-min min-h-0 flex-col gap-4 overflow-y-auto rounded-md bg-white p-4 shadow dark:bg-gray-700">
-          {authorUnions.length > 0 ? (
-            groupedAuthorsEntries
-          ) : (
-            <p className="place-self-center">No authors have been grouped yet</p>
-          )}
+        <div className="overflow-y-auto">
+          <div className="flex h-min min-h-0 flex-col gap-4 rounded-md bg-white p-4 shadow dark:bg-gray-700">
+            {authorUnions.length > 0 ? (
+              groupedAuthorsEntries
+            ) : (
+              <p className="place-self-center">No authors have been grouped yet</p>
+            )}
+          </div>
         </div>
 
         <div className="col-span-2 mr-6 grid w-full grid-cols-2 gap-4">
