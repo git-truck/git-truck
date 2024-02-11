@@ -242,7 +242,7 @@ function collapseText({
   } else {
     const datum = d as HierarchyRectangularNode<HydratedGitObject>
     textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
-    textIsTooTall = (text: string) => {
+    textIsTooTall = () => {
       const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
       return heightAvailable < estimatedLetterHeightForDirText
     }
@@ -394,7 +394,7 @@ function createPartitionedHiearchy(
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
-    case "TREE_MAP":
+    case "TREE_MAP": {
       const treeMapPartition = treemap<HydratedGitObject>()
         .tile(treemapBinary)
         .size([size.width, size.height])
@@ -406,12 +406,12 @@ function createPartitionedHiearchy(
 
       filterTree(tmPartition, (child) => {
         const cast = child as HierarchyRectangularNode<HydratedGitObject>
-        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
+        return cast.x1 - cast.x0 >= cutOff && cast.y1 - cast.y0 >= cutOff
       })
 
       return tmPartition
-
-    case "BUBBLE_CHART":
+    }
+    case "BUBBLE_CHART": {
       const bubbleChartPartition = pack<HydratedGitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
@@ -421,6 +421,7 @@ function createPartitionedHiearchy(
         return cast.r >= cutOff
       })
       return bPartition
+    }
     default:
       throw Error("Invalid chart type")
   }

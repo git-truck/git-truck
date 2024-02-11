@@ -78,15 +78,17 @@ function ColorMetricDependentInfo(props: {
   authorshipType: AuthorshipType
 }) {
   switch (props.metric) {
-    case "MOST_COMMITS":
+    case "MOST_COMMITS": {
       const noCommits = props.hoveredBlob?.noCommits
       if (!noCommits) return null
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
-    case "LAST_CHANGED":
+    }
+    case "LAST_CHANGED": {
       const epoch = props.hoveredBlob?.lastChangeEpoch
       if (!epoch) return null
-      return <>{dateFormatRelative(epoch)}</>
-    case "SINGLE_AUTHOR":
+      return dateFormatRelative(epoch)
+    }
+    case "SINGLE_AUTHOR": {
       const authors = props.hoveredBlob
         ? Object.entries(props.hoveredBlob?.unionedAuthors?.[props.authorshipType] ?? [])
         : []
@@ -98,11 +100,13 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authors.length} authors`
       }
-    case "TOP_CONTRIBUTOR":
+    }
+    case "TOP_CONTRIBUTOR": {
       const dominant = props.hoveredBlob?.dominantAuthor?.[props.authorshipType] ?? undefined
       if (!dominant) return null
-      return <>{dominant[0]}</>
-    case "TRUCK_FACTOR":
+      return dominant[0]
+    }
+    case "TRUCK_FACTOR": {
       const authorCount = Object.entries(props.hoveredBlob?.unionedAuthors?.HISTORICAL ?? []).length
       switch (authorCount) {
         case 0:
@@ -112,6 +116,7 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authorCount} authors`
       }
+    }
     default:
       return null
   }

@@ -15,7 +15,7 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
 
   useEffect(() => {
     if (fetcher.state === "idle") fetcher.load(`/progress`)
-  }, [fetcher.state])
+  }, [fetcher, fetcher.state])
 
   const progressText = useMemo(() => {
     if (!fetcher.data) return "Starting analyzation"

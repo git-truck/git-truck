@@ -17,8 +17,8 @@ function AccordionItem({
   return (
     <li className="border-0 ">
       <h2 className="m-0 w-full">
-        <div
-          className={clsx("b-0 flex w-full cursor-pointer items-center " + afterStyle, {
+        <button
+          className={clsx("b-0 flex w-full cursor-pointer items-center ", afterStyle, {
             "text-[16px] font-semibold": titleLabels,
             "text-[14px] font-normal": !titleLabels,
             "after:-rotate-180": isOpen,
@@ -28,7 +28,7 @@ function AccordionItem({
           title={data.title}
         >
           {data.title}
-        </div>
+        </button>
       </h2>
       <ul
         className="m-0 block p-0 text-sm transition-[height] duration-[200ms] ease-out"

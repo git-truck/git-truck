@@ -127,7 +127,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
       currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
     }
     switch (child.type) {
-      case "tree":
+      case "tree": {
         const newTree: GitTreeObject = {
           type: "tree",
           path: newPath,
@@ -139,7 +139,8 @@ async function analyzeTree(path: string, name: string, hash: string) {
         currTree.children.push(newTree)
 
         break
-      case "blob":
+      }
+      case "blob": {
         fileCount += 1
         const blob: GitBlobObject = {
           type: "blob",
@@ -153,6 +154,7 @@ async function analyzeTree(path: string, name: string, hash: string) {
         // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
         break
+      }
     }
   }
 
@@ -187,7 +189,9 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   try {
     const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
     if (configFileContents) currentConfig = JSON.parse(configFileContents)
-  } catch (e) {}
+  } catch (e) {
+    // TODO: Show error in UI that the truckconfig.json file could not be read
+  }
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
