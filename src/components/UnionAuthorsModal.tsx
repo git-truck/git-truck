@@ -8,7 +8,6 @@ import { useKey } from "react-use"
 import { Icon } from "@mdi/react"
 import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 import { createPortal } from "react-dom"
-import { cn } from "~/styling"
 
 export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { repo, analyzerData, truckConfig } = useData()
