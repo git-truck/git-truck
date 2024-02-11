@@ -104,30 +104,27 @@ function RepositoryEntry({ repo, index }: { repo: SerializeFrom<Repository>; ind
 
   const branchIsAnalyzed = repo.analyzedHeads[head]
 
-  const groupClasses = `peer row-${index} peer-[.row-${index}:hover]:bg-white`
-
   return (
     <Fragment key={repo.name}>
-      <h2 className={cn("card__title truncate", groupClasses)} title={repo.name}>
+      <h2 className="card__title truncate" title={repo.name}>
         {repo.name}
       </h2>
       <span
         className={cn(
           "w-full min-w-max select-none rounded-full bg-white/20 bg-gradient-to-r px-2 py-1.5 text-center text-xs font-bold uppercase leading-none tracking-widest text-white/90",
-          groupClasses,
           branchIsAnalyzed ? " from-green-500  to-green-600 " : "bg-transparent text-inherit"
         )}
       >
         {branchIsAnalyzed ? "Ready" : "Not analyzed"}
       </span>
       <RevisionSelect
-        className={cn("input--hover-border", groupClasses)}
+        className="input--hover-border"
         value={head}
         onChange={(e) => setHead(e.target.value)}
         headGroups={repo.refs}
         analyzedHeads={repo.analyzedHeads}
       />
-      <div className={cn("grid", groupClasses)}>
+      <div className="grid">
         <Link className={`btn rounded-full ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>
           {branchIsAnalyzed ? "View" : "Analyze"}
         </Link>
