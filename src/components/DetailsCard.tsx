@@ -17,7 +17,7 @@ import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MenuItem, MenuTab } from "./MenuTab"
 import { CommitsCard } from "./CommitsCard"
-import { usePrefersLightMode } from "~/hooks"
+import { usePrefersLightMode } from "~/styling"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")

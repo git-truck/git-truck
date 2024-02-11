@@ -29,12 +29,17 @@ import {
   mdiCog,
   mdiFileTree,
   mdiFamilyTree,
-  mdiContentCut
+  mdiContentCut,
+  mdiThemeLightDark,
+  mdiWhiteBalanceSunny,
+  mdiMoonFull
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
 import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
+import type { Theme } from "~/styling"
+import { Themes, useTheme } from "~/styling"
 
 // function isMetricWithHistoricalOption(metric: MetricType) {
 //   switch (metric) {
@@ -46,6 +51,8 @@ import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
 // }
 
 export const Options = memo(function Options() {
+  const [theme, setTheme] = useTheme()
+  console.log(theme)
   const {
     metricType,
     chartType,
@@ -97,6 +104,12 @@ export const Options = memo(function Options() {
     FLAT: mdiChartTree
   }
 
+  const themeIcons: Record<Theme, string> = {
+    SYSTEM: mdiCog,
+    LIGHT: mdiWhiteBalanceSunny,
+    DARK: mdiMoonFull
+  }
+
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
     FILE_TYPE: "FILE_SIZE",
     TRUCK_FACTOR: "TRUCK_FACTOR",
@@ -110,7 +123,6 @@ export const Options = memo(function Options() {
 
   return (
     <>
-      <h2 className="card__title">Options</h2>
       <div className="card">
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
@@ -188,6 +200,18 @@ export const Options = memo(function Options() {
           </fieldset>
         ) : null}
         {/* </div> */}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiThemeLightDark} size="1.25em" />
+            Theme
+          </legend>
+          <EnumSelect
+            enum={Themes}
+            defaultValue={theme}
+            onChange={(theme: Theme) => setTheme(theme)}
+            iconMap={themeIcons}
+          />
+        </fieldset>
 
         {/*
       <div className={`card flex flex-col gap-0 rounded-lg border p-1 ${props.hidden ? "hidden" : ""}`}>

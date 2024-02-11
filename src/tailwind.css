@@ -139,6 +139,10 @@
     @apply outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white;
   }
 
+  .input--hover-border {
+    @apply border-transparent hover:border-gray-400;
+  }
+
   .input:not(select) {
     @apply px-2;
   }

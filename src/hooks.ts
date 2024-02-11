@@ -31,7 +31,3 @@ export function useMediaQuery(query: string) {
   }, [query])
   return matches
 }
-
-export function usePrefersLightMode() {
-  return useMediaQuery("(prefers-color-scheme: light)")
-}

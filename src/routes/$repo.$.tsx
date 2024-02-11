@@ -1,6 +1,6 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -237,34 +237,37 @@ export default function Repo() {
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
+  const containerClass = useMemo(
+    function getContainerClass() {
+      // The fullscreen overrides the collapses
+      if (isFullscreen) {
+        return "fullscreen"
+      }
+
+      // The classes for collapses
+      if (isLeftPanelCollapse && isRightPanelCollapse) {
+        return "both-collapse"
+      }
+
+      if (isLeftPanelCollapse) {
+        return "left-collapse"
+      }
+
+      if (isRightPanelCollapse) {
+        return "right-collapse"
+      }
+
+      // The default class is none
+      return ""
+    },
+    [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
+  )
+
   if (!analyzerData) return null
-
-  function defineTheContainerClass(): string {
-    // The fullscreen overrides the collapses
-    if (isFullscreen) {
-      return "fullscreen"
-    }
-
-    // The classes for collapses
-    if (isLeftPanelCollapse && isRightPanelCollapse) {
-      return "both-collapse"
-    }
-
-    if (isLeftPanelCollapse) {
-      return "left-collapse"
-    }
-
-    if (isRightPanelCollapse) {
-      return "right-collapse"
-    }
-
-    // The default class is none
-    return ""
-  }
 
   return (
     <Providers data={data}>
-      <div className={`app-container ${defineTheContainerClass()}`}>
+      <div className={cn("app-container", containerClass)}>
         <aside
           className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
             "overflow-y-auto": !isFullscreen

@@ -15,6 +15,7 @@ import varsStyles from "~/styles/vars.css"
 import indexStyles from "~/styles/animations.css"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
+import { ThemeProvider, usePrefersLightMode } from "./styling"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
@@ -57,14 +58,23 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300">
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
+      <ThemeProvider>
+        <Body>
+          <div className="bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+            <Outlet />
+          </div>
+          <ScrollRestoration />
+          <Scripts />
+          <LiveReload />
+        </Body>
+      </ThemeProvider>
     </html>
   )
+}
+
+function Body({ children }: { children: React.ReactNode }) {
+  const prefersLightMode = usePrefersLightMode()
+  return <body className={prefersLightMode ? "" : "dark"}>{children}</body>
 }
 
 export const ErrorBoundary = () => {

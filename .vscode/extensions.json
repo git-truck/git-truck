@@ -3,6 +3,7 @@
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
     "Orta.vscode-jest",
-    "ms-playwright.playwright"
+    "ms-playwright.playwright",
+    "dbaeumer.vscode-eslint"
   ]
 }

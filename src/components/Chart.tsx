@@ -9,7 +9,7 @@ import type {
   HydratedGitTreeObject
 } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize, usePrefersLightMode } from "~/hooks"
+import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
   estimatedLetterHeightForDirText,
@@ -32,7 +32,7 @@ import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
-import { cn } from "~/styling"
+import { cn, usePrefersLightMode } from "~/styling"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
