@@ -1,6 +1,6 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of bun
 
-name: Check
+name: Check (node)
 
 on:
   push:
@@ -9,12 +9,12 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  check-node:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 18.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
         run: npm install
 
       - name: Run unit tests
-        run: npm run test
+        run: npm run test:unit
 
       - name: Build application
         run: npm run build
