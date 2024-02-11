@@ -56,7 +56,7 @@ export function DetailsCard({
   }, [analyzerData, setClickedObject])
 
   const [metricsData] = useMetrics()
-  const { backgroundColor, color, lightBackground } = useMemo(() => {
+  const { backgroundColor, lightBackground } = useMemo(() => {
     if (!clickedObject) {
       return {
         backgroundColor: null,

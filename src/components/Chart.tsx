@@ -170,7 +170,6 @@ export const Chart = memo(function Chart({
 function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
   const [metricsData] = useMetrics()
   const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
-  const prefersLightMode = usePrefersLightMode()
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
@@ -205,7 +204,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       }
     }
     return props
-  }, [d, isSearchMatch, metricsData, authorshipType, metricType, chartType])
+  }, [d, metricsData, authorshipType, metricType, chartType])
 
   return (
     <rect
