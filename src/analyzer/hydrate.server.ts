@@ -137,18 +137,26 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
     await Promise.all(promises)
 
+    const start = Date.now()
     await DB.addCommits(commits)
+    const end = Date.now()
+    console.log("add commits ms", end - start)
 
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
 
+  console.time("commitquery")
   const rows = await DB.query(`SELECT author, COUNT(*) as commit_count
   FROM commits
   GROUP BY author
   ORDER BY commit_count DESC
   LIMIT 10;`)
+  console.timeEnd("commitquery")
   console.log(rows)
+
+  const rowCount = await DB.query(`select count (*) from commits;`)
+  console.log("row count", rowCount)
 
   sortCommits(fileMap)
   return [data, Array.from(authors)]
