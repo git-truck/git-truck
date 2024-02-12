@@ -155,6 +155,16 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
   console.timeEnd("commitquery")
   console.log(rows)
 
+  const rows2 = await DB.query(`SELECT author, message, body
+  FROM commits
+  LIMIT 10;`)
+  console.log("rows2", rows2)
+
+  const rows3 = await DB.query(`select *
+  FROM filechanges
+  LIMIT 40;`)
+  console.log("rows3", rows3)
+
   const rowCount = await DB.query(`select count (*) from commits;`)
   console.log("row count", rowCount)
 
