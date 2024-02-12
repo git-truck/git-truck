@@ -118,8 +118,6 @@ async function analyzeTree(path: string, name: string, hash: string) {
     children: []
   } as GitTreeObject
 
-  await DB.init()
-
   for (const child of lsTreeEntries) {
     log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")
@@ -234,6 +232,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   git.branch = branchName
 
   let data: AnalyzerData | null = null
+
+  await DB.init(repoName, branch ?? "main") // Fixme risky
 
   if (!args.invalidateCache) {
     const [cachedData, reasons] = await GitCaller.retrieveCachedResult({

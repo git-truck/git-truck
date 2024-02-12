@@ -1,10 +1,13 @@
 import { Database } from "duckdb-async"
 import type { GitBlobObject, GitLogEntry } from "./model"
+import { GitCaller } from "./git-caller.server"
 
 export default class DB {
   private static instance: Database | null = null
 
-  public static async init() {
+  public static async init(repo: string, branch: string) {
+    // const filePath = GitCaller.getCachePath(repo, branch).replace(".json", ".db")
+    // console.log("filepath", filePath)
     if (!this.instance) this.instance = await Database.create(":memory:")
   }
 
@@ -18,7 +21,9 @@ export default class DB {
     await this.instance?.all(`CREATE TABLE IF NOT EXISTS commits (
       hash VARCHAR,
       author VARCHAR,
-      time UINTEGER
+      time UINTEGER,
+      body VARCHAR,
+      message VARCHAR
       );`)
 
     const batchSize = 10_000
@@ -27,14 +32,14 @@ export default class DB {
 
 
       const queryBuilder: string[] = []
-      queryBuilder.push("INSERT INTO commits (hash, author, time) VALUES ")
-      for (let i = 0; i < thisBatchSize; i++) queryBuilder.push("(?, ?, ?),")
+      queryBuilder.push("INSERT INTO commits (hash, author, time, body, message) VALUES ")
+      for (let i = 0; i < thisBatchSize; i++) queryBuilder.push("(?, ?, ?, ?, ?),")
       const insertStatement = await this.instance!.prepare(queryBuilder.join(""))
   
       const valueArray = []
       for (let x = 0; x < thisBatchSize; x++) {
         const commit = commitEntries.next().value
-        valueArray.push(commit.hash, commit.author, commit.time)
+        valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
       }
       await insertStatement.run(...valueArray)
       await insertStatement.finalize()
