@@ -161,7 +161,6 @@ async function analyzeTree(path: string, name: string, hash: string) {
   }
 
   // await Promise.all(jobs)
-  console.log(await DB.query("from files limit 20;"))
   return { rootTree, fileCount }
 }
 
