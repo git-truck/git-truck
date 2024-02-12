@@ -13,19 +13,35 @@ export default class DB {
   }
 
   public static async addCommits(commits: Map<string, GitLogEntry>) {
+    const commitEntries = commits.values()
     if (commits.size < 1) return
     await this.instance?.all(`CREATE TABLE IF NOT EXISTS commits (
-        hash VARCHAR,
-        author VARCHAR,
-        time INTEGER
-    );`)
-    const queryBuilder: string[] = []
-    queryBuilder.push("INSERT INTO commits (hash, author, time) VALUES")
-    for (const [, commit] of commits) {
-      queryBuilder.push(`('${commit.hash}', '${commit.author}', ${commit.time}),`)
-    }
+      hash VARCHAR,
+      author VARCHAR,
+      time UINTEGER
+      );`)
 
-    await this.instance?.all(queryBuilder.join(" "))
+    const batchSize = 10_000
+    for (let index = 0; index < commits.size; index += batchSize) {
+      const thisBatchSize = Math.min(commits.size - index, batchSize)
+
+
+      const queryBuilder: string[] = []
+      queryBuilder.push("INSERT INTO commits (hash, author, time) VALUES ")
+      for (let i = 0; i < thisBatchSize; i++) queryBuilder.push("(?, ?, ?),")
+      const insertStatement = await this.instance!.prepare(queryBuilder.join(""))
+  
+      const valueArray = []
+      for (let x = 0; x < thisBatchSize; x++) {
+        const commit = commitEntries.next().value
+        valueArray.push(commit.hash, commit.author, commit.time)
+      }
+      await insertStatement.run(...valueArray)
+      await insertStatement.finalize()
+
+
+
+    }
   }
 
   public static async addFile(blob: GitBlobObject) {
