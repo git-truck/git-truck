@@ -8,7 +8,7 @@ import type {
   HydratedGitCommitObject,
   HydratedGitTreeObject
 } from "./model"
-import { analyzeRenamedFile } from "./util.server"
+import { analyzeRenamedFile, tableName } from "./util.server"
 import { GitCaller } from "./git-caller.server"
 import { getCoAuthors } from "./coauthors.server"
 import { log } from "./log.server"
@@ -101,8 +101,8 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
 export let progress = 0
 export let totalCommitCount = Infinity
 
-export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
-  await DB.init()
+export async function hydrateData(commit: GitCommitObject, repo: string, branch: string): Promise<[HydratedGitCommitObject, string[]]> {
+  await DB.init(repo, branch)
 
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
@@ -138,7 +138,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
     await Promise.all(promises)
 
     const start = Date.now()
-    await DB.addCommits(commits)
+    await DB.addCommits(commits, repo, branch)
     const end = Date.now()
     console.log("add commits ms", end - start)
 
@@ -148,7 +148,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 
   console.time("commitquery")
   const rows = await DB.query(`SELECT author, COUNT(*) as commit_count
-  FROM commits
+  FROM ${tableName("commits", repo, branch)}
   GROUP BY author
   ORDER BY commit_count DESC
   LIMIT 10;`)
@@ -156,16 +156,16 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
   console.log(rows)
 
   const rows2 = await DB.query(`SELECT author, message, body
-  FROM commits
+  FROM ${tableName("commits", repo, branch)}
   LIMIT 10;`)
   console.log("rows2", rows2)
 
   const rows3 = await DB.query(`select *
-  FROM filechanges
+  FROM ${tableName("filechanges", repo, branch)}
   LIMIT 40;`)
   console.log("rows3", rows3)
 
-  const rowCount = await DB.query(`select count (*) from commits;`)
+  const rowCount = await DB.query(`select count (*) from ${tableName("commits", repo, branch)};`)
   console.log("row count", rowCount)
 
   sortCommits(fileMap)

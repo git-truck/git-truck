@@ -194,6 +194,12 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   }
 }
 
+export function tableName(table: string, repo: string, branch: string) {
+  const sanitizedRepo = repo.replace(/\W/g, "_")
+  const sanitizedBranch = branch.replace(/\W/g, "_")
+  return `${table}_${sanitizedRepo}_${sanitizedBranch}`
+}
+
 export async function getGitTruckInfo() {
   const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
   return {
