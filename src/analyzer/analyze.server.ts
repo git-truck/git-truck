@@ -27,8 +27,10 @@ import DB from "./DB"
 
 let repoDir = "."
 
+let git: GitCaller
+
 export async function analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
-  const rawContent = await GitCaller.getInstance().catFileCached(hash)
+  const rawContent = await git.catFileCached(hash)
   const commitRegex =
     /tree (?<tree>.*)\s*(?:parent (?<parent>.*)\s*)?(?:parent (?<parent2>.*)\s*)?author (?<authorName>.*?) <(?<authorEmail>.*?)> (?<authorTimeStamp>\d*?) (?<authorTimeZone>.*?)\s*committer (?<committerName>.*?) <(?<committerEmail>.*?)> (?<committerTimeStamp>\d*?) (?<committerTimeZone>.*)\s*(?:gpgsig (?:.|\s)*?-----END (?:PGP SIGNATURE|SIGNED MESSAGE)-----)?\s*(?<message>.*)\s*(?<description>(?:.|\s)*)/gm
 
@@ -92,7 +94,7 @@ interface RawGitObject {
 }
 
 async function analyzeTree(path: string, name: string, hash: string) {
-  const rawContent = await GitCaller.getInstance().lsTree(hash)
+  const rawContent = await git.lsTree(hash)
 
   const lsTreeEntries: RawGitObject[] = []
   const matches = rawContent.matchAll(treeRegex)
@@ -203,8 +205,7 @@ export function setAnalyzationStatus(newStatus: AnalyzationStatus) {
 
 export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   analyzationStatus = "Starting"
-  GitCaller.initInstance(args.path)
-  const git = GitCaller.getInstance()
+  git = new GitCaller(args.path, args.branch ?? "main")
 
   if (args?.log) {
     setLogLevel(args.log as string)
@@ -213,13 +214,11 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
   repoDir = args.path
   if (!isAbsolute(repoDir)) repoDir = resolve(process.cwd(), repoDir)
 
-  const branch = args.branch
-
   const hiddenFiles = args.hiddenFiles
 
   const start = performance.now()
   const [findBranchHeadResult, findBranchHeadError] = await describeAsyncJob({
-    job: () => git.findBranchHead(branch),
+    job: () => git.findBranchHead(),
     beforeMsg: "Finding branch head",
     afterMsg: "Found branch head",
     errorMsg: "Error finding branch head"
@@ -233,26 +232,22 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
   let data: AnalyzerData | null = null
 
-  if (!args.invalidateCache) {
-    const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
-      repo: repoName,
-      branch: branchName,
-      branchHead: branchHead,
-      invalidateCache: args.invalidateCache
-    })
+  const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
+    repo: repoName,
+    branch: branchName,
+    branchHead: branchHead,
+    invalidateCache: args.invalidateCache
+  })
 
-    if (cachedData) {
-      data = {
-        ...cachedData,
-        hiddenFiles
-      }
-    } else {
-      log.info(
-        `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
-      )
+  if (cachedData) {
+    data = {
+      ...cachedData,
+      hiddenFiles
     }
   } else {
-    GitCaller.getInstance().setUseCache(false)
+    log.info(
+      `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
+    )
   }
 
   if (data === null) {
@@ -274,7 +269,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     if (repoTreeError) throw repoTreeError
 
     const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
-      job: () => hydrateData(repoTree, repoName, branchName),
+      job: () => hydrateData(repoTree, repoName, branchName, git),
       beforeMsg: "Hydrating commit tree",
       afterMsg: "Commit tree hydrated",
       errorMsg: "Error hydrating commit tree"

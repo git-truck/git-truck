@@ -20,6 +20,9 @@ import DB from "./DB"
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>
 let authors: Set<string>
 
+let git: GitCaller
+let db: DB
+
 export function gatherCommitsFromGitLog(
   gitLogResult: string,
   commits: Map<string, GitLogEntry>,
@@ -68,7 +71,7 @@ export function gatherCommitsFromGitLog(
 }
 
 async function gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
-  const gitLogResult = await GitCaller.getInstance().gitLog(start, end - start)
+  const gitLogResult = await git.gitLog(start, end - start)
   gatherCommitsFromGitLog(gitLogResult, commits, true)
 }
 
@@ -101,14 +104,15 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
 export let progress = 0
 export let totalCommitCount = Infinity
 
-export async function hydrateData(commit: GitCommitObject, repo: string, branch: string): Promise<[HydratedGitCommitObject, string[]]> {
-  await DB.init(repo, branch)
+export async function hydrateData(commit: GitCommitObject, repo: string, branch: string, _git: GitCaller): Promise<[HydratedGitCommitObject, string[]]> {
+  git = _git
+  db = new DB(repo, branch)
 
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
 
-  const commitCount = await GitCaller.getInstance().getCommitCount()
+  const commitCount = await git.getCommitCount()
   totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
@@ -138,7 +142,7 @@ export async function hydrateData(commit: GitCommitObject, repo: string, branch:
     await Promise.all(promises)
 
     const start = Date.now()
-    await DB.addCommits(commits, repo, branch)
+    await db.addCommits(commits)
     const end = Date.now()
     console.log("add commits ms", end - start)
 
@@ -147,25 +151,25 @@ export async function hydrateData(commit: GitCommitObject, repo: string, branch:
   }
 
   console.time("commitquery")
-  const rows = await DB.query(`SELECT author, COUNT(*) as commit_count
-  FROM ${tableName("commits", repo, branch)}
+  const rows = await db.query(`SELECT author, COUNT(*) as commit_count
+  FROM commits
   GROUP BY author
   ORDER BY commit_count DESC
   LIMIT 10;`)
   console.timeEnd("commitquery")
   console.log(rows)
 
-  const rows2 = await DB.query(`SELECT author, message, body
-  FROM ${tableName("commits", repo, branch)}
+  const rows2 = await db.query(`SELECT author, message, body
+  FROM commits
   LIMIT 10;`)
   console.log("rows2", rows2)
 
-  const rows3 = await DB.query(`select *
-  FROM ${tableName("filechanges", repo, branch)}
+  const rows3 = await db.query(`select *
+  FROM filechanges
   LIMIT 40;`)
   console.log("rows3", rows3)
 
-  const rowCount = await DB.query(`select count (*) from ${tableName("commits", repo, branch)};`)
+  const rowCount = await db.query(`select count (*) from commits;`)
   console.log("row count", rowCount)
 
   sortCommits(fileMap)

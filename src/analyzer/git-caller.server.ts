@@ -25,27 +25,13 @@ export type RawGitObject = {
 export class GitCaller {
   private useCache = true
   private repo: string
-  public branch?: string
+  public branch: string
   private catFileCache: Map<string, string> = new Map()
-  private blameCache: Map<string, string> = new Map()
 
-  private static instance: GitCaller | null = null
 
-  static initInstance(repo: string) {
-    if (!GitCaller.instance || GitCaller.instance.repo !== repo) {
-      GitCaller.instance = new GitCaller(repo)
-    }
-  }
-
-  static destroyInstance() {
-    GitCaller.instance = null
-  }
-
-  static getInstance(): GitCaller {
-    if (!GitCaller.instance) {
-      throw Error("ObjectDeflator not initialized")
-    }
-    return GitCaller.instance
+  constructor(repo: string, branch: string) {
+    this.repo = repo
+    this.branch = branch
   }
 
   static async isGitRepo(path: string): Promise<boolean> {
@@ -92,7 +78,6 @@ export class GitCaller {
   }
 
   async gitShow(commits: string[]) {
-    if (!this.branch) throw Error("branch not set")
     const args = [
       "show",
       "--no-patch",
@@ -133,7 +118,7 @@ export class GitCaller {
     if (!isRepo) {
       return null
     }
-    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
+    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath, ""))
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {
@@ -270,7 +255,6 @@ export class GitCaller {
   }
 
   async gitLog(skip: number, count: number) {
-    if (!this.branch) throw Error("branch not set")
     const args = [
       "log",
       `--skip=${skip}`,
@@ -328,20 +312,16 @@ export class GitCaller {
     return [cachedData, reasons]
   }
 
-  private constructor(repo: string) {
-    this.repo = repo
-  }
-
   setUseCache(useCache: boolean) {
     this.useCache = useCache
   }
 
   async getRefs() {
-    return await GitCaller._getRefs(this.repo)
+    return await GitCaller._getRefs(this.repo, this.branch)
   }
 
-  static async _getRefs(repo: string) {
-    const result = await runProcess(repo, "git", ["show-ref"])
+  static async _getRefs(repo: string, branch: string) {
+    const result = await runProcess(repo, "git", ["show-ref", branch])
     return result as string
   }
 
@@ -350,8 +330,8 @@ export class GitCaller {
     return result as string
   }
 
-  async findBranchHead(branch?: string) {
-    return await GitCaller.findBranchHead(this.repo, branch)
+  async findBranchHead() {
+    return await GitCaller.findBranchHead(this.repo, this.branch)
   }
 
   async catFileCached(hash: string): Promise<string> {
@@ -368,53 +348,10 @@ export class GitCaller {
   }
 
   async getCommitCount() {
-    if (!this.branch) throw Error("Branch is undefined")
     const result = await runProcess(this.repo, "git", ["rev-list", "--count", this.branch])
     return result as number
   }
 
-  private async blame(path: string) {
-    if (!this.branch) throw Error("Branch is undefined")
-    try {
-      const result = await runProcess(this.repo, "git", ["blame", this.branch, "--", path])
-      return result as string
-    } catch (e) {
-      log.warn(`Could not blame on ${path}. It might have been deleted since last commit.`)
-      return ""
-    }
-  }
-
-  async blameCached(path: string): Promise<string> {
-    if (!this.useCache) {
-      const cachedValue = this.blameCache.get(path)
-      if (cachedValue) {
-        return cachedValue
-      }
-    }
-    const result = await this.blame(path)
-    this.blameCache.set(path, result)
-
-    return result
-  }
-
-  async parseBlame(path: string) {
-    const cutString = path.slice(path.indexOf("/") + 1)
-    const blame = await this.blameCached(cutString)
-    const blameRegex = /\((?<author>.*?)\s+\d{4}-\d{2}-\d{2}/gm
-    const matches = blame.match(blameRegex)
-    const blameAuthors: Record<string, number> = {}
-    matches?.forEach((match) => {
-      const author = match
-        .slice(1)
-        .slice(0, match.length - 11)
-        .trim()
-      if (author !== "Not Committed Yet") {
-        const currentValue = blameAuthors[author] ?? 0
-        blameAuthors[author] = currentValue + 1
-      }
-    })
-    return blameAuthors
-  }
 
   async getDefaultGitSettingValue(setting: string) {
     const result = await runProcess(this.repo, "git", ["config", setting])

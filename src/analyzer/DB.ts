@@ -6,37 +6,40 @@ import { resolve } from "path"
 import { tableName } from "./util.server"
 
 export default class DB {
-  private static instance: Database | null = null
+  private instance: Promise<Database>
 
-  public static async init(repo: string, branch: string) {
-    if (!this.instance) {
-      // const dbPath = resolve(os.tmpdir(), "git-truck.db")
-      const dbPath = ":memory:"
-      this.instance = await Database.create(dbPath)
-    }
-    await DB.initTables(repo, branch)
+  private static async init(dbPath: string) {
+    const db = await Database.create(dbPath)
+    await this.initTables(db)
+    return db
   }
 
-  public static async query(query: string) {
-    return await this.instance?.all(query)
+  constructor(private repo: string, private branch: string) {
+    // const dbPath = resolve(os.tmpdir(), "git-truck-cache", repoSanitized, branchSanitized + ".db")
+    const dbPath = ":memory:"
+    this.instance = DB.init(dbPath)
   }
 
-  static async initTables(repo: string, branch: string) {
-    await this.instance?.all(`CREATE TABLE IF NOT EXISTS ${tableName("commits", repo, branch)} (
+  public async query(query: string) {
+    return await (await this.instance).all(query)
+  }
+
+  private static async initTables(db: Database) {
+    await db.all(`CREATE TABLE IF NOT EXISTS commits (
       hash VARCHAR PRIMARY KEY,
       author VARCHAR,
       time UINTEGER,
       body VARCHAR,
       message VARCHAR
     );
-    CREATE TABLE IF NOT EXISTS ${tableName("filechanges", repo, branch)} (
+    CREATE TABLE IF NOT EXISTS filechanges (
       commithash VARCHAR,
       author VARCHAR,
       contribcount UINTEGER,
       filepath VARCHAR,
       isbinary BOOLEAN
     );
-    CREATE TABLE IF NOT EXISTS ${tableName("files", repo, branch)} (
+    CREATE TABLE IF NOT EXISTS files(
       hash VARCHAR,
       path VARCHAR,
       sizeInBytes INTEGER,
@@ -44,60 +47,66 @@ export default class DB {
     );`)
   }
 
-  public static async addCommits(commits: Map<string, GitLogEntry>, repo: string, branch: string) {
+  private async flushFileChanges(queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[]) {
+    if (valueArrayFilechanges.length === 0) return
+    // console.log("start flush")
+    // console.log("querybilder", queryBuilderFilechanges.length, queryBuilderFilechanges.join(""))
+    // console.log("values", valueArrayFilechanges.length, valueArrayFilechanges)
+    const insertStatement = await (await this.instance).prepare(queryBuilderFilechanges.join(""))
+    await insertStatement.run(...valueArrayFilechanges)
+    await insertStatement.finalize()
+    queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+    valueArrayFilechanges = []
+    // console.log("end flush")
+  }
+
+  private async addFileChanges(fileChanges: FileChange[], author: string, hash: string, queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[], batchSize: number) {
+    // console.log("numchanges", fileChanges.length)
+    // console.log("before", queryBuilderFilechanges.length)
+    for (const fileChange of fileChanges) {
+      queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
+      valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
+      // console.log("filechange", hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
+    }
+    // console.log("after", queryBuilderFilechanges.length)
+
+    if (queryBuilderFilechanges.length > batchSize) {
+      await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
+    }
+  }
+
+  public async addCommits(commits: Map<string, GitLogEntry>) {
     const commitEntries = commits.values()
     if (commits.size < 1) return
     
-    const batchSize = 10
-    let queryBuilderFilechanges: string[] = [`INSERT INTO ${tableName("filechanges", repo, branch)} (commithash, author, contribcount, filepath, isbinary) VALUES `]
-    let valueArrayFilechanges: (string|boolean|number)[] = []
-
-    async function flushFileChanges() {
-      if (valueArrayFilechanges.length === 0) return
-      console.log("start flush")
-      const insertStatement = await DB.instance!.prepare(queryBuilderFilechanges.join(""))
-      await insertStatement.run(...valueArrayFilechanges)
-      await insertStatement.finalize()
-      queryBuilderFilechanges = [`INSERT INTO ${tableName("filechanges", repo, branch)} (commithash, author, contribcount, filepath, isbinary) VALUES `]
-      valueArrayFilechanges = []
-      console.log("end flush")
-    }
-
-    async function addFileChanges(fileChanges: FileChange[], author: string, hash: string) {
-
-      for (const fileChange of fileChanges) {
-        queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
-        valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
-        console.log("filechange", hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
-      }
-
-      if (queryBuilderFilechanges.length > batchSize) {
-        await flushFileChanges()
-      }
-    }
-
+    const batchSize = 10000
+    const queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+    const valueArrayFilechanges: (string|boolean|number)[] = []
+    let now = Date.now()
     for (let index = 0; index < commits.size; index += batchSize) {
       const thisBatchSize = Math.min(commits.size - index, batchSize)
-
+      
       const queryBuilderCommits: string[] = []
-      queryBuilderCommits.push(`INSERT INTO ${tableName("commits", repo, branch)} (hash, author, time, body, message) VALUES `)
+      queryBuilderCommits.push(`INSERT INTO commits (hash, author, time, body, message) VALUES `)
       for (let i = 0; i < thisBatchSize; i++) queryBuilderCommits.push(`(?, ?, ?, ?, ?,),`)
-      const insertStatement = await this.instance!.prepare(queryBuilderCommits.join(""))
-  
+      const insertStatement = await (await this.instance).prepare(queryBuilderCommits.join(""))
+    
       const valueArray = []
       for (let x = 0; x < thisBatchSize; x++) {
         const commit = commitEntries.next().value
-        await addFileChanges(commit.fileChanges, commit.author, commit.hash)
+        await this.addFileChanges(commit.fileChanges, commit.author, commit.hash, queryBuilderFilechanges, valueArrayFilechanges, batchSize)
         valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
-        console.log("commit", commit)
+        // console.log("commit", commit)
       }
-      console.log("statemnt", queryBuilderCommits.join(""))
-      console.log("values", valueArray)
+      // console.log("statemnt", queryBuilderCommits.join(""))
+      // console.log("values", valueArray)
       await insertStatement.run(...valueArray)
       await insertStatement.finalize()
-      console.log("done adding commits")
+      console.log("batch loop", Date.now() - now)
+      now = Date.now()
+      // console.log("done adding commits")
     }
-    await flushFileChanges()
+    await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
   }
 
   // public static async addFile(blob: GitBlobObject) {
