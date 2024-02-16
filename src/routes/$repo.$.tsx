@@ -6,7 +6,7 @@ import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
-import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
+import { openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
@@ -33,8 +33,11 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
+import ServerInstance from "~/analyzer/ServerInstance.server"
 
 let invalidateCache = false
+
+const instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
 
 export interface RepoData {
   analyzerData: AnalyzerData
@@ -44,6 +47,21 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
+}
+
+function getOrCreateInstance(repo: string, branch: string, path: string) {
+  const existing = instances.get(repo)?.get(branch)
+  if (existing) return existing
+
+  const newInstance = new ServerInstance(repo, branch, path)
+  const existingRepo = instances.get(repo)
+  if (existingRepo) {
+    existingRepo.set(branch, newInstance)
+  } else {
+    instances.set(repo, new Map([[branch, newInstance]]))
+  }
+
+  return newInstance
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -61,8 +79,9 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (params["*"]) {
     options.branch = params["*"]
   }
+  const instance = getOrCreateInstance(params["repo"], options.branch, options.path)
 
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
+  const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   )
 

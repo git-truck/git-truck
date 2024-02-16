@@ -24,14 +24,11 @@ export type RawGitObject = {
 
 export class GitCaller {
   private useCache = true
-  private repo: string
-  public branch: string
   private catFileCache: Map<string, string> = new Map()
 
 
-  constructor(repo: string, branch: string) {
-    this.repo = repo
-    this.branch = branch
+  constructor(private repo: string, public branch: string, private path: string) {
+
   }
 
   static async isGitRepo(path: string): Promise<boolean> {
@@ -331,7 +328,7 @@ export class GitCaller {
   }
 
   async findBranchHead() {
-    return await GitCaller.findBranchHead(this.repo, this.branch)
+    return await GitCaller.findBranchHead(this.path, this.branch)
   }
 
   async catFileCached(hash: string): Promise<string> {
