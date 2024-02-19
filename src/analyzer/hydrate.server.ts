@@ -111,24 +111,23 @@ export async function hydrateData(commit: GitCommitObject, repo: string, branch:
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
-
   const commitCount = await git.getCommitCount()
   totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
   const commitBundleSize = Math.min(Math.max(commitCount / 4, 10_000), 150_000)
-
+  
   if (commitCount > 500_000)
-    log.warn(
-      "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
-    )
-  setAnalyzationStatus("Hydrating")
-  // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
-  for (let index = 0; index < commitCount; index += commitBundleSize) {
+  log.warn(
+"This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
+)
+setAnalyzationStatus("Hydrating")
+// Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
+for (let index = 0; index < commitCount; index += commitBundleSize) {
     progress = index
     const runCountCommit = Math.min(commitBundleSize, commitCount - index)
     const sectionSize = Math.ceil(runCountCommit / threadCount)
-
+    
     const commits = new Map<string, GitLogEntry>()
 
     const promises = Array.from({ length: threadCount }, (_, i) => {
@@ -138,18 +137,18 @@ export async function hydrateData(commit: GitCommitObject, repo: string, branch:
       log.info("start thread " + sectionStart + "-" + sectionEnd)
       return gatherCommitsInRange(sectionStart, sectionEnd, commits)
     })
-
+    
     await Promise.all(promises)
-
+    
     const start = Date.now()
     await db.addCommits(commits)
     const end = Date.now()
     console.log("add commits ms", end - start)
-
+    
     await hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
-
+  
   console.time("commitquery")
   const rows = await db.query(`SELECT author, COUNT(*) as commit_count
   FROM commits

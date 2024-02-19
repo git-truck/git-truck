@@ -29,6 +29,15 @@ export interface TruckUserConfig {
   colorSeed?: string
 }
 
+export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
+export type RawGitObject = {
+  hash: string
+  type: RawGitObjectType
+  path: string
+  value?: string
+  size?: number
+}
+
 export interface TruckConfig {
   log?: string
   out?: string

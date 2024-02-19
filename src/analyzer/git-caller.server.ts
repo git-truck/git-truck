@@ -14,22 +14,13 @@ export enum ANALYZER_CACHE_MISS_REASONS {
   DATA_VERSION_MISMATCH = "Outdated cache"
 }
 
-export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
-export type RawGitObject = {
-  hash: string
-  type: RawGitObjectType
-  idk: string
-  value: string
-}
-
 export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
 
-  constructor(private repo: string, public branch: string, private path: string) {
-
-  }
+  // eslint-disable-next-line no-useless-constructor
+  constructor(private repo: string, public branch: string, private path: string) {}
 
   static async isGitRepo(path: string): Promise<boolean> {
     const gitFolderPath = resolve(path, ".git")
@@ -82,7 +73,7 @@ export class GitCaller {
       ...commits
     ]
 
-    const result = (await runProcess(this.repo, "git", args)) as string
+    const result = (await runProcess(this.path, "git", args)) as string
     return result.trim()
   }
 
@@ -92,7 +83,7 @@ export class GitCaller {
   }
 
   async lsTree(hash: string) {
-    return await GitCaller._lsTree(this.repo, hash)
+    return await GitCaller._lsTree(this.path, hash)
   }
 
   static async _lsTree(repo: string, hash: string) {
@@ -101,7 +92,7 @@ export class GitCaller {
   }
 
   async revParse(ref: string) {
-    return await GitCaller._revParse(this.repo, ref)
+    return await GitCaller._revParse(this.path, ref)
   }
 
   static async _revParse(dir: string, ref: string) {
@@ -262,7 +253,7 @@ export class GitCaller {
       '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
-    const result = (await runProcess(this.repo, "git", args)) as string
+    const result = (await runProcess(this.path, "git", args)) as string
     return result.trim()
   }
 
@@ -323,7 +314,7 @@ export class GitCaller {
   }
 
   private async catFile(hash: string) {
-    const result = await runProcess(this.repo, "git", ["cat-file", "-p", hash])
+    const result = await runProcess(this.path, "git", ["cat-file", "-p", hash])
     return result as string
   }
 
@@ -345,28 +336,28 @@ export class GitCaller {
   }
 
   async getCommitCount() {
-    const result = await runProcess(this.repo, "git", ["rev-list", "--count", this.branch])
+    const result = await runProcess(this.path, "git", ["rev-list", "--count", this.branch])
     return result as number
   }
 
 
   async getDefaultGitSettingValue(setting: string) {
-    const result = await runProcess(this.repo, "git", ["config", setting])
+    const result = await runProcess(this.path, "git", ["config", setting])
     return result as string
   }
 
   async resetGitSetting(settingToReset: string, value: string) {
     if (!value) {
-      await runProcess(this.repo, "git", ["config", "--unset", settingToReset])
+      await runProcess(this.path, "git", ["config", "--unset", settingToReset])
       log.debug(`Unset ${settingToReset}`)
     } else {
-      await runProcess(this.repo, "git", ["config", settingToReset, value])
+      await runProcess(this.path, "git", ["config", settingToReset, value])
       log.debug(`Reset ${settingToReset} to ${value}`)
     }
   }
 
   async setGitSetting(setting: string, value: string) {
-    await runProcess(this.repo, "git", ["config", setting, value])
+    await runProcess(this.path, "git", ["config", setting, value])
     log.debug(`Set ${setting} to ${value}`)
   }
 }

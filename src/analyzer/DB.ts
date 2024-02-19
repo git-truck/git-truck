@@ -1,9 +1,5 @@
 import { Database } from "duckdb-async"
-import type { FileChange, GitBlobObject, GitLogEntry } from "./model"
-import { GitCaller } from "./git-caller.server"
-import os from "os"
-import { resolve } from "path"
-import { tableName } from "./util.server"
+import type { FileChange, GitLogEntry } from "./model"
 
 export default class DB {
   private instance: Promise<Database>
@@ -49,26 +45,18 @@ export default class DB {
 
   private async flushFileChanges(queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[]) {
     if (valueArrayFilechanges.length === 0) return
-    // console.log("start flush")
-    // console.log("querybilder", queryBuilderFilechanges.length, queryBuilderFilechanges.join(""))
-    // console.log("values", valueArrayFilechanges.length, valueArrayFilechanges)
     const insertStatement = await (await this.instance).prepare(queryBuilderFilechanges.join(""))
     await insertStatement.run(...valueArrayFilechanges)
     await insertStatement.finalize()
     queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
     valueArrayFilechanges = []
-    // console.log("end flush")
   }
 
   private async addFileChanges(fileChanges: FileChange[], author: string, hash: string, queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[], batchSize: number) {
-    // console.log("numchanges", fileChanges.length)
-    // console.log("before", queryBuilderFilechanges.length)
     for (const fileChange of fileChanges) {
       queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
       valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
-      // console.log("filechange", hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
     }
-    // console.log("after", queryBuilderFilechanges.length)
 
     if (queryBuilderFilechanges.length > batchSize) {
       await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
@@ -96,15 +84,11 @@ export default class DB {
         const commit = commitEntries.next().value
         await this.addFileChanges(commit.fileChanges, commit.author, commit.hash, queryBuilderFilechanges, valueArrayFilechanges, batchSize)
         valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
-        // console.log("commit", commit)
       }
-      // console.log("statemnt", queryBuilderCommits.join(""))
-      // console.log("values", valueArray)
       await insertStatement.run(...valueArray)
       await insertStatement.finalize()
       console.log("batch loop", Date.now() - now)
       now = Date.now()
-      // console.log("done adding commits")
     }
     await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
   }

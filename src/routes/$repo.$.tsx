@@ -6,12 +6,11 @@ import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
-import { openFile, updateTruckConfig } from "~/analyzer/analyze.server"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
+import { addAuthorUnion, makeDupeMap,  } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -33,11 +32,9 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
-import ServerInstance from "~/analyzer/ServerInstance.server"
+import InstanceManager from "~/analyzer/InstanceManager"
 
 let invalidateCache = false
-
-const instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
 
 export interface RepoData {
   analyzerData: AnalyzerData
@@ -47,21 +44,6 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
-}
-
-function getOrCreateInstance(repo: string, branch: string, path: string) {
-  const existing = instances.get(repo)?.get(branch)
-  if (existing) return existing
-
-  const newInstance = new ServerInstance(repo, branch, path)
-  const existingRepo = instances.get(repo)
-  if (existingRepo) {
-    existingRepo.set(branch, newInstance)
-  } else {
-    instances.set(repo, new Map([[branch, newInstance]]))
-  }
-
-  return newInstance
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -79,7 +61,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (params["*"]) {
     options.branch = params["*"]
   }
-  const instance = getOrCreateInstance(params["repo"], options.branch, options.path)
+  const instance = InstanceManager.getOrCreateInstance(params["repo"], options.branch, options.path)
 
   const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
     addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
@@ -104,6 +86,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
+  
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -119,6 +102,9 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const [args] = await getTruckConfigWithArgs(params["repo"])
   const path = resolve(args.path, params["repo"])
+
+  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+
 
   if (ignore && typeof ignore === "string") {
     await updateTruckConfig(path, (prevConfig) => {
@@ -147,7 +133,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   if (typeof fileToOpen === "string") {
-    openFile(fileToOpen)
+    openFile(instance.path, fileToOpen)
     return null
   }
 
