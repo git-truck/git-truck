@@ -1,7 +1,7 @@
 import { useFetcher } from "@remix-run/react"
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
-import type { AnalyzationStatus } from "~/analyzer/analyze.server"
+import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import anitruck from "~/assets/truck.gif"
 
 type ProgressData = {

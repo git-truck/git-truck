@@ -43,23 +43,27 @@ export default class DB {
     );`)
   }
 
-  private async flushFileChanges(queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[]) {
-    if (valueArrayFilechanges.length === 0) return
-    const insertStatement = await (await this.instance).prepare(queryBuilderFilechanges.join(""))
-    await insertStatement.run(...valueArrayFilechanges)
+  private batchSize = 10000
+  private queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+  private valueArrayFilechanges: (string|boolean|number)[] = []
+
+  private async flushFileChanges() {
+    if (this.valueArrayFilechanges.length === 0) return
+    const insertStatement = await (await this.instance).prepare(this.queryBuilderFilechanges.join(""))
+    await insertStatement.run(...this.valueArrayFilechanges)
     await insertStatement.finalize()
-    queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
-    valueArrayFilechanges = []
+    this.queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+    this.valueArrayFilechanges = []
   }
 
-  private async addFileChanges(fileChanges: FileChange[], author: string, hash: string, queryBuilderFilechanges: string[], valueArrayFilechanges: (string|boolean|number)[], batchSize: number) {
+  private async addFileChanges(fileChanges: FileChange[], author: string, hash: string) {
     for (const fileChange of fileChanges) {
-      queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
-      valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
+      this.queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
+      this.valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
     }
 
-    if (queryBuilderFilechanges.length > batchSize) {
-      await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
+    if (this.queryBuilderFilechanges.length > this.batchSize) {
+      await this.flushFileChanges()
     }
   }
 
@@ -67,30 +71,23 @@ export default class DB {
     const commitEntries = commits.values()
     if (commits.size < 1) return
     
-    const batchSize = 10000
-    const queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
-    const valueArrayFilechanges: (string|boolean|number)[] = []
-    let now = Date.now()
-    for (let index = 0; index < commits.size; index += batchSize) {
-      const thisBatchSize = Math.min(commits.size - index, batchSize)
+    for (let index = 0; index < commits.size; index += this.batchSize) {
+      const thisBatchSize = Math.min(commits.size - index, this.batchSize)
       
       const queryBuilderCommits: string[] = []
       queryBuilderCommits.push(`INSERT INTO commits (hash, author, time, body, message) VALUES `)
       for (let i = 0; i < thisBatchSize; i++) queryBuilderCommits.push(`(?, ?, ?, ?, ?,),`)
       const insertStatement = await (await this.instance).prepare(queryBuilderCommits.join(""))
-    
       const valueArray = []
       for (let x = 0; x < thisBatchSize; x++) {
         const commit = commitEntries.next().value
-        await this.addFileChanges(commit.fileChanges, commit.author, commit.hash, queryBuilderFilechanges, valueArrayFilechanges, batchSize)
+        await this.addFileChanges(commit.fileChanges, commit.author, commit.hash)
         valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
       }
       await insertStatement.run(...valueArray)
       await insertStatement.finalize()
-      console.log("batch loop", Date.now() - now)
-      now = Date.now()
     }
-    await this.flushFileChanges(queryBuilderFilechanges, valueArrayFilechanges)
+    await this.flushFileChanges()
   }
 
   // public static async addFile(blob: GitBlobObject) {

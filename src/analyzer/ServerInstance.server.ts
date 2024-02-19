@@ -1,26 +1,31 @@
 import DB from "./DB"
 import { GitCaller } from "./git-caller.server"
 import { AnalyzerDataInterfaceVersion } from "./model";
-import type { AnalyzerData, GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, TruckConfig, RawGitObject } from "./model"
+import type { AnalyzerData, GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, TruckConfig, RawGitObject, HydratedGitCommitObject, GitLogEntry, FileChange, HydratedGitBlobObject, HydratedGitTreeObject } from "./model"
 import { log, setLogLevel } from "./log.server"
 import { resolve, isAbsolute } from "path"
-import { describeAsyncJob, getDirName, writeRepoToFile } from "./util.server"
-import { hydrateData } from "./hydrate.server"
+import { analyzeRenamedFile, describeAsyncJob, getDirName, writeRepoToFile } from "./util.server"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
 import pkg from "../../package.json"
 import ignore from "ignore"
 import { TreeCleanup, applyIgnore, applyMetrics, initMetrics } from "./postprocessing.server"
 import { getCoAuthors } from "./coauthors.server";
-import { emptyGitCommitHash, treeRegex } from "./constants";
+import { contribRegex, emptyGitCommitHash, gitLogRegex, treeRegex } from "./constants";
+import { cpus } from "os"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart" | "Idle"
 
 export default class ServerInstance {
-    private analyzationStatus: AnalyzationStatus = "Idle"
+    public analyzationStatus: AnalyzationStatus = "Idle"
     private repoSanitized: string
     private branchSanitized: string
-    private gitCaller: GitCaller
+    public gitCaller: GitCaller
     private db: DB
+    public progress = 0
+    public totalCommitCount = 0
+
+    private renamedFiles: Map<string, { path: string; timestamp: number }[]> = new Map()
+    private authors: Set<string> = new Set()
 
     constructor(private repo: string, private branch: string, public path: string) {
         this.repoSanitized = repo.replace(/\W/g, "_")
@@ -94,7 +99,7 @@ export default class ServerInstance {
           if (repoTreeError) throw repoTreeError
       
           const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
-            job: () => hydrateData(repoTree, repoName, this.branch, this.gitCaller),
+            job: () => this.hydrateData(repoTree, repoName, this.branch),
             beforeMsg: "Hydrating commit tree",
             afterMsg: "Commit tree hydrated",
             errorMsg: "Error hydrating commit tree"
@@ -291,5 +296,240 @@ private async analyzeTree(path: string, name: string, hash: string) {
   // await Promise.all(jobs)
   return { rootTree, fileCount }
 }
+
+
+public gatherCommitsFromGitLog(
+  gitLogResult: string,
+  commits: Map<string, GitLogEntry>,
+  handleAuthors: boolean
+) {
+  const matches = gitLogResult.matchAll(gitLogRegex)
+  for (const match of matches) {
+    const groups = match.groups ?? {}
+    const author = groups.author
+    const time = Number(groups.date)
+    const body = groups.body
+    const message = groups.message
+    const hash = groups.hash
+    const contributionsString = groups.contributions
+    const coauthors = body ? getCoAuthors(body) : []
+    const fileChanges: FileChange[] = []
+
+    log.debug(`Checking commit from ${time} ${hash}`)
+
+    if (handleAuthors) {
+      this.authors.add(author)
+      for (const coauthor of coauthors) this.authors.add(coauthor.name)
+    }
+
+    if (contributionsString) {
+      const contribMatches = contributionsString.matchAll(contribRegex)
+      for (const contribMatch of contribMatches) {
+        log.debug("contrib loop")
+        const file = contribMatch.groups?.file.trim()
+        const isBinary = contribMatch.groups?.insertions === "-"
+        if (!file) throw Error("file not found")
+
+        let filePath = file
+        const fileHasMoved = file.includes("=>")
+        if (fileHasMoved) {
+          filePath = analyzeRenamedFile(filePath, this.renamedFiles, time)
+        }
+
+        const contribs = isBinary
+          ? 1
+          : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
+        fileChanges.push({ isBinary, contribs, path: filePath })
+      }
+    }
+    commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
+  }
+}
+
+private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
+  const gitLogResult = await this.gitCaller.gitLog(start, end - start)
+  this.gatherCommitsFromGitLog(gitLogResult, commits, true)
+  log.debug("done gathering")
+}
+
+private async updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntry, change: FileChange) {
+  blob.noCommits = (blob.noCommits ?? 0) + 1
+  if (blob.commits) {
+    blob.commits.push({ hash: commit.hash, time: commit.time })
+  } else {
+    blob.commits = [{ hash: commit.hash, time: commit.time }]
+  }
+  if (!blob.lastChangeEpoch || blob.lastChangeEpoch < commit.time) blob.lastChangeEpoch = commit.time
+
+  if (change.isBinary) {
+    blob.isBinary = true
+    blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + 1
+
+    for (const coauthor of commit.coauthors) {
+      blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + 1
+    }
+    return
+  }
+  if (change.contribs === 0) return // in case a rename with no changes, this happens
+  blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
+
+  for (const coauthor of commit.coauthors) {
+    blob.authors[coauthor.name] = (blob.authors[coauthor.name] ?? 0) + change.contribs
+  }
+}
+
+private async hydrateData(commit: GitCommitObject, repo: string, branch: string): Promise<[HydratedGitCommitObject, string[]]> {
+  const data = commit as HydratedGitCommitObject
+  const fileMap = this.convertFileTreeToMap(data.tree)
+  this.initially_mut(data)
+  const commitCount = await this.gitCaller.getCommitCount()
+  this.totalCommitCount = commitCount
+  const threadCount = cpus().length > 4 ? 4 : 2
+  // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
+  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10_000), 150_000)
+  setLogLevel("DEBUG")
+  if (commitCount > 500_000)
+  log.warn(
+"This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
+)
+this.analyzationStatus = "Hydrating"
+// Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
+for (let index = 0; index < commitCount; index += commitBundleSize) {
+    this.progress = index
+    const runCountCommit = Math.min(commitBundleSize, commitCount - index)
+    const sectionSize = Math.ceil(runCountCommit / threadCount)
+    
+    const commits = new Map<string, GitLogEntry>()
+
+    const promises = Array.from({ length: threadCount }, (_, i) => {
+      const sectionStart = index + i * sectionSize
+      let sectionEnd = sectionStart + sectionSize
+      if (sectionEnd > commitCount) sectionEnd = runCountCommit
+      log.info("start thread " + sectionStart + "-" + sectionEnd)
+      return this.gatherCommitsInRange(sectionStart, sectionEnd, commits)
+    })
+    
+    await Promise.all(promises)
+    
+    const start = Date.now()
+    log.debug("adding")
+    await this.db.addCommits(commits)
+    log.debug("done adding")
+    const end = Date.now()
+    console.log("add commits ms", end - start)
+    
+    await this.hydrateBlobs(fileMap, commits)
+    log.info("threads synced")
+  }
+  
+  console.time("commitquery")
+  const rows = await this.db.query(`SELECT author, COUNT(*) as commit_count
+  FROM commits
+  GROUP BY author
+  ORDER BY commit_count DESC
+  LIMIT 10;`)
+  console.timeEnd("commitquery")
+  console.log(rows)
+
+  const rows2 = await this.db.query(`SELECT author, message, body
+  FROM commits
+  LIMIT 10;`)
+  console.log("rows2", rows2)
+
+  const rows3 = await this.db.query(`select *
+  FROM filechanges
+  LIMIT 40;`)
+  console.log("rows3", rows3)
+
+  const rowCount = await this.db.query(`select count (*) from commits;`)
+  console.log("row count", rowCount)
+
+  this.sortCommits(fileMap)
+  return [data, Array.from(this.authors)]
+}
+
+private sortCommits(fileMap: Map<string, GitBlobObject>) {
+  fileMap.forEach((blob, _) => {
+    const cast = blob as HydratedGitBlobObject
+    cast.commits?.sort((a, b) => {
+      return b.time - a.time
+    })
+  })
+}
+
+private async hydrateBlobs(files: Map<string, GitBlobObject>, commits: Map<string, GitLogEntry>) {
+  for (const [, commit] of commits) {
+    for (const change of commit.fileChanges) {
+      let recentChange = { path: change.path, timestamp: commit.time }
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const rename = this.getRecentRename(recentChange.timestamp, recentChange.path)
+        if (!rename) break
+        recentChange = rename
+      }
+      const blob = files.get(recentChange.path)
+      if (!blob) {
+        continue
+      }
+      await this.updateCreditOnBlob(blob as HydratedGitBlobObject, commit, change)
+    }
+  }
+}
+
+private convertFileTreeToMap(tree: GitTreeObject) {
+  const map = new Map<string, GitBlobObject>()
+
+  function aux(recTree: GitTreeObject) {
+    for (const child of recTree.children) {
+      if (child.type === "blob") {
+        map.set(child.path.substring(child.path.indexOf("/") + 1), child)
+      } else {
+        aux(child)
+      }
+    }
+  }
+
+  aux(tree)
+  return map
+}
+
+private getRecentRename(targetTimestamp: number, path: string) {
+  const renames = this.renamedFiles.get(path)
+  if (!renames) return undefined
+
+  let minTimestamp = Infinity
+  let resultRename = undefined
+
+  for (const rename of renames) {
+    const currentTimestamp = rename.timestamp
+    if (currentTimestamp > targetTimestamp && currentTimestamp < minTimestamp) {
+      minTimestamp = currentTimestamp
+      resultRename = rename
+    }
+  }
+
+  if (minTimestamp === Infinity) return undefined
+  return resultRename
+}
+
+private initially_mut(data: HydratedGitCommitObject) {
+  data.oldestLatestChangeEpoch = Number.MAX_VALUE
+  data.newestLatestChangeEpoch = Number.MIN_VALUE
+  this.authors = new Set()
+  this.renamedFiles = new Map<string, { path: string; timestamp: number }[]>()
+
+  this.addAuthorsField_mut(data.tree)
+}
+
+private addAuthorsField_mut(tree: HydratedGitTreeObject) {
+  for (const child of tree.children) {
+    if (child.type === "blob") {
+      child.authors = {}
+    } else {
+      this.addAuthorsField_mut(child)
+    }
+  }
+}
+
 
 }
