@@ -1,6 +1,4 @@
 import { useTransition, useState } from "react"
-import type { MouseEvent } from "react"
-
 import { useNavigation, useSubmit } from "@remix-run/react"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
@@ -83,10 +81,6 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
     .slice(0)
     .sort(stringSorter)
 
-  function handleModalWrapperClick(event: MouseEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) onClose()
-  }
-
   useKey("Escape", onClose)
 
   const getColorFromDisplayName = (displayName: string) => authorColors.get(displayName) ?? "#333"
@@ -153,7 +147,7 @@ export function UnionAuthorsModal({ visible, onClose }: { visible: boolean; onCl
   })
 
   return (
-    <div className="fixed inset-0 z-10 grid bg-black/50 p-2" onClick={handleModalWrapperClick}>
+    <div className="fixed inset-0 z-10 grid bg-black/50 p-2">
       <div className="card relative mx-auto grid h-full max-h-full w-auto max-w-screen-lg grid-flow-col grid-cols-[1fr_1fr]  grid-rows-[max-content_max-content_max-content_max-content_1fr_max-content] gap-4 overflow-hidden">
         <h2 className="col-span-2 text-2xl">Group authors</h2>
 

@@ -37,11 +37,12 @@ function CommitDistFragment(props: CommitDistFragProps) {
               <li
                 className="cursor-auto"
                 style={{ listStyleImage: `url(${commitIcon})` }}
-                onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
                 key={value.hash + "--itemContentAccordion"}
                 title={`By: ${value.author}`}
               >
-                {value.message}
+                <button onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}>
+                  {value.message}
+                </button>
               </li>
             )
           })}
@@ -164,7 +165,9 @@ export function CommitHistory() {
         <CommitDistFragment
           items={
             commitSearch != ""
-              ? commits.filter((commit: GitLogEntry) => commit.message.toLowerCase().includes(commitSearch.toLowerCase()))
+              ? commits.filter((commit: GitLogEntry) =>
+                  commit.message.toLowerCase().includes(commitSearch.toLowerCase())
+                )
               : commits
           }
           sortBy={commitSortingMethodsType}
@@ -172,12 +175,12 @@ export function CommitHistory() {
 
         {fetcher.state === "idle" ? (
           commitIndex + commitIncrement < totalCommitHashes.length ? (
-            <span
+            <button
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
               className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
             >
               Load more commits {footerText}
-            </span>
+            </button>
           ) : (
             <span className="whitespace-pre text-xs font-medium opacity-70">{footerText}</span>
           )

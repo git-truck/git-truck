@@ -33,7 +33,7 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
-import { Online } from "react-detect-offline";
+import { Online } from "react-detect-offline"
 
 let invalidateCache = false
 
@@ -267,7 +267,7 @@ export default function Repo() {
         >
           {!isFullscreen ? (
             <div className="absolute z-10">
-              <div
+              <button
                 onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
                 className={clsx(
                   "absolute top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white",
@@ -277,7 +277,7 @@ export default function Repo() {
                 )}
               >
                 <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
-              </div>
+              </button>
             </div>
           ) : null}
           {!isLeftPanelCollapse ? (
@@ -305,12 +305,12 @@ export default function Repo() {
         >
           {!isFullscreen ? (
             <div className="absolute z-10">
-              <div
+              <button
                 onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
                 className="absolute right-0 top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white"
               >
                 <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
-              </div>
+              </button>
             </div>
           ) : null}
           {!isRightPanelCollapse ? (

@@ -90,7 +90,7 @@ async function updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEnt
     }
     return
   }
-  if (change.contribs === 0) return // in case a rename with no changes, this happens 
+  if (change.contribs === 0) return // in case a rename with no changes, this happens
   blob.authors[commit.author] = (blob.authors[commit.author] ?? 0) + change.contribs
 
   for (const coauthor of commit.coauthors) {
@@ -102,7 +102,7 @@ export let progress = 0
 export let totalCommitCount = Infinity
 
 export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGitCommitObject, string[]]> {
-  setFlagsFromString('--max-old-space-size=4096')
+  setFlagsFromString("--max-old-space-size=4096")
   const data = commit as HydratedGitCommitObject
   const fileMap = convertFileTreeToMap(data.tree)
   initially_mut(data)
@@ -144,7 +144,7 @@ export async function hydrateData(commit: GitCommitObject): Promise<[HydratedGit
 }
 
 function sortCommits(fileMap: Map<string, GitBlobObject>) {
-  fileMap.forEach((blob, _) => {
+  fileMap.forEach((blob) => {
     const cast = blob as HydratedGitBlobObject
     cast.commits?.sort((a, b) => {
       return b.time - a.time

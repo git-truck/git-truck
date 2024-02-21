@@ -21,10 +21,10 @@ export function getDefaultCommitTab(): CommitTab {
   return {
     startDate: null,
     endDate: null,
-    setStartDate: (newDate: number | null) => {
+    setStartDate: () => {
       throw new Error("No setStartDate provided")
     },
-    setEndDate: (newDate: number | null) => {
+    setEndDate: () => {
       throw new Error("No setEndDate provided")
     }
   }

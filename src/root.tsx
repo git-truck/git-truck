@@ -72,9 +72,9 @@ export const ErrorBoundary = () => {
 
   if (isRouteErrorResponse(error)) {
     return (
-      <html>
+      <html lang="en">
         <head>
-          <title>Oops! An error wasn't handled</title>
+          <title>Oops! An error wasn&apos;t handled</title>
           <Meta />
           <Links />
         </head>
@@ -87,9 +87,9 @@ export const ErrorBoundary = () => {
     )
   } else if (error instanceof Error) {
     return (
-      <html>
+      <html lang="en">
         <head>
-          <title>Oops! An error wasn't handled</title>
+          <title>Oops! An error wasn&apos;t handled</title>
           <Meta />
           <Links />
         </head>

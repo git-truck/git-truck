@@ -24,12 +24,16 @@
     "watch": "remix watch",
     "start": "npm run build && node .",
     "clean": "rimraf -rf build public/build .cache .temp",
-    "tsc": "tsc",
+    "typecheck": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
     "pub-exp": "node ./scripts/publish-experimental.js",
     "prepublishOnly": "npm run clean && npm run build",
-    "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --log-level warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
-    "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
+    "format:write": "prettier --log-level warn --write src/**/*.{ts,tsx} scripts/**/*.mjs",
+    "lint:fix": "eslint --fix --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "check:write": "npm run format:write && npm run lint:fix",
+    "check": "npm run format:check && npm run lint",
+    "format:check": "prettier --check src/**/*.{ts,tsx} scripts/**/*.mjs",
+    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint ."
   },
   "devDependencies": {
     "@mdi/js": "^7.3.67",
@@ -88,7 +92,7 @@
     "nanospinner": "^1.1.0",
     "open": "^8.4.2",
     "postcss": "^8.4.31",
-    "prettier-plugin-tailwindcss": "^0.5.6",
+    "prettier-plugin-tailwindcss": "^0.5.11",
     "randomstring": "^1.3.0",
     "react": "^18.2.0",
     "react-detect-offline": "^2.4.5",
