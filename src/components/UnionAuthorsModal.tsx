@@ -189,12 +189,6 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     <dialog
       ref={ref}
       aria-modal
-      onClick={(evt) => {
-        if (evt.currentTarget !== evt.target) {
-          return
-        }
-        onClose()
-      }}
       className="z-10 m-auto flex h-full w-full flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
     >
       <div className="card m-auto grid h-full w-full max-w-screen-2xl grow grid-cols-[1fr,1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden shadow">
