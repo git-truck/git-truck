@@ -98,7 +98,7 @@ function RepositoryGrid({ repositories }: { repositories: SerializeFrom<Reposito
   )
 }
 
-function RepositoryEntry({ repo, index }: { repo: SerializeFrom<Repository>; index: number }): ReactNode {
+function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository>; index: number }): ReactNode {
   const [head, setHead] = useState(repo.currentHead)
   const path = getPathFromRepoAndHead(repo.name, head)
 
