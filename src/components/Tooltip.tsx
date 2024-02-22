@@ -36,7 +36,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 
   return (
     <div
-      className={`card absolute left-0 top-0 flex w-max flex-row place-items-center rounded-full bg-gray-100/50 py-0 pl-1 pr-2 backdrop-blur will-change-transform dark:bg-gray-800/40 ${
+      className={`card absolute left-0 top-0 z-50 flex w-max flex-row place-items-center rounded-full bg-gray-100/50 py-0 pl-1 pr-2 backdrop-blur will-change-transform dark:bg-gray-800/40 ${
         visible ? "visible" : "hidden"
       }`}
       ref={tooltipRef}
