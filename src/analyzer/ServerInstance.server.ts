@@ -20,7 +20,7 @@ export default class ServerInstance {
     private repoSanitized: string
     private branchSanitized: string
     public gitCaller: GitCaller
-    private db: DB
+    public db: DB
     public progress = 0
     public totalCommitCount = 0
 

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import type { GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
+import type { CommitDTO, GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import { dateFormatLong } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
@@ -12,15 +12,15 @@ import { useData } from "~/contexts/DataContext"
 type SortCommitsMethods = "date" | "author"
 
 interface CommitDistFragProps {
-  items: GitLogEntry[]
+  items: CommitDTO[]
   sortBy?: SortCommitsMethods
-  handleOnClick?: (commit: GitLogEntry) => void
+  handleOnClick?: (commit: CommitDTO) => void
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
-  const cleanGroupItems: { [key: string]: GitLogEntry[] } = sortCommits(props.items, sortMethod)
+  const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items, sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
   for (const [key, values] of Object.entries(cleanGroupItems)) {
@@ -28,7 +28,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       title: key,
       content: (
         <>
-          {values.map((value: GitLogEntry) => {
+          {values.map((value: CommitDTO) => {
             return (
               <li
                 className="cursor-auto"
@@ -80,41 +80,45 @@ function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
 }
 
 export function CommitHistory() {
-  const [totalCommitHashes, setTotalCommitHashes] = useState<string[]>([])
+  // const [totalCommitHashes, setTotalCommitHashes] = useState<string[]>([])
   const analyzerData = useData()
-  const [commits, setCommits] = useState<GitLogEntry[] | null>(null)
+  const [commits, setCommits] = useState<CommitDTO[] | null>(null)
   const [commitIndex, setCommitIndex] = useState(0)
   const commitIncrement = 5
   const { clickedObject } = useClickedObject()
   const fetcher = useFetcher()
 
-  function requestCommits(index: number, commitHashes?: string[]) {
+  function requestCommits() {
     const searchParams = new URLSearchParams()
-    const commitHashesToRequest = commitHashes ?? totalCommitHashes
-    searchParams.set("commits", commitHashesToRequest.slice(index, index + commitIncrement).join(","))
     searchParams.set("branch", analyzerData.repo.currentHead)
     searchParams.set("repo", analyzerData.analyzerData.repo)
+    searchParams.set("skip", commitIndex + "")
+    searchParams.set("count", commitIncrement + "")
     fetcher.load(`/commits?${searchParams.toString()}`)
   }
 
   useEffect(() => {
     if (clickedObject) {
-      let commitHashes: string[] = []
-      if (clickedObject.type === "blob") {
-        commitHashes = clickedObject.commits.map((a) => a.hash)
-      } else {
-        commitHashes = calculateCommitsForSubTree(clickedObject).map((a) => a.hash)
-      }
-      setTotalCommitHashes(commitHashes)
-      setCommits(null)
+      // TODO: show commits for folder by finding all filechanges with path that starts with folder path, and join with commits
+      // let commitHashes: string[] = []
+      // if (clickedObject.type === "blob") {
+      //   commitHashes = clickedObject.commits.map((a) => a.hash)
+      // } else {
+      //   commitHashes = calculateCommitsForSubTree(clickedObject).map((a) => a.hash)
+      // }
+      // setTotalCommitHashes(commitHashes)
+      // setCommits(null)
+      // setCommitIndex(0)
+      // requestCommits(0, commitHashes)
+      requestCommits()
+    } else {
       setCommitIndex(0)
-      requestCommits(0, commitHashes)
     }
   }, [clickedObject])
 
   useEffect(() => {
     if (!clickedObject || commitIndex === 0) return
-    requestCommits(commitIndex)
+    requestCommits()
   }, [commitIndex])
 
   useEffect(() => {
@@ -133,10 +137,8 @@ export function CommitHistory() {
 
   const headerText = useMemo<string>(() => {
     if (!clickedObject) return ""
-    return `Commit history (${Math.min(totalCommitHashes.length, commitIndex + commitIncrement)} of ${
-      totalCommitHashes.length
-    } shown)`
-  }, [clickedObject, totalCommitHashes, commitIndex])
+    return `Commit history`
+  }, [clickedObject, commitIndex])
 
   if (!clickedObject) return null
 
@@ -164,14 +166,14 @@ export function CommitHistory() {
         <CommitDistFragment items={commits} />
 
         {fetcher.state === "idle" ? (
-          commitIndex + commitIncrement < totalCommitHashes.length ? (
+          // commitIndex + commitIncrement < totalCommitHashes.length ? (
             <span
               onClick={() => setCommitIndex(commitIndex + commitIncrement)}
               className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
             >
               Load more commits
             </span>
-          ) : null
+          // ) : null
         ) : (
           <h3>Loading commits...</h3>
         )}
@@ -180,8 +182,8 @@ export function CommitHistory() {
   )
 }
 
-function sortCommits(items: GitLogEntry[], method: SortCommitsMethods): { [key: string]: GitLogEntry[] } {
-  const cleanGroupItems: { [key: string]: GitLogEntry[] } = {}
+function sortCommits(items: CommitDTO[], method: SortCommitsMethods): { [key: string]: CommitDTO[] } {
+  const cleanGroupItems: { [key: string]: CommitDTO[] } = {}
   switch (method) {
     case "author":
       for (const commit of items) {

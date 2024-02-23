@@ -1,5 +1,5 @@
 import { Database } from "duckdb-async"
-import type { FileChange, GitLogEntry } from "./model"
+import type { CommitDTO, FileChange, GitLogEntry } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
@@ -83,7 +83,15 @@ export default class DB {
         await this.flushFileChanges()
       }
     }
+  }
 
+  public async getCommits(skip: number, count: number) {
+    const res = await (await this.instance).all(`
+      SELECT * FROM commits ORDER BY time DESC OFFSET ${skip} LIMIT ${count};
+    `)
+    return res.map((row) => {
+      return {author: row["author"], time: row["time"], body: row["body"], hash: row["hash"], message: row["message"]} as CommitDTO
+    })
   }
 
   public async addRenames(renames: {from: string, to: string, time: number}[]) {

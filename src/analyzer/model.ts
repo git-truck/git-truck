@@ -142,12 +142,15 @@ export interface FileChange {
   contribs: number
 }
 
-export interface GitLogEntry {
+export interface CommitDTO {
   author: string
   time: number
   body: string
   message: string
   hash: string
+}
+
+export interface GitLogEntry extends CommitDTO {
   coauthors: Person[]
   fileChanges: FileChange[]
 }
