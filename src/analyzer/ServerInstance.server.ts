@@ -325,7 +325,6 @@ public gatherCommitsFromGitLog(
     if (contributionsString) {
       const contribMatches = contributionsString.matchAll(contribRegex)
       for (const contribMatch of contribMatches) {
-        log.debug("contrib loop")
         const file = contribMatch.groups?.file.trim()
         const isBinary = contribMatch.groups?.insertions === "-"
         if (!file) throw Error("file not found")
@@ -386,8 +385,7 @@ private async hydrateData(commit: GitCommitObject, repo: string, branch: string)
   this.totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
-  const commitBundleSize = Math.min(Math.max(commitCount / 4, 10_000), 150_000)
-  setLogLevel("DEBUG")
+  const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
   if (commitCount > 500_000)
   log.warn(
 "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
@@ -403,7 +401,7 @@ for (let index = 0; index < commitCount; index += commitBundleSize) {
 
     const promises = Array.from({ length: threadCount }, (_, i) => {
       const sectionStart = index + i * sectionSize
-      let sectionEnd = sectionStart + sectionSize
+      let sectionEnd = Math.min(sectionStart + sectionSize, index + runCountCommit)
       if (sectionEnd > commitCount) sectionEnd = runCountCommit
       log.info("start thread " + sectionStart + "-" + sectionEnd)
       return this.gatherCommitsInRange(sectionStart, sectionEnd, commits)
@@ -443,6 +441,9 @@ for (let index = 0; index < commitCount; index += commitBundleSize) {
 
   const rowCount = await this.db.query(`select count (*) from commits;`)
   console.log("row count", rowCount)
+
+  const latest = await this.db.getLatestCommitTime()
+  console.log("latest", latest)
 
   this.sortCommits(fileMap)
   return [data, Array.from(this.authors)]
