@@ -316,7 +316,6 @@ public async gatherCommitsFromGitLog(
     const coauthors = body ? getCoAuthors(body) : []
     const fileChanges: FileChange[] = []
 
-    log.debug(`Checking commit from ${time} ${hash}`)
 
     if (handleAuthors) {
       this.authors.add(author)
@@ -392,7 +391,7 @@ private async hydrateData(commit: GitCommitObject, repo: string, branch: string)
     log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
   }
   this.totalCommitCount = commitCount
-  const threadCount = cpus().length > 4 ? 4 : 2
+  const threadCount = Math.min(cpus().length > 4 ? 4 : 2, commitCount)
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
   const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
   if (commitCount > 500_000)
