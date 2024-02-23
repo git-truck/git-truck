@@ -25,6 +25,7 @@ export default class ServerInstance {
     public totalCommitCount = 0
 
     private renamedFiles: Map<string, { path: string; timestamp: number }[]> = new Map()
+    private renamedFilesNew: {from: string, to: string, time: number}[] = []
     private authors: Set<string> = new Set()
 
     constructor(private repo: string, private branch: string, public path: string) {
@@ -298,7 +299,7 @@ private async analyzeTree(path: string, name: string, hash: string) {
 }
 
 
-public gatherCommitsFromGitLog(
+public async gatherCommitsFromGitLog(
   gitLogResult: string,
   commits: Map<string, GitLogEntry>,
   handleAuthors: boolean
@@ -332,7 +333,7 @@ public gatherCommitsFromGitLog(
         let filePath = file
         const fileHasMoved = file.includes("=>")
         if (fileHasMoved) {
-          filePath = analyzeRenamedFile(filePath, this.renamedFiles, time)
+          filePath = analyzeRenamedFile(filePath, this.renamedFiles, time, this.renamedFilesNew)
         }
 
         const contribs = isBinary
@@ -343,6 +344,7 @@ public gatherCommitsFromGitLog(
     }
     commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
   }
+  this.db.addRenames(this.renamedFilesNew)
 }
 
 private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
@@ -381,7 +383,14 @@ private async hydrateData(commit: GitCommitObject, repo: string, branch: string)
   const data = commit as HydratedGitCommitObject
   const fileMap = this.convertFileTreeToMap(data.tree)
   this.initially_mut(data)
-  const commitCount = await this.gitCaller.getCommitCount()
+  setLogLevel("DEBUG")
+  let commitCount = await this.gitCaller.getCommitCount()
+  if (await this.db.hasCompletedPreviously()) {
+    log.debug("going in")
+    const latestCommit = await this.db.getLatestCommitHash()
+    commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
+    log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
+  }
   this.totalCommitCount = commitCount
   const threadCount = cpus().length > 4 ? 4 : 2
   // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
@@ -442,10 +451,8 @@ for (let index = 0; index < commitCount; index += commitBundleSize) {
   const rowCount = await this.db.query(`select count (*) from commits;`)
   console.log("row count", rowCount)
 
-  const latest = await this.db.getLatestCommitTime()
-  console.log("latest", latest)
-
   this.sortCommits(fileMap)
+  await this.db.setFinishTime()
   return [data, Array.from(this.authors)]
 }
 
