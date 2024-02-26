@@ -1,4 +1,3 @@
-import type { AuthorshipType } from "~/metrics/metrics"
 import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
 
 export interface Repository {
@@ -50,7 +49,7 @@ export interface TruckConfig {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 15
+export const AnalyzerDataInterfaceVersion = 16
 
 export interface AnalyzerData {
   cached: boolean
@@ -85,8 +84,8 @@ export interface HydratedGitBlobObject extends GitBlobObject {
   noCommits: number
   lastChangeEpoch?: number
   isBinary?: boolean
-  unionedAuthors?: Record<AuthorshipType, Record<string, number>>
-  dominantAuthor?: Record<AuthorshipType, [string, number]>
+  unionedAuthors?: Record<string, number>
+  dominantAuthor?: [string, number]
   isSearchResult?: boolean
   commits: { hash: string; time: number }[]
 }
