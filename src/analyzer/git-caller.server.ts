@@ -69,7 +69,7 @@ export class GitCaller {
     const args = [
       "show",
       "--no-patch",
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      '--format="author <|%aN|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
     ]
 
@@ -250,7 +250,7 @@ export class GitCaller {
       this.branch,
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="author <|%an|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
+      '--format="author <|%aN|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
     const result = (await runProcess(this.path, "git", args)) as string
