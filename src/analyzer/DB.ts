@@ -39,10 +39,8 @@ export default class DB {
     );
     CREATE TABLE IF NOT EXISTS filechanges (
       commithash VARCHAR,
-      author VARCHAR, --Duplicate information, but might enable faster querying, as joining with commits-table is not necessary
       contribcount UINTEGER,
       filepath VARCHAR,
-      isbinary BOOLEAN,
       --FOREIGN KEY (commithash) REFERENCES commits(hash)
     );
     CREATE TABLE IF NOT EXISTS authorunions (
@@ -62,7 +60,7 @@ export default class DB {
   }
 
   private batchSize = 5000
-  private queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+  private queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, contribcount, filepath) VALUES `]
   private valueArrayFilechanges: (string|boolean|number)[] = []
 
   private async flushFileChanges() {
@@ -70,15 +68,15 @@ export default class DB {
     const insertStatement = await (await this.instance).prepare(this.queryBuilderFilechanges.join(""))
     await insertStatement.run(...this.valueArrayFilechanges)
     await insertStatement.finalize()
-    this.queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, author, contribcount, filepath, isbinary) VALUES `]
+    this.queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, contribcount, filepath) VALUES `]
     this.valueArrayFilechanges = []
   }
 
   private async addFileChanges(fileChanges: FileChange[], author: string, hash: string) {
     // console.log("filechanges count", fileChanges.length)
     for (const fileChange of fileChanges) {
-      this.queryBuilderFilechanges.push(`(?, ?, ?, ?, ?,),`)
-      this.valueArrayFilechanges.push(hash, author, fileChange.contribs, fileChange.path, fileChange.isBinary)
+      this.queryBuilderFilechanges.push(`(?, ?, ?),`)
+      this.valueArrayFilechanges.push(hash, fileChange.contribs, fileChange.path)
       if (this.queryBuilderFilechanges.length >= this.batchSize) {
         await this.flushFileChanges()
       }
@@ -92,6 +90,51 @@ export default class DB {
     return res.map((row) => {
       return {author: row["author"], time: row["time"], body: row["body"], hash: row["hash"], message: row["message"]} as CommitDTO
     })
+  }
+
+  public async getCommitCountPerFile() {
+    // TODO: aggregate for renamed files
+    const res = await (await this.instance).all(`
+      SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC;
+    `)
+    return new Map(res.map((row) => {
+      return [row["filepath"] as string, row["count"] as number]
+    }))
+  }
+  
+  public async getLastChangedPerFile() {
+    const res = await (await this.instance).all(`
+      SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY f.filepath;
+    `)
+    return new Map(res.map((row) => {
+      return [row["filepath"] as string, row["max_time"] as number]
+    }))
+  }
+  
+  public async getAuthorCountPerFile() {
+    // TODO: aggregate for renamed files, also handle coauthors
+    const res = await (await this.instance).all(`
+      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath;
+    `)
+    return new Map(res.map((row) => {
+      return [row["filepath"] as string, row["author_count"] as number]
+    }))
+  }
+  
+  public async getDominantAuthorPerFile() {
+    // TODO: also handle renames
+    const res = await (await this.instance).all(`
+      WITH RankedAuthors AS (
+        SELECT f.filepath, c.author, f.contribcount, ROW_NUMBER() OVER (PARTITION BY f.filepath ORDER BY f.contribcount DESC, c.author ASC) as rank
+        FROM filechanges f JOIN commits c ON f.commithash = c.hash
+      )
+      SELECT filepath, author, contribcount
+      FROM RankedAuthors
+      WHERE rank = 1;
+    `)
+    return new Map(res.map((row) => {
+      return [row["filepath"] as string, row["author"] as string]
+    }))
   }
 
   public async addRenames(renames: {from: string, to: string, time: number}[]) {
@@ -122,6 +165,7 @@ export default class DB {
   }
 
   public async setFinishTime() {
+    // TODO: also have metadata for table format, to rerun if data model changed
     await (await this.instance).all(`
       INSERT INTO metadata (field, value) VALUES ('finished', ${Date.now()});
     `)
