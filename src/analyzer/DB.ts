@@ -114,7 +114,7 @@ export default class DB {
   public async getAuthorCountPerFile() {
     // TODO: aggregate for renamed files, also handle coauthors
     const res = await (await this.instance).all(`
-      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath;
+      SELECT f.filepath, count(DISTINCT c.author) AS author_count FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, row["author_count"] as number]
@@ -162,6 +162,23 @@ export default class DB {
       SELECT count(*) as count FROM metadata WHERE field = 'finished';
     `)
     return res[0]["count"] > 0
+  }
+  
+  public async getNewestAndOldestChangeDates() {
+    // TODO: filter out files no longer in file tree
+    const res = await (await this.instance).all(`
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath);
+    `)
+    console.log("newestoldest", res, res[0]["newest"], res[0]["oldest"])
+    return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
+  }
+  
+  public async getMaxCommitCount() {
+    const res = await (await this.instance).all(`
+      SELECT MAX(count) as max_commits FROM (SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC);
+    `)
+    console.log("maxcommit")
+    return res[0]["max_commits"] as number
   }
 
   public async setFinishTime() {
