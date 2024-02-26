@@ -11,14 +11,7 @@ import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import uniqolor from "uniqolor"
 
-export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
-
-export const Authorship = {
-  HISTORICAL: "Complete history"
-  // BLAME: "Newest version",
-}
-
-export type AuthorshipType = keyof typeof Authorship
+export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
 export const Metric = {
   FILE_TYPE: "File type",
@@ -35,15 +28,12 @@ export function createMetricData(data: AnalyzerData, colorSeed: string | undefin
   const authorColors = generateAuthorColors(data.authors, colorSeed)
 
   return [
-    {
-      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors))
-      // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
-    },
+    setupMetricsCache(data.commit.tree, getMetricCalcs(data, authorColors)),
     authorColors
   ]
 }
 
-export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
+export function getMetricDescription(metric: MetricType): string {
   switch (metric) {
     case "FILE_TYPE":
       return "Where are different types of files located?"
@@ -52,13 +42,10 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
     case "LAST_CHANGED":
       return "How long ago did the files change?"
     case "SINGLE_AUTHOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which files are authored by only one person, throughout the repository's history?"
-        : "Which files are authored by only one person, in the newest version?"
+      return  "Which files are authored by only one person, throughout the repository's history?"
     case "TOP_CONTRIBUTOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which person has made the most line-changes to a file, throughout the repository's history?"
-        : "Which person has made the most line-changes to a file, in the newest version?"
+      return "Which person has made the most line-changes to a file, throughout the repository's history?"
+        
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
     default:
@@ -116,7 +103,6 @@ function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: numbe
 
 export function getMetricCalcs(
   data: AnalyzerData,
-  authorshipType: AuthorshipType,
   authorColors: Map<string, `#${string}`>
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
   const commit = data.commit
@@ -140,7 +126,7 @@ export function getMetricCalcs(
       "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorshipType, authorColors)
+        setDominanceColor(blob, cache, authorColors)
       }
     ],
     [
@@ -181,9 +167,9 @@ export function getMetricCalcs(
     [
       "TOP_CONTRIBUTOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
+        if (!blob.dominantAuthor) blob.dominantAuthor = {} as [string, number]
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+        setDominantAuthorColor(authorColors, blob, cache)
       }
     ],
     [

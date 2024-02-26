@@ -169,14 +169,14 @@ export const Chart = memo(function Chart({
 
 function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
   const [metricsData] = useMetrics()
-  const { chartType, metricType, authorshipType, transitionsEnabled } = useOptions()
+  const { chartType, metricType, transitionsEnabled } = useOptions()
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       stroke: isSearchMatch ? searchMatchColor : "transparent",
       strokeWidth: "1px",
       fill: isBlob(d.data)
-        ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
+        ? metricsData.get(metricType)?.colormap.get(d.data.path) ?? "grey"
         : "transparent"
     }
 
@@ -205,7 +205,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       }
     }
     return props
-  }, [d, isSearchMatch, metricsData, authorshipType, metricType, chartType])
+  }, [d, isSearchMatch, metricsData, metricType, chartType])
 
   return (
     <rect
@@ -284,7 +284,7 @@ function collapseText({
 
 function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
   const [metricsData] = useMetrics()
-  const { authorshipType, metricType } = useOptions()
+  const { metricType } = useOptions()
   const isBubbleChart = isCircularNode(d)
 
   if (children === null) return null
@@ -307,7 +307,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
   }
 
   const fillColor = isBlob(d.data)
-    ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
+    ? getTextColorFromBackground(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
     : "#333"
 
   const textPathBaseProps = {

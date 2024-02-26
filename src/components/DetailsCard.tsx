@@ -10,7 +10,6 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
 import byteSize from "byte-size"
-import type { AuthorshipType } from "~/metrics/metrics"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import clsx from "clsx"
@@ -35,7 +34,7 @@ export function DetailsCard({
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
-  const { metricType, authorshipType } = useOptions()
+  const { metricType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
   const { analyzerData } = useData()
@@ -62,7 +61,7 @@ export function DetailsCard({
         lightBackground: true
       }
     }
-    const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
+    const colormap = metricsData.get(metricType)?.colormap
     const backgroundColor = colormap?.get(clickedObject.path) ?? ("#808080" as `#${string}`)
     const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
     return {
@@ -70,7 +69,7 @@ export function DetailsCard({
       color: color,
       lightBackground: color === "#000000"
     }
-  }, [clickedObject, metricsData, metricType, authorshipType])
+  }, [clickedObject, metricsData, metricType])
 
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"
@@ -114,9 +113,9 @@ export function DetailsCard({
             </div>
             <div className="card bg-white/70 text-black">
               {isBlob ? (
-                <AuthorDistribution authors={clickedObject.unionedAuthors?.[authorshipType]} />
+                <AuthorDistribution authors={clickedObject.unionedAuthors} />
               ) : (
-                <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject, authorshipType)} />
+                <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
               )}
             </div>
             <button
@@ -387,13 +386,13 @@ function hasZeroContributions(authors?: Record<string, number>) {
   return true
 }
 
-function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject, authorshipType: AuthorshipType) {
+function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
   const aggregatedAuthors: Record<string, number> = {}
   subTree(tree)
   function subTree(tree: HydratedGitTreeObject) {
     for (const child of tree.children) {
       if (child.type === "blob") {
-        const unionedAuthors = child.unionedAuthors?.[authorshipType]
+        const unionedAuthors = child.unionedAuthors
         if (!unionedAuthors) throw Error("No unioned authors")
         for (const [author, contrib] of Object.entries(unionedAuthors)) {
           aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib

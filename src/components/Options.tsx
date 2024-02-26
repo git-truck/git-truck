@@ -190,21 +190,6 @@ export const Options = memo(function Options() {
             />
           </fieldset>
         ) : null}
-        {/* </div> */}
-
-        {/* 
-      <div className={`card flex flex-col gap-0 rounded-lg border p-1 ${props.hidden ? "hidden" : ""}`}>
-      <legend className="text-sm font-bold">{props.label}</legend>
-      <EnumSelect
-        label="Authorship data"
-        enum={Authorship}
-        onChange={(baseData: AuthorshipType) => setAuthorshipType(baseData)}
-        hidden={!isMetricWithHistoricalOption(metricType)}
-      />
-      </div>
-      */}
-
-        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiCog} size="1.25em" />

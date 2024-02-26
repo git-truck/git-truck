@@ -8,7 +8,7 @@ import type { ChartType, HierarchyType, OptionsContextType } from "../contexts/O
 import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
-import type { AuthorshipType, MetricsData, MetricType } from "../metrics/metrics"
+import type { MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData as createMetricsData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/analyzer/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
@@ -76,11 +76,6 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           hierarchyType
-        })),
-      setAuthorshipType: (authorshipType: AuthorshipType) =>
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
-          authorshipType
         })),
       setSizeMetricType: (sizeMetric: SizeMetricType) =>
         setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),

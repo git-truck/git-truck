@@ -1,15 +1,14 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { AuthorshipType, MetricCache } from "./metrics"
+import type { MetricCache } from "./metrics"
 
 export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
   blob: HydratedGitBlobObject,
   cache: MetricCache,
-  authorshipType: AuthorshipType
 ) {
-  const authorUnion = blob.unionedAuthors?.[authorshipType]
+  const authorUnion = blob.unionedAuthors
   if (!authorUnion) {
     console.warn("No author union found for file", blob.path)
     return
@@ -29,7 +28,7 @@ export function setDominantAuthorColor(
 
   cache.colormap.set(blob.path, color)
   if (blob.dominantAuthor) {
-    blob.dominantAuthor[authorshipType] = sorted[0]
+    blob.dominantAuthor = sorted[0]
   }
 
   if (legend.has(dom)) {

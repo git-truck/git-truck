@@ -1,13 +1,13 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { AuthorshipType, MetricCache } from "./metrics"
+import type { MetricCache } from "./metrics"
 
-export function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorshipType: AuthorshipType, authorColors: Map<string, `#${string}`>) {
+export function setDominanceColor(blob: HydratedGitBlobObject, cache: MetricCache, authorColors: Map<string, `#${string}`>) {
   const multipleAuthorsColor = "#e0e0e0"
   const noAuthorsColor = "#404040"
   
-  const authorUnion = blob.unionedAuthors?.[authorshipType] ?? {}
+  const authorUnion = blob.unionedAuthors ?? {}
   
   const legend = cache.legend as PointLegendData
   const authors = Object.keys(authorUnion)

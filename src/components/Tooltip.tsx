@@ -2,7 +2,7 @@ import { Fragment, memo, useMemo, useRef } from "react"
 import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
-import type { AuthorshipType, MetricType } from "../metrics/metrics"
+import type { MetricType } from "../metrics/metrics"
 import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
@@ -17,16 +17,16 @@ interface TooltipProps {
 
 export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { metricType, authorshipType } = useOptions()
+  const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const color = useMemo(() => {
     if (!hoveredObject) {
       return null
     }
-    const colormap = metricsData[authorshipType]?.get(metricType)?.colormap
+    const colormap = metricsData.get(metricType)?.colormap
     const color = colormap?.get(hoveredObject.path) ?? "grey"
     return color
-  }, [hoveredObject, metricsData, metricType, authorshipType])
+  }, [hoveredObject, metricsData, metricType])
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
   const top = useMemo(() => y < window.innerHeight / 2, [y])
@@ -65,7 +65,6 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
         ? ColorMetricDependentInfo({
             metric: metricType,
             hoveredBlob: hoveredObject as HydratedGitBlobObject,
-            authorshipType: authorshipType
           })
         : null}
     </div>
@@ -75,7 +74,6 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: HydratedGitBlobObject | null
-  authorshipType: AuthorshipType
 }) {
   switch (props.metric) {
     case "MOST_COMMITS":
@@ -88,7 +86,7 @@ function ColorMetricDependentInfo(props: {
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.unionedAuthors?.[props.authorshipType] ?? [])
+        ? Object.entries(props.hoveredBlob?.unionedAuthors ?? [])
         : []
       switch (authors.length) {
         case 0:
@@ -99,7 +97,7 @@ function ColorMetricDependentInfo(props: {
           return `${authors.length} authors`
       }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.hoveredBlob?.dominantAuthor?.[props.authorshipType] ?? undefined
+      const dominant = props.hoveredBlob?.dominantAuthor ?? undefined
       if (!dominant) return null
       return <>{dominant[0]}</>
     case "TRUCK_FACTOR":
