@@ -52,6 +52,9 @@ export default class DB {
       toname VARCHAR,
       timestamp UINTEGER
     );
+    CREATE TABLE IF NOT EXISTS hiddenfiles (
+      path VARCHAR
+    );
     CREATE TABLE IF NOT EXISTS metadata (
       field VARCHAR,
       value UBIGINT
