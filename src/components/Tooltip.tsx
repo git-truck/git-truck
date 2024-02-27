@@ -3,10 +3,12 @@ import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
+import { allExceptFirst, dateFormatRelative, isBlob, removeFirstPart } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
+import { useData } from "~/contexts/DataContext"
+import type { RepoData2 } from "~/routes/$repo.$"
 
 interface TooltipProps {
   hoveredObject: HydratedGitObject | null
@@ -19,6 +21,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
+  const { repodata2 } = useData()
   const color = useMemo(() => {
     if (!hoveredObject) {
       return null
@@ -65,6 +68,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
         ? ColorMetricDependentInfo({
             metric: metricType,
             hoveredBlob: hoveredObject as HydratedGitBlobObject,
+            repodata2
           })
         : null}
     </div>
@@ -74,35 +78,38 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: HydratedGitBlobObject | null
+  repodata2: RepoData2
 }) {
+  const slicedPath = removeFirstPart(props.hoveredBlob?.path ?? "")
+  const authorCount = props.repodata2.authorCounts.get(slicedPath)
   switch (props.metric) {
     case "MOST_COMMITS":
-      const noCommits = props.hoveredBlob?.noCommits
+      const noCommits = props.repodata2.commitCounts.get(slicedPath)
       if (!noCommits) return null
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
     case "LAST_CHANGED":
-      const epoch = props.hoveredBlob?.lastChangeEpoch
+      const epoch = props.repodata2.lastChanged.get(slicedPath)
       if (!epoch) return null
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
-      const authors = props.hoveredBlob
-        ? Object.entries(props.hoveredBlob?.unionedAuthors ?? [])
-        : []
-      switch (authors.length) {
+      switch (authorCount) {
+        case undefined:
         case 0:
           return null
         case 1:
-          return `${authors[0][0]} is the only author`
+          const dom = props.repodata2.dominantAuthors.get(slicedPath)
+          if (!dom) return null
+          return `${dom} is the only author`
         default:
-          return `${authors.length} authors`
+          return `${authorCount} authors`
       }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.hoveredBlob?.dominantAuthor ?? undefined
+      const dominant = props.repodata2.dominantAuthors.get(slicedPath)
       if (!dominant) return null
-      return <>{dominant[0]}</>
+      return <>{dominant}</>
     case "TRUCK_FACTOR":
-      const authorCount = Object.entries(props.hoveredBlob?.unionedAuthors?.HISTORICAL ?? []).length
       switch (authorCount) {
+        case undefined:
         case 0:
           return null
         case 1:
