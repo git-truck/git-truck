@@ -98,7 +98,7 @@ export default class DB {
       SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC;
     `)
     return new Map(res.map((row) => {
-      return [row["filepath"] as string, row["count"] as number]
+      return [row["filepath"] as string, Number(row["count"])]
     }))
   }
   
@@ -107,7 +107,7 @@ export default class DB {
       SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY f.filepath;
     `)
     return new Map(res.map((row) => {
-      return [row["filepath"] as string, row["max_time"] as number]
+      return [row["filepath"] as string, Number(row["max_time"])]
     }))
   }
   
@@ -117,7 +117,7 @@ export default class DB {
       SELECT f.filepath, count(DISTINCT c.author) AS author_count FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
-      return [row["filepath"] as string, row["author_count"] as number]
+      return [row["filepath"] as string, Number(row["author_count"])]
     }))
   }
   
