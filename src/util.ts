@@ -149,5 +149,9 @@ export function getLightness(hex: `#${string}`): number {
   return weightedDistanceIn3D(hex) / 255
 }
 
+export function removeFirstPart(path: string) {
+  return path.slice(path.indexOf(getSeparator(path)) + 1)
+}
+
 export const isTree = (d: HydratedGitObject | null = null): d is HydratedGitTreeObject => d?.type === "tree"
 export const isBlob = (d: HydratedGitObject | null = null): d is HydratedGitBlobObject => d?.type === "blob"

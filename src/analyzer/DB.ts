@@ -163,22 +163,28 @@ export default class DB {
     `)
     return res[0]["count"] > 0
   }
+
+  public async getAuthors() {
+    // TODO handle author unions
+    const res = await (await this.instance).all(`
+      SELECT DISTINCT author FROM commits;
+    `)
+    return res.map(row => row["author"] as string)
+  }
   
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
     const res = await (await this.instance).all(`
       SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath);
     `)
-    console.log("newestoldest", res, res[0]["newest"], res[0]["oldest"])
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
   
-  public async getMaxCommitCount() {
+  public async getMaxAndMinCommitCount() {
     const res = await (await this.instance).all(`
-      SELECT MAX(count) as max_commits FROM (SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC);
+      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC);
     `)
-    console.log("maxcommit")
-    return res[0]["max_commits"] as number
+    return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
 
   public async setFinishTime() {

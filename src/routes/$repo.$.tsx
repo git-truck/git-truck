@@ -44,6 +44,19 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
+  repodata2: RepoData2
+}
+
+export interface RepoData2 {
+  dominantAuthors: Map<string, string>
+  commitCounts: Map<string, number>
+  lastChanged: Map<string, number>
+  authorCounts: Map<string, number>
+  maxCommitCount: number
+  minCommitCount: number
+  newestChangeDate: number
+  oldestChangeDate: number
+  authors: string[]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -74,11 +87,22 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw Error("Error loading repo")
   }
 
+
+  const repodata2: RepoData2 = {
+    dominantAuthors: await instance.db.getDominantAuthorPerFile(),
+    commitCounts: await instance.db.getCommitCountPerFile(),
+    lastChanged: await instance.db.getLastChangedPerFile(),
+    authorCounts: await instance.db.getAuthorCountPerFile(),
+    ...(await instance.db.getMaxAndMinCommitCount()),
+    ...(await instance.db.getNewestAndOldestChangeDates()),
+    authors: await instance.db.getAuthors() 
+  }
   return typedjson<RepoData>({
     analyzerData,
     repo,
     gitTruckInfo: await getGitTruckInfo(),
-    truckConfig
+    truckConfig,
+    repodata2
   })
 }
 

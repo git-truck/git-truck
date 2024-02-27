@@ -478,7 +478,7 @@ private async hydrateBlobs(files: Map<string, GitBlobObject>, commits: Map<strin
       if (!blob) {
         continue
       }
-      await this.updateCreditOnBlob(blob as HydratedGitBlobObject, commit, change)
+      // await this.updateCreditOnBlob(blob as HydratedGitBlobObject, commit, change)
     }
   }
 }

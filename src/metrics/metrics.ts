@@ -1,4 +1,4 @@
-import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
 import { setDominanceColor } from "./singleAuthor"
@@ -10,6 +10,8 @@ import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import uniqolor from "uniqolor"
+import type { RepoData } from "~/routes/$repo.$"
+import { removeFirstPart } from "~/util"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -24,11 +26,11 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
-  const authorColors = generateAuthorColors(data.authors, colorSeed)
+export function createMetricData(data: RepoData, colorSeed: string | undefined): MetricsData {
+  const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed)
 
   return [
-    setupMetricsCache(data.commit.tree, getMetricCalcs(data, authorColors)),
+    setupMetricsCache(data.analyzerData.commit.tree, getMetricCalcs(data, authorColors)),
     authorColors
   ]
 }
@@ -85,32 +87,15 @@ export function generateAuthorColors(authors: string[], colorSeed: string | unde
   return map
 }
 
-function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: number] {
-  let min = Number.MAX_VALUE
-  let max = Number.MIN_VALUE
-  tree.children.forEach((element) => {
-    if (element.type == "blob") {
-      if (element.noCommits > max) max = element.noCommits
-      if (element.noCommits < min) min = element.noCommits
-    } else if (element.type == "tree") {
-      const [submin, submax] = FindMinMaxCommit(element)
-      if (submax > max) max = submax
-      if (submin < min) min = submin
-    }
-  })
-  return [min, max]
-}
-
 export function getMetricCalcs(
-  data: AnalyzerData,
+  data: RepoData,
   authorColors: Map<string, `#${string}`>
 ): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
-  const commit = data.commit
+  const maxCommitCount = data.repodata2.maxCommitCount
+  const minCommitCount = data.repodata2.minCommitCount
 
-  const [mincom, maxcom] = FindMinMaxCommit(commit.tree)
-
-  const commitmapper = new CommitAmountTranslater(mincom, maxcom)
-  const truckmapper = new TruckFactorTranslater(data.authorsUnion.length)
+  const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
+  const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
 
   return [
     [
@@ -126,7 +111,7 @@ export function getMetricCalcs(
       "SINGLE_AUTHOR",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorColors)
+        setDominanceColor(blob, cache, authorColors, data.repodata2.dominantAuthors, data.repodata2.authorCounts)
       }
     ],
     [
@@ -134,33 +119,33 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            `${mincom}`,
-            `${maxcom}`,
+            `${minCommitCount}`,
+            `${maxCommitCount}`,
             undefined,
             undefined,
-            commitmapper.getColor(mincom),
-            commitmapper.getColor(maxcom)
+            commitmapper.getColor(minCommitCount),
+            commitmapper.getColor(maxCommitCount)
           ]
         }
-        commitmapper.setColor(blob, cache)
+        commitmapper.setColor(blob, cache, data.repodata2.commitCounts)
       }
     ],
     [
       "LAST_CHANGED",
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        const newestEpoch = data.commit.newestLatestChangeEpoch
+        const newestEpoch = data.repodata2.newestChangeDate
         const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
           cache.legend = [
-            getLastChangedIndex(groupings, newestEpoch, data.commit.oldestLatestChangeEpoch) + 1,
+            getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
+            (blob) => getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0) ?? -1
           ]
         }
         cache.colormap.set(
           blob.path,
-          groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
+          groupings[getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0) ?? -1].color
         )
       }
     ],
@@ -169,7 +154,7 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!blob.dominantAuthor) blob.dominantAuthor = {} as [string, number]
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache)
+        setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors)
       }
     ],
     [
@@ -177,13 +162,13 @@ export function getMetricCalcs(
       (blob: HydratedGitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            Math.floor(Math.log2(data.authorsUnion.length)) + 1,
+            Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
             (n) => `${Math.pow(2, n)}`,
-            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
+            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.repodata2.authors.length)) + 1))}%)`,
+            (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(removeFirstPart(blob.path)) ?? 0))
           ]
         }
-        truckmapper.setColor(blob, cache)
+        truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
       }
     ]
   ]

@@ -2,38 +2,28 @@ import type { HydratedGitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"
+import { removeFirstPart } from "~/util"
 
 export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
   blob: HydratedGitBlobObject,
   cache: MetricCache,
+  dominantAuthorPerFile: Map<string, string>
 ) {
-  const authorUnion = blob.unionedAuthors
-  if (!authorUnion) {
-    console.warn("No author union found for file", blob.path)
+  const path = removeFirstPart(blob.path)
+  const dominantAuthor = dominantAuthorPerFile.get(path)
+  if (!dominantAuthor) {
+    // console.warn("No dominant author for file", path)
     return
   }
-  const sorted = Object.entries(authorUnion).sort(([k1, v1], [k2, v2]) => {
-    if (v1 === 0 || v2 === 0 || !k1 || !k2) return -1
-    return v2 - v1
-  })
-  if (!sorted[0]) {
-    console.warn("No sorted authors for file", blob.path)
-    return
-  }
-
-  const [dom] = sorted[0]
   const legend = cache.legend as PointLegendData
-  const color = authorColors.get(dom) ?? "#808080"
-
+  const color = authorColors.get(dominantAuthor) ?? "#808080"
+  
   cache.colormap.set(blob.path, color)
-  if (blob.dominantAuthor) {
-    blob.dominantAuthor = sorted[0]
-  }
 
-  if (legend.has(dom)) {
-    legend.get(dom)?.add(1)
+  if (legend.has(dominantAuthor)) {
+    legend.get(dominantAuthor)?.add(1)
     return
   }
-  legend.set(dom, new PointInfo(color, 1))
+  legend.set(dominantAuthor, new PointInfo(color, 1))
 }
