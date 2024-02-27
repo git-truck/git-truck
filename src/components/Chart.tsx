@@ -29,10 +29,11 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { getTextColorFromBackground, isBlob, isTree } from "~/util"
+import { getTextColorFromBackground, isBlob, isTree, removeFirstPart } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
+import type { RepoData2 } from "~/routes/$repo.$"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -44,7 +45,7 @@ export const Chart = memo(function Chart({
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
-  const { analyzerData } = useData()
+  const { analyzerData, repodata2 } = useData()
   const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
@@ -86,8 +87,8 @@ export const Chart = memo(function Chart({
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path, renderCutoff).descendants()
-  }, [size, commit, chartType, sizeMetric, path, renderCutoff])
+    return createPartitionedHiearchy(commit, repodata2, size, chartType, sizeMetric, path, renderCutoff).descendants()
+  }, [size, commit, chartType, sizeMetric, path, renderCutoff, repodata2])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -351,6 +352,7 @@ function isCircularNode(d: CircleOrRectHiearchyNode) {
 
 function createPartitionedHiearchy(
   data: HydratedGitCommitObject,
+  repodata2: RepoData2,
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
@@ -379,17 +381,18 @@ function createPartitionedHiearchy(
 
   const hiearchy = hierarchy(castedTree).sum((d) => {
     const hydratedBlob = d as HydratedGitBlobObject
+    const slicedPath = removeFirstPart(hydratedBlob.path)
     switch (sizeMetricType) {
       case "FILE_SIZE":
         return hydratedBlob.sizeInBytes ?? 1
       case "MOST_COMMITS":
-        return hydratedBlob.noCommits
+        return repodata2.commitCounts.get(slicedPath) ?? 1
       case "EQUAL_SIZE":
         return 1
       case "LAST_CHANGED":
-        return (hydratedBlob.lastChangeEpoch ?? data.oldestLatestChangeEpoch) - data.oldestLatestChangeEpoch
+        return (repodata2.lastChanged.get(slicedPath) ?? repodata2.oldestChangeDate) - repodata2.oldestChangeDate
       case "TRUCK_FACTOR":
-        return Object.keys(hydratedBlob.authors ?? {}).length
+        return repodata2.authorCounts.get(slicedPath) ?? 1
     }
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
