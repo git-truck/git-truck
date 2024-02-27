@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Form, useLocation, useNavigation } from "@remix-run/react"
-import type { HydratedGitBlobObject, HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -8,7 +8,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
-import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
+import { dateFormatLong, getTextColorFromBackground, last, removeFirstPart } from "~/util"
 import byteSize from "byte-size"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
@@ -37,8 +37,10 @@ export function DetailsCard({
   const { metricType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
-  const { analyzerData } = useData()
+  const { analyzerData, repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
+
+  const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -103,8 +105,8 @@ export function DetailsCard({
               {isBlob ? (
                 <>
                   <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
-                  <CommitsEntry clickedBlob={clickedObject} />
-                  <LastchangedEntry clickedBlob={clickedObject} />
+                  <CommitsEntry count={repodata2.commitCounts.get(slicedPath)}/>
+                  <LastchangedEntry epoch={repodata2.lastChanged.get(slicedPath)} />
                 </>
               ) : (
                 <FileAndSubfolderCountEntries clickedTree={clickedObject} />
@@ -241,24 +243,24 @@ function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObjec
   )
 }
 
-function CommitsEntry(props: { clickedBlob: HydratedGitBlobObject }) {
+function CommitsEntry(props: { count: number | undefined }) {
   return (
     <>
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Commits
       </div>
-      <p className="break-all text-sm">{props.clickedBlob.noCommits ? props.clickedBlob.noCommits : 0}</p>
+      <p className="break-all text-sm">{props.count ?? "unknown"}</p>
     </>
   )
 }
 
-function LastchangedEntry(props: { clickedBlob: HydratedGitBlobObject }) {
+function LastchangedEntry(props: { epoch: number | undefined }) {
   return (
     <>
       <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
         Last changed
       </div>
-      <p className="break-all text-sm">{dateFormatLong(props.clickedBlob.lastChangeEpoch)}</p>
+      <p className="break-all text-sm">{props.epoch ? dateFormatLong(props.epoch) : "unknown"}</p>
     </>
   )
 }
