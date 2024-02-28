@@ -4,7 +4,7 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { renderToPipeableStream } from "react-dom/server"
 
-const ABORT_DELAY = 5000
+const ABORT_DELAY = 30_000
 
 export default handleBrowserRequest
 

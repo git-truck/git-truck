@@ -1,5 +1,5 @@
-import type { SerializeFrom } from "@remix-run/node"
-import { Link, useLoaderData, useNavigation } from "@remix-run/react"
+import { defer, type SerializeFrom } from "@remix-run/node"
+import { Await, Link, useLoaderData, useNavigation } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Code } from "~/components/util"
@@ -9,7 +9,7 @@ import type { Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
 import type { ReactNode } from "react"
-import { Fragment, useState } from "react"
+import { Suspense, Fragment, useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
@@ -35,11 +35,11 @@ async function getResponse(): Promise<IndexData> {
 }
 
 export const loader = async () => {
-  return await getResponse()
+  return defer({ data: getResponse() })
 }
 
 export default function Index() {
-  const { repositories, baseDir, baseDirName } = useLoaderData<typeof loader>()
+  const { data } = useLoaderData<typeof loader>()
   const transitionData = useNavigation()
 
   if (transitionData.state !== "idle")
@@ -56,16 +56,24 @@ export default function Index() {
           Git Truck
         </h1>
         <p>
-          <>
-            Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
-            <Code inline title={baseDir}>
-              {baseDirName}
-            </Code>
-            .
-          </>
+          <Suspense fallback="Loading...">
+            <Await resolve={data} errorElement={<div>error</div>}>
+              {({ repositories, baseDir, baseDirName }) => (
+                <>
+                  Found {repositories.length} git repositor{repositories.length === 1 ? "y" : "ies"} in the folder{" "}
+                  <Code inline title={baseDir}>
+                    {baseDirName}
+                  </Code>
+                  .
+                </>
+              )}
+            </Await>
+          </Suspense>
         </p>
       </div>
-      <RepositoryGrid repositories={repositories} />
+      <Suspense fallback="Loading...">
+        <Await resolve={data}>{({ repositories }) => <RepositoryGrid repositories={repositories} />}</Await>
+      </Suspense>
     </main>
   )
 }
