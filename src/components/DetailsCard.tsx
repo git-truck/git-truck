@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Form, useLocation, useNavigation } from "@remix-run/react"
+import { Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
@@ -37,10 +37,34 @@ export function DetailsCard({
   const { metricType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
-  const { analyzerData, repodata2 } = useData()
+  const { analyzerData, repodata2, repo } = useData()
   const isProcessingHideRef = useRef(false)
 
   const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
+
+  const [authorContributions, setAuthorContributions] = useState<{author: string, contribs: number}[] | null>(null)
+  const contribSum = useMemo(() => {
+    if (!authorContributions) return 0
+    return authorContributions.reduce((acc, curr) => acc + curr.contribs, 0)
+  }, [authorContributions])
+
+  const fetcher = useFetcher()
+  
+  useEffect(() => {
+    const searchParams = new URLSearchParams()
+    searchParams.set("branch", repo.currentHead)
+    searchParams.set("repo", analyzerData.repo)
+    if (!clickedObject?.path) return
+    searchParams.set("path", clickedObject.path)
+    fetcher.load(`/authordist?${searchParams.toString()}`)
+  }, [clickedObject, repo.currentHead, analyzerData.repo])
+
+  useEffect(() => {
+    if (fetcher.state === "idle") {
+      const data = (fetcher.data ?? []) as {author: string, contribs: number}[]
+      setAuthorContributions(data)
+    }
+  }, [fetcher])
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -115,9 +139,11 @@ export function DetailsCard({
             </div>
             <div className="card bg-white/70 text-black">
               {isBlob ? (
-                <AuthorDistribution authors={clickedObject.unionedAuthors} />
+                <AuthorDistribution authors={authorContributions} contribSum={contribSum}/>
               ) : (
-                <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
+                null
+                // TODO aggregate authorship for folder
+                // <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
               )}
             </div>
             <button
@@ -318,15 +344,12 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
 
 const authorCutoff = 2
 
-function AuthorDistribution(props: { authors: Record<string, number> | undefined }) {
+function AuthorDistribution(props: { authors: {author: string, contribs: number}[] | null , contribSum: number}) {
   const authorDistributionExpandId = useId()
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
-  const contribDist = Object.entries(makePercentResponsibilityDistribution(props.authors)).sort((a, b) =>
-    a[1] < b[1] ? 1 : -1
-  )
 
-  const authorsAreCutoff = contribDist.length > authorCutoff + 1
+  const authorsAreCutoff = (props.authors?.length ?? 0) > authorCutoff + 1
   return (
     <div className="flex flex-col gap-2">
       <div className={`flex justify-between ${authorsAreCutoff ? "cursor-pointer hover:opacity-70" : ""}`}>
@@ -338,27 +361,34 @@ function AuthorDistribution(props: { authors: Record<string, number> | undefined
         ) : null}
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-1">
-        {authorsAreCutoff ? (
-          <>
-            <AuthorDistFragment show={true} items={contribDist.slice(0, authorCutoff)} />
-            <AuthorDistFragment show={!collapsed} items={contribDist.slice(authorCutoff)} />
-            {collapsed ? (
-              <button
-                className="text-left text-xs opacity-70 hover:opacity-100"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                + {contribDist.slice(authorCutoff).length} more
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {contribDist.length > 0 && !hasZeroContributions(props.authors) ? (
-              <AuthorDistFragment show={true} items={contribDist} />
-            ) : (
-              <p>No authors found</p>
-            )}
-          </>
+        { props.authors === null ? (
+          <p>Loading authors...</p>
+        )
+        : (
+        <>
+          {authorsAreCutoff ? (
+            <>
+              <AuthorDistFragment show={true} items={props.authors.slice(0, authorCutoff)} contribSum={props.contribSum} />
+              <AuthorDistFragment show={!collapsed} items={props.authors.slice(authorCutoff)} contribSum={props.contribSum} />
+              {collapsed ? (
+                <button
+                  className="text-left text-xs opacity-70 hover:opacity-100"
+                  onClick={() => setCollapsed(!collapsed)}
+                >
+                  + {props.authors.slice(authorCutoff).length} more
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {props.authors.length > 0 && hasContributions(props.authors) ? (
+                <AuthorDistFragment show={true} items={props.authors} contribSum={props.contribSum} />
+              ) : (
+                <p>No authors found</p>
+              )}
+            </>
+          )}
+        </>
         )}
       </div>
     </div>
@@ -379,13 +409,12 @@ function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-function hasZeroContributions(authors?: Record<string, number>) {
-  if (!authors) return true
-  const authorsList = Object.entries(authors)
-  for (const [, contribution] of authorsList) {
-    if (contribution > 0) return false
+function hasContributions(authors?: {author: string, contribs: number}[]) {
+  if (!authors) return false
+  for (const {contribs} of authors) {
+    if (contribs > 0) return true
   }
-  return true
+  return false
 }
 
 function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {

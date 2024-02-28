@@ -189,6 +189,15 @@ export default class DB {
     `)
     return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
+  
+  public async getAuthorContribsForFile(path: string) {
+    const res = await (await this.instance).all(`
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges f JOIN commits c ON f.commithash = c.hash WHERE filepath = '${path}' GROUP BY author ORDER BY contribsum DESC;
+    `)
+    return res.map(row => {
+      return {author: row["author"] as string, contribs: Number(row["contribsum"])}
+    })
+  }
 
   public async setFinishTime() {
     // TODO: also have metadata for table format, to rerun if data model changed

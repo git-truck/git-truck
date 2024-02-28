@@ -3,8 +3,9 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { LegendDot } from "./util"
 
 interface AuthorDistFragProps {
-  items: [string, number][]
+  items: {author: string, contribs: number}[]
   show: boolean
+  contribSum: number
 }
 
 export function AuthorDistFragment(props: AuthorDistFragProps) {
@@ -15,8 +16,9 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
   return (
     <>
       {props.items.map((legendItem) => {
-        const [author, contrib] = legendItem
-        const roundedContrib = Math.round(contrib * 100)
+        const contrib = legendItem.contribs
+        const author = legendItem.author
+        const roundedContrib = Math.round((contrib / props.contribSum) * 100)
         const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
         return (
           <Fragment key={author + contrib}>
