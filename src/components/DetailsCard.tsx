@@ -56,6 +56,7 @@ export function DetailsCard({
     searchParams.set("repo", analyzerData.repo)
     if (!clickedObject?.path) return
     searchParams.set("path", clickedObject.path)
+    searchParams.set("isblob", String(clickedObject.type === "blob"))
     fetcher.load(`/authordist?${searchParams.toString()}`)
   }, [clickedObject, repo.currentHead, analyzerData.repo])
 
@@ -138,13 +139,7 @@ export function DetailsCard({
               <PathEntry path={clickedObject.path} />
             </div>
             <div className="card bg-white/70 text-black">
-              {isBlob ? (
-                <AuthorDistribution authors={authorContributions} contribSum={contribSum}/>
-              ) : (
-                null
-                // TODO aggregate authorship for folder
-                // <AuthorDistribution authors={calculateAuthorshipForSubTree(clickedObject)} />
-              )}
+              <AuthorDistribution authors={authorContributions} contribSum={contribSum}/>
             </div>
             <button
               className={clsx("btn", {

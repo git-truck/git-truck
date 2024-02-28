@@ -150,7 +150,9 @@ export function getLightness(hex: `#${string}`): number {
 }
 
 export function removeFirstPart(path: string) {
-  return path.slice(path.indexOf(getSeparator(path)) + 1)
+  const index = path.indexOf(getSeparator(path))
+  if (index === -1) return ""
+  return path.slice(index + 1)
 }
 
 export const isTree = (d: HydratedGitObject | null = null): d is HydratedGitTreeObject => d?.type === "tree"
