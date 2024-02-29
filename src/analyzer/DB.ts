@@ -15,6 +15,7 @@ export default class DB {
     if (!existsSync(dir)) await fs.mkdir(dir, {recursive: true})
     const db = await Database.create(dbPath)
     await this.initTables(db)
+    await this.initViews(db)
     return db
   }
 
@@ -59,6 +60,14 @@ export default class DB {
       field VARCHAR,
       value UBIGINT
     );
+    `)
+  }
+
+  private static async initViews(db: Database) {
+    await db.all(`
+      CREATE OR REPLACE VIEW filechanges_commits AS
+      SELECT f.commithash, f.contribcount, f.filepath, c.author, c.time FROM
+      filechanges f JOIN commits c on f.commithash = c.hash;
     `)
   }
 
@@ -107,7 +116,7 @@ export default class DB {
   
   public async getLastChangedPerFile() {
     const res = await (await this.instance).all(`
-      SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY f.filepath;
+      SELECT filepath, MAX(time) AS max_time FROM filechanges_commits GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["max_time"])]
@@ -117,7 +126,7 @@ export default class DB {
   public async getAuthorCountPerFile() {
     // TODO: aggregate for renamed files, also handle coauthors
     const res = await (await this.instance).all(`
-      SELECT f.filepath, count(DISTINCT c.author) AS author_count FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath;
+      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["author_count"])]
@@ -128,8 +137,8 @@ export default class DB {
     // TODO: also handle renames
     const res = await (await this.instance).all(`
       WITH RankedAuthors AS (
-        SELECT f.filepath, c.author, f.contribcount, ROW_NUMBER() OVER (PARTITION BY f.filepath ORDER BY f.contribcount DESC, c.author ASC) as rank
-        FROM filechanges f JOIN commits c ON f.commithash = c.hash
+        SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
+        FROM filechanges_commits
       )
       SELECT filepath, author, contribcount
       FROM RankedAuthors
@@ -178,7 +187,7 @@ export default class DB {
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
     const res = await (await this.instance).all(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT f.filepath, MAX(c.time) AS max_time FROM filechanges f JOIN commits c ON f.commithash = c.hash GROUP BY filepath);
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(time) AS max_time FROM filechanges_commits GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
@@ -192,7 +201,7 @@ export default class DB {
   
   public async getAuthorContribsForFile(path: string, isblob: boolean) {
     const res = await (await this.instance).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges f JOIN commits c ON f.commithash = c.hash WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
     `)
     return res.map(row => {
       return {author: row["author"] as string, contribs: Number(row["contribsum"])}
