@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
+import { Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
@@ -139,7 +139,7 @@ export function DetailsCard({
               <PathEntry path={clickedObject.path} />
             </div>
             <div className="card bg-white/70 text-black">
-              <AuthorDistribution authors={authorContributions} contribSum={contribSum}/>
+              <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher}/>
             </div>
             <button
               className={clsx("btn", {
@@ -339,7 +339,7 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
 
 const authorCutoff = 2
 
-function AuthorDistribution(props: { authors: {author: string, contribs: number}[] | null , contribSum: number}) {
+function AuthorDistribution(props: { authors: {author: string, contribs: number}[] | null , contribSum: number, fetcher: Fetcher}) {
   const authorDistributionExpandId = useId()
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
@@ -356,28 +356,28 @@ function AuthorDistribution(props: { authors: {author: string, contribs: number}
         ) : null}
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-1">
-        { props.authors === null ? (
+        { props.fetcher.state !== "idle" ? (
           <p>Loading authors...</p>
         )
         : (
         <>
           {authorsAreCutoff ? (
             <>
-              <AuthorDistFragment show={true} items={props.authors.slice(0, authorCutoff)} contribSum={props.contribSum} />
-              <AuthorDistFragment show={!collapsed} items={props.authors.slice(authorCutoff)} contribSum={props.contribSum} />
+              <AuthorDistFragment show={true} items={props.authors?.slice(0, authorCutoff) ?? []} contribSum={props.contribSum} />
+              <AuthorDistFragment show={!collapsed} items={props.authors?.slice(authorCutoff) ?? []} contribSum={props.contribSum} />
               {collapsed ? (
                 <button
                   className="text-left text-xs opacity-70 hover:opacity-100"
                   onClick={() => setCollapsed(!collapsed)}
                 >
-                  + {props.authors.slice(authorCutoff).length} more
+                  + {(props.authors?.slice(authorCutoff) ?? []).length} more
                 </button>
               ) : null}
             </>
           ) : (
             <>
-              {props.authors.length > 0 && hasContributions(props.authors) ? (
-                <AuthorDistFragment show={true} items={props.authors} contribSum={props.contribSum} />
+              {(props.authors ?? []).length > 0 && hasContributions(props.authors) ? (
+                <AuthorDistFragment show={true} items={props.authors ?? []} contribSum={props.contribSum} />
               ) : (
                 <p>No authors found</p>
               )}
@@ -404,7 +404,7 @@ function makePercentResponsibilityDistribution(
   return newAuthorsEntries
 }
 
-function hasContributions(authors?: {author: string, contribs: number}[]) {
+function hasContributions(authors?: {author: string, contribs: number}[] | null) {
   if (!authors) return false
   for (const {contribs} of authors) {
     if (contribs > 0) return true

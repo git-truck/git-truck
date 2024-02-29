@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { CommitDTO, GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
 import { Fragment, useEffect, useMemo, useState } from "react"
-import { dateFormatLong } from "~/util"
+import { dateFormatLong, removeFirstPart } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
@@ -13,6 +13,7 @@ type SortCommitsMethods = "date" | "author"
 
 interface CommitDistFragProps {
   items: CommitDTO[]
+  count: number
   sortBy?: SortCommitsMethods
   handleOnClick?: (commit: CommitDTO) => void
 }
@@ -20,7 +21,7 @@ interface CommitDistFragProps {
 function CommitDistFragment(props: CommitDistFragProps) {
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
 
-  const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items, sortMethod)
+  const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
   for (const [key, values] of Object.entries(cleanGroupItems)) {
@@ -80,65 +81,39 @@ function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
 }
 
 export function CommitHistory() {
-  // const [totalCommitHashes, setTotalCommitHashes] = useState<string[]>([])
   const analyzerData = useData()
   const [commits, setCommits] = useState<CommitDTO[] | null>(null)
-  const [commitIndex, setCommitIndex] = useState(0)
-  const commitIncrement = 5
+  const [commitShowCount, setCommitShowCount] = useState(10)
+  const commitIncrement = 10
   const { clickedObject } = useClickedObject()
   const fetcher = useFetcher()
 
-  function requestCommits() {
+  function fetchCommits() {
+    if (!clickedObject) return
+    setCommitShowCount((prev) => prev + commitIncrement)
     const searchParams = new URLSearchParams()
     searchParams.set("branch", analyzerData.repo.currentHead)
     searchParams.set("repo", analyzerData.analyzerData.repo)
-    searchParams.set("skip", commitIndex + "")
-    searchParams.set("count", commitIncrement + "")
+    searchParams.set("path", clickedObject.path)
+    searchParams.set("count", (commitShowCount + commitIncrement) + "")
     fetcher.load(`/commits?${searchParams.toString()}`)
   }
 
   useEffect(() => {
-    if (clickedObject) {
-      // TODO: show commits for folder by finding all filechanges with path that starts with folder path, and join with commits
-      // let commitHashes: string[] = []
-      // if (clickedObject.type === "blob") {
-      //   commitHashes = clickedObject.commits.map((a) => a.hash)
-      // } else {
-      //   commitHashes = calculateCommitsForSubTree(clickedObject).map((a) => a.hash)
-      // }
-      // setTotalCommitHashes(commitHashes)
-      // setCommits(null)
-      // setCommitIndex(0)
-      // requestCommits(0, commitHashes)
-      requestCommits()
-    } else {
-      setCommitIndex(0)
-    }
+    setCommitShowCount(0)
+    fetchCommits()
   }, [clickedObject])
 
   useEffect(() => {
-    if (!clickedObject || commitIndex === 0) return
-    requestCommits()
-  }, [commitIndex])
-
-  useEffect(() => {
-    if (fetcher.state === "idle") {
-      const data = fetcher.data as GitLogEntry[] | undefined | null
-      if (!data) return
-      setCommits((prevCommits) => {
-        if (!prevCommits || prevCommits.length === 0) {
-          return data
-        } else {
-          return [...prevCommits, ...data]
-        }
-      })
-    }
-  }, [fetcher.data, fetcher.state])
+    if (fetcher.state !== "idle") return
+    const data = fetcher.data as GitLogEntry[] | null
+    setCommits(data)
+  }, [fetcher])
 
   const headerText = useMemo<string>(() => {
     if (!clickedObject) return ""
     return `Commit history`
-  }, [clickedObject, commitIndex])
+  }, [clickedObject, commits])
 
   if (!clickedObject) return null
 
@@ -163,17 +138,17 @@ export function CommitHistory() {
         </label>
       </div>
       <div>
-        <CommitDistFragment items={commits} />
+        <CommitDistFragment items={commits} count={commitShowCount}/>
 
         {fetcher.state === "idle" ? (
-          // commitIndex + commitIncrement < totalCommitHashes.length ? (
+          commitShowCount < (analyzerData.repodata2.commitCounts.get(removeFirstPart(clickedObject.path)) ?? 0) ? (
             <span
-              onClick={() => setCommitIndex(commitIndex + commitIncrement)}
-              className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
+            onClick={fetchCommits}
+            className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
             >
-              Load more commits
+              Show more commits
             </span>
-          // ) : null
+          ) : null
         ) : (
           <h3>Loading commits...</h3>
         )}

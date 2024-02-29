@@ -95,13 +95,23 @@ export default class DB {
     }
   }
 
-  public async getCommits(skip: number, count: number) {
+  public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-      SELECT * FROM commits ORDER BY time DESC OFFSET ${skip} LIMIT ${count};
+    SELECT hash, author, time, message, body FROM commits c INNER JOIN (
+      SELECT distinct commithash FROM filechanges WHERE filepath LIKE '${path}%'
+    ) f ON c.hash = f.commithash
+    ORDER BY time DESC LIMIT ${count};
     `)
     return res.map((row) => {
       return {author: row["author"], time: row["time"], body: row["body"], hash: row["hash"], message: row["message"]} as CommitDTO
     })
+  }
+
+  public async getCommitCountForPath(path: string) {
+    const res = await (await this.instance).all(`
+      SELECT COUNT(DISTINCT commithash) AS count from filechanges WHERE filepath LIKE '${path}%';
+    `)
+    return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
