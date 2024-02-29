@@ -65,9 +65,13 @@ export default class DB {
 
   private static async initViews(db: Database) {
     await db.all(`
+      CREATE OR REPLACE VIEW commits_unioned AS
+      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.time, c.body, c.message FROM
+      commits c LEFT JOIN authorunions u ON c.author = u.alias;
+
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.contribcount, f.filepath, c.author, c.time FROM
-      filechanges f JOIN commits c on f.commithash = c.hash;
+      SELECT f.commithash, f.contribcount, f.filepath, author, c.time FROM
+      filechanges f JOIN commits_unioned c on f.commithash = c.hash;
     `)
   }
 
@@ -97,7 +101,7 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-    SELECT hash, author, time, message, body FROM commits c INNER JOIN (
+    SELECT hash, author, time, message, body FROM commits_unioned c INNER JOIN (
       SELECT distinct commithash FROM filechanges WHERE filepath LIKE '${path}%'
     ) f ON c.hash = f.commithash
     ORDER BY time DESC LIMIT ${count};
