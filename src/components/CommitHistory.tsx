@@ -94,7 +94,7 @@ export function CommitHistory() {
     searchParams.set("repo", analyzerData.analyzerData.repo)
     searchParams.set("skip", commitIndex + "")
     searchParams.set("count", commitIncrement + "")
-    fetcher.load(`/commits?${searchParams.toString()}`)
+    fetcher.load(`/api/commits?${searchParams.toString()}`)
   }
 
   useEffect(() => {

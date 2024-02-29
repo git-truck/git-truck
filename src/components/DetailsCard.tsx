@@ -57,7 +57,7 @@ export function DetailsCard({
     if (!clickedObject?.path) return
     searchParams.set("path", clickedObject.path)
     searchParams.set("isblob", String(clickedObject.type === "blob"))
-    fetcher.load(`/authordist?${searchParams.toString()}`)
+    fetcher.load(`/api/authordist?${searchParams.toString()}`)
   }, [clickedObject, repo.currentHead, analyzerData.repo])
 
   useEffect(() => {
