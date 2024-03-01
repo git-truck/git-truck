@@ -74,7 +74,6 @@ export interface GitBlobObject extends AbstractGitObject {
   name: string
   path: string
   sizeInBytes: number
-  blameAuthors: Record<string, number>
 }
 
 export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject

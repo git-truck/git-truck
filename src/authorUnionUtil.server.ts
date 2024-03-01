@@ -51,10 +51,7 @@ export function addAuthorUnion(data: AnalyzerData, dupeMap: Record<string, strin
 function addAuthorUnionRec(tree: HydratedGitTreeObject, authorUnions: Record<string, string>) {
   for (const child of tree.children) {
     if (child.type === "blob") {
-      child.unionedAuthors = {
-        HISTORICAL: unionAuthors(child.authors, authorUnions)
-        // BLAME: unionAuthors(child.blameAuthors, authorUnions),
-      }
+      child.unionedAuthors = unionAuthors(child.authors, authorUnions)
     } else {
       addAuthorUnionRec(child, authorUnions)
     }

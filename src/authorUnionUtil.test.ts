@@ -8,7 +8,7 @@ const authorUnionsTwo = [
   ["hojelse", "Kristoffer Højelse"],
   ["emiljapelt", "Emil Jäpelt"]
 ]
-
+// TODO: fix tests to work with db
 const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
   sizeInBytes: 0,
   authors: {
@@ -16,7 +16,6 @@ const makeHydratedGitBlobObject: () => HydratedGitBlobObject = () => ({
     author2: 50,
     author1: 25
   },
-  blameAuthors: {},
   noCommits: 0,
   type: "blob",
   name: "",
@@ -54,7 +53,6 @@ describe("unionAuthors", () => {
         joglr: 40,
         "Jonas Røssum": 125
       },
-      blameAuthors: {},
       sizeInBytes: 249,
       noCommits: 30,
       lastChangeEpoch: 1646818775,

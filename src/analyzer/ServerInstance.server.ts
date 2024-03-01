@@ -284,11 +284,7 @@ private async analyzeTree(path: string, name: string, hash: string) {
           path: newPath,
           name: newName,
           sizeInBytes: child.size as number,
-          blameAuthors: {}
         }
-        // await DB.addFile(blob)
-        // Don't block the current loop, just add the job to the queue and await it later
-        // jobs.push((async () => (blob.blameAuthors = await GitCaller.getInstance().parseBlame(blob.path)))())
         currTree.children.push(blob)
         break
     }
