@@ -99,6 +99,27 @@ export default class DB {
     }
   }
 
+  public async replaceAuthorUnions(unions: string[][]) {
+    const queryBuilder: string[] = ["DELETE FROM authorunions;"]
+    if (unions.length > 0) queryBuilder.push("INSERT INTO authorunions (alias, actualname) VALUES")
+    for (const union of unions) {
+      const [actualname, ...aliases] = union
+      for (const alias of aliases) {
+        queryBuilder.push(`('${alias}', '${actualname}'),`)
+      }
+    }
+    queryBuilder.push(";")
+
+    await (await this.instance).all(queryBuilder.join(" "))
+  }
+  
+  public async getAuthorUnions() {
+    const res = await (await this.instance).all(`
+      SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
+    `)
+    return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
+  }
+
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
     SELECT hash, author, time, message, body FROM commits_unioned c INNER JOIN (
@@ -191,9 +212,8 @@ export default class DB {
   }
 
   public async getAuthors() {
-    // TODO handle author unions
     const res = await (await this.instance).all(`
-      SELECT DISTINCT author FROM commits;
+      SELECT DISTINCT author FROM commits_unioned;
     `)
     return res.map(row => row["author"] as string)
   }

@@ -57,6 +57,7 @@ export interface RepoData2 {
   newestChangeDate: number
   oldestChangeDate: number
   authors: string[]
+  authorUnions: string[][]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -95,7 +96,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     authorCounts: await instance.db.getAuthorCountPerFile(),
     ...(await instance.db.getMaxAndMinCommitCount()),
     ...(await instance.db.getNewestAndOldestChangeDates()),
-    authors: await instance.db.getAuthors() 
+    authors: await instance.db.getAuthors(),
+    authorUnions : await instance.db.getAuthorUnions()
   }
   return typedjson<RepoData>({
     analyzerData,
@@ -162,17 +164,8 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   if (typeof unionedAuthors === "string") {
-    try {
-      const json = JSON.parse(unionedAuthors)
-      await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-        return {
-          ...prevConfig,
-          unionedAuthors: json
-        }
-      })
-    } catch (e) {
-      console.error(e)
-    }
+    const json = JSON.parse(unionedAuthors) as string[][]
+    await instance.db.replaceAuthorUnions(json)
     return null
   }
 
