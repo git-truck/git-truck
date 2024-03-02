@@ -1,4 +1,4 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"
@@ -6,7 +6,7 @@ import { removeFirstPart } from "~/util"
 
 export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
-  blob: HydratedGitBlobObject,
+  blob: GitBlobObject,
   cache: MetricCache,
   dominantAuthorPerFile: Map<string, string>
 ) {

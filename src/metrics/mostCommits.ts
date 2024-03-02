@@ -1,4 +1,4 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import type { MetricCache } from "./metrics"
 import { SpectrumTranslater } from "./metricUtils"
 import { hslToHex, removeFirstPart } from "../util"
@@ -16,7 +16,7 @@ export class CommitAmountTranslater {
     return hslToHex(20, 100, this.translater.inverseTranslate(value))
   }
 
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache, commitCountPerFile: Map<string, number>) {
+  setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Map<string, number>) {
     cache.colormap.set(blob.path, this.getColor(commitCountPerFile.get(removeFirstPart(blob.path)) ?? 0))
   }
 }

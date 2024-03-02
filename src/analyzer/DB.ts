@@ -58,7 +58,8 @@ export default class DB {
     );
     CREATE TABLE IF NOT EXISTS metadata (
       field VARCHAR,
-      value UBIGINT
+      value UBIGINT,
+      value2 VARCHAR
     );
     `)
   }
@@ -118,6 +119,13 @@ export default class DB {
       SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
     `)
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
+  }
+
+  public async getHiddenFiles() {
+    const res = await (await this.instance).all(`
+      FROM hiddenfiles;
+    `)
+    return res.map(row => row["path"] as string)
   }
 
   public async getCommits(path: string, count: number) {
@@ -244,9 +252,18 @@ export default class DB {
 
   public async setFinishTime() {
     // TODO: also have metadata for table format, to rerun if data model changed
+    const latestHash = (await (await this.instance).all(`SELECT hash FROM commits ORDER BY time DESC LIMIT 1;`))[0]["hash"] as string
     await (await this.instance).all(`
-      INSERT INTO metadata (field, value) VALUES ('finished', ${Date.now()});
+      INSERT INTO metadata (field, value, value2) VALUES ('finished', ${Date.now()}, '${latestHash}');
     `)
+  }
+  
+  public async getLastRunInfo() {
+    const res = await (await this.instance).all(`
+      SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;
+    `)
+    if (!res[0]) return {time: 0, hash: ""}
+    return {time: Number(res[0]["time"]), hash: res[0]["hash"] as string}
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>) {

@@ -1,4 +1,4 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import type { MetricCache } from "./metrics"
 import { hslToHex, removeFirstPart } from "~/util"
 
@@ -23,7 +23,7 @@ export class TruckFactorTranslater {
     return hslToHex(hue, saturation, lightness)
   }
 
-  setColor(blob: HydratedGitBlobObject, cache: MetricCache, authorCountsPerFile: Map<string, number>) {
+  setColor(blob: GitBlobObject, cache: MetricCache, authorCountsPerFile: Map<string, number>) {
     cache.colormap.set(blob.path, this.getColor(authorCountsPerFile.get(removeFirstPart(blob.path)) ?? 0))
   }
 }

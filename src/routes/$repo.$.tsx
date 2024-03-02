@@ -8,9 +8,8 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { GitTreeObject, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap,  } from "~/authorUnionUtil.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -37,7 +36,6 @@ import InstanceManager from "~/analyzer/InstanceManager"
 let invalidateCache = false
 
 export interface RepoData {
-  analyzerData: AnalyzerData
   repo: Repository
   truckConfig: TruckUserConfig
   gitTruckInfo: {
@@ -58,6 +56,15 @@ export interface RepoData2 {
   oldestChangeDate: number
   authors: string[]
   authorUnions: string[][]
+  fileTree: GitTreeObject
+  hiddenFiles: string[]
+  lastRunInfo: {
+    time: number
+    hash: string
+  }
+  fileCount: number
+  repo: string
+  branch: string
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -76,10 +83,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     options.branch = params["*"]
   }
   const instance = InstanceManager.getOrCreateInstance(params["repo"], options.branch, options.path)
-
-  const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
-  )
+  await instance.hydrateData()
+  // const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
+  //   addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
+  // )
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
@@ -88,6 +95,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw Error("Error loading repo")
   }
 
+  const treeAnalyzed = (await instance.analyzeTree("HEAD")) // TODO replace HEAD with hash at selected time range end
 
   const repodata2: RepoData2 = {
     dominantAuthors: await instance.db.getDominantAuthorPerFile(),
@@ -97,10 +105,15 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     ...(await instance.db.getMaxAndMinCommitCount()),
     ...(await instance.db.getNewestAndOldestChangeDates()),
     authors: await instance.db.getAuthors(),
-    authorUnions : await instance.db.getAuthorUnions()
+    authorUnions : await instance.db.getAuthorUnions(),
+    fileTree: treeAnalyzed.rootTree,
+    fileCount: treeAnalyzed.fileCount,
+    hiddenFiles: [], // TODO load hiddenfiles
+    lastRunInfo: await instance.db.getLastRunInfo(),
+    repo: instance.repo,
+    branch: instance.branch
   }
   return typedjson<RepoData>({
-    analyzerData,
     repo,
     gitTruckInfo: await getGitTruckInfo(),
     truckConfig,
@@ -249,7 +262,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
 export default function Repo() {
   const client = useClient()
   const data = useTypedLoaderData<RepoData>()
-  const { analyzerData, gitTruckInfo } = data
+  const { gitTruckInfo, repodata2 } = data
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
@@ -257,7 +270,6 @@ export default function Repo() {
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
-  if (!analyzerData) return null
 
   function defineTheContainerClass(): string {
     // The fullscreen overrides the collapses
@@ -305,7 +317,7 @@ export default function Repo() {
             <>
               <GlobalInfo />
               <Options />
-              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
               <SearchCard />
             </>
           ) : null}

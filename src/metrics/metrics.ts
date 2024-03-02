@@ -1,4 +1,4 @@
-import type { HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
 import { setDominanceColor } from "./singleAuthor"
@@ -30,7 +30,7 @@ export function createMetricData(data: RepoData, colorSeed: string | undefined):
   const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed)
 
   return [
-    setupMetricsCache(data.analyzerData.commit.tree, getMetricCalcs(data, authorColors)),
+    setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)),
     authorColors
   ]
 }
@@ -90,7 +90,7 @@ export function generateAuthorColors(authors: string[], colorSeed: string | unde
 export function getMetricCalcs(
   data: RepoData,
   authorColors: Map<string, `#${string}`>
-): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
+): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.repodata2.maxCommitCount
   const minCommitCount = data.repodata2.minCommitCount
 
@@ -100,7 +100,7 @@ export function getMetricCalcs(
   return [
     [
       "FILE_TYPE",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>()
         }
@@ -109,14 +109,14 @@ export function getMetricCalcs(
     ],
     [
       "SINGLE_AUTHOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominanceColor(blob, cache, authorColors, data.repodata2.dominantAuthors, data.repodata2.authorCounts)
       }
     ],
     [
       "MOST_COMMITS",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
             `${minCommitCount}`,
@@ -132,7 +132,7 @@ export function getMetricCalcs(
     ],
     [
       "LAST_CHANGED",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         const newestEpoch = data.repodata2.newestChangeDate
         const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
@@ -151,15 +151,14 @@ export function getMetricCalcs(
     ],
     [
       "TOP_CONTRIBUTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = {} as [string, number]
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
         setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors)
       }
     ],
     [
       "TRUCK_FACTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
             Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
@@ -175,8 +174,8 @@ export function getMetricCalcs(
 }
 
 export function setupMetricsCache(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -184,8 +183,8 @@ export function setupMetricsCache(
 }
 
 function setupMetricsCacheRec(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {

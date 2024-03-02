@@ -3,11 +3,10 @@ import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type {
-  HydratedGitBlobObject,
-  HydratedGitCommitObject,
-  HydratedGitObject,
-  HydratedGitTreeObject
-} from "~/analyzer/model"
+  GitBlobObject,
+  GitObject,
+  GitTreeObject,
+  HydratedGitObject} from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
@@ -35,7 +34,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import type { RepoData2 } from "~/routes/$repo.$"
 
-type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
+type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
 export const Chart = memo(function Chart({
   setHoveredObject
@@ -45,7 +44,7 @@ export const Chart = memo(function Chart({
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
-  const { analyzerData, repodata2 } = useData()
+  const { repodata2 } = useData()
   const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
@@ -73,26 +72,24 @@ export const Chart = memo(function Chart({
       numberOfDepthLevels = undefined
   }
 
-  const commit = useMemo(() => {
-    if (hierarchyType === "NESTED") return analyzerData.commit
+  const filetree = useMemo(() => {
+    if (hierarchyType === "NESTED") return repodata2.fileTree
 
     return {
-      ...analyzerData.commit,
-      tree: {
-        ...analyzerData.commit.tree,
-        children: flatten(analyzerData.commit.tree)
-      }
-    }
-  }, [analyzerData.commit, hierarchyType])
+      ...repodata2.fileTree,
+      children: flatten(repodata2.fileTree)
+    } as GitTreeObject
+    
+  }, [repodata2.fileTree, hierarchyType])
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(commit, repodata2, size, chartType, sizeMetric, path, renderCutoff).descendants()
-  }, [size, commit, chartType, sizeMetric, path, renderCutoff, repodata2])
+    return createPartitionedHiearchy(repodata2, filetree, size, chartType, sizeMetric, path, renderCutoff).descendants()
+  }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
 
   useEffect(() => {
     setHoveredObject(null)
-  }, [chartType, analyzerData.commit, size, setHoveredObject])
+  }, [chartType, size, setHoveredObject])
 
   const createGroupHandlers: (
     d: CircleOrRectHiearchyNode,
@@ -351,19 +348,16 @@ function isCircularNode(d: CircleOrRectHiearchyNode) {
 }
 
 function createPartitionedHiearchy(
-  data: HydratedGitCommitObject,
   repodata2: RepoData2,
+  tree: GitTreeObject,
   size: { height: number; width: number },
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
   path: string,
   renderCutoff: number
 ) {
-  const root = data.tree as HydratedGitTreeObject
-
-  let currentTree = root
-  const steps = path.substring(data.tree.name.length + 1).split("/")
-
+  let currentTree = tree
+  const steps = path.substring(tree.name.length + 1).split("/")
   for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
       if (child.type === "tree") {
@@ -377,10 +371,10 @@ function createPartitionedHiearchy(
     }
   }
 
-  const castedTree = currentTree as HydratedGitObject
+  const castedTree = currentTree as GitObject
 
   const hiearchy = hierarchy(castedTree).sum((d) => {
-    const hydratedBlob = d as HydratedGitBlobObject
+    const hydratedBlob = d as GitBlobObject
     const slicedPath = removeFirstPart(hydratedBlob.path)
     switch (sizeMetricType) {
       case "FILE_SIZE":
@@ -398,7 +392,7 @@ function createPartitionedHiearchy(
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
     case "TREE_MAP":
-      const treeMapPartition = treemap<HydratedGitObject>()
+      const treeMapPartition = treemap<GitObject>()
         .tile(treemapBinary)
         .size([size.width, size.height])
         .paddingInner(2)
@@ -415,7 +409,7 @@ function createPartitionedHiearchy(
       return tmPartition
 
     case "BUBBLE_CHART":
-      const bubbleChartPartition = pack<HydratedGitObject>()
+      const bubbleChartPartition = pack<GitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
       const bPartition = bubbleChartPartition(hiearchy)
@@ -430,8 +424,8 @@ function createPartitionedHiearchy(
 }
 
 function filterTree(
-  node: HierarchyNode<HydratedGitObject>,
-  filter: (child: HierarchyNode<HydratedGitObject>) => boolean
+  node: HierarchyNode<GitObject>,
+  filter: (child: HierarchyNode<GitObject>) => boolean
 ) {
   node.children = node.children?.filter((c) => filter(c))
   for (const child of node.children ?? []) {
@@ -471,8 +465,8 @@ function roundedRectPathFromRect(x: number, y: number, width: number, height: nu
           z`
 }
 
-function flatten(tree: HydratedGitTreeObject) {
-  const flattened: HydratedGitBlobObject[] = []
+function flatten(tree: GitTreeObject) {
+  const flattened: GitBlobObject[] = []
   for (const child of tree.children) {
     if (child.type === "blob") {
       flattened.push(child)

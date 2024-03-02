@@ -14,7 +14,7 @@ const analyzingTitle = "Analyzing | Git Truck"
 
 export const GlobalInfo = memo(function GlobalInfo() {
   const client = useClient()
-  const { analyzerData, repo } = useData()
+  const { repodata2, repo } = useData()
   const transitionState = useNavigation()
 
   const location = useLocation()
@@ -36,8 +36,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
       setIsAnalyzing(false)
     }
   }, [transitionState.state])
-
-  const isoString = new Date(analyzerData.lastRunEpoch).toISOString()
+  const isoString = new Date(repodata2.lastRunInfo.time).toISOString()
   return (
     <div className="flex flex-col gap-2">
       <div className="card">
@@ -60,16 +59,16 @@ export const GlobalInfo = memo(function GlobalInfo() {
               <div className="grid auto-rows-fr grid-cols-2 gap-0">
                 <span>Analyzed</span>
                 <time className="text-right" dateTime={isoString} title={isoString}>
-                  {client ? dateTimeFormatShort(analyzerData.lastRunEpoch) : ""}
+                  {client ? dateTimeFormatShort(repodata2.lastRunInfo.time) : ""}
                 </time>
 
                 <span>As of commit</span>
-                <span className="text-right" title={analyzerData.commit.message ?? "No commit message"}>
-                  <Code inline>#{analyzerData.commit.hash.slice(0, 7)}</Code>
+                <span className="text-right">
+                  <Code inline>#{repodata2.lastRunInfo.hash.slice(0, 7)}</Code>
                 </span>
 
                 <span>Files analyzed</span>
-                <span className="text-right">{analyzerData.commit.fileCount ?? 0}</span>
+                <span className="text-right">{repodata2.fileCount ?? 0}</span>
               </div>
             </div>
           </div>
@@ -100,7 +99,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           key={repo.currentHead}
           disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
-          defaultValue={analyzerData.branch}
+          defaultValue={""} // TODO: fix branch select
           headGroups={repo.refs}
           analyzedHeads={repo.analyzedHeads}
         />

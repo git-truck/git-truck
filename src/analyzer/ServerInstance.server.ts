@@ -1,14 +1,8 @@
 import DB from "./DB"
 import { GitCaller } from "./git-caller.server"
-import { AnalyzerDataInterfaceVersion } from "./model";
-import type { AnalyzerData, GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, TruckConfig, RawGitObject, HydratedGitCommitObject, GitLogEntry, FileChange, HydratedGitBlobObject, HydratedGitTreeObject } from "./model"
+import type { GitBlobObject, GitCommitObject, GitCommitObjectLight, GitTreeObject, RawGitObject, HydratedGitCommitObject, GitLogEntry, FileChange, HydratedGitBlobObject, HydratedGitTreeObject } from "./model"
 import { log, setLogLevel } from "./log.server"
-import { resolve, isAbsolute } from "path"
-import { analyzeRenamedFile, describeAsyncJob, getDirName, writeRepoToFile } from "./util.server"
-import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
-import pkg from "../../package.json"
-import ignore from "ignore"
-import { TreeCleanup, applyIgnore, applyMetrics, initMetrics } from "./postprocessing.server"
+import { analyzeRenamedFile } from "./util.server"
 import { getCoAuthors } from "./coauthors.server";
 import { contribRegex, emptyGitCommitHash, gitLogRegex, treeRegex } from "./constants";
 import { cpus } from "os"
@@ -28,148 +22,12 @@ export default class ServerInstance {
     private renamedFilesNew: {from: string, to: string, time: number}[] = []
     private authors: Set<string> = new Set()
 
-    constructor(private repo: string, private branch: string, public path: string) {
+    constructor(public repo: string, public branch: string, public path: string) {
         this.repoSanitized = repo.replace(/\W/g, "_")
         this.branchSanitized = branch.replace(/\W/g, "_")
         this.gitCaller = new GitCaller(repo, branch, path)
         this.db = new DB(repo, branch)
     }
-
-    public async analyze(args: TruckConfig): Promise<AnalyzerData> {
-        this.analyzationStatus = "Starting"
-      
-        if (args?.log) {
-          setLogLevel(args.log as string)
-        }
-      
-        let repoDir = args.path
-        if (!isAbsolute(repoDir)) repoDir = resolve(process.cwd(), repoDir)
-      
-        const hiddenFiles = args.hiddenFiles
-      
-        const start = performance.now()
-        const [findBranchHeadResult, findBranchHeadError] = await describeAsyncJob({
-          job: () => this.gitCaller.findBranchHead(),
-          beforeMsg: "Finding branch head",
-          afterMsg: "Found branch head",
-          errorMsg: "Error finding branch head"
-        })
-        const repoName = getDirName(repoDir)
-      
-        if (findBranchHeadError) throw findBranchHeadError
-      
-        const [branchHead,] = findBranchHeadResult
-        // this.gitCaller.branch = branchName
-      
-        let data: AnalyzerData | null = null
-      
-        const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
-          repo: repoName,
-          branch: this.branch,
-          branchHead: branchHead,
-          invalidateCache: args.invalidateCache
-        })
-      
-        if (cachedData) {
-          data = {
-            ...cachedData,
-            hiddenFiles
-          }
-        } else {
-          log.info(
-            `Reanalyzing, since the following cache conditions were not met:\n${reasons.map((r) => ` - ${r}`).join("\n")}`
-          )
-        }
-      
-        if (data === null) {
-          const quotePathDefaultValue = await this.gitCaller.getDefaultGitSettingValue("core.quotepath")
-          await this.gitCaller.setGitSetting("core.quotePath", "off")
-          const renamesDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renames")
-          await this.gitCaller.setGitSetting("diff.renames", "true")
-          const renameLimitDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renameLimit")
-          await this.gitCaller.setGitSetting("diff.renameLimit", "1000000")
-      
-          const runDateEpoch = Date.now()
-          const [repoTree, repoTreeError] = await describeAsyncJob({
-            job: () => this.analyzeCommit(repoName, branchHead),
-            beforeMsg: "Analyzing commit tree",
-            afterMsg: "Commit tree analyzed",
-            errorMsg: "Error analyzing commit tree"
-          })
-      
-          if (repoTreeError) throw repoTreeError
-      
-          const [hydrateResult, hydratedRepoTreeError] = await describeAsyncJob({
-            job: () => this.hydrateData(repoTree, repoName, this.branch),
-            beforeMsg: "Hydrating commit tree",
-            afterMsg: "Commit tree hydrated",
-            errorMsg: "Error hydrating commit tree"
-          })
-      
-          if (hydratedRepoTreeError) throw hydratedRepoTreeError
-      
-          this.analyzationStatus = "GeneratingChart"
-      
-          const [hydratedRepoTree, authors] = hydrateResult
-      
-          await this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue)
-          await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
-          await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
-      
-          const defaultOutPath = GitCaller.getCachePath(repoName, this.branch)
-          let outPath = resolve((args.out as string) ?? defaultOutPath)
-          if (!isAbsolute(outPath)) outPath = resolve(process.cwd(), outPath)
-      
-          const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
-      
-          data = {
-            cached: false,
-            hiddenFiles,
-            authors,
-            authorsUnion,
-            repo: repoName,
-            branch: this.branch,
-            commit: hydratedRepoTree,
-            interfaceVersion: AnalyzerDataInterfaceVersion,
-            currentVersion: pkg.version,
-            lastRunEpoch: runDateEpoch,
-            commits: {}
-          }
-      
-          if (!args.invalidateCache) {
-            await describeAsyncJob({
-              job: () =>
-                writeRepoToFile(outPath, {
-                  ...data,
-                  cached: true
-                } as AnalyzerData),
-              beforeMsg: "Writing data to file",
-              afterMsg: `Wrote data to ${resolve(outPath)}`,
-              errorMsg: `Error writing data to file ${outPath}`
-            })
-          }
-        }
-      
-        this.analyzationStatus = "GeneratingChart"
-      
-        const truckignore = ignore().add(hiddenFiles)
-        data.commit.tree = applyIgnore(data.commit.tree, truckignore)
-        TreeCleanup(data.commit.tree)
-        initMetrics(data)
-        data.commit.tree = applyMetrics(data, data.commit.tree)
-      
-        const stop = performance.now()
-      
-        await describeAsyncJob({
-          job: () => Promise.resolve(),
-          beforeMsg: "",
-          afterMsg: `Ready in`,
-          errorMsg: "",
-          ms: stop - start
-        })
-      
-        return data
-      }
 
       private async analyzeCommitLight(hash: string): Promise<GitCommitObjectLight> {
         const rawContent = await this.gitCaller.catFileCached(hash)
@@ -217,7 +75,7 @@ export default class ServerInstance {
           throw Error("Hash is required")
         }
         const { tree, ...commit } = await this.analyzeCommitLight(hash)
-        const { rootTree, fileCount } = await this.analyzeTree(repoName, repoName, tree)
+        const { rootTree, fileCount } = await this.analyzeTree(tree)
         const commitObject = {
           ...commit,
           fileCount,
@@ -227,9 +85,8 @@ export default class ServerInstance {
       }
 
       
-private async analyzeTree(path: string, name: string, hash: string) {
+public async analyzeTree(hash: string) {
   const rawContent = await this.gitCaller.lsTree(hash)
-
   const lsTreeEntries: RawGitObject[] = []
   const matches = rawContent.matchAll(treeRegex)
   let fileCount = 0
@@ -248,8 +105,8 @@ private async analyzeTree(path: string, name: string, hash: string) {
 
   const rootTree = {
     type: "tree",
-    path,
-    name,
+    path: this.repo,
+    name: this.repo,
     hash,
     children: []
   } as GitTreeObject
@@ -258,7 +115,7 @@ private async analyzeTree(path: string, name: string, hash: string) {
     log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")
     const newName = prevTrees.pop() as string
-    const newPath = `${path}/${child.path}`
+    const newPath = `${this.repo}/${child.path}`
     let currTree = rootTree
     for (const treePath of prevTrees) {
       currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
@@ -374,10 +231,8 @@ private async updateCreditOnBlob(blob: HydratedGitBlobObject, commit: GitLogEntr
   }
 }
 
-private async hydrateData(commit: GitCommitObject, repo: string, branch: string): Promise<[HydratedGitCommitObject, string[]]> {
-  const data = commit as HydratedGitCommitObject
-  const fileMap = this.convertFileTreeToMap(data.tree)
-  this.initially_mut(data)
+public async hydrateData() {
+  // const fileMap = this.convertFileTreeToMap(data.tree)
   setLogLevel("DEBUG")
   let commitCount = await this.gitCaller.getCommitCount()
   if (await this.db.hasCompletedPreviously()) {
@@ -420,35 +275,13 @@ for (let index = 0; index < commitCount; index += commitBundleSize) {
     const end = Date.now()
     console.log("add commits ms", end - start)
     
-    await this.hydrateBlobs(fileMap, commits)
+    // await this.hydrateBlobs(fileMap, commits)
     log.info("threads synced")
   }
-  
-  console.time("commitquery")
-  const rows = await this.db.query(`SELECT author, COUNT(*) as commit_count
-  FROM commits
-  GROUP BY author
-  ORDER BY commit_count DESC
-  LIMIT 10;`)
-  console.timeEnd("commitquery")
-  console.log(rows)
 
-  const rows2 = await this.db.query(`SELECT author, message, body
-  FROM commits
-  LIMIT 10;`)
-  console.log("rows2", rows2)
-
-  const rows3 = await this.db.query(`select *
-  FROM filechanges
-  LIMIT 40;`)
-  console.log("rows3", rows3)
-
-  const rowCount = await this.db.query(`select count (*) from commits;`)
-  console.log("row count", rowCount)
-
-  this.sortCommits(fileMap)
+  // this.sortCommits(fileMap)
   await this.db.setFinishTime()
-  return [data, Array.from(this.authors)]
+  // return [data, Array.from(this.authors)]
 }
 
 private sortCommits(fileMap: Map<string, GitBlobObject>) {

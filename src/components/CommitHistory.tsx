@@ -92,8 +92,8 @@ export function CommitHistory() {
     if (!clickedObject) return
     setCommitShowCount((prev) => prev + commitIncrement)
     const searchParams = new URLSearchParams()
-    searchParams.set("branch", analyzerData.repo.currentHead)
-    searchParams.set("repo", analyzerData.analyzerData.repo)
+    searchParams.set("branch", analyzerData.repodata2.branch)
+    searchParams.set("repo", analyzerData.repodata2.repo)
     searchParams.set("path", clickedObject.path)
     searchParams.set("count", (commitShowCount + commitIncrement) + "")
     fetcher.load(`/commits?${searchParams.toString()}`)

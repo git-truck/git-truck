@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
-import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
+import type { GitObject, GitTreeObject, HydratedGitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -37,7 +37,7 @@ export function DetailsCard({
   const { metricType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
-  const { analyzerData, repodata2, repo } = useData()
+  const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
 
   const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
@@ -52,13 +52,13 @@ export function DetailsCard({
   
   useEffect(() => {
     const searchParams = new URLSearchParams()
-    searchParams.set("branch", repo.currentHead)
-    searchParams.set("repo", analyzerData.repo)
+    searchParams.set("branch", repodata2.branch)
+    searchParams.set("repo", repodata2.repo)
     if (!clickedObject?.path) return
     searchParams.set("path", clickedObject.path)
     searchParams.set("isblob", String(clickedObject.type === "blob"))
     fetcher.load(`/authordist?${searchParams.toString()}`)
-  }, [clickedObject, repo.currentHead, analyzerData.repo])
+  }, [clickedObject, repodata2])
 
   useEffect(() => {
     if (fetcher.state === "idle") {
@@ -76,8 +76,8 @@ export function DetailsCard({
 
   useEffect(() => {
     // Update clickedObject if data changes
-    setClickedObject((clickedObject) => findObjectInTree(analyzerData.commit.tree, clickedObject))
-  }, [analyzerData, setClickedObject])
+    setClickedObject((clickedObject) => findObjectInTree(repodata2.fileTree, clickedObject))
+  }, [repodata2, setClickedObject])
 
   const [metricsData] = useMetrics()
   const { backgroundColor, color, lightBackground } = useMemo(() => {
@@ -101,7 +101,7 @@ export function DetailsCard({
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"
   const extension = last(clickedObject.name.split("."))
-
+  // TODO: handle binary file properly or remove the entry
   return (
     <div
       className={clsx(className, "card flex flex-col gap-2 transition-colors")}
@@ -129,7 +129,7 @@ export function DetailsCard({
             <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
               {isBlob ? (
                 <>
-                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={clickedObject.isBinary} />
+                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} /> 
                   <CommitsEntry count={repodata2.commitCounts.get(slicedPath)}/>
                   <LastchangedEntry epoch={repodata2.lastChanged.get(slicedPath)} />
                 </>
@@ -225,7 +225,7 @@ export function DetailsCard({
   )
 }
 
-function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject | null) {
+function findObjectInTree(tree: GitTreeObject, object: GitObject | null) {
   if (object === null) return null
   let currentTree = tree
   const steps = object.path.split("/")
@@ -246,7 +246,7 @@ function findObjectInTree(tree: HydratedGitTreeObject, object: HydratedGitObject
   return currentTree
 }
 
-function FileAndSubfolderCountEntries(props: { clickedTree: HydratedGitTreeObject }) {
+function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
   const folderCount = props.clickedTree.children.filter((child) => child.type === "tree").length
   const fileCount = props.clickedTree.children.length - folderCount
 
