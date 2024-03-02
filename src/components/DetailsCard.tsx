@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
-import type { GitObject, GitTreeObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitObject, GitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
@@ -390,43 +390,10 @@ function AuthorDistribution(props: { authors: {author: string, contribs: number}
   )
 }
 
-function makePercentResponsibilityDistribution(
-  unionedAuthors: Record<string, number> | undefined
-): Record<string, number> {
-  if (!unionedAuthors) throw Error("unionedAuthors is undefined")
-  const sum = Object.values(unionedAuthors).reduce((acc, v) => acc + v, 0)
-
-  const newAuthorsEntries = Object.entries(unionedAuthors).reduce((newAuthorOject, [author, contrib]) => {
-    const fraction: number = contrib / sum
-    return { ...newAuthorOject, [author]: fraction }
-  }, {})
-
-  return newAuthorsEntries
-}
-
 function hasContributions(authors?: {author: string, contribs: number}[] | null) {
   if (!authors) return false
   for (const {contribs} of authors) {
     if (contribs > 0) return true
   }
   return false
-}
-
-function calculateAuthorshipForSubTree(tree: HydratedGitTreeObject) {
-  const aggregatedAuthors: Record<string, number> = {}
-  subTree(tree)
-  function subTree(tree: HydratedGitTreeObject) {
-    for (const child of tree.children) {
-      if (child.type === "blob") {
-        const unionedAuthors = child.unionedAuthors
-        if (!unionedAuthors) throw Error("No unioned authors")
-        for (const [author, contrib] of Object.entries(unionedAuthors)) {
-          aggregatedAuthors[author] = (aggregatedAuthors[author] ?? 0) + contrib
-        }
-      } else if (child.type === "tree") {
-        subTree(child)
-      }
-    }
-  }
-  return aggregatedAuthors
 }

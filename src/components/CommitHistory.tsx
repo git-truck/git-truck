@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import type { CommitDTO, GitLogEntry, HydratedGitTreeObject } from "~/analyzer/model"
+import type { CommitDTO, GitLogEntry } from "~/analyzer/model"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import { dateFormatLong, removeFirstPart } from "~/util"
 import commitIcon from "~/assets/commit_icon.png"
@@ -56,28 +56,6 @@ function CommitDistFragment(props: CommitDistFragProps) {
       items={items}
     />
   )
-}
-
-function calculateCommitsForSubTree(tree: HydratedGitTreeObject) {
-  const commitMap = new Map<string, number>()
-  subTree(tree)
-  function subTree(tree: HydratedGitTreeObject) {
-    for (const child of tree.children) {
-      if (!child) continue
-      if (child.type === "blob") {
-        if (!child.commits) continue
-        for (const commit of child.commits) {
-          commitMap.set(commit.hash, commit.time)
-        }
-      } else if (child.type === "tree") {
-        subTree(child)
-      }
-    }
-  }
-  const commitArr = []
-  for (const [hash, time] of commitMap) commitArr.push({ hash, time })
-  commitArr.sort((a, b) => b.time - a.time)
-  return commitArr
 }
 
 export function CommitHistory() {

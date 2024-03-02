@@ -1,5 +1,5 @@
 import { Fragment, memo, useMemo, useRef } from "react"
-import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import type { GitBlobObject, GitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
@@ -11,7 +11,7 @@ import { useData } from "~/contexts/DataContext"
 import type { RepoData2 } from "~/routes/$repo.$"
 
 interface TooltipProps {
-  hoveredObject: HydratedGitObject | null
+  hoveredObject: GitObject | null
   x: number
   y: number
   w: number
@@ -67,7 +67,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
       {hoveredObject?.type === "blob"
         ? ColorMetricDependentInfo({
             metric: metricType,
-            hoveredBlob: hoveredObject as HydratedGitBlobObject,
+            hoveredBlob: hoveredObject,
             repodata2
           })
         : null}
@@ -77,7 +77,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 
 function ColorMetricDependentInfo(props: {
   metric: MetricType
-  hoveredBlob: HydratedGitBlobObject | null
+  hoveredBlob: GitBlobObject | null
   repodata2: RepoData2
 }) {
   const slicedPath = removeFirstPart(props.hoveredBlob?.path ?? "")

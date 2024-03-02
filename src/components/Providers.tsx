@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import type { HydratedGitBlobObject, HydratedGitObject } from "~/analyzer/model"
+import type { GitBlobObject, GitObject } from "~/analyzer/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
@@ -24,9 +24,9 @@ interface ProvidersProps {
 export function Providers({ children, data }: ProvidersProps) {
   const [options, setOptions] = useState<OptionsContextType | null>(null)
   const [commitTab, setCommitTab] = useState<CommitTab | null>(null)
-  const [searchResults, setSearchResults] = useState<Record<string, HydratedGitObject>>({})
+  const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const [path, setPath] = useState(data.repo.name)
-  const [clickedObject, setClickedObject] = useState<HydratedGitObject | null>(null)
+  const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
 
   const metricsData: MetricsData = useMemo(
     () => createMetricData(data, data.truckConfig.colorSeed),
@@ -79,12 +79,12 @@ export function Providers({ children, data }: ProvidersProps) {
         })),
       setSizeMetricType: (sizeMetric: SizeMetricType) =>
         setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),
-      setHoveredBlob: (blob: HydratedGitBlobObject | null) =>
+      setHoveredBlob: (blob: GitBlobObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           hoveredBlob: blob
         })),
-      setClickedObject: (object: HydratedGitObject | null) =>
+      setClickedObject: (object: GitObject | null) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           clickedObject: object

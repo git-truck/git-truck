@@ -57,7 +57,7 @@ export interface AnalyzerData {
   hiddenFiles: string[]
   repo: string
   branch: string
-  commit: HydratedGitCommitObject
+  commit: GitCommitObject
   authors: string[]
   authorsUnion: string[]
   currentVersion: string
@@ -76,29 +76,11 @@ export interface GitBlobObject extends AbstractGitObject {
   sizeInBytes: number
 }
 
-export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
-
-export interface HydratedGitBlobObject extends GitBlobObject {
-  authors: Record<string, number>
-  noCommits: number
-  lastChangeEpoch?: number
-  isBinary?: boolean
-  unionedAuthors?: Record<string, number>
-  dominantAuthor?: [string, number]
-  isSearchResult?: boolean
-  commits: { hash: string; time: number }[]
-}
-
 export interface GitTreeObject extends AbstractGitObject {
   type: "tree"
   name: string
   path: string
   children: (GitTreeObject | GitBlobObject)[]
-}
-
-export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
-  children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
-  isSearchResult?: boolean
 }
 
 export interface GitCommitObject extends AbstractGitObject {
@@ -112,12 +94,6 @@ export interface GitCommitObject extends AbstractGitObject {
   description: string
   coauthors: Person[]
   fileCount?: number
-}
-
-export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
-  tree: HydratedGitTreeObject
-  newestLatestChangeEpoch: number
-  oldestLatestChangeEpoch: number
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {

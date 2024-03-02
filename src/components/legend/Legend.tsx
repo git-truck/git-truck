@@ -7,7 +7,7 @@ import { Icon } from "@mdi/react"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
-import type { HydratedGitObject } from "~/analyzer/model"
+import type { GitObject } from "~/analyzer/model"
 import { useDeferredValue } from "react"
 import { getPathFromRepoAndHead } from "~/util"
 import { useData } from "~/contexts/DataContext"
@@ -20,7 +20,7 @@ export function Legend({
   showUnionAuthorsModal,
   className = ""
 }: {
-  hoveredObject: HydratedGitObject | null
+  hoveredObject: GitObject | null
   showUnionAuthorsModal: () => void
   className?: string
 }) {
@@ -81,6 +81,6 @@ export function Legend({
 }
 
 export interface MetricLegendProps {
-  hoveredObject: HydratedGitObject | null
+  hoveredObject: GitObject | null
   metricCache: MetricCache
 }

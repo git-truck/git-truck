@@ -5,8 +5,7 @@ import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type {
   GitBlobObject,
   GitObject,
-  GitTreeObject,
-  HydratedGitObject} from "~/analyzer/model"
+  GitTreeObject} from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
@@ -39,7 +38,7 @@ type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRect
 export const Chart = memo(function Chart({
   setHoveredObject
 }: {
-  setHoveredObject: (obj: HydratedGitObject | null) => void
+  setHoveredObject: (obj: GitObject | null) => void
 }) {
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
@@ -101,7 +100,7 @@ export const Chart = memo(function Chart({
             evt.stopPropagation()
             return setClickedObject(d.data)
           },
-          onMouseOver: () => setHoveredObject(d.data as HydratedGitObject),
+          onMouseOver: () => setHoveredObject(d.data as GitObject),
           onMouseOut: () => setHoveredObject(null)
         }
       : {
@@ -112,7 +111,7 @@ export const Chart = memo(function Chart({
           },
           onMouseOver: (evt) => {
             evt.stopPropagation()
-            if (!isRoot) setHoveredObject(d.data as HydratedGitObject)
+            if (!isRoot) setHoveredObject(d.data as GitObject)
             else setHoveredObject(null)
           },
           onMouseOut: () => setHoveredObject(null)
@@ -179,7 +178,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
     }
 
     if (chartType === "BUBBLE_CHART") {
-      const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+      const circleDatum = d as HierarchyCircularNode<GitObject>
       props = {
         ...props,
         x: circleDatum.x - circleDatum.r,
@@ -190,7 +189,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
         ry: circleDatum.r
       }
     } else {
-      const datum = d as HierarchyRectangularNode<HydratedGitObject>
+      const datum = d as HierarchyRectangularNode<GitObject>
 
       props = {
         ...props,
@@ -234,11 +233,11 @@ function collapseText({
   let textIsTooLong: (text: string) => boolean
   let textIsTooTall: (text: string) => boolean
   if (chartType === "BUBBLE_CHART") {
-    const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+    const circleDatum = d as HierarchyCircularNode<GitObject>
     textIsTooLong = (text: string) => circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidth
     textIsTooTall = () => false
   } else {
-    const datum = d as HierarchyRectangularNode<HydratedGitObject>
+    const datum = d as HierarchyRectangularNode<GitObject>
     textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
     textIsTooTall = (text: string) => {
       const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
@@ -291,10 +290,10 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 
   if (isBubbleChart) {
     const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
-    const circleDatum = d as HierarchyCircularNode<HydratedGitObject>
+    const circleDatum = d as HierarchyCircularNode<GitObject>
     textPathData = circlePathFromCircle(circleDatum.x, circleDatum.y + yOffset, circleDatum.r)
   } else {
-    const datum = d as HierarchyRectangularNode<HydratedGitObject>
+    const datum = d as HierarchyRectangularNode<GitObject>
     textPathData = roundedRectPathFromRect(
       datum.x0 + (isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX),
       datum.y0 + (isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY),
@@ -344,7 +343,7 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 }
 
 function isCircularNode(d: CircleOrRectHiearchyNode) {
-  return typeof (d as HierarchyCircularNode<HydratedGitObject>).r === "number"
+  return typeof (d as HierarchyCircularNode<GitObject>).r === "number"
 }
 
 function createPartitionedHiearchy(
@@ -374,11 +373,11 @@ function createPartitionedHiearchy(
   const castedTree = currentTree as GitObject
 
   const hiearchy = hierarchy(castedTree).sum((d) => {
-    const hydratedBlob = d as GitBlobObject
-    const slicedPath = removeFirstPart(hydratedBlob.path)
+    const blob = d as GitBlobObject
+    const slicedPath = removeFirstPart(blob.path)
     switch (sizeMetricType) {
       case "FILE_SIZE":
-        return hydratedBlob.sizeInBytes ?? 1
+        return blob.sizeInBytes ?? 1
       case "MOST_COMMITS":
         return repodata2.commitCounts.get(slicedPath) ?? 1
       case "EQUAL_SIZE":
@@ -402,7 +401,7 @@ function createPartitionedHiearchy(
       const tmPartition = treeMapPartition(hiearchy)
 
       filterTree(tmPartition, (child) => {
-        const cast = child as HierarchyRectangularNode<HydratedGitObject>
+        const cast = child as HierarchyRectangularNode<GitObject>
         return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
       })
 
@@ -414,7 +413,7 @@ function createPartitionedHiearchy(
         .padding(bubblePadding)
       const bPartition = bubbleChartPartition(hiearchy)
       filterTree(bPartition, (child) => {
-        const cast = child as HierarchyCircularNode<HydratedGitObject>
+        const cast = child as HierarchyCircularNode<GitObject>
         return cast.r >= cutOff
       })
       return bPartition

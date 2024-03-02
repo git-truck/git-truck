@@ -8,7 +8,7 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { GitTreeObject, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { GitObject, GitTreeObject, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -267,7 +267,7 @@ export default function Repo() {
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
-  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
+  const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
 
@@ -396,8 +396,8 @@ function ChartWrapper({
   hoveredObject,
   setHoveredObject
 }: {
-  hoveredObject: HydratedGitObject | null
-  setHoveredObject: (obj: HydratedGitObject | null) => void
+  hoveredObject: GitObject | null
+  setHoveredObject: (obj: GitObject | null) => void
 }) {
   const chartWrapperRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLElement>(document.body)

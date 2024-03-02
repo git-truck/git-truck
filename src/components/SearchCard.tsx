@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState, useTransition, useId } from
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
-import type { HydratedGitObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitObject, GitTreeObject } from "~/analyzer/model"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -10,14 +10,12 @@ import { allExceptLast, getSeparator } from "~/util"
 import { Icon } from "@mdi/react"
 import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 
-function findSearchResults(tree: HydratedGitTreeObject, searchString: string): SearchResults {
-  const searchResults: Record<string, HydratedGitObject> = {}
-  function subTreeSearch(subTree: HydratedGitTreeObject) {
+function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
+  const searchResults: Record<string, GitObject> = {}
+  function subTreeSearch(subTree: GitTreeObject) {
     for (const child of subTree.children) {
       if (child.name.toLowerCase().includes(searchString.toLowerCase()) && searchString) {
         searchResults[child.path] = child
-      } else {
-        child.isSearchResult = false
       }
       if (child.type === "tree") subTreeSearch(child)
     }
@@ -33,7 +31,7 @@ export const SearchCard = memo(function SearchCard() {
   const { searchResults, setSearchResults } = useSearch()
   const searchResultsArray = useMemo(() => Object.values(searchResults), [searchResults])
   const id = useId()
-  const { analyzerData } = useData()
+  const { repodata2 } = useData()
 
   useEffect(() => {
     const searchOverride = (event: KeyboardEvent) => {
@@ -68,7 +66,7 @@ export const SearchCard = memo(function SearchCard() {
               setSearchText(value)
               startTransition(() => {
                 if (value.trim() === "") setSearchResults({})
-                setSearchResults(findSearchResults(analyzerData.commit.tree, value))
+                setSearchResults(findSearchResults(repodata2.fileTree, value))
               })
             }}
           />
@@ -103,7 +101,7 @@ const SearchResultsList = memo(function SearchResults() {
   const { setClickedObject } = useClickedObject()
   const { searchResults } = useSearch()
 
-  function onClick(object: HydratedGitObject) {
+  function onClick(object: GitObject) {
     setClickedObject(object)
     if (object.type === "tree") {
       setPath(object.path)
