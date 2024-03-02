@@ -289,10 +289,4 @@ export default class DB {
     console.log("final flush")
     await this.flushFileChanges()
   }
-
-  // public static async addFile(blob: GitBlobObject) {
-  //   await this.instance?.all(`INSERT INTO files (hash, path, sizeInBytes, name) VALUES
-  //       ('${blob.hash}', '${blob.path}', ${blob.sizeInBytes}, '${blob.name}');
-  //   `)
-  // }
 }

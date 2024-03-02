@@ -83,7 +83,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     options.branch = params["*"]
   }
   const instance = InstanceManager.getOrCreateInstance(params["repo"], options.branch, options.path)
-  await instance.hydrateData()
+  await instance.loadRepoData()
   // const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
   //   addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
   // )

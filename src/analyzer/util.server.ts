@@ -92,16 +92,6 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject |
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
-export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
-  const data = JSON.stringify(analyzedData, null, 2)
-  const dir = dirname(outPath)
-  if (!existsSync(dir)) {
-    await fs.mkdir(dir, { recursive: true })
-  }
-  await fs.writeFile(outPath, data)
-  return outPath
-}
-
 export function getDirName(dir: string) {
   return resolvePath(dir).split(sep).slice().reverse()[0]
 }
@@ -198,12 +188,6 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   } catch (e) {
     return [null, e as Error]
   }
-}
-
-export function tableName(table: string, repo: string, branch: string) {
-  const sanitizedRepo = repo.replace(/\W/g, "_")
-  const sanitizedBranch = branch.replace(/\W/g, "_")
-  return `${table}_${sanitizedRepo}_${sanitizedBranch}`
 }
 
 export async function getGitTruckInfo() {
