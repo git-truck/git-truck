@@ -32,7 +32,7 @@ import {
   mdiContentCut,
   mdiThemeLightDark,
   mdiWhiteBalanceSunny,
-  mdiMoonFull
+  mdiMoonWaningCrescent
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -107,7 +107,7 @@ export const Options = memo(function Options() {
   const themeIcons: Record<Theme, string> = {
     SYSTEM: mdiCog,
     LIGHT: mdiWhiteBalanceSunny,
-    DARK: mdiMoonFull
+    DARK: mdiMoonWaningCrescent
   }
 
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
