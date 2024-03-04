@@ -31,6 +31,11 @@
     "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --log-level warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
     "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
   },
+  "binary": {
+    "module_name": "duckdb",
+    "module_path": "./node_modules/duckdb/lib/binding",
+    "host": "bruh.stuff"
+  },
   "devDependencies": {
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
@@ -67,7 +72,6 @@
     "cross-env": "^7.0.3",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^16.3.1",
-    "duckdb-async": "^0.10.0",
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
@@ -140,5 +144,8 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "dependencies": {
+    "duckdb-async": "^0.10.0"
+  }
 }
