@@ -92,7 +92,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw Error("Error loading repo")
   }
 
-  const treeAnalyzed = (await instance.analyzeTree("HEAD")) // TODO replace HEAD with hash at selected time range end
+  const treeAnalyzed = (await instance.analyzeTree())
 
   const repodata2: RepoData2 = {
     dominantAuthors: await instance.db.getDominantAuthorPerFile(),
@@ -130,6 +130,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
+  const timeseries = formData.get("timeseries")
 
   if (refresh) {
     invalidateCache = true
@@ -177,6 +178,14 @@ export const action: ActionFunction = async ({ request, params }) => {
     })
     return null
   }
+
+  if (typeof timeseries === "string") {
+    const split = timeseries.split("-")
+    const start = Number(split[0])
+    const end = Number(split[1])
+    await instance.updateTimeInterval(start, end)
+  }
+
   return null
 }
 

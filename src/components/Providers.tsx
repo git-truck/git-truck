@@ -104,6 +104,16 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
         })),
+      setTimeSeriesStart: (timeSeriesStart: number) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          timeSeriesStart: timeSeriesStart
+        })),
+      setTimeSeriesEnd: (timeSeriesEnd: number) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          timeSeriesEnd: timeSeriesEnd
+        })),
     }),
     [options]
   )

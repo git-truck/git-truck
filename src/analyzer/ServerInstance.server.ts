@@ -17,6 +17,7 @@ export default class ServerInstance {
     public db: DB
     public progress = 0
     public totalCommitCount = 0
+    private fileTreeAsOf = "HEAD"
 
     private renamedFiles: Map<string, { path: string; timestamp: number }[]> = new Map()
     private renamedFilesNew: {from: string, to: string, time: number}[] = []
@@ -28,9 +29,16 @@ export default class ServerInstance {
         this.gitCaller = new GitCaller(repo, branch, path)
         this.db = new DB(repo, branch)
     }
+
+public async updateTimeInterval(start: number, end: number) {
+  await this.db.updateTimeInterval(start, end)
+  this.fileTreeAsOf = await this.db.getLatestCommitHash(end)
+}
       
-public async analyzeTree(hash: string) {
-  const rawContent = await this.gitCaller.lsTree(hash)
+// TODO: handle breadcrumb when timeseries changes such that
+// currently zoomed folder no longer exists
+public async analyzeTree() {
+  const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
   const lsTreeEntries: RawGitObject[] = []
   const matches = rawContent.matchAll(treeRegex)
   let fileCount = 0
@@ -51,7 +59,7 @@ public async analyzeTree(hash: string) {
     type: "tree",
     path: this.repo,
     name: this.repo,
-    hash,
+    hash: this.fileTreeAsOf,
     children: []
   } as GitTreeObject
 

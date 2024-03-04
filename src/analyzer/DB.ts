@@ -3,7 +3,6 @@ import type { CommitDTO, FileChange, GitLogEntry } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { log } from "./log.server"
 
 export default class DB {
   private instance: Promise<Database>
@@ -64,16 +63,22 @@ export default class DB {
     `)
   }
 
-  private static async initViews(db: Database) {
+  private static async initViews(db: Database, timeSeriesStart?: number, timeSeriesEnd?: number) {
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.time, c.body, c.message FROM
-      commits c LEFT JOIN authorunions u ON c.author = u.alias;
+      commits c LEFT JOIN authorunions u ON c.author = u.alias
+      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
       SELECT f.commithash, f.contribcount, f.filepath, author, c.time FROM
-      filechanges f JOIN commits_unioned c on f.commithash = c.hash;
+      filechanges f JOIN commits_unioned c on f.commithash = c.hash
+      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};;
     `)
+  }
+
+  public async updateTimeInterval(start: number, end: number) {
+    await DB.initViews(await this.instance, start, end)
   }
 
   private batchSize = 5000
@@ -153,7 +158,7 @@ export default class DB {
 
   public async getCommitCountForPath(path: string) {
     const res = await (await this.instance).all(`
-      SELECT COUNT(DISTINCT commithash) AS count from filechanges WHERE filepath LIKE '${path}%';
+      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits WHERE filepath LIKE '${path}%';
     `)
     return Number(res[0]["count"])
   }
@@ -161,7 +166,7 @@ export default class DB {
   public async getCommitCountPerFile() {
     // TODO: aggregate for renamed files
     const res = await (await this.instance).all(`
-      SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC;
+      SELECT filepath, count(*) AS count FROM filechanges_commits GROUP BY filepath ORDER BY count DESC;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["count"])]
@@ -214,12 +219,10 @@ export default class DB {
     await insertStatement.finalize()
   }
 
-  public async getLatestCommitHash() {
+  public async getLatestCommitHash(beforeTime?: number) {
     const res = await (await this.instance).all(`
-      SELECT hash FROM commits ORDER BY time DESC LIMIT 1;
+      SELECT hash FROM commits WHERE time <= ${beforeTime ?? 1_000_000_000_000} ORDER BY time DESC LIMIT 1;
     `)
-    log.debug(`length ${res.length}`)
-    log.debug("im trying okay")
     return res[0]["hash"] as string
   }
 
@@ -247,7 +250,7 @@ export default class DB {
   
   public async getMaxAndMinCommitCount() {
     const res = await (await this.instance).all(`
-      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges GROUP BY filepath ORDER BY count DESC);
+      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits GROUP BY filepath ORDER BY count DESC);
     `)
     return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
