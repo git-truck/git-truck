@@ -72,14 +72,15 @@ export const Chart = memo(function Chart({
   }
 
   const filetree = useMemo(() => {
-    if (hierarchyType === "NESTED") return repodata2.fileTree
-
+    // TODO: make filtering faster, e.g. by not having to refetch everything every time
+    const filtered = filterGitTree(repodata2.fileTree, repodata2.hiddenFiles)
+    if (hierarchyType === "NESTED") return filtered
     return {
-      ...repodata2.fileTree,
-      children: flatten(repodata2.fileTree)
+      ...filtered,
+      children: flatten(filtered)
     } as GitTreeObject
     
-  }, [repodata2.fileTree, hierarchyType])
+  }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles])
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
@@ -163,6 +164,37 @@ export const Chart = memo(function Chart({
     </div>
   )
 })
+
+function filterGitTree(tree: GitTreeObject, pathsToFilter: string[]): GitTreeObject {
+  function filterNode(node: GitObject): GitObject | null {
+      if (node.type === "blob") {
+        if (pathsToFilter.some(path => node.path === path)) {
+          return null;
+        }
+          return node;
+      } else {
+          // It's a tree
+          const children: GitObject[] = [];
+          for (const child of node.children) {
+              const filteredChild = filterNode(child);
+              if (filteredChild !== null) {
+                  children.push(filteredChild);
+              }
+          }
+          if (pathsToFilter.some(hiddenPath => node.path.startsWith(hiddenPath))) {
+              return null;
+          }
+          return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject;
+      }
+  }
+
+  const filteredTree = filterNode(tree);
+  if (filteredTree === null || filteredTree.type !== "tree") {
+      throw new Error("Filtered tree must be a tree structure");
+  }
+
+  return filteredTree;
+}
 
 function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
   const [metricsData] = useMetrics()

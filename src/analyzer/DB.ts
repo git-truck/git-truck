@@ -123,9 +123,20 @@ export default class DB {
 
   public async getHiddenFiles() {
     const res = await (await this.instance).all(`
-      FROM hiddenfiles;
+      SELECT path FROM hiddenfiles ORDER BY path ASC;
     `)
     return res.map(row => row["path"] as string)
+    }
+
+  public async replaceHiddenFiles(hiddenFiles: string[]) {
+    const queryBuilder: string[] = ["DELETE FROM hiddenfiles;"]
+    if (hiddenFiles.length > 0) queryBuilder.push("INSERT INTO hiddenfiles (path) VALUES")
+    for (const file of hiddenFiles) {
+      queryBuilder.push(`('${file}'),`)
+    }
+    queryBuilder.push(";")
+
+    await (await this.instance).all(queryBuilder.join(" "))
   }
 
   public async getCommits(path: string, count: number) {

@@ -84,9 +84,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
   const instance = InstanceManager.getOrCreateInstance(params["repo"], options.branch, options.path)
   await instance.loadRepoData()
-  // const analyzerData = await instance.analyze({ ...args, ...options }).then((data) =>
-  //   addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
-  // )
 
   invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
@@ -108,7 +105,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     authorUnions : await instance.db.getAuthorUnions(),
     fileTree: treeAnalyzed.rootTree,
     fileCount: treeAnalyzed.fileCount,
-    hiddenFiles: [], // TODO load hiddenfiles
+    hiddenFiles: await instance.db.getHiddenFiles(),
     lastRunInfo: await instance.db.getLastRunInfo(),
     repo: instance.repo,
     branch: instance.branch
@@ -146,28 +143,16 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 
   if (ignore && typeof ignore === "string") {
-    await updateTruckConfig(path, (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.add(ignore)
+    const hidden = await instance.db.getHiddenFiles()
+    hidden.push(ignore)
+    await instance.db.replaceHiddenFiles(hidden)
 
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
     return null
   }
 
   if (unignore && typeof unignore === "string") {
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.delete(unignore.trim())
-
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
+    const hidden = await instance.db.getHiddenFiles()
+    await instance.db.replaceHiddenFiles(hidden.filter(path => path !== unignore))
     return null
   }
 
