@@ -32,6 +32,7 @@ import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import type { RepoData2 } from "~/routes/$repo.$"
+import ignore, { type Ignore } from "ignore"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -73,7 +74,9 @@ export const Chart = memo(function Chart({
 
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
-    const filtered = filterGitTree(repodata2.fileTree, repodata2.hiddenFiles)
+    const ig = ignore()
+    ig.add(repodata2.hiddenFiles)
+    const filtered = filterGitTree(repodata2.fileTree, ig)
     if (hierarchyType === "NESTED") return filtered
     return {
       ...filtered,
@@ -165,27 +168,24 @@ export const Chart = memo(function Chart({
   )
 })
 
-function filterGitTree(tree: GitTreeObject, pathsToFilter: string[]): GitTreeObject {
+function filterGitTree(tree: GitTreeObject, ig: Ignore): GitTreeObject {
   function filterNode(node: GitObject): GitObject | null {
-      if (node.type === "blob") {
-        if (pathsToFilter.some(path => node.path === path)) {
-          return null;
+    if (ig.ignores(node.path)) {
+      return null;
+    }
+    if (node.type === "blob") {
+        return node;
+    } else {
+        // It's a tree
+        const children: GitObject[] = [];
+        for (const child of node.children) {
+            const filteredChild = filterNode(child);
+            if (filteredChild !== null) {
+                children.push(filteredChild);
+            }
         }
-          return node;
-      } else {
-          // It's a tree
-          const children: GitObject[] = [];
-          for (const child of node.children) {
-              const filteredChild = filterNode(child);
-              if (filteredChild !== null) {
-                  children.push(filteredChild);
-              }
-          }
-          if (pathsToFilter.some(hiddenPath => node.path.startsWith(hiddenPath))) {
-              return null;
-          }
-          return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject;
-      }
+        return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject;
+    }
   }
 
   const filteredTree = filterNode(tree);
