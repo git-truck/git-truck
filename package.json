@@ -31,11 +31,6 @@
     "format": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs} && prettier --log-level warn --write {src,scripts}/**/*.{ts,tsx,js,mjs}",
     "lint": "eslint --cache --fix {src,scripts}/**/*.{ts,tsx,js,mjs}"
   },
-  "binary": {
-    "module_name": "duckdb",
-    "module_path": "./node_modules/duckdb/lib/binding",
-    "host": "bruh.stuff"
-  },
   "devDependencies": {
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
