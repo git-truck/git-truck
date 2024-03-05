@@ -41,7 +41,6 @@ export default class DB {
       commithash VARCHAR,
       contribcount UINTEGER,
       filepath VARCHAR,
-      --FOREIGN KEY (commithash) REFERENCES commits(hash)
     );
     CREATE TABLE IF NOT EXISTS authorunions (
       alias VARCHAR PRIMARY KEY,
@@ -94,7 +93,7 @@ export default class DB {
     this.valueArrayFilechanges = []
   }
 
-  private async addFileChanges(fileChanges: FileChange[], author: string, hash: string) {
+  private async addFileChanges(fileChanges: FileChange[], hash: string) {
     // console.log("filechanges count", fileChanges.length)
     for (const fileChange of fileChanges) {
       this.queryBuilderFilechanges.push(`(?, ?, ?),`)
@@ -294,7 +293,7 @@ export default class DB {
       const valueArray = []
       for (let x = 0; x < thisBatchSize; x++) {
         const commit = commitEntries.next().value as GitLogEntry
-        await this.addFileChanges(commit.fileChanges, commit.author, commit.hash)
+        await this.addFileChanges(commit.fileChanges, commit.hash)
         valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
       }
       await insertStatement.run(...valueArray)
