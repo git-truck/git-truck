@@ -201,19 +201,12 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-      SELECT commithash, author, time, message, body 
+      SELECT distinct commithash, author, time, message, body 
       FROM filechanges_commits_renamed
-      WHERE filepath = '${path}'
+      WHERE filepath LIKE '${path}%'
       ORDER BY time DESC
       LIMIT ${count};
     `)
-    // TODO: readd folder aggregate
-    // const res = await (await this.instance).all(`
-    // SELECT hash, author, time, message, body FROM commits_unioned c INNER JOIN (
-    //   SELECT distinct commithash FROM filechanges WHERE filepath LIKE '${path}%'
-    // ) f ON c.hash = f.commithash
-    // ORDER BY time DESC LIMIT ${count};
-    // `)
     return res.map((row) => {
       return {author: row["author"], time: row["time"], body: row["body"], hash: row["commithash"], message: row["message"]} as CommitDTO
     })
