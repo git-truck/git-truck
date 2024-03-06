@@ -8,7 +8,7 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getTruckConfigWithArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { GitObject, GitTreeObject, Repository, TruckUserConfig } from "~/analyzer/model"
+import type { GitObject, GitTreeObject, RenameEntry, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -94,6 +94,12 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const treeAnalyzed = (await instance.analyzeTree())
 
+  const renames = await instance.db.getCurrentRenames()
+  const start = Date.now()
+  const followedRenames = followRenames(renames)
+  console.log("renames followed", Date.now() - start)
+  await instance.db.replaceTemporaryRenames(followedRenames)
+
   const repodata2: RepoData2 = {
     dominantAuthors: await instance.db.getDominantAuthorPerFile(),
     commitCounts: await instance.db.getCommitCountPerFile(),
@@ -116,6 +122,46 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     truckConfig,
     repodata2
   })
+}
+
+function overlaps(a: RenameEntry, b: RenameEntry) {
+  return (a.timestamp <= b.timestamp && (a.timestampEnd ?? Number.MAX_VALUE) >= b.timestamp) ||
+        (b.timestamp <= a.timestamp && (b.timestampEnd ?? Number.MAX_VALUE) >= a.timestamp)
+}
+
+function followRenames(renames: RenameEntry[]) {
+  let changedThisIteration = true
+  while (changedThisIteration) {
+    changedThisIteration = false
+    for (const rename of renames) {
+      const res = renames.filter((other) => rename.toname === other.fromname && rename.timestamp < other.timestamp).sort((a, b) => b.timestamp - a.timestamp)
+      if (res.length > 0) {
+        const nextRename = res[0]
+        if (nextRename.fromname === nextRename.toname) continue
+        changedThisIteration = true
+        if (!rename.timestampEnd) {
+          rename.timestampEnd = nextRename.timestamp - 1
+        }
+        rename.toname = nextRename.toname
+      }
+    }
+  }
+  // Add The first part of rename chain from time 0 up to the first rename
+  renames.sort((a, b) => a.timestamp - b.timestamp)
+  const toAdd = new Map<string,RenameEntry>()
+  for (const rename of renames) {
+    const inMap = toAdd.get(rename.fromname)
+    if (!inMap) {
+      const newObject: RenameEntry = {fromname: rename.fromname, toname: rename.toname, originalToName: rename.fromname, timestamp: 0, timestampEnd: rename.timestamp-1}
+      const existing = renames.find(r => r.toname === newObject.toname && overlaps(newObject, r))
+      if (!existing) {
+        toAdd.set(rename.fromname, newObject)
+      }
+    }
+  }
+
+  renames.push(...toAdd.values())
+  return renames.filter(r => r.originalToName !== r.toname)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {

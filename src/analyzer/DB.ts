@@ -1,5 +1,5 @@
 import { Database } from "duckdb-async"
-import type { CommitDTO, FileChange, GitLogEntry } from "./model"
+import type { CommitDTO, FileChange, GitLogEntry, RenameEntry } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
@@ -30,35 +30,42 @@ export default class DB {
   }
 
   private static async initTables(db: Database) {
-    await db.all(`CREATE TABLE IF NOT EXISTS commits (
-      hash VARCHAR PRIMARY KEY,
-      author VARCHAR,
-      time UINTEGER,
-      body VARCHAR,
-      message VARCHAR
-    );
-    CREATE TABLE IF NOT EXISTS filechanges (
-      commithash VARCHAR,
-      contribcount UINTEGER,
-      filepath VARCHAR,
-    );
-    CREATE TABLE IF NOT EXISTS authorunions (
-      alias VARCHAR PRIMARY KEY,
-      actualname VARCHAR
-    );
-    CREATE TABLE IF NOT EXISTS renames (
-      fromname VARCHAR,
-      toname VARCHAR,
-      timestamp UINTEGER
-    );
-    CREATE TABLE IF NOT EXISTS hiddenfiles (
-      path VARCHAR
-    );
-    CREATE TABLE IF NOT EXISTS metadata (
-      field VARCHAR,
-      value UBIGINT,
-      value2 VARCHAR
-    );
+    await db.all(`
+      CREATE TABLE IF NOT EXISTS commits (
+        hash VARCHAR PRIMARY KEY,
+        author VARCHAR,
+        time UINTEGER,
+        body VARCHAR,
+        message VARCHAR
+      );
+      CREATE TABLE IF NOT EXISTS filechanges (
+        commithash VARCHAR,
+        contribcount UINTEGER,
+        filepath VARCHAR,
+      );
+      CREATE TABLE IF NOT EXISTS authorunions (
+        alias VARCHAR PRIMARY KEY,
+        actualname VARCHAR
+      );
+      CREATE TABLE IF NOT EXISTS renames (
+        fromname VARCHAR,
+        toname VARCHAR,
+        timestamp UINTEGER
+      );
+      CREATE TABLE IF NOT EXISTS hiddenfiles (
+        path VARCHAR
+      );
+      CREATE TABLE IF NOT EXISTS metadata (
+        field VARCHAR,
+        value UBIGINT,
+        value2 VARCHAR
+      );
+      CREATE TABLE IF NOT EXISTS temporary_renames (
+        fromname VARCHAR,
+        toname VARCHAR,
+        timestamp UINTEGER,
+        timestampend UINTEGER
+      );
     `)
   }
 
@@ -70,9 +77,25 @@ export default class DB {
       WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.contribcount, f.filepath, author, c.time FROM
+      SELECT f.commithash, f.contribcount, f.filepath, author, c.time, c.message, c.body FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash
-      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};;
+      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+
+
+      CREATE OR REPLACE VIEW filechanges_commits_renamed AS
+      SELECT f.commithash, f.contribcount, f.author, f.time, f.message, f.body,
+          CASE
+              WHEN r.toname IS NOT NULL THEN r.toname
+              ELSE f.filepath
+          END AS filepath
+      FROM filechanges_commits f
+      LEFT JOIN temporary_renames r ON f.filepath = r.fromname
+                    AND f.time >= r.timestamp 
+                    AND f.time <= r.timestampend;
+
+      CREATE OR REPLACE VIEW relevant_renames AS
+      SELECT * FROM renames
+      WHERE timestamp BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
     `)
   }
 
@@ -117,12 +140,45 @@ export default class DB {
 
     await (await this.instance).all(queryBuilder.join(" "))
   }
+
+  public async replaceTemporaryRenames(renames: RenameEntry[]) {
+    await (await this.instance).all(`
+      DELETE FROM temporary_renames;
+    `)
+
+    for (let index = 0; index < renames.length; index += 5000) {
+      const queryBuilderRenames: string[] = ["INSERT INTO temporary_renames (fromname, toname, timestamp, timestampend) VALUES "]
+      const valueArrayRenames: (string|number|null)[] = []
+      const count = Math.min(5000, renames.length - index)
+      for (let i = 0; i < count; i++) {
+        queryBuilderRenames.push("(?, ?, ?, ?),")
+        const current = renames[index + i]
+        valueArrayRenames.push(current.originalToName, current.toname, current.timestamp, current.timestampEnd ?? null)
+      }
+      const insertStatement = await (await this.instance).prepare(queryBuilderRenames.join(""))
+      await insertStatement.run(...valueArrayRenames)
+    }
+  }
   
   public async getAuthorUnions() {
     const res = await (await this.instance).all(`
       SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
     `)
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
+  }
+  
+  public async getCurrentRenames() {
+    const res = await (await this.instance).all(`
+      SELECT * FROM relevant_renames;
+    `)
+    return res.map((row) => {
+      return {
+        fromname: row["fromname"] as string,
+        toname: row["toname"] as string,
+        timestamp: Number(row["timestamp"]),
+        originalToName: row["toname"] as string,
+      } as RenameEntry
+    })
   }
 
   public async getHiddenFiles() {
@@ -145,19 +201,27 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-    SELECT hash, author, time, message, body FROM commits_unioned c INNER JOIN (
-      SELECT distinct commithash FROM filechanges WHERE filepath LIKE '${path}%'
-    ) f ON c.hash = f.commithash
-    ORDER BY time DESC LIMIT ${count};
+      SELECT commithash, author, time, message, body 
+      FROM filechanges_commits_renamed
+      WHERE filepath = '${path}'
+      ORDER BY time DESC
+      LIMIT ${count};
     `)
+    // TODO: readd folder aggregate
+    // const res = await (await this.instance).all(`
+    // SELECT hash, author, time, message, body FROM commits_unioned c INNER JOIN (
+    //   SELECT distinct commithash FROM filechanges WHERE filepath LIKE '${path}%'
+    // ) f ON c.hash = f.commithash
+    // ORDER BY time DESC LIMIT ${count};
+    // `)
     return res.map((row) => {
-      return {author: row["author"], time: row["time"], body: row["body"], hash: row["hash"], message: row["message"]} as CommitDTO
+      return {author: row["author"], time: row["time"], body: row["body"], hash: row["commithash"], message: row["message"]} as CommitDTO
     })
   }
 
   public async getCommitCountForPath(path: string) {
     const res = await (await this.instance).all(`
-      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits WHERE filepath LIKE '${path}%';
+      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed WHERE filepath LIKE '${path}%';
     `)
     return Number(res[0]["count"])
   }
@@ -165,7 +229,7 @@ export default class DB {
   public async getCommitCountPerFile() {
     // TODO: aggregate for renamed files
     const res = await (await this.instance).all(`
-      SELECT filepath, count(*) AS count FROM filechanges_commits GROUP BY filepath ORDER BY count DESC;
+      SELECT filepath, count(*) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["count"])]
@@ -174,7 +238,7 @@ export default class DB {
   
   public async getLastChangedPerFile() {
     const res = await (await this.instance).all(`
-      SELECT filepath, MAX(time) AS max_time FROM filechanges_commits GROUP BY filepath;
+      SELECT filepath, MAX(time) AS max_time FROM filechanges_commits_renamed GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["max_time"])]
@@ -184,7 +248,7 @@ export default class DB {
   public async getAuthorCountPerFile() {
     // TODO: aggregate for renamed files, also handle coauthors
     const res = await (await this.instance).all(`
-      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits GROUP BY filepath;
+      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits_renamed GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["author_count"])]
@@ -196,7 +260,7 @@ export default class DB {
     const res = await (await this.instance).all(`
       WITH RankedAuthors AS (
         SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
-        FROM filechanges_commits
+        FROM filechanges_commits_renamed
       )
       SELECT filepath, author, contribcount
       FROM RankedAuthors
@@ -207,11 +271,16 @@ export default class DB {
     }))
   }
 
-  public async addRenames(renames: {from: string, to: string, time: number}[]) {
+  public async addRenames(renames: RenameEntry[]) {
     const queryBuilderRenames: string[] = ["INSERT INTO renames (fromname, toname, timestamp) VALUES "]
     const valueArrayRenames: (string|number)[] = []
     for (let i = 0; i < renames.length; i++) queryBuilderRenames.push("(?, ?, ?),")
-    for (const rename of renames) valueArrayRenames.push(rename.from, rename.to, rename.time)
+    for (const rename of renames) {
+      if (rename.fromname.includes("BubbleChart.tsx")) {
+        console.log("rename", rename)
+      }
+      valueArrayRenames.push(rename.fromname, rename.toname, rename.timestamp)
+    }
     if (valueArrayRenames.length === 0) return
     const insertStatement = await (await this.instance).prepare(queryBuilderRenames.join(""))
     await insertStatement.run(...valueArrayRenames)
@@ -242,21 +311,21 @@ export default class DB {
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
     const res = await (await this.instance).all(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(time) AS max_time FROM filechanges_commits GROUP BY filepath);
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(time) AS max_time FROM filechanges_commits_renamed GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
   
   public async getMaxAndMinCommitCount() {
     const res = await (await this.instance).all(`
-      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits GROUP BY filepath ORDER BY count DESC);
+      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC);
     `)
     return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
   
   public async getAuthorContribsForFile(path: string, isblob: boolean) {
     const res = await (await this.instance).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
     `)
     return res.map(row => {
       return {author: row["author"] as string, contribs: Number(row["contribsum"])}

@@ -128,3 +128,11 @@ export interface GitLogEntry extends CommitDTO {
   coauthors: Person[]
   fileChanges: FileChange[]
 }
+
+export interface RenameEntry {
+  fromname: string
+  toname: string
+  originalToName: string
+  timestamp: number
+  timestampEnd?: number
+}

@@ -4,7 +4,7 @@ import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
 import { dirname, resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject, TruckUserConfig } from "./model"
+import type { GitTreeObject, AnalyzerData, GitObject, TruckUserConfig, RenameEntry } from "./model"
 import { performance } from "perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
@@ -46,9 +46,8 @@ export function runProcess(dir: string, command: string, args: string[]) {
 
 export function analyzeRenamedFile(
   file: string,
-  renamedFiles: Map<string, { path: string; timestamp: number }[]>, // TODO remove this and use array instead
   timestamp: number,
-  renamedFilesNew: {from: string, to: string, time: number}[]
+  renamedFiles: RenameEntry[]
 ) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
@@ -67,13 +66,7 @@ export function analyzeRenamedFile(
     newPath = groups["newPath2"] ?? ""
   }
 
-  renamedFilesNew.push({from: oldPath, to: newPath, time: timestamp})
-  
-  if (renamedFiles.has(oldPath)) {
-    renamedFiles.get(oldPath)?.push({ path: newPath, timestamp })
-  } else {
-    renamedFiles.set(oldPath, [{ path: newPath, timestamp }])
-  }
+  renamedFiles.push({fromname: oldPath, toname: newPath, timestamp: timestamp, originalToName: newPath})
   return newPath
 }
 

@@ -1,6 +1,6 @@
 import DB from "./DB"
 import { GitCaller } from "./git-caller.server"
-import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange } from "./model"
+import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange, RenameEntry } from "./model"
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
 import { getCoAuthors } from "./coauthors.server";
@@ -19,8 +19,6 @@ export default class ServerInstance {
     public totalCommitCount = 0
     private fileTreeAsOf = "HEAD"
 
-    private renamedFiles: Map<string, { path: string; timestamp: number }[]> = new Map()
-    private renamedFilesNew: {from: string, to: string, time: number}[] = []
     private authors: Set<string> = new Set()
 
     constructor(public repo: string, public branch: string, public path: string) {
@@ -132,6 +130,7 @@ public async gatherCommitsFromGitLog(
   commits: Map<string, GitLogEntry>,
   handleAuthors: boolean
 ) {
+  const renamedFiles: RenameEntry[] = []
   const matches = gitLogResult.matchAll(gitLogRegex)
   for (const match of matches) {
     const groups = match.groups ?? {}
@@ -157,10 +156,10 @@ public async gatherCommitsFromGitLog(
         const isBinary = contribMatch.groups?.insertions === "-"
         if (!file) throw Error("file not found")
 
-        let filePath = file
         const fileHasMoved = file.includes("=>")
+        let filePath = file
         if (fileHasMoved) {
-          filePath = analyzeRenamedFile(filePath, this.renamedFiles, time, this.renamedFilesNew)
+          filePath = analyzeRenamedFile(file, time, renamedFiles)
         }
 
         const contribs = isBinary
@@ -171,7 +170,7 @@ public async gatherCommitsFromGitLog(
     }
     commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
   }
-  this.db.addRenames(this.renamedFilesNew)
+  this.db.addRenames(renamedFiles)
 }
 
 private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
