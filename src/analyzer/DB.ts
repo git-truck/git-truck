@@ -235,7 +235,6 @@ export default class DB {
   }
 
   public async getCommitCountPerFile() {
-    // TODO: aggregate for renamed files
     const res = await (await this.instance).all(`
       SELECT filepath, count(*) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC;
     `)
@@ -254,7 +253,7 @@ export default class DB {
   }
   
   public async getAuthorCountPerFile() {
-    // TODO: aggregate for renamed files, also handle coauthors
+    // TODO: handle coauthors
     const res = await (await this.instance).all(`
       SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits_renamed GROUP BY filepath;
     `)
@@ -264,7 +263,6 @@ export default class DB {
   }
   
   public async getDominantAuthorPerFile() {
-    // TODO: also handle renames
     const res = await (await this.instance).all(`
       WITH RankedAuthors AS (
         SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
