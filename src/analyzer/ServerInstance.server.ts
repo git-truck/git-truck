@@ -1,10 +1,10 @@
 import DB from "./DB"
 import { GitCaller } from "./git-caller.server"
-import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange, RenameEntry } from "./model"
+import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange, RenameEntry, ModeType } from "./model"
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
 import { getCoAuthors } from "./coauthors.server";
-import { contribRegex, gitLogRegex, treeRegex } from "./constants";
+import { contribRegex, gitLogRegex, modeRegex, treeRegex } from "./constants";
 import { cpus } from "os"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart" | "Idle"
@@ -19,7 +19,6 @@ export default class ServerInstance {
     public totalCommitCount = 0
     private fileTreeAsOf = "HEAD"
 
-    private authors: Set<string> = new Set()
 
     constructor(public repo: string, public branch: string, public path: string) {
         this.repoSanitized = repo.replace(/\W/g, "_")
@@ -127,8 +126,7 @@ private treeCleanup(tree: GitTreeObject) {
 
 public async gatherCommitsFromGitLog(
   gitLogResult: string,
-  commits: Map<string, GitLogEntry>,
-  handleAuthors: boolean
+  commits: Map<string, GitLogEntry>
 ) {
   const renamedFiles: RenameEntry[] = []
   const matches = gitLogResult.matchAll(gitLogRegex)
@@ -140,13 +138,22 @@ public async gatherCommitsFromGitLog(
     const message = groups.message
     const hash = groups.hash
     const contributionsString = groups.contributions
+    const modesString = groups.modes
     const coauthors = body ? getCoAuthors(body) : []
     const fileChanges: FileChange[] = []
 
+    const modeChanges = new Map<string, ModeType>()
 
-    if (handleAuthors) {
-      this.authors.add(author)
-      for (const coauthor of coauthors) this.authors.add(coauthor.name)
+    if (modesString) {
+      const modeMatches = modesString.matchAll(modeRegex)
+      for (const modeMatch of modeMatches) {
+        const file = modeMatch.groups?.file.trim()
+        const mode = modeMatch.groups?.mode.trim()
+        if (!file || !mode) continue
+        if (mode === "create" || mode === "delete") {
+          modeChanges.set(file, mode as ModeType)
+        }
+      }
     }
 
     if (contributionsString) {
@@ -165,7 +172,7 @@ public async gatherCommitsFromGitLog(
         const contribs = isBinary
           ? 1
           : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-        fileChanges.push({ isBinary, contribs, path: filePath })
+        fileChanges.push({ isBinary, contribs, path: filePath, mode: modeChanges.get(filePath) ?? "modify"  })
       }
     }
     commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
@@ -175,7 +182,7 @@ public async gatherCommitsFromGitLog(
 
 private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
   const gitLogResult = await this.gitCaller.gitLog(start, end - start)
-  this.gatherCommitsFromGitLog(gitLogResult, commits, true)
+  this.gatherCommitsFromGitLog(gitLogResult, commits)
   log.debug("done gathering")
 }
 

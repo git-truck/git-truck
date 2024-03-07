@@ -248,6 +248,7 @@ export class GitCaller {
       `--skip=${skip}`,
       `--max-count=${count}`,
       this.branch,
+      "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
       '--format="author <|%aN|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'

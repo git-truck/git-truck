@@ -110,10 +110,13 @@ export type PersonWithTime = Person & {
   timezone: string
 }
 
+export type ModeType = "create" | "modify" | "delete"
+
 export interface FileChange {
   path: string
   isBinary: boolean
   contribs: number
+  mode: ModeType
 }
 
 export interface CommitDTO {
