@@ -282,9 +282,6 @@ export default class DB {
     const valueArrayRenames: (string|number)[] = []
     for (let i = 0; i < renames.length; i++) queryBuilderRenames.push("(?, ?, ?),")
     for (const rename of renames) {
-      if (rename.fromname.includes("BubbleChart.tsx")) {
-        console.log("rename", rename)
-      }
       valueArrayRenames.push(rename.fromname, rename.toname, rename.timestamp)
     }
     if (valueArrayRenames.length === 0) return
