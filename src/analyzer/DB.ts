@@ -81,6 +81,21 @@ export default class DB {
       filechanges f JOIN commits_unioned c on f.commithash = c.hash
       WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
 
+      CREATE OR REPLACE VIEW processed_renames AS
+      SELECT 
+          tr1.fromname AS fromname, 
+          tr1.toname AS toname, 
+          MIN(tr1.timestamp) AS timestamp, 
+          MAX(tr2.timestampend) AS timestampend
+      FROM 
+          temporary_renames tr1
+      JOIN 
+          temporary_renames tr2 ON tr1.fromname = tr2.fromname AND tr1.toname = tr2.toname
+      WHERE 
+          tr1.timestamp <= tr2.timestampend 
+          AND tr2.timestamp >= tr1.timestamp
+      GROUP BY 
+          tr1.fromname, tr1.toname;
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
       SELECT f.commithash, f.contribcount, f.author, f.time, f.message, f.body,
@@ -89,7 +104,7 @@ export default class DB {
               ELSE f.filepath
           END AS filepath
       FROM filechanges_commits f
-      LEFT JOIN temporary_renames r ON f.filepath = r.fromname
+      LEFT JOIN processed_renames r ON f.filepath = r.fromname
                     AND f.time >= r.timestamp 
                     AND f.time <= r.timestampend;
 
