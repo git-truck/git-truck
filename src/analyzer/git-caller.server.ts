@@ -251,7 +251,7 @@ export class GitCaller {
       "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="author <|%aN|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"'
+      '--format="author <|%aN|> date <|%ct|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
     const result = (await runProcess(this.path, "git", args)) as string
