@@ -219,7 +219,7 @@ export default class DB {
       SELECT distinct commithash, author, time, message, body 
       FROM filechanges_commits_renamed
       WHERE filepath LIKE '${path}%'
-      ORDER BY time DESC
+      ORDER BY time DESC, commithash
       LIMIT ${count};
     `)
     return res.map((row) => {
