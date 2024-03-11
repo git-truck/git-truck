@@ -134,7 +134,8 @@ function followRenames(renames: RenameEntry[]) {
   while (changedThisIteration) {
     changedThisIteration = false
     for (const rename of renames) {
-      const res = renames.filter((other) => rename.toname === other.fromname && rename.timestamp < other.timestamp).sort((a, b) => b.timestamp - a.timestamp)
+      if (rename.toname === null) continue
+      const res = renames.filter((other) => other.fromname !== null && rename.toname === other.fromname && rename.timestamp < other.timestamp).sort((a, b) => a.timestamp - b.timestamp)
       if (res.length > 0) {
         const nextRename = res[0]
         if (nextRename.fromname === nextRename.toname) continue
@@ -150,6 +151,7 @@ function followRenames(renames: RenameEntry[]) {
   renames.sort((a, b) => a.timestamp - b.timestamp)
   const toAdd = new Map<string,RenameEntry>()
   for (const rename of renames) {
+    if (rename.fromname === null) continue
     const inMap = toAdd.get(rename.fromname)
     if (!inMap) {
       const newObject: RenameEntry = {fromname: rename.fromname, toname: rename.toname, originalToName: rename.fromname, timestamp: 0, timestampEnd: rename.timestamp-1}

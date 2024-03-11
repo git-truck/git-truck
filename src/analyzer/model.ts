@@ -133,9 +133,15 @@ export interface GitLogEntry extends CommitDTO {
 }
 
 export interface RenameEntry {
-  fromname: string
-  toname: string
-  originalToName: string
+  fromname: string | null
+  toname: string | null
+  originalToName: string | null
   timestamp: number
   timestampEnd?: number
+}
+
+export interface FileModification {
+  path: string
+  timestamp: number
+  type: ModeType
 }

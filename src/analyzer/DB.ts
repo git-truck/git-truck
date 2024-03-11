@@ -151,9 +151,10 @@ export default class DB {
         queryBuilder.push(`('${alias}', '${actualname}'),`)
       }
     }
-    queryBuilder.push(";")
-
-    await (await this.instance).all(queryBuilder.join(" "))
+    if (queryBuilder.length > 1) {
+      queryBuilder.push(";")
+      await (await this.instance).all(queryBuilder.join(" "))
+    }
   }
 
   public async replaceTemporaryRenames(renames: RenameEntry[]) {
@@ -236,7 +237,7 @@ export default class DB {
 
   public async getCommitCountPerFile() {
     const res = await (await this.instance).all(`
-      SELECT filepath, count(*) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC;
+      SELECT filepath, count(DISTINCT commithash) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["count"])]
@@ -279,7 +280,7 @@ export default class DB {
 
   public async addRenames(renames: RenameEntry[]) {
     const queryBuilderRenames: string[] = ["INSERT INTO renames (fromname, toname, timestamp) VALUES "]
-    const valueArrayRenames: (string|number)[] = []
+    const valueArrayRenames: (string|number|null)[] = []
     for (let i = 0; i < renames.length; i++) queryBuilderRenames.push("(?, ?, ?),")
     for (const rename of renames) {
       valueArrayRenames.push(rename.fromname, rename.toname, rename.timestamp)

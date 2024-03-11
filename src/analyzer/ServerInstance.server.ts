@@ -1,6 +1,6 @@
 import DB from "./DB"
 import { GitCaller } from "./git-caller.server"
-import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange, RenameEntry, ModeType } from "./model"
+import type { GitBlobObject, GitTreeObject, RawGitObject, GitLogEntry, FileChange, RenameEntry, FileModification } from "./model"
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
 import { getCoAuthors } from "./coauthors.server";
@@ -130,6 +130,7 @@ public async gatherCommitsFromGitLog(
 ) {
   const renamedFiles: RenameEntry[] = []
   const matches = gitLogResult.matchAll(gitLogRegex)
+  const FileModifications: FileModification[] = []
   for (const match of matches) {
     const groups = match.groups ?? {}
     const author = groups.author
@@ -142,16 +143,14 @@ public async gatherCommitsFromGitLog(
     const coauthors = body ? getCoAuthors(body) : []
     const fileChanges: FileChange[] = []
 
-    const modeChanges = new Map<string, ModeType>()
-
     if (modesString) {
       const modeMatches = modesString.matchAll(modeRegex)
       for (const modeMatch of modeMatches) {
         const file = modeMatch.groups?.file.trim()
         const mode = modeMatch.groups?.mode.trim()
         if (!file || !mode) continue
-        if (mode === "create" || mode === "delete") {
-          modeChanges.set(file, mode as ModeType)
+        if (mode === "delete" || mode === "create") {
+          FileModifications.push({path: file, timestamp: time, type: mode})
         }
       }
     }
@@ -172,17 +171,25 @@ public async gatherCommitsFromGitLog(
         const contribs = isBinary
           ? 1
           : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-        fileChanges.push({ isBinary, contribs, path: filePath, mode: modeChanges.get(filePath) ?? "modify"  })
+        fileChanges.push({ isBinary, contribs, path: filePath, mode: "modify" }) // TODO remove modetype
       }
     }
     commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
   }
-  this.db.addRenames(renamedFiles)
+
+  renamedFiles.push(...FileModifications.map((modification) => {
+    if (modification.type === "delete") {
+      return {fromname: modification.path, toname: null, originalToName: null, timestamp: modification.timestamp}
+    }
+    return {fromname: null, toname: modification.path, originalToName: modification.path, timestamp: modification.timestamp}
+  }))
+
+  await this.db.addRenames(renamedFiles)
 }
 
 private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
   const gitLogResult = await this.gitCaller.gitLog(start, end - start)
-  this.gatherCommitsFromGitLog(gitLogResult, commits)
+  await this.gatherCommitsFromGitLog(gitLogResult, commits)
   log.debug("done gathering")
 }
 
