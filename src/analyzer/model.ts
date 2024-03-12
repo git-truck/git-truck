@@ -121,7 +121,8 @@ export interface FileChange {
 
 export interface CommitDTO {
   author: string
-  time: number
+  committertime: number
+  authortime: number
   body: string
   message: string
   hash: string

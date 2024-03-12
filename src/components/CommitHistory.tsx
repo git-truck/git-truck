@@ -150,7 +150,7 @@ function sortCommits(items: CommitDTO[], method: SortCommitsMethods): { [key: st
     case "date":
     default:
       for (const commit of items) {
-        const date: string = dateFormatLong(commit.time)
+        const date: string = dateFormatLong(commit.committertime)
         if (!cleanGroupItems[date]) {
           cleanGroupItems[date] = []
         }

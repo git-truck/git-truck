@@ -134,7 +134,8 @@ public async gatherCommitsFromGitLog(
   for (const match of matches) {
     const groups = match.groups ?? {}
     const author = groups.author
-    const time = Number(groups.date)
+    const committertime = Number(groups.datecommitter)
+    const authortime = Number(groups.dateauthor)
     const body = groups.body
     const message = groups.message
     const hash = groups.hash
@@ -150,7 +151,7 @@ public async gatherCommitsFromGitLog(
         const mode = modeMatch.groups?.mode.trim()
         if (!file || !mode) continue
         if (mode === "delete" || mode === "create") {
-          FileModifications.push({path: file, timestamp: time, type: mode})
+          FileModifications.push({path: file, timestamp: committertime, type: mode})
         }
       }
     }
@@ -165,7 +166,7 @@ public async gatherCommitsFromGitLog(
         const fileHasMoved = file.includes("=>")
         let filePath = file
         if (fileHasMoved) {
-          filePath = analyzeRenamedFile(file, time, renamedFiles)
+          filePath = analyzeRenamedFile(file, committertime, renamedFiles)
         }
 
         const contribs = isBinary
@@ -174,7 +175,7 @@ public async gatherCommitsFromGitLog(
         fileChanges.push({ isBinary, contribs, path: filePath, mode: "modify" }) // TODO remove modetype
       }
     }
-    commits.set(hash, { author, time, body, message, hash, coauthors, fileChanges })
+    commits.set(hash, { author, committertime, authortime, body, message, hash, coauthors, fileChanges })
   }
 
   renamedFiles.push(...FileModifications.map((modification) => {

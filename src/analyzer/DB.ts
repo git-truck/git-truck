@@ -34,7 +34,8 @@ export default class DB {
       CREATE TABLE IF NOT EXISTS commits (
         hash VARCHAR PRIMARY KEY,
         author VARCHAR,
-        time UINTEGER,
+        committertime UINTEGER,
+        authortime UINTEGER,
         body VARCHAR,
         message VARCHAR
       );
@@ -72,14 +73,14 @@ export default class DB {
   private static async initViews(db: Database, timeSeriesStart?: number, timeSeriesEnd?: number) {
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.time, c.body, c.message FROM
+      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime, c.body, c.message FROM
       commits c LEFT JOIN authorunions u ON c.author = u.alias
-      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+      WHERE c.committertime BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.contribcount, f.filepath, author, c.time, c.message, c.body FROM
+      SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime, c.message, c.body FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash
-      WHERE c.time BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+      WHERE c.committertime BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
 
       CREATE OR REPLACE VIEW processed_renames AS
       SELECT 
@@ -98,15 +99,19 @@ export default class DB {
           tr1.fromname, tr1.toname;
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
-      SELECT f.commithash, f.contribcount, f.author, f.time, f.message, f.body,
+      SELECT f.commithash, f.contribcount, f.author, f.committertime, f.authortime, f.message, f.body,
           CASE
               WHEN r.toname IS NOT NULL THEN r.toname
               ELSE f.filepath
           END AS filepath
       FROM filechanges_commits f
       LEFT JOIN processed_renames r ON f.filepath = r.fromname
-                    AND f.time >= r.timestamp 
-                    AND f.time <= r.timestampend;
+                    AND (
+                      (f.committertime >= r.timestamp 
+                      AND f.committertime <= r.timestampend)
+                      OR (f.committertime = r.timestampend + 1
+                      AND f.authortime < r.timestampend)
+                    );
 
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT * FROM renames
@@ -217,14 +222,14 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-      SELECT distinct commithash, author, time, message, body 
+      SELECT distinct commithash, author, committertime, message, body 
       FROM filechanges_commits_renamed
       WHERE filepath LIKE '${path}%'
-      ORDER BY time DESC, commithash
+      ORDER BY committertime DESC, commithash
       LIMIT ${count};
     `)
     return res.map((row) => {
-      return {author: row["author"], time: row["time"], body: row["body"], hash: row["commithash"], message: row["message"]} as CommitDTO
+      return {author: row["author"], committertime: row["committertime"], authortime: row["authortime"], body: row["body"], hash: row["commithash"], message: row["message"]} as CommitDTO
     })
   }
 
@@ -246,7 +251,7 @@ export default class DB {
   
   public async getLastChangedPerFile() {
     const res = await (await this.instance).all(`
-      SELECT filepath, MAX(time) AS max_time FROM filechanges_commits_renamed GROUP BY filepath;
+      SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["max_time"])]
@@ -293,7 +298,7 @@ export default class DB {
 
   public async getLatestCommitHash(beforeTime?: number) {
     const res = await (await this.instance).all(`
-      SELECT hash FROM commits WHERE time <= ${beforeTime ?? 1_000_000_000_000} ORDER BY time DESC LIMIT 1;
+      SELECT hash FROM commits WHERE committertime <= ${beforeTime ?? 1_000_000_000_000} ORDER BY committertime DESC LIMIT 1;
     `)
     return res[0]["hash"] as string
   }
@@ -315,7 +320,7 @@ export default class DB {
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
     const res = await (await this.instance).all(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(time) AS max_time FROM filechanges_commits_renamed GROUP BY filepath);
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
@@ -338,7 +343,7 @@ export default class DB {
 
   public async setFinishTime() {
     // TODO: also have metadata for table format, to rerun if data model changed
-    const latestHash = (await (await this.instance).all(`SELECT hash FROM commits ORDER BY time DESC LIMIT 1;`))[0]["hash"] as string
+    const latestHash = (await (await this.instance).all(`SELECT hash FROM commits ORDER BY committertime DESC LIMIT 1;`))[0]["hash"] as string
     await (await this.instance).all(`
       INSERT INTO metadata (field, value, value2) VALUES ('finished', ${Date.now()}, '${latestHash}');
     `)
@@ -360,14 +365,14 @@ export default class DB {
       const thisBatchSize = Math.min(commits.size - index, this.batchSize)
       
       const queryBuilderCommits: string[] = []
-      queryBuilderCommits.push(`INSERT INTO commits (hash, author, time, body, message) VALUES `)
-      for (let i = 0; i < thisBatchSize; i++) queryBuilderCommits.push(`(?, ?, ?, ?, ?,),`)
+      queryBuilderCommits.push(`INSERT INTO commits (hash, author, committertime, authortime, body, message) VALUES `)
+      for (let i = 0; i < thisBatchSize; i++) queryBuilderCommits.push(`(?, ?, ?, ?, ?, ?,),`)
       const insertStatement = await (await this.instance).prepare(queryBuilderCommits.join(""))
       const valueArray = []
       for (let x = 0; x < thisBatchSize; x++) {
         const commit = commitEntries.next().value as GitLogEntry
         await this.addFileChanges(commit.fileChanges, commit.hash)
-        valueArray.push(commit.hash, commit.author, commit.time, commit.body, commit.message)
+        valueArray.push(commit.hash, commit.author, commit.committertime, commit.authortime, commit.body, commit.message)
       }
       await insertStatement.run(...valueArray)
       await insertStatement.finalize()
