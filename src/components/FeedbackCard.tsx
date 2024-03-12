@@ -1,6 +1,9 @@
 import { mdiMessageDraw, mdiAlertCircleOutline, mdiForum } from "@mdi/js"
 import Icon from "@mdi/react"
 import { memo } from "react"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+import yearOfRat from "year-of-rat"
 
 export const FeedbackCard = memo(function FeedbackCard() {
   return (
@@ -27,6 +30,10 @@ export const FeedbackCard = memo(function FeedbackCard() {
         <Icon path={mdiAlertCircleOutline} />
         Open an issue
       </a>
+      {yearOfRat() ?
+        <p>It's ratting time 🐀🧀</p>
+        : null
+      }
     </div>
   )
 })
