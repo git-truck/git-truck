@@ -32,6 +32,7 @@ import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
 import InstanceManager from "~/analyzer/InstanceManager"
+import TimeSlider from "~/components/TimeSlider"
 
 let invalidateCache = false
 
@@ -65,6 +66,7 @@ export interface RepoData2 {
   fileCount: number
   repo: string
   branch: string
+  timerange: [number, number]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -114,7 +116,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     hiddenFiles: await instance.db.getHiddenFiles(),
     lastRunInfo: await instance.db.getLastRunInfo(),
     repo: instance.repo,
-    branch: instance.branch
+    branch: instance.branch,
+    timerange: await instance.db.getTimeRange()
   }
   return typedjson<RepoData>({
     repo,
@@ -371,6 +374,7 @@ export default function Repo() {
             <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
           </header>
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
+          <TimeSlider />
         </main>
 
         <aside

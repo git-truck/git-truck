@@ -188,6 +188,13 @@ export default class DB {
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
   }
   
+  public async getTimeRange() {
+    const res = await (await this.instance).all(`
+      SELECT MIN(committertime) as min, MAX(committertime) as max from commits;
+    `)
+    return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
+  }
+  
   public async getCurrentRenames() {
     const res = await (await this.instance).all(`
       SELECT * FROM relevant_renames;
