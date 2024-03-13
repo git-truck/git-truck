@@ -365,6 +365,23 @@ export default class DB {
     `)
   }
   
+  public async updateColorSeed(seed: string) {
+    await (await this.instance).all(`
+    DELETE FROM metadata WHERE field = 'colorseed';
+      INSERT INTO metadata (field, value, value2) VALUES ('colorseed', null, '${seed}');
+      `)
+      console.log("inserted seed", seed)
+    }
+    
+  public async getColorSeed() {
+    const res = await (await this.instance).all(`
+      SELECT value2 FROM metadata WHERE field = 'colorseed';
+    `)
+    if (res.length < 1) return null
+    console.log("retrieved seed", res[0]["value2"])
+    return res[0]["value2"] as string
+  }
+
   public async getLastRunInfo() {
     const res = await (await this.instance).all(`
       SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;

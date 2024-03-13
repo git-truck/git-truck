@@ -67,6 +67,7 @@ export interface RepoData2 {
   repo: string
   branch: string
   timerange: [number, number]
+  colorSeed: string | null
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -121,6 +122,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const lastRunInfo = await instance.db.getLastRunInfo();
   const branch = instance.branch;
   const timerange = await instance.db.getTimeRange();
+  const colorSeed = await instance.db.getColorSeed()
   console.timeEnd("dbQueries")
 
 const repodata2 = {
@@ -140,7 +142,8 @@ const repodata2 = {
   lastRunInfo,
   repo: instance.repo,
   branch,
-  timerange
+  timerange,
+  colorSeed
 };
   return typedjson<RepoData>({
     repo,
@@ -244,12 +247,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof rerollColors === "string") {
     const newSeed = randomstring.generate(6)
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      return {
-        ...prevConfig,
-        colorSeed: newSeed
-      }
-    })
+    await instance.db.updateColorSeed(newSeed)
     return null
   }
 
