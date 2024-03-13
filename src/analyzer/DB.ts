@@ -277,18 +277,20 @@ export default class DB {
   
   public async getDominantAuthorPerFile() {
     const res = await (await this.instance).all(`
-    WITH RankedAuthors AS (
-      SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
-      FROM filechanges_commits_renamed_cached
+      WITH RankedAuthors AS (
+        SELECT filepath, author, SUM(contribcount) AS total_contribcount,
+        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(contribcount) DESC, author ASC) AS rank 
+        FROM filechanges_commits_renamed_cached
+        GROUP BY filepath, author
       )
-      SELECT filepath, author, contribcount
+      SELECT filepath, author
       FROM RankedAuthors
       WHERE rank = 1;
-      `)
-      return new Map(res.map((row) => {
-        return [row["filepath"] as string, row["author"] as string]
-      }))
-    }
+    `)
+    return new Map(res.map((row) => {
+      return [row["filepath"] as string, row["author"] as string]
+    }))
+  }
     
     public async updateCachedResult() {
       await (await this.instance).all(`
@@ -348,7 +350,7 @@ export default class DB {
   
   public async getAuthorContribsForFile(path: string, isblob: boolean) {
     const res = await (await this.instance).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
     return res.map(row => {
       return {author: row["author"] as string, contribs: Number(row["contribsum"])}
