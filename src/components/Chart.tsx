@@ -415,7 +415,7 @@ function createPartitionedHiearchy(
       case "EQUAL_SIZE":
         return 1
       case "LAST_CHANGED":
-        return (repodata2.lastChanged.get(slicedPath) ?? repodata2.oldestChangeDate) - repodata2.oldestChangeDate
+        return (repodata2.lastChanged.get(slicedPath) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
       case "TRUCK_FACTOR":
         return repodata2.authorCounts.get(slicedPath) ?? 1
     }

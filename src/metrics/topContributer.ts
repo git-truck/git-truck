@@ -3,6 +3,7 @@ import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"
 import { removeFirstPart } from "~/util"
+import { noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
@@ -17,7 +18,7 @@ export function setDominantAuthorColor(
     return
   }
   const legend = cache.legend as PointLegendData
-  const color = authorColors.get(dominantAuthor) ?? "#808080"
+  const color = authorColors.get(dominantAuthor) ?? noEntryColor
   
   cache.colormap.set(blob.path, color)
 

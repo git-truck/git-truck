@@ -150,8 +150,8 @@ export default function TimeSlider() {
                 <Rail>
                     {({ getRailProps }) => (
                         <div style={railStyle} {...getRailProps()} >
-                            <p style={{left: `${percentageStart}%`, bottom: "100%", position: "absolute", transform: "translate(-50%, -50%)"}}>{dateFormatShort(selectedStartDate.getTime())}</p>
-                            <p style={{left: `${percentageEnd}%`, bottom: "100%", position: "absolute", transform: "translate(-50%, -50%)"}}>{dateFormatShort(selectedEndDate.getTime())}</p>
+                            <p style={{left: `${percentageStart}%`, bottom: "100%", position: "absolute", transform: "translate(-100%, -50%)"}}>{dateFormatShort(selectedStartDate.getTime())}</p>
+                            <p style={{left: `${percentageEnd}%`, bottom: "100%", position: "absolute", transform: "translate(0%, -50%)"}}>{dateFormatShort(selectedEndDate.getTime())}</p>
                         </div>
                     )}
                 </Rail>

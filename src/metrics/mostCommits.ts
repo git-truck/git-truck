@@ -2,6 +2,7 @@ import type { GitBlobObject } from "~/analyzer/model"
 import type { MetricCache } from "./metrics"
 import { SpectrumTranslater } from "./metricUtils"
 import { hslToHex, removeFirstPart } from "../util"
+import { noEntryColor } from "~/const"
 
 export class CommitAmountTranslater {
   readonly translater: SpectrumTranslater
@@ -17,6 +18,8 @@ export class CommitAmountTranslater {
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Map<string, number>) {
-    cache.colormap.set(blob.path, this.getColor(commitCountPerFile.get(removeFirstPart(blob.path)) ?? 0))
+    const existing = commitCountPerFile.get(removeFirstPart(blob.path))
+    const color = existing ? this.getColor(existing) : noEntryColor
+    cache.colormap.set(blob.path, color)
   }
 }

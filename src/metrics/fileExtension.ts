@@ -3,6 +3,7 @@ import { getColorFromExtension } from "./metricUtils"
 import type { MetricCache } from "./metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
+import { noEntryColor } from "~/const"
 
 export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
@@ -16,7 +17,7 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
     }
     cache.colormap.set(blob.path, color)
   } else {
-    if (!legend.has("Other")) legend.set("Other", new PointInfo("#808080", 0))
-    cache.colormap.set(blob.path, "#808080")
+    if (!legend.has("Other")) legend.set("Other", new PointInfo(noEntryColor, 0))
+    cache.colormap.set(blob.path, noEntryColor)
   }
 }

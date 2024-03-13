@@ -85,17 +85,17 @@ function ColorMetricDependentInfo(props: {
   switch (props.metric) {
     case "MOST_COMMITS":
       const noCommits = props.repodata2.commitCounts.get(slicedPath)
-      if (!noCommits) return null
+      if (!noCommits) return "No activity"
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
     case "LAST_CHANGED":
       const epoch = props.repodata2.lastChanged.get(slicedPath)
-      if (!epoch) return null
+      if (!epoch) return "No activity"
       return <>{dateFormatRelative(epoch)}</>
     case "SINGLE_AUTHOR":
       switch (authorCount) {
         case undefined:
         case 0:
-          return null
+          return "No activity"
         case 1:
           const dom = props.repodata2.dominantAuthors.get(slicedPath)
           if (!dom) return null
@@ -105,13 +105,13 @@ function ColorMetricDependentInfo(props: {
       }
     case "TOP_CONTRIBUTOR":
       const dominant = props.repodata2.dominantAuthors.get(slicedPath)
-      if (!dominant) return null
+      if (!dominant) return "No activity"
       return <>{dominant}</>
     case "TRUCK_FACTOR":
       switch (authorCount) {
         case undefined:
         case 0:
-          return null
+          return "No activity"
         case 1:
           return "1 author"
         default:

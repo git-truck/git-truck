@@ -12,6 +12,7 @@ import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend
 import uniqolor from "uniqolor"
 import type { RepoData } from "~/routes/$repo.$"
 import { removeFirstPart } from "~/util"
+import { noEntryColor } from "~/const"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -143,9 +144,11 @@ export function getMetricCalcs(
             (blob) => getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0) ?? -1
           ]
         }
+        const existing = data.repodata2.lastChanged.get(removeFirstPart(blob.path))
+        const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
         cache.colormap.set(
           blob.path,
-          groupings[getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0) ?? -1].color
+          color
         )
       }
     ],
