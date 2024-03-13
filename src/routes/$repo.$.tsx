@@ -94,65 +94,34 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw Error("Error loading repo")
   }
 
+  console.time("fileTree")
   const treeAnalyzed = (await instance.analyzeTree())
+  console.timeEnd("fileTree")
 
   const renames = await instance.db.getCurrentRenames()
-  const start = Date.now()
+  console.time("rename")
   const followedRenames = followRenames(renames)
-  console.log("renames followed", Date.now() - start)
   await instance.db.replaceTemporaryRenames(followedRenames)
-
-  console.time('cachedResult');
+  console.timeEnd("rename")
+  console.time("updateCache")
   await instance.db.updateCachedResult()
-  console.timeEnd("cachedResult")
-
-  console.time('dominantAuthors');
-const dominantAuthors = await instance.db.getDominantAuthorPerFile();
-console.timeEnd('dominantAuthors');
-
-console.time('commitCounts');
-const commitCounts = await instance.db.getCommitCountPerFile();
-console.timeEnd('commitCounts');
-
-console.time('lastChanged');
-const lastChanged = await instance.db.getLastChangedPerFile();
-console.timeEnd('lastChanged');
-
-console.time('authorCounts');
-const authorCounts = await instance.db.getAuthorCountPerFile();
-console.timeEnd('authorCounts');
-
-console.time('maxAndMinCommitCount');
-const { maxCommitCount, minCommitCount } = await instance.db.getMaxAndMinCommitCount();
-console.timeEnd('maxAndMinCommitCount');
-
-console.time('newestAndOldestChangeDates');
-const { newestChangeDate, oldestChangeDate } = await instance.db.getNewestAndOldestChangeDates();
-console.timeEnd('newestAndOldestChangeDates');
-
-console.time('authors');
-const authors = await instance.db.getAuthors();
-console.timeEnd('authors');
-
-console.time('authorUnions');
-const authorUnions = await instance.db.getAuthorUnions();
-console.timeEnd('authorUnions');
-
-console.time('hiddenFiles');
-const hiddenFiles = await instance.db.getHiddenFiles();
-console.timeEnd('hiddenFiles');
-
-console.time('lastRunInfo');
-const lastRunInfo = await instance.db.getLastRunInfo();
-console.timeEnd('lastRunInfo');
-
-console.time('timerange');
-const timerange = await instance.db.getTimeRange();
-console.timeEnd('timerange');
-
-const fileTree = treeAnalyzed.rootTree;
-const fileCount = treeAnalyzed.fileCount;
-const branch = instance.branch;
+  console.timeEnd("updateCache")
+  console.time("dbQueries")
+  const dominantAuthors = await instance.db.getDominantAuthorPerFile();
+  const commitCounts = await instance.db.getCommitCountPerFile();
+  const lastChanged = await instance.db.getLastChangedPerFile();
+  const authorCounts = await instance.db.getAuthorCountPerFile();
+  const { maxCommitCount, minCommitCount } = await instance.db.getMaxAndMinCommitCount();
+  const { newestChangeDate, oldestChangeDate } = await instance.db.getNewestAndOldestChangeDates();
+  const authors = await instance.db.getAuthors();
+  const authorUnions = await instance.db.getAuthorUnions();
+  const fileTree = treeAnalyzed.rootTree;
+  const fileCount = treeAnalyzed.fileCount;
+  const hiddenFiles = await instance.db.getHiddenFiles();
+  const lastRunInfo = await instance.db.getLastRunInfo();
+  const branch = instance.branch;
+  const timerange = await instance.db.getTimeRange();
+  console.timeEnd("dbQueries")
 
 const repodata2 = {
   dominantAuthors,
@@ -173,7 +142,6 @@ const repodata2 = {
   branch,
   timerange
 };
-
   return typedjson<RepoData>({
     repo,
     gitTruckInfo: await getGitTruckInfo(),

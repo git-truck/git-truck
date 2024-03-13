@@ -86,8 +86,11 @@ export const Chart = memo(function Chart({
   }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles])
 
   const nodes = useMemo(() => {
+    console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(repodata2, filetree, size, chartType, sizeMetric, path, renderCutoff).descendants()
+    const res = createPartitionedHiearchy(repodata2, filetree, size, chartType, sizeMetric, path, renderCutoff).descendants()
+    console.timeEnd("nodes")
+    return res
   }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
 
   useEffect(() => {

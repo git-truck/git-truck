@@ -29,7 +29,12 @@ export function Providers({ children, data }: ProvidersProps) {
   const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
 
   const metricsData: MetricsData = useMemo(
-    () => createMetricData(data, data.truckConfig.colorSeed),
+    () => {
+      console.time("metrics")
+      const res = createMetricData(data, data.truckConfig.colorSeed)
+      console.timeEnd("metrics")
+      return res
+    },
     [data]
   )
 
