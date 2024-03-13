@@ -12,7 +12,7 @@ export default class DB {
   private static async init(dbPath: string) {
     const dir = dirname(dbPath)
     if (!existsSync(dir)) await fs.mkdir(dir, {recursive: true})
-    const db = await Database.create(dbPath)
+    const db = await Database.create(dbPath, {temp_directory: dir})
     await this.initTables(db)
     await this.initViews(db)
     return db
@@ -32,7 +32,7 @@ export default class DB {
   private static async initTables(db: Database) {
     await db.all(`
       CREATE TABLE IF NOT EXISTS commits (
-        hash VARCHAR PRIMARY KEY,
+        hash VARCHAR,
         author VARCHAR,
         committertime UINTEGER,
         authortime UINTEGER,
@@ -230,7 +230,7 @@ export default class DB {
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
       SELECT distinct commithash, author, committertime, message, body 
-      FROM filechanges_commits_renamed
+      FROM filechanges_commits_renamed_cached
       WHERE filepath LIKE '${path}%'
       ORDER BY committertime DESC, commithash
       LIMIT ${count};
@@ -242,14 +242,14 @@ export default class DB {
 
   public async getCommitCountForPath(path: string) {
     const res = await (await this.instance).all(`
-      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed WHERE filepath LIKE '${path}%';
+      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath LIKE '${path}%';
     `)
     return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
     const res = await (await this.instance).all(`
-      SELECT filepath, count(DISTINCT commithash) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC;
+      SELECT filepath, count(DISTINCT commithash) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["count"])]
@@ -258,7 +258,7 @@ export default class DB {
   
   public async getLastChangedPerFile() {
     const res = await (await this.instance).all(`
-      SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed GROUP BY filepath;
+      SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["max_time"])]
@@ -268,7 +268,7 @@ export default class DB {
   public async getAuthorCountPerFile() {
     // TODO: handle coauthors
     const res = await (await this.instance).all(`
-      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits_renamed GROUP BY filepath;
+      SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
     return new Map(res.map((row) => {
       return [row["filepath"] as string, Number(row["author_count"])]
@@ -277,18 +277,25 @@ export default class DB {
   
   public async getDominantAuthorPerFile() {
     const res = await (await this.instance).all(`
-      WITH RankedAuthors AS (
-        SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
-        FROM filechanges_commits_renamed
+    WITH RankedAuthors AS (
+      SELECT filepath, author, contribcount, ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY contribcount DESC, author ASC) as rank
+      FROM filechanges_commits_renamed_cached
       )
       SELECT filepath, author, contribcount
       FROM RankedAuthors
       WHERE rank = 1;
-    `)
-    return new Map(res.map((row) => {
-      return [row["filepath"] as string, row["author"] as string]
-    }))
-  }
+      `)
+      return new Map(res.map((row) => {
+        return [row["filepath"] as string, row["author"] as string]
+      }))
+    }
+    
+    public async updateCachedResult() {
+      await (await this.instance).all(`
+        CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
+        SELECT * FROM filechanges_commits_renamed;
+      `)
+    }
 
   public async addRenames(renames: RenameEntry[]) {
     const queryBuilderRenames: string[] = ["INSERT INTO renames (fromname, toname, timestamp) VALUES "]
@@ -327,21 +334,21 @@ export default class DB {
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
     const res = await (await this.instance).all(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed GROUP BY filepath);
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
   
   public async getMaxAndMinCommitCount() {
     const res = await (await this.instance).all(`
-      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits_renamed GROUP BY filepath ORDER BY count DESC);
+      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC);
     `)
     return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
   
   public async getAuthorContribsForFile(path: string, isblob: boolean) {
     const res = await (await this.instance).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC;
     `)
     return res.map(row => {
       return {author: row["author"] as string, contribs: Number(row["contribsum"])}
