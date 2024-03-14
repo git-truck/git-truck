@@ -27,25 +27,11 @@ export function getArgsWithDefaults(): TruckConfig {
   return tempArgs
 }
 
-export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig, TruckUserConfig]> {
+export async function getArgs(): Promise<TruckConfig> {
   const args = getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
   args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path
 
-  let config: TruckUserConfig = {}
-  try {
-    const configContents = JSON.parse(await fs.readFile(resolve(args.path, repo, "truckconfig.json"), "utf-8"))
-    config = configContents
-  } catch (e) {
-    log.warn(`No truckconfig.json found in repo ${repo}`)
-  }
-
-  return [
-    {
-      ...args,
-      ...config
-    },
-    config
-  ]
+  return args
 }

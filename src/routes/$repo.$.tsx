@@ -6,7 +6,7 @@ import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
-import { getTruckConfigWithArgs } from "~/analyzer/args.server"
+import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { GitObject, GitTreeObject, RenameEntry, Repository, TruckUserConfig } from "~/analyzer/model"
 import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
@@ -38,7 +38,6 @@ let invalidateCache = false
 
 export interface RepoData {
   repo: Repository
-  truckConfig: TruckUserConfig
   gitTruckInfo: {
     version: string
     latestVersion: string | null
@@ -75,7 +74,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return redirect("/")
   }
 
-  const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
+  const args = await getArgs()
   const options: TruckUserConfig = {
     invalidateCache: invalidateCache || args.invalidateCache
   }
@@ -148,7 +147,6 @@ const repodata2 = {
   return typedjson<RepoData>({
     repo,
     gitTruckInfo: await getGitTruckInfo(),
-    truckConfig,
     repodata2
   })
 }
@@ -214,7 +212,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     return null
   }
 
-  const [args] = await getTruckConfigWithArgs(params["repo"])
+  const args = await getArgs()
   const path = resolve(args.path, params["repo"])
 
   const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
