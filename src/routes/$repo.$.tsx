@@ -75,20 +75,15 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
 
   const args = await getArgs()
-  const options: TruckUserConfig = {
-    invalidateCache: invalidateCache || args.invalidateCache
-  }
-  options.path = resolve(args.path, params["repo"])
-  options.branch = params["*"]
+  const path = resolve(args.path, params["repo"])
+  const branch = params["*"]
+  const repoName = params["repo"]
 
-  if (params["*"]) {
-    options.branch = params["*"]
-  }
-  const instance = InstanceManager.getOrCreateInstance(params["repo"], options.branch, options.path)
+  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   await instance.loadRepoData()
 
   invalidateCache = false
-  const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
+  const repo = await GitCaller.getRepoMetadata(path, false)
 
   if (!repo) {
     throw Error("Error loading repo")
@@ -119,7 +114,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const fileCount = treeAnalyzed.fileCount;
   const hiddenFiles = await instance.db.getHiddenFiles();
   const lastRunInfo = await instance.db.getLastRunInfo();
-  const branch = instance.branch;
   const timerange = await instance.db.getTimeRange();
   const colorSeed = await instance.db.getColorSeed()
   console.timeEnd("dbQueries")

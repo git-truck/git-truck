@@ -37,15 +37,11 @@ export type RawGitObject = {
   size?: number
 }
 
-export interface TruckConfig {
+export interface ArgsOptions {
   log?: string
   out?: string
   branch?: string
   path: string
-  unionedAuthors: string[][]
-  hiddenFiles: string[]
-  invalidateCache: boolean
-  colorSeed?: string
 }
 
 // Bump this if changes are made to this file
