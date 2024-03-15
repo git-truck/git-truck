@@ -71,16 +71,18 @@ export default class DB {
   }
 
   private static async initViews(db: Database, timeSeriesStart?: number, timeSeriesEnd?: number) {
+    const start = !timeSeriesStart || Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
+    const end = !timeSeriesEnd || Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime, c.body, c.message FROM
       commits c LEFT JOIN authorunions u ON c.author = u.alias
-      WHERE c.committertime BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+      WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
       SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime, c.message, c.body FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash
-      WHERE c.committertime BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+      WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW processed_renames AS
       SELECT 
@@ -115,7 +117,7 @@ export default class DB {
 
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT * FROM renames
-      WHERE timestamp BETWEEN ${timeSeriesStart ?? 0} AND ${timeSeriesEnd ?? 1_000_000_000_000};
+      WHERE timestamp BETWEEN ${start} AND ${end};
     `)
   }
 
