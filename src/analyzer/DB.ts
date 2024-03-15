@@ -1,8 +1,9 @@
 import { Database } from "duckdb-async"
-import type { CommitDTO, FileChange, GitLogEntry, RenameEntry } from "./model"
+import type { CommitDTO, GitLogEntry, RenameEntry } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
+import { DBInserter } from "./DBInserter"
 
 export default class DB {
   private instance: Promise<Database>
@@ -125,43 +126,20 @@ export default class DB {
     await DB.initViews(await this.instance, start, end)
   }
 
-  private batchSize = 5000
-  private queryBuilderFilechanges: string[] = [`INSERT INTO filechanges (commithash, contribcount, filepath) VALUES `]
-  private valueArrayFilechanges: (string|boolean|number)[] = []
-
-  private async flushFileChanges() {
-    if (this.valueArrayFilechanges.length === 0) return
-    const insertStatement = await (await this.instance).prepare(this.queryBuilderFilechanges.join(""))
-    await insertStatement.run(...this.valueArrayFilechanges)
-    await insertStatement.finalize()
-    this.queryBuilderFilechanges = [`INSERT INTO filechanges (commithash, contribcount, filepath) VALUES `]
-    this.valueArrayFilechanges = []
-  }
-
-  private async addFileChanges(fileChanges: FileChange[], hash: string) {
-    // console.log("filechanges count", fileChanges.length)
-    for (const fileChange of fileChanges) {
-      this.queryBuilderFilechanges.push(`(?, ?, ?),`)
-      this.valueArrayFilechanges.push(hash, fileChange.contribs, fileChange.path)
-      if (this.queryBuilderFilechanges.length >= this.batchSize) {
-        await this.flushFileChanges()
-      }
-    }
-  }
-
   public async replaceAuthorUnions(unions: string[][]) {
-    const queryBuilder: string[] = ["DELETE FROM authorunions;"]
-    if (unions.length > 0) queryBuilder.push("INSERT INTO authorunions (alias, actualname) VALUES")
+    await (await this.instance).all(`
+      DELETE FROM authorunions;
+    `)
+
+    const inserter = new DBInserter<string>("authorunions", ["alias", "actualname"], this.instance)
+
     for (const union of unions) {
       const [actualname, ...aliases] = union
       for (const alias of aliases) {
-        queryBuilder.push(`('${alias}', '${actualname}'),`)
+        await inserter.addRow(alias, actualname)
       }
     }
-    if (queryBuilder.length > 1) {
-      queryBuilder.push(";")
-      await (await this.instance).all(queryBuilder.join(" "))
-    }
+    await inserter.finalize()
   }
 
   public async replaceTemporaryRenames(renames: RenameEntry[]) {
@@ -169,18 +147,10 @@ export default class DB {
       DELETE FROM temporary_renames;
     `)
 
-    for (let index = 0; index < renames.length; index += 5000) {
-      const queryBuilderRenames: string[] = ["INSERT INTO temporary_renames (fromname, toname, timestamp, timestampend) VALUES "]
-      const valueArrayRenames: (string|number|null)[] = []
-      const count = Math.min(5000, renames.length - index)
-      for (let i = 0; i < count; i++) {
-        queryBuilderRenames.push("(?, ?, ?, ?),")
-        const current = renames[index + i]
-        valueArrayRenames.push(current.originalToName, current.toname, current.timestamp, current.timestampEnd ?? null)
-      }
-      const insertStatement = await (await this.instance).prepare(queryBuilderRenames.join(""))
-      await insertStatement.run(...valueArrayRenames)
-    }
+    const inserter = new DBInserter<string|number|null>("temporary_renames", ["fromname", "toname", "timestamp", "timestampend"], this.instance)
+
+    for (const rename of renames) await inserter.addRow(rename.originalToName, rename.toname, rename.timestamp, rename.timestampEnd ?? null)
+    await inserter.finalize()
   }
   
   public async getAuthorUnions() {
@@ -219,14 +189,13 @@ export default class DB {
     }
 
   public async replaceHiddenFiles(hiddenFiles: string[]) {
-    const queryBuilder: string[] = ["DELETE FROM hiddenfiles;"]
-    if (hiddenFiles.length > 0) queryBuilder.push("INSERT INTO hiddenfiles (path) VALUES")
-    for (const file of hiddenFiles) {
-      queryBuilder.push(`('${file}'),`)
-    }
-    queryBuilder.push(";")
+    await (await this.instance).all(`
+      DELETE FROM hiddenfiles;
+    `)
 
-    await (await this.instance).all(queryBuilder.join(" "))
+    const inserter = new DBInserter<string>("hiddenfiles", ["path"], this.instance)
+    for (const file of hiddenFiles) await inserter.addRow(file)
+    await inserter.finalize()
   }
 
   public async getCommits(path: string, count: number) {
@@ -302,16 +271,9 @@ export default class DB {
     }
 
   public async addRenames(renames: RenameEntry[]) {
-    const queryBuilderRenames: string[] = ["INSERT INTO renames (fromname, toname, timestamp) VALUES "]
-    const valueArrayRenames: (string|number|null)[] = []
-    for (let i = 0; i < renames.length; i++) queryBuilderRenames.push("(?, ?, ?),")
-    for (const rename of renames) {
-      valueArrayRenames.push(rename.fromname, rename.toname, rename.timestamp)
-    }
-    if (valueArrayRenames.length === 0) return
-    const insertStatement = await (await this.instance).prepare(queryBuilderRenames.join(""))
-    await insertStatement.run(...valueArrayRenames)
-    await insertStatement.finalize()
+    const inserter = new DBInserter<string|number|null>("renames", ["fromname", "toname", "timestamp"], this.instance)
+    for (const rename of renames) await inserter.addRow(rename.fromname, rename.toname, rename.timestamp)
+    await inserter.finalize()
   }
 
   public async getLatestCommitHash(beforeTime?: number) {
@@ -393,26 +355,16 @@ export default class DB {
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>) {
-    const commitEntries = commits.values()
-    if (commits.size < 1) return
-    
-    for (let index = 0; index < commits.size; index += this.batchSize) {
-      const thisBatchSize = Math.min(commits.size - index, this.batchSize)
-      
-      const queryBuilderCommits: string[] = []
-      queryBuilderCommits.push(`INSERT INTO commits (hash, author, committertime, authortime, body, message) VALUES `)
-      for (let i = 0; i < thisBatchSize; i++) queryBuilderCommits.push(`(?, ?, ?, ?, ?, ?,),`)
-      const insertStatement = await (await this.instance).prepare(queryBuilderCommits.join(""))
-      const valueArray = []
-      for (let x = 0; x < thisBatchSize; x++) {
-        const commit = commitEntries.next().value as GitLogEntry
-        await this.addFileChanges(commit.fileChanges, commit.hash)
-        valueArray.push(commit.hash, commit.author, commit.committertime, commit.authortime, commit.body, commit.message)
+    const commitInserter = new DBInserter<string|number>("commits", ["hash", "author", "committertime", "authortime", "body", "message"], this.instance)
+    const fileChangeInserter = new DBInserter<string|number>("filechanges", ["commithash", "contribcount", "filepath"], this.instance)
+
+    for (const [,commit] of commits) {
+      await commitInserter.addRow(commit.hash, commit.author, commit.committertime, commit.authortime, commit.body, commit.message)
+      for (const change of commit.fileChanges) {
+        await fileChangeInserter.addRow(commit.hash, change.contribs, change.path)
       }
-      await insertStatement.run(...valueArray)
-      await insertStatement.finalize()
     }
-    console.log("final flush")
-    await this.flushFileChanges()
+    await commitInserter.finalize()
+    await fileChangeInserter.finalize()
   }
 }
