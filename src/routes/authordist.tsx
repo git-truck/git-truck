@@ -16,5 +16,5 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-  return await instance.db.getAuthorContribsForFile(removeFirstPart(path), isblob === "true")
+  return await instance.db.getAuthorContribsForPath(removeFirstPart(path), isblob === "true")
 }

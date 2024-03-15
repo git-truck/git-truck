@@ -60,6 +60,8 @@ public async analyzeTree() {
     children: []
   } as GitTreeObject
 
+  await this.db.replaceFiles(lsTreeEntries)
+
   for (const child of lsTreeEntries) {
     log.debug(`Path: ${child.path}`)
     const prevTrees = child.path.split("/")

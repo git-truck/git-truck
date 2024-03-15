@@ -1,5 +1,5 @@
 import { Database } from "duckdb-async"
-import type { CommitDTO, GitLogEntry, RenameEntry } from "./model"
+import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
@@ -68,6 +68,9 @@ export default class DB {
         timestamp UINTEGER,
         timestampend UINTEGER
       );
+      CREATE TABLE IF NOT EXISTS files (
+        path VARCHAR
+      );
     `)
   }
 
@@ -115,6 +118,10 @@ export default class DB {
                       OR (f.committertime = r.timestampend + 1
                       AND f.authortime < r.timestampend)
                     );
+
+      CREATE OR REPLACE VIEW filechanges_commits_renamed_files AS
+      SELECT * FROM filechanges_commits_renamed f
+      INNER JOIN files fi on fi.path = f.filepath;
 
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT * FROM renames
@@ -266,13 +273,24 @@ export default class DB {
     public async updateCachedResult() {
       await (await this.instance).all(`
         CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
-        SELECT * FROM filechanges_commits_renamed;
+        SELECT * FROM filechanges_commits_renamed_files;
       `)
     }
 
   public async addRenames(renames: RenameEntry[]) {
     const inserter = new DBInserter<string|number|null>("renames", ["fromname", "toname", "timestamp"], this.instance)
     for (const rename of renames) await inserter.addRow(rename.fromname, rename.toname, rename.timestamp)
+    await inserter.finalize()
+  }
+
+  public async replaceFiles(files: RawGitObject[]) {
+    await (await this.instance).all(`
+      DELETE FROM files;
+    `)
+    const inserter = new DBInserter<string>("files", ["path"], this.instance)
+    for (const file of files) {
+      if (file.type === "blob") await inserter.addRow(file.path)
+    }
     await inserter.finalize()
   }
 
@@ -312,7 +330,7 @@ export default class DB {
     return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
   }
   
-  public async getAuthorContribsForFile(path: string, isblob: boolean) {
+  public async getAuthorContribsForPath(path: string, isblob: boolean) {
     const res = await (await this.instance).all(`
       SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
