@@ -39,8 +39,38 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
-
+  const [commitCount, setCommitCount] = useState<number|null>(null)
   const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
+
+  const existingCommitCount = repodata2.commitCounts.get(slicedPath)
+  
+  const commitFetcher = useFetcher()
+
+  useEffect(() => {
+    if (clickedObject?.type === "blob" && existingCommitCount) {
+      setCommitCount(existingCommitCount)
+    } else {
+      fetchCommitCount()
+    }
+  }, [repodata2, clickedObject])
+
+  function fetchCommitCount() {
+    const searchParams = new URLSearchParams()
+    searchParams.set("branch", repodata2.branch)
+    searchParams.set("repo", repodata2.repo)
+    if (!clickedObject?.path) return
+    searchParams.set("path", clickedObject.path)
+    commitFetcher.load(`/commitcount?${searchParams.toString()}`)
+  }
+
+  useEffect(() => {
+    if (commitFetcher.state === "idle") {
+      const data = commitFetcher.data as number
+      setCommitCount(data)
+    }
+  }, [commitFetcher])
+
+  // const commitCount = clickedObject?.type === "blob" ? repodata2.commitCounts.get(slicedPath) : 8
 
   const [authorContributions, setAuthorContributions] = useState<{author: string, contribs: number}[] | null>(null)
   const contribSum = useMemo(() => {
@@ -127,10 +157,10 @@ export function DetailsCard({
         <MenuItem title="General">
           <div className="flex grow flex-col gap-2">
             <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+              <CommitsEntry count={commitCount ?? 0}/>
               {isBlob ? (
                 <>
                   <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} /> 
-                  <CommitsEntry count={repodata2.commitCounts.get(slicedPath)}/>
                   <LastchangedEntry epoch={repodata2.lastChanged.get(slicedPath)} />
                 </>
               ) : (
@@ -218,7 +248,7 @@ export function DetailsCard({
           </div>
         </MenuItem>
         <MenuItem title="Commits">
-          <CommitsCard />
+          <CommitsCard commitCount={commitCount ?? 0}/>
         </MenuItem>
       </MenuTab>
     </div>

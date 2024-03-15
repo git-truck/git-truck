@@ -58,7 +58,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
   )
 }
 
-export function CommitHistory() {
+export function CommitHistory(props: {commitCount: number}) {
   const analyzerData = useData()
   const [commits, setCommits] = useState<CommitDTO[] | null>(null)
   const [commitShowCount, setCommitShowCount] = useState(10)
@@ -119,7 +119,7 @@ export function CommitHistory() {
         <CommitDistFragment items={commits} count={commitShowCount}/>
 
         {fetcher.state === "idle" ? (
-          commitShowCount < (analyzerData.repodata2.commitCounts.get(removeFirstPart(clickedObject.path)) ?? 0) ? (
+          commitShowCount < props.commitCount ? (
             <span
             onClick={fetchCommits}
             className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer"
