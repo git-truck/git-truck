@@ -207,7 +207,7 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await (await this.instance).all(`
-      SELECT distinct commithash, author, committertime, message, body 
+      SELECT distinct commithash, author, committertime, authortime, message, body 
       FROM filechanges_commits_renamed_cached
       WHERE filepath LIKE '${path}%'
       ORDER BY committertime DESC, commithash

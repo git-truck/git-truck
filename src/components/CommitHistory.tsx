@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { CommitDTO, GitLogEntry } from "~/analyzer/model"
-import { Fragment, useEffect, useMemo, useState } from "react"
-import { dateFormatLong } from "~/util"
+import { useEffect, useMemo, useState } from "react"
+import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
-import { LegendDot } from "./util"
+import { CloseButton, LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
+import { Popover, ArrowContainer } from 'react-tiny-popover'
 
 type SortCommitsMethods = "date" | "author"
 
@@ -31,17 +32,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       content: (
         <>
           {values.map((value: CommitDTO) => {
-            return (
-              <div title={`By: ${value.author}`} className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre" key={value.hash + "--itemContentAccordion"}>
-                <LegendDot className="ml-1" dotColor={authorColors.get(value.author) ?? "grey"} />
-                <li
-                  className="cursor-auto font-bold opacity-80"
-                  onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
-                  >
-                  {value.message}
-                </li>
-              </div>
-            )
+            return <CommitListEntry key={value.hash + "--itemContentAccordion"} authorColor={authorColors.get(value.author) ?? "grey"} value={value}/>
           })}
         </>
       )
@@ -56,6 +47,58 @@ function CommitDistFragment(props: CommitDistFragProps) {
       openByDefault={true}
       items={items}
     />
+  )
+}
+
+function InfoEntry(props: {keyString: string, value: string}) {
+  return (
+    <>
+      <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+        {props.keyString}
+      </div>
+      <p className="break-all overflow-ellipsis text-sm">{props.value}</p>
+    </>
+  )
+}
+
+function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  return (
+    <div 
+      title={`By: ${props.value.author}`}
+      className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre cursor-pointer hover:opacity-70"
+      onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+    >
+    <Popover
+      isOpen={isPopoverOpen}
+      positions={['left', 'top', 'bottom', 'right']} // preferred positions by priority
+      content={ ({ position, childRect, popoverRect }) =>
+        <ArrowContainer position={position} childRect={childRect} popoverRect={popoverRect} arrowSize={10} arrowColor="white">
+          <div className="card grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 max-w-lg pr-10">
+            <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)}/>
+            <InfoEntry keyString="Hash" value={props.value.hash}/>
+            <InfoEntry keyString="Author" value={props.value.author}/>
+            { props.value.committertime === props.value.authortime 
+              ? <InfoEntry keyString="Date" value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(props.value.committertime)})`}/>
+              : (<>
+                  <InfoEntry keyString="Date committed" value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(props.value.committertime)})`}/>
+                  <InfoEntry keyString="Date authored" value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(props.value.authortime)})`}/>
+                </>)}
+            <InfoEntry keyString="Message" value={props.value.message}/>
+            <InfoEntry keyString="Body" value={props.value.body.length > 0 ? props.value.body : "<none>"}/>
+          </div>
+        </ArrowContainer>
+      }
+      onClickOutside={() => setIsPopoverOpen(false)}
+    >
+      <div className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre cursor-pointer hover:opacity-70">
+        <LegendDot className="ml-1" dotColor={props.authorColor} />
+        <li className="font-bold opacity-80">
+          {props.value.message}
+        </li>
+      </div>
+    </Popover>
+  </div>
   )
 }
 
@@ -112,9 +155,7 @@ export function CommitHistory(props: {commitCount: number}) {
   return (
     <>
       <div className="flex justify-between">
-        <label className="label grow">
-          <h3 className="font-bold">{headerText}</h3>
-        </label>
+        <h3 className="font-bold">{headerText}</h3>
       </div>
       <div>
         <CommitDistFragment items={commits} count={commitShowCount}/>

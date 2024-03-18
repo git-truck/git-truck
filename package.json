@@ -93,6 +93,7 @@
     "react-compound-slider": "^3.4.0",
     "react-dom": "^18.2.0",
     "react-konami-code": "^2.3.0",
+    "react-tiny-popover": "^8.0.4",
     "react-use": "^17.4.0",
     "react-use-size": "^3.0.2",
     "remix-typedjson": "^0.3.1",
