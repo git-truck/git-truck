@@ -30,15 +30,12 @@ import {
   mdiFileTree,
   mdiFamilyTree,
   mdiContentCut,
-  mdiHistory,
-  mdiRayStart,
-  mdiRayEnd
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
 import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
-import { Form, useLocation } from "@remix-run/react"
+import { useLocation } from "@remix-run/react"
 
 export const Options = memo(function Options() {
   const {
@@ -49,8 +46,6 @@ export const Options = memo(function Options() {
     hierarchyType,
     transitionsEnabled,
     renderCutoff,
-    timeSeriesStart,
-    timeSeriesEnd,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,
@@ -60,8 +55,6 @@ export const Options = memo(function Options() {
     setHierarchyType,
     setSizeMetricType,
     setRenderCutoff,
-    setTimeSeriesStart,
-    setTimeSeriesEnd
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
@@ -106,7 +99,6 @@ export const Options = memo(function Options() {
   }
 
   const [isTransitioning, startTransition] = useTransition()
-  const location = useLocation()
 
   return (
     <>
@@ -191,53 +183,6 @@ export const Options = memo(function Options() {
           </fieldset>
         ) : null}
 
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiHistory} size="1.25em" />
-            Time interval
-          </legend>
-          <label
-            className="label flex w-full items-center justify-start gap-2 text-sm"
-            title="Adjust the time interval that data is shown for"
-          >
-            <span className="flex grow items-center gap-2">
-              <Icon path={mdiRayStart} size="1.25em" />
-              Start
-            </span>
-            <input
-              type="number"
-              min={0}
-              defaultValue={timeSeriesStart}
-              className="mr-1 w-40 place-self-end border-b-2"
-              onChange={(x) => startTransition(() => setTimeSeriesStart(x.target.valueAsNumber))}
-            />
-          </label>
-          <label
-            className="label flex w-full items-center justify-start gap-2 text-sm"
-            title="Adjust the time interval that data is shown for"
-          >
-            <span className="flex grow items-center gap-2">
-              <Icon path={mdiRayEnd} size="1.25em" />
-              End
-            </span>
-            <input
-              type="number"
-              min={0}
-              defaultValue={timeSeriesEnd}
-              className="mr-1 w-40 place-self-end border-b-2"
-              onChange={(x) => startTransition(() => setTimeSeriesEnd(x.target.valueAsNumber))}
-            />
-          </label>
-          <Form className="w-4" method="post" action={location.pathname}>
-            <input type="hidden" name="timeseries" value={`${timeSeriesStart}-${timeSeriesEnd}`} />
-            <button
-                  title="Show range"
-            >
-              Show range
-            </button>
-          </Form>
-        </fieldset>
-        
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiCog} size="1.25em" />

@@ -29,8 +29,6 @@ export type Options = {
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
-  timeSeriesStart: number
-  timeSeriesEnd: number
 }
 
 export type OptionsContextType = Options & {
@@ -42,8 +40,6 @@ export type OptionsContextType = Options & {
   setDepthType: (depthType: DepthType) => void
   setHierarchyType: (hierarchyType: HierarchyType) => void
   setRenderCutoff: (renderCutoff: number) => void
-  setTimeSeriesStart: (timeSeriesStart: number) => void
-  setTimeSeriesEnd: (timeSeriesEnd: number) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -66,8 +62,6 @@ const defaultOptions: Options = {
   transitionsEnabled: true,
   labelsVisible: true,
   renderCutoff: 2,
-  timeSeriesStart: 0,
-  timeSeriesEnd: Math.floor(Date.now() / 1000)
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -98,11 +92,5 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     setRenderCutoff: () => {
       throw new Error("No renderCutoffSetter provided")
     },
-    setTimeSeriesStart: () => {
-      throw new Error("No timeSeriesStartSetter provided")
-    },
-    setTimeSeriesEnd: () => {
-      throw new Error("No timeSeriesEndSetter provided")
-    }
   }
 }
