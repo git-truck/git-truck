@@ -27,12 +27,7 @@ export function LoadingIndicator({ className = "" }: { loadingText?: string; cla
   }, [fetcher.data])
 
   return (
-    <div
-      className={clsx("grid h-full w-full place-items-center", className)}
-      style={{
-        backgroundColor: "var(--global-bg-color)"
-      }}
-    >
+    <div className={clsx("grid h-full w-full place-items-center", className)}>
       <div className="flex animate-hide-initially flex-col px-2 py-2 opacity-0">
         <p className="text-center text-3xl font-bold opacity-70">{progressText}</p>
         <img src={anitruck} alt={"🚛"} className="w-full min-w-0 max-w-sm self-center" />

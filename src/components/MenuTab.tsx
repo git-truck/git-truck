@@ -15,7 +15,6 @@ export type MenuItemProps = {
 }
 
 export type MenuTabProps = {
-  lightBackground?: boolean
   onChange?: (index: number) => void
   selectedItemIndex?: number
 }
@@ -44,9 +43,7 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
         {items.map((item, idx) => (
           <button
             key={item.title + idx + "--tab"}
-            className={clsx("btn flex-1", {
-              "btn--outlined--light": !props.lightBackground,
-              "btn--outlined": props.lightBackground,
+            className={clsx("btn btn--outlined flex-1", {
               "opacity-50": selectedIdx === idx,
               "rounded-br-none rounded-tr-none": idx !== items.length - 1,
               "rounded-bl-none rounded-tl-none": idx === items.length - 1

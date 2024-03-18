@@ -14,7 +14,6 @@ import {
   bubblePadding,
   estimatedLetterHeightForDirText,
   estimatedLetterWidth,
-  searchMatchColor,
   circleTreeTextOffsetY,
   treemapBlobTextOffsetX,
   treemapBlobTextOffsetY,
@@ -33,6 +32,7 @@ import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
+import { cn, usePrefersLightMode } from "~/styling"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<HydratedGitObject> | HierarchyRectangularNode<HydratedGitObject>
 
@@ -125,7 +125,7 @@ export const Chart = memo(function Chart({
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
         key={`svg|${size.width}|${size.height}`}
-        className={clsx("grid h-full w-full place-items-center", {
+        className={clsx("grid h-full w-full place-items-center stroke-gray-300 dark:stroke-gray-700", {
           "cursor-zoom-out": path.includes("/")
         })}
         xmlns="http://www.w3.org/2000/svg"
@@ -173,7 +173,6 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
-      stroke: isSearchMatch ? searchMatchColor : "transparent",
       strokeWidth: "1px",
       fill: isBlob(d.data)
         ? metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "grey"
@@ -205,16 +204,15 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       }
     }
     return props
-  }, [d, isSearchMatch, metricsData, authorshipType, metricType, chartType])
+  }, [d, metricsData, authorshipType, metricType, chartType])
 
   return (
     <rect
       {...commonProps}
-      className={clsx({
+      className={cn(isSearchMatch ? "stroke-red-500" : isBlob(d.data) ? "stroke-transparent" : "", {
         "cursor-pointer": isBlob(d.data),
         "transition-all duration-500 ease-in-out": transitionsEnabled,
-        "animate-stroke-pulse": isSearchMatch,
-        "stroke-black/20": isTree(d.data)
+        "animate-stroke-pulse": isSearchMatch
       })}
     />
   )
@@ -285,6 +283,7 @@ function collapseText({
 function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
   const [metricsData] = useMetrics()
   const { authorshipType, metricType } = useOptions()
+  const prefersLightMode = usePrefersLightMode()
   const isBubbleChart = isCircularNode(d)
 
   if (children === null) return null
@@ -308,7 +307,9 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 
   const fillColor = isBlob(d.data)
     ? getTextColorFromBackground(metricsData[authorshipType].get(metricType)?.colormap.get(d.data.path) ?? "#333")
-    : "#333"
+    : prefersLightMode
+    ? "#333"
+    : "#fff"
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
@@ -320,20 +321,18 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
   return (
     <>
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
-      {isTree(d.data) ? (
+      {isTree(d.data) && isBubbleChart ? (
         <text
-          className={clsx("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
-            "stroke-white": isBubbleChart
-          })}
+          className="pointer-events-none fill-none stroke-gray-100 stroke-[7px] font-mono text-sm font-bold dark:stroke-gray-800"
           strokeLinecap="round"
         >
           <textPath {...textPathBaseProps}>{children}</textPath>
         </text>
       ) : null}
-      <text fill={fillColor} className="pointer-events-none">
+      <text fill={fillColor} className="pointer-events-none stroke-none">
         <textPath
           {...textPathBaseProps}
-          className={clsx("font-mono", {
+          className={clsx("stroke-none font-mono", {
             "text-sm font-bold": isTree(d.data),
             "text-xs": !isTree(d.data)
           })}

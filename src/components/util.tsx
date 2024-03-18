@@ -33,7 +33,7 @@ export const LegendDot = ({
 
 export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
   <code
-    className={`rounded-md bg-gray-100 p-1 font-mono text-sm text-gray-900 ${
+    className={`rounded-md bg-gray-100 p-1 font-mono text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100 ${
       inline ? "inline-block" : "block"
     } whitespace-pre-wrap`}
     {...props}

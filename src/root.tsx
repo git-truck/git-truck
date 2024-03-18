@@ -12,9 +12,10 @@ import {
 } from "@remix-run/react"
 
 import varsStyles from "~/styles/vars.css"
-import indexStyles from "~/styles/index.css"
+import indexStyles from "~/styles/animations.css"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
+import { ThemeProvider, cn, usePrefersLightMode } from "./styling"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
@@ -57,13 +58,28 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className="text-gray-600">
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
+      <ThemeProvider>
+        <Body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+          <LiveReload />
+        </Body>
+      </ThemeProvider>
     </html>
+  )
+}
+
+function Body({ children }: { children: React.ReactNode }) {
+  const prefersLightMode = usePrefersLightMode()
+  return (
+    <body
+      className={cn("bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300", {
+        dark: !prefersLightMode
+      })}
+    >
+      {children}
+    </body>
   )
 }
 

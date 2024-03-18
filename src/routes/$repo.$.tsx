@@ -1,6 +1,6 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
@@ -34,6 +34,7 @@ import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
 import { Online } from "react-detect-offline"
+import { cn } from "~/styling"
 
 let invalidateCache = false
 
@@ -236,41 +237,61 @@ export default function Repo() {
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
+  const containerClass = useMemo(
+    function getContainerClass() {
+      // The fullscreen overrides the collapses
+      if (isFullscreen) {
+        return "fullscreen"
+      }
+
+      // The classes for collapses
+      if (isLeftPanelCollapse && isRightPanelCollapse) {
+        return "both-collapse"
+      }
+
+      if (isLeftPanelCollapse) {
+        return "left-collapse"
+      }
+
+      if (isRightPanelCollapse) {
+        return "right-collapse"
+      }
+
+      // The default class is none
+      return ""
+    },
+    [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
+  )
+
   if (!analyzerData) return null
-
-  function defineTheContainerClass(): string {
-    // The fullscreen overrides the collapses
-    if (isFullscreen) {
-      return "fullscreen"
-    }
-
-    // The classes for collapses
-    if (isLeftPanelCollapse && isRightPanelCollapse) {
-      return "both-collapse"
-    } else if (isLeftPanelCollapse) {
-      return "left-collapse"
-    } else if (isRightPanelCollapse) {
-      return "right-collapse"
-    }
-
-    // The default class is none
-    return ""
-  }
 
   return (
     <Providers data={data}>
-      <div className={`app-container ${defineTheContainerClass()}`}>
+      <div className={cn("app-container", containerClass)}>
         <aside
-          className={clsx("flex flex-col gap-2 p-2 pl-0", {
+          className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
             "overflow-y-auto": !isFullscreen
           })}
         >
+          {!isLeftPanelCollapse ? (
+            <>
+              <GlobalInfo />
+              <Options />
+              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              <SearchCard />
+            </>
+          ) : null}
           {!isFullscreen ? (
-            <div className="absolute z-10">
+            <div
+              className={cn("absolute z-10 justify-self-end", {
+                "left-0": isLeftPanelCollapse
+              })}
+            >
               <button
+                type="button"
                 onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
                 className={clsx(
-                  "absolute top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white",
+                  "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
                   {
                     "left-arrow-space": !isLeftPanelCollapse
                   }
@@ -279,14 +300,6 @@ export default function Repo() {
                 <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
               </button>
             </div>
-          ) : null}
-          {!isLeftPanelCollapse ? (
-            <>
-              <GlobalInfo />
-              <Options />
-              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-              <SearchCard />
-            </>
           ) : null}
         </aside>
 
@@ -299,15 +312,16 @@ export default function Repo() {
         </main>
 
         <aside
-          className={clsx("flex flex-col gap-2 p-2 pl-0", {
+          className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
             "overflow-y-auto": !isFullscreen
           })}
         >
           {!isFullscreen ? (
             <div className="absolute z-10">
               <button
+                type="button"
                 onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                className="absolute right-0 top-half-screen flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-solid border-sky-500 bg-white"
+                className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
               >
                 <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
               </button>
@@ -320,7 +334,7 @@ export default function Repo() {
               ) : null}
               <DetailsCard
                 className={clsx({
-                  "absolute bottom-0 right-0 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                  "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
                     isFullscreen
                 })}
                 showUnionAuthorsModal={showUnionAuthorsModal}
@@ -334,7 +348,7 @@ export default function Repo() {
         </aside>
       </div>
       <UnionAuthorsModal
-        visible={unionAuthorsModalOpen}
+        open={unionAuthorsModalOpen}
         onClose={() => {
           setUnionAuthorsModalOpen(false)
         }}
@@ -352,7 +366,7 @@ const FullscreenButton = memo(function FullscreenButton({
 }) {
   return (
     <button
-      className="card btn--icon p-1"
+      className="card btn btn--primary p-1"
       onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
       title="Toggle full view"
     >
