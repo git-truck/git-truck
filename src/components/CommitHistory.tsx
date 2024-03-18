@@ -66,9 +66,9 @@ function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
   return (
     <div 
       title={`By: ${props.value.author}`}
-      className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre cursor-pointer hover:opacity-70"
-      onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+      className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre"
     >
+    <LegendDot className="ml-1" dotColor={props.authorColor} authorColorToChange={props.value.author} />
     <Popover
       isOpen={isPopoverOpen}
       positions={['left', 'top', 'bottom', 'right']} // preferred positions by priority
@@ -92,8 +92,7 @@ function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
       onClickOutside={() => setIsPopoverOpen(false)}
     >
       <div className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre cursor-pointer hover:opacity-70">
-        <LegendDot className="ml-1" dotColor={props.authorColor} />
-        <li className="font-bold opacity-80">
+        <li onClick={() => setIsPopoverOpen(!isPopoverOpen)} className="font-bold opacity-80">
           {props.value.message}
         </li>
       </div>

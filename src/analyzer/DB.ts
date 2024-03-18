@@ -71,6 +71,10 @@ export default class DB {
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR
       );
+      CREATE TABLE IF NOT EXISTS authorcolors (
+        author VARCHAR,
+        color VARCHAR
+      );
     `)
   }
 
@@ -187,13 +191,32 @@ export default class DB {
       } as RenameEntry
     })
   }
+  
+  public async getAuthorColors() {
+    const res = await (await this.instance).all(`
+      SELECT * FROM authorcolors;
+    `)
+    return new Map(res.map((row) => {
+      return [row["author"] as string, row["color"] as `#${string}`]
+    }))
+  }
+
+  public async addAuthorColor(author: string, color: string) {
+    await (await this.instance).all(`
+      DELETE FROM authorcolors WHERE author = '${author}';
+    `)
+    if (color === "") return
+    await (await this.instance).all(`
+      INSERT INTO authorcolors (author, color) VALUES ('${author}', '${color}');
+    `)
+  }
 
   public async getHiddenFiles() {
     const res = await (await this.instance).all(`
       SELECT path FROM hiddenfiles ORDER BY path ASC;
     `)
     return res.map(row => row["path"] as string)
-    }
+  }
 
   public async replaceHiddenFiles(hiddenFiles: string[]) {
     await (await this.instance).all(`

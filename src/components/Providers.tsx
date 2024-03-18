@@ -31,7 +31,7 @@ export function Providers({ children, data }: ProvidersProps) {
   const metricsData: MetricsData = useMemo(
     () => {
       console.time("metrics")
-      const res = createMetricData(data, data.repodata2.colorSeed)
+      const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors)
       console.timeEnd("metrics")
       return res
     },

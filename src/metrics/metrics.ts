@@ -28,8 +28,8 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: RepoData, colorSeed: string | null): MetricsData {
-  const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed)
+export function createMetricData(data: RepoData, colorSeed: string | null, predefinedAuthorColors: Map<string, `#${string}`>): MetricsData {
+  const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
   return [
     setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)),
@@ -78,11 +78,16 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[], colorSeed: string | null): Map<string, `#${string}`> {
+export function generateAuthorColors(authors: string[], colorSeed: string | null, predefinedAuthorColors: Map<string, `#${string}`>): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
   const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
+    const existing = predefinedAuthorColors.get(author)
+    if (existing) {
+      map.set(author, existing)
+      continue
+    }
     const hash = createHash("sha1");
     hash.update(author + seed);
     const hashed = hash.digest('hex');

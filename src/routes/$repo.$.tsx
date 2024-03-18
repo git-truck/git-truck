@@ -67,6 +67,7 @@ export interface RepoData2 {
   branch: string
   timerange: [number, number]
   colorSeed: string | null
+  authorColors: Map<string, `#${string}`>
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -136,7 +137,8 @@ const repodata2 = {
   repo: instance.repo,
   branch,
   timerange,
-  colorSeed
+  colorSeed,
+  authorColors: await instance.db.getAuthorColors()
 };
   return typedjson<RepoData>({
     repo,
@@ -200,6 +202,8 @@ export const action: ActionFunction = async ({ request, params }) => {
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
   const timeseries = formData.get("timeseries")
+  const authorname = formData.get("authorname")
+  const authorcolor = formData.get("authorcolor")
 
   if (refresh) {
     invalidateCache = true
@@ -248,6 +252,10 @@ export const action: ActionFunction = async ({ request, params }) => {
     const start = Number(split[0])
     const end = Number(split[1])
     await instance.updateTimeInterval(start, end)
+  }
+
+  if (typeof authorname === "string") {
+    await instance.db.addAuthorColor(authorname, authorcolor as string)
   }
 
   return null
