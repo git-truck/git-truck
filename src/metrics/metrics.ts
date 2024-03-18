@@ -13,6 +13,7 @@ import uniqolor from "uniqolor"
 import type { RepoData } from "~/routes/$repo.$"
 import { removeFirstPart } from "~/util"
 import { noEntryColor } from "~/const"
+import { createHash } from "node:crypto"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -79,10 +80,13 @@ export interface MetricCache {
 
 export function generateAuthorColors(authors: string[], colorSeed: string | null): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
+  const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
-    const seed = colorSeed ?? ""
-    const color = uniqolor(author + seed).color as `#${string}`
+    const hash = createHash("sha1");
+    hash.update(author + seed);
+    const hashed = hash.digest('hex');
+    const color = uniqolor(hashed).color as `#${string}`
     map.set(author, color)
   }
   return map

@@ -5,5 +5,6 @@ export default {
   serverBuildPath: "build/index.js",
   serverModuleFormat: "cjs",
   serverPlatform: "node",
-  serverMinify: process.env.NODE_ENV === "production"
+  serverMinify: process.env.NODE_ENV === "production",
+  browserNodeBuiltinsPolyfill: { modules: { crypto: true } }
 }
