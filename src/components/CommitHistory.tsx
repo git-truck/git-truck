@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import type { CommitDTO, GitLogEntry } from "~/analyzer/model"
 import { Fragment, useEffect, useMemo, useState } from "react"
-import { dateFormatLong, removeFirstPart } from "~/util"
-import commitIcon from "~/assets/commit_icon.png"
+import { dateFormatLong } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { useFetcher } from "@remix-run/react"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
+import { LegendDot } from "./util"
+import { useMetrics } from "~/contexts/MetricContext"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -20,7 +21,7 @@ interface CommitDistFragProps {
 
 function CommitDistFragment(props: CommitDistFragProps) {
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
-
+  const [, authorColors] = useMetrics()
   const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
@@ -31,15 +32,15 @@ function CommitDistFragment(props: CommitDistFragProps) {
         <>
           {values.map((value: CommitDTO) => {
             return (
-              <li
-                className="cursor-auto"
-                style={{ listStyleImage: `url(${commitIcon})` }}
-                onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
-                key={value.hash + "--itemContentAccordion"}
-                title={`By: ${value.author}`}
-              >
-                {value.message}
-              </li>
+              <div title={`By: ${value.author}`} className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre" key={value.hash + "--itemContentAccordion"}>
+                <LegendDot className="ml-1" dotColor={authorColors.get(value.author) ?? "grey"} />
+                <li
+                  className="cursor-auto font-bold opacity-80"
+                  onClick={() => (props.handleOnClick ? props.handleOnClick(value) : null)}
+                  >
+                  {value.message}
+                </li>
+              </div>
             )
           })}
         </>
@@ -110,7 +111,7 @@ export function CommitHistory(props: {commitCount: number}) {
 
   return (
     <>
-      <div className="flex cursor-pointer justify-between hover:opacity-70">
+      <div className="flex justify-between">
         <label className="label grow">
           <h3 className="font-bold">{headerText}</h3>
         </label>
