@@ -213,6 +213,13 @@ export default class ServerInstance {
   }
 
   public async loadRepoData() {
+    const quotePathDefaultValue = await this.gitCaller.getDefaultGitSettingValue("core.quotepath")
+    await this.gitCaller.setGitSetting("core.quotePath", "off")
+    const renamesDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renames")
+    await this.gitCaller.setGitSetting("diff.renames", "true")
+    const renameLimitDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renameLimit")
+    await this.gitCaller.setGitSetting("diff.renameLimit", "1000000")
+
     let commitCount = await this.gitCaller.getCommitCount()
     if (await this.db.hasCompletedPreviously()) {
       const latestCommit = await this.db.getLatestCommitHash()
@@ -253,25 +260,10 @@ export default class ServerInstance {
       log.info("threads synced")
     }
 
+    await this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue)
+    await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
+    await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
+
     await this.db.setFinishTime()
   }
-
-  // private getRecentRename(targetTimestamp: number, path: string) {
-  //   const renames = this.renamedFiles.get(path)
-  //   if (!renames) return undefined
-
-  //   let minTimestamp = Infinity
-  //   let resultRename = undefined
-
-  //   for (const rename of renames) {
-  //     const currentTimestamp = rename.timestamp
-  //     if (currentTimestamp > targetTimestamp && currentTimestamp < minTimestamp) {
-  //       minTimestamp = currentTimestamp
-  //       resultRename = rename
-  //     }
-  //   }
-
-  //   if (minTimestamp === Infinity) return undefined
-  //   return resultRename
-  // }
 }
