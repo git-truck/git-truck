@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
@@ -59,7 +61,7 @@ export const LegendDot = ({
       positions={['top', 'left', 'bottom', 'right']} // preferred positions by priority
       content={ ({ position, childRect, popoverRect }) =>
         <ArrowContainer position={position} childRect={childRect} popoverRect={popoverRect} arrowSize={10} arrowColor="white">
-          <div className="card max-w-lg pr-10">
+          <div className="card bg-gray-100/50 dark:bg-gray-800/40 backdrop-blur max-w-lg pr-10">
             <HexColorPicker color={color} onChange={setColor} />
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>Set color</button>
             {repodata2.authorColors.get(authorColorToChange) ? 

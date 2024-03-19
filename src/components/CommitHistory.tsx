@@ -81,7 +81,7 @@ function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
       positions={['left', 'top', 'bottom', 'right']} // preferred positions by priority
       content={ ({ position, childRect, popoverRect }) =>
         <ArrowContainer position={position} childRect={childRect} popoverRect={popoverRect} arrowSize={10} arrowColor="white">
-          <div className="card grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 max-w-lg pr-10">
+          <div className="card bg-gray-100/50 dark:bg-gray-800/40 backdrop-blur grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 max-w-lg pr-10">
             <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)}/>
             <InfoEntry keyString="Hash" value={props.value.hash}/>
             <InfoEntry keyString="Author" value={props.value.author}/>
