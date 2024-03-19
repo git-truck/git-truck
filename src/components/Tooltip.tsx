@@ -120,6 +120,5 @@ function ColorMetricDependentInfo(props: {
       }
     default:
       return null
-    }
   }
-
+}

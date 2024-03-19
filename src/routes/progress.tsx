@@ -3,9 +3,9 @@ import InstanceManager from "~/analyzer/InstanceManager"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 
-type ProgressResponse = {progress: number, totalCommitCount: number, analyzationStatus: AnalyzationStatus}
+type ProgressResponse = { progress: number; totalCommitCount: number; analyzationStatus: AnalyzationStatus }
 
-const defaultResponse: ProgressResponse = { progress: 0, totalCommitCount: 1, analyzationStatus: "Starting"}
+const defaultResponse: ProgressResponse = { progress: 0, totalCommitCount: 1, analyzationStatus: "Starting" }
 
 // TODO this does not update progress. Rework using defer
 
@@ -18,5 +18,9 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressR
   if (!instance) return defaultResponse
   await sleep(700)
 
-  return { progress: instance.progress, totalCommitCount: instance.totalCommitCount, analyzationStatus: instance.analyzationStatus }
+  return {
+    progress: instance.progress,
+    totalCommitCount: instance.totalCommitCount,
+    analyzationStatus: instance.analyzationStatus
+  }
 }

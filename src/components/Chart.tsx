@@ -2,10 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
-import type {
-  GitBlobObject,
-  GitObject,
-  GitTreeObject} from "~/analyzer/model"
+import type { GitBlobObject, GitObject, GitTreeObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
@@ -36,11 +33,7 @@ import { cn, usePrefersLightMode } from "~/styling"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
-export const Chart = memo(function Chart({
-  setHoveredObject
-}: {
-  setHoveredObject: (obj: GitObject | null) => void
-}) {
+export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObject: (obj: GitObject | null) => void }) {
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
@@ -82,13 +75,20 @@ export const Chart = memo(function Chart({
       ...filtered,
       children: flatten(filtered)
     } as GitTreeObject
-    
   }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles])
 
   const nodes = useMemo(() => {
     console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
-    const res = createPartitionedHiearchy(repodata2, filetree, size, chartType, sizeMetric, path, renderCutoff).descendants()
+    const res = createPartitionedHiearchy(
+      repodata2,
+      filetree,
+      size,
+      chartType,
+      sizeMetric,
+      path,
+      renderCutoff
+    ).descendants()
     console.timeEnd("nodes")
     return res
   }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
@@ -174,29 +174,29 @@ export const Chart = memo(function Chart({
 function filterGitTree(tree: GitTreeObject, ig: Ignore): GitTreeObject {
   function filterNode(node: GitObject): GitObject | null {
     if (ig.ignores(node.path)) {
-      return null;
+      return null
     }
     if (node.type === "blob") {
-        return node;
+      return node
     } else {
-        // It's a tree
-        const children: GitObject[] = [];
-        for (const child of node.children) {
-            const filteredChild = filterNode(child);
-            if (filteredChild !== null) {
-                children.push(filteredChild);
-            }
+      // It's a tree
+      const children: GitObject[] = []
+      for (const child of node.children) {
+        const filteredChild = filterNode(child)
+        if (filteredChild !== null) {
+          children.push(filteredChild)
         }
-        return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject;
+      }
+      return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject
     }
   }
 
-  const filteredTree = filterNode(tree);
+  const filteredTree = filterNode(tree)
   if (filteredTree === null || filteredTree.type !== "tree") {
-      throw new Error("Filtered tree must be a tree structure");
+    throw new Error("Filtered tree must be a tree structure")
   }
 
-  return filteredTree;
+  return filteredTree
 }
 
 function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
@@ -206,9 +206,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       strokeWidth: "1px",
-      fill: isBlob(d.data)
-        ? metricsData.get(metricType)?.colormap.get(d.data.path) ?? "grey"
-        : "transparent"
+      fill: isBlob(d.data) ? metricsData.get(metricType)?.colormap.get(d.data.path) ?? "grey" : "transparent"
     }
 
     if (chartType === "BUBBLE_CHART") {
@@ -426,39 +424,35 @@ function createPartitionedHiearchy(
 
   if (chartType === "TREE_MAP") {
     const treeMapPartition = treemap<GitObject>()
-        .tile(treemapBinary)
-        .size([size.width, size.height])
-        .paddingInner(2)
-        .paddingOuter(4)
-        .paddingTop(treemapPaddingTop)
+      .tile(treemapBinary)
+      .size([size.width, size.height])
+      .paddingInner(2)
+      .paddingOuter(4)
+      .paddingTop(treemapPaddingTop)
 
-      const tmPartition = treeMapPartition(hiearchy)
+    const tmPartition = treeMapPartition(hiearchy)
 
-      filterTree(tmPartition, (child) => {
-        const cast = child as HierarchyRectangularNode<GitObject>
-        return (cast.x1 - cast.x0) >= cutOff && (cast.y1 - cast.y0) >= cutOff
-      })
+    filterTree(tmPartition, (child) => {
+      const cast = child as HierarchyRectangularNode<GitObject>
+      return cast.x1 - cast.x0 >= cutOff && cast.y1 - cast.y0 >= cutOff
+    })
 
-      return tmPartition
+    return tmPartition
   }
   if (chartType === "BUBBLE_CHART") {
     const bubbleChartPartition = pack<GitObject>()
-        .size([size.width, size.height - estimatedLetterHeightForDirText])
-        .padding(bubblePadding)
-      const bPartition = bubbleChartPartition(hiearchy)
-      filterTree(bPartition, (child) => {
-        const cast = child as HierarchyCircularNode<GitObject>
-        return cast.r >= cutOff
-      })
-      return bPartition
+      .size([size.width, size.height - estimatedLetterHeightForDirText])
+      .padding(bubblePadding)
+    const bPartition = bubbleChartPartition(hiearchy)
+    filterTree(bPartition, (child) => {
+      const cast = child as HierarchyCircularNode<GitObject>
+      return cast.r >= cutOff
+    })
+    return bPartition
   }
 }
 
-
-function filterTree(
-  node: HierarchyNode<GitObject>,
-  filter: (child: HierarchyNode<GitObject>) => boolean
-) {
+function filterTree(node: HierarchyNode<GitObject>, filter: (child: HierarchyNode<GitObject>) => boolean) {
   node.children = node.children?.filter((c) => filter(c))
   for (const child of node.children ?? []) {
     if ((child.children?.length ?? 0) > 0) filterTree(child, filter)

@@ -3,7 +3,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { LegendDot } from "./util"
 
 interface AuthorDistFragProps {
-  items: {author: string, contribs: number}[]
+  items: { author: string; contribs: number }[]
   show: boolean
   contribSum: number
 }

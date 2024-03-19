@@ -12,14 +12,17 @@ export default class DB {
 
   private static async init(dbPath: string) {
     const dir = dirname(dbPath)
-    if (!existsSync(dir)) await fs.mkdir(dir, {recursive: true})
-    const db = await Database.create(dbPath, {temp_directory: dir})
+    if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
+    const db = await Database.create(dbPath, { temp_directory: dir })
     await this.initTables(db)
     await this.initViews(db)
     return db
   }
 
-  constructor(private repo: string, private branch: string) {
+  constructor(
+    private repo: string,
+    private branch: string
+  ) {
     this.repoSanitized = repo.replace(/\W/g, "_")
     this.branchSanitized = branch.replace(/\W/g, "_")
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
@@ -138,7 +141,9 @@ export default class DB {
   }
 
   public async replaceAuthorUnions(unions: string[][]) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       DELETE FROM authorunions;
     `)
 
@@ -154,32 +159,45 @@ export default class DB {
   }
 
   public async replaceTemporaryRenames(renames: RenameEntry[]) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       DELETE FROM temporary_renames;
     `)
 
-    const inserter = new DBInserter<string|number|null>("temporary_renames", ["fromname", "toname", "timestamp", "timestampend"], this.instance)
+    const inserter = new DBInserter<string | number | null>(
+      "temporary_renames",
+      ["fromname", "toname", "timestamp", "timestampend"],
+      this.instance
+    )
 
-    for (const rename of renames) await inserter.addRow(rename.originalToName, rename.toname, rename.timestamp, rename.timestampEnd ?? null)
+    for (const rename of renames)
+      await inserter.addRow(rename.originalToName, rename.toname, rename.timestamp, rename.timestampEnd ?? null)
     await inserter.finalize()
   }
-  
+
   public async getAuthorUnions() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
     `)
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
   }
-  
+
   public async getTimeRange() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT MIN(committertime) as min, MAX(committertime) as max from commits;
     `)
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
-  
+
   public async getCurrentRenames() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT * FROM relevant_renames;
     `)
     return res.map((row) => {
@@ -187,39 +205,51 @@ export default class DB {
         fromname: row["fromname"] as string,
         toname: row["toname"] as string,
         timestamp: Number(row["timestamp"]),
-        originalToName: row["toname"] as string,
+        originalToName: row["toname"] as string
       } as RenameEntry
     })
   }
-  
+
   public async getAuthorColors() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT * FROM authorcolors;
     `)
-    return new Map(res.map((row) => {
-      return [row["author"] as string, row["color"] as `#${string}`]
-    }))
+    return new Map(
+      res.map((row) => {
+        return [row["author"] as string, row["color"] as `#${string}`]
+      })
+    )
   }
 
   public async addAuthorColor(author: string, color: string) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       DELETE FROM authorcolors WHERE author = '${author}';
     `)
     if (color === "") return
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       INSERT INTO authorcolors (author, color) VALUES ('${author}', '${color}');
     `)
   }
 
   public async getHiddenFiles() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT path FROM hiddenfiles ORDER BY path ASC;
     `)
-    return res.map(row => row["path"] as string)
+    return res.map((row) => row["path"] as string)
   }
 
   public async replaceHiddenFiles(hiddenFiles: string[]) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       DELETE FROM hiddenfiles;
     `)
 
@@ -229,7 +259,9 @@ export default class DB {
   }
 
   public async getCommits(path: string, count: number) {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT distinct commithash, author, committertime, authortime, message, body 
       FROM filechanges_commits_renamed_cached
       WHERE filepath LIKE '${path}%'
@@ -237,47 +269,70 @@ export default class DB {
       LIMIT ${count};
     `)
     return res.map((row) => {
-      return {author: row["author"], committertime: row["committertime"], authortime: row["authortime"], body: row["body"], hash: row["commithash"], message: row["message"]} as CommitDTO
+      return {
+        author: row["author"],
+        committertime: row["committertime"],
+        authortime: row["authortime"],
+        body: row["body"],
+        hash: row["commithash"],
+        message: row["message"]
+      } as CommitDTO
     })
   }
 
   public async getCommitCountForPath(path: string) {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath LIKE '${path}%';
     `)
     return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT filepath, count(DISTINCT commithash) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC;
     `)
-    return new Map(res.map((row) => {
-      return [row["filepath"] as string, Number(row["count"])]
-    }))
+    return new Map(
+      res.map((row) => {
+        return [row["filepath"] as string, Number(row["count"])]
+      })
+    )
   }
-  
+
   public async getLastChangedPerFile() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
-    return new Map(res.map((row) => {
-      return [row["filepath"] as string, Number(row["max_time"])]
-    }))
+    return new Map(
+      res.map((row) => {
+        return [row["filepath"] as string, Number(row["max_time"])]
+      })
+    )
   }
-  
+
   public async getAuthorCountPerFile() {
     // TODO: handle coauthors
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT filepath, count(DISTINCT author) AS author_count FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
-    return new Map(res.map((row) => {
-      return [row["filepath"] as string, Number(row["author_count"])]
-    }))
+    return new Map(
+      res.map((row) => {
+        return [row["filepath"] as string, Number(row["author_count"])]
+      })
+    )
   }
-  
+
   public async getDominantAuthorPerFile() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       WITH RankedAuthors AS (
         SELECT filepath, author, SUM(contribcount) AS total_contribcount,
         ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(contribcount) DESC, author ASC) AS rank 
@@ -288,26 +343,36 @@ export default class DB {
       FROM RankedAuthors
       WHERE rank = 1;
     `)
-    return new Map(res.map((row) => {
-      return [row["filepath"] as string, row["author"] as string]
-    }))
+    return new Map(
+      res.map((row) => {
+        return [row["filepath"] as string, row["author"] as string]
+      })
+    )
   }
-    
-    public async updateCachedResult() {
-      await (await this.instance).all(`
+
+  public async updateCachedResult() {
+    await (
+      await this.instance
+    ).all(`
         CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
         SELECT * FROM filechanges_commits_renamed_files;
       `)
-    }
+  }
 
   public async addRenames(renames: RenameEntry[]) {
-    const inserter = new DBInserter<string|number|null>("renames", ["fromname", "toname", "timestamp"], this.instance)
+    const inserter = new DBInserter<string | number | null>(
+      "renames",
+      ["fromname", "toname", "timestamp"],
+      this.instance
+    )
     for (const rename of renames) await inserter.addRow(rename.fromname, rename.toname, rename.timestamp)
     await inserter.finalize()
   }
 
   public async replaceFiles(files: RawGitObject[]) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
       DELETE FROM files;
     `)
     const inserter = new DBInserter<string>("files", ["path"], this.instance)
@@ -318,68 +383,92 @@ export default class DB {
   }
 
   public async getLatestCommitHash(beforeTime?: number) {
-    const res = await (await this.instance).all(`
-      SELECT hash FROM commits WHERE committertime <= ${beforeTime ?? 1_000_000_000_000} ORDER BY committertime DESC LIMIT 1;
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT hash FROM commits WHERE committertime <= ${
+        beforeTime ?? 1_000_000_000_000
+      } ORDER BY committertime DESC LIMIT 1;
     `)
     return res[0]["hash"] as string
   }
 
   public async hasCompletedPreviously() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT count(*) as count FROM metadata WHERE field = 'finished';
     `)
     return res[0]["count"] > 0
   }
 
   public async getAuthors() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT DISTINCT author FROM commits_unioned;
     `)
-    return res.map(row => row["author"] as string)
+    return res.map((row) => row["author"] as string)
   }
-  
+
   public async getNewestAndOldestChangeDates() {
     // TODO: filter out files no longer in file tree
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
-  
+
   public async getMaxAndMinCommitCount() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(*) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC);
     `)
-    return {maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"])}
+    return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
-  
+
   public async getAuthorContribsForPath(path: string, isblob: boolean) {
-    const res = await (await this.instance).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${isblob ? "=" : "LIKE"} '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
+        isblob ? "=" : "LIKE"
+      } '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
-    return res.map(row => {
-      return {author: row["author"] as string, contribs: Number(row["contribsum"])}
+    return res.map((row) => {
+      return { author: row["author"] as string, contribs: Number(row["contribsum"]) }
     })
   }
 
   public async setFinishTime() {
     // TODO: also have metadata for table format, to rerun if data model changed
-    const latestHash = (await (await this.instance).all(`SELECT hash FROM commits ORDER BY committertime DESC LIMIT 1;`))[0]["hash"] as string
-    await (await this.instance).all(`
+    const latestHash = (
+      await (await this.instance).all(`SELECT hash FROM commits ORDER BY committertime DESC LIMIT 1;`)
+    )[0]["hash"] as string
+    await (
+      await this.instance
+    ).all(`
       INSERT INTO metadata (field, value, value2) VALUES ('finished', ${Date.now()}, '${latestHash}');
     `)
   }
-  
+
   public async updateColorSeed(seed: string) {
-    await (await this.instance).all(`
+    await (
+      await this.instance
+    ).all(`
     DELETE FROM metadata WHERE field = 'colorseed';
       INSERT INTO metadata (field, value, value2) VALUES ('colorseed', null, '${seed}');
       `)
-      console.log("inserted seed", seed)
-    }
-    
+    console.log("inserted seed", seed)
+  }
+
   public async getColorSeed() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT value2 FROM metadata WHERE field = 'colorseed';
     `)
     if (res.length < 1) return null
@@ -388,19 +477,36 @@ export default class DB {
   }
 
   public async getLastRunInfo() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;
     `)
-    if (!res[0]) return {time: 0, hash: ""}
-    return {time: Number(res[0]["time"]), hash: res[0]["hash"] as string}
+    if (!res[0]) return { time: 0, hash: "" }
+    return { time: Number(res[0]["time"]), hash: res[0]["hash"] as string }
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>) {
-    const commitInserter = new DBInserter<string|number>("commits", ["hash", "author", "committertime", "authortime", "body", "message"], this.instance)
-    const fileChangeInserter = new DBInserter<string|number>("filechanges", ["commithash", "contribcount", "filepath"], this.instance)
+    const commitInserter = new DBInserter<string | number>(
+      "commits",
+      ["hash", "author", "committertime", "authortime", "body", "message"],
+      this.instance
+    )
+    const fileChangeInserter = new DBInserter<string | number>(
+      "filechanges",
+      ["commithash", "contribcount", "filepath"],
+      this.instance
+    )
 
-    for (const [,commit] of commits) {
-      await commitInserter.addRow(commit.hash, commit.author, commit.committertime, commit.authortime, commit.body, commit.message)
+    for (const [, commit] of commits) {
+      await commitInserter.addRow(
+        commit.hash,
+        commit.author,
+        commit.committertime,
+        commit.authortime,
+        commit.body,
+        commit.message
+      )
       for (const change of commit.fileChanges) {
         await fileChangeInserter.addRow(commit.hash, change.contribs, change.path)
       }

@@ -93,7 +93,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
 
   console.time("fileTree")
-  const treeAnalyzed = (await instance.analyzeTree())
+  const treeAnalyzed = await instance.analyzeTree()
   console.timeEnd("fileTree")
 
   const renames = await instance.db.getCurrentRenames()
@@ -105,43 +105,43 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   await instance.db.updateCachedResult()
   console.timeEnd("updateCache")
   console.time("dbQueries")
-  const dominantAuthors = await instance.db.getDominantAuthorPerFile();
-  const commitCounts = await instance.db.getCommitCountPerFile();
-  const lastChanged = await instance.db.getLastChangedPerFile();
-  const authorCounts = await instance.db.getAuthorCountPerFile();
-  const { maxCommitCount, minCommitCount } = await instance.db.getMaxAndMinCommitCount();
-  const { newestChangeDate, oldestChangeDate } = await instance.db.getNewestAndOldestChangeDates();
-  const authors = await instance.db.getAuthors();
-  const authorUnions = await instance.db.getAuthorUnions();
-  const fileTree = treeAnalyzed.rootTree;
-  const fileCount = treeAnalyzed.fileCount;
-  const hiddenFiles = await instance.db.getHiddenFiles();
-  const lastRunInfo = await instance.db.getLastRunInfo();
-  const timerange = await instance.db.getTimeRange();
+  const dominantAuthors = await instance.db.getDominantAuthorPerFile()
+  const commitCounts = await instance.db.getCommitCountPerFile()
+  const lastChanged = await instance.db.getLastChangedPerFile()
+  const authorCounts = await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } = await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } = await instance.db.getNewestAndOldestChangeDates()
+  const authors = await instance.db.getAuthors()
+  const authorUnions = await instance.db.getAuthorUnions()
+  const fileTree = treeAnalyzed.rootTree
+  const fileCount = treeAnalyzed.fileCount
+  const hiddenFiles = await instance.db.getHiddenFiles()
+  const lastRunInfo = await instance.db.getLastRunInfo()
+  const timerange = await instance.db.getTimeRange()
   const colorSeed = await instance.db.getColorSeed()
   console.timeEnd("dbQueries")
 
-const repodata2 = {
-  dominantAuthors,
-  commitCounts,
-  lastChanged,
-  authorCounts,
-  maxCommitCount,
-  minCommitCount,
-  newestChangeDate,
-  oldestChangeDate,
-  authors,
-  authorUnions,
-  fileTree,
-  fileCount,
-  hiddenFiles,
-  lastRunInfo,
-  repo: instance.repo,
-  branch,
-  timerange,
-  colorSeed,
-  authorColors: await instance.db.getAuthorColors()
-};
+  const repodata2 = {
+    dominantAuthors,
+    commitCounts,
+    lastChanged,
+    authorCounts,
+    maxCommitCount,
+    minCommitCount,
+    newestChangeDate,
+    oldestChangeDate,
+    authors,
+    authorUnions,
+    fileTree,
+    fileCount,
+    hiddenFiles,
+    lastRunInfo,
+    repo: instance.repo,
+    branch,
+    timerange,
+    colorSeed,
+    authorColors: await instance.db.getAuthorColors()
+  }
   return typedjson<RepoData>({
     repo,
     gitTruckInfo: await getGitTruckInfo(),
@@ -150,8 +150,10 @@ const repodata2 = {
 }
 
 function overlaps(a: RenameEntry, b: RenameEntry) {
-  return (a.timestamp <= b.timestamp && (a.timestampEnd ?? Number.MAX_VALUE) >= b.timestamp) ||
-        (b.timestamp <= a.timestamp && (b.timestampEnd ?? Number.MAX_VALUE) >= a.timestamp)
+  return (
+    (a.timestamp <= b.timestamp && (a.timestampEnd ?? Number.MAX_VALUE) >= b.timestamp) ||
+    (b.timestamp <= a.timestamp && (b.timestampEnd ?? Number.MAX_VALUE) >= a.timestamp)
+  )
 }
 
 function followRenames(renames: RenameEntry[]) {
@@ -160,7 +162,11 @@ function followRenames(renames: RenameEntry[]) {
     changedThisIteration = false
     for (const rename of renames) {
       if (rename.toname === null) continue
-      const res = renames.filter((other) => other.fromname !== null && rename.toname === other.fromname && rename.timestamp < other.timestamp).sort((a, b) => a.timestamp - b.timestamp)
+      const res = renames
+        .filter(
+          (other) => other.fromname !== null && rename.toname === other.fromname && rename.timestamp < other.timestamp
+        )
+        .sort((a, b) => a.timestamp - b.timestamp)
       if (res.length > 0) {
         const nextRename = res[0]
         if (nextRename.fromname === nextRename.toname) continue
@@ -174,13 +180,19 @@ function followRenames(renames: RenameEntry[]) {
   }
   // Add The first part of rename chain from time 0 up to the first rename
   renames.sort((a, b) => a.timestamp - b.timestamp)
-  const toAdd = new Map<string,RenameEntry>()
+  const toAdd = new Map<string, RenameEntry>()
   for (const rename of renames) {
     if (rename.fromname === null) continue
     const inMap = toAdd.get(rename.fromname)
     if (!inMap) {
-      const newObject: RenameEntry = {fromname: rename.fromname, toname: rename.toname, originalToName: rename.fromname, timestamp: 0, timestampEnd: rename.timestamp-1}
-      const existing = renames.find(r => r.toname === newObject.toname && overlaps(newObject, r))
+      const newObject: RenameEntry = {
+        fromname: rename.fromname,
+        toname: rename.toname,
+        originalToName: rename.fromname,
+        timestamp: 0,
+        timestampEnd: rename.timestamp - 1
+      }
+      const existing = renames.find((r) => r.toname === newObject.toname && overlaps(newObject, r))
       if (!existing) {
         toAdd.set(rename.fromname, newObject)
       }
@@ -188,14 +200,14 @@ function followRenames(renames: RenameEntry[]) {
   }
 
   renames.push(...toAdd.values())
-  return renames.filter(r => r.originalToName !== r.toname)
+  return renames.filter((r) => r.originalToName !== r.toname)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
-  
+
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -217,7 +229,6 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
 
-
   if (ignore && typeof ignore === "string") {
     const hidden = await instance.db.getHiddenFiles()
     hidden.push(ignore)
@@ -228,7 +239,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (unignore && typeof unignore === "string") {
     const hidden = await instance.db.getHiddenFiles()
-    await instance.db.replaceHiddenFiles(hidden.filter(path => path !== unignore))
+    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
     return null
   }
 

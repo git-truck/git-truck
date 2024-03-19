@@ -61,8 +61,11 @@ function PointLegendFragment(props: PointLegendFragProps) {
         return (
           <div key={label}>
             <div className="relative flex items-center gap-2 text-sm leading-none">
-              {isAuthorRelatedLegend ? <LegendDot dotColor={info.color} authorColorToChange={label}/>
-              : <LegendDot dotColor={info.color}/>}
+              {isAuthorRelatedLegend ? (
+                <LegendDot dotColor={info.color} authorColorToChange={label} />
+              ) : (
+                <LegendDot dotColor={info.color} />
+              )}
               <span className="font-bold">{label}</span>
             </div>
           </div>

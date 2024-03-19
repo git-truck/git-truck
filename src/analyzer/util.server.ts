@@ -11,7 +11,6 @@ import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
 import type { AnalyzationStatus } from "./ServerInstance.server"
 
-
 export function last<T>(array: T[]) {
   return array[array.length - 1]
 }
@@ -44,11 +43,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export function analyzeRenamedFile(
-  file: string,
-  timestamp: number,
-  renamedFiles: RenameEntry[]
-) {
+export function analyzeRenamedFile(file: string, timestamp: number, renamedFiles: RenameEntry[]) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
@@ -66,7 +61,7 @@ export function analyzeRenamedFile(
     newPath = groups["newPath2"] ?? ""
   }
 
-  renamedFiles.push({fromname: oldPath, toname: newPath, timestamp: timestamp, originalToName: newPath})
+  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, originalToName: newPath })
   return newPath
 }
 

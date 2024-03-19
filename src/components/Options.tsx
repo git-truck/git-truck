@@ -41,7 +41,6 @@ import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
 import type { Theme } from "~/styling"
 import { Themes, useTheme } from "~/styling"
 
-
 export const Options = memo(function Options() {
   const [theme, setTheme] = useTheme()
   console.log(theme)
@@ -61,7 +60,7 @@ export const Options = memo(function Options() {
     setDepthType,
     setHierarchyType,
     setSizeMetricType,
-    setRenderCutoff,
+    setRenderCutoff
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(

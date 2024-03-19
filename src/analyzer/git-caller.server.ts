@@ -18,9 +18,12 @@ export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
-
   // eslint-disable-next-line no-useless-constructor
-  constructor(private repo: string, public branch: string, private path: string) {}
+  constructor(
+    private repo: string,
+    public branch: string,
+    private path: string
+  ) {}
 
   static async isGitRepo(path: string): Promise<boolean> {
     const gitFolderPath = resolve(path, ".git")
@@ -306,7 +309,7 @@ export class GitCaller {
   }
 
   public async commitCountSinceCommit(hash: string) {
-    const result = await runProcess(this.path, "git", ["rev-list", "--count", `${hash}..HEAD`]) as number
+    const result = (await runProcess(this.path, "git", ["rev-list", "--count", `${hash}..HEAD`])) as number
     return result
   }
 
@@ -345,7 +348,6 @@ export class GitCaller {
     const result = await runProcess(this.path, "git", ["rev-list", "--count", this.branch])
     return result as number
   }
-
 
   async getDefaultGitSettingValue(setting: string) {
     const result = await runProcess(this.path, "git", ["config", setting])

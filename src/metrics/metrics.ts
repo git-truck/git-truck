@@ -28,13 +28,14 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: RepoData, colorSeed: string | null, predefinedAuthorColors: Map<string, `#${string}`>): MetricsData {
+export function createMetricData(
+  data: RepoData,
+  colorSeed: string | null,
+  predefinedAuthorColors: Map<string, `#${string}`>
+): MetricsData {
   const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
-  return [
-    setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)),
-    authorColors
-  ]
+  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)), authorColors]
 }
 
 export function getMetricDescription(metric: MetricType): string {
@@ -46,10 +47,10 @@ export function getMetricDescription(metric: MetricType): string {
     case "LAST_CHANGED":
       return "How long ago did the files change?"
     case "SINGLE_AUTHOR":
-      return  "Which files are authored by only one person, throughout the repository's history?"
+      return "Which files are authored by only one person, throughout the repository's history?"
     case "TOP_CONTRIBUTOR":
       return "Which person has made the most line-changes to a file, throughout the repository's history?"
-        
+
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
     default:
@@ -78,7 +79,11 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[], colorSeed: string | null, predefinedAuthorColors: Map<string, `#${string}`>): Map<string, `#${string}`> {
+export function generateAuthorColors(
+  authors: string[],
+  colorSeed: string | null,
+  predefinedAuthorColors: Map<string, `#${string}`>
+): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
   const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
@@ -88,9 +93,9 @@ export function generateAuthorColors(authors: string[], colorSeed: string | null
       map.set(author, existing)
       continue
     }
-    const hash = createHash("sha1");
-    hash.update(author + seed);
-    const hashed = hash.digest('hex');
+    const hash = createHash("sha1")
+    hash.update(author + seed)
+    const hashed = hash.digest("hex")
     const color = uniqolor(hashed).color as `#${string}`
     map.set(author, color)
   }
@@ -150,15 +155,17 @@ export function getMetricCalcs(
             getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0) ?? -1
+            (blob) =>
+              getLastChangedIndex(
+                groupings,
+                newestEpoch,
+                data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0
+              ) ?? -1
           ]
         }
         const existing = data.repodata2.lastChanged.get(removeFirstPart(blob.path))
         const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
-        cache.colormap.set(
-          blob.path,
-          color
-        )
+        cache.colormap.set(blob.path, color)
       }
     ],
     [

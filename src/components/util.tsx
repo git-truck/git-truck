@@ -5,8 +5,8 @@ import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
-import { Popover, ArrowContainer } from 'react-tiny-popover'
-import { HexColorPicker } from "react-colorful";
+import { Popover, ArrowContainer } from "react-tiny-popover"
+import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
 import { useSubmit } from "@remix-run/react"
 import { getPathFromRepoAndHead } from "~/util"
@@ -32,44 +32,56 @@ export const LegendDot = ({
   style = {},
   dotColor,
   authorColorToChange = undefined
-}: { dotColor: string, authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
+}: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [color, setColor] = useState(dotColor)
-  const {repodata2, repo} = useData()
+  const { repodata2, repo } = useData()
   const submit = useSubmit()
 
-  if (!authorColorToChange) return (
-    <div
-      className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className}`}
-      style={{ ...style, backgroundColor: dotColor }}
-    />
-  )
+  if (!authorColorToChange)
+    return (
+      <div
+        className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className}`}
+        style={{ ...style, backgroundColor: dotColor }}
+      />
+    )
 
   function updateColor(author: string, color: string) {
     const form = new FormData()
     form.append("authorname", author)
     form.append("authorcolor", color)
     submit(form, {
-        action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-        method: "post"
+      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
+      method: "post"
     })
   }
 
   return (
     <Popover
       isOpen={isPopoverOpen}
-      positions={['top', 'left', 'bottom', 'right']} // preferred positions by priority
-      content={ ({ position, childRect, popoverRect }) =>
-        <ArrowContainer position={position} childRect={childRect} popoverRect={popoverRect} arrowSize={10} arrowColor="white">
-          <div className="card bg-gray-100/50 dark:bg-gray-800/40 backdrop-blur max-w-lg pr-10">
+      positions={["top", "left", "bottom", "right"]} // preferred positions by priority
+      content={({ position, childRect, popoverRect }) => (
+        <ArrowContainer
+          position={position}
+          childRect={childRect}
+          popoverRect={popoverRect}
+          arrowSize={10}
+          arrowColor="white"
+        >
+          <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
             <HexColorPicker color={color} onChange={setColor} />
-            <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>Set color</button>
-            {repodata2.authorColors.get(authorColorToChange) ? 
-            <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>Use default color</button> : null}
-            <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)}/>
+            <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
+              Set color
+            </button>
+            {repodata2.authorColors.get(authorColorToChange) ? (
+              <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
+                Use default color
+              </button>
+            ) : null}
+            <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)} />
           </div>
         </ArrowContainer>
-      }
+      )}
       onClickOutside={() => setIsPopoverOpen(false)}
     >
       <div

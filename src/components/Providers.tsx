@@ -34,15 +34,12 @@ export function Providers({ children, data }: ProvidersProps) {
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
 
-  const metricsData: MetricsData = useMemo(
-    () => {
-      console.time("metrics")
-      const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors)
-      console.timeEnd("metrics")
-      return res
-    },
-    [data]
-  )
+  const metricsData: MetricsData = useMemo(() => {
+    console.time("metrics")
+    const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors)
+    console.timeEnd("metrics")
+    return res
+  }, [data])
 
   const commitTabValue = useMemo(
     () => ({

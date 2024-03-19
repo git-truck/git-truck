@@ -40,11 +40,11 @@ export function DetailsCard({
   const { setPath, path } = usePath()
   const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
-  const [commitCount, setCommitCount] = useState<number|null>(null)
+  const [commitCount, setCommitCount] = useState<number | null>(null)
   const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
 
   const existingCommitCount = repodata2.commitCounts.get(slicedPath)
-  
+
   const commitFetcher = useFetcher()
 
   useEffect(() => {
@@ -73,14 +73,14 @@ export function DetailsCard({
 
   // const commitCount = clickedObject?.type === "blob" ? repodata2.commitCounts.get(slicedPath) : 8
 
-  const [authorContributions, setAuthorContributions] = useState<{author: string, contribs: number}[] | null>(null)
+  const [authorContributions, setAuthorContributions] = useState<{ author: string; contribs: number }[] | null>(null)
   const contribSum = useMemo(() => {
     if (!authorContributions) return 0
     return authorContributions.reduce((acc, curr) => acc + curr.contribs, 0)
   }, [authorContributions])
 
   const fetcher = useFetcher()
-  
+
   useEffect(() => {
     const searchParams = new URLSearchParams()
     searchParams.set("branch", repodata2.branch)
@@ -93,7 +93,7 @@ export function DetailsCard({
 
   useEffect(() => {
     if (fetcher.state === "idle") {
-      const data = (fetcher.data ?? []) as {author: string, contribs: number}[]
+      const data = (fetcher.data ?? []) as { author: string; contribs: number }[]
       setAuthorContributions(data)
     }
   }, [fetcher])
@@ -161,10 +161,10 @@ export function DetailsCard({
         <MenuItem title="General">
           <div className="flex grow flex-col gap-2">
             <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
-              <CommitsEntry count={commitCount ?? 0}/>
+              <CommitsEntry count={commitCount ?? 0} />
               {isBlob ? (
                 <>
-                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} /> 
+                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
                   <LastchangedEntry epoch={repodata2.lastChanged.get(slicedPath)} />
                 </>
               ) : (
@@ -173,7 +173,7 @@ export function DetailsCard({
               <PathEntry path={clickedObject.path} />
             </div>
             <div className="card bg-white/70 text-black">
-              <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher}/>
+              <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
             </div>
             <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
               <Icon path={mdiAccountMultiple} />
@@ -237,7 +237,7 @@ export function DetailsCard({
           </div>
         </MenuItem>
         <MenuItem title="Commits">
-          <CommitsCard commitCount={commitCount ?? 0}/>
+          <CommitsCard commitCount={commitCount ?? 0} />
         </MenuItem>
       </MenuTab>
     </div>
@@ -358,7 +358,11 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
 
 const authorCutoff = 2
 
-function AuthorDistribution(props: { authors: {author: string, contribs: number}[] | null , contribSum: number, fetcher: Fetcher}) {
+function AuthorDistribution(props: {
+  authors: { author: string; contribs: number }[] | null
+  contribSum: number
+  fetcher: Fetcher
+}) {
   const authorDistributionExpandId = useId()
 
   const [collapsed, setCollapsed] = useState<boolean>(true)
@@ -375,43 +379,50 @@ function AuthorDistribution(props: { authors: {author: string, contribs: number}
         ) : null}
       </div>
       <div className="grid grid-cols-[1fr,auto] gap-1">
-        { props.fetcher.state !== "idle" ? (
+        {props.fetcher.state !== "idle" ? (
           <p>Loading authors...</p>
-        )
-        : (
-        <>
-          {authorsAreCutoff ? (
-            <>
-              <AuthorDistFragment show={true} items={props.authors?.slice(0, authorCutoff) ?? []} contribSum={props.contribSum} />
-              <AuthorDistFragment show={!collapsed} items={props.authors?.slice(authorCutoff) ?? []} contribSum={props.contribSum} />
-              {collapsed ? (
-                <button
-                  className="text-left text-xs opacity-70 hover:opacity-100"
-                  onClick={() => setCollapsed(!collapsed)}
-                >
-                  + {(props.authors?.slice(authorCutoff) ?? []).length} more
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <>
-              {(props.authors ?? []).length > 0 && hasContributions(props.authors) ? (
-                <AuthorDistFragment show={true} items={props.authors ?? []} contribSum={props.contribSum} />
-              ) : (
-                <p>No authors found</p>
-              )}
-            </>
-          )}
-        </>
+        ) : (
+          <>
+            {authorsAreCutoff ? (
+              <>
+                <AuthorDistFragment
+                  show={true}
+                  items={props.authors?.slice(0, authorCutoff) ?? []}
+                  contribSum={props.contribSum}
+                />
+                <AuthorDistFragment
+                  show={!collapsed}
+                  items={props.authors?.slice(authorCutoff) ?? []}
+                  contribSum={props.contribSum}
+                />
+                {collapsed ? (
+                  <button
+                    className="text-left text-xs opacity-70 hover:opacity-100"
+                    onClick={() => setCollapsed(!collapsed)}
+                  >
+                    + {(props.authors?.slice(authorCutoff) ?? []).length} more
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {(props.authors ?? []).length > 0 && hasContributions(props.authors) ? (
+                  <AuthorDistFragment show={true} items={props.authors ?? []} contribSum={props.contribSum} />
+                ) : (
+                  <p>No authors found</p>
+                )}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
   )
 }
 
-function hasContributions(authors?: {author: string, contribs: number}[] | null) {
+function hasContributions(authors?: { author: string; contribs: number }[] | null) {
   if (!authors) return false
-  for (const {contribs} of authors) {
+  for (const { contribs } of authors) {
     if (contribs > 0) return true
   }
   return false

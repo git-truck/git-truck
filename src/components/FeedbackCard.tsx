@@ -31,10 +31,7 @@ export const FeedbackCard = memo(function FeedbackCard() {
           >
             Open an issue
           </GitHubButton>
-          {yearOfRat() ?
-        <p>Ratting time 🐀🧀</p>
-        : null
-      }
+          {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
         </div>
       </div>
     </div>

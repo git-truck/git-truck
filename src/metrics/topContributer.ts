@@ -19,7 +19,7 @@ export function setDominantAuthorColor(
   }
   const legend = cache.legend as PointLegendData
   const color = authorColors.get(dominantAuthor) ?? noEntryColor
-  
+
   cache.colormap.set(blob.path, color)
 
   if (legend.has(dominantAuthor)) {
