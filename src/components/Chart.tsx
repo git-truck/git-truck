@@ -449,6 +449,8 @@ function createPartitionedHiearchy(
       return cast.r >= cutOff
     })
     return bPartition
+  } else {
+    throw new Error("Unknown chart type: " + chartType)
   }
 }
 
