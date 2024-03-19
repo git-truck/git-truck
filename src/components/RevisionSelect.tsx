@@ -21,7 +21,7 @@ export function RevisionSelect({
   return (
     <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
       <Icon path={mdiSourceBranch} size={0.75} />
-      <select className={`input text-gray-800 ${className}`} {...props}>
+      <select className={`input bg-inherit text-inherit ${className}`} {...props}>
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>

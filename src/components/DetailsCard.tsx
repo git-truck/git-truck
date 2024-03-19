@@ -16,6 +16,7 @@ import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
 import { MenuItem, MenuTab } from "./MenuTab"
 import { CommitsCard } from "./CommitsCard"
+import { usePrefersLightMode } from "~/styling"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -96,6 +97,7 @@ export function DetailsCard({
       setAuthorContributions(data)
     }
   }, [fetcher])
+  const prefersLightMode = usePrefersLightMode()
 
   useEffect(() => {
     if (isProcessingHideRef.current) {
@@ -110,23 +112,23 @@ export function DetailsCard({
   }, [repodata2, setClickedObject])
 
   const [metricsData] = useMetrics()
-  const { backgroundColor, color, lightBackground } = useMemo(() => {
+  const { backgroundColor, lightBackground } = useMemo(() => {
     if (!clickedObject) {
       return {
         backgroundColor: null,
-        color: null,
-        lightBackground: true
+        color: null
       }
     }
     const colormap = metricsData.get(metricType)?.colormap
-    const backgroundColor = colormap?.get(clickedObject.path) ?? ("#808080" as `#${string}`)
+    const backgroundColor =
+      colormap?.get(clickedObject.path) ?? ((prefersLightMode ? "#808080" : "#262626") as `#${string}`)
     const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
     return {
       backgroundColor: backgroundColor,
       color: color,
       lightBackground: color === "#000000"
     }
-  }, [clickedObject, metricsData, metricType])
+  }, [clickedObject, metricsData, metricType, prefersLightMode])
 
   if (!clickedObject) return null
   const isBlob = clickedObject.type === "blob"
@@ -134,18 +136,20 @@ export function DetailsCard({
   // TODO: handle binary file properly or remove the entry
   return (
     <div
-      className={clsx(className, "card flex flex-col gap-2 transition-colors")}
-      style={
-        color
-          ? {
-              backgroundColor: backgroundColor,
-              color: color
+      className={clsx(className, "card flex flex-col gap-2 transition-colors", {
+        "text-gray-100": !lightBackground,
+        "text-gray-800": lightBackground
+      })}
+      {...(backgroundColor
+        ? {
+            style: {
+              backgroundColor
             }
-          : {}
-      }
+          }
+        : {})}
     >
       <div className="flex">
-        <h2 className="card__title grid grid-cols-[auto,1fr,auto] gap-2">
+        <h2 className="card__title grid w-full grid-cols-[auto,1fr,auto] gap-2">
           <Icon path={clickedObject.type === "blob" ? mdiFile : mdiFolder} size="1.25em" />
           <span className="truncate" title={clickedObject.name}>
             {clickedObject.name}
@@ -153,7 +157,7 @@ export function DetailsCard({
           <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
         </h2>
       </div>
-      <MenuTab lightBackground={lightBackground}>
+      <MenuTab>
         <MenuItem title="General">
           <div className="flex grow flex-col gap-2">
             <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
@@ -171,13 +175,7 @@ export function DetailsCard({
             <div className="card bg-white/70 text-black">
               <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher}/>
             </div>
-            <button
-              className={clsx("btn", {
-                "btn--outlined--light": !lightBackground,
-                "btn--outlined": lightBackground
-              })}
-              onClick={showUnionAuthorsModal}
-            >
+            <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
               <Icon path={mdiAccountMultiple} />
               Group authors
             </button>
@@ -188,10 +186,7 @@ export function DetailsCard({
                 <Form className="w-max" method="post" action={location.pathname}>
                   <input type="hidden" name="ignore" value={clickedObject.path} />
                   <button
-                    className={clsx("btn", {
-                      "btn--outlined--light": !lightBackground,
-                      "btn--outlined": lightBackground
-                    })}
+                    className="btn btn--outlined"
                     type="submit"
                     disabled={state !== "idle"}
                     onClick={() => {
@@ -207,10 +202,7 @@ export function DetailsCard({
                   <Form className="w-max" method="post" action={location.pathname}>
                     <input type="hidden" name="ignore" value={`*.${extension}`} />
                     <button
-                      className={clsx("btn", {
-                        "btn--outlined--light": !lightBackground,
-                        "btn--outlined": lightBackground
-                      })}
+                      className="btn btn--outlined"
                       type="submit"
                       disabled={state !== "idle"}
                       onClick={() => {
@@ -228,10 +220,7 @@ export function DetailsCard({
                 <Form method="post" action={location.pathname}>
                   <input type="hidden" name="ignore" value={clickedObject.path} />
                   <button
-                    className={clsx("btn", {
-                      "btn--outlined--light": !lightBackground,
-                      "btn--outlined": lightBackground
-                    })}
+                    className="btn btn--outlined"
                     type="submit"
                     disabled={state !== "idle"}
                     onClick={() => {

@@ -8,16 +8,30 @@ import { Depth, type DepthType } from "~/metrics/chartDepth"
 export const Chart = {
   BUBBLE_CHART: "Bubble chart",
   TREE_MAP: "Tree map"
-}
+} as const
 
 export type ChartType = keyof typeof Chart
 
 export const Hierarchy = {
   NESTED: "Nested",
   FLAT: "Flat"
-}
+} as const
 
 export type HierarchyType = keyof typeof Hierarchy
+
+export const SortingMethods = {
+  DATE: "By date",
+  AUTHOR: "By author"
+}
+export type CommitSortingMethodsType = keyof typeof SortingMethods
+
+export const SortingOrders = (isDate: boolean) => {
+  return {
+    ASCENDING: isDate ? "Latest first" : "Ascending",
+    DESCENDING: isDate ? "Oldest first" : "Descending"
+  }
+}
+export type CommitSortingOrdersType = keyof typeof SortingOrders
 
 export type Options = {
   hasLoadedSavedOptions: boolean
@@ -25,6 +39,9 @@ export type Options = {
   chartType: ChartType
   depthType: DepthType
   hierarchyType: HierarchyType
+  commitSortingMethodsType: CommitSortingMethodsType
+  commitSortingOrdersType: CommitSortingOrdersType
+  commitSearch: string
   sizeMetric: SizeMetricType
   transitionsEnabled: boolean
   labelsVisible: boolean
@@ -39,6 +56,9 @@ export type OptionsContextType = Options & {
   setLabelsVisible: (labelsVisible: boolean) => void
   setDepthType: (depthType: DepthType) => void
   setHierarchyType: (hierarchyType: HierarchyType) => void
+  setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) => void
+  setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
+  setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
 }
 
@@ -59,6 +79,10 @@ const defaultOptions: Options = {
   depthType: Object.keys(Depth)[0] as DepthType,
   hierarchyType: Object.keys(Hierarchy)[0] as HierarchyType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
+  commitSortingMethodsType: Object.keys(SortingMethods)[0] as CommitSortingMethodsType,
+  // The parameter value is based on default sorting method - date (true) or author (false)
+  commitSortingOrdersType: Object.keys(SortingOrders(true))[0] as CommitSortingOrdersType,
+  commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
   renderCutoff: 2,
@@ -82,6 +106,15 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setHierarchyType: () => {
       throw new Error("No HiearchyTypeSetter provided")
+    },
+    setCommitSortingMethodsType: () => {
+      throw new Error("No CommitSortingMethodsTypeSetter provided")
+    },
+    setCommitSortingOrdersType: () => {
+      throw new Error("No CommitSortingOrdersTypeSetter provided")
+    },
+    setCommitSearch: () => {
+      throw new Error("No CommitSearchSetter provided")
     },
     setTransitionsEnabled: () => {
       throw new Error("No transitionsEnabledSetter provided")

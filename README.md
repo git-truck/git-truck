@@ -1,6 +1,6 @@
 # Git Truck 🚛 &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/git-truck/git-truck/blob/main/LICENSE) [![Git Truck on NPM](https://img.shields.io/npm/v/git-truck)](https://www.npmjs.com/git-truck)
 
-Git-Truck is a tool that provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://www.agileadvice.com/2005/05/15/agilemanagement/truck-factor/). 
+Git-Truck is a tool that provides you with a truckload of visualizations for your git repository, and helps you find out if your project has a good [truck factor](https://en.wikipedia.org/wiki/Bus_factor). 
 
 | Git Truck can help you figure out: | |
 |-|-|
@@ -92,12 +92,6 @@ You can also define files to ignore.
   "invalidateCache": true
 }
 ```
-
-### Very large repositories
-
-> [!TIP]
-> If the repository you intend to analyze is very large (300k+ commits), we recommend to increase the memory available to nodejs by setting the environment variable `NODE_OPTIONS` to `--max-old-space-size=4096` before starting Git Truck, otherwise analyzation might crash.
-> If your repository has more than 1 million commits, it is unlikely that Git Truck can successfully analyze it, even with higher memory limit.
 
 ## Star History
 

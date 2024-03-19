@@ -1,4 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import type { CommitDTO, GitLogEntry } from "~/analyzer/model"
 import { useEffect, useMemo, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
@@ -10,6 +12,7 @@ import { useData } from "~/contexts/DataContext"
 import { CloseButton, LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover, ArrowContainer } from 'react-tiny-popover'
+import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -23,6 +26,10 @@ interface CommitDistFragProps {
 function CommitDistFragment(props: CommitDistFragProps) {
   const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
   const [, authorColors] = useMetrics()
+  const { commitSortingOrdersType, commitSortingMethodsType } = useOptions()
+  const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
+  const isDefaultSortingOrdersSelected: boolean =
+    commitSortingOrdersType == Object.keys(SortingOrders(isDateSortingMethod))[0]
   const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
@@ -45,7 +52,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       titleLabels={true}
       multipleOpen={true}
       openByDefault={true}
-      items={items}
+      items={isDefaultSortingOrdersSelected ? items : items.reverse()}
     />
   )
 }
@@ -66,7 +73,7 @@ function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
   return (
     <div 
       title={`By: ${props.value.author}`}
-      className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre"
+      className="flex items-center gap-2 overflow-hidden overflow-ellipsis"
     >
     <LegendDot className="ml-1" dotColor={props.authorColor} authorColorToChange={props.value.author} />
     <Popover
@@ -91,11 +98,10 @@ function CommitListEntry(props: {value: CommitDTO, authorColor: string}) {
       }
       onClickOutside={() => setIsPopoverOpen(false)}
     >
-      <div className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre cursor-pointer hover:opacity-70">
-        <li onClick={() => setIsPopoverOpen(!isPopoverOpen)} className="font-bold opacity-80">
-          {props.value.message}
-        </li>
-      </div>
+      {/* TODO: fix ellipsis not working */}
+      <p onClick={() => setIsPopoverOpen(!isPopoverOpen)} className="whitespace-nowrap overflow-hidden overflow-ellipsis font-bold opacity-80 cursor-pointer hover:opacity-70">
+        {props.value.message}
+      </p>
     </Popover>
   </div>
   )
@@ -131,11 +137,6 @@ export function CommitHistory(props: {commitCount: number}) {
     setCommits(data)
   }, [fetcher])
 
-  const headerText = useMemo<string>(() => {
-    if (!clickedObject) return ""
-    return `Commit history`
-  }, [clickedObject, commits])
-
   if (!clickedObject) return null
 
   if (!commits) {
@@ -154,7 +155,7 @@ export function CommitHistory(props: {commitCount: number}) {
   return (
     <>
       <div className="flex justify-between">
-        <h3 className="font-bold">{headerText}</h3>
+        <h3 className="font-bold">Commit history</h3>
       </div>
       <div>
         <CommitDistFragment items={commits} count={commitShowCount}/>
@@ -179,7 +180,8 @@ export function CommitHistory(props: {commitCount: number}) {
 function sortCommits(items: CommitDTO[], method: SortCommitsMethods): { [key: string]: CommitDTO[] } {
   const cleanGroupItems: { [key: string]: CommitDTO[] } = {}
   switch (method) {
-    case "author":
+    // case AUTHOR
+    case Object.keys(SortingMethods)[1]:
       for (const commit of items) {
         const author: string = commit.author
         if (!cleanGroupItems[author]) {
@@ -188,7 +190,8 @@ function sortCommits(items: CommitDTO[], method: SortCommitsMethods): { [key: st
         cleanGroupItems[author].push(commit)
       }
       break
-    case "date":
+    // case DATE
+    case Object.keys(SortingMethods)[0]:
     default:
       for (const commit of items) {
         const date: string = dateFormatLong(commit.committertime)

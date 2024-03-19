@@ -19,13 +19,16 @@ export function setDominanceColor(blob: GitBlobObject, cache: MetricCache, autho
       legend.set("No authors", new PointInfo(noEntryColor, 0))
       cache.colormap.set(blob.path, noEntryColor)
       return
-      case 1:
+    case 1: {
       const color = authorColors.get(dominantAuthor ?? "") ?? noEntryColor
       legend.set(dominantAuthor ?? "", new PointInfo(color, 2))
       cache.colormap.set(blob.path, color)
+    }
       return
-    default:
+    default: {
       legend.set("Multiple authors", new PointInfo(multipleAuthorsColor, 1))
       cache.colormap.set(blob.path, multipleAuthorsColor)
+    }
+    }
   }
-}
+

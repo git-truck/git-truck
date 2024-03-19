@@ -12,7 +12,6 @@ import {
   bubblePadding,
   estimatedLetterHeightForDirText,
   estimatedLetterWidth,
-  searchMatchColor,
   circleTreeTextOffsetY,
   treemapBlobTextOffsetX,
   treemapBlobTextOffsetY,
@@ -33,6 +32,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import type { RepoData2 } from "~/routes/$repo.$"
 import ignore, { type Ignore } from "ignore"
+import { cn, usePrefersLightMode } from "~/styling"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -129,7 +129,7 @@ export const Chart = memo(function Chart({
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
         key={`svg|${size.width}|${size.height}`}
-        className={clsx("grid h-full w-full place-items-center", {
+        className={clsx("grid h-full w-full place-items-center stroke-gray-300 dark:stroke-gray-700", {
           "cursor-zoom-out": path.includes("/")
         })}
         xmlns="http://www.w3.org/2000/svg"
@@ -205,7 +205,6 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
-      stroke: isSearchMatch ? searchMatchColor : "transparent",
       strokeWidth: "1px",
       fill: isBlob(d.data)
         ? metricsData.get(metricType)?.colormap.get(d.data.path) ?? "grey"
@@ -237,16 +236,15 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       }
     }
     return props
-  }, [d, isSearchMatch, metricsData, metricType, chartType])
+  }, [d, metricsData, metricType, chartType])
 
   return (
     <rect
       {...commonProps}
-      className={clsx({
+      className={cn(isSearchMatch ? "stroke-red-500" : isBlob(d.data) ? "stroke-transparent" : "", {
         "cursor-pointer": isBlob(d.data),
-        "transition-all duration-1000 ease-in-out": transitionsEnabled,
-        "animate-stroke-pulse": isSearchMatch,
-        "stroke-black/20": isTree(d.data)
+        "transition-all duration-500 ease-in-out": transitionsEnabled,
+        "animate-stroke-pulse": isSearchMatch
       })}
     />
   )
@@ -274,7 +272,7 @@ function collapseText({
   } else {
     const datum = d as HierarchyRectangularNode<GitObject>
     textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
-    textIsTooTall = (text: string) => {
+    textIsTooTall = () => {
       const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
       return heightAvailable < estimatedLetterHeightForDirText
     }
@@ -317,6 +315,7 @@ function collapseText({
 function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
   const [metricsData] = useMetrics()
   const { metricType } = useOptions()
+  const prefersLightMode = usePrefersLightMode()
   const isBubbleChart = isCircularNode(d)
 
   if (children === null) return null
@@ -340,7 +339,9 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
 
   const fillColor = isBlob(d.data)
     ? getTextColorFromBackground(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
-    : "#333"
+    : prefersLightMode
+    ? "#333"
+    : "#fff"
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
@@ -352,20 +353,18 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
   return (
     <>
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
-      {isTree(d.data) ? (
+      {isTree(d.data) && isBubbleChart ? (
         <text
-          className={clsx("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
-            "stroke-white": isBubbleChart
-          })}
+          className="pointer-events-none fill-none stroke-gray-100 stroke-[7px] font-mono text-sm font-bold dark:stroke-gray-800"
           strokeLinecap="round"
         >
           <textPath {...textPathBaseProps}>{children}</textPath>
         </text>
       ) : null}
-      <text fill={fillColor} className="pointer-events-none">
+      <text fill={fillColor} className="pointer-events-none stroke-none">
         <textPath
           {...textPathBaseProps}
-          className={clsx("font-mono", {
+          className={clsx("stroke-none font-mono", {
             "text-sm font-bold": isTree(d.data),
             "text-xs": !isTree(d.data)
           })}
@@ -424,9 +423,9 @@ function createPartitionedHiearchy(
     }
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
-  switch (chartType) {
-    case "TREE_MAP":
-      const treeMapPartition = treemap<GitObject>()
+
+  if (chartType === "TREE_MAP") {
+    const treeMapPartition = treemap<GitObject>()
         .tile(treemapBinary)
         .size([size.width, size.height])
         .paddingInner(2)
@@ -441,9 +440,9 @@ function createPartitionedHiearchy(
       })
 
       return tmPartition
-
-    case "BUBBLE_CHART":
-      const bubbleChartPartition = pack<GitObject>()
+  }
+  if (chartType === "BUBBLE_CHART") {
+    const bubbleChartPartition = pack<GitObject>()
         .size([size.width, size.height - estimatedLetterHeightForDirText])
         .padding(bubblePadding)
       const bPartition = bubbleChartPartition(hiearchy)
@@ -452,10 +451,9 @@ function createPartitionedHiearchy(
         return cast.r >= cutOff
       })
       return bPartition
-    default:
-      throw Error("Invalid chart type")
   }
 }
+
 
 function filterTree(
   node: HierarchyNode<GitObject>,

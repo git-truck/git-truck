@@ -4,7 +4,13 @@ import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/routes/$repo.$"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import type { ChartType, HierarchyType, OptionsContextType } from "../contexts/OptionsContext"
+import type {
+  ChartType,
+  CommitSortingMethodsType,
+  CommitSortingOrdersType,
+  HierarchyType,
+  OptionsContextType
+} from "../contexts/OptionsContext"
 import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
@@ -82,6 +88,21 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           hierarchyType
         })),
+      setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSortingMethodsType
+        })),
+      setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSortingOrdersType
+        })),
+      setCommitSearch: (commitSearch: string) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          commitSearch
+        })),
       setSizeMetricType: (sizeMetric: SizeMetricType) =>
         setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),
       setHoveredBlob: (blob: GitBlobObject | null) =>
@@ -108,7 +129,7 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
-        })),
+        }))
     }),
     [options]
   )
@@ -117,7 +138,7 @@ export function Providers({ children, data }: ProvidersProps) {
     let canceled = false
     // Persist options to local storage
     if (options) {
-      requestAnimationFrame(() => {
+      requestIdleCallback(() => {
         if (canceled) return
         localStorage.setItem(OPTIONS_LOCAL_STORAGE_KEY, JSON.stringify(options))
       })

@@ -21,14 +21,12 @@ export const HiddenFiles = memo(function HiddenFiles() {
 
   return (
     <div className="card flex flex-col gap-2">
-      <h2
-        className="card__title cursor-pointer justify-start gap-2 hover:opacity-70"
-        onClick={() => setExpanded(!expanded)}
-        role="button"
-      >
-        <Icon path={mdiEyeOff} size="1.25em" />
-        Hidden files ({repodata2.hiddenFiles.length})
-        <ChevronButton id={expandHiddenFilesButtonId} className="absolute right-2 top-2" open={expanded} />
+      <h2 className="card__title">
+        <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
+          <Icon path={mdiEyeOff} size="1.25em" />
+          Hidden files ({repodata2.hiddenFiles.length})
+          <ChevronButton id={expandHiddenFilesButtonId} className="absolute right-2 top-2" open={expanded} />
+        </button>
       </h2>
       {expanded ? (
         <div>
