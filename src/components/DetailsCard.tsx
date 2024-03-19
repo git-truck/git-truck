@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import type { GitObject, GitTreeObject } from "~/analyzer/model"

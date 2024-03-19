@@ -8,8 +8,8 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { GitObject, GitTreeObject, RenameEntry, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo, updateTruckConfig, openFile } from "~/analyzer/util.server"
+import type { GitObject, GitTreeObject, RenameEntry, Repository } from "~/analyzer/model"
+import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -35,8 +35,6 @@ import InstanceManager from "~/analyzer/InstanceManager"
 import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
-
-let invalidateCache = false
 
 export interface RepoData {
   repo: Repository
@@ -85,7 +83,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   await instance.loadRepoData()
 
-  invalidateCache = false
   const repo = await GitCaller.getRepoMetadata(path, false)
 
   if (!repo) {
@@ -220,7 +217,6 @@ export const action: ActionFunction = async ({ request, params }) => {
   const authorcolor = formData.get("authorcolor")
 
   if (refresh) {
-    invalidateCache = true
     return null
   }
 

@@ -1,10 +1,10 @@
-import { spawn } from "node:child_process"
-import { existsSync, promises as fs } from "node:fs"
+import { spawn, exec } from "node:child_process"
+import { promises as fs } from "node:fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
+import { resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject, TruckUserConfig, RenameEntry } from "./model"
+import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./model"
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
@@ -212,7 +212,7 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   try {
     const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
     if (configFileContents) currentConfig = JSON.parse(configFileContents)
-  } catch (e) {}
+  } catch (e) { /* empty */ }
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }

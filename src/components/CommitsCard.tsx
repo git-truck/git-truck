@@ -1,6 +1,6 @@
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { CommitHistory } from "./CommitHistory"
-import { CommitSettings } from "./CommitSettings"
+// import { CommitSettings } from "./CommitSettings"
 
 export function CommitsCard(props: { commitCount: number }) {
   const { clickedObject } = useClickedObject()

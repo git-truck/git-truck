@@ -83,7 +83,7 @@ export default class ServerInstance {
         currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
       }
       switch (child.type) {
-        case "tree":
+        case "tree": {
           const newTree: GitTreeObject = {
             type: "tree",
             path: newPath,
@@ -95,7 +95,8 @@ export default class ServerInstance {
           currTree.children.push(newTree)
 
           break
-        case "blob":
+        }
+        case "blob": {
           fileCount += 1
           const blob: GitBlobObject = {
             type: "blob",
@@ -106,6 +107,7 @@ export default class ServerInstance {
           }
           currTree.children.push(blob)
           break
+        }
       }
     }
 
