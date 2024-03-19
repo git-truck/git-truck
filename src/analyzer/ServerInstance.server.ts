@@ -220,7 +220,8 @@ export default class ServerInstance {
       log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
     }
     this.totalCommitCount = commitCount
-    const threadCount = Math.min(cpus().length > 4 ? 4 : 2, commitCount)
+    // const threadCount = Math.min(cpus().length > 4 ? 4 : 2, commitCount)
+    const threadCount = 2
     // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
     const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
     if (commitCount > 500_000)

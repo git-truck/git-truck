@@ -198,7 +198,7 @@ export default class DB {
     const res = await (
       await this.instance
     ).all(`
-      SELECT * FROM relevant_renames;
+      SELECT * FROM relevant_renames ORDER BY timestamp ASC;
     `)
     return res.map((row) => {
       return {

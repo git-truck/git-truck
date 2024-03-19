@@ -153,20 +153,21 @@ function overlaps(a: RenameEntry, b: RenameEntry) {
   )
 }
 
-function followRenames(renames: RenameEntry[]) {
+function followRenames(orderedRenames: RenameEntry[]) {
   let changedThisIteration = true
+  console.log("iteration")
   while (changedThisIteration) {
     changedThisIteration = false
-    for (const rename of renames) {
+    for (const rename of orderedRenames) {
+      console.log("loop", rename.timestamp)
       if (rename.toname === null) continue
-      const res = renames
-        .filter(
+      const nextRename = orderedRenames
+        .find(
           (other) => other.fromname !== null && rename.toname === other.fromname && rename.timestamp < other.timestamp
         )
-        .sort((a, b) => a.timestamp - b.timestamp)
-      if (res.length > 0) {
-        const nextRename = res[0]
+      if (nextRename) {
         if (nextRename.fromname === nextRename.toname) continue
+        console.log(rename, nextRename)
         changedThisIteration = true
         if (!rename.timestampEnd) {
           rename.timestampEnd = nextRename.timestamp - 1
@@ -176,9 +177,9 @@ function followRenames(renames: RenameEntry[]) {
     }
   }
   // Add The first part of rename chain from time 0 up to the first rename
-  renames.sort((a, b) => a.timestamp - b.timestamp)
+  orderedRenames.sort((a, b) => a.timestamp - b.timestamp)
   const toAdd = new Map<string, RenameEntry>()
-  for (const rename of renames) {
+  for (const rename of orderedRenames) {
     if (rename.fromname === null) continue
     const inMap = toAdd.get(rename.fromname)
     if (!inMap) {
@@ -189,15 +190,15 @@ function followRenames(renames: RenameEntry[]) {
         timestamp: 0,
         timestampEnd: rename.timestamp - 1
       }
-      const existing = renames.find((r) => r.toname === newObject.toname && overlaps(newObject, r))
+      const existing = orderedRenames.find((r) => r.toname === newObject.toname && overlaps(newObject, r))
       if (!existing) {
         toAdd.set(rename.fromname, newObject)
       }
     }
   }
 
-  renames.push(...toAdd.values())
-  return renames.filter((r) => r.originalToName !== r.toname)
+  orderedRenames.push(...toAdd.values())
+  return orderedRenames.filter((r) => r.originalToName !== r.toname)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
