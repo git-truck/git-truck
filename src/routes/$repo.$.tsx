@@ -35,6 +35,7 @@ import InstanceManager from "~/analyzer/InstanceManager"
 import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
+import BarChart from "~/components/BarChart"
 
 export interface RepoData {
   repo: Repository
@@ -68,6 +69,7 @@ export interface RepoData2 {
   timerange: [number, number]
   colorSeed: string | null
   authorColors: Map<string, `#${string}`>
+  commitCountPerDay: {date: string, count: number}[]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -137,7 +139,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     branch,
     timerange,
     colorSeed,
-    authorColors: await instance.db.getAuthorColors()
+    authorColors: await instance.db.getAuthorColors(),
+    commitCountPerDay: await instance.db.getCommitCountPerTime(timerange)
   }
   return typedjson<RepoData>({
     repo,
@@ -155,11 +158,9 @@ function overlaps(a: RenameEntry, b: RenameEntry) {
 
 function followRenames(orderedRenames: RenameEntry[]) {
   let changedThisIteration = true
-  console.log("iteration")
   while (changedThisIteration) {
     changedThisIteration = false
     for (const rename of orderedRenames) {
-      console.log("loop", rename.timestamp)
       if (rename.toname === null) continue
       const nextRename = orderedRenames
         .find(
@@ -167,7 +168,6 @@ function followRenames(orderedRenames: RenameEntry[]) {
         )
       if (nextRename) {
         if (nextRename.fromname === nextRename.toname) continue
-        console.log(rename, nextRename)
         changedThisIteration = true
         if (!rename.timestampEnd) {
           rename.timestampEnd = nextRename.timestamp - 1
@@ -177,7 +177,6 @@ function followRenames(orderedRenames: RenameEntry[]) {
     }
   }
   // Add The first part of rename chain from time 0 up to the first rename
-  orderedRenames.sort((a, b) => a.timestamp - b.timestamp)
   const toAdd = new Map<string, RenameEntry>()
   for (const rename of orderedRenames) {
     if (rename.fromname === null) continue
@@ -416,7 +415,10 @@ export default function Repo() {
             <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
           </header>
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
-          <TimeSlider />
+          <div className="flex flex-col">
+            <TimeSlider />
+            <BarChart />
+          </div>
         </main>
 
         <aside

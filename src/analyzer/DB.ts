@@ -455,6 +455,26 @@ export default class DB {
     `)
   }
 
+  private getTimeStringFormat(timerange: [number, number]) {
+    const durationDays = (timerange[1] - timerange[0]) / (60 * 60 * 24)
+    if (durationDays < 150) return ['%a, %-d %B %Y', 'day']
+    if (durationDays < 1000) return ['Week %V %Y', 'week']
+    if (durationDays < 4000) return ['%B %Y', 'month']
+    return ['%Y', 'year']
+  }
+
+  public async getCommitCountPerTime(timerange: [number, number]) {
+    const [query, timeUnit] = this.getTimeStringFormat(timerange)
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT strftime(date, '${query}') as timestring, count(*) AS count FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date FROM commits) GROUP BY date ORDER BY date ASC;
+    `)
+    return res.map(x => {
+      return { date: x["timestring"] as string, count: Number(x["count"])}
+    })
+  }
+
   public async updateColorSeed(seed: string) {
     await (
       await this.instance
