@@ -463,6 +463,7 @@ export default class DB {
     return ['%Y', 'year']
   }
 
+  // TODO: add dates/months/weeks/years that have 0 commits
   public async getCommitCountPerTime(timerange: [number, number]) {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
     const res = await (
