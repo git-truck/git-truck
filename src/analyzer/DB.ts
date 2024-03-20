@@ -23,8 +23,8 @@ export default class DB {
     private repo: string,
     private branch: string
   ) {
-    this.repoSanitized = repo.replace(/\W/g, "_")
-    this.branchSanitized = branch.replace(/\W/g, "_")
+    this.repoSanitized = repo.replace(/\W/g, "_") + "_"
+    this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
     this.instance = DB.init(dbPath)
   }
@@ -78,6 +78,7 @@ export default class DB {
         author VARCHAR,
         color VARCHAR
       );
+      CREATE INDEX IF NOT EXISTS commitstime ON commits(committertime);
     `)
   }
 
@@ -92,8 +93,7 @@ export default class DB {
 
       CREATE OR REPLACE VIEW filechanges_commits AS
       SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime, c.message, c.body FROM
-      filechanges f JOIN commits_unioned c on f.commithash = c.hash
-      WHERE c.committertime BETWEEN ${start} AND ${end};
+      filechanges f JOIN commits_unioned c on f.commithash = c.hash;
 
       CREATE OR REPLACE VIEW processed_renames AS
       SELECT 
