@@ -418,7 +418,6 @@ export default class DB {
     `)
     const num = Number(res[0]["count"])
     const val = num > 0
-    console.log("prevcomplete", res, num, val, res2)
     return val
   }
 
