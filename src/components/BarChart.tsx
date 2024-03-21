@@ -3,6 +3,7 @@ import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
 import { useComponentSize } from "~/hooks"
 
+// TODO: this causes this -> Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format.
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
   const {repodata2} = useData()
