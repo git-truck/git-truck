@@ -213,6 +213,15 @@ export default class ServerInstance {
   }
 
   public async loadRepoData() {
+    
+    let commitCount = await this.gitCaller.getCommitCount()
+    if (await this.db.hasCompletedPreviously()) {
+      const latestCommit = await this.db.getLatestCommitHash()
+      commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
+      log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
+    }
+
+    if (commitCount < 1) return
     const quotePathDefaultValue = await this.gitCaller.getDefaultGitSettingValue("core.quotepath")
     await this.gitCaller.setGitSetting("core.quotePath", "off")
     const renamesDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renames")
@@ -220,12 +229,6 @@ export default class ServerInstance {
     const renameLimitDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renameLimit")
     await this.gitCaller.setGitSetting("diff.renameLimit", "1000000")
 
-    let commitCount = await this.gitCaller.getCommitCount()
-    if (await this.db.hasCompletedPreviously()) {
-      const latestCommit = await this.db.getLatestCommitHash()
-      commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
-      log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
-    }
     this.totalCommitCount = commitCount
     // const threadCount = Math.min(cpus().length > 4 ? 4 : 2, commitCount)
     const threadCount = 2
