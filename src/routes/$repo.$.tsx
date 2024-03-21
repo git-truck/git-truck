@@ -106,7 +106,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const renames = await instance.db.getCurrentRenames()
   console.time("rename")
-  const followedRenames = followRenames(renames)
+  const followedRenames = instance.followRenames(renames)
   await instance.db.replaceTemporaryRenames(followedRenames)
   console.timeEnd("rename")
   console.time("updateCache")
@@ -156,57 +156,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     gitTruckInfo: await getGitTruckInfo(),
     repodata2
   })
-}
-
-function overlaps(a: RenameEntry, b: RenameEntry) {
-  return (
-    (a.timestamp <= b.timestamp && (a.timestampEnd ?? Number.MAX_VALUE) >= b.timestamp) ||
-    (b.timestamp <= a.timestamp && (b.timestampEnd ?? Number.MAX_VALUE) >= a.timestamp)
-  )
-}
-
-function followRenames(orderedRenames: RenameEntry[]) {
-  let changedThisIteration = true
-  while (changedThisIteration) {
-    changedThisIteration = false
-    for (const rename of orderedRenames) {
-      if (rename.toname === null) continue
-      const nextRename = orderedRenames
-        .find(
-          (other) => other.fromname !== null && rename.toname === other.fromname && rename.timestamp < other.timestamp
-        )
-      if (nextRename) {
-        if (nextRename.fromname === nextRename.toname) continue
-        changedThisIteration = true
-        if (!rename.timestampEnd) {
-          rename.timestampEnd = nextRename.timestamp - 1
-        }
-        rename.toname = nextRename.toname
-      }
-    }
-  }
-  // Add The first part of rename chain from time 0 up to the first rename
-  const toAdd = new Map<string, RenameEntry>()
-  for (const rename of orderedRenames) {
-    if (rename.fromname === null) continue
-    const inMap = toAdd.get(rename.fromname)
-    if (!inMap) {
-      const newObject: RenameEntry = {
-        fromname: rename.fromname,
-        toname: rename.toname,
-        originalToName: rename.fromname,
-        timestamp: 0,
-        timestampEnd: rename.timestamp - 1
-      }
-      const existing = orderedRenames.find((r) => r.toname === newObject.toname && overlaps(newObject, r))
-      if (!existing) {
-        toAdd.set(rename.fromname, newObject)
-      }
-    }
-  }
-
-  orderedRenames.push(...toAdd.values())
-  return orderedRenames.filter((r) => r.originalToName !== r.toname)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
