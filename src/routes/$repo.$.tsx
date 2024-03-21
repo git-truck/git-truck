@@ -36,6 +36,7 @@ import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
+import { shouldUpdate } from "~/analyzer/RefreshPolicy"
 
 export interface RepoData {
   repo: Repository
@@ -100,32 +101,40 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw Error("Error loading repo")
   }
 
+  const reason = instance.prevInvokeReason
+  const prevRes = instance.prevResult
+  
   console.time("fileTree")
-  const treeAnalyzed = await instance.analyzeTree()
+  const filetree = prevRes && !shouldUpdate(reason, "filetree") ? {rootTree: prevRes.fileTree, fileCount: prevRes.fileCount} : await instance.analyzeTree()
   console.timeEnd("fileTree")
 
-  const renames = await instance.db.getCurrentRenames()
-  console.time("rename")
-  const followedRenames = instance.followRenames(renames)
-  await instance.db.replaceTemporaryRenames(followedRenames)
-  console.timeEnd("rename")
+  
+  if (!prevRes || shouldUpdate(reason, "rename")) {
+    console.time("rename")
+    const renames = await instance.db.getCurrentRenames()
+    const followedRenames = instance.followRenames(renames)
+    await instance.db.replaceTemporaryRenames(followedRenames)
+    console.timeEnd("rename")
+  }
+
   console.time("updateCache")
-  await instance.db.updateCachedResult()
+  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
   console.timeEnd("updateCache")
   console.time("dbQueries")
-  const dominantAuthors = await instance.db.getDominantAuthorPerFile()
-  const commitCounts = await instance.db.getCommitCountPerFile()
-  const lastChanged = await instance.db.getLastChangedPerFile()
-  const authorCounts = await instance.db.getAuthorCountPerFile()
-  const { maxCommitCount, minCommitCount } = await instance.db.getMaxAndMinCommitCount()
-  const { newestChangeDate, oldestChangeDate } = await instance.db.getNewestAndOldestChangeDates()
-  const authors = await instance.db.getAuthors()
-  const authorUnions = await instance.db.getAuthorUnions()
-  const fileTree = treeAnalyzed.rootTree
-  const fileCount = treeAnalyzed.fileCount
-  const hiddenFiles = await instance.db.getHiddenFiles()
-  const lastRunInfo = await instance.db.getLastRunInfo()
-  const colorSeed = await instance.db.getColorSeed()
+  const dominantAuthors = prevRes && !shouldUpdate(reason, "dominantAuthor") ? prevRes.dominantAuthors : await instance.db.getDominantAuthorPerFile()
+  const commitCounts = prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const lastChanged = prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
+  const authorCounts = prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } = prevRes && !shouldUpdate(reason, "maxMinCommitCount") ? {maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount} : await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } = prevRes && !shouldUpdate(reason, "newestOldestChangeDate") ? {newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate} :await instance.db.getNewestAndOldestChangeDates()
+  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
+  const authorUnions = prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions :await instance.db.getAuthorUnions()
+  const {rootTree, fileCount} = filetree
+  const hiddenFiles = prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await instance.db.getLastRunInfo()
+  const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
+  const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await instance.db.getAuthorColors()
+  const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
   console.timeEnd("dbQueries")
 
   const repodata2 = {
@@ -139,7 +148,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     oldestChangeDate,
     authors,
     authorUnions,
-    fileTree,
+    fileTree: rootTree,
     fileCount,
     hiddenFiles,
     lastRunInfo,
@@ -148,9 +157,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     timerange,
     colorSeed,
     selectedRange: selectedRange as [number, number],
-    authorColors: await instance.db.getAuthorColors(),
-    commitCountPerDay: await instance.db.getCommitCountPerTime(timerange)
+    authorColors,
+    commitCountPerDay
   }
+
+  instance.prevResult = repodata2
   return typedjson<RepoData>({
     repo,
     gitTruckInfo: await getGitTruckInfo(),
@@ -174,54 +185,66 @@ export const action: ActionFunction = async ({ request, params }) => {
   const authorname = formData.get("authorname")
   const authorcolor = formData.get("authorcolor")
 
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"])
+  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+  instance.prevInvokeReason = "unknown"
   if (refresh) {
+    instance.prevInvokeReason = "refresh"
     return null
   }
 
-  const args = await getArgs()
-  const path = resolve(args.path, params["repo"])
-
-  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
 
   if (ignore && typeof ignore === "string") {
+    instance.prevInvokeReason = "ignore"
     const hidden = await instance.db.getHiddenFiles()
     hidden.push(ignore)
     await instance.db.replaceHiddenFiles(hidden)
-
+    
     return null
   }
-
+  
   if (unignore && typeof unignore === "string") {
+    instance.prevInvokeReason = "unignore"
     const hidden = await instance.db.getHiddenFiles()
     await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
     return null
   }
-
+  
   if (typeof fileToOpen === "string") {
+    instance.prevInvokeReason = "open"
     openFile(instance.path, fileToOpen)
     return null
   }
-
+  
   if (typeof unionedAuthors === "string") {
+    instance.prevInvokeReason = "unionedAuthors"
     const json = JSON.parse(unionedAuthors) as string[][]
     await instance.db.replaceAuthorUnions(json)
     return null
   }
-
+  
   if (typeof rerollColors === "string") {
+    instance.prevInvokeReason = "rerollColors"
     const newSeed = randomstring.generate(6)
     await instance.db.updateColorSeed(newSeed)
     return null
   }
-
+  
   if (typeof timeseries === "string") {
     const split = timeseries.split("-")
     const start = Number(split[0])
     const end = Number(split[1])
+    if (start !== instance.prevResult?.selectedRange[0]) {
+      instance.prevInvokeReason = "timeseriesstart"
+    } else {
+      instance.prevInvokeReason = "timeseriesend"
+    }
     await instance.updateTimeInterval(start, end)
   }
-
+  
   if (typeof authorname === "string") {
+    instance.prevInvokeReason = "authorcolor"
     await instance.db.addAuthorColor(authorname, authorcolor as string)
   }
 
