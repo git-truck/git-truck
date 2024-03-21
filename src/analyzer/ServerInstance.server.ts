@@ -17,10 +17,10 @@ import { cpus } from "os"
 import { RepoData2 } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 
-export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart" | "Idle"
+export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
 export default class ServerInstance {
-  public analyzationStatus: AnalyzationStatus = "Idle"
+  public analyzationStatus: AnalyzationStatus = "Starting"
   private repoSanitized: string
   private branchSanitized: string
   public gitCaller: GitCaller
@@ -30,6 +30,7 @@ export default class ServerInstance {
   private fileTreeAsOf = "HEAD"
   public prevResult: RepoData2 | null = null
   public prevInvokeReason: InvocationReason = "unknown"
+  public prevProgress = ""
 
   constructor(
     public repo: string,
@@ -269,6 +270,7 @@ public followRenames(orderedRenames: RenameEntry[]) {
   }
 
   public async loadRepoData() {
+    this.analyzationStatus = "Starting"
     
     let commitCount = await this.gitCaller.getCommitCount()
     if (await this.db.hasCompletedPreviously()) {
@@ -324,5 +326,6 @@ public followRenames(orderedRenames: RenameEntry[]) {
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
     await this.db.setFinishTime()
+    this.analyzationStatus = "GeneratingChart"
   }
 }

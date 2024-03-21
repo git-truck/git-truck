@@ -9,7 +9,6 @@ import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
-import type { AnalyzationStatus } from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -23,7 +22,6 @@ export function sleep(ms: number) {
 
 export function runProcess(dir: string, command: string, args: string[]) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
-  console.log(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
       const prcs = spawn(command, args, {
@@ -217,8 +215,3 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
 
-export let analyzationStatus: AnalyzationStatus = "Starting"
-
-export function setAnalyzationStatus(newStatus: AnalyzationStatus) {
-  analyzationStatus = newStatus
-}
