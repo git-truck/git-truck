@@ -1,5 +1,5 @@
 import { useSubmit, useNavigation } from "@remix-run/react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { SliderItem, GetHandleProps, GetTrackProps } from "react-compound-slider"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
@@ -116,9 +116,11 @@ export default function TimeSlider() {
   }
 
   const { repodata2 } = useData()
-  const { timerange } = repodata2
+  const { timerange, selectedRange } = repodata2
   const submit = useSubmit()
-  const [range, setRange] = useState(timerange)
+  const [range, setRange] = useState(selectedRange)
+  const [chosenRange, setChosenRange] = useState(range)
+  
   const selectedStartDate = useMemo(() => new Date(range[0] * 1000), [range])
   const selectedEndDate = useMemo(() => new Date(range[1] * 1000), [range])
   const percentageStart = useMemo(
@@ -133,6 +135,16 @@ export default function TimeSlider() {
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
+  // TODO: fix this does 2 fetches on first load
+  useEffect(() => {
+    const form = new FormData()
+    form.append("timeseries", `${chosenRange[0]}-${chosenRange[1]}`)
+    submit(form, {
+      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
+      method: "post"
+    })
+  }, [chosenRange])
+
   return (
     <div style={{ height: 60, width: "100%" }}>
       <Slider
@@ -142,12 +154,7 @@ export default function TimeSlider() {
         rootStyle={sliderStyle}
         onUpdate={(e) => setRange([...e] as [number, number])}
         onChange={() => {
-          const form = new FormData()
-          form.append("timeseries", `${range[0]}-${range[1]}`)
-          submit(form, {
-            action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-            method: "post"
-          })
+          setChosenRange(range)
         }}
         values={range}
         disabled={disabled}

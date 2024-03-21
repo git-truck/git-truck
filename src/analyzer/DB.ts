@@ -9,13 +9,14 @@ export default class DB {
   private instance: Promise<Database>
   private repoSanitized: string
   private branchSanitized: string
+  public selectedRange: [number, number]|null = null
 
   private static async init(dbPath: string) {
     const dir = dirname(dbPath)
     if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
     const db = await Database.create(dbPath, { temp_directory: dir })
     await this.initTables(db)
-    await this.initViews(db)
+    await this.initViews(db, 0, 1_000_000_000_000)
     return db
   }
 
@@ -82,9 +83,10 @@ export default class DB {
     `)
   }
 
-  private static async initViews(db: Database, timeSeriesStart?: number, timeSeriesEnd?: number) {
-    const start = !timeSeriesStart || Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
-    const end = !timeSeriesEnd || Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
+  private static async initViews(db: Database, timeSeriesStart: number, timeSeriesEnd: number) {
+    const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
+    const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
+
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime, c.body, c.message FROM
@@ -137,6 +139,7 @@ export default class DB {
   }
 
   public async updateTimeInterval(start: number, end: number) {
+    this.selectedRange = [start, end]
     await DB.initViews(await this.instance, start, end)
   }
 
@@ -185,7 +188,16 @@ export default class DB {
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
   }
 
-  public async getTimeRange() {
+  public async getCommitTimeAtIndex(idx: number) {
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT committertime FROM commits ORDER BY committertime DESC OFFSET ${idx} LIMIT 1;
+    `)
+    return res.length > 0 ? Number(res[0]["committertime"]) : 0
+  }
+
+  public async getOverallTimeRange() {
     const res = await (
       await this.instance
     ).all(`
@@ -399,7 +411,15 @@ export default class DB {
     ).all(`
       SELECT count(*) as count FROM metadata WHERE field = 'finished';
     `)
-    return res[0]["count"] > 0
+    const res2 = await (
+      await this.instance
+    ).all(`
+      SELECT * FROM metadata WHERE field = 'finished';
+    `)
+    const num = Number(res[0]["count"])
+    const val = num > 0
+    console.log("prevcomplete", res, num, val, res2)
+    return val
   }
 
   public async getAuthors() {

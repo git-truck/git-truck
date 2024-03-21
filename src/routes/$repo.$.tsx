@@ -70,6 +70,7 @@ export interface RepoData2 {
   colorSeed: string | null
   authorColors: Map<string, `#${string}`>
   commitCountPerDay: {date: string, count: number}[]
+  selectedRange: [number, number]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -84,6 +85,14 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   await instance.loadRepoData()
+  
+  const timerange = await instance.db.getOverallTimeRange()
+  let selectedRange = instance.db.selectedRange
+  if (!selectedRange) {
+    const newStart = await instance.db.getCommitTimeAtIndex(30000)
+    await instance.updateTimeInterval(newStart, timerange[1])
+    selectedRange = instance.db.selectedRange
+  }
 
   const repo = await GitCaller.getRepoMetadata(path, false)
 
@@ -116,7 +125,6 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const fileCount = treeAnalyzed.fileCount
   const hiddenFiles = await instance.db.getHiddenFiles()
   const lastRunInfo = await instance.db.getLastRunInfo()
-  const timerange = await instance.db.getTimeRange()
   const colorSeed = await instance.db.getColorSeed()
   console.timeEnd("dbQueries")
 
@@ -139,6 +147,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     branch,
     timerange,
     colorSeed,
+    selectedRange: selectedRange as [number, number],
     authorColors: await instance.db.getAuthorColors(),
     commitCountPerDay: await instance.db.getCommitCountPerTime(timerange)
   }
