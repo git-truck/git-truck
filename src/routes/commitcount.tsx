@@ -3,7 +3,6 @@ import invariant from "tiny-invariant"
 import InstanceManager from "~/analyzer/InstanceManager"
 import { removeFirstPart } from "~/util"
 
-// TODO use this to show commitcount for folder, and fix "show more commits" button
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const branch = url.searchParams.get("branch")

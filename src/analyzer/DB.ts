@@ -431,7 +431,6 @@ export default class DB {
   }
 
   public async getNewestAndOldestChangeDates() {
-    // TODO: filter out files no longer in file tree
     const res = await (
       await this.instance
     ).all(`
