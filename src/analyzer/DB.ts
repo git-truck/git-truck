@@ -79,7 +79,15 @@ export default class DB {
         author VARCHAR,
         color VARCHAR
       );
+    `)
+  }
+
+  public async createIndexes() {
+    await (
+      await this.instance
+    ).all(`
       CREATE INDEX IF NOT EXISTS commitstime ON commits(committertime);
+      CREATE INDEX IF NOT EXISTS renamestime ON renames(timestamp);
     `)
   }
 
