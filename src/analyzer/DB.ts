@@ -4,6 +4,7 @@ import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { DBInserter } from "./DBInserter"
+import { tableFromJSON, tableToIPC } from "apache-arrow"
 
 export default class DB {
   private instance: Promise<Database>
@@ -17,6 +18,7 @@ export default class DB {
     const db = await Database.create(dbPath, { temp_directory: dir })
     await this.initTables(db)
     await this.initViews(db, 0, 1_000_000_000_000)
+    await db.exec(`INSTALL arrow; LOAD arrow;`)
     return db
   }
 
@@ -553,6 +555,17 @@ export default class DB {
       this.instance
     )
 
+    console.time("newInsert")
+    const commitList = [...commits.values()].map(c => {
+      return { hash: c.hash, author: c.author, committertime: c.committertime, authortime: c.authortime, body: c.body, message: c.message}
+    })
+    
+    const arrowTable = tableFromJSON(commitList)
+    const d = await this.instance
+    await d.register_buffer("jsonDataTable", [tableToIPC(arrowTable)], true)
+    console.timeEnd("newInsert")
+    
+    console.time("oldInsert")
     for (const [, commit] of commits) {
       await commitInserter.addRow(
         commit.hash,
@@ -562,11 +575,12 @@ export default class DB {
         commit.body,
         commit.message
       )
-      for (const change of commit.fileChanges) {
-        await fileChangeInserter.addRow(commit.hash, change.contribs, change.path)
-      }
+      // for (const change of commit.fileChanges) {
+        //   await fileChangeInserter.addRow(commit.hash, change.contribs, change.path)
+      // }
     }
     await commitInserter.finalize()
+    console.timeEnd("oldInsert")
     await fileChangeInserter.finalize()
   }
 }
