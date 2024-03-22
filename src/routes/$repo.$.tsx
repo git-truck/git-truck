@@ -8,7 +8,7 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { GitObject, GitTreeObject, RenameEntry, Repository } from "~/analyzer/model"
+import type { GitObject, GitTreeObject, Repository } from "~/analyzer/model"
 import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -111,9 +111,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   
   if (!prevRes || shouldUpdate(reason, "rename")) {
     console.time("rename")
-    const renames = await instance.db.getCurrentRenames()
-    const followedRenames = instance.followRenames(renames)
-    await instance.db.replaceTemporaryRenames(followedRenames)
+    const rawRenames = await instance.db.getCurrentRenameIntervals()
+    const files = await instance.db.getFiles()
+    const renameChains = instance.rename(rawRenames, files)
+    const flattenedRenames = instance.flattenChains(renameChains)
+    await instance.db.replaceTemporaryRenames(flattenedRenames)
     console.timeEnd("rename")
   }
 

@@ -1,5 +1,5 @@
 import { Database } from "duckdb-async"
-import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry } from "./model"
+import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
@@ -169,7 +169,7 @@ export default class DB {
     await inserter.finalize()
   }
 
-  public async replaceTemporaryRenames(renames: RenameEntry[]) {
+  public async replaceTemporaryRenames(renames: RenameInterval[]) {
     await (
       await this.instance
     ).all(`
@@ -183,7 +183,7 @@ export default class DB {
     )
 
     for (const rename of renames)
-      await inserter.addRow(rename.originalToName, rename.toname, rename.timestamp, rename.timestampEnd ?? null)
+      await inserter.addRow(rename.fromname, rename.toname, rename.timestampstart, rename.timestampend)
     await inserter.finalize()
   }
 
@@ -214,19 +214,18 @@ export default class DB {
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
 
-  public async getCurrentRenames() {
-    const res = await (
-      await this.instance
-    ).all(`
-      SELECT * FROM relevant_renames ORDER BY timestamp ASC;
+
+  public async getCurrentRenameIntervals() {
+    const res = await (await this.instance).all(`
+        SELECT * FROM relevant_renames ORDER BY timestamp DESC;
     `)
     return res.map((row) => {
-      return {
-        fromname: row["fromname"] as string,
-        toname: row["toname"] as string,
-        timestamp: Number(row["timestamp"]),
-        originalToName: row["toname"] as string
-      } as RenameEntry
+        return {
+            fromname: row["fromname"] as string|null,
+            toname: row["toname"] as string|null,
+            timestampstart: 0,
+            timestampend: Number(row["timestamp"]),
+        } as RenameInterval
     })
   }
 
@@ -400,6 +399,15 @@ export default class DB {
       if (file.type === "blob") await inserter.addRow(file.path)
     }
     await inserter.finalize()
+  }
+
+  public async getFiles() {
+    const res = await (
+      await this.instance
+    ).all(`
+      FROM files;
+    `)
+    return res.map(row => row["path"] as string)
   }
 
   public async getLatestCommitHash(beforeTime?: number) {

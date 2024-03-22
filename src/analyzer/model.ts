@@ -137,6 +137,13 @@ export interface RenameEntry {
   timestampEnd?: number
 }
 
+export interface RenameInterval {
+  fromname: string | null
+  toname: string | null
+  timestampstart: number
+  timestampend: number
+}
+
 export interface FileModification {
   path: string
   timestamp: number
