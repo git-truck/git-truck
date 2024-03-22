@@ -85,6 +85,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const repoName = params["repo"]
 
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  // to avoid double identical fetch at first load, which it does for some reason
+  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+    return instance.prevResult
+  }
   await instance.loadRepoData()
   
   const timerange = await instance.db.getOverallTimeRange()
@@ -233,17 +237,24 @@ export const action: ActionFunction = async ({ request, params }) => {
     const split = timeseries.split("-")
     const start = Number(split[0])
     const end = Number(split[1])
+
     if (start !== instance.prevResult?.selectedRange[0]) {
       instance.prevInvokeReason = "timeseriesstart"
-    } else {
+    } else if (end !== instance.prevResult?.selectedRange[1]) {
       instance.prevInvokeReason = "timeseriesend"
+    } else {
+      instance.prevInvokeReason = "none"
+      return null
     }
+
     await instance.updateTimeInterval(start, end)
+    return null
   }
   
   if (typeof authorname === "string") {
     instance.prevInvokeReason = "authorcolor"
     await instance.db.addAuthorColor(authorname, authorcolor as string)
+    return null
   }
 
   return null

@@ -27,7 +27,8 @@ export type InvocationReason =
     "timeseriesstart"|
     "timeseriesend"|
     "authorcolor"|
-    "unknown"
+    "unknown"|
+    "none"
 
     // TODO: handle when start of range is increased, so renames do not need refresh
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
@@ -40,7 +41,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "timeseriesstart": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors"],
     "timeseriesend": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "filetree"],
     "authorcolor": ["authorColors"],
-    "unknown": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"]
+    "unknown": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
+    "none": []
 }
 
 export function shouldUpdate(reason: InvocationReason, item: DataItem) {
