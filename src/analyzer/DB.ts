@@ -561,9 +561,21 @@ export default class DB {
     })
     
     const arrowTable = tableFromJSON(commitList)
-    const d = await this.instance
-    await d.register_buffer("jsonDataTable", [tableToIPC(arrowTable)], true)
+    await (await this.instance).register_buffer("temp_commits", [tableToIPC(arrowTable)], true)
+    await (await this.instance).exec(`INSERT INTO commits SELECT * FROM temp_commits;`)
+    await (await this.instance).unregister_buffer("temp_commits")
     console.timeEnd("newInsert")
+
+    console.time("jsonInsert")
+    const commitList2 = [...commits.values()].map(c => {
+      return { hash: c.hash, author: c.author, committertime: c.committertime, authortime: c.authortime, body: c.body, message: c.message}
+    })
+
+    const tmpPath = "/tmp/git-truck-cache/duckdb_/tempcommits.json"
+    await fs.writeFile(tmpPath, JSON.stringify(commitList2))
+    await (await this.instance).exec(`INSERT INTO commits SELECT * FROM '${tmpPath}'`)
+    await fs.rm(tmpPath)
+    console.timeEnd("jsonInsert")
     
     console.time("oldInsert")
     for (const [, commit] of commits) {
