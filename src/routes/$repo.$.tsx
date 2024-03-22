@@ -87,7 +87,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   // to avoid double identical fetch at first load, which it does for some reason
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
-    return instance.prevResult
+    return typedjson(instance.prevResult)
   }
   await instance.loadRepoData()
   
@@ -106,7 +106,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
 
   const reason = instance.prevInvokeReason
-  const prevRes = instance.prevResult
+  const prevData = instance.prevResult
+  const prevRes = prevData?.repodata2
   
   console.time("fileTree")
   const filetree = prevRes && !shouldUpdate(reason, "filetree") ? {rootTree: prevRes.fileTree, fileCount: prevRes.fileCount} : await instance.analyzeTree()
@@ -163,12 +164,13 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     commitCountPerDay
   }
 
-  instance.prevResult = repodata2
-  return typedjson<RepoData>({
+  const fullData = {
     repo,
     gitTruckInfo: await getGitTruckInfo(),
     repodata2
-  })
+  } as RepoData
+  instance.prevResult = fullData
+  return typedjson<RepoData>(fullData)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -238,9 +240,9 @@ export const action: ActionFunction = async ({ request, params }) => {
     const start = Number(split[0])
     const end = Number(split[1])
 
-    if (start !== instance.prevResult?.selectedRange[0]) {
+    if (start !== instance.prevResult?.repodata2.selectedRange[0]) {
       instance.prevInvokeReason = "timeseriesstart"
-    } else if (end !== instance.prevResult?.selectedRange[1]) {
+    } else if (end !== instance.prevResult?.repodata2.selectedRange[1]) {
       instance.prevInvokeReason = "timeseriesend"
     } else {
       instance.prevInvokeReason = "none"

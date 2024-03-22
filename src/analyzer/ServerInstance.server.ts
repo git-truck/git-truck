@@ -15,7 +15,7 @@ import { analyzeRenamedFile } from "./util.server"
 import { getCoAuthors } from "./coauthors.server"
 import { contribRegex, gitLogRegex, modeRegex, treeRegex } from "./constants"
 import { cpus } from "os"
-import { RepoData2 } from "~/routes/$repo.$"
+import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
@@ -29,7 +29,7 @@ export default class ServerInstance {
   public progress = 0
   public totalCommitCount = 0
   private fileTreeAsOf = "HEAD"
-  public prevResult: RepoData2 | null = null
+  public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
   public prevProgress = ""
 
