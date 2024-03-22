@@ -111,11 +111,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   
   if (!prevRes || shouldUpdate(reason, "rename")) {
     console.time("rename")
-    const rawRenames = await instance.db.getCurrentRenameIntervals()
-    const files = await instance.db.getFiles()
-    const renameChains = instance.rename(rawRenames, files)
-    const flattenedRenames = instance.flattenChains(renameChains)
-    await instance.db.replaceTemporaryRenames(flattenedRenames)
+    await instance.updateRenames()
     console.timeEnd("rename")
   }
 

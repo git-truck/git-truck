@@ -218,14 +218,22 @@ export default class ServerInstance {
     log.debug("done gathering")
   }
 
-  public flattenChains(chains: RenameInterval[][]) {
+  private flattenChains(chains: RenameInterval[][]) {
     return chains.flatMap(chain => {
         const destinationName = chain[0].toname;
         return chain.map(interval => ({ ...interval, toname: destinationName } as RenameInterval));
     });
   }
 
-  public rename(orderedRenames: RenameInterval[], currentFiles: string[]) {
+  public async updateRenames() {
+    const rawRenames = await this.db.getCurrentRenameIntervals()
+    const files = await this.db.getFiles()
+    const renameChains = this.generateRenameChains(rawRenames, files)
+    const flattenedRenames = this.flattenChains(renameChains)
+    await this.db.replaceTemporaryRenames(flattenedRenames)
+  }
+
+  private generateRenameChains(orderedRenames: RenameInterval[], currentFiles: string[]) {
     const currentPathToRenameChain = new Map<string, RenameInterval[]>()
     const finishedChains: RenameInterval[][] = []
 
