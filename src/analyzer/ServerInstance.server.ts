@@ -237,7 +237,7 @@ export default class ServerInstance {
     const currentPathToRenameChain = new Map<string, RenameInterval[]>()
     const finishedChains: RenameInterval[][] = []
 
-    for (const file of currentFiles) currentPathToRenameChain.set(file, [{fromname: file, toname: file, timestampstart: 0, timestampend: 1_000_000_000}])
+    for (const file of currentFiles) currentPathToRenameChain.set(file, [{fromname: file, toname: file, timestamp: 0, timestampend: 1_000_000_000}])
 
     for (const rename of orderedRenames) {
         // if file was deleted, we not care about what it was previously called
@@ -245,15 +245,15 @@ export default class ServerInstance {
         const existing = currentPathToRenameChain.get(rename.toname)
         if (existing) {
             const prevRename = existing[existing.length-1]
-            prevRename.timestampstart = rename.timestampend
-            rename.timestampend = prevRename.timestampstart
+            prevRename.timestamp = rename.timestampend
+            rename.timestampend = prevRename.timestamp
             // if we found the time of file creation, we do not need to follow renames for it any more
             if (rename.fromname !== null) {
                 existing.push(rename)
                 currentPathToRenameChain.set(rename.fromname, existing)
             } else {
                 // Otherwise, add rename to chain, and set the current rename to the newly found rename
-                prevRename.timestampstart = rename.timestampend
+                prevRename.timestamp = rename.timestampend
                 finishedChains.push(existing)
             }
             currentPathToRenameChain.delete(rename.toname)

@@ -1,16 +1,16 @@
 import { Database } from "duckdb-async"
-import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
+import type { CommitDTO, DBFileChange, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { DBInserter } from "./DBInserter"
-import { tableFromJSON, tableToIPC } from "apache-arrow"
+import { JsonInserter } from "./DBInserter"
 
 export default class DB {
   private instance: Promise<Database>
   private repoSanitized: string
   private branchSanitized: string
   public selectedRange: [number, number]|null = null
+  private tmpDir: string
 
   private static async init(dbPath: string) {
     const dir = dirname(dbPath)
@@ -29,6 +29,7 @@ export default class DB {
     this.repoSanitized = repo.replace(/\W/g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
+    this.tmpDir = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized)
     this.instance = DB.init(dbPath)
   }
 
@@ -159,16 +160,16 @@ export default class DB {
     ).all(`
       DELETE FROM authorunions;
     `)
-
-    const inserter = new DBInserter<string>("authorunions", ["alias", "actualname"], this.instance)
-
+    const ins = new JsonInserter<{alias: string, actualname: string}>("authorunions", this.tmpDir, await this.instance)
+    const splitunions: {alias: string, actualname: string}[] = []
     for (const union of unions) {
       const [actualname, ...aliases] = union
       for (const alias of aliases) {
-        await inserter.addRow(alias, actualname)
+        splitunions.push({alias, actualname})
       }
     }
-    await inserter.finalize()
+    await ins.addRows(splitunions)
+    await ins.finalize()
   }
 
   public async replaceTemporaryRenames(renames: RenameInterval[]) {
@@ -178,15 +179,9 @@ export default class DB {
       DELETE FROM temporary_renames;
     `)
 
-    const inserter = new DBInserter<string | number | null>(
-      "temporary_renames",
-      ["fromname", "toname", "timestamp", "timestampend"],
-      this.instance
-    )
-
-    for (const rename of renames)
-      await inserter.addRow(rename.fromname, rename.toname, rename.timestampstart, rename.timestampend)
-    await inserter.finalize()
+    const ins = new JsonInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
+    await ins.addRows(renames)
+    await ins.finalize()
   }
 
   public async getAuthorUnions() {
@@ -225,7 +220,7 @@ export default class DB {
         return {
             fromname: row["fromname"] as string|null,
             toname: row["toname"] as string|null,
-            timestampstart: 0,
+            timestamp: 0,
             timestampend: Number(row["timestamp"]),
         } as RenameInterval
     })
@@ -274,9 +269,11 @@ export default class DB {
       DELETE FROM hiddenfiles;
     `)
 
-    const inserter = new DBInserter<string>("hiddenfiles", ["path"], this.instance)
-    for (const file of hiddenFiles) await inserter.addRow(file)
-    await inserter.finalize()
+    const ins = new JsonInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
+    await ins.addRows(hiddenFiles.map(path => {
+      return {path: path}
+    }))
+    await ins.finalize()
   }
 
   public async getCommits(path: string, count: number) {
@@ -381,13 +378,15 @@ export default class DB {
   }
 
   public async addRenames(renames: RenameEntry[]) {
-    const inserter = new DBInserter<string | number | null>(
-      "renames",
-      ["fromname", "toname", "timestamp"],
-      this.instance
-    )
-    for (const rename of renames) await inserter.addRow(rename.fromname, rename.toname, rename.timestamp)
-    await inserter.finalize()
+    const ins = new JsonInserter<{fromname: string|null, toname: string|null, timestamp: number}>("renames", this.tmpDir, await this.instance)
+    await ins.addRows(renames.map(r => {
+      return {
+        fromname: r.fromname,
+        toname: r.toname,
+        timestamp: r.timestamp
+      }
+    }))
+    await ins.finalize()
   }
 
   public async replaceFiles(files: RawGitObject[]) {
@@ -396,11 +395,9 @@ export default class DB {
     ).all(`
       DELETE FROM files;
     `)
-    const inserter = new DBInserter<string>("files", ["path"], this.instance)
-    for (const file of files) {
-      if (file.type === "blob") await inserter.addRow(file.path)
-    }
-    await inserter.finalize()
+    const ins = new JsonInserter<{path: string}>("files", this.tmpDir, await this.instance)
+    await ins.addRows(files.map(x => { return {path: x.path}}))
+    await ins.finalize()
   }
 
   public async getFiles() {
@@ -429,14 +426,8 @@ export default class DB {
     ).all(`
       SELECT count(*) as count FROM metadata WHERE field = 'finished';
     `)
-    const res2 = await (
-      await this.instance
-    ).all(`
-      SELECT * FROM metadata WHERE field = 'finished';
-    `)
     const num = Number(res[0]["count"])
-    const val = num > 0
-    return val
+    return num > 0
   }
 
   public async getAuthors() {
@@ -544,55 +535,27 @@ export default class DB {
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>) {
-    const commitInserter = new DBInserter<string | number>(
-      "commits",
-      ["hash", "author", "committertime", "authortime", "body", "message"],
-      this.instance
-    )
-    const fileChangeInserter = new DBInserter<string | number>(
-      "filechanges",
-      ["commithash", "contribcount", "filepath"],
-      this.instance
-    )
+    const commitInserter = new JsonInserter<CommitDTO>("commits", this.tmpDir, await this.instance)
+    const fileChangeInserter = new JsonInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance)
 
-    console.time("newInsert")
-    const commitList = [...commits.values()].map(c => {
-      return { hash: c.hash, author: c.author, committertime: c.committertime, authortime: c.authortime, body: c.body, message: c.message}
-    })
-    
-    const arrowTable = tableFromJSON(commitList)
-    await (await this.instance).register_buffer("temp_commits", [tableToIPC(arrowTable)], true)
-    await (await this.instance).exec(`INSERT INTO commits SELECT * FROM temp_commits;`)
-    await (await this.instance).unregister_buffer("temp_commits")
-    console.timeEnd("newInsert")
-
-    console.time("jsonInsert")
-    const commitList2 = [...commits.values()].map(c => {
-      return { hash: c.hash, author: c.author, committertime: c.committertime, authortime: c.authortime, body: c.body, message: c.message}
-    })
-
-    const tmpPath = "/tmp/git-truck-cache/duckdb_/tempcommits.json"
-    await fs.writeFile(tmpPath, JSON.stringify(commitList2))
-    await (await this.instance).exec(`INSERT INTO commits SELECT * FROM '${tmpPath}'`)
-    await fs.rm(tmpPath)
-    console.timeEnd("jsonInsert")
-    
-    console.time("oldInsert")
     for (const [, commit] of commits) {
-      await commitInserter.addRow(
-        commit.hash,
-        commit.author,
-        commit.committertime,
-        commit.authortime,
-        commit.body,
-        commit.message
-      )
-      // for (const change of commit.fileChanges) {
-        //   await fileChangeInserter.addRow(commit.hash, change.contribs, change.path)
-      // }
+      await commitInserter.addRow({
+        hash: commit.hash,
+        author: commit.author,
+        committertime: commit.committertime,
+        authortime: commit.authortime,
+        body: commit.body,
+        message: commit.message
+      })
+      for (const change of commit.fileChanges) {
+          await fileChangeInserter.addRow({
+            commithash: commit.hash, 
+            contribcount: change.contribs, 
+            filepath: change.path
+          })
+      }
     }
     await commitInserter.finalize()
-    console.timeEnd("oldInsert")
     await fileChangeInserter.finalize()
   }
 }

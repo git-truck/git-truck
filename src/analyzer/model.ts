@@ -115,6 +115,12 @@ export interface FileChange {
   mode: ModeType
 }
 
+export interface DBFileChange {
+  commithash: string,
+  contribcount: number,
+  filepath: string
+}
+
 export interface CommitDTO {
   author: string
   committertime: number
@@ -140,7 +146,7 @@ export interface RenameEntry {
 export interface RenameInterval {
   fromname: string | null
   toname: string | null
-  timestampstart: number
+  timestamp: number
   timestampend: number
 }
 
