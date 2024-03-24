@@ -118,13 +118,14 @@ export function Chart() {
       size,
       chartType,
       sizeMetricType: sizeMetric,
-      renderCutOff
+      renderCutOff,
+      labelsVisible
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
       console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+  }, [size, databaseInfo, filetree, chartType, sizeMetric, renderCutOff, labelsVisible])
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -581,7 +582,8 @@ function createPartitionedHiearchy({
   size,
   chartType,
   sizeMetricType,
-  renderCutOff
+  renderCutOff,
+  labelsVisible
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
@@ -589,6 +591,7 @@ function createPartitionedHiearchy({
   chartType: LayoutType
   sizeMetricType: SizeMetricType
   renderCutOff: number
+  labelsVisible: boolean
 }) {
   const hiearchy = hierarchy<GitObject>(tree)
     .sum((d) => {
@@ -615,13 +618,20 @@ function createPartitionedHiearchy({
   if (chartType === "TREE_MAP" || chartType === "PARTITION") {
     const treeMapPartition =
       chartType === "TREE_MAP"
-        ? treemap<GitObject>()
-            .size([size.width, size.height])
-            .round(true)
-            .tile(treemapResquarify)
-            .paddingInner(treemapPaddingInner)
-            .paddingOuter(treemapPaddingOuter)
-            .paddingTop(treemapPaddingTop)
+        ? labelsVisible
+          ? treemap<GitObject>()
+              .size([size.width, size.height])
+              .round(true)
+              .tile(treemapResquarify)
+              .paddingInner(treemapPaddingInner)
+              .paddingOuter(treemapPaddingOuter)
+              .paddingTop(treemapPaddingTop)
+          : treemap<GitObject>()
+              .size([size.width, size.height])
+              .round(true)
+              .tile(treemapResquarify)
+              .paddingInner(treemapPaddingInner)
+              .paddingOuter(treemapPaddingOuter)
         : partition<GitObject>().size([size.width, size.height]).padding(treemapPaddingInner)
 
     const tmPartition = treeMapPartition(hiearchy)
