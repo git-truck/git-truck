@@ -86,8 +86,16 @@ export const Chart = memo(function Chart({
 
   const nodes = useMemo(() => {
     if (size.width === 0 || size.height === 0) return []
-    return createPartitionedHiearchy(commit, size, chartType, sizeMetric, path, renderCutoff).descendants()
-  }, [size, commit, chartType, sizeMetric, path, renderCutoff])
+    return createPartitionedHiearchy(
+      commit,
+      size,
+      chartType,
+      sizeMetric,
+      path,
+      renderCutoff,
+      labelsVisible
+    ).descendants()
+  }, [size, commit, chartType, sizeMetric, path, renderCutoff, labelsVisible])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -354,7 +362,8 @@ function createPartitionedHiearchy(
   chartType: ChartType,
   sizeMetricType: SizeMetricType,
   path: string,
-  renderCutoff: number
+  renderCutoff: number,
+  labelsVisible: boolean
 ) {
   const root = data.tree as HydratedGitTreeObject
 
@@ -399,7 +408,7 @@ function createPartitionedHiearchy(
         .size([size.width, size.height])
         .paddingInner(2)
         .paddingOuter(4)
-        .paddingTop(treemapPaddingTop)
+        .paddingTop(labelsVisible ? treemapPaddingTop : 4)
 
       const tmPartition = treeMapPartition(hiearchy)
 
