@@ -403,12 +403,13 @@ function createPartitionedHiearchy(
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
   switch (chartType) {
     case "TREE_MAP": {
-      const treeMapPartition = treemap<HydratedGitObject>()
+      let treeMapPartition = treemap<HydratedGitObject>()
         .tile(treemapBinary)
         .size([size.width, size.height])
         .paddingInner(2)
-        .paddingOuter(4)
-        .paddingTop(labelsVisible ? treemapPaddingTop : 4)
+        .paddingOuter(labelsVisible ? 4 : 8)
+
+      if (labelsVisible) treeMapPartition = treeMapPartition.paddingTop(treemapPaddingTop)
 
       const tmPartition = treeMapPartition(hiearchy)
 
