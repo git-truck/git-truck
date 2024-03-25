@@ -237,7 +237,7 @@ export default class ServerInstance {
     const currentPathToRenameChain = new Map<string, RenameInterval[]>()
     const finishedChains: RenameInterval[][] = []
 
-    for (const file of currentFiles) currentPathToRenameChain.set(file, [{fromname: file, toname: file, timestamp: 0, timestampend: 1_000_000_000}])
+    for (const file of currentFiles) currentPathToRenameChain.set(file, [{fromname: file, toname: file, timestamp: 0, timestampend: 4_000_000_000}])
 
     for (const rename of orderedRenames) {
         // if file was deleted, we not care about what it was previously called
