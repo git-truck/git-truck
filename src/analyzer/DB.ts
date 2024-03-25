@@ -128,8 +128,24 @@ export default class DB {
       INNER JOIN files fi on fi.path = f.filepath;
 
       CREATE OR REPLACE VIEW relevant_renames AS
-      SELECT * FROM renames
-      WHERE timestamp BETWEEN ${start} AND ${end};
+      SELECT fromname, toname, min(timestamp) AS timestamp, timestampauthor FROM renames
+      WHERE timestamp BETWEEN ${start} AND ${end}
+      group by fromname, toname, timestampauthor;
+      
+      CREATE OR REPLACE VIEW combined_result AS
+      SELECT f.commithash, f.contribcount, c.committertime, c.authortime, c.message, c.body,
+        CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
+        CASE
+            WHEN r.toname IS NOT NULL THEN r.toname
+            ELSE f.filepath
+        END AS filepath
+      FROM commits c 
+      LEFT JOIN authorunions u ON c.author = u.alias
+      JOIN filechanges f ON f.commithash = c.hash
+      LEFT JOIN temporary_renames r ON f.filepath = r.fromname AND c.committertime BETWEEN r.timestamp AND r.timestampend
+      INNER JOIN files fi on fi.path = filepath
+      WHERE c.committertime BETWEEN ${start} AND ${end}
+
     `)
   }
 
@@ -356,9 +372,9 @@ export default class DB {
     await (
       await this.instance
     ).all(`
-        CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
-        SELECT * FROM filechanges_commits_renamed_files;
-      `)
+    CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
+    SELECT * FROM combined_result;
+    `)
   }
 
   public async addRenames(renames: RenameEntry[]) {
