@@ -59,7 +59,8 @@ export default class DB {
       CREATE TABLE IF NOT EXISTS renames (
         fromname VARCHAR,
         toname VARCHAR,
-        timestamp UINTEGER
+        timestamp UINTEGER,
+        timestampauthor UINTEGER
       );
       CREATE TABLE IF NOT EXISTS hiddenfiles (
         path VARCHAR
@@ -197,7 +198,7 @@ export default class DB {
 
   public async getCurrentRenameIntervals() {
     const res = await (await this.instance).all(`
-        SELECT * FROM relevant_renames ORDER BY timestamp DESC;
+        SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampauthor DESC;
     `)
     return res.map((row) => {
         return {
@@ -366,7 +367,8 @@ export default class DB {
       return {
         fromname: r.fromname,
         toname: r.toname,
-        timestamp: r.timestamp
+        timestamp: r.timestamp,
+        timestampauthor: r.timestampauthor
       }
     }))
     await ins.finalize()

@@ -140,6 +140,7 @@ export interface RenameEntry {
   toname: string | null
   originalToName: string | null
   timestamp: number
+  timestampauthor: number
   timestampEnd?: number
 }
 
@@ -153,5 +154,6 @@ export interface RenameInterval {
 export interface FileModification {
   path: string
   timestamp: number
+  timestampauthor: number
   type: ModeType
 }

@@ -168,7 +168,7 @@ export default class ServerInstance {
           const mode = modeMatch.groups?.mode.trim()
           if (!file || !mode) continue
           if (mode === "delete" || mode === "create") {
-            FileModifications.push({ path: file, timestamp: committertime, type: mode })
+            FileModifications.push({ path: file, timestamp: committertime, timestampauthor: authortime, type: mode })
           }
         }
       }
@@ -198,13 +198,14 @@ export default class ServerInstance {
     renamedFiles.push(
       ...FileModifications.map((modification) => {
         if (modification.type === "delete") {
-          return { fromname: modification.path, toname: null, originalToName: null, timestamp: modification.timestamp }
+          return { fromname: modification.path, toname: null, originalToName: null, timestamp: modification.timestamp, timestampauthor: modification.timestampauthor}
         }
         return {
           fromname: null,
           toname: modification.path,
           originalToName: modification.path,
-          timestamp: modification.timestamp
+          timestamp: modification.timestamp,
+          timestampauthor: modification.timestampauthor
         }
       })
     )
