@@ -108,22 +108,6 @@ export default class DB {
       SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime, c.message, c.body FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash;
 
-      CREATE OR REPLACE VIEW processed_renames AS
-      SELECT 
-          tr1.fromname AS fromname, 
-          tr1.toname AS toname, 
-          MIN(tr1.timestamp) AS timestamp, 
-          MAX(tr2.timestampend) AS timestampend
-      FROM 
-          temporary_renames tr1
-      JOIN 
-          temporary_renames tr2 ON tr1.fromname = tr2.fromname AND tr1.toname = tr2.toname
-      WHERE 
-          tr1.timestamp <= tr2.timestampend 
-          AND tr2.timestamp >= tr1.timestamp
-      GROUP BY 
-          tr1.fromname, tr1.toname;
-
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
       SELECT f.commithash, f.contribcount, f.author, f.committertime, f.authortime, f.message, f.body,
           CASE
@@ -131,13 +115,12 @@ export default class DB {
               ELSE f.filepath
           END AS filepath
       FROM filechanges_commits f
-      LEFT JOIN processed_renames r ON f.filepath = r.fromname
-                    AND (
-                      (f.committertime >= r.timestamp 
-                      AND f.committertime <= r.timestampend)
-                      OR (f.committertime = r.timestampend + 1
-                      AND f.authortime < r.timestampend)
-                    );
+      LEFT JOIN temporary_renames r ON f.filepath = r.fromname
+      AND (
+        f.committertime BETWEEN r.timestamp AND r.timestampend
+        --OR (f.committertime = r.timestampend + 1
+        --AND f.authortime < r.timestampend)
+      );
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed_files AS
       SELECT * FROM filechanges_commits_renamed f
