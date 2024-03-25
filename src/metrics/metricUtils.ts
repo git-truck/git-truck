@@ -41,10 +41,8 @@ for (const [key, value] of Object.entries(
 }
 
 export function getColorFromExtension(extension: string): ColorResult | null {
-  console.log(`looking for ${extension}`)
   const colorResult = extensionToColor.get(extension)
   if (!colorResult) return null
-  console.log(`found ${colorResult.lang} with color ${colorResult.color}`)
   return colorResult
 }
 
