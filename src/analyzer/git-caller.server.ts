@@ -1,5 +1,5 @@
 import { log } from "./log.server"
-import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
+import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
@@ -129,9 +129,18 @@ export class GitCaller {
 
   static async getRepoMetadata(repoPath: string, invalidateCache: boolean): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
+    const parentDir = getBaseDirFromPath(repoDir)
     const isRepo = await GitCaller.isGitRepo(repoPath)
+
     if (!isRepo) {
-      return null
+      return {
+        status: "Error",
+        // errorMessage: "Not a git repository",   // TODO: Implement browsing, requires new routing
+        errorMessage: "Not a valid git repository",
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir
+      }
     }
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
@@ -157,77 +166,64 @@ export class GitCaller {
         {} as { [branch: string]: boolean }
       )
 
-    const repo: Repository = {
-      name: repoDir,
-      path: repoPath,
-      data: null,
-      reasons: [],
-      currentHead: await GitCaller._getRepositoryHead(repoPath),
-      refs,
-      analyzedHeads
-    }
+    const repoHead = await GitCaller._getRepositoryHead(repoPath)
 
     try {
       const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
-      if (!error) {
-        const [branchHead, branch] = findBranchHeadResult
-        const [data, reasons] = await GitCaller.retrieveCachedResult({
-          repo: repoDir,
-          branch,
-          branchHead,
-          invalidateCache
-        })
-        repo.data = data
-        repo.reasons = reasons
+      if (error) {
+        return {
+          status: "Error",
+          errorMessage: error.message,
+          name: repoDir,
+          path: repoPath,
+          parentDirPath: parentDir
+        }
+      }
+
+      const [branchHead, branch] = findBranchHeadResult
+      const [data, reasons] = await GitCaller.retrieveCachedResult({
+        repo: repoDir,
+        branch,
+        branchHead,
+        invalidateCache
+      })
+
+      if (!data) {
+        return {
+          status: "Success",
+          isAnalyzed: false,
+          data: null,
+          reasons: reasons,
+          name: repoDir,
+          path: repoPath,
+          parentDirPath: parentDir,
+          currentHead: branchHead,
+          refs,
+          analyzedHeads
+        }
+      }
+
+      return {
+        status: "Success",
+        isAnalyzed: true,
+        data: data,
+        reasons: [],
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir,
+        currentHead: repoHead,
+        refs,
+        analyzedHeads
       }
     } catch (e) {
-      return null
+      return {
+        status: "Error",
+        errorMessage: e instanceof Error ? e.message : "Unknown error",
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir
+      }
     }
-    return repo
-  }
-
-  static async scanDirectoryForRepositories(
-    argPath: string,
-    invalidateCache: boolean
-  ): Promise<[Repository | null, Repository[]]> {
-    let userRepo: Repository | null = null
-    const [pathIsRepo] = await describeAsyncJob({
-      job: () => GitCaller.isGitRepo(argPath),
-      beforeMsg: "Checking if path is a git repo...",
-      afterMsg: "Done checking if path is a git repo",
-      errorMsg: "Error checking if path is a git repo"
-    })
-
-    const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
-
-    const entries = await fs.readdir(baseDir, { withFileTypes: true })
-    const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
-
-    const [repoResults] = (await describeAsyncJob({
-      job: () =>
-        Promise.allSettled(
-          dirs.map(async (repo) => {
-            const result = await GitCaller.getRepoMetadata(join(baseDir, repo), invalidateCache)
-            if (!result) throw Error("Not a git repo")
-            return result
-          })
-        ),
-      beforeMsg: "Scanning for repositories...",
-      afterMsg: "Done scanning for repositories",
-      errorMsg: "Error scanning for repositories"
-    })) as [PromiseSettledResult<Repository>[], null]
-
-    const onlyRepos = (
-      repoResults.filter((currentRepo) => {
-        if (currentRepo.status === "rejected") return false
-        if (pathIsRepo && currentRepo.value.name === getDirName(argPath)) {
-          userRepo = currentRepo.value
-        }
-        return true
-      }) as PromiseFulfilledResult<Repository>[]
-    ).map((result) => result.value)
-
-    return [userRepo, onlyRepos]
   }
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
