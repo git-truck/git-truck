@@ -6,7 +6,7 @@ import { PointInfo } from "~/components/legend/PointLegend"
 
 export function setExtensionColor(blob: HydratedGitBlobObject, cache: MetricCache) {
   const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
-  const color = getColorFromExtension(extension)
+  const color = getColorFromExtension(extension)?.color
   const legend = cache.legend as PointLegendData
   if (color) {
     if (legend.has(extension)) {
