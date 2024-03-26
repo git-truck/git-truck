@@ -11,7 +11,7 @@ export interface Inserter<T> {
   
 }
 
-export class JsonInserter<T extends Record<string, unknown>> implements Inserter<T> {
+export class JsonInserter<T> implements Inserter<T> {
   private rows: T[] = []
   private tempFile: string
   constructor(private table: string, tempPath: string, private db: Database) {

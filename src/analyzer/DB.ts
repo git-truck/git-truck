@@ -473,9 +473,7 @@ export default class DB {
 
   public async setFinishTime() {
     // TODO: also have metadata for table format, to rerun if data model changed
-    const latestHash = (
-      await (await this.instance).all(`SELECT hash FROM commits ORDER BY committertime DESC LIMIT 1;`)
-    )[0]["hash"] as string
+    const latestHash = await this.getLatestCommitHash()
     await (
       await this.instance
     ).all(`
