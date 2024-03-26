@@ -18,7 +18,7 @@ export default class DB {
     const db = await Database.create(dbPath, { temp_directory: dir })
     await this.initTables(db)
     await this.initViews(db, 0, 1_000_000_000_000)
-    await db.exec(`INSTALL arrow; LOAD arrow;`)
+    // await db.exec(`INSTALL arrow; LOAD arrow;`)
     return db
   }
 
