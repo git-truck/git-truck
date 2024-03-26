@@ -8,14 +8,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const branch = url.searchParams.get("branch")
   const repo = url.searchParams.get("repo")
   const path = url.searchParams.get("path")
-  const count = url.searchParams.get("count")
-
+  const isblob = url.searchParams.get("isblob")
   invariant(branch, "branch is required")
   invariant(repo, "repo is required")
   invariant(path, "path is required")
-  invariant(count, "count is required")
+  invariant(isblob, "isblob is required")
 
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-  return await instance.db.getCommits(removeFirstPart(path), Number(count))
+  return await instance.db.getAuthorContribsForPath(removeFirstPart(path), isblob === "true")
 }

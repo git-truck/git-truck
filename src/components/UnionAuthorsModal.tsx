@@ -10,10 +10,10 @@ import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 import { createPortal } from "react-dom"
 
 export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { repo, analyzerData, truckConfig } = useData()
+  const { repo, repodata2 } = useData()
   const submit = useSubmit()
-  const { authors } = analyzerData
-  const authorUnions = truckConfig.unionedAuthors ?? []
+  const { authors } = repodata2
+  const authorUnions = repodata2.authorUnions
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
   const [filter, setFilter] = useState("")
   const navigationData = useNavigation()

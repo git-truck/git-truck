@@ -22,7 +22,7 @@
     "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts",
     "dev": "remix dev",
     "watch": "remix watch",
-    "start": "npm run build && node .",
+    "start": "npm run build && node --max-old-space-size=4096 --stack-size=4096 .",
     "clean": "rimraf -rf build public/build .cache .temp",
     "typecheck": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
@@ -51,6 +51,7 @@
     "@types/byte-size": "^8.1.1",
     "@types/color-convert": "^2.0.2",
     "@types/compression": "^1.7.5",
+    "@types/d3": "^7.4.3",
     "@types/d3-hierarchy": "^3.1.5",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.7",
@@ -70,6 +71,7 @@
     "color-convert": "^2.0.1",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
+    "d3": "^7.9.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^16.3.1",
     "eslint": "^8.52.0",
@@ -95,10 +97,13 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "randomstring": "^1.3.0",
     "react": "^18.2.0",
+    "react-colorful": "^5.6.1",
+    "react-compound-slider": "^3.4.0",
     "react-detect-offline": "^2.4.5",
     "react-dom": "^18.2.0",
     "react-github-btn": "^1.4.0",
     "react-konami-code": "^2.3.0",
+    "react-tiny-popover": "^8.0.4",
     "react-use": "^17.4.0",
     "react-use-size": "^3.0.2",
     "remix-typedjson": "^0.3.1",
@@ -111,7 +116,8 @@
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
     "uniqolor": "^1.1.0",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "year-of-rat": "^1.0.2"
   },
   "jest": {
     "preset": "ts-jest",
@@ -147,5 +153,8 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "dependencies": {
+    "duckdb-async": "^0.10.0"
+  }
 }

@@ -7,7 +7,7 @@ import { Icon } from "@mdi/react"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
-import type { HydratedGitObject } from "~/analyzer/model"
+import type { GitObject } from "~/analyzer/model"
 import { useDeferredValue } from "react"
 import { getPathFromRepoAndHead } from "~/util"
 import { useData } from "~/contexts/DataContext"
@@ -20,18 +20,18 @@ export function Legend({
   showUnionAuthorsModal,
   className = ""
 }: {
-  hoveredObject: HydratedGitObject | null
+  hoveredObject: GitObject | null
   showUnionAuthorsModal: () => void
   className?: string
 }) {
   const submit = useSubmit()
-  const { metricType, authorshipType } = useOptions()
+  const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const deferredHoveredObject = useDeferredValue(hoveredObject)
   const { repo } = useData()
   const transitionState = useNavigation()
 
-  const metricCache = metricsData[authorshipType].get(metricType) ?? undefined
+  const metricCache = metricsData.get(metricType) ?? undefined
 
   if (metricCache === undefined) return null
 
@@ -62,7 +62,7 @@ export function Legend({
     <div className={`card flex-shrink-0 overflow-hidden ${className}`}>
       <h2 className="card__title">Legend</h2>
       <h3 className="card__subtitle">{Metric[metricType]}</h3>
-      <p className="card-p">{getMetricDescription(metricType, authorshipType)}</p>
+      <p className="card-p">{getMetricDescription(metricType)}</p>
       {metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR" ? (
         <>
           <button className="btn" onClick={showUnionAuthorsModal}>
@@ -81,6 +81,6 @@ export function Legend({
 }
 
 export interface MetricLegendProps {
-  hoveredObject: HydratedGitObject | null
+  hoveredObject: GitObject | null
   metricCache: MetricCache
 }

@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
-import type { AuthorshipType, MetricType } from "../metrics/metrics"
-import { Authorship, Metric } from "../metrics/metrics"
+import type { MetricType } from "../metrics/metrics"
+import { Metric } from "../metrics/metrics"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { Depth, type DepthType } from "~/metrics/chartDepth"
@@ -43,7 +43,6 @@ export type Options = {
   commitSortingOrdersType: CommitSortingOrdersType
   commitSearch: string
   sizeMetric: SizeMetricType
-  authorshipType: AuthorshipType
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
@@ -53,7 +52,6 @@ export type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
   setSizeMetricType: (sizeMetricType: SizeMetricType) => void
-  setAuthorshipType: (authorshipType: AuthorshipType) => void
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
   setDepthType: (depthType: DepthType) => void
@@ -81,7 +79,6 @@ const defaultOptions: Options = {
   depthType: Object.keys(Depth)[0] as DepthType,
   hierarchyType: Object.keys(Hierarchy)[0] as HierarchyType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
-  authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   commitSortingMethodsType: Object.keys(SortingMethods)[0] as CommitSortingMethodsType,
   // The parameter value is based on default sorting method - date (true) or author (false)
   commitSortingOrdersType: Object.keys(SortingOrders(true))[0] as CommitSortingOrdersType,
@@ -103,9 +100,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setSizeMetricType: () => {
       throw new Error("No sizeMetricTypeSetter provided")
-    },
-    setAuthorshipType: () => {
-      throw new Error("No AuthorshipTypeSetter provided")
     },
     setDepthType: () => {
       throw new Error("No DepthTypeSetter provided")

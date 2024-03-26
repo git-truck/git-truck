@@ -1,4 +1,4 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
@@ -8,7 +8,7 @@ export type SegmentLegendData = [
   steps: number,
   textGenerator: (n: number) => string,
   colorGenerator: (n: number) => string,
-  offsetStepCalc: (blob: HydratedGitBlobObject) => number
+  offsetStepCalc: (blob: GitBlobObject) => number
 ]
 
 export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {

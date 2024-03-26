@@ -34,7 +34,7 @@ function Accordion({
     setCurrentIdx([0])
   }
   return (
-    <ul className="m-0 block overflow-x-hidden pl-4">
+    <ul className="m-0 block overflow-x-hidden">
       {items.map((item, idx) => (
         <AccordionItem
           key={item.title + idx + "--accordion"}

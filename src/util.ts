@@ -1,7 +1,7 @@
 import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model"
+import type { GitObject, GitBlobObject, GitTreeObject } from "./analyzer/model"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
@@ -149,5 +149,11 @@ export function getLightness(hex: `#${string}`): number {
   return weightedDistanceIn3D(hex) / 255
 }
 
-export const isTree = (d: HydratedGitObject | null = null): d is HydratedGitTreeObject => d?.type === "tree"
-export const isBlob = (d: HydratedGitObject | null = null): d is HydratedGitBlobObject => d?.type === "blob"
+export function removeFirstPart(path: string) {
+  const index = path.indexOf(getSeparator(path))
+  if (index === -1) return ""
+  return path.slice(index + 1)
+}
+
+export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
+export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"

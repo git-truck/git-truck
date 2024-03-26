@@ -1,4 +1,4 @@
-import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
 import { setDominanceColor } from "./singleAuthor"
@@ -10,15 +10,12 @@ import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import uniqolor from "uniqolor"
+import type { RepoData } from "~/routes/$repo.$"
+import { removeFirstPart } from "~/util"
+import { noEntryColor } from "~/const"
+import { createHash } from "node:crypto"
 
-export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
-
-export const Authorship = {
-  HISTORICAL: "Complete history"
-  // BLAME: "Newest version",
-}
-
-export type AuthorshipType = keyof typeof Authorship
+export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
 export const Metric = {
   FILE_TYPE: "File type",
@@ -31,19 +28,17 @@ export const Metric = {
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
-  const authorColors = generateAuthorColors(data.authors, colorSeed)
+export function createMetricData(
+  data: RepoData,
+  colorSeed: string | null,
+  predefinedAuthorColors: Map<string, `#${string}`>
+): MetricsData {
+  const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
-  return [
-    {
-      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors))
-      // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
-    },
-    authorColors
-  ]
+  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)), authorColors]
 }
 
-export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
+export function getMetricDescription(metric: MetricType): string {
   switch (metric) {
     case "FILE_TYPE":
       return "Where are different types of files located?"
@@ -52,13 +47,10 @@ export function getMetricDescription(metric: MetricType, authorshipType: Authors
     case "LAST_CHANGED":
       return "How long ago did the files change?"
     case "SINGLE_AUTHOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which files are authored by only one person, throughout the repository's history?"
-        : "Which files are authored by only one person, in the newest version?"
+      return "Which files are authored by only one person, throughout the repository's history?"
     case "TOP_CONTRIBUTOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which person has made the most line-changes to a file, throughout the repository's history?"
-        : "Which person has made the most line-changes to a file, in the newest version?"
+      return "Which person has made the most line-changes to a file, throughout the repository's history?"
+
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
     default:
@@ -87,49 +79,43 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[], colorSeed: string | undefined): Map<string, `#${string}`> {
+export function generateAuthorColors(
+  authors: string[],
+  colorSeed: string | null,
+  predefinedAuthorColors: Map<string, `#${string}`>
+): Map<string, `#${string}`> {
   const map = new Map<string, `#${string}`>()
+  const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
-    const seed = colorSeed ?? ""
-    const color = uniqolor(author + seed).color as `#${string}`
+    const existing = predefinedAuthorColors.get(author)
+    if (existing) {
+      map.set(author, existing)
+      continue
+    }
+    const hash = createHash("sha1")
+    hash.update(author + seed)
+    const hashed = hash.digest("hex")
+    const color = uniqolor(hashed).color as `#${string}`
     map.set(author, color)
   }
   return map
 }
 
-function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: number] {
-  let min = Number.MAX_VALUE
-  let max = Number.MIN_VALUE
-  tree.children.forEach((element) => {
-    if (element.type == "blob") {
-      if (element.noCommits > max) max = element.noCommits
-      if (element.noCommits < min) min = element.noCommits
-    } else if (element.type == "tree") {
-      const [submin, submax] = FindMinMaxCommit(element)
-      if (submax > max) max = submax
-      if (submin < min) min = submin
-    }
-  })
-  return [min, max]
-}
-
 export function getMetricCalcs(
-  data: AnalyzerData,
-  authorshipType: AuthorshipType,
+  data: RepoData,
   authorColors: Map<string, `#${string}`>
-): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
-  const commit = data.commit
+): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
+  const maxCommitCount = data.repodata2.maxCommitCount
+  const minCommitCount = data.repodata2.minCommitCount
 
-  const [mincom, maxcom] = FindMinMaxCommit(commit.tree)
-
-  const commitmapper = new CommitAmountTranslater(mincom, maxcom)
-  const truckmapper = new TruckFactorTranslater(data.authorsUnion.length)
+  const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
+  const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
 
   return [
     [
       "FILE_TYPE",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>()
         }
@@ -138,74 +124,77 @@ export function getMetricCalcs(
     ],
     [
       "SINGLE_AUTHOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorshipType, authorColors)
+        setDominanceColor(blob, cache, authorColors, data.repodata2.dominantAuthors, data.repodata2.authorCounts)
       }
     ],
     [
       "MOST_COMMITS",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            `${mincom}`,
-            `${maxcom}`,
+            `${minCommitCount}`,
+            `${maxCommitCount}`,
             undefined,
             undefined,
-            commitmapper.getColor(mincom),
-            commitmapper.getColor(maxcom)
+            commitmapper.getColor(minCommitCount),
+            commitmapper.getColor(maxCommitCount)
           ]
         }
-        commitmapper.setColor(blob, cache)
+        commitmapper.setColor(blob, cache, data.repodata2.commitCounts)
       }
     ],
     [
       "LAST_CHANGED",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        const newestEpoch = data.commit.newestLatestChangeEpoch
+      (blob: GitBlobObject, cache: MetricCache) => {
+        const newestEpoch = data.repodata2.newestChangeDate
         const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
           cache.legend = [
-            getLastChangedIndex(groupings, newestEpoch, data.commit.oldestLatestChangeEpoch) + 1,
+            getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
+            (blob) =>
+              getLastChangedIndex(
+                groupings,
+                newestEpoch,
+                data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0
+              ) ?? -1
           ]
         }
-        cache.colormap.set(
-          blob.path,
-          groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
-        )
+        const existing = data.repodata2.lastChanged.get(removeFirstPart(blob.path))
+        const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
+        cache.colormap.set(blob.path, color)
       }
     ],
     [
       "TOP_CONTRIBUTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+        setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors)
       }
     ],
     [
       "TRUCK_FACTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            Math.floor(Math.log2(data.authorsUnion.length)) + 1,
+            Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
             (n) => `${Math.pow(2, n)}`,
-            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
+            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.repodata2.authors.length)) + 1))}%)`,
+            (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(removeFirstPart(blob.path)) ?? 0))
           ]
         }
-        truckmapper.setColor(blob, cache)
+        truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
       }
     ]
   ]
 }
 
 export function setupMetricsCache(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -213,8 +202,8 @@ export function setupMetricsCache(
 }
 
 function setupMetricsCacheRec(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {

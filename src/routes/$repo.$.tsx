@@ -6,12 +6,10 @@ import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
-import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
-import { getTruckConfigWithArgs } from "~/analyzer/args.server"
+import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import type { GitObject, GitTreeObject, Repository } from "~/analyzer/model"
+import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -33,19 +31,47 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
+import InstanceManager from "~/analyzer/InstanceManager"
+import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
-
-let invalidateCache = false
+import BarChart from "~/components/BarChart"
+import { shouldUpdate } from "~/analyzer/RefreshPolicy"
 
 export interface RepoData {
-  analyzerData: AnalyzerData
   repo: Repository
-  truckConfig: TruckUserConfig
   gitTruckInfo: {
     version: string
     latestVersion: string | null
   }
+  repodata2: RepoData2
+}
+
+export interface RepoData2 {
+  dominantAuthors: Map<string, string>
+  commitCounts: Map<string, number>
+  lastChanged: Map<string, number>
+  authorCounts: Map<string, number>
+  maxCommitCount: number
+  minCommitCount: number
+  newestChangeDate: number
+  oldestChangeDate: number
+  authors: string[]
+  authorUnions: string[][]
+  fileTree: GitTreeObject
+  hiddenFiles: string[]
+  lastRunInfo: {
+    time: number
+    hash: string
+  }
+  fileCount: number
+  repo: string
+  branch: string
+  timerange: [number, number]
+  colorSeed: string | null
+  authorColors: Map<string, `#${string}`>
+  commitCountPerDay: {date: string, count: number}[]
+  selectedRange: [number, number]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -53,40 +79,105 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return redirect("/")
   }
 
-  const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
-  const options: TruckUserConfig = {
-    invalidateCache: invalidateCache || args.invalidateCache
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"])
+  const branch = params["*"]
+  const repoName = params["repo"]
+
+  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  // to avoid double identical fetch at first load, which it does for some reason
+  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+    return typedjson(instance.prevResult)
   }
-  options.path = resolve(args.path, params["repo"])
-  options.branch = params["*"]
-
-  if (params["*"]) {
-    options.branch = params["*"]
+  await instance.loadRepoData()
+  
+  const timerange = await instance.db.getOverallTimeRange()
+  let selectedRange = instance.db.selectedRange
+  if (!selectedRange) {
+    const newStart = await instance.db.getCommitTimeAtIndex(30000)
+    await instance.updateTimeInterval(newStart, timerange[1])
+    selectedRange = instance.db.selectedRange
   }
 
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
-  )
-
-  invalidateCache = false
-  const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
+  const repo = await GitCaller.getRepoMetadata(path, false)
 
   if (!repo) {
     throw Error("Error loading repo")
   }
 
-  return typedjson<RepoData>({
-    analyzerData,
+  const reason = instance.prevInvokeReason
+  const prevData = instance.prevResult
+  const prevRes = prevData?.repodata2
+  
+  console.time("fileTree")
+  const filetree = prevRes && !shouldUpdate(reason, "filetree") ? {rootTree: prevRes.fileTree, fileCount: prevRes.fileCount} : await instance.analyzeTree()
+  console.timeEnd("fileTree")
+
+  
+  if (!prevRes || shouldUpdate(reason, "rename")) {
+    console.time("rename")
+    await instance.updateRenames()
+    console.timeEnd("rename")
+  }
+
+  console.time("updateCache")
+  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
+  console.timeEnd("updateCache")
+  console.time("dbQueries")
+  const dominantAuthors = prevRes && !shouldUpdate(reason, "dominantAuthor") ? prevRes.dominantAuthors : await instance.db.getDominantAuthorPerFile()
+  const commitCounts = prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const lastChanged = prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
+  const authorCounts = prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } = prevRes && !shouldUpdate(reason, "maxMinCommitCount") ? {maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount} : await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } = prevRes && !shouldUpdate(reason, "newestOldestChangeDate") ? {newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate} :await instance.db.getNewestAndOldestChangeDates()
+  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
+  const authorUnions = prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions :await instance.db.getAuthorUnions()
+  const {rootTree, fileCount} = filetree
+  const hiddenFiles = prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await instance.db.getLastRunInfo()
+  const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
+  const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await instance.db.getAuthorColors()
+  const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
+  console.timeEnd("dbQueries")
+
+  const repodata2 = {
+    dominantAuthors,
+    commitCounts,
+    lastChanged,
+    authorCounts,
+    maxCommitCount,
+    minCommitCount,
+    newestChangeDate,
+    oldestChangeDate,
+    authors,
+    authorUnions,
+    fileTree: rootTree,
+    fileCount,
+    hiddenFiles,
+    lastRunInfo,
+    repo: instance.repo,
+    branch,
+    timerange,
+    colorSeed,
+    selectedRange: selectedRange as [number, number],
+    authorColors,
+    commitCountPerDay
+  }
+
+  const fullData = {
     repo,
     gitTruckInfo: await getGitTruckInfo(),
-    truckConfig
-  })
+    repodata2
+  } as RepoData
+  instance.prevResult = fullData
+  return typedjson<RepoData>(fullData)
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
+
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -94,71 +185,80 @@ export const action: ActionFunction = async ({ request, params }) => {
   const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
+  const timeseries = formData.get("timeseries")
+  const authorname = formData.get("authorname")
+  const authorcolor = formData.get("authorcolor")
 
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"])
+  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+  instance.prevInvokeReason = "unknown"
   if (refresh) {
-    invalidateCache = true
+    instance.prevInvokeReason = "refresh"
     return null
   }
 
-  const [args] = await getTruckConfigWithArgs(params["repo"])
-  const path = resolve(args.path, params["repo"])
 
   if (ignore && typeof ignore === "string") {
-    await updateTruckConfig(path, (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.add(ignore)
-
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
+    instance.prevInvokeReason = "ignore"
+    const hidden = await instance.db.getHiddenFiles()
+    hidden.push(ignore)
+    await instance.db.replaceHiddenFiles(hidden)
+    
     return null
   }
-
+  
   if (unignore && typeof unignore === "string") {
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.delete(unignore.trim())
-
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
+    instance.prevInvokeReason = "unignore"
+    const hidden = await instance.db.getHiddenFiles()
+    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
     return null
   }
-
+  
   if (typeof fileToOpen === "string") {
-    openFile(fileToOpen)
+    instance.prevInvokeReason = "open"
+    openFile(instance.path, fileToOpen)
     return null
   }
-
+  
   if (typeof unionedAuthors === "string") {
-    try {
-      const json = JSON.parse(unionedAuthors)
-      await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-        return {
-          ...prevConfig,
-          unionedAuthors: json
-        }
-      })
-    } catch (e) {
-      console.error(e)
+    instance.prevInvokeReason = "unionedAuthors"
+    const json = JSON.parse(unionedAuthors) as string[][]
+    await instance.db.replaceAuthorUnions(json)
+    return null
+  }
+  
+  if (typeof rerollColors === "string") {
+    instance.prevInvokeReason = "rerollColors"
+    const newSeed = randomstring.generate(6)
+    await instance.db.updateColorSeed(newSeed)
+    return null
+  }
+  
+  if (typeof timeseries === "string") {
+    const split = timeseries.split("-")
+    const start = Number(split[0])
+    const end = Number(split[1])
+
+    if (start !== instance.prevResult?.repodata2.selectedRange[0]) {
+      instance.prevInvokeReason = "timeseriesstart"
+    } else if (end !== instance.prevResult?.repodata2.selectedRange[1]) {
+      instance.prevInvokeReason = "timeseriesend"
+    } else {
+      instance.prevInvokeReason = "none"
+      return null
     }
+
+    await instance.updateTimeInterval(start, end)
+    return null
+  }
+  
+  if (typeof authorname === "string") {
+    instance.prevInvokeReason = "authorcolor"
+    await instance.db.addAuthorColor(authorname, authorcolor as string)
     return null
   }
 
-  if (typeof rerollColors === "string") {
-    const newSeed = randomstring.generate(6)
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      return {
-        ...prevConfig,
-        colorSeed: newSeed
-      }
-    })
-    return null
-  }
   return null
 }
 
@@ -229,12 +329,12 @@ const UpdateNotifier = memo(function UpdateNotifier() {
 export default function Repo() {
   const client = useClient()
   const data = useTypedLoaderData<RepoData>()
-  const { analyzerData, gitTruckInfo } = data
+  const { gitTruckInfo, repodata2 } = data
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
-  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
+  const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
   const containerClass = useMemo(
@@ -263,8 +363,6 @@ export default function Repo() {
     [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
   )
 
-  if (!analyzerData) return null
-
   return (
     <Providers data={data}>
       <div className={cn("app-container", containerClass)}>
@@ -277,7 +375,7 @@ export default function Repo() {
             <>
               <GlobalInfo />
               <Options />
-              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
               <SearchCard />
             </>
           ) : null}
@@ -309,6 +407,10 @@ export default function Repo() {
             <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
           </header>
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
+          <div className="flex flex-col">
+            <TimeSlider />
+            <BarChart />
+          </div>
         </main>
 
         <aside
@@ -379,8 +481,8 @@ function ChartWrapper({
   hoveredObject,
   setHoveredObject
 }: {
-  hoveredObject: HydratedGitObject | null
-  setHoveredObject: (obj: HydratedGitObject | null) => void
+  hoveredObject: GitObject | null
+  setHoveredObject: (obj: GitObject | null) => void
 }) {
   const chartWrapperRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLElement>(document.body)

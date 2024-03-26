@@ -1,10 +1,10 @@
-import { spawn } from "node:child_process"
-import { existsSync, promises as fs } from "node:fs"
+import { spawn, exec } from "node:child_process"
+import { promises as fs } from "node:fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
+import { resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
+import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./model"
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
@@ -41,11 +41,7 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
-export function analyzeRenamedFile(
-  file: string,
-  renamedFiles: Map<string, { path: string; timestamp: number }[]>,
-  timestamp: number
-) {
+export function analyzeRenamedFile(file: string, timestamp: number, renamedFiles: RenameEntry[]) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
@@ -63,11 +59,7 @@ export function analyzeRenamedFile(
     newPath = groups["newPath2"] ?? ""
   }
 
-  if (renamedFiles.has(oldPath)) {
-    renamedFiles.get(oldPath)?.push({ path: newPath, timestamp })
-  } else {
-    renamedFiles.set(oldPath, [{ path: newPath, timestamp }])
-  }
+  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, originalToName: newPath })
   return newPath
 }
 
@@ -84,16 +76,6 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject |
   const subtree = tree.children.find((x) => x.name === dirs[0])
   if (!subtree || subtree.type === "blob") return
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
-}
-
-export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
-  const data = JSON.stringify(analyzedData, null, 2)
-  const dir = dirname(outPath)
-  if (!existsSync(dir)) {
-    await fs.mkdir(dir, { recursive: true })
-  }
-  await fs.writeFile(outPath, data)
-  return outPath
 }
 
 export function getDirName(dir: string) {
@@ -201,3 +183,35 @@ export async function getGitTruckInfo() {
     latestVersion: latestVersion
   }
 }
+
+function getCommandLine() {
+  switch (process.platform) {
+    case "darwin":
+      return "open" // MacOS
+    case "win32":
+      return 'start ""' // Windows
+    default:
+      return "xdg-open" // Linux
+  }
+}
+
+export function openFile(repoDir: string, path: string) {
+  path = resolvePath(repoDir, "..", path.split("/").join(sep))
+  const command = `${getCommandLine()} "${path}"`
+  exec(command).stderr?.on("data", (e) => {
+    // TODO show error in UI
+    log.error(`Cannot open file ${resolvePath(repoDir, path)}: ${e}`)
+  })
+}
+
+export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUserConfig) => TruckUserConfig) {
+  const truckConfigPath = resolvePath(repoDir, "truckconfig.json")
+  let currentConfig: TruckUserConfig = {}
+  try {
+    const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
+    if (configFileContents) currentConfig = JSON.parse(configFileContents)
+  } catch (e) { /* empty */ }
+  const updatedConfig = updaterFn(currentConfig)
+  await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
+}
+
