@@ -248,12 +248,12 @@ export default class ServerInstance {
             const prevRename = existing[existing.length-1]
             prevRename.timestamp = rename.timestampend
             rename.timestampend = prevRename.timestamp
-            // if we found the time of file creation, we do not need to follow renames for it any more
             if (rename.fromname !== null) {
-                existing.push(rename)
-                currentPathToRenameChain.set(rename.fromname, existing)
+              // add rename to chain, and set the current rename to the newly found rename
+              existing.push(rename)
+              currentPathToRenameChain.set(rename.fromname, existing)
             } else {
-                // Otherwise, add rename to chain, and set the current rename to the newly found rename
+              // if we found the time of file creation, we do not need to follow renames for it any more
                 prevRename.timestamp = rename.timestampend
                 finishedChains.push(existing)
             }
