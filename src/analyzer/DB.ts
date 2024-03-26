@@ -369,11 +369,12 @@ export default class DB {
   }
 
   public async updateCachedResult() {
+    // TODO: fix combined_result
     await (
       await this.instance
     ).all(`
     CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
-    SELECT * FROM combined_result;
+    SELECT * FROM filechanges_commits_renamed_files;
     `)
   }
 
