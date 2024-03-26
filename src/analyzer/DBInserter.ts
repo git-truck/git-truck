@@ -11,7 +11,7 @@ export interface Inserter<T> {
   
 }
 
-export class JsonInserter<T> implements Inserter<T> {
+export class JsonInserter<T extends Record<string, unknown>> implements Inserter<T> {
   private rows: T[] = []
   private tempFile: string
   constructor(private table: string, tempPath: string, private db: Database) {
@@ -28,14 +28,49 @@ export class JsonInserter<T> implements Inserter<T> {
     if (this.rows.length >= bundleSize) await this.finalize()
   }
 
+  // private typeToDuckdbType(val: unknown, key: string) {
+  //   switch (typeof val) {
+  //     case "number":
+  //       return "UINTEGER"
+  //     case "string":
+  //       return "VARCHAR"
+  //     case "bigint":
+  //       return "UBIGINT"
+  //     default:
+  //       if (key.includes("timestamp")) return "UINTEGER"
+  //       if (key.includes("name")) return "VARCHAR"
+  //       throw new Error("Unknown type " + key)
+  //   }
+  // }
+
+  // private objToDuckdbStruct(obj: Record<string | number | symbol, unknown>) {
+  //   const keys = Object.keys(obj)
+  //   const types: Record<string, string> = {}
+  //   for (const key of keys) {
+  //     const val = obj[key]
+  //     types[key] = this.typeToDuckdbType(val, key)
+  //   }
+  //   return types
+  // }
+
   public async finalize() {
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
       await fs.writeFile(this.tempFile, JSON.stringify(sliced))
+      // await fs.writeFile(this.tempFile, JSON.stringify(sliced, (key, value) => value))
       await this.db.exec(`INSERT INTO ${this.table} SELECT * FROM '${this.tempFile}'`)
       await fs.rm(this.tempFile)
     }
+    
+    // for (let i = 0; i < this.rows.length; i += bundleSize) {
+    //   const sliced = this.rows.slice(i, i + bundleSize)
+    //   const typesString = JSON.stringify(this.objToDuckdbStruct(this.rows[0]))
+    //   const dataString = JSON.stringify(sliced).replace(/'/g, "")
+    //   await this.db.exec(`
+    //     insert into ${this.table} (select unnest(j, recursive:=true) from (select from_json('${dataString}', '[${typesString}]') j));
+    //   `)
+    // }
     this.rows = []
   }
 
