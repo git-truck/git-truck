@@ -17,5 +17,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-  return await instance.db.getCommits(removeFirstPart(path), Number(count))
+      
+  const commitHashes = await instance.db.getCommitHashes(removeFirstPart(path), Number(count))
+  const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
+  return await instance.getFullCommits(gitLogResult)
 }

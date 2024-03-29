@@ -43,9 +43,7 @@ export default class DB {
         hash VARCHAR,
         author VARCHAR,
         committertime UINTEGER,
-        authortime UINTEGER,
-        body VARCHAR,
-        message VARCHAR
+        authortime UINTEGER
       );
       CREATE TABLE IF NOT EXISTS filechanges (
         commithash VARCHAR,
@@ -101,16 +99,16 @@ export default class DB {
 
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime, c.body, c.message FROM
+      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime FROM
       commits c LEFT JOIN authorunions u ON c.author = u.alias
       WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime, c.message, c.body FROM
+      SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash;
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
-      SELECT f.commithash, f.contribcount, f.author, f.committertime, f.authortime, f.message, f.body,
+      SELECT f.commithash, f.contribcount, f.author, f.committertime, f.authortime,
           CASE
               WHEN r.toname IS NOT NULL THEN r.toname
               ELSE f.filepath
@@ -133,7 +131,7 @@ export default class DB {
       group by fromname, toname, timestampauthor;
       
       CREATE OR REPLACE VIEW combined_result AS
-      SELECT f.commithash, f.contribcount, c.committertime, c.authortime, c.message, c.body,
+      SELECT f.commithash, f.contribcount, c.committertime, c.authortime,
         CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
         CASE
             WHEN r.toname IS NOT NULL THEN r.toname
@@ -295,6 +293,21 @@ export default class DB {
         hash: row["commithash"],
         message: row["message"]
       } as CommitDTO
+    })
+  }
+
+  public async getCommitHashes(path: string, count: number) {
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT distinct commithash
+      FROM filechanges_commits_renamed_cached
+      WHERE filepath LIKE '${path}%'
+      ORDER BY committertime DESC, commithash
+      LIMIT ${count};
+    `)
+    return res.map((row) => {
+      return row["commithash"] as string
     })
   }
 
@@ -544,9 +557,7 @@ export default class DB {
         hash: commit.hash,
         author: commit.author,
         committertime: commit.committertime,
-        authortime: commit.authortime,
-        body: commit.body,
-        message: commit.message
+        authortime: commit.authortime
       })
       for (const change of commit.fileChanges) {
           await fileChangeInserter.addRow({

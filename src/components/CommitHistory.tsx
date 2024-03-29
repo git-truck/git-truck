@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import type { CommitDTO, GitLogEntry } from "~/analyzer/model"
+import type { FullCommitDTO } from "~/analyzer/model"
 import { useEffect, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
@@ -18,10 +18,10 @@ import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsCon
 type SortCommitsMethods = "date" | "author"
 
 interface CommitDistFragProps {
-  items: CommitDTO[]
+  items: FullCommitDTO[]
   count: number
   sortBy?: SortCommitsMethods
-  handleOnClick?: (commit: CommitDTO) => void
+  handleOnClick?: (commit: FullCommitDTO) => void
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
@@ -31,7 +31,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
   const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
   const isDefaultSortingOrdersSelected: boolean =
     commitSortingOrdersType == Object.keys(SortingOrders(isDateSortingMethod))[0]
-  const cleanGroupItems: { [key: string]: CommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
+  const cleanGroupItems: { [key: string]: FullCommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
 
   const items: Array<AccordionData> = new Array<AccordionData>()
   for (const [key, values] of Object.entries(cleanGroupItems)) {
@@ -39,7 +39,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       title: key,
       content: (
         <>
-          {values.map((value: CommitDTO) => {
+          {values.map((value: FullCommitDTO) => {
             return (
               <CommitListEntry
                 key={value.hash + "--itemContentAccordion"}
@@ -75,7 +75,7 @@ function InfoEntry(props: { keyString: string; value: string }) {
   )
 }
 
-function CommitListEntry(props: { value: CommitDTO; authorColor: string }) {
+function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   return (
     <div title={`By: ${props.value.author}`} className="flex items-center gap-2 overflow-hidden overflow-ellipsis">
@@ -139,7 +139,7 @@ function CommitListEntry(props: { value: CommitDTO; authorColor: string }) {
 
 export function CommitHistory(props: { commitCount: number }) {
   const analyzerData = useData()
-  const [commits, setCommits] = useState<CommitDTO[] | null>(null)
+  const [commits, setCommits] = useState<FullCommitDTO[] | null>(null)
   const [commitShowCount, setCommitShowCount] = useState(10)
   const commitIncrement = 10
   const { clickedObject } = useClickedObject()
@@ -163,7 +163,7 @@ export function CommitHistory(props: { commitCount: number }) {
 
   useEffect(() => {
     if (fetcher.state !== "idle") return
-    const data = fetcher.data as GitLogEntry[] | null
+    const data = fetcher.data as FullCommitDTO[] | null
     setCommits(data)
   }, [fetcher])
 
@@ -204,8 +204,8 @@ export function CommitHistory(props: { commitCount: number }) {
   )
 }
 
-function sortCommits(items: CommitDTO[], method: SortCommitsMethods): { [key: string]: CommitDTO[] } {
-  const cleanGroupItems: { [key: string]: CommitDTO[] } = {}
+function sortCommits(items: FullCommitDTO[], method: SortCommitsMethods): { [key: string]: FullCommitDTO[] } {
+  const cleanGroupItems: { [key: string]: FullCommitDTO[] } = {}
   switch (method) {
     // case AUTHOR
     case Object.keys(SortingMethods)[1]:

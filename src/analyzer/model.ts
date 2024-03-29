@@ -125,9 +125,13 @@ export interface CommitDTO {
   author: string
   committertime: number
   authortime: number
+  hash: string
+}
+
+export interface FullCommitDTO extends CommitDTO {
   body: string
   message: string
-  hash: string
+  fileChanges: FileChange[]
 }
 
 export interface GitLogEntry extends CommitDTO {

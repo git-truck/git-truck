@@ -68,11 +68,12 @@ export class GitCaller {
     return await GitCaller._getRepositoryHead(this.repo)
   }
 
-  async gitShow(commits: string[]) {
+  async gitLogSpecificCommits(commits: string[]) {
     const args = [
-      "show",
-      "--no-patch",
-      '--format="author <|%aN|> date <|%at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      "log",
+      "--no-walk",
+      "--numstat",
+      '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
     ]
 
@@ -255,6 +256,22 @@ export class GitCaller {
       "--numstat",
       // "--cc", // include file changes for merge commits
       '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
+    ]
+
+    const result = (await runProcess(this.path, "git", args)) as string
+    return result.trim()
+  }
+
+  async gitLogSimple(skip: number, count: number) {
+    const args = [
+      "log",
+      `--skip=${skip}`,
+      `--max-count=${count}`,
+      this.branch,
+      "--summary",
+      "--numstat",
+      // "--cc", // include file changes for merge commits
+      '--format="<|%aN|><|%ct %at|><|%H|>"'
     ]
 
     const result = (await runProcess(this.path, "git", args)) as string

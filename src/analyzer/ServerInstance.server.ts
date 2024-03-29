@@ -8,12 +8,12 @@ import type {
   FileChange,
   RenameEntry,
   FileModification,
-  RenameInterval
+  RenameInterval,
+  FullCommitDTO
 } from "./model"
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
-import { getCoAuthors } from "./coauthors.server"
-import { contribRegex, gitLogRegex, modeRegex, treeRegex } from "./constants"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
 import { cpus } from "os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
@@ -146,19 +146,16 @@ export default class ServerInstance {
 
   public async gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>) {
     const renamedFiles: RenameEntry[] = []
-    const matches = gitLogResult.matchAll(gitLogRegex)
+    const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
     for (const match of matches) {
       const groups = match.groups ?? {}
       const author = groups.author
       const committertime = Number(groups.datecommitter)
       const authortime = Number(groups.dateauthor)
-      const body = groups.body
-      const message = groups.message
       const hash = groups.hash
       const contributionsString = groups.contributions
       const modesString = groups.modes
-      const coauthors = body ? getCoAuthors(body) : []
       const fileChanges: FileChange[] = []
 
       if (modesString) {
@@ -192,7 +189,7 @@ export default class ServerInstance {
           fileChanges.push({ isBinary, contribs, path: filePath, mode: "modify" }) // TODO remove modetype
         }
       }
-      commits.set(hash, { author, committertime, authortime, body, message, hash, coauthors, fileChanges })
+      commits.set(hash, { author, committertime, authortime, hash, coauthors: [], fileChanges })
     }
 
     renamedFiles.push(
@@ -212,8 +209,43 @@ export default class ServerInstance {
     await this.db.addRenames(renamedFiles)
   }
 
+  public async getFullCommits(gitLogResult: string) {
+    const commits: FullCommitDTO[] = []
+    const matches = gitLogResult.matchAll(gitLogRegex)
+    for (const match of matches) {
+      console.log("match!")
+      const groups = match.groups ?? {}
+      const author = groups.author
+      const message = groups.message
+      const body = groups.body
+      const committertime = Number(groups.datecommitter)
+      const authortime = Number(groups.dateauthor)
+      const hash = groups.hash
+      const contributionsString = groups.contributions
+      const fileChanges: FileChange[] = []
+
+      if (contributionsString) {
+        console.log("contrib!")
+        const contribMatches = contributionsString.matchAll(contribRegex)
+        for (const contribMatch of contribMatches) {
+          console.log("contribmatch!")
+          const file = contribMatch.groups?.file.trim()
+          const isBinary = contribMatch.groups?.insertions === "-"
+          if (!file) throw Error("file not found")
+
+          const contribs = isBinary
+            ? 1
+            : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
+          fileChanges.push({ isBinary, contribs, path: file, mode: "modify" })
+        }
+      }
+      commits.push({ author, committertime, authortime, hash, fileChanges, message, body })
+    }
+    return commits;
+  }
+
   private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
-    const gitLogResult = await this.gitCaller.gitLog(start, end - start)
+    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start)
     await this.gatherCommitsFromGitLog(gitLogResult, commits)
     log.debug("done gathering")
   }
