@@ -138,7 +138,6 @@ export interface GitLogEntry extends CommitDTO {
 export interface RenameEntry {
   fromname: string | null
   toname: string | null
-  originalToName: string | null
   timestamp: number
   timestampauthor: number
   timestampEnd?: number

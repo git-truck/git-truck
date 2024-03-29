@@ -183,7 +183,7 @@ export default class ServerInstance {
           const fileHasMoved = file.includes("=>")
           let filePath = file
           if (fileHasMoved) {
-            filePath = analyzeRenamedFile(file, committertime, renamedFiles)
+            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles)
           }
 
           const contribs = isBinary
@@ -198,12 +198,11 @@ export default class ServerInstance {
     renamedFiles.push(
       ...FileModifications.map((modification) => {
         if (modification.type === "delete") {
-          return { fromname: modification.path, toname: null, originalToName: null, timestamp: modification.timestamp, timestampauthor: modification.timestampauthor}
+          return { fromname: modification.path, toname: null, timestamp: modification.timestamp, timestampauthor: modification.timestampauthor}
         }
         return {
           fromname: null,
           toname: modification.path,
-          originalToName: modification.path,
           timestamp: modification.timestamp,
           timestampauthor: modification.timestampauthor
         }

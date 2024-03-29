@@ -3,7 +3,7 @@ import type { CommitDTO, DBFileChange, GitLogEntry, RawGitObject, RenameEntry, R
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { JsonInserter } from "./DBInserter"
+import { Inserter } from "./DBInserter"
 
 export default class DB {
   private instance: Promise<Database>
@@ -160,7 +160,7 @@ export default class DB {
     ).all(`
       DELETE FROM authorunions;
     `)
-    const ins = new JsonInserter<{alias: string, actualname: string}>("authorunions", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{alias: string, actualname: string}>("authorunions", this.tmpDir, await this.instance)
     const splitunions: {alias: string, actualname: string}[] = []
     for (const union of unions) {
       const [actualname, ...aliases] = union
@@ -179,7 +179,7 @@ export default class DB {
       DELETE FROM temporary_renames;
     `)
 
-    const ins = new JsonInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
     await ins.addRows(renames)
     await ins.finalize()
   }
@@ -269,7 +269,7 @@ export default class DB {
       DELETE FROM hiddenfiles;
     `)
 
-    const ins = new JsonInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
     await ins.addRows(hiddenFiles.map(path => {
       return {path: path}
     }))
@@ -379,8 +379,9 @@ export default class DB {
   }
 
   public async addRenames(renames: RenameEntry[]) {
-    const ins = new JsonInserter<{fromname: string|null, toname: string|null, timestamp: number}>("renames", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance)
     await ins.addRows(renames.map(r => {
+      if (!r.timestampauthor)console.log("waddup", r)
       return {
         fromname: r.fromname,
         toname: r.toname,
@@ -397,7 +398,7 @@ export default class DB {
     ).all(`
       DELETE FROM files;
     `)
-    const ins = new JsonInserter<{path: string}>("files", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{path: string}>("files", this.tmpDir, await this.instance)
     await ins.addRows(files.map(x => { return {path: x.path}}))
     await ins.finalize()
   }
@@ -535,8 +536,8 @@ export default class DB {
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>) {
-    const commitInserter = new JsonInserter<CommitDTO>("commits", this.tmpDir, await this.instance)
-    const fileChangeInserter = new JsonInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance)
+    const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>("commits", this.tmpDir, await this.instance)
+    const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance)
 
     for (const [, commit] of commits) {
       await commitInserter.addRow({
