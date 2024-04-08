@@ -13,7 +13,6 @@ for (const [key, { color }] of Object.entries(gitcolors)) {
     lang: key
   })
 }
-// console.log(JSON.stringify(languageMap))
 
 const extensionToColor = new Map<string, ColorResult>()
 
