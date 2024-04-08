@@ -213,7 +213,6 @@ export default class ServerInstance {
     const commits: FullCommitDTO[] = []
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
-      console.log("match!")
       const groups = match.groups ?? {}
       const author = groups.author
       const message = groups.message
@@ -225,10 +224,8 @@ export default class ServerInstance {
       const fileChanges: FileChange[] = []
 
       if (contributionsString) {
-        console.log("contrib!")
         const contribMatches = contributionsString.matchAll(contribRegex)
         for (const contribMatch of contribMatches) {
-          console.log("contribmatch!")
           const file = contribMatch.groups?.file.trim()
           const isBinary = contribMatch.groups?.insertions === "-"
           if (!file) throw Error("file not found")
