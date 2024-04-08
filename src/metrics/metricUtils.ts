@@ -1,17 +1,8 @@
-import gitcolors from "github-colors/colors.json"
 import languageMap from "language-map/languages.json"
 
 interface ColorResult {
   lang: string
   color: `#${string}` | null
-}
-
-const lowercasedColors = new Map<string, ColorResult>()
-for (const [key, { color }] of Object.entries(gitcolors)) {
-  lowercasedColors.set(key.toLowerCase(), {
-    color: (color as `#${string}`) ?? null,
-    lang: key
-  })
 }
 
 const extensionToColor = new Map<string, ColorResult>()
