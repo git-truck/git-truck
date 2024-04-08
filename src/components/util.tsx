@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { useState, useTransition, type HTMLAttributes } from "react"
+import { useEffect, useState, useTransition, type HTMLAttributes } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
@@ -26,6 +26,16 @@ export const CloseButton = ({
     <Icon path={mdiClose} size={1} />
   </button>
 )
+
+export function ClientOnly({children}: {children: React.ReactNode}) {
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) return null
+  return children
+}
 
 export const LegendDot = ({
   className = "",

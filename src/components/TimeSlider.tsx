@@ -119,7 +119,6 @@ export default function TimeSlider() {
   const { timerange, selectedRange } = repodata2
   const submit = useSubmit()
   const [range, setRange] = useState(selectedRange)
-  const [chosenRange, setChosenRange] = useState(range)
   
   const selectedStartDate = useMemo(() => new Date(range[0] * 1000), [range])
   const selectedEndDate = useMemo(() => new Date(range[1] * 1000), [range])
@@ -131,19 +130,10 @@ export default function TimeSlider() {
     () => ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
     [range, timerange]
   )
-  const { repo } = useData()
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
   // TODO: fix this does 2 fetches on first load
-  useEffect(() => {
-    const form = new FormData()
-    form.append("timeseries", `${chosenRange[0]}-${chosenRange[1]}`)
-    submit(form, {
-      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post"
-    })
-  }, [chosenRange])
 
   return (
     <div style={{ height: 60, width: "100%" }}>
@@ -153,8 +143,13 @@ export default function TimeSlider() {
         domain={timerange}
         rootStyle={sliderStyle}
         onUpdate={(e) => setRange([...e] as [number, number])}
-        onChange={() => {
-          setChosenRange(range)
+        onChange={(e) => {
+          const form = new FormData()
+          form.append("timeseries", `${e[0]}-${e[1]}`)
+          submit(form, {
+            action: `/${getPathFromRepoAndHead(repodata2.repo, repodata2.branch)}`,
+            method: "post"
+          })
         }}
         values={range}
         disabled={disabled}

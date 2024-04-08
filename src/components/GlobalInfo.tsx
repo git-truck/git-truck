@@ -96,7 +96,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           </Form>
         </div>
         <RevisionSelect
-          key={repo.currentHead}
+          key={repodata2.branch}
           disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
           defaultValue={repodata2.branch}

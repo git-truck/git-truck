@@ -18,7 +18,7 @@ import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { Code } from "~/components/util"
+import { ClientOnly, Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
 import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
@@ -408,7 +408,9 @@ export default function Repo() {
           </header>
           {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
           <div className="flex flex-col">
-            <TimeSlider />
+            <ClientOnly>
+              <TimeSlider />
+            </ClientOnly>
             <BarChart />
           </div>
         </main>
