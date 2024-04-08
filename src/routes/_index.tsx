@@ -267,6 +267,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
           <div className="grow" />
         ) : (
           <span
+            data-testid={`status-${repo.name}`}
             className={cn(
               "w-full min-w-max select-none rounded-full bg-transparent px-2 py-1.5 text-xs font-bold uppercase leading-none tracking-widest text-inherit transition-colors duration-200"
             )}
@@ -279,6 +280,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
         {isSuccesful ? (
           <RevisionSelect
             className="input--hover-border"
+            data-testid={`revision-select-${repo.name}`}
             value={head ?? ""}
             onChange={(e) => setHead(e.target.value)}
             headGroups={repo.refs}
@@ -311,6 +313,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
       ) : (
         <Link
           className="btn btn--primary btn--outlined transition-colors"
+          title={`View ${repo.name}`}
           aria-disabled={repo.status === "Error" || repo.status === "Loading"}
           // to={`/repo/?${new URLSearchParams({ path: repo.fullPath ?? "", branch: head ?? "" }).toString()}`}
           to={path ?? ""}
