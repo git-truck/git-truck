@@ -99,7 +99,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           key={repo.currentHead}
           disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
-          defaultValue={""} // TODO: fix branch select
+          defaultValue={repodata2.branch}
           headGroups={repo.refs}
           analyzedHeads={repo.analyzedHeads}
         />

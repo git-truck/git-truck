@@ -23,7 +23,7 @@ interface IndexData {
 
 async function getResponse(): Promise<IndexData> {
   const args = getArgsWithDefaults()
-  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path, args.invalidateCache)
+  const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
 
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   return {

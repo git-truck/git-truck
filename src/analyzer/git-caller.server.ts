@@ -104,21 +104,22 @@ export class GitCaller {
     return result.trim()
   }
 
-  static async getRepoMetadata(repoPath: string, invalidateCache: boolean): Promise<Repository | null> {
+  static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
     const isRepo = await GitCaller.isGitRepo(repoPath)
     if (!isRepo) {
       return null
     }
-    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath, ""))
+
+    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
+    console.log("refs for", repoPath, refs)
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {
         const [result] = await GitCaller.retrieveCachedResult({
           repo: getDirName(repoPath),
           branch: headName,
-          branchHead: head,
-          invalidateCache
+          branchHead: head
         })
         return {
           headName,
@@ -151,8 +152,7 @@ export class GitCaller {
         const [data, reasons] = await GitCaller.retrieveCachedResult({
           repo: repoDir,
           branch,
-          branchHead,
-          invalidateCache
+          branchHead
         })
         repo.data = data
         repo.reasons = reasons
@@ -164,8 +164,7 @@ export class GitCaller {
   }
 
   static async scanDirectoryForRepositories(
-    argPath: string,
-    invalidateCache: boolean
+    argPath: string
   ): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const [pathIsRepo] = await describeAsyncJob({
@@ -184,7 +183,7 @@ export class GitCaller {
       job: () =>
         Promise.allSettled(
           dirs.map(async (repo) => {
-            const result = await GitCaller.getRepoMetadata(join(baseDir, repo), invalidateCache)
+            const result = await GitCaller.getRepoMetadata(join(baseDir, repo))
             if (!result) throw Error("Not a git repo")
             return result
           })
@@ -282,16 +281,11 @@ export class GitCaller {
     repo,
     branch,
     branchHead,
-    invalidateCache = false
   }: {
     repo: string
     branch: string
     branchHead: string
-    invalidateCache: boolean
   }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
-    if (invalidateCache) {
-      return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
-    }
     const reasons = []
     const cachedDataPath = GitCaller.getCachePath(repo, branch)
     if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
@@ -331,11 +325,11 @@ export class GitCaller {
   }
 
   async getRefs() {
-    return await GitCaller._getRefs(this.repo, this.branch)
+    return await GitCaller._getRefs(this.repo)
   }
 
-  static async _getRefs(repo: string, branch: string) {
-    const result = await runProcess(repo, "git", ["show-ref", branch])
+  static async _getRefs(repo: string) {
+    const result = await runProcess(repo, "git", ["show-ref"])
     return result as string
   }
 

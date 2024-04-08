@@ -99,7 +99,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     selectedRange = instance.db.selectedRange
   }
 
-  const repo = await GitCaller.getRepoMetadata(path, false)
+  const repo = await GitCaller.getRepoMetadata(path)
 
   if (!repo) {
     throw Error("Error loading repo")
