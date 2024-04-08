@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import type { FullCommitDTO } from "~/analyzer/model"
+import type { FileChange, FullCommitDTO } from "~/analyzer/model"
 import { useEffect, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
@@ -75,6 +75,23 @@ function InfoEntry(props: { keyString: string; value: string }) {
   )
 }
 
+function FileChangesEntry(props: { filechanges: FileChange[]}) {
+  return (
+    <div>
+      <div className="text-sm font-semibold">File changes</div>
+      <ul className="max-h-64 overflow-scroll">
+        {props.filechanges.map(filechange => {
+          return (
+            <li key={filechange.path} className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm max-w-96">
+              {filechange.contribs} {filechange.path}
+            </li>
+          )
+        })} 
+      </ul>
+    </div>
+  )
+}
+
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   return (
@@ -91,35 +108,38 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
             arrowSize={10}
             arrowColor="white"
           >
-            <div className="card grid max-w-lg grid-cols-[auto,1fr] gap-x-3 gap-y-1 bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
-              <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)} />
-              <InfoEntry keyString="Hash" value={props.value.hash} />
-              <InfoEntry keyString="Author" value={props.value.author} />
-              {props.value.committertime === props.value.authortime ? (
-                <InfoEntry
-                  keyString="Date"
-                  value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
-                    props.value.committertime
-                  )})`}
-                />
-              ) : (
-                <>
+            <div className="card bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+              <div className="grid max-w-lg grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+                <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)} />
+                <InfoEntry keyString="Hash" value={props.value.hash} />
+                <InfoEntry keyString="Author" value={props.value.author} />
+                {props.value.committertime === props.value.authortime ? (
                   <InfoEntry
-                    keyString="Date committed"
+                    keyString="Date"
                     value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
                       props.value.committertime
                     )})`}
-                  />
-                  <InfoEntry
-                    keyString="Date authored"
-                    value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
-                      props.value.authortime
-                    )})`}
-                  />
-                </>
-              )}
-              <InfoEntry keyString="Message" value={props.value.message} />
-              <InfoEntry keyString="Body" value={props.value.body.length > 0 ? props.value.body : "<none>"} />
+                    />
+                  ) : (
+                  <>
+                    <InfoEntry
+                      keyString="Date committed"
+                      value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
+                        props.value.committertime
+                      )})`}
+                      />
+                    <InfoEntry
+                      keyString="Date authored"
+                      value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
+                        props.value.authortime
+                      )})`}
+                      />
+                  </>
+                )}
+                <InfoEntry keyString="Message" value={props.value.message} />
+                <InfoEntry keyString="Body" value={props.value.body.length > 0 ? props.value.body : "<none>"} />
+              </div>
+              <FileChangesEntry filechanges={props.value.fileChanges}/>
             </div>
           </ArrowContainer>
         )}
