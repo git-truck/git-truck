@@ -196,6 +196,16 @@ export default class DB {
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
   }
 
+  public async getRawUnions() {
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT * FROM authorunions;
+    `)
+
+    return res as {alias: string, actualname: string}[]
+  }
+
   public async getCommitTimeAtIndex(idx: number) {
     const res = await (
       await this.instance
