@@ -23,8 +23,8 @@ export abstract class Inserter<T> {
     switch (process.platform) {
       case "darwin":
       case "linux":
-      default:
         return new ArrowInserter<T>(table, db)
+      default:
         return new JsonInserter<T>(table, tempPath, db)
     }
   }
