@@ -3,7 +3,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import type { FileChange, FullCommitDTO } from "~/analyzer/model"
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
@@ -77,17 +77,18 @@ function InfoEntry(props: { keyString: string; value: string }) {
 
 function FileChangesEntry(props: { filechanges: FileChange[]}) {
   return (
-    <div>
-      <div className="text-sm font-semibold">File changes</div>
-      <ul className="max-h-64 overflow-scroll">
+    <div className="max-h-64 overflow-scroll">
+      <div className="grid max-w-lg grid-cols-[auto,auto,1fr] gap-x-3 gap-y-1">
         {props.filechanges.map(filechange => {
           return (
-            <li key={filechange.path} className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm max-w-96">
-              +{filechange.insertions} -{filechange.deletions} {filechange.path}
-            </li>
+            <Fragment key={filechange.path}>
+              <div className="text-green-600 flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">+{filechange.insertions}</div>
+              <div className="text-red-600 flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">-{filechange.deletions}</div>
+              <div className="whitespace-nowrap flex-grow overflow-hidden overflow-ellipsis">{filechange.path}</div>
+            </Fragment>
           )
-        })} 
-      </ul>
+        })}
+      </div>
     </div>
   )
 }
@@ -138,6 +139,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
                 )}
                 <InfoEntry keyString="Message" value={props.value.message} />
                 <InfoEntry keyString="Body" value={props.value.body.length > 0 ? props.value.body : "<none>"} />
+                <InfoEntry keyString="File changes" value={props.value.fileChanges.length + " files (+" + props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) + ", -" + props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) + ")"}/>
               </div>
               <FileChangesEntry filechanges={props.value.fileChanges}/>
             </div>
