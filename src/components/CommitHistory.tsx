@@ -83,7 +83,7 @@ function FileChangesEntry(props: { filechanges: FileChange[]}) {
         {props.filechanges.map(filechange => {
           return (
             <li key={filechange.path} className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm max-w-96">
-              {filechange.contribs} {filechange.path}
+              +{filechange.insertions} -{filechange.deletions} {filechange.path}
             </li>
           )
         })} 

@@ -112,7 +112,6 @@ export class GitCaller {
     }
 
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-    console.log("refs for", repoPath, refs)
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {

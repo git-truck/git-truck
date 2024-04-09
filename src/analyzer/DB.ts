@@ -51,7 +51,8 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS filechanges (
         commithash VARCHAR,
-        contribcount UINTEGER,
+        insertions UINTEGER,
+        deletions UINTEGER,
         filepath VARCHAR,
       );
       CREATE TABLE IF NOT EXISTS authorunions (
@@ -108,11 +109,11 @@ export default class DB {
       WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.contribcount, f.filepath, author, c.committertime, c.authortime FROM
+      SELECT f.commithash, f.insertions, f.deletions, f.filepath, author, c.committertime, c.authortime FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash;
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
-      SELECT f.commithash, f.contribcount, f.author, f.committertime, f.authortime,
+      SELECT f.commithash, f.insertions, f.deletions, f.author, f.committertime, f.authortime,
           CASE
               WHEN r.toname IS NOT NULL THEN r.toname
               ELSE f.filepath
@@ -135,7 +136,7 @@ export default class DB {
       group by fromname, toname, timestampauthor;
       
       CREATE OR REPLACE VIEW combined_result AS
-      SELECT f.commithash, f.contribcount, c.committertime, c.authortime,
+      SELECT f.commithash, f.insertions, f.deletions, c.committertime, c.authortime,
         CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
         CASE
             WHEN r.toname IS NOT NULL THEN r.toname
@@ -369,8 +370,8 @@ export default class DB {
       await this.instance
     ).all(`
       WITH RankedAuthors AS (
-        SELECT filepath, author, SUM(contribcount) AS total_contribcount,
-        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(contribcount) DESC, author ASC) AS rank 
+        SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount,
+        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank 
         FROM filechanges_commits_renamed_cached
         GROUP BY filepath, author
       )
@@ -481,7 +482,7 @@ export default class DB {
     const res = await (
       await this.instance
     ).all(`
-      SELECT author, SUM(contribcount) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
+      SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
         isblob ? "=" : "LIKE"
       } '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
@@ -566,7 +567,8 @@ export default class DB {
       for (const change of commit.fileChanges) {
           await fileChangeInserter.addRow({
             commithash: commit.hash, 
-            contribcount: change.contribs, 
+            insertions: change.insertions, 
+            deletions: change.deletions,
             filepath: change.path
           })
       }

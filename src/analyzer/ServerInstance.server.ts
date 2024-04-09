@@ -183,10 +183,9 @@ export default class ServerInstance {
             filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles)
           }
 
-          const contribs = isBinary
-            ? 1
-            : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, contribs, path: filePath, mode: "modify" }) // TODO remove modetype
+          const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
+          const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
+          fileChanges.push({ isBinary, insertions, deletions, path: filePath, mode: "modify" }) // TODO remove modetype
         }
       }
       commits.set(hash, { author, committertime, authortime, hash, coauthors: [], fileChanges })
@@ -230,10 +229,9 @@ export default class ServerInstance {
           const isBinary = contribMatch.groups?.insertions === "-"
           if (!file) throw Error("file not found")
 
-          const contribs = isBinary
-            ? 1
-            : Number(contribMatch.groups?.insertions ?? "0") + Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, contribs, path: file, mode: "modify" })
+          const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
+          const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
+          fileChanges.push({ isBinary, insertions, deletions, path: file, mode: "modify" })
         }
       }
       commits.push({ author, committertime, authortime, hash, fileChanges, message, body })

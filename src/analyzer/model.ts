@@ -111,13 +111,15 @@ export type ModeType = "create" | "modify" | "delete"
 export interface FileChange {
   path: string
   isBinary: boolean
-  contribs: number
+  insertions: number
+  deletions: number
   mode: ModeType
 }
 
 export interface DBFileChange {
   commithash: string,
-  contribcount: number,
+  insertions: number,
+  deletions: number,
   filepath: string
 }
 
