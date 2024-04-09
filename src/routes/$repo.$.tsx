@@ -410,8 +410,8 @@ export default function Repo() {
           <div className="flex flex-col">
             <ClientOnly>
               <TimeSlider />
+              <BarChart />
             </ClientOnly>
-            <BarChart />
           </div>
         </main>
 
