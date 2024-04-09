@@ -33,6 +33,10 @@ export default class DB {
     this.instance = DB.init(dbPath)
   }
 
+  public async close() {
+    await (await this.instance).close()
+  }
+
   public async query(query: string) {
     return await (await this.instance).all(query)
   }

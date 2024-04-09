@@ -23,4 +23,13 @@ export default class InstanceManager {
     if (!this.instances) this.instances = new Map()
     return this.instances.get(repo)?.get(branch)
   }
+
+  public static async closeAllDBConnections() {
+    for (const [,repo] of this.instances) {
+      for (const [,branchInstance] of repo) {
+        await branchInstance.db.close()
+      }
+    }
+    this.instances = new Map()
+  }
 }
