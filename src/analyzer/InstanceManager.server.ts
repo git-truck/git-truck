@@ -1,7 +1,9 @@
+import MetadataDB from "./MetadataDB"
 import ServerInstance from "./ServerInstance.server"
 
 export default class InstanceManager {
   private static instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
+  public static metadataDB = new MetadataDB()
 
   public static getOrCreateInstance(repo: string, branch: string, path: string) {
     if (!this.instances) this.instances = new Map()

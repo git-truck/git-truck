@@ -14,7 +14,7 @@ import { semverCompare, getPathFromRepoAndHead } from "./util"
 import { describeAsyncJob, getDirName } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import type { NextFunction } from "express-serve-static-core"
-import InstanceManager from "./analyzer/InstanceManager"
+import InstanceManager from "./analyzer/InstanceManager.server"
 
 async function main() {
   const args = parseArgs()

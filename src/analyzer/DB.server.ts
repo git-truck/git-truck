@@ -82,10 +82,6 @@ export default class DB {
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR
       );
-      CREATE TABLE IF NOT EXISTS authorcolors (
-        author VARCHAR,
-        color VARCHAR
-      );
     `)
   }
 
@@ -237,33 +233,6 @@ export default class DB {
             timestampend: Number(row["timestamp"]),
         } as RenameInterval
     })
-  }
-
-  public async getAuthorColors() {
-    const res = await (
-      await this.instance
-    ).all(`
-      SELECT * FROM authorcolors;
-    `)
-    return new Map(
-      res.map((row) => {
-        return [row["author"] as string, row["color"] as `#${string}`]
-      })
-    )
-  }
-
-  public async addAuthorColor(author: string, color: string) {
-    await (
-      await this.instance
-    ).all(`
-      DELETE FROM authorcolors WHERE author = '${author}';
-    `)
-    if (color === "") return
-    await (
-      await this.instance
-    ).all(`
-      INSERT INTO authorcolors (author, color) VALUES ('${author}', '${color}');
-    `)
   }
 
   public async getHiddenFiles() {
@@ -451,16 +420,6 @@ export default class DB {
     return res[0]["hash"] as string
   }
 
-  public async hasCompletedPreviously() {
-    const res = await (
-      await this.instance
-    ).all(`
-      SELECT count(*) as count FROM metadata WHERE field = 'finished';
-    `)
-    const num = Number(res[0]["count"])
-    return num > 0
-  }
-
   public async getAuthors() {
     const res = await (
       await this.instance
@@ -499,16 +458,6 @@ export default class DB {
     return res.map((row) => {
       return { author: row["author"] as string, contribs: Number(row["contribsum"]) }
     })
-  }
-
-  public async setFinishTime() {
-    // TODO: also have metadata for table format, to rerun if data model changed
-    const latestHash = await this.getLatestCommitHash()
-    await (
-      await this.instance
-    ).all(`
-      INSERT INTO metadata (field, value, value2) VALUES ('finished', ${Date.now()}, '${latestHash}');
-    `)
   }
 
   private getTimeStringFormat(timerange: [number, number]) {

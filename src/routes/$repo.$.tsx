@@ -31,7 +31,7 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
-import InstanceManager from "~/analyzer/InstanceManager"
+import InstanceManager from "~/analyzer/InstanceManager.server"
 import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
@@ -136,7 +136,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const hiddenFiles = prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
   const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await instance.db.getLastRunInfo()
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
-  const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await instance.db.getAuthorColors()
+  const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await InstanceManager.metadataDB.getAuthorColors()
   const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
   console.timeEnd("dbQueries")
 
@@ -255,7 +255,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   
   if (typeof authorname === "string") {
     instance.prevInvokeReason = "authorcolor"
-    await instance.db.addAuthorColor(authorname, authorcolor as string)
+    await InstanceManager.metadataDB.addAuthorColor(authorname, authorcolor as string)
     return null
   }
 

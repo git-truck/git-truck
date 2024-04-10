@@ -1,5 +1,5 @@
 import { sleep } from "~/analyzer/util.server"
-import InstanceManager from "~/analyzer/InstanceManager"
+import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import { ProgressData } from "~/components/LoadingIndicator"

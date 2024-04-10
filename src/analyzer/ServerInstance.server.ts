@@ -1,4 +1,4 @@
-import DB from "./DB"
+import DB from "./DB.server"
 import { GitCaller } from "./git-caller.server"
 import type {
   GitBlobObject,
@@ -17,6 +17,7 @@ import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } fr
 import { cpus } from "os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
+import InstanceManager from "./InstanceManager.server"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
@@ -296,7 +297,7 @@ export default class ServerInstance {
     this.analyzationStatus = "Starting"
     
     let commitCount = await this.gitCaller.getCommitCount()
-    if (await this.db.hasCompletedPreviously()) {
+    if (await InstanceManager.metadataDB.getLastRun(this.repo, this.branch)) {
       const latestCommit = await this.db.getLatestCommitHash()
       commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
       log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
@@ -348,7 +349,7 @@ export default class ServerInstance {
     await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
-    await this.db.setFinishTime()
+    await InstanceManager.metadataDB.setCompletion(this.repo, this.branch)
     this.analyzationStatus = "GeneratingChart"
   }
 }
