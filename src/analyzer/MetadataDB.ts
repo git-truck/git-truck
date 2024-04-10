@@ -2,6 +2,7 @@ import { Database } from "duckdb-async"
 import { resolve, dirname } from "path"
 import os from "os"
 import { promises as fs, existsSync } from "fs"
+import { CompletedResult } from "./model"
 
 export default class MetadataDB {
     private instance: Promise<Database>
@@ -71,5 +72,17 @@ export default class MetadataDB {
         `)
         if (res.length < 1) return undefined
         return Number(res[0]["timestamp"])
+    }
+
+    public async getCompletedRepos() {
+        const res = await (
+            await this.instance
+        ).all(`
+            SELECT repo, branch, MAX(timestamp) AS time FROM completions GROUP BY repo, branch;
+        `)
+        if (res.length < 1) return []
+        return res.map(row => {
+            return { repo: row["repo"] as string, branch: row["branch"] as string, time: Number(row["time"]) }
+        }) as CompletedResult[]
     }
 }

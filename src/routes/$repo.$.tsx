@@ -8,7 +8,7 @@ import { typedjson, useTypedLoaderData } from "remix-typedjson"
 import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { GitObject, GitTreeObject, Repository } from "~/analyzer/model"
+import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
 import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -72,6 +72,7 @@ export interface RepoData2 {
   authorColors: Map<string, `#${string}`>
   commitCountPerDay: {date: string, count: number}[]
   selectedRange: [number, number]
+  analyzedRepos: CompletedResult[]
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -138,6 +139,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
   const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await InstanceManager.metadataDB.getAuthorColors()
   const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
+  const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
   console.timeEnd("dbQueries")
 
   const repodata2 = {
@@ -161,7 +163,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     colorSeed,
     selectedRange: selectedRange as [number, number],
     authorColors,
-    commitCountPerDay
+    commitCountPerDay,
+    analyzedRepos
   }
 
   const fullData = {

@@ -130,6 +130,12 @@ export interface CommitDTO {
   hash: string
 }
 
+export interface CompletedResult {
+    repo: string;
+    branch: string;
+    time: number;
+}
+
 export interface FullCommitDTO extends CommitDTO {
   body: string
   message: string

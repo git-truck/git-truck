@@ -5,32 +5,35 @@ import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { resolve } from "path"
-import type { Repository } from "~/analyzer/model"
+import type { CompletedResult, Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
 import type { ReactNode } from "react"
-import { Fragment, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
+import InstanceManager from "~/analyzer/InstanceManager.server"
 
 interface IndexData {
   repositories: Repository[]
   baseDir: string
   baseDirName: string
   repo: Repository | null
+  analyzedRepos: CompletedResult[]
 }
 
 async function getResponse(): Promise<IndexData> {
   const args = getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
-
+  const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   return {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
-    repo
+    repo,
+    analyzedRepos
   }
 }
 
@@ -39,7 +42,7 @@ export const loader = async () => {
 }
 
 export default function Index() {
-  const { repositories, baseDir, baseDirName } = useLoaderData<typeof loader>()
+  const { repositories, baseDir, baseDirName, analyzedRepos } = useLoaderData<typeof loader>()
   const transitionData = useNavigation()
 
   if (transitionData.state !== "idle")
@@ -65,12 +68,12 @@ export default function Index() {
           </>
         </p>
       </div>
-      <RepositoryGrid repositories={repositories} />
+      <RepositoryGrid repositories={repositories} analyzedRepos={analyzedRepos} />
     </main>
   )
 }
 
-function RepositoryGrid({ repositories }: { repositories: SerializeFrom<Repository>[] }) {
+function RepositoryGrid({ repositories, analyzedRepos }: { repositories: SerializeFrom<Repository>[], analyzedRepos: CompletedResult[] }) {
   return repositories.length === 0 ? (
     <>
       <p>
@@ -92,18 +95,17 @@ function RepositoryGrid({ repositories }: { repositories: SerializeFrom<Reposito
       </button>
       <hr className="col-span-full" />
       {repositories.map((repo, idx) => (
-        <RepositoryEntry key={repo.path} index={idx} repo={repo} />
+        <RepositoryEntry key={repo.path} index={idx} repo={repo} analyzedRepos={analyzedRepos} />
       ))}
     </div>
   )
 }
 
-function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository>; index: number }): ReactNode {
+function RepositoryEntry({ repo, analyzedRepos }: { repo: SerializeFrom<Repository>, analyzedRepos: CompletedResult[]; index: number }): ReactNode {
   const [head, setHead] = useState(repo.currentHead)
-  const path = getPathFromRepoAndHead(repo.name, head)
+  const path = useMemo(() => getPathFromRepoAndHead(repo.name, head), [head, repo.name])
 
-  const branchIsAnalyzed = repo.analyzedHeads[head]
-
+  const branchIsAnalyzed = useMemo(() => analyzedRepos.find(rep => rep.repo === repo.name && rep.branch === head), [head, analyzedRepos, repo.name])
   return (
     <Fragment key={repo.name}>
       <h2 className="card__title truncate" title={repo.name}>
@@ -122,7 +124,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository>; index: num
         value={head}
         onChange={(e) => setHead(e.target.value)}
         headGroups={repo.refs}
-        analyzedHeads={repo.analyzedHeads}
+        analyzedBranches={analyzedRepos.filter(rep => rep.repo === repo.name)}
       />
       <div className="grid">
         <Link className={`btn rounded-full ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>

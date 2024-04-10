@@ -101,7 +101,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           onChange={(e) => switchBranch(e.target.value)}
           defaultValue={repodata2.branch}
           headGroups={repo.refs}
-          analyzedHeads={repo.analyzedHeads}
+          analyzedBranches={repodata2.analyzedRepos.filter(rep => rep.repo === repodata2.repo)}
         />
       </div>
     </div>
