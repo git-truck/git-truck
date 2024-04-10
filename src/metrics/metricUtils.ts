@@ -1,5 +1,5 @@
 import gitcolors from "github-colors/colors.json"
-import langMap from "lang-map"
+import languageMap from "language-map/languages.json"
 
 interface ColorResult {
   lang: string
@@ -14,23 +14,35 @@ for (const [key, { color }] of Object.entries(gitcolors)) {
   })
 }
 
-export function getColorFromExtension(extension: string) {
-  const langMatches = langMap.languages(extension.toLowerCase())
-  const langs = []
-  if (!langMatches) return null
-  let colorResult = null
-  // Loop through lang resuts
-  for (const langResult of langMatches) {
-    // If we have a color for the language, return it
-    const match = lowercasedColors.get(langResult)
-    if (match) {
-      colorResult = match
-      langs.push(colorResult.lang)
-      break
+const extensionToColor = new Map<string, ColorResult>()
+
+for (const [key, value] of Object.entries(
+  languageMap as Record<
+    string,
+    {
+      color?: string
+      extensions?: string[]
+    }
+  >
+)) {
+  if (value.color) {
+    if (!value.extensions) {
+      continue
+    }
+    for (const ext of value.extensions) {
+      const extWithoutDot = ext.startsWith(".") ? ext.slice(1) : ext
+      extensionToColor.set(extWithoutDot, {
+        lang: key,
+        color: value.color as `#${string}`
+      })
     }
   }
+}
+
+export function getColorFromExtension(extension: string): ColorResult | null {
+  const colorResult = extensionToColor.get(extension)
   if (!colorResult) return null
-  return colorResult.color
+  return colorResult
 }
 
 export class SpectrumTranslater {
