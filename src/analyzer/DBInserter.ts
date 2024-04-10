@@ -20,6 +20,7 @@ export abstract class Inserter<T> {
   constructor(protected table: string, protected db: Database) {}
 
   public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database): Inserter<T> {
+    return new JsonInserter<T>(table, tempPath, db)
     switch (process.platform) {
       case "darwin":
       case "linux":
