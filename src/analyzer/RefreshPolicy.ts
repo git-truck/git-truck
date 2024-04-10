@@ -34,7 +34,7 @@ export type InvocationReason =
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "refresh": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
     "unignore": ["cache", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "hiddenfiles"],
-    "ignore": ["cache", "maxMinCommitCount", "newestOldestChangeDate", "authors"],
+    "ignore": ["cache", "maxMinCommitCount", "newestOldestChangeDate", "authors", "hiddenfiles"],
     "open": [],
     "unionedAuthors": ["cache", "dominantAuthor", "authorCounts", "authors", "authorunions"],
     "rerollColors": ["colorSeed"],
