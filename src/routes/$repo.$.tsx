@@ -327,7 +327,7 @@ export default function Repo() {
               </button>
             </div>
           ) : null}
-          {!isRightPanelCollapse ? (
+          {!isRightPanelCollapse && !isFullscreen ? (
             <>
               {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
                 <UpdateNotifier />
