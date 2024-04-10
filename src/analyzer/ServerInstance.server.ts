@@ -80,13 +80,14 @@ export default class ServerInstance {
     await this.db.replaceFiles(lsTreeEntries)
 
     for (const child of lsTreeEntries) {
-      log.debug(`Path: ${child.path}`)
       const prevTrees = child.path.split("/")
       const newName = prevTrees.pop() as string
       const newPath = `${this.repo}/${child.path}`
       let currTree = rootTree
       for (const treePath of prevTrees) {
-        currTree = currTree.children.find((t) => t.name === treePath && t.type === "tree") as GitTreeObject
+        const foundTree = currTree.children.find((t) => t.name === treePath && t.type === "tree")
+        if (!foundTree) continue
+        currTree = foundTree as GitTreeObject
       }
       switch (child.type) {
         case "tree": {
