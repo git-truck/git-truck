@@ -320,6 +320,7 @@ export default class ServerInstance {
     this.analyzationStatus = "Hydrating"
     // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
     for (let index = 0; index < commitCount; index += commitBundleSize) {
+      this.progress = index
       const runCountCommit = Math.min(commitBundleSize, commitCount - index)
       const sectionSize = Math.ceil(runCountCommit / threadCount)
 
@@ -335,7 +336,6 @@ export default class ServerInstance {
       })
 
       await Promise.all(promises)
-
       await this.db.addRenames(renamedFiles)
       await this.db.addCommits(commits)
       log.debug("done adding")
