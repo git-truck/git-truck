@@ -4,9 +4,9 @@ import type { LoaderFunctionArgs } from "@remix-run/node"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import { ProgressData } from "~/components/LoadingIndicator"
 
-type ProgressResponse = { progress: number; totalCommitCount: number; analyzationStatus: AnalyzationStatus }
+type ProgressResponse = { progress: number; analyzationStatus: AnalyzationStatus }
 
-const defaultResponse: ProgressResponse = { progress: 0, totalCommitCount: 1, analyzationStatus: "Starting" }
+const defaultResponse: ProgressResponse = { progress: 0, analyzationStatus: "Starting" }
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressResponse> => {
   const url = new URL(request.url)
@@ -15,17 +15,17 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressR
   if (!repo || !branch) return defaultResponse
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return defaultResponse
-  let progress = instance.progress
+  let progressPercentage = instance.progress
   let status = instance.analyzationStatus
-  while (instance.prevProgress === status+progress) {
-    await sleep(700)
-    progress = instance.progress
+  while (instance.prevProgress.str === status+progressPercentage || instance.prevProgress.timestamp + 1000 > Date.now()) {
+    await sleep(1000)
+    progressPercentage = instance.totalCommitCount > 0 ? Math.floor((instance.progress / instance.totalCommitCount) * 100) : 0
     status = instance.analyzationStatus
   }
-  instance.prevProgress = status+progress
+  instance.prevProgress.str = status+progressPercentage
+  instance.prevProgress.timestamp = Date.now()
   return {
-    progress: instance.progress,
-    totalCommitCount: instance.totalCommitCount,
+    progress: progressPercentage,
     analyzationStatus: instance.analyzationStatus
   } as ProgressData
 }

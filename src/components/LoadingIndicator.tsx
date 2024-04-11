@@ -6,7 +6,6 @@ import anitruck from "~/assets/truck.gif"
 
 export type ProgressData = {
   progress: number
-  totalCommitCount: number
   analyzationStatus: AnalyzationStatus
 }
 
@@ -20,12 +19,11 @@ export function LoadingIndicator(props: {transitionData: Navigation}) {
   }, [fetcher, fetcher.state])
 
   const progressText = useMemo(() => {
-    if (!fetcher.data) return "Starting analyzation"
-    const { progress, totalCommitCount, analyzationStatus } = fetcher.data
-    if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analyzation"
+    if (!fetcher.data) return "Starting analysis"
+    const { progress, analyzationStatus } = fetcher.data
+    if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analysis"
     if (analyzationStatus === "GeneratingChart") return "Generating chart"
-    const percentage = progress && totalCommitCount ? Math.round((progress / totalCommitCount) * 100) : 0
-    return "Analyzing commits: " + percentage + "% done"
+    return "Analyzing commits: " + progress + "% done"
   }, [fetcher.data])
 
   return (

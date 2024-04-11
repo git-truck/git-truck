@@ -32,7 +32,7 @@ export default class ServerInstance {
   private fileTreeAsOf = "HEAD"
   public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
-  public prevProgress = ""
+  public prevProgress = { str: "", timestamp: 0}
 
   constructor(
     public repo: string,
@@ -43,6 +43,10 @@ export default class ServerInstance {
     this.branchSanitized = branch.replace(/\W/g, "_")
     this.gitCaller = new GitCaller(repo, branch, path)
     this.db = new DB(repo, branch)
+  }
+
+  public updateProgress() {
+    this.progress++
   }
 
   public async updateTimeInterval(start: number, end: number) {
@@ -239,7 +243,7 @@ export default class ServerInstance {
   }
 
   private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>, renamedFiles: RenameEntry[]) {
-    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start)
+    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
   }
@@ -313,14 +317,9 @@ export default class ServerInstance {
     const threadCount = 2
     // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
     const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
-    if (commitCount > 500_000)
-      log.warn(
-        "This repo has a lot of commits, so nodejs might run out of memory. Consider setting the environment variable NODE_OPTIONS to --max-old-space-size=4096 and rerun Git Truck"
-      )
     this.analyzationStatus = "Hydrating"
     // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
     for (let index = 0; index < commitCount; index += commitBundleSize) {
-      this.progress = index
       const runCountCommit = Math.min(commitBundleSize, commitCount - index)
       const sectionSize = Math.ceil(runCountCommit / threadCount)
 

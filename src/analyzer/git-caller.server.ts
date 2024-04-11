@@ -6,6 +6,7 @@ import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "~/util"
 import os from "node:os"
+import ServerInstance from "./ServerInstance.server"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -260,7 +261,7 @@ export class GitCaller {
     return result.trim()
   }
 
-  async gitLogSimple(skip: number, count: number) {
+  async gitLogSimple(skip: number, count: number, instance: ServerInstance) {
     const args = [
       "log",
       `--skip=${skip}`,
@@ -272,7 +273,7 @@ export class GitCaller {
       '--format="<|%aN|><|%ct %at|><|%H|>"'
     ]
 
-    const result = (await runProcess(this.path, "git", args)) as string
+    const result = (await runProcess(this.path, "git", args, instance)) as string
     return result.trim()
   }
 

@@ -9,6 +9,7 @@ import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
+import ServerInstance from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -20,7 +21,7 @@ export function sleep(ms: number) {
   })
 }
 
-export function runProcess(dir: string, command: string, args: string[]) {
+export function runProcess(dir: string, command: string, args: string[], serverInstance?: ServerInstance) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
@@ -31,7 +32,10 @@ export function runProcess(dir: string, command: string, args: string[]) {
       const errorHandler = (buf: Error): void => reject(buf.toString().trim())
       prcs.once("error", errorHandler)
       prcs.stderr.once("data", errorHandler)
-      prcs.stdout.on("data", (buf) => chunks.push(buf))
+      prcs.stdout.on("data", (buf) => {
+        chunks.push(buf)
+        if (serverInstance) serverInstance.updateProgress()
+      })
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())
       })
