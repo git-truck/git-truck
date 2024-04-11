@@ -42,10 +42,11 @@ class JsonInserter<T> extends Inserter<T> {
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
-      await fs.writeFile(this.tempFile, JSON.stringify(sliced, (key, value) => {
+      const stringified = JSON.stringify(sliced, (key, value) => {
         if (typeof value === "undefined") return null
         return value
-      }))
+      })
+      await fs.writeFile(this.tempFile, stringified)
       await this.db.exec(`INSERT INTO ${this.table} SELECT * FROM '${this.tempFile}'`)
       await fs.rm(this.tempFile)
     }

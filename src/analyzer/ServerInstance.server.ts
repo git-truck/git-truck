@@ -146,8 +146,7 @@ export default class ServerInstance {
     }
   }
 
-  public async gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>) {
-    const renamedFiles: RenameEntry[] = []
+  public async gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>, renamedFiles: RenameEntry[]) {
     const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
     for (const match of matches) {
@@ -206,8 +205,6 @@ export default class ServerInstance {
         }
       })
     )
-
-    await this.db.addRenames(renamedFiles)
   }
 
   public async getFullCommits(gitLogResult: string) {
@@ -241,9 +238,9 @@ export default class ServerInstance {
     return commits;
   }
 
-  private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>) {
+  private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>, renamedFiles: RenameEntry[]) {
     const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start)
-    await this.gatherCommitsFromGitLog(gitLogResult, commits)
+    await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
   }
 
@@ -328,17 +325,19 @@ export default class ServerInstance {
       const sectionSize = Math.ceil(runCountCommit / threadCount)
 
       const commits = new Map<string, GitLogEntry>()
+      const renamedFiles: RenameEntry[] = []
 
       const promises = Array.from({ length: threadCount }, (_, i) => {
         const sectionStart = index + i * sectionSize
         let sectionEnd = Math.min(sectionStart + sectionSize, index + runCountCommit)
         if (sectionEnd > commitCount) sectionEnd = runCountCommit
         log.info("start thread " + sectionStart + "-" + sectionEnd)
-        return this.gatherCommitsInRange(sectionStart, sectionEnd, commits)
+        return this.gatherCommitsInRange(sectionStart, sectionEnd, commits, renamedFiles)
       })
 
       await Promise.all(promises)
 
+      await this.db.addRenames(renamedFiles)
       await this.db.addCommits(commits)
       log.debug("done adding")
 
