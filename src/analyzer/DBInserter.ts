@@ -6,21 +6,18 @@ const bundleSize = 5000
 
 export abstract class Inserter<T> {
   protected rows: T[] = []
-  public async addRow(row: T) {
+  public addRow(row: T) {
     this.rows.push(row)
-    if (this.rows.length >= bundleSize) await this.finalize()
   }
 
-  public async addRows(rows: T[]) {
+  public addRows(rows: T[]) {
     this.rows.push(...rows)
-    if (this.rows.length >= bundleSize) await this.finalize()
   }
   public abstract finalize(): Promise<void>
 
   constructor(protected table: string, protected db: Database) {}
 
   public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database): Inserter<T> {
-    return new JsonInserter<T>(table, tempPath, db)
     switch (process.platform) {
       case "darwin":
       case "linux":
@@ -60,17 +57,10 @@ class ArrowInserter<T> extends Inserter<T> {
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
-      // console.log("finalizing", this.table)
-      // console.log("sliced", sliced)
       const arrowTable = tableFromJSON(sliced as Record<string, unknown>[])
-      // console.log("data", arrowTable.data)
-      // console.log("registering", this.table)
       await this.db.register_buffer(`temp_${this.table}`, [tableToIPC(arrowTable)], true)
-      // console.log("done registering", this.table)
       await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM temp_${this.table});`)
-      // console.log("exec complete", this.table)
       await this.db.unregister_buffer(`temp_${this.table}`)
-      // console.log("unregister", this.table)
     }
   }
 }

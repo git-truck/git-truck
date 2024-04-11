@@ -167,7 +167,7 @@ export default class DB {
         splitunions.push({alias, actualname})
       }
     }
-    await ins.addRows(splitunions)
+    ins.addRows(splitunions)
     await ins.finalize()
   }
 
@@ -179,7 +179,7 @@ export default class DB {
     `)
 
     const ins = Inserter.getSystemSpecificInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
-    await ins.addRows(renames)
+    ins.addRows(renames)
     await ins.finalize()
   }
 
@@ -252,7 +252,7 @@ export default class DB {
     `)
 
     const ins = Inserter.getSystemSpecificInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
-    await ins.addRows(hiddenFiles.map(path => {
+    ins.addRows(hiddenFiles.map(path => {
       return {path: path}
     }))
     await ins.finalize()
@@ -377,7 +377,7 @@ export default class DB {
 
   public async addRenames(renames: RenameEntry[]) {
     const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance)
-    await ins.addRows(renames.map(r => {
+    ins.addRows(renames.map(r => {
       if (!r.timestampauthor)console.log("waddup", r)
       return {
         fromname: r.fromname,
@@ -396,7 +396,7 @@ export default class DB {
       DELETE FROM files;
     `)
     const ins = Inserter.getSystemSpecificInserter<{path: string}>("files", this.tmpDir, await this.instance)
-    await ins.addRows(files.map(x => { return {path: x.path}}))
+    ins.addRows(files.map(x => { return {path: x.path}}))
     await ins.finalize()
   }
 
@@ -524,7 +524,7 @@ export default class DB {
         authortime: commit.authortime
       })
       for (const change of commit.fileChanges) {
-          await fileChangeInserter.addRow({
+          fileChangeInserter.addRow({
             commithash: commit.hash, 
             insertions: change.insertions, 
             deletions: change.deletions,
