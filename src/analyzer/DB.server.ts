@@ -41,6 +41,10 @@ export default class DB {
     return await (await this.instance).all(query)
   }
 
+  public async checkpoint() {
+    await (await this.instance).all("CHECKPOINT;")
+  }
+
   private static async initTables(db: Database) {
     await db.all(`
       CREATE TABLE IF NOT EXISTS commits (

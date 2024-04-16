@@ -343,6 +343,7 @@ export default class ServerInstance {
       log.info("threads synced")
     }
     await this.db.createIndexes()
+    await this.db.checkpoint()
     await this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue)
     await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
