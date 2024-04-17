@@ -18,7 +18,7 @@ import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { ClientOnly, Code } from "~/components/util"
+import { Code } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { semverCompare } from "~/util"
 import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
@@ -70,7 +70,7 @@ export interface RepoData2 {
   timerange: [number, number]
   colorSeed: string | null
   authorColors: Map<string, `#${string}`>
-  commitCountPerDay: {date: string, count: number}[]
+  commitCountPerDay: { date: string; count: number }[]
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
 }
@@ -91,7 +91,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return typedjson(instance.prevResult)
   }
   await instance.loadRepoData()
-  
+
   const timerange = await instance.db.getOverallTimeRange()
   let selectedRange = instance.db.selectedRange
   if (!selectedRange) {
@@ -109,12 +109,14 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const reason = instance.prevInvokeReason
   const prevData = instance.prevResult
   const prevRes = prevData?.repodata2
-  
+
   console.time("fileTree")
-  const filetree = prevRes && !shouldUpdate(reason, "filetree") ? {rootTree: prevRes.fileTree, fileCount: prevRes.fileCount} : await instance.analyzeTree()
+  const filetree =
+    prevRes && !shouldUpdate(reason, "filetree")
+      ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
+      : await instance.analyzeTree()
   console.timeEnd("fileTree")
 
-  
   if (!prevRes || shouldUpdate(reason, "rename")) {
     console.time("rename")
     await instance.updateRenames()
@@ -125,20 +127,43 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
   console.timeEnd("updateCache")
   console.time("dbQueries")
-  const dominantAuthors = prevRes && !shouldUpdate(reason, "dominantAuthor") ? prevRes.dominantAuthors : await instance.db.getDominantAuthorPerFile()
-  const commitCounts = prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
-  const lastChanged = prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
-  const authorCounts = prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
-  const { maxCommitCount, minCommitCount } = prevRes && !shouldUpdate(reason, "maxMinCommitCount") ? {maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount} : await instance.db.getMaxAndMinCommitCount()
-  const { newestChangeDate, oldestChangeDate } = prevRes && !shouldUpdate(reason, "newestOldestChangeDate") ? {newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate} :await instance.db.getNewestAndOldestChangeDates()
+  const dominantAuthors =
+    prevRes && !shouldUpdate(reason, "dominantAuthor")
+      ? prevRes.dominantAuthors
+      : await instance.db.getDominantAuthorPerFile()
+  const commitCounts =
+    prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const lastChanged =
+    prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
+  const authorCounts =
+    prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } =
+    prevRes && !shouldUpdate(reason, "maxMinCommitCount")
+      ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
+      : await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } =
+    prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
+      ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
+      : await instance.db.getNewestAndOldestChangeDates()
   const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
-  const authorUnions = prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions :await instance.db.getAuthorUnions()
-  const {rootTree, fileCount} = filetree
-  const hiddenFiles = prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
-  const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await InstanceManager.metadataDB.getLastRun(instance.repo, instance.branch)
+  const authorUnions =
+    prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions : await instance.db.getAuthorUnions()
+  const { rootTree, fileCount } = filetree
+  const hiddenFiles =
+    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const lastRunInfo =
+    prevRes && !shouldUpdate(reason, "lastRunInfo")
+      ? prevRes.lastRunInfo
+      : await InstanceManager.metadataDB.getLastRun(instance.repo, instance.branch)
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
-  const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await InstanceManager.metadataDB.getAuthorColors()
-  const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
+  const authorColors =
+    prevRes && !shouldUpdate(reason, "authorColors")
+      ? prevRes.authorColors
+      : await InstanceManager.metadataDB.getAuthorColors()
+  const commitCountPerDay =
+    prevRes && !shouldUpdate(reason, "commitCountPerDay")
+      ? prevRes.commitCountPerDay
+      : await instance.db.getCommitCountPerTime(timerange)
   const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
   console.timeEnd("dbQueries")
 
@@ -201,43 +226,42 @@ export const action: ActionFunction = async ({ request, params }) => {
     return null
   }
 
-
   if (ignore && typeof ignore === "string") {
     instance.prevInvokeReason = "ignore"
     const hidden = await instance.db.getHiddenFiles()
     hidden.push(ignore)
     await instance.db.replaceHiddenFiles(hidden)
-    
+
     return null
   }
-  
+
   if (unignore && typeof unignore === "string") {
     instance.prevInvokeReason = "unignore"
     const hidden = await instance.db.getHiddenFiles()
     await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
     return null
   }
-  
+
   if (typeof fileToOpen === "string") {
     instance.prevInvokeReason = "open"
     openFile(instance.path, fileToOpen)
     return null
   }
-  
+
   if (typeof unionedAuthors === "string") {
     instance.prevInvokeReason = "unionedAuthors"
     const json = JSON.parse(unionedAuthors) as string[][]
     await instance.db.replaceAuthorUnions(json)
     return null
   }
-  
+
   if (typeof rerollColors === "string") {
     instance.prevInvokeReason = "rerollColors"
     const newSeed = randomstring.generate(6)
     await instance.db.updateColorSeed(newSeed)
     return null
   }
-  
+
   if (typeof timeseries === "string") {
     const split = timeseries.split("-")
     const start = Number(split[0])
@@ -255,7 +279,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     await instance.updateTimeInterval(start, end)
     return null
   }
-  
+
   if (typeof authorname === "string") {
     instance.prevInvokeReason = "authorcolor"
     await InstanceManager.metadataDB.addAuthorColor(authorname, authorcolor as string)
@@ -409,13 +433,17 @@ export default function Repo() {
             <Breadcrumb />
             <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
           </header>
-          {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
-          <div className="flex flex-col">
-            <ClientOnly>
-              <TimeSlider />
-              <BarChart />
-            </ClientOnly>
-          </div>
+          {client ? (
+            <>
+              <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+              <div className="flex flex-col">
+                <TimeSlider />
+                <BarChart />
+              </div>
+            </>
+          ) : (
+            <div />
+          )}
         </main>
 
         <aside
