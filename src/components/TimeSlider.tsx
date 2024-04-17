@@ -11,7 +11,7 @@ interface IHandleProps {
   getHandleProps: GetHandleProps
   disabled: boolean
 }
-
+// TODO: allow setting specific date by clicking the date
 function Handle(props: IHandleProps) {
   return (
     <div
@@ -100,10 +100,10 @@ function Track(props: ITrackProps) {
 
 export default function TimeSlider() {
   const sliderStyle: React.CSSProperties = {
-    left: "5%",
+    left: "70px",
     top: "30px",
     position: "relative",
-    width: "90%"
+    width: "calc(100% - 140px)"
   }
 
   const railStyle: React.CSSProperties = {
@@ -136,7 +136,7 @@ export default function TimeSlider() {
   // TODO: fix this does 2 fetches on first load
 
   return (
-    <div style={{ height: 60, width: "100%" }}>
+    <div style={{ height: 60, width: "100%", textAlign: "center" }}>
       <Slider
         mode={2}
         step={1}
@@ -155,14 +155,15 @@ export default function TimeSlider() {
         disabled={disabled}
       >
         <Rail>
-          {({ getRailProps }) => (
-            <div style={railStyle} {...getRailProps()}>
+          {() => (
+            <div style={railStyle}>
               <p
                 style={{
                   left: `${percentageStart}%`,
                   bottom: "100%",
                   position: "absolute",
-                  transform: "translate(-100%, -50%)"
+                  transform: "translate(-100%, -50%)",
+                  maxWidth: "80px"
                 }}
               >
                 {dateFormatShort(selectedStartDate.getTime())}
@@ -172,7 +173,8 @@ export default function TimeSlider() {
                   left: `${percentageEnd}%`,
                   bottom: "100%",
                   position: "absolute",
-                  transform: "translate(0%, -50%)"
+                  transform: "translate(0%, -50%)",
+                  width: "80px"
                 }}
               >
                 {dateFormatShort(selectedEndDate.getTime())}
