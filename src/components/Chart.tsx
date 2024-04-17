@@ -143,6 +143,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         }}
       >
         {nodes.map((d, i) => {
+          // TODO: fix labels not updating in chrome when changing interval (reenabling labels fixes)
           return (
             <g
               key={d.data.path}
