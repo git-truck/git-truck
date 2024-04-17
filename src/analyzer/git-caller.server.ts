@@ -197,7 +197,7 @@ export class GitCaller {
           name: repoDir,
           path: repoPath,
           parentDirPath: parentDir,
-          currentHead: branchHead,
+          currentHead: branch,
           refs,
           analyzedHeads
         }
