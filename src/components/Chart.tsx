@@ -23,7 +23,7 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { getTextColorFromBackground, isBlob, isTree, removeFirstPart } from "~/util"
+import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -407,18 +407,17 @@ function createPartitionedHiearchy(
 
   const hiearchy = hierarchy(castedTree).sum((d) => {
     const blob = d as GitBlobObject
-    const slicedPath = removeFirstPart(blob.path)
     switch (sizeMetricType) {
       case "FILE_SIZE":
         return blob.sizeInBytes ?? 1
       case "MOST_COMMITS":
-        return repodata2.commitCounts.get(slicedPath) ?? 1
+        return repodata2.commitCounts.get(blob.path) ?? 1
       case "EQUAL_SIZE":
         return 1
       case "LAST_CHANGED":
-        return (repodata2.lastChanged.get(slicedPath) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
+        return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
       case "TRUCK_FACTOR":
-        return repodata2.authorCounts.get(slicedPath) ?? 1
+        return repodata2.authorCounts.get(blob.path) ?? 1
     }
   })
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff

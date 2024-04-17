@@ -1,7 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import invariant from "tiny-invariant"
 import InstanceManager from "~/analyzer/InstanceManager.server"
-import { removeFirstPart } from "~/util"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
@@ -18,7 +17,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
       
-  const commitHashes = await instance.db.getCommitHashes(removeFirstPart(path), Number(count))
+  const commitHashes = await instance.db.getCommitHashes(path, Number(count))
   const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
   const fullCommits = await instance.getFullCommits(gitLogResult)
   const unions = await instance.db.getRawUnions()

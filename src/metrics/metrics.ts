@@ -11,7 +11,6 @@ import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import uniqolor from "uniqolor"
 import type { RepoData } from "~/routes/$repo.$"
-import { removeFirstPart } from "~/util"
 import { noEntryColor } from "~/const"
 import { createHash } from "node:crypto"
 
@@ -159,11 +158,11 @@ export function getMetricCalcs(
               getLastChangedIndex(
                 groupings,
                 newestEpoch,
-                data.repodata2.lastChanged.get(removeFirstPart(blob.path)) ?? 0
+                data.repodata2.lastChanged.get(blob.path) ?? 0
               ) ?? -1
           ]
         }
-        const existing = data.repodata2.lastChanged.get(removeFirstPart(blob.path))
+        const existing = data.repodata2.lastChanged.get(blob.path)
         const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
         cache.colormap.set(blob.path, color)
       }
@@ -183,7 +182,7 @@ export function getMetricCalcs(
             Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
             (n) => `${Math.pow(2, n)}`,
             (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.repodata2.authors.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(removeFirstPart(blob.path)) ?? 0))
+            (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(blob.path) ?? 0))
           ]
         }
         truckmapper.setColor(blob, cache, data.repodata2.authorCounts)

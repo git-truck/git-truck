@@ -1,7 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import invariant from "tiny-invariant"
 import InstanceManager from "~/analyzer/InstanceManager.server"
-import { removeFirstPart } from "~/util"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
@@ -16,5 +15,5 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-  return await instance.db.getAuthorContribsForPath(removeFirstPart(path), isblob === "true")
+  return await instance.db.getAuthorContribsForPath(path, isblob === "true")
 }

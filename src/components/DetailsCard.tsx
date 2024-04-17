@@ -9,7 +9,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
-import { dateFormatLong, getTextColorFromBackground, last, removeFirstPart } from "~/util"
+import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
 import byteSize from "byte-size"
 import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
@@ -42,7 +42,7 @@ export function DetailsCard({
   const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
-  const slicedPath = useMemo(() => removeFirstPart(clickedObject?.path ?? ""), [clickedObject])
+  const slicedPath = useMemo(() => (clickedObject?.path ?? ""), [clickedObject])
 
   const existingCommitCount = repodata2.commitCounts.get(slicedPath)
 

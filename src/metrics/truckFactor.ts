@@ -1,6 +1,6 @@
 import type { GitBlobObject } from "~/analyzer/model"
 import type { MetricCache } from "./metrics"
-import { hslToHex, removeFirstPart } from "~/util"
+import { hslToHex } from "~/util"
 import { noEntryColor } from "~/const"
 
 export class TruckFactorTranslater {
@@ -25,7 +25,7 @@ export class TruckFactorTranslater {
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, authorCountsPerFile: Map<string, number>) {
-    const existing = authorCountsPerFile.get(removeFirstPart(blob.path))
+    const existing = authorCountsPerFile.get(blob.path)
     const color = existing ? this.getColor(existing) : noEntryColor
     cache.colormap.set(blob.path, color)
   }

@@ -149,12 +149,5 @@ export function getLightness(hex: `#${string}`): number {
   return weightedDistanceIn3D(hex) / 255
 }
 
-export function removeFirstPart(path: string) {
-  return path
-  const index = path.indexOf(getSeparator(path))
-  if (index === -1) return ""
-  return path.slice(index + 1)
-}
-
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"

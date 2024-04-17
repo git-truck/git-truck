@@ -2,7 +2,6 @@ import type { GitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"
-import { removeFirstPart } from "~/util"
 import { noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(
@@ -11,8 +10,7 @@ export function setDominantAuthorColor(
   cache: MetricCache,
   dominantAuthorPerFile: Map<string, string>
 ) {
-  const path = removeFirstPart(blob.path)
-  const dominantAuthor = dominantAuthorPerFile.get(path)
+  const dominantAuthor = dominantAuthorPerFile.get(blob.path)
   if (!dominantAuthor) {
     // console.warn("No dominant author for file", path)
     return

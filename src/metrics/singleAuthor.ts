@@ -2,7 +2,6 @@ import type { GitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"
-import { removeFirstPart } from "~/util"
 import { noEntryColor } from "~/const"
 
 export function setDominanceColor(
@@ -13,7 +12,7 @@ export function setDominanceColor(
   authorCountsPerFile: Map<string, number>
 ) {
   const multipleAuthorsColor = "#e0e0e0"
-  const path = removeFirstPart(blob.path)
+  const path = blob.path
   const dominantAuthor = dominantAuthorPerFile.get(path)
   const legend = cache.legend as PointLegendData
 

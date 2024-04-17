@@ -4,7 +4,7 @@ import type { GitBlobObject, GitObject } from "~/analyzer/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob, removeFirstPart } from "../util"
+import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
 import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
@@ -81,7 +81,7 @@ function ColorMetricDependentInfo(props: {
   hoveredBlob: GitBlobObject | null
   repodata2: RepoData2
 }) {
-  const slicedPath = removeFirstPart(props.hoveredBlob?.path ?? "")
+  const slicedPath = props.hoveredBlob?.path ?? ""
   const authorCount = props.repodata2.authorCounts.get(slicedPath)
   switch (props.metric) {
     case "MOST_COMMITS":
