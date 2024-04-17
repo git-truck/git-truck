@@ -11,4 +11,5 @@ export const treemapBlobTextOffsetY = 3
 export const bubblePadding = 10
 export const circleTreeTextOffsetY = estimatedLetterHeightForDirText - 1
 export const circleBlobTextOffsetY = estimatedLetterHeightForDirText
-export const noEntryColor = "#808080"
+export const noEntryColor = "#c0c0c0" // TODO: change to lighter grey
+// TODO: add option to hide files with no activity
