@@ -6,18 +6,16 @@ test("navigate to a repository", async ({ page }) => {
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Git Truck/)
 
-  await page.getByRole("button").waitFor()
-
-  const gitTruckCard = page.locator(".card", { has: page.getByRole("heading", { name: /^git-truck$/, level: 2 }) })
+  // Expect the status of the git-truck repository to be "Not analyzed".
+  const gitTruckStatus = await page.getByTestId("status-git-truck").textContent()
+  expect(gitTruckStatus).toBe("Not analyzed")
 
   // Select an option from a <select> dropdown.
-  await gitTruckCard.locator("select").selectOption("main")
+  await page.getByTestId("revision-select-git-truck").selectOption("main")
   // Click the analyze button.
-  await gitTruckCard
-    .getByRole("link", {
-      name: "Analyze",
-    })
-    .click()
+  await page.getByTitle("View git-truck", {
+    exact: true
+  }).click()
 
   await page.waitForURL("/git-truck/main")
   await page.waitForSelector("text=See more repositories")

@@ -71,7 +71,7 @@
   /* Inputs */
 
   .btn {
-    @apply grid h-8 cursor-pointer select-none grid-flow-col items-center justify-center gap-2 text-nowrap rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-gray-600 transition-all hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
+    @apply grid h-8 cursor-pointer select-none grid-flow-col items-center justify-center gap-2 text-nowrap rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-gray-600 transition duration-200 hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
   }
 
   .btn > svg,

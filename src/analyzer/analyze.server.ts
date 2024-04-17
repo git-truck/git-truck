@@ -225,7 +225,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
     job: () => git.findBranchHead(branch),
     beforeMsg: "Finding branch head",
     afterMsg: "Found branch head",
-    errorMsg: "Error finding branch head"
+    errorMsg: "Could not find branch head"
   })
   const repoName = getDirName(repoDir)
 

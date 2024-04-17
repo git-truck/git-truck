@@ -8,5 +8,13 @@ export function useData() {
   if (!context) {
     throw new Error("useData must be used within a DataContext")
   }
-  return context
+  if (context.repo.status !== "Success") {
+    throw new Error(`Repo is not analyzed, it is in status: ${context.repo.status}`)
+  }
+
+  // Force typescript to infer the type of the repo
+  return {
+    ...context,
+    repo: context.repo
+  }
 }
