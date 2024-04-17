@@ -1,5 +1,7 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useSubmit, useNavigation } from "@remix-run/react"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import type { SliderItem, GetHandleProps, GetTrackProps } from "react-compound-slider"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
@@ -62,64 +64,7 @@ function Track(props: ITrackProps) {
   )
 }
 
-// interface ITickProps {
-//     key: string;
-//     tick: SliderItem;
-//     count: number;
-// }
-
-// function Tick(props: ITickProps) {
-//     return (
-//         <div>
-//             <div
-//                 style={{
-//                     position: 'absolute',
-//                     marginTop: 14,
-//                     width: 1,
-//                     height: 5,
-//                     backgroundColor: 'rgb(200,200,200)',
-//                     left: `${props.tick.percent}%`
-//                 }}
-//             />
-//             <div
-//                 style={{
-//                     position: 'absolute',
-//                     marginTop: 22,
-//                     fontSize: 10,
-//                     textAlign: 'center',
-//                     marginLeft: `${-(100 / props.count) / 2}%`,
-//                     width: `${100 / props.count}%`,
-//                     left: `${props.tick.percent}%`
-//                 }}
-//             >
-//                 {(new Date(props.tick.value * 1000)).toISOString()}
-//             </div>
-//         </div>
-//     )
-// }
-
-export default function TimeSlider() {
-  const sliderStyle: React.CSSProperties = {
-    left: "70px",
-    top: "30px",
-    position: "relative",
-    width: "calc(100% - 140px)"
-  }
-
-  const railStyle: React.CSSProperties = {
-    position: "absolute",
-    width: "100%",
-    height: 14,
-    borderRadius: 7,
-    cursor: "pointer",
-    backgroundColor: "rgb(155,155,155)"
-  }
-
-  const { repodata2 } = useData()
-  const { timerange, selectedRange } = repodata2
-  const submit = useSubmit()
-  const [range, setRange] = useState(selectedRange)
-  
+function DateTags({range, timerange}: {range: [number, number], timerange: [number, number]}) {
   const selectedStartDate = useMemo(() => new Date(range[0] * 1000), [range])
   const selectedEndDate = useMemo(() => new Date(range[1] * 1000), [range])
   const percentageStart = useMemo(
@@ -130,10 +75,61 @@ export default function TimeSlider() {
     () => ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
     [range, timerange]
   )
+  
+  const railStyle: React.CSSProperties = {
+    position: "absolute",
+    width: "100%",
+    height: 14,
+    borderRadius: 7,
+    cursor: "pointer",
+    backgroundColor: "rgb(155,155,155)"
+  }
+
+  return (
+    <div style={railStyle}>
+      <p
+        style={{
+          left: `${percentageStart}%`,
+          bottom: "100%",
+          position: "absolute",
+          transform: "translate(-100%, -50%)",
+          maxWidth: "80px"
+        }}
+        onClick={() => console.log("left !!!")}
+      >
+        {dateFormatShort(selectedStartDate.getTime())}
+      </p>
+      <p
+        style={{
+          left: `${percentageEnd}%`,
+          bottom: "100%",
+          position: "absolute",
+          transform: "translate(0%, -50%)",
+          width: "80px"
+        }}
+        onClick={() => console.log("bruh?")}
+      >
+        {dateFormatShort(selectedEndDate.getTime())}
+      </p>
+    </div>
+  )
+}
+
+export default function TimeSlider() {
+  const sliderStyle: React.CSSProperties = {
+    left: "70px",
+    top: "30px",
+    position: "relative",
+    width: "calc(100% - 140px)"
+  }
+
+  const { repodata2 } = useData()
+  const { timerange, selectedRange } = repodata2
+  const submit = useSubmit()
+  const [range, setRange] = useState(selectedRange)
+  
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
-
-  // TODO: fix this does 2 fetches on first load
 
   return (
     <div style={{ height: 60, width: "100%", textAlign: "center" }}>
@@ -156,30 +152,7 @@ export default function TimeSlider() {
       >
         <Rail>
           {() => (
-            <div style={railStyle}>
-              <p
-                style={{
-                  left: `${percentageStart}%`,
-                  bottom: "100%",
-                  position: "absolute",
-                  transform: "translate(-100%, -50%)",
-                  maxWidth: "80px"
-                }}
-              >
-                {dateFormatShort(selectedStartDate.getTime())}
-              </p>
-              <p
-                style={{
-                  left: `${percentageEnd}%`,
-                  bottom: "100%",
-                  position: "absolute",
-                  transform: "translate(0%, -50%)",
-                  width: "80px"
-                }}
-              >
-                {dateFormatShort(selectedEndDate.getTime())}
-              </p>
-            </div>
+            <DateTags timerange={timerange} range={range}/>
           )}
         </Rail>
         <Handles>
@@ -206,15 +179,6 @@ export default function TimeSlider() {
             </div>
           )}
         </Tracks>
-        {/* <Ticks count={2}>
-                    {({ ticks }) => (
-                        <div className="slider-ticks">
-                            {ticks.map(tick => (
-                                <Tick key={tick.id} tick={tick} count={ticks.length} />
-                            ))}
-                        </div>
-                    )}
-                </Ticks> */}
       </Slider>
     </div>
   )
