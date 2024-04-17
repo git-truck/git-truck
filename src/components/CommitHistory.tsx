@@ -147,7 +147,6 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         )}
         onClickOutside={() => setIsPopoverOpen(false)}
       >
-        {/* TODO: fix ellipsis not working */}
         <p
           onClick={() => setIsPopoverOpen(!isPopoverOpen)}
           className="cursor-pointer overflow-hidden overflow-ellipsis font-bold opacity-80 hover:opacity-70"
