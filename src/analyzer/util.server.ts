@@ -45,7 +45,13 @@ export function runProcess(dir: string, command: string, args: string[], serverI
   })
 }
 
-export function analyzeRenamedFile(file: string, timestamp: number, authortime: number, renamedFiles: RenameEntry[], repo: string) {
+export function analyzeRenamedFile(
+  file: string,
+  timestamp: number,
+  authortime: number,
+  renamedFiles: RenameEntry[],
+  repo: string
+) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
   const match = movedFileRegex.exec(file)
@@ -56,14 +62,14 @@ export function analyzeRenamedFile(file: string, timestamp: number, authortime: 
   if (groups["oldPath"] || groups["newPath"]) {
     const oldP = groups["oldPath"] ?? ""
     const newP = groups["newPath"] ?? ""
-    oldPath = repo + sep + file.replace(replaceRegex, oldP).replace("//", "/")
-    newPath = repo + sep + file.replace(replaceRegex, newP).replace("//", "/")
+    oldPath = repo + "/" + file.replace(replaceRegex, oldP).replace("//", "/")
+    newPath = repo + "/" + file.replace(replaceRegex, newP).replace("//", "/")
   } else {
-    oldPath = repo + sep + groups["oldPath2"] ?? ""
-    newPath = repo + sep + groups["newPath2"] ?? ""
+    oldPath = repo + "/" + groups["oldPath2"] ?? ""
+    newPath = repo + "/" + groups["newPath2"] ?? ""
   }
 
-  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime})
+  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime })
   return newPath
 }
 
@@ -200,7 +206,7 @@ function getCommandLine() {
 }
 
 export function openFile(repoDir: string, path: string) {
-  path = resolvePath(repoDir, "..", path.split("/").join(sep))
+  path = resolvePath(repoDir, "..", path.split("/").join("/"))
   const command = `${getCommandLine()} "${path}"`
   exec(command).stderr?.on("data", (e) => {
     // TODO show error in UI
@@ -214,8 +220,9 @@ export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUs
   try {
     const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
     if (configFileContents) currentConfig = JSON.parse(configFileContents)
-  } catch (e) { /* empty */ }
+  } catch (e) {
+    /* empty */
+  }
   const updatedConfig = updaterFn(currentConfig)
   await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }
-

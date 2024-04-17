@@ -18,7 +18,6 @@ import { cpus } from "os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
-import { sep } from "node:path"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
@@ -33,7 +32,7 @@ export default class ServerInstance {
   private fileTreeAsOf = "HEAD"
   public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
-  public prevProgress = { str: "", timestamp: 0}
+  public prevProgress = { str: "", timestamp: 0 }
 
   constructor(
     public repo: string,
@@ -71,7 +70,7 @@ export default class ServerInstance {
         type: groups["type"] as "blob" | "tree",
         hash: groups["hash"],
         size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-        path: this.repo + sep + groups["path"]
+        path: this.repo + "/" + groups["path"]
       })
     }
 
@@ -151,7 +150,11 @@ export default class ServerInstance {
     }
   }
 
-  public async gatherCommitsFromGitLog(gitLogResult: string, commits: Map<string, GitLogEntry>, renamedFiles: RenameEntry[]) {
+  public async gatherCommitsFromGitLog(
+    gitLogResult: string,
+    commits: Map<string, GitLogEntry>,
+    renamedFiles: RenameEntry[]
+  ) {
     const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
     for (const match of matches) {
@@ -191,7 +194,7 @@ export default class ServerInstance {
 
           const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
           const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, insertions, deletions, path: this.repo + sep + filePath, mode: "modify" }) // TODO remove modetype
+          fileChanges.push({ isBinary, insertions, deletions, path: this.repo + "/" + filePath, mode: "modify" }) // TODO remove modetype
         }
       }
       commits.set(hash, { author, committertime, authortime, hash, coauthors: [], fileChanges })
@@ -200,7 +203,12 @@ export default class ServerInstance {
     renamedFiles.push(
       ...FileModifications.map((modification) => {
         if (modification.type === "delete") {
-          return { fromname: modification.path, toname: null, timestamp: modification.timestamp, timestampauthor: modification.timestampauthor}
+          return {
+            fromname: modification.path,
+            toname: null,
+            timestamp: modification.timestamp,
+            timestampauthor: modification.timestampauthor
+          }
         }
         return {
           fromname: null,
@@ -240,20 +248,25 @@ export default class ServerInstance {
       }
       commits.push({ author, committertime, authortime, hash, fileChanges, message, body })
     }
-    return commits;
+    return commits
   }
 
-  private async gatherCommitsInRange(start: number, end: number, commits: Map<string, GitLogEntry>, renamedFiles: RenameEntry[]) {
+  private async gatherCommitsInRange(
+    start: number,
+    end: number,
+    commits: Map<string, GitLogEntry>,
+    renamedFiles: RenameEntry[]
+  ) {
     const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
   }
 
   private flattenChains(chains: RenameInterval[][]) {
-    return chains.flatMap(chain => {
-        const destinationName = chain[0].toname;
-        return chain.map(interval => ({ ...interval, toname: destinationName } as RenameInterval));
-    });
+    return chains.flatMap((chain) => {
+      const destinationName = chain[0].toname
+      return chain.map((interval) => ({ ...interval, toname: destinationName }) as RenameInterval)
+    })
   }
 
   public async updateRenames() {
@@ -268,27 +281,28 @@ export default class ServerInstance {
     const currentPathToRenameChain = new Map<string, RenameInterval[]>()
     const finishedChains: RenameInterval[][] = []
 
-    for (const file of currentFiles) currentPathToRenameChain.set(file, [{fromname: file, toname: file, timestamp: 0, timestampend: 4_000_000_000}])
+    for (const file of currentFiles)
+      currentPathToRenameChain.set(file, [{ fromname: file, toname: file, timestamp: 0, timestampend: 4_000_000_000 }])
 
     for (const rename of orderedRenames) {
-        // if file was deleted, we not care about what it was previously called
-        if (rename.toname === null) continue
-        const existing = currentPathToRenameChain.get(rename.toname)
-        if (existing) {
-            const prevRename = existing[existing.length-1]
-            prevRename.timestamp = rename.timestampend
-            rename.timestampend = prevRename.timestamp
-            if (rename.fromname !== null) {
-              // add rename to chain, and set the current rename to the newly found rename
-              existing.push(rename)
-              currentPathToRenameChain.set(rename.fromname, existing)
-            } else {
-              // if we found the time of file creation, we do not need to follow renames for it any more
-                prevRename.timestamp = rename.timestampend
-                finishedChains.push(existing)
-            }
-            currentPathToRenameChain.delete(rename.toname)
+      // if file was deleted, we not care about what it was previously called
+      if (rename.toname === null) continue
+      const existing = currentPathToRenameChain.get(rename.toname)
+      if (existing) {
+        const prevRename = existing[existing.length - 1]
+        prevRename.timestamp = rename.timestampend
+        rename.timestampend = prevRename.timestamp
+        if (rename.fromname !== null) {
+          // add rename to chain, and set the current rename to the newly found rename
+          existing.push(rename)
+          currentPathToRenameChain.set(rename.fromname, existing)
+        } else {
+          // if we found the time of file creation, we do not need to follow renames for it any more
+          prevRename.timestamp = rename.timestampend
+          finishedChains.push(existing)
         }
+        currentPathToRenameChain.delete(rename.toname)
+      }
     }
 
     finishedChains.push(...currentPathToRenameChain.values())
@@ -297,7 +311,7 @@ export default class ServerInstance {
 
   public async loadRepoData() {
     this.analyzationStatus = "Starting"
-    
+
     let commitCount = await this.gitCaller.getCommitCount()
     if (await InstanceManager.metadataDB.getLastRun(this.repo, this.branch)) {
       const latestCommit = await this.db.getLatestCommitHash()
