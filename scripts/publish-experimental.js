@@ -16,13 +16,13 @@ async function main() {
 
   const commitHash = execSync("git rev-parse --short HEAD", { stdio: "pipe" }).toString().trim()
   const versionTag = `0.0.0-${commitHash}`
-
+  const tag = process.argv[3] ?? "experimental"
   console.log(`Tagging version ${versionTag}...`)
   execSync(`npm version ${versionTag} --no-git-tag-version`, { stdio: "pipe" })
   console.log(`Tagged version ${versionTag}`)
-  console.log(`Publishing version ${versionTag} to git-truck@experimental...`)
-  execSync(`npm publish --otp ${process.argv[2]} --tag experimental`, { stdio: "inherit" })
-  console.log(`Published version ${versionTag} to git-truck@experimental`)
+  console.log(`Publishing version ${versionTag} to git-truck@${tag}...`)
+  execSync(`npm publish --otp ${process.argv[2]} --tag ${tag}`, { stdio: "inherit" })
+  console.log(`Published version ${versionTag} to git-truck@${tag}`)
   console.log("Cleaning up...")
   cleanUp()
   console.log("Cleaned up")
