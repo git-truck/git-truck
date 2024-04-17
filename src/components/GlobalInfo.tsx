@@ -59,7 +59,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
               <div className="grid auto-rows-fr grid-cols-2 gap-0">
                 <span>Analyzed</span>
                 <time className="text-right" dateTime={isoString} title={isoString}>
-                  {client ? dateTimeFormatShort(repodata2.lastRunInfo.time) : ""}
+                  {client ? dateTimeFormatShort(repodata2.lastRunInfo.time * 1000) : ""}
                 </time>
 
                 <span>As of commit</span>
@@ -101,7 +101,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           onChange={(e) => switchBranch(e.target.value)}
           defaultValue={repodata2.branch}
           headGroups={repo.refs}
-          analyzedBranches={repodata2.analyzedRepos.filter(rep => rep.repo === repodata2.repo)}
+          analyzedBranches={repodata2.analyzedRepos.filter((rep) => rep.repo === repodata2.repo)}
         />
       </div>
     </div>

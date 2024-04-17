@@ -363,7 +363,7 @@ export default class ServerInstance {
     await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
-    await InstanceManager.metadataDB.setCompletion(this.repo, this.branch)
+    await InstanceManager.metadataDB.setCompletion(this.repo, this.branch, await this.db.getLatestCommitHash())
     this.analyzationStatus = "GeneratingChart"
   }
 }

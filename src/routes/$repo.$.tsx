@@ -135,7 +135,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const authorUnions = prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions :await instance.db.getAuthorUnions()
   const {rootTree, fileCount} = filetree
   const hiddenFiles = prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
-  const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await instance.db.getLastRunInfo()
+  const lastRunInfo = prevRes && !shouldUpdate(reason, "lastRunInfo") ? prevRes.lastRunInfo : await InstanceManager.metadataDB.getLastRun(instance.repo, instance.branch)
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
   const authorColors = prevRes && !shouldUpdate(reason, "authorColors") ? prevRes.authorColors : await InstanceManager.metadataDB.getAuthorColors()
   const commitCountPerDay = prevRes && !shouldUpdate(reason, "commitCountPerDay") ? prevRes.commitCountPerDay :await instance.db.getCommitCountPerTime(timerange)
