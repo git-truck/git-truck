@@ -10,9 +10,11 @@ export abstract class Inserter<T> {
     this.rows.push(row)
   }
 
-  public addRows(rows: T[]) {
-    this.rows.push(...rows)
+  public async addAndFinalize(rows: T[]) {
+    this.rows = rows
+    await this.finalize()
   }
+
   public abstract finalize(): Promise<void>
 
   constructor(protected table: string, protected db: Database) {}

@@ -101,7 +101,7 @@ export default class DB {
   private static async initViews(db: Database, timeSeriesStart: number, timeSeriesEnd: number) {
     const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
     const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
-
+    // TODO filter out hidden files
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime FROM
@@ -171,8 +171,7 @@ export default class DB {
         splitunions.push({alias, actualname})
       }
     }
-    ins.addRows(splitunions)
-    await ins.finalize()
+    await ins.addAndFinalize(splitunions)
   }
 
   public async replaceTemporaryRenames(renames: RenameInterval[]) {
@@ -183,8 +182,7 @@ export default class DB {
     `)
 
     const ins = Inserter.getSystemSpecificInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
-    ins.addRows(renames)
-    await ins.finalize()
+    await ins.addAndFinalize(renames)
   }
 
   public async getAuthorUnions() {
@@ -256,10 +254,9 @@ export default class DB {
     `)
 
     const ins = Inserter.getSystemSpecificInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
-    ins.addRows(hiddenFiles.map(path => {
+    await ins.addAndFinalize(hiddenFiles.map(path => {
       return {path: path}
     }))
-    await ins.finalize()
   }
 
   public async getCommits(path: string, count: number) {
@@ -381,7 +378,7 @@ export default class DB {
 
   public async addRenames(renames: RenameEntry[]) {
     const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance)
-    ins.addRows(renames.map(r => {
+    ins.addAndFinalize(renames.map(r => {
       if (!r.timestampauthor)console.log("waddup", r)
       return {
         fromname: r.fromname,
@@ -390,7 +387,6 @@ export default class DB {
         timestampauthor: r.timestampauthor
       }
     }))
-    await ins.finalize()
   }
 
   public async replaceFiles(files: RawGitObject[]) {
@@ -400,8 +396,7 @@ export default class DB {
       DELETE FROM files;
     `)
     const ins = Inserter.getSystemSpecificInserter<{path: string}>("files", this.tmpDir, await this.instance)
-    ins.addRows(files.map(x => { return {path: x.path}}))
-    await ins.finalize()
+    ins.addAndFinalize(files.map(x => { return {path: x.path}}))
   }
 
   public async getFiles() {
