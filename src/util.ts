@@ -150,6 +150,7 @@ export function getLightness(hex: `#${string}`): number {
 }
 
 export function removeFirstPart(path: string) {
+  return path
   const index = path.indexOf(getSeparator(path))
   if (index === -1) return ""
   return path.slice(index + 1)

@@ -126,9 +126,18 @@ export default class DB {
         --AND f.authortime < r.timestampend)
       );
 
+      CREATE OR REPLACE VIEW filtered_files AS
+      SELECT f.path
+      FROM files f
+      LEFT JOIN hiddenfiles g ON 
+          (g.path LIKE '*.%' AND f.path GLOB g.path)
+          OR (g.path NOT LIKE '*.%' AND f.path LIKE g.path || '%')
+      WHERE g.path IS NULL;
+
+
       CREATE OR REPLACE VIEW filechanges_commits_renamed_files AS
       SELECT * FROM filechanges_commits_renamed f
-      INNER JOIN files fi on fi.path = f.filepath;
+      INNER JOIN filtered_files fi on fi.path = f.filepath;
 
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT fromname, toname, min(timestamp) AS timestamp, timestampauthor FROM renames

@@ -18,6 +18,7 @@ import { cpus } from "os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
+import { sep } from "node:path"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
@@ -70,7 +71,7 @@ export default class ServerInstance {
         type: groups["type"] as "blob" | "tree",
         hash: groups["hash"],
         size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-        path: groups["path"]
+        path: this.repo + sep + groups["path"]
       })
     }
 
@@ -87,7 +88,7 @@ export default class ServerInstance {
     for (const child of lsTreeEntries) {
       const prevTrees = child.path.split("/")
       const newName = prevTrees.pop() as string
-      const newPath = `${this.repo}/${child.path}`
+      const newPath = `${child.path}`
       let currTree = rootTree
       for (const treePath of prevTrees) {
         const foundTree = currTree.children.find((t) => t.name === treePath && t.type === "tree")
@@ -185,12 +186,12 @@ export default class ServerInstance {
           const fileHasMoved = file.includes("=>")
           let filePath = file
           if (fileHasMoved) {
-            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles)
+            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles, this.repo)
           }
 
           const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
           const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, insertions, deletions, path: filePath, mode: "modify" }) // TODO remove modetype
+          fileChanges.push({ isBinary, insertions, deletions, path: this.repo + sep + filePath, mode: "modify" }) // TODO remove modetype
         }
       }
       commits.set(hash, { author, committertime, authortime, hash, coauthors: [], fileChanges })
