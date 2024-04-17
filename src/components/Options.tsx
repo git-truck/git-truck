@@ -32,7 +32,8 @@ import {
   mdiContentCut,
   mdiThemeLightDark,
   mdiWhiteBalanceSunny,
-  mdiMoonWaningCrescent
+  mdiMoonWaningCrescent,
+  mdiClockEdit
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -52,6 +53,7 @@ export const Options = memo(function Options() {
     hierarchyType,
     transitionsEnabled,
     renderCutoff,
+    showFilesWithoutChanges,
     setTransitionsEnabled,
     labelsVisible,
     setLabelsVisible,
@@ -60,7 +62,8 @@ export const Options = memo(function Options() {
     setDepthType,
     setHierarchyType,
     setSizeMetricType,
-    setRenderCutoff
+    setRenderCutoff,
+    setShowFilesWithoutChanges
   } = useOptions()
 
   const [linkMetricAndSizeMetric, setLinkMetricAndSizeMetric] = useLocalStorage<boolean>(
@@ -241,6 +244,15 @@ export const Options = memo(function Options() {
           >
             <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
             Labels
+          </CheckboxWithLabel>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={showFilesWithoutChanges}
+            onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
+            title="Show files that have had no changes in the selected time range"
+          >
+            <Icon className="ml-1.5" path={mdiClockEdit} size="1.25em" />
+            Show files with no activity
           </CheckboxWithLabel>
           <label
             className="label flex w-full items-center justify-start gap-2 text-sm"

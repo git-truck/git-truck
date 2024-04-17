@@ -42,6 +42,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
+  const { showFilesWithoutChanges } = useOptions()
 
   let numberOfDepthLevels: number | undefined = undefined
   switch (depthType) {
@@ -69,13 +70,13 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
     const ig = ignore()
     ig.add(repodata2.hiddenFiles)
-    const filtered = filterGitTree(repodata2.fileTree, ig)
+    const filtered = filterGitTree(repodata2.fileTree, repodata2.commitCounts, showFilesWithoutChanges, ig)
     if (hierarchyType === "NESTED") return filtered
     return {
       ...filtered,
       children: flatten(filtered)
     } as GitTreeObject
-  }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles])
+  }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles, repodata2.commitCounts, showFilesWithoutChanges])
 
   const nodes = useMemo(() => {
     console.time("nodes")
@@ -172,12 +173,13 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   )
 })
 
-function filterGitTree(tree: GitTreeObject, ig: Ignore): GitTreeObject {
+function filterGitTree(tree: GitTreeObject, commitCounts: Map<string, number>, showFilesWithoutChanges: boolean, ig: Ignore): GitTreeObject {
   function filterNode(node: GitObject): GitObject | null {
     if (ig.ignores(node.path)) {
       return null
     }
     if (node.type === "blob") {
+      if (!showFilesWithoutChanges && !commitCounts.get(node.path)) return null
       return node
     } else {
       // It's a tree

@@ -46,6 +46,7 @@ export type Options = {
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
+  showFilesWithoutChanges: boolean
 }
 
 export type OptionsContextType = Options & {
@@ -60,6 +61,7 @@ export type OptionsContextType = Options & {
   setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
   setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
+  setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -85,7 +87,8 @@ const defaultOptions: Options = {
   commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
-  renderCutoff: 2
+  renderCutoff: 2,
+  showFilesWithoutChanges: true
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -124,6 +127,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setRenderCutoff: () => {
       throw new Error("No renderCutoffSetter provided")
+    },
+    setShowFilesWithoutChanges: () => {
+      throw new Error("No showFilesWithoutChangesSetter provided")
     }
   }
 }

@@ -126,6 +126,11 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
+        })),
+      setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => 
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          showFilesWithoutChanges: showFilesWithoutChanges
         }))
     }),
     [options]
