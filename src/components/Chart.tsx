@@ -173,7 +173,12 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   )
 })
 
-function filterGitTree(tree: GitTreeObject, commitCounts: Map<string, number>, showFilesWithoutChanges: boolean, ig: Ignore): GitTreeObject {
+function filterGitTree(
+  tree: GitTreeObject,
+  commitCounts: Map<string, number>,
+  showFilesWithoutChanges: boolean,
+  ig: Ignore
+): GitTreeObject {
   function filterNode(node: GitObject): GitObject | null {
     if (ig.ignores(node.path)) {
       return null
@@ -190,6 +195,7 @@ function filterGitTree(tree: GitTreeObject, commitCounts: Map<string, number>, s
           children.push(filteredChild)
         }
       }
+      if (children.length === 0) return null
       return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject
     }
   }
