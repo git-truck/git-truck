@@ -12,12 +12,11 @@ import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
 import { join, resolve } from "node:path"
-import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
+import { getBaseDirFromPath, getDirName, readGitRepos } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
 import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
-import { readdir } from "node:fs/promises"
 import { log } from "~/analyzer/log.server"
 
 export const loader = async () => {
@@ -42,35 +41,24 @@ export const loader = async () => {
     // args.path
   )
 
-  const entries = await readdir(baseDir, { withFileTypes: true })
-
   // Get all directories that has a .git subdirectory
-  const repositories = entries
-    .filter(
-      (entry) =>
-        entry.isDirectory() &&
-        existsSync(join(baseDir, entry.name)) &&
-        !entry.name.startsWith(".") &&
-        // TODO: Implement browsing, requires new routing
-        existsSync(join(baseDir, entry.name, ".git"))
-    )
-    .map(({ name }) => name)
+  const repositories: Repository[] = await readGitRepos(baseDir)
 
   // Get metadata for all repos in parallel
   // Returns an object, as `defer` does not support arrays
   // The keys are prefixed with an underscore to avoid conflicts with other properties returned from the loader
   const repositoryPromises = Object.fromEntries(
-    repositories.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo))])
+    repositories.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo.name))])
   )
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
   return defer<{
-    repositories: string[]
+    repositories: Repository[]
     baseDir: string
     baseDirName: string
     analyzedReposPromise: Promise<CompletedResult[]>
-    [key: string]: string | string[] | Promise<CompletedResult[]> | Repository
+    [key: string]: string | string[] | Repository[] | Promise<CompletedResult[]> | Repository
   }>({
     repositories,
     baseDir,
@@ -174,15 +162,13 @@ export default function Index() {
           <div className="opacity-80">Folder</div>
           <div className="opacity-80">Status</div>
           <div className="col-span-2 opacity-80">Actions</div>
-          {repositories.map((repoDir, i) => (
+          {repositories.map((repo, i) => (
             <Suspense
-              key={repositories[i]}
+              key={repositories[i].path}
               fallback={
                 <RepositoryEntry
                   repo={{
-                    name: repoDir,
-                    path: repoDir,
-                    fullPath: join(baseDir, repoDir),
+                    ...repo,
                     parentDirPath: baseDir,
                     status: "Loading"
                   }}
@@ -190,7 +176,7 @@ export default function Index() {
                 />
               }
             >
-              <Await resolve={Promise.all([castedRepositoryPromises[`_${repoDir}`], analyzedReposPromise] as const)}>
+              <Await resolve={Promise.all([castedRepositoryPromises[`_${repo}`], analyzedReposPromise] as const)}>
                 {([repo, analyzedRepos]) =>
                   repo !== null ? <RepositoryEntry key={repo.name} repo={repo} analyzedRepos={analyzedRepos} /> : null
                 }
@@ -251,7 +237,7 @@ function RepositoryEntry({
 
   return (
     <Fragment key={repo.name}>
-      <h2 className="card__title flex justify-start gap-2" title={join(repo.parentDirPath, repo.name)}>
+      <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
           <Icon path={mdiGit} size={1} className="inline-block flex-shrink-0" title="Git repository" />
         ) : isFolder ? (
@@ -326,7 +312,7 @@ function RepositoryEntry({
           className="btn btn--primary btn--outlined transition-colors"
           title={`View ${repo.name}`}
           aria-disabled={repo.status === "Error" || repo.status === "Loading"}
-          // to={`/repo/?${new URLSearchParams({ path: repo.fullPath ?? "", branch: head ?? "" }).toString()}`}
+          // to={`/repo/?${new URLSearchParams({ path: repo.path ?? "", branch: head ?? "" }).toString()}`}
           to={path ?? ""}
           prefetch="none"
         >
