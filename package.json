@@ -13,6 +13,7 @@
     "public/",
     "cli.js"
   ],
+  "type": "module",
   "scripts": {
     "test": "npm run test:e2e && npm run test:unit",
     "test:unit": "jest --coverage",
@@ -120,7 +121,8 @@
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
     "uniqolor": "^1.1.0",
-    "vite": "^5.0.4",
+    "vite": "^5.2.9",
+    "vite-plugin-cjs-interop": "^2.1.0",
     "vite-tsconfig-paths": "^4.2.1",
     "yargs": "^17.7.2"
   },
