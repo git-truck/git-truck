@@ -1,13 +1,13 @@
-import { spawn, exec } from "node:child_process"
-import { promises as fs } from "node:fs"
+import c from "ansi-colors"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { resolve as resolvePath, sep } from "node:path"
-import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./model"
+import { exec, spawn } from "node:child_process"
+import { readdir } from "node:fs/promises"
+import { join, resolve as resolvePath, sep } from "node:path"
 import { performance } from "node:perf_hooks"
-import c from "ansi-colors"
 import pkg from "../../package.json"
+import { getLogLevel, log, LOG_LEVEL } from "./log.server"
+import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -280,3 +280,21 @@ export async function getLatestVersion() {
 
   return result
 }
+
+export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (baseDir) => {
+  const entries = await readdir(baseDir, { withFileTypes: true })
+
+  // Get all directories that has a .git subdirectory
+  return entries
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        existsSync(join(baseDir, entry.name)) &&
+        !entry.name.startsWith(".") &&
+        // TODO: Implement browsing, requires new routing
+        existsSync(join(baseDir, entry.name, ".git"))
+    )
+    .map(({ name }) => ({ name, path: join(baseDir, name), parentDirPath: baseDir, status: "Loading" }))
+  }
+
+export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))
