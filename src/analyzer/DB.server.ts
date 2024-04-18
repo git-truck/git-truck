@@ -4,6 +4,7 @@ import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { Inserter } from "./DBInserter"
+import { getTimeIntervals } from "./util.server"
 
 export default class DB {
   private instance: Promise<Database>
@@ -481,11 +482,24 @@ export default class DB {
     const res = await (
       await this.instance
     ).all(`
-      SELECT strftime(date, '${query}') as timestring, count(*) AS count FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date FROM commits) GROUP BY date ORDER BY date ASC;
+      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
     `)
-    return res.map(x => {
-      return { date: x["timestring"] as string, count: Number(x["count"])}
+    const mapped =  res.map(x => {
+      return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["committertime"])}
     })
+    const final: {
+      date: string;
+      count: number;
+      timestamp: number
+  }[] = []
+    const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
+    for (const [dateString, timestamp] of allIntervals) {
+      const existing = mapped.find(x => x.date === dateString)
+      if (existing) final.push(existing)
+        else final.push({date: dateString, count: 0, timestamp})
+    }
+    const sorted = final.sort((a,b) => a.timestamp - b.timestamp)
+    return sorted
   }
 
   public async updateColorSeed(seed: string) {
