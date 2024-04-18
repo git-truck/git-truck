@@ -200,8 +200,9 @@ function filterGitTree(
     }
   }
 
-  const filteredTree = filterNode(tree)
-  if (filteredTree === null || filteredTree.type !== "tree") {
+  let filteredTree = filterNode(tree)
+  if (filteredTree === null) filteredTree = {...tree, children: []}
+  if (filteredTree.type !== "tree") {
     throw new Error("Filtered tree must be a tree structure")
   }
 
