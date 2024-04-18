@@ -2,7 +2,7 @@ import { spawn } from "node:child_process"
 import { existsSync, promises as fs } from "node:fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
+import { dirname, join, resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "node:perf_hooks"
@@ -211,3 +211,17 @@ export async function getLatestVersion() {
 
   return result
 }
+
+export const readGitRepos = async (baseDir: string) =>
+  (await fs.readdir(baseDir, { withFileTypes: true }))
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        existsSync(join(baseDir, entry.name)) &&
+        !entry.name.startsWith(".") &&
+        // TODO: Implement browsing, requires new routing
+        isPathGitRepo(join(baseDir, entry.name, ".git"))
+    )
+    .map(({ name }) => ({ name, path: join(baseDir, name) }))
+
+export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))
