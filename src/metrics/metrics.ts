@@ -107,7 +107,8 @@ export function getMetricCalcs(
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.repodata2.maxCommitCount
   const minCommitCount = data.repodata2.minCommitCount
-
+  const newestEpoch = data.repodata2.newestChangeDate
+  const groupings = lastChangedGroupings(newestEpoch)
   const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
   const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
 
@@ -147,8 +148,6 @@ export function getMetricCalcs(
     [
       "LAST_CHANGED",
       (blob: GitBlobObject, cache: MetricCache) => {
-        const newestEpoch = data.repodata2.newestChangeDate
-        const groupings = lastChangedGroupings(newestEpoch)
         if (!cache.legend) {
           cache.legend = [
             getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
