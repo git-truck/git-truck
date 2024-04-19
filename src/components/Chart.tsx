@@ -1,5 +1,5 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
-import { hierarchy, pack, treemap, treemapBinary } from "d3-hierarchy"
+import { hierarchy, pack, treemap, treemapResquarify } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject } from "~/analyzer/model"
@@ -428,12 +428,13 @@ function createPartitionedHiearchy(
       case "TRUCK_FACTOR":
         return repodata2.authorCounts.get(blob.path) ?? 1
     }
-  })
+  }).sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
+
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
 
   if (chartType === "TREE_MAP") {
     const treeMapPartition = treemap<GitObject>()
-      .tile(treemapBinary)
+      .tile(treemapResquarify)
       .size([size.width, size.height])
       .paddingInner(2)
       .paddingOuter(4)
