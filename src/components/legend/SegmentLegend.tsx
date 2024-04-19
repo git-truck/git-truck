@@ -27,7 +27,7 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
   return (
     <>
       <div className="relative">
-        <div className="flex">
+        <div className="flex whitespace-nowrap">
           {[...Array(steps)].map((_, i) => {
             return steps >= 4 ? (
               <MetricSegment
