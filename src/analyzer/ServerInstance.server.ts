@@ -85,7 +85,7 @@ export default class ServerInstance {
     await this.db.replaceFiles(lsTreeEntries)
 
     for (const child of lsTreeEntries) {
-      const prevTrees = child.path.split("/")
+      const prevTrees = child.path.split("/").slice(1)
       const newName = prevTrees.pop() as string
       const newPath = `${child.path}`
       let currTree = rootTree
