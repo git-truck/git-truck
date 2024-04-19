@@ -93,7 +93,8 @@ function DateTags({range, timerange}: {range: [number, number], timerange: [numb
           bottom: "100%",
           position: "absolute",
           transform: "translate(-100%, -50%)",
-          maxWidth: "80px"
+          maxWidth: "80px",
+          whiteSpace: "nowrap"
         }}
         onClick={() => console.log("left !!!")}
       >
@@ -105,7 +106,8 @@ function DateTags({range, timerange}: {range: [number, number], timerange: [numb
           bottom: "100%",
           position: "absolute",
           transform: "translate(0%, -50%)",
-          width: "80px"
+          width: "80px",
+          whiteSpace: "nowrap"
         }}
         onClick={() => console.log("bruh?")}
       >
