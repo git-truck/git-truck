@@ -104,6 +104,7 @@
     "react-dom": "^18.2.0",
     "react-github-btn": "^1.4.0",
     "react-konami-code": "^2.3.0",
+    "react-spinners": "^0.13.8",
     "react-tiny-popover": "^8.0.4",
     "react-use": "^17.4.0",
     "react-use-size": "^3.0.2",

@@ -6,6 +6,7 @@ import type { SliderItem, GetHandleProps, GetTrackProps } from "react-compound-s
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatShort, getPathFromRepoAndHead } from "~/util"
+import ClipLoader from "react-spinners/ClipLoader"
 
 interface IHandleProps {
   domain: number[]
@@ -154,7 +155,16 @@ export default function TimeSlider() {
       >
         <Rail>
           {() => (
-            <DateTags timerange={timerange} range={range}/>
+            <>
+              <DateTags timerange={timerange} range={range}/>
+              <div style={{
+                left: "-50px",
+                top: "-8px",
+                position: "absolute"
+              }}>
+                <ClipLoader title="Loading selected time range" size={30} loading={disabled} color="#7aa0c4" />
+              </div>
+            </>
           )}
         </Rail>
         <Handles>
