@@ -18,6 +18,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!instance) return []
       
   const commitHashes = await instance.db.getCommitHashes(path, Number(count))
+  if (commitHashes.length < 1) return []
   const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
   const fullCommits = await instance.getFullCommits(gitLogResult)
   const unions = await instance.db.getRawUnions()
