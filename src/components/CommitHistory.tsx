@@ -138,8 +138,11 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
                   </>
                 )}
                 <InfoEntry keyString="Message" value={props.value.message} />
+                  <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+                    Body
+                  </div>
                 <div className="max-h-64 overflow-scroll">
-                  <InfoEntry keyString="Body" value={props.value.body.length > 0 ? props.value.body : "<none>"} />
+                  <p className="overflow-ellipsis break-all text-sm">{props.value.body.length > 0 ? props.value.body : "<none>"}</p>
                 </div>
                 <InfoEntry keyString="File changes" value={props.value.fileChanges.length + " files (+" + props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) + ", -" + props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) + ")"}/>
               </div>
