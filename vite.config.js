@@ -1,27 +1,23 @@
-import { vitePlugin as remix } from "@remix-run/dev";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { installGlobals } from "@remix-run/node";
-import { cjsInterop } from "vite-plugin-cjs-interop";
+import { vitePlugin as remix } from "@remix-run/dev"
+import { defineConfig } from "vite"
+import tsconfigPaths from "vite-tsconfig-paths"
+import { installGlobals } from "@remix-run/node"
+import { cjsInterop } from "vite-plugin-cjs-interop"
 
-installGlobals();
+installGlobals()
 
 export default defineConfig({
   ssr: {
-    noExternal: [/^node:/, /^d3/]
+    noExternal: [/^node:/, /^d3/, "lightningcss"]
   },
   plugins: [
     remix({
       appDirectory: "src",
-      serverModuleFormat: "cjs"
+      serverModuleFormat: "esm"
     }),
     tsconfigPaths(),
     cjsInterop({
-      dependencies: [
-        "@mdi/react",
-        "react-use",
-        "react-konami-code"
-      ]
+      dependencies: ["@mdi/react", "react-konami-code"]
     })
   ]
 })
