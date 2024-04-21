@@ -4,10 +4,10 @@ import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
-import { useKey } from "react-use"
 import { Icon } from "@mdi/react"
 import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 import { createPortal } from "react-dom"
+import { useKey } from "react-use/esm"
 
 export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { repo, databaseInfo } = useData()
