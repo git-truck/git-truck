@@ -131,7 +131,7 @@ export default class DB {
       FROM files f
       LEFT JOIN hiddenfiles g ON 
           (g.path LIKE '*.%' AND f.path GLOB g.path)
-          OR (g.path NOT LIKE '*.%' AND f.path LIKE g.path || '%')
+          OR (g.path NOT LIKE '*.%' AND f.path GLOB g.path || '*')
       WHERE g.path IS NULL;
 
 
@@ -274,7 +274,7 @@ export default class DB {
     ).all(`
       SELECT distinct commithash, author, committertime, authortime, message, body 
       FROM filechanges_commits_renamed_cached
-      WHERE filepath LIKE '${path}%'
+      WHERE filepath GLOB '${path}*'
       ORDER BY committertime DESC, commithash
       LIMIT ${count};
     `)
@@ -296,7 +296,7 @@ export default class DB {
     ).all(`
       SELECT distinct commithash
       FROM filechanges_commits_renamed_cached
-      WHERE filepath LIKE '${path}%'
+      WHERE filepath GLOB '${path}*'
       ORDER BY committertime DESC, commithash
       LIMIT ${count};
     `)
@@ -309,7 +309,7 @@ export default class DB {
     const res = await (
       await this.instance
     ).all(`
-      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath LIKE '${path}%';
+      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath GLOB '${path}*';
     `)
     return Number(res[0]["count"])
   }
@@ -460,8 +460,8 @@ export default class DB {
       await this.instance
     ).all(`
       SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
-        isblob ? "=" : "LIKE"
-      } '${path}${isblob ? "" : "%"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
+        isblob ? "=" : "GLOB"
+      } '${path}${isblob ? "" : "*"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
     return res.map((row) => {
       return { author: row["author"] as string, contribs: Number(row["contribsum"]) }
