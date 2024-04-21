@@ -12,7 +12,6 @@ import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { semverCompare, getPathFromRepoAndHead } from "./util"
 import { describeAsyncJob, getDirName, isValidURI, getLatestVersion } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
-import type { NextFunction } from "express-serve-static-core"
 import InstanceManager from "./analyzer/InstanceManager.server"
 
 async function main() {
@@ -94,27 +93,25 @@ for usage instructions.`)
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
-      if (!args.headless) {
-        log.debug(`Opening ${openURL}`)
-        await describeAsyncJob({
-          job: () => open(openURL),
-          beforeMsg: "Opening Git Truck in your browser",
-          afterMsg: "Opened Git Truck in your browser",
-          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
-        })
-      } else {
-        console.log(`Application available at ${url}`)
-      }
+    if (!args.headless) {
+      log.debug(`Opening ${openURL}`)
+      await describeAsyncJob({
+        job: () => open(openURL),
+        beforeMsg: "Opening Git Truck in your browser",
+        afterMsg: "Opened Git Truck in your browser",
+        errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
+      })
+    } else {
+      console.log(`Application available at ${url}`)
     }
   }
 
   describeAsyncJob({
     job: async () => {
-      const app = createApp(
-        "./build/index.js",
+      const app = await createApp(
         process.env.NODE_ENV ?? "production",
         "/build",
-        path.join(__dirname, "public", "build")
+        path.join(import.meta.url, "public", "build")
       )
 
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
@@ -131,12 +128,16 @@ for usage instructions.`)
 
 main()
 
-function createApp(
-  buildPath: string,
-  mode = "production",
-  publicPath = "/build/",
-  assetsBuildDirectory = "public/build/"
-) {
+async function createApp(mode = "production", publicPath = "/build/", assetsBuildDirectory = "public/build/") {
+  const viteDevServer =
+    process.env.NODE_ENV === "production"
+      ? undefined
+      : await import("vite").then((vite) =>
+          vite.createServer({
+            server: { middlewareMode: true }
+          })
+        )
+
   const app = express()
 
   app.disable("x-powered-by")
@@ -147,27 +148,38 @@ function createApp(
   // @ts-expect-error This error is wrong, the types are incorrect
   app.use(publicPath, express.static(assetsBuildDirectory, { immutable: true, maxAge: "1y" }))
 
+  if (viteDevServer) {
+    // @ts-expect-error This error is wrong, the types are incorrect
+    app.use(viteDevServer.middlewares)
+  } else {
+    app.use(
+      "/assets",
+      // @ts-expect-error This error is wrong, the types are incorrect
+      express.static("build/client/assets", {
+        immutable: true,
+        maxAge: "1y"
+      })
+    )
+  }
   // @ts-expect-error This error is wrong, the types are incorrect
-  app.use(express.static("public", { maxAge: "1h" }))
+  app.use(express.static("build/client", { maxAge: "1h" }))
 
   if (mode === "development") {
     // @ts-expect-error This error is wrong, the types are incorrect
     app.use(morgan("dev"))
   }
 
-  let requestHandler: ReturnType<typeof createRequestHandler> | undefined
-  app.all("*", async (req, res, next) => {
-    try {
-      if (!requestHandler) {
-        const build = await import(buildPath)
-        requestHandler = createRequestHandler({ build, mode })
-      }
-
-      return await requestHandler(req, res, next as NextFunction)
-    } catch (error) {
-      next?.(error)
-    }
-  })
+  app.all(
+    "*",
+    // @ts-expect-error This error is wrong, the types are incorrect
+    createRequestHandler({
+      build: viteDevServer
+        ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+        : // Expected, this is present if the app has been built
+          // eslint-disable-next-line import/no-unresolved
+          await import("../build/server/index.js")
+    })
+  )
 
   return app
 }
