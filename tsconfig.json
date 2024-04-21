@@ -1,15 +1,7 @@
 {
-  "include": [
-    "env.d.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2019"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -17,13 +9,11 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "target": "ES2019",
+    "target": "ES2021",
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "src/*"
-      ]
+      "~/*": ["src/*"]
     },
     "noEmit": true,
     "allowJs": true,

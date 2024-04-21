@@ -1,7 +1,7 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
 import { memo, useEffect, useMemo, useRef, useState } from "react"
-import { useBoolean, useMouse } from "react-use"
+import { useMouse } from "react-use/esm"
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
@@ -233,7 +233,7 @@ export default function Repo() {
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
-  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 

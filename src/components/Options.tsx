@@ -36,7 +36,7 @@ import {
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-import { useLocalStorage } from "react-use"
+import { useLocalStorage } from "react-use/esm"
 import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
 import type { Theme } from "~/styling"
 import { Themes, useTheme } from "~/styling"
