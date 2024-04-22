@@ -42,13 +42,13 @@ export function getMetricDescription(metric: MetricType): string {
     case "FILE_TYPE":
       return "Where are different types of files located?"
     case "MOST_COMMITS":
-      return "Which files have had the most commits, throughout the repository's history?"
+      return "Which files have had the most commits, in the selected time range?"
     case "LAST_CHANGED":
       return "How long ago did the files change?"
     case "SINGLE_AUTHOR":
-      return "Which files are authored by only one person, throughout the repository's history?"
+      return "Which files are authored by only one person, in the selected time range?"
     case "TOP_CONTRIBUTOR":
-      return "Which person has made the most line-changes to a file, throughout the repository's history?"
+      return "Which person has made the most line-changes to a file, in the selected time range?"
 
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
