@@ -10,7 +10,7 @@ export default class DB {
   private instance: Promise<Database>
   private repoSanitized: string
   private branchSanitized: string
-  public selectedRange: [number, number]|null = null
+  public selectedRange: [number, number]
   private tmpDir: string
 
   private static async init(dbPath: string) {
@@ -32,6 +32,7 @@ export default class DB {
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
     this.tmpDir = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized)
     this.instance = DB.init(dbPath)
+    this.selectedRange = [0, 1_000_000_000_000] as [number, number]
   }
 
   public async close() {
@@ -99,9 +100,7 @@ export default class DB {
     `)
   }
 
-  private static async initViews(db: Database, timeSeriesStart: number, timeSeriesEnd: number) {
-    const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
-    const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
+  private static async initViews(db: Database, start: number, end: number) {
     await db.all(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime FROM
@@ -161,7 +160,9 @@ export default class DB {
     `)
   }
 
-  public async updateTimeInterval(start: number, end: number) {
+  public async updateTimeInterval(timeSeriesStart: number, timeSeriesEnd: number) {
+    const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
+    const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
     this.selectedRange = [start, end]
     await DB.initViews(await this.instance, start, end)
   }
@@ -385,9 +386,13 @@ export default class DB {
     `)
   }
 
+  private async tableRowCount(table: string) {
+    return (await (await this.instance).all(`select count (*) as count from ${table};`))[0]["count"]
+  }
+
   public async addRenames(renames: RenameEntry[]) {
     const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance)
-    ins.addAndFinalize(renames.map(r => {
+    await ins.addAndFinalize(renames.map(r => {
       if (!r.timestampauthor)console.log("waddup", r)
       return {
         fromname: r.fromname,
@@ -405,7 +410,7 @@ export default class DB {
       DELETE FROM files;
     `)
     const ins = Inserter.getSystemSpecificInserter<{path: string}>("files", this.tmpDir, await this.instance)
-    ins.addAndFinalize(files.map(x => { return {path: x.path}}))
+    await ins.addAndFinalize(files.map(x => { return {path: x.path}}))
   }
 
   public async getFiles() {

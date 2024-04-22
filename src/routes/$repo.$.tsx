@@ -93,12 +93,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   await instance.loadRepoData()
 
   const timerange = await instance.db.getOverallTimeRange()
-  let selectedRange = instance.db.selectedRange
-  if (!selectedRange) {
-    const newStart = await instance.db.getCommitTimeAtIndex(30000)
-    await instance.updateTimeInterval(newStart, timerange[1])
-    selectedRange = instance.db.selectedRange
-  }
+  const selectedRange = instance.db.selectedRange
 
   const repo = await GitCaller.getRepoMetadata(path)
 
@@ -186,7 +181,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     branch,
     timerange,
     colorSeed,
-    selectedRange: selectedRange as [number, number],
+    selectedRange,
     authorColors,
     commitCountPerDay,
     analyzedRepos
