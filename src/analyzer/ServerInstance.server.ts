@@ -333,10 +333,10 @@ export default class ServerInstance {
 
     const availableMemory = Math.max(freemem() - systemMemoryToNotUse, 0)
     const availableThreadCount = Math.min(Math.max(cpus().length - threadsToNotUse, 2), 4)
-    if (freemem() < 1) return availableThreadCount
+    if (availableMemory < 1) return availableThreadCount
     const estimatedBytesPerThread = Math.max(estimatedBytesPerCommit * repoCommitCount, minimumBytesPerThread)
     const threadsBasedOnMemory = Math.floor(availableMemory / estimatedBytesPerThread)
-    return Math.min(availableThreadCount, threadsBasedOnMemory)
+    return Math.max(2, Math.min(availableThreadCount, threadsBasedOnMemory))
   }
 
   public async loadRepoData() {
