@@ -15,11 +15,11 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressR
   if (!repo || !branch) return defaultResponse
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return defaultResponse
-  let progressPercentage = instance.progress
+  let progressPercentage = instance.progress.reduce((acc, curr) => acc+curr, 0)
   let status = instance.analyzationStatus
   while (instance.prevProgress.str === status+progressPercentage || instance.prevProgress.timestamp + 1000 > Date.now()) {
     await sleep(1000)
-    progressPercentage = instance.totalCommitCount > 0 ? Math.floor((instance.progress / instance.totalCommitCount) * 100) : 0
+    progressPercentage = instance.totalCommitCount > 0 ? Math.floor((instance.progress.reduce((acc, curr) => acc+curr, 0) / instance.totalCommitCount) * 100) : 0
     status = instance.analyzationStatus
   }
   instance.prevProgress.str = status+progressPercentage

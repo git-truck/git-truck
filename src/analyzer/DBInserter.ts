@@ -17,24 +17,24 @@ export abstract class Inserter<T> {
 
   public abstract finalize(): Promise<void>
 
-  constructor(protected table: string, protected db: Database) {}
+  constructor(protected table: string, protected db: Database, protected id: string) {}
 
-  public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database): Inserter<T> {
+  public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database, id?: string): Inserter<T> {
     switch (process.platform) {
       case "darwin":
       case "linux":
-        return new ArrowInserter<T>(table, db)
+        return new ArrowInserter<T>(table, db, id ?? "")
       default:
-        return new JsonInserter<T>(table, tempPath, db)
+        return new JsonInserter<T>(table, tempPath, db, id ?? "")
     }
   }
 }
 
 class JsonInserter<T> extends Inserter<T> {
   private tempFile: string
-  constructor(table: string, tempPath: string, db: Database) {
-    super(table, db)
-    this.tempFile = tempPath + table + ".json"
+  constructor(table: string, tempPath: string, db: Database, id: string) {
+    super(table, db, id)
+    this.tempFile = tempPath + table + id + ".json"
   }
 
   public async finalize() {
@@ -60,9 +60,10 @@ class ArrowInserter<T> extends Inserter<T> {
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
       const arrowTable = tableFromJSON(sliced as Record<string, unknown>[])
-      await this.db.register_buffer(`temp_${this.table}`, [tableToIPC(arrowTable)], true)
-      await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM temp_${this.table});`)
-      await this.db.unregister_buffer(`temp_${this.table}`)
+      const tempTableName = `temp_${this.table}_${this.id}`
+      await this.db.register_buffer(tempTableName, [tableToIPC(arrowTable)], true)
+      await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM ${tempTableName});`)
+      await this.db.unregister_buffer(tempTableName)
     }
   }
 }

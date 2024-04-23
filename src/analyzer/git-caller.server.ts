@@ -261,7 +261,7 @@ export class GitCaller {
     return result.trim()
   }
 
-  async gitLogSimple(skip: number, count: number, instance: ServerInstance) {
+  async gitLogSimple(skip: number, count: number, instance: ServerInstance, index: number) {
     const args = [
       "log",
       `--skip=${skip}`,
@@ -273,7 +273,7 @@ export class GitCaller {
       '--format="<|%aN|><|%ct %at|><|%H|>"'
     ]
 
-    const result = (await runProcess(this.path, "git", args, instance)) as string
+    const result = (await runProcess(this.path, "git", args, instance, index)) as string
     return result.trim()
   }
 

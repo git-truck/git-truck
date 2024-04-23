@@ -21,7 +21,7 @@ export function sleep(ms: number) {
   })
 }
 
-export function runProcess(dir: string, command: string, args: string[], serverInstance?: ServerInstance) {
+export function runProcess(dir: string, command: string, args: string[], serverInstance?: ServerInstance, index?: number) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
@@ -34,7 +34,7 @@ export function runProcess(dir: string, command: string, args: string[], serverI
       prcs.stderr.once("data", errorHandler)
       prcs.stdout.on("data", (buf) => {
         chunks.push(buf)
-        if (serverInstance) serverInstance.updateProgress()
+        if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
       })
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())

@@ -390,10 +390,9 @@ export default class DB {
     return (await (await this.instance).all(`select count (*) as count from ${table};`))[0]["count"]
   }
 
-  public async addRenames(renames: RenameEntry[]) {
-    const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance)
+  public async addRenames(renames: RenameEntry[], id?: string) {
+    const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance, id)
     await ins.addAndFinalize(renames.map(r => {
-      if (!r.timestampauthor)console.log("waddup", r)
       return {
         fromname: r.fromname,
         toname: r.toname,
@@ -537,9 +536,9 @@ export default class DB {
     return { time: Number(res[0]["time"]), hash: res[0]["hash"] as string }
   }
 
-  public async addCommits(commits: Map<string, GitLogEntry>) {
-    const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>("commits", this.tmpDir, await this.instance)
-    const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance)
+  public async addCommits(commits: Map<string, GitLogEntry>, id?: string) {
+    const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>("commits", this.tmpDir, await this.instance, id)
+    const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance, id)
 
     for (const [, commit] of commits) {
       await commitInserter.addRow({

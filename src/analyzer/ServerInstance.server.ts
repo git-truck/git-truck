@@ -27,7 +27,7 @@ export default class ServerInstance {
   private branchSanitized: string
   public gitCaller: GitCaller
   public db: DB
-  public progress = 0
+  public progress = [0]
   public totalCommitCount = 0
   private fileTreeAsOf = "HEAD"
   public prevResult: RepoData | null = null
@@ -45,8 +45,22 @@ export default class ServerInstance {
     this.db = new DB(repo, branch)
   }
 
-  public updateProgress() {
-    this.progress++
+  public updateProgress(index: number) {
+    this.progress[index]++
+  }
+
+  private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
+    const CHUNK_SIZE = 100_000;
+
+    for (let start = sectionStart; start <= sectionEnd; start += CHUNK_SIZE) {
+        const end = Math.min(start + CHUNK_SIZE, sectionEnd);
+        const commits = new Map<string, GitLogEntry>();
+        const renamedFiles: RenameEntry[] = [];
+        log.debug(`thread ${index} gathering ${start}-${end}`)
+        await this.gatherCommitsInRange(start, end, commits, renamedFiles, index);
+        await this.db.addRenames(renamedFiles, index + "");
+        await this.db.addCommits(commits, index + "");
+    }
   }
 
   public async updateTimeInterval(start: number, end: number) {
@@ -255,9 +269,10 @@ export default class ServerInstance {
     start: number,
     end: number,
     commits: Map<string, GitLogEntry>,
-    renamedFiles: RenameEntry[]
+    renamedFiles: RenameEntry[],
+    index: number
   ) {
-    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this)
+    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this, index)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
   }
@@ -310,9 +325,9 @@ export default class ServerInstance {
   }
 
   private getThreadCount(repoCommitCount: number) {
-    const estimatedBytesPerCommit = 1500
+    const estimatedBytesPerCommit = 1300
     const minimumBytesPerThread = 400_000_000
-    const systemMemoryToNotUse = 1_000_000_000
+    const systemMemoryToNotUse = 800_000_000
     const threadsToNotUse = 2
 
     const availableMemory = Math.max(freemem() - systemMemoryToNotUse, 0)
@@ -343,33 +358,18 @@ export default class ServerInstance {
 
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
-    // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
-    const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
+    this.progress = Array(threadCount).fill(0)
     this.analyzationStatus = "Hydrating"
-    // Sync threads every commitBundleSize commits to reset commits map, to reduce peak memory usage
-    for (let index = 0; index < commitCount; index += commitBundleSize) {
-      this.progress = index
-      const runCountCommit = Math.min(commitBundleSize, commitCount - index)
-      const sectionSize = Math.ceil(runCountCommit / threadCount)
+    const sectionSize = Math.ceil(this.totalCommitCount / threadCount)
+    const promises = Array.from({ length: threadCount }, async (_, i) => {
+      const sectionStart = i * sectionSize
+      const sectionEnd = Math.min(sectionStart + sectionSize, commitCount)
+      console.log("start thread " + sectionStart + "-" + sectionEnd, i)
+      await this.gathererWorker(sectionStart, sectionEnd, i)
+    })
 
-      const commits = new Map<string, GitLogEntry>()
-      const renamedFiles: RenameEntry[] = []
+    await Promise.all(promises)
 
-      const promises = Array.from({ length: threadCount }, (_, i) => {
-        const sectionStart = index + i * sectionSize
-        let sectionEnd = Math.min(sectionStart + sectionSize, index + runCountCommit)
-        if (sectionEnd > commitCount) sectionEnd = runCountCommit
-        log.info("start thread " + sectionStart + "-" + sectionEnd)
-        return this.gatherCommitsInRange(sectionStart, sectionEnd, commits, renamedFiles)
-      })
-
-      await Promise.all(promises)
-      await this.db.addRenames(renamedFiles)
-      await this.db.addCommits(commits)
-      log.debug("done adding")
-
-      log.info("threads synced")
-    }
     await this.db.createIndexes()
     await this.db.checkpoint()
     await this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue)
