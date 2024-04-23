@@ -74,7 +74,11 @@ export default class MetadataDB {
           SELECT * FROM completions WHERE repo = '${repo}' AND branch = '${branch}' ORDER BY timestamp DESC LIMIT 1;
         `)
     if (res.length < 1) return undefined
-    return { time: Number(res[0]["timestamp"]), hash: res[0]["hash"] as string }
+    try {
+      return { time: Number(res[0]["timestamp"]), hash: res[0]["hash"] as string }
+    } catch (e) {
+      return undefined
+    }
   }
 
   public async getCompletedRepos() {
