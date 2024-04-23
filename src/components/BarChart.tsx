@@ -45,7 +45,7 @@ const BarChart = () => {
   }, [data, size])
 
   return <div className="flex justify-center" ref={ref}>
-    <svg ref={svgRef} width="90%" height={30}></svg>
+    <svg ref={svgRef} width="calc(100% - 150px)" height={30}></svg>
   </div>
 }
 

@@ -123,7 +123,7 @@ export default function TimeSlider() {
     left: "70px",
     top: "30px",
     position: "relative",
-    width: "calc(100% - 140px)"
+    width: "calc(100% - 150px)"
   }
 
   const { repodata2 } = useData()
