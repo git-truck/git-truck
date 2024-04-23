@@ -248,7 +248,7 @@ export function DetailsCard({
 function findObjectInTree(tree: GitTreeObject, object: GitObject | null) {
   if (object === null) return null
   let currentTree = tree
-  const steps = object.path.split("/")
+  const steps = object.path.slice(1).split("/")
 
   for (let i = 0; i < steps.length; i++) {
     for (const child of currentTree.children) {
@@ -263,7 +263,7 @@ function findObjectInTree(tree: GitTreeObject, object: GitObject | null) {
       }
     }
   }
-  return currentTree
+  return currentTree.path === object.path ? currentTree : null
 }
 
 function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
