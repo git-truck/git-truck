@@ -60,6 +60,7 @@ export default class ServerInstance {
         await this.gatherCommitsInRange(start, end, commits, renamedFiles, index);
         await this.db.addRenames(renamedFiles, index + "");
         await this.db.addCommits(commits, index + "");
+        this.progress[index] = end - sectionStart
     }
   }
 
