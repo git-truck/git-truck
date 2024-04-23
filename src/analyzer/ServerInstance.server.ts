@@ -14,7 +14,7 @@ import type {
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
-import { cpus } from "os"
+import { cpus, freemem } from "node:os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
@@ -309,6 +309,20 @@ export default class ServerInstance {
     return finishedChains
   }
 
+  private getThreadCount(repoCommitCount: number) {
+    const estimatedBytesPerCommit = 1500
+    const minimumBytesPerThread = 400_000_000
+    const systemMemoryToNotUse = 1_000_000_000
+    const threadsToNotUse = 2
+
+    const availableMemory = Math.max(freemem() - systemMemoryToNotUse, 0)
+    const availableThreadCount = Math.min(Math.max(cpus().length - threadsToNotUse, 2), 4)
+    if (freemem() < 1) return availableThreadCount
+    const estimatedBytesPerThread = Math.max(estimatedBytesPerCommit * repoCommitCount, minimumBytesPerThread)
+    const threadsBasedOnMemory = Math.floor(availableMemory / estimatedBytesPerThread)
+    return Math.min(availableThreadCount, threadsBasedOnMemory)
+  }
+
   public async loadRepoData() {
     this.analyzationStatus = "Starting"
 
@@ -328,8 +342,7 @@ export default class ServerInstance {
     await this.gitCaller.setGitSetting("diff.renameLimit", "1000000")
 
     this.totalCommitCount = commitCount
-    // const threadCount = Math.min(cpus().length > 4 ? 4 : 2, commitCount)
-    const threadCount = 2
+    const threadCount = this.getThreadCount(commitCount)
     // Dynamically set commitBundleSize, such that progress indicator is smoother for small repos
     const commitBundleSize = Math.ceil(Math.min(Math.max(commitCount / 4, 10_000), 150_000))
     this.analyzationStatus = "Hydrating"
