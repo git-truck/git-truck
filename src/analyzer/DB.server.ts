@@ -429,6 +429,7 @@ export default class DB {
         beforeTime ?? 1_000_000_000_000
       } ORDER BY committertime DESC LIMIT 1;
     `)
+    if (res.length < 1) throw new Error("Could not get latest commit hash. Commits table is empty. beforeTime set to " + beforeTime)
     return res[0]["hash"] as string
   }
 
@@ -540,8 +541,9 @@ export default class DB {
     const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>("commits", this.tmpDir, await this.instance, id)
     const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance, id)
 
-    for (const [, commit] of commits) {
-      await commitInserter.addRow({
+    for (const [hash, commit] of commits) {
+      if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
+      commitInserter.addRow({
         hash: commit.hash,
         author: commit.author,
         committertime: commit.committertime,
