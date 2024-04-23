@@ -421,6 +421,15 @@ export default class DB {
     return res.map(row => row["path"] as string)
   }
 
+  public async commitTableEmpty() {
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT * FROM commits LIMIT 1;
+    `)
+    return res.length === 0
+  }
+
   public async getLatestCommitHash(beforeTime?: number) {
     const res = await (
       await this.instance
