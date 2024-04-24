@@ -14,7 +14,7 @@ import type {
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "./util.server"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
-import { cpus, freemem } from "node:os"
+import { cpus, freemem, totalmem } from "node:os"
 import { RepoData } from "~/routes/$repo.$"
 import { InvocationReason } from "./RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
@@ -50,17 +50,17 @@ export default class ServerInstance {
   }
 
   private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
-    const CHUNK_SIZE = 100_000;
+    const CHUNK_SIZE = 100_000
 
     for (let start = sectionStart; start <= sectionEnd; start += CHUNK_SIZE) {
-        const end = Math.min(start + CHUNK_SIZE, sectionEnd);
-        const commits = new Map<string, GitLogEntry>();
-        const renamedFiles: RenameEntry[] = [];
-        log.debug(`thread ${index} gathering ${start}-${end}`)
-        await this.gatherCommitsInRange(start, end, commits, renamedFiles, index);
-        await this.db.addRenames(renamedFiles, index + "");
-        await this.db.addCommits(commits, index + "");
-        this.progress[index] = end - sectionStart
+      const end = Math.min(start + CHUNK_SIZE, sectionEnd)
+      const commits = new Map<string, GitLogEntry>()
+      const renamedFiles: RenameEntry[] = []
+      log.debug(`thread ${index} gathering ${start}-${end}`)
+      await this.gatherCommitsInRange(start, end, commits, renamedFiles, index)
+      await this.db.addRenames(renamedFiles, index + "")
+      await this.db.addCommits(commits, index + "")
+      this.progress[index] = end - sectionStart
     }
   }
 
@@ -331,7 +331,10 @@ export default class ServerInstance {
     const systemMemoryToNotUse = 800_000_000
     const threadsToNotUse = 2
 
-    const availableMemory = Math.max(freemem() - systemMemoryToNotUse, 0)
+    const availableMemory =
+      process.platform === "linux" || process.platform === "win32"
+        ? freemem() - systemMemoryToNotUse
+        : Math.floor(totalmem() / 2) - systemMemoryToNotUse // assume half of memory available
     const availableThreadCount = Math.min(Math.max(cpus().length - threadsToNotUse, 2), 4)
     if (availableMemory < 1) return availableThreadCount
     const estimatedBytesPerThread = Math.max(estimatedBytesPerCommit * repoCommitCount, minimumBytesPerThread)
@@ -343,7 +346,7 @@ export default class ServerInstance {
     this.analyzationStatus = "Starting"
 
     let commitCount = await this.gitCaller.getCommitCount()
-    if (await InstanceManager.metadataDB.getLastRun(this.repo, this.branch) && ! (await this.db.commitTableEmpty())) {
+    if ((await InstanceManager.metadataDB.getLastRun(this.repo, this.branch)) && !(await this.db.commitTableEmpty())) {
       const latestCommit = await this.db.getLatestCommitHash()
       commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
       log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
