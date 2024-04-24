@@ -75,16 +75,20 @@ function InfoEntry(props: { keyString: string; value: string }) {
   )
 }
 
-function FileChangesEntry(props: { filechanges: FileChange[]}) {
+function FileChangesEntry(props: { filechanges: FileChange[] }) {
   return (
-    <div className="max-h-64 overflow-scroll">
+    <div className="max-h-64 overflow-auto">
       <div className="grid max-w-lg grid-cols-[auto,auto,1fr] gap-x-3 gap-y-1">
-        {props.filechanges.map(filechange => {
+        {props.filechanges.map((filechange) => {
           return (
             <Fragment key={filechange.path}>
-              <div className="text-green-600 flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">+{filechange.insertions}</div>
-              <div className="text-red-600 flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">-{filechange.deletions}</div>
-              <div className="whitespace-nowrap flex-grow overflow-hidden overflow-ellipsis">{filechange.path}</div>
+              <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold text-green-600">
+                +{filechange.insertions}
+              </div>
+              <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold text-red-600">
+                -{filechange.deletions}
+              </div>
+              <div className="flex-grow overflow-hidden overflow-ellipsis whitespace-nowrap">{filechange.path}</div>
             </Fragment>
           )
         })}
@@ -120,33 +124,45 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
                     value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
                       props.value.committertime
                     )})`}
-                    />
-                  ) : (
+                  />
+                ) : (
                   <>
                     <InfoEntry
                       keyString="Date committed"
                       value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
                         props.value.committertime
                       )})`}
-                      />
+                    />
                     <InfoEntry
                       keyString="Date authored"
                       value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
                         props.value.authortime
                       )})`}
-                      />
+                    />
                   </>
                 )}
                 <InfoEntry keyString="Message" value={props.value.message} />
-                  <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
-                    Body
-                  </div>
-                <div className="max-h-64 overflow-scroll">
-                  <p className="overflow-ellipsis break-all text-sm">{props.value.body.length > 0 ? props.value.body : "<none>"}</p>
+                <div className="flex grow overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+                  Body
                 </div>
-                <InfoEntry keyString="File changes" value={props.value.fileChanges.length + " files (+" + props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) + ", -" + props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) + ")"}/>
+                <div className="max-h-64 overflow-auto">
+                  <p className="overflow-ellipsis break-all text-sm">
+                    {props.value.body.length > 0 ? props.value.body : "<none>"}
+                  </p>
+                </div>
+                <InfoEntry
+                  keyString="File changes"
+                  value={
+                    props.value.fileChanges.length +
+                    " files (+" +
+                    props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) +
+                    ", -" +
+                    props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) +
+                    ")"
+                  }
+                />
               </div>
-              <FileChangesEntry filechanges={props.value.fileChanges}/>
+              <FileChangesEntry filechanges={props.value.fileChanges} />
             </div>
           </ArrowContainer>
         )}
