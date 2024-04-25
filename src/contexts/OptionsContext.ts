@@ -47,6 +47,7 @@ export type Options = {
   labelsVisible: boolean
   renderCutoff: number
   showFilesWithoutChanges: boolean
+  dominantAuthorCutoff: number
 }
 
 export type OptionsContextType = Options & {
@@ -62,6 +63,7 @@ export type OptionsContextType = Options & {
   setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
+  setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -88,7 +90,8 @@ const defaultOptions: Options = {
   transitionsEnabled: true,
   labelsVisible: true,
   renderCutoff: 2,
-  showFilesWithoutChanges: true
+  showFilesWithoutChanges: true,
+  dominantAuthorCutoff: 80
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -130,6 +133,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setShowFilesWithoutChanges: () => {
       throw new Error("No showFilesWithoutChangesSetter provided")
+    },
+    setDominantAuthorCutoff: () => {
+      throw new Error("No setDominantAuthorCutoffSetter provided")
     }
   }
 }

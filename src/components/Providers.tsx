@@ -36,10 +36,10 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const metricsData: MetricsData = useMemo(() => {
     console.time("metrics")
-    const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors)
+    const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors, options?.dominantAuthorCutoff ?? 70)
     console.timeEnd("metrics")
     return res
-  }, [data])
+  }, [data, options?.dominantAuthorCutoff])
 
   const commitTabValue = useMemo(
     () => ({
@@ -131,7 +131,12 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           showFilesWithoutChanges: showFilesWithoutChanges
-        }))
+        })),
+      setDominantAuthorCutoff: (dominantAuthorCutoff: number) => 
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          dominantAuthorCutoff: dominantAuthorCutoff
+        })),
     }),
     [options]
   )

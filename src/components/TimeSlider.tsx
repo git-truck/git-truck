@@ -2,70 +2,13 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useSubmit, useNavigation } from "@remix-run/react"
 import { useMemo, useState } from "react"
-import type { SliderItem, GetHandleProps, GetTrackProps } from "react-compound-slider"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/util"
 import ClipLoader from "react-spinners/ClipLoader"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
-
-interface IHandleProps {
-  domain: number[]
-  handle: SliderItem
-  getHandleProps: GetHandleProps
-  disabled: boolean
-}
-// TODO: allow setting specific date by clicking the date
-function Handle(props: IHandleProps) {
-  return (
-    <div
-      role="slider"
-      aria-valuemin={props.domain[0]}
-      aria-valuemax={props.domain[1]}
-      aria-valuenow={props.handle.value}
-      style={{
-        left: `${props.handle.percent}%`,
-        position: "absolute",
-        marginLeft: "-11px",
-        marginTop: "-6px",
-        zIndex: 2,
-        width: 24,
-        height: 24,
-        cursor: "pointer",
-        borderRadius: "50%",
-        boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)",
-        backgroundColor: `${props.disabled ? "grey" : "#34568f"}`
-      }}
-      {...props.getHandleProps(props.handle.id)}
-    />
-  )
-}
-
-interface ITrackProps {
-  source: SliderItem
-  target: SliderItem
-  getTrackProps: GetTrackProps
-  disabled: boolean
-}
-
-function Track(props: ITrackProps) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        height: 14,
-        zIndex: 1,
-        backgroundColor: `${props.disabled ? "grey" : "#7aa0c4"}`,
-        borderRadius: 7,
-        cursor: "pointer",
-        left: `${props.source.percent}%`,
-        width: `${props.target.percent - props.source.percent}%`
-      }}
-      {...props.getTrackProps()}
-    />
-  )
-}
+import { Handle, Track } from "./sliderUtils"
 
 function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {range: [number, number], timerange: [number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, updateTimeseries(e: readonly number[]): void, disabled: boolean}) {
   const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)

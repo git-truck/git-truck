@@ -8,14 +8,23 @@ export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>
+  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>,
+  dominantAuthorCutoff: number,
+  contribSumPerFile: Map<string, number>
 ) {
   const dominantAuthor = dominantAuthorPerFile.get(blob.path)
-  if (!dominantAuthor) {
+  const contribSum = contribSumPerFile.get(blob.path)
+  if (!dominantAuthor || !contribSum) {
     // console.warn("No dominant author for file", path)
     return
   }
   const legend = cache.legend as PointLegendData
+
+  const authorPercentage = (dominantAuthor.contribcount / contribSum) * 100
+  if (authorPercentage < dominantAuthorCutoff) {
+    cache.colormap.set(blob.path, noEntryColor)
+    return
+  }
   const color = authorColors.get(dominantAuthor.author) ?? noEntryColor
 
   cache.colormap.set(blob.path, color)

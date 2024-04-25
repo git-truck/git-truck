@@ -32,11 +32,12 @@ export type MetricType = keyof typeof Metric
 export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
-  predefinedAuthorColors: Map<string, `#${string}`>
+  predefinedAuthorColors: Map<string, `#${string}`>,
+  dominantAuthorCutoff: number
 ): MetricsData {
   const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
-  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors)), authorColors]
+  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)), authorColors]
 }
 
 export function getMetricDescription(metric: MetricType): string {
@@ -50,7 +51,7 @@ export function getMetricDescription(metric: MetricType): string {
     case "SINGLE_AUTHOR":
       return "Which files are authored by only one person, in the selected time range?"
     case "TOP_CONTRIBUTOR":
-      return "Which person has made the most line-changes to a file, in the selected time range?"
+      return "Which person has made the most line-changes to a file, in the selected time range? Change the cut-off slider to decide when a file should be colored according to an author. 0% means that the top author will be shown. 100% means that only files with a single author will be colored."
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
     // case "MOST_CONTRIBUTIONS":
@@ -107,7 +108,8 @@ export function generateAuthorColors(
 
 export function getMetricCalcs(
   data: RepoData,
-  authorColors: Map<string, `#${string}`>
+  authorColors: Map<string, `#${string}`>,
+  dominantAuthorCutoff: number
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.repodata2.maxCommitCount
   const minCommitCount = data.repodata2.minCommitCount
@@ -177,7 +179,7 @@ export function getMetricCalcs(
       "TOP_CONTRIBUTOR",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors)
+        setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors, dominantAuthorCutoff, data.repodata2.contribSumPerFile)
       }
     ],
     [
