@@ -19,6 +19,14 @@ export function dateFormatLong(epochTime?: number) {
   })
 }
 
+export function dateFormatCalendarHeader(epochTime?: number) {
+  if (!epochTime) return "Invalid date"
+  return new Date(epochTime).toLocaleString("en-gb", {
+    month: "long",
+    year: "numeric"
+  })
+}
+
 export function dateFormatShort(epochTime: number) {
   return new Date(epochTime).toLocaleString("en-gb", {
     day: "2-digit",

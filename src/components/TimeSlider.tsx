@@ -5,7 +5,7 @@ import { useMemo, useState } from "react"
 import type { SliderItem, GetHandleProps, GetTrackProps } from "react-compound-slider"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { dateFormatShort, getPathFromRepoAndHead } from "~/util"
+import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/util"
 import ClipLoader from "react-spinners/ClipLoader"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
@@ -169,9 +169,27 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
 
 function TimePicker({range, setRange, timerange, setsBeginning, updateTimeseries, disabled}: { range:[number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, timerange: [number, number], setsBeginning: boolean, updateTimeseries(e: readonly number[]): void, disabled: boolean }) {
   return(
-    <div className=" bg-white p-5">
+    <div>
     <DatePicker
-      timeFormat="HH:mm" 
+      renderCustomHeader={({
+        date,
+        decreaseMonth,
+        increaseMonth,
+        prevMonthButtonDisabled,
+        nextMonthButtonDisabled,
+      }) => {
+        return (
+          <div className="flex justify-between m-2">
+            <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
+              {"<"}
+            </button>
+            <h2>{dateFormatCalendarHeader(date.getTime())}</h2>
+            <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
+              {">"}
+            </button>
+          </div>
+        )
+      }}
       inline 
       fixedHeight
       disabled={disabled}
