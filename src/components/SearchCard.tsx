@@ -48,7 +48,7 @@ export const SearchCard = memo(function SearchCard() {
 
   return (
     <>
-      <div className="card sticky top-0 z-10 flex flex-col gap-2">
+      <div className="card sticky top-0 flex flex-col gap-2">
         <h2 className="card__title justify-start gap-2">
           <Icon path={mdiMagnify} size="1.25em" />
           Search

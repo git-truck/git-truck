@@ -16,6 +16,7 @@ import indexStyles from "~/styles/animations.css"
 import { Code } from "./components/util"
 import tailwindStylesheet from "~/tailwind.css"
 import { ThemeProvider, cn, usePrefersLightMode } from "./styling"
+import datePickerStyles from "react-datepicker/dist/react-datepicker.css"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
@@ -23,7 +24,7 @@ export const meta: MetaFunction = () => {
 
 export function links() {
   return [
-    ...[varsStyles, indexStyles, tailwindStylesheet].map((x) => ({
+    ...[varsStyles, indexStyles, tailwindStylesheet, datePickerStyles].map((x) => ({
       rel: "stylesheet",
       href: x
     })),
