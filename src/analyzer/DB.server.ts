@@ -355,6 +355,25 @@ export default class DB {
     )
   }
 
+  public async getMaxMinContribCounts() {
+    const res = await (await this.instance).all(`
+      SELECT MAX(contribsum) as max, MIN(contribsum) as min FROM (SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath);
+    `)
+    return { max: Number(res[0]["max"]), min: Number(res[0]["min"]) }
+  }
+
+  public async getContribSumPerFile() {
+    const res = await (await this.instance).all(`
+      SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath;
+    `)
+
+    return new Map(
+      res.map((row) => {
+        return [row["filepath"] as string, Number(row["contribsum"])]
+      })
+    )
+  }
+
   public async getDominantAuthorPerFile() {
     const res = await (
       await this.instance
@@ -365,13 +384,13 @@ export default class DB {
         FROM filechanges_commits_renamed_cached
         GROUP BY filepath, author
       )
-      SELECT filepath, author
+      SELECT filepath, author, total_contribcount
       FROM RankedAuthors
       WHERE rank = 1;
     `)
     return new Map(
       res.map((row) => {
-        return [row["filepath"] as string, row["author"] as string]
+        return [row["filepath"] as string, { author: row["author"] as string, contribcount: Number(row["total_contribcount"])}]
       })
     )
   }

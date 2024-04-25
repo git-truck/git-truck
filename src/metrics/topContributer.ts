@@ -8,7 +8,7 @@ export function setDominantAuthorColor(
   authorColors: Map<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  dominantAuthorPerFile: Map<string, string>
+  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>
 ) {
   const dominantAuthor = dominantAuthorPerFile.get(blob.path)
   if (!dominantAuthor) {
@@ -16,13 +16,13 @@ export function setDominantAuthorColor(
     return
   }
   const legend = cache.legend as PointLegendData
-  const color = authorColors.get(dominantAuthor) ?? noEntryColor
+  const color = authorColors.get(dominantAuthor.author) ?? noEntryColor
 
   cache.colormap.set(blob.path, color)
 
-  if (legend.has(dominantAuthor)) {
-    legend.get(dominantAuthor)?.add(1)
+  if (legend.has(dominantAuthor.author)) {
+    legend.get(dominantAuthor.author)?.add(1)
     return
   }
-  legend.set(dominantAuthor, new PointInfo(color, 1))
+  legend.set(dominantAuthor.author, new PointInfo(color, 1))
 }

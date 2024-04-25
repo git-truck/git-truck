@@ -13,6 +13,7 @@ import uniqolor from "uniqolor"
 import type { RepoData } from "~/routes/$repo.$"
 import { noEntryColor } from "~/const"
 import { createHash } from "node:crypto"
+import { ContribAmountTranslater } from "./mostContribs"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -21,6 +22,7 @@ export const Metric = {
   TRUCK_FACTOR: "Truck factor",
   TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Commits",
+  // MOST_CONTRIBUTIONS: "Contributions",
   SINGLE_AUTHOR: "Single author",
   LAST_CHANGED: "Last changed"
 }
@@ -49,9 +51,10 @@ export function getMetricDescription(metric: MetricType): string {
       return "Which files are authored by only one person, in the selected time range?"
     case "TOP_CONTRIBUTOR":
       return "Which person has made the most line-changes to a file, in the selected time range?"
-
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
+    // case "MOST_CONTRIBUTIONS":
+    //   return "How many contributions have been made to the file?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -64,6 +67,7 @@ export function getMetricLegendType(metric: MetricType): LegendType {
     case "SINGLE_AUTHOR":
       return "POINT"
     case "MOST_COMMITS":
+    // case "MOST_CONTRIBUTIONS":
       return "GRADIENT"
     case "LAST_CHANGED":
     case "TRUCK_FACTOR":
@@ -111,6 +115,9 @@ export function getMetricCalcs(
   const groupings = lastChangedGroupings(newestEpoch)
   const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
   const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
+  const maxContribCount = data.repodata2.maxMinContribCounts.max
+  const minContribCount = data.repodata2.maxMinContribCounts.min
+  const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
   return [
     [
@@ -186,7 +193,23 @@ export function getMetricCalcs(
         }
         truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
       }
-    ]
+    ],
+    // [
+    //   "MOST_CONTRIBUTIONS",
+    //   (blob: GitBlobObject, cache: MetricCache) => {
+    //     if (!cache.legend) {
+    //       cache.legend = [
+    //         `${minContribCount}`,
+    //         `${maxContribCount}`,
+    //         undefined,
+    //         undefined,
+    //         contribmapper.getColor(minContribCount),
+    //         contribmapper.getColor(maxContribCount)
+    //       ]
+    //     }
+    //     contribmapper.setColor(blob, cache, data.repodata2.contribSumPerFile)
+    //   }
+    // ]
   ]
 }
 

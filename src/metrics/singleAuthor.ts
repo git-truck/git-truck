@@ -8,7 +8,7 @@ export function setDominanceColor(
   blob: GitBlobObject,
   cache: MetricCache,
   authorColors: Map<string, `#${string}`>,
-  dominantAuthorPerFile: Map<string, string>,
+  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>,
   authorCountsPerFile: Map<string, number>
 ) {
   const multipleAuthorsColor = "#e0e0e0"
@@ -26,8 +26,8 @@ export function setDominanceColor(
       return
     case 1:
       {
-        const color = authorColors.get(dominantAuthor ?? "") ?? noEntryColor
-        legend.set(dominantAuthor ?? "", new PointInfo(color, 2))
+        const color = authorColors.get(dominantAuthor?.author ?? "") ?? noEntryColor
+        legend.set(dominantAuthor?.author ?? "", new PointInfo(color, 2))
         cache.colormap.set(blob.path, color)
       }
       return

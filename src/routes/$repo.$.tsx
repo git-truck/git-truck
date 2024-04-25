@@ -48,7 +48,7 @@ export interface RepoData {
 }
 
 export interface RepoData2 {
-  dominantAuthors: Map<string, string>
+  dominantAuthors: Map<string, { author: string, contribcount: number}>
   commitCounts: Map<string, number>
   lastChanged: Map<string, number>
   authorCounts: Map<string, number>
@@ -73,6 +73,8 @@ export interface RepoData2 {
   commitCountPerDay: { date: string; count: number }[]
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
+  contribSumPerFile: Map<string, number>
+  maxMinContribCounts: { max: number, min: number}
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -159,10 +161,18 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? prevRes.commitCountPerDay
       : await instance.db.getCommitCountPerTime(timerange)
+  const contribCounts =
+    prevRes && !shouldUpdate(reason, "commitCountPerDay")
+    ? prevRes.contribSumPerFile
+    : await instance.db.getContribSumPerFile()
+  const maxMinContribCounts = 
+    prevRes && !shouldUpdate(reason, "maxMinContribCounts")
+    ? prevRes.maxMinContribCounts
+    : await instance.db.getMaxMinContribCounts()
   const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
   console.timeEnd("dbQueries")
 
-  const repodata2 = {
+  const repodata2: RepoData2 = {
     dominantAuthors,
     commitCounts,
     lastChanged,
@@ -176,7 +186,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     fileTree: rootTree,
     fileCount,
     hiddenFiles,
-    lastRunInfo,
+    lastRunInfo: lastRunInfo!,
     repo: instance.repo,
     branch,
     timerange,
@@ -184,7 +194,9 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     selectedRange,
     authorColors,
     commitCountPerDay,
-    analyzedRepos
+    analyzedRepos,
+    contribSumPerFile: contribCounts,
+    maxMinContribCounts
   }
 
   const fullData = {

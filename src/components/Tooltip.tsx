@@ -100,14 +100,14 @@ function ColorMetricDependentInfo(props: {
         case 1:
           const dom = props.repodata2.dominantAuthors.get(slicedPath)
           if (!dom) return null
-          return `${dom} is the only author`
+          return `${dom.author} is the only author`
         default:
           return `${authorCount} authors`
       }
     case "TOP_CONTRIBUTOR":
       const dominant = props.repodata2.dominantAuthors.get(slicedPath)
       if (!dominant) return "No activity"
-      return <>{dominant}</>
+      return <>{dominant.author}</>
     case "TRUCK_FACTOR":
       switch (authorCount) {
         case undefined:
@@ -118,6 +118,10 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authorCount} authors`
       }
+    // case "MOST_CONTRIBUTIONS":
+    //   const contribs = props.repodata2.contribSumPerFile.get(slicedPath)
+    //   if (!contribs) "No activity" 
+    //   return <>{contribs} contributions</>
     default:
       return null
   }

@@ -15,7 +15,9 @@ export type DataItem =
     "colorSeed"|
     "authorColors"|
     "commitCountPerDay"|
-    "loadRepoData"
+    "loadRepoData"|
+    "contribSumPerFile"|
+    "maxMinContribCounts"
 
 export type InvocationReason = 
     "refresh"|
@@ -32,16 +34,16 @@ export type InvocationReason =
 
     // TODO: handle when start of range is increased, so renames do not need refresh
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
-    "refresh": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
-    "unignore": ["cache", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "hiddenfiles"],
-    "ignore": ["cache", "maxMinCommitCount", "newestOldestChangeDate", "authors", "hiddenfiles"],
+    "refresh": ["cache", "rename", "dominantAuthor", "commitCounts", "contribSumPerFile", "lastChanged", "authorCounts", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
+    "unignore": ["cache", "dominantAuthor", "commitCounts", "contribSumPerFile", "lastChanged", "authorCounts", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors", "hiddenfiles"],
+    "ignore": ["cache", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors", "hiddenfiles"],
     "open": [],
     "unionedAuthors": ["cache", "dominantAuthor", "authorCounts", "authors", "authorunions"],
     "rerollColors": ["colorSeed"],
-    "timeseriesstart": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors"],
-    "timeseriesend": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "filetree"],
+    "timeseriesstart": ["cache", "rename", "dominantAuthor", "commitCounts", "contribSumPerFile", "lastChanged", "authorCounts", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors"],
+    "timeseriesend": ["cache", "rename", "dominantAuthor", "commitCounts", "contribSumPerFile", "lastChanged", "authorCounts", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors", "filetree"],
     "authorcolor": ["authorColors"],
-    "unknown": ["cache", "rename", "dominantAuthor", "commitCounts", "lastChanged", "authorCounts", "maxMinCommitCount", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
+    "unknown": ["cache", "rename", "dominantAuthor", "commitCounts", "contribSumPerFile", "lastChanged", "authorCounts", "maxMinCommitCount", "maxMinContribCounts", "newestOldestChangeDate", "authors", "authorunions", "filetree", "hiddenfiles", "lastRunInfo", "colorSeed", "authorColors", "commitCountPerDay", "loadRepoData"],
     "none": []
 }
 
