@@ -348,7 +348,7 @@ export default class ServerInstance {
     let commitCount = await this.gitCaller.getCommitCount()
     if ((await InstanceManager.metadataDB.getLastRun(this.repo, this.branch)) && !(await this.db.commitTableEmpty())) {
       const latestCommit = await this.db.getLatestCommitHash()
-      commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit)
+      commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit, this.branch)
       log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
     }
 

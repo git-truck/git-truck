@@ -319,8 +319,8 @@ export class GitCaller {
     this.useCache = useCache
   }
 
-  public async commitCountSinceCommit(hash: string) {
-    const result = (await runProcess(this.path, "git", ["rev-list", "--count", `${hash}..HEAD`])) as number
+  public async commitCountSinceCommit(hash: string, branch: string) {
+    const result = (await runProcess(this.path, "git", ["rev-list", "--count", `${hash}..${branch}`])) as number
     return result
   }
 
