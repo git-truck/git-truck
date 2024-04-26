@@ -48,6 +48,7 @@ export type Options = {
   renderCutoff: number
   showFilesWithoutChanges: boolean
   dominantAuthorCutoff: number
+  shouldReenableLabels: boolean
 }
 
 export type OptionsContextType = Options & {
@@ -64,6 +65,7 @@ export type OptionsContextType = Options & {
   setRenderCutoff: (renderCutoff: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
+  setShouldReenableLabels: (should: boolean) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -91,7 +93,8 @@ const defaultOptions: Options = {
   labelsVisible: true,
   renderCutoff: 2,
   showFilesWithoutChanges: true,
-  dominantAuthorCutoff: 80
+  dominantAuthorCutoff: 80,
+  shouldReenableLabels: false
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -136,6 +139,9 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setDominantAuthorCutoff: () => {
       throw new Error("No setDominantAuthorCutoffSetter provided")
+    },
+    setShouldReenableLabels: () => {
+      throw new Error("No setShouldReenableLabelsSetter provided")
     }
   }
 }

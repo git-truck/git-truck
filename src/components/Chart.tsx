@@ -38,7 +38,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { repodata2 } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible, shouldReenableLabels, setShouldReenableLabels } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -90,6 +90,10 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       path,
       renderCutoff
     ).descendants()
+    if (shouldReenableLabels) {
+      setLabelsVisible(true)
+      setShouldReenableLabels(false)
+    }
     console.timeEnd("nodes")
     return res
   }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
