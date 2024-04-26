@@ -162,7 +162,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
       ? prevRes.commitCountPerDay
       : await instance.db.getCommitCountPerTime(timerange)
   const contribCounts =
-    prevRes && !shouldUpdate(reason, "commitCountPerDay")
+    prevRes && !shouldUpdate(reason, "contribSumPerFile")
     ? prevRes.contribSumPerFile
     : await instance.db.getContribSumPerFile()
   const maxMinContribCounts = 
