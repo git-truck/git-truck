@@ -33,7 +33,8 @@ import {
   mdiThemeLightDark,
   mdiWhiteBalanceSunny,
   mdiMoonWaningCrescent,
-  mdiClockEdit
+  mdiClockEdit,
+  mdiPlusMinusVariant
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -77,7 +78,8 @@ export const Options = memo(function Options() {
     MOST_COMMITS: mdiSourceCommit,
     SINGLE_AUTHOR: mdiAccountAlertOutline,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    TRUCK_FACTOR: mdiTruckFastOutline
+    TRUCK_FACTOR: mdiTruckFastOutline,
+    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
   }
 
   const sizeMetricIcons: Record<SizeMetricType, string> = {
@@ -85,7 +87,8 @@ export const Options = memo(function Options() {
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
     TRUCK_FACTOR: mdiTruckFastOutline,
-    LAST_CHANGED: mdiUpdate
+    LAST_CHANGED: mdiUpdate,
+    MOST_CONTRIBS: mdiPlusMinusVariant
   }
 
   const chartTypeIcons: Record<ChartType, string> = {
@@ -110,7 +113,8 @@ export const Options = memo(function Options() {
     TOP_CONTRIBUTOR: "TRUCK_FACTOR",
     MOST_COMMITS: "MOST_COMMITS",
     SINGLE_AUTHOR: "TRUCK_FACTOR",
-    LAST_CHANGED: "LAST_CHANGED"
+    LAST_CHANGED: "LAST_CHANGED",
+    MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
   }
 
   const [isTransitioning, startTransition] = useTransition()

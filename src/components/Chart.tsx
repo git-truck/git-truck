@@ -427,6 +427,8 @@ function createPartitionedHiearchy(
         return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
       case "TRUCK_FACTOR":
         return repodata2.authorCounts.get(blob.path) ?? 1
+      case "MOST_CONTRIBS":
+        return repodata2.contribSumPerFile.get(blob.path) ?? 1
     }
   }).sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
 

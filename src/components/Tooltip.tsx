@@ -118,10 +118,10 @@ function ColorMetricDependentInfo(props: {
         default:
           return `${authorCount} authors`
       }
-    // case "MOST_CONTRIBUTIONS":
-    //   const contribs = props.repodata2.contribSumPerFile.get(slicedPath)
-    //   if (!contribs) "No activity" 
-    //   return <>{contribs} contributions</>
+    case "MOST_CONTRIBUTIONS":
+      const contribs = props.repodata2.contribSumPerFile.get(slicedPath)
+      if (!contribs) "No activity" 
+      return <>{contribs} line changes</>
     default:
       return null
   }

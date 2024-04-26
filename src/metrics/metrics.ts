@@ -22,7 +22,7 @@ export const Metric = {
   TRUCK_FACTOR: "Truck factor",
   TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Commits",
-  // MOST_CONTRIBUTIONS: "Contributions",
+  MOST_CONTRIBUTIONS: "Line changes",
   SINGLE_AUTHOR: "Single author",
   LAST_CHANGED: "Last changed"
 }
@@ -54,8 +54,8 @@ export function getMetricDescription(metric: MetricType): string {
       return "Which person has made the most line-changes to a file, in the selected time range? Change the cut-off slider to decide when a file should be colored according to an author. 0% means that the top author will be shown. 100% means that only files with a single author will be colored."
     case "TRUCK_FACTOR":
       return "How many authors have contributed to a given file?"
-    // case "MOST_CONTRIBUTIONS":
-    //   return "How many contributions have been made to the file?"
+    case "MOST_CONTRIBUTIONS":
+      return "How many line changes (additions and deletions) have been made to the file?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -68,7 +68,7 @@ export function getMetricLegendType(metric: MetricType): LegendType {
     case "SINGLE_AUTHOR":
       return "POINT"
     case "MOST_COMMITS":
-    // case "MOST_CONTRIBUTIONS":
+    case "MOST_CONTRIBUTIONS":
       return "GRADIENT"
     case "LAST_CHANGED":
     case "TRUCK_FACTOR":
@@ -196,22 +196,22 @@ export function getMetricCalcs(
         truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
       }
     ],
-    // [
-    //   "MOST_CONTRIBUTIONS",
-    //   (blob: GitBlobObject, cache: MetricCache) => {
-    //     if (!cache.legend) {
-    //       cache.legend = [
-    //         `${minContribCount}`,
-    //         `${maxContribCount}`,
-    //         undefined,
-    //         undefined,
-    //         contribmapper.getColor(minContribCount),
-    //         contribmapper.getColor(maxContribCount)
-    //       ]
-    //     }
-    //     contribmapper.setColor(blob, cache, data.repodata2.contribSumPerFile)
-    //   }
-    // ]
+    [
+      "MOST_CONTRIBUTIONS",
+      (blob: GitBlobObject, cache: MetricCache) => {
+        if (!cache.legend) {
+          cache.legend = [
+            `${minContribCount}`,
+            `${maxContribCount}`,
+            undefined,
+            undefined,
+            contribmapper.getColor(minContribCount),
+            contribmapper.getColor(maxContribCount)
+          ]
+        }
+        contribmapper.setColor(blob, cache, data.repodata2.contribSumPerFile)
+      }
+    ]
   ]
 }
 

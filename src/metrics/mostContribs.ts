@@ -6,15 +6,15 @@ import { noEntryColor } from "~/const"
 
 export class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
-  readonly min_lightness = 50
-  readonly max_lightness = 95
+  readonly min_lightness = 40
+  readonly max_lightness = 92
 
   constructor(min: number, max: number) {
     this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(118, 100, this.translater.inverseTranslate(value))
+    return hslToHex(118, 50, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Map<string, number>) {
