@@ -2,13 +2,13 @@ import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"
 import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
-import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
+import { mdiAccountMultiple, mdiDiceMultipleOutline, mdiPercentBoxOutline } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
 import type { GitObject } from "~/analyzer/model"
-import { useDeferredValue } from "react"
+import { useDeferredValue, useState } from "react"
 import { getPathFromRepoAndHead } from "~/util"
 import { useData } from "~/contexts/DataContext"
 import { useNavigation, useSubmit } from "@remix-run/react"
@@ -60,12 +60,14 @@ export function Legend({
     })
   }
 
-
   function PercentageSlider() {
+  const [displayPercentage, setDisplayPercentage] = useState(dominantAuthorCutoff)
+
     const sliderStyle: React.CSSProperties = {
-      margin: '5%',
       position: 'relative',
-      width: '90%'
+      left: '35px',
+      top: "5px",
+      width: 'calc(100% - 35px)',
     };
 
     const railStyle: React.CSSProperties = {
@@ -79,6 +81,7 @@ export function Legend({
 
     const domain = [0, 100]
     return (
+      <>
       <Slider
       mode={1}
       step={1}
@@ -87,8 +90,12 @@ export function Legend({
       onChange={(e) => {
         console.log(e)
         setDominantAuthorCutoff(e[0])
+        setDisplayPercentage(e[0])
       }}
-      values={[dominantAuthorCutoff]}
+      onUpdate={(e) => {
+        setDisplayPercentage(e[0])
+      }}
+      values={[displayPercentage]}
     >
       <Rail>
         {({ getRailProps }) => (
@@ -124,6 +131,8 @@ export function Legend({
         )}
       </Tracks>
     </Slider>
+    <p>{displayPercentage}%</p>
+    </>
     )
   }
 
@@ -145,7 +154,17 @@ export function Legend({
         </>
       ) : null}
       {metricType === "TOP_CONTRIBUTOR" ? (
-        <PercentageSlider />
+        <>
+        <fieldset className="rounded-lg border p-2">
+            <legend className="card__title ml-1.5 justify-start gap-2" 
+              title="Only colors a file according to its top contributor, if the top contributor has made at least the chosen percentage of total line changes"
+            >
+              <Icon path={mdiPercentBoxOutline} size="1.25em" />
+              Authorship cutoff percentage
+            </legend>
+            <PercentageSlider />
+          </fieldset>
+        </>
       ) : null}
       {legend}
     </div>
