@@ -160,6 +160,6 @@
   },
   "homepage": "https://github.com/git-truck/git-truck#readme",
   "dependencies": {
-    "duckdb-async": "^0.10.0"
+    "duckdb-async": "^0.10.2"
   }
 }
