@@ -61,78 +61,64 @@ export function Legend({
   }
 
   function PercentageSlider() {
-  const [displayPercentage, setDisplayPercentage] = useState(dominantAuthorCutoff)
+    const [displayPercentage, setDisplayPercentage] = useState(dominantAuthorCutoff)
 
     const sliderStyle: React.CSSProperties = {
-      position: 'relative',
-      left: '35px',
-      top: "5px",
-      width: 'calc(100% - 35px)',
-    };
+      position: "relative",
+      left: "43px",
+      top: "7px",
+      width: "calc(100% - 53px)"
+    }
 
     const railStyle: React.CSSProperties = {
-      position: 'absolute',
-      width: '100%',
+      position: "absolute",
+      width: "100%",
       height: 14,
       borderRadius: 7,
-      cursor: 'pointer',
-      backgroundColor: 'rgb(155,155,155)'
-    };
+      cursor: "pointer",
+      backgroundColor: "rgb(155,155,155)"
+    }
 
     const domain = [0, 100]
     return (
       <>
-      <Slider
-      mode={1}
-      step={1}
-      domain={domain}
-      rootStyle={sliderStyle}
-      onChange={(e) => {
-        console.log(e)
-        setDominantAuthorCutoff(e[0])
-        setDisplayPercentage(e[0])
-      }}
-      onUpdate={(e) => {
-        setDisplayPercentage(e[0])
-      }}
-      values={[displayPercentage]}
-    >
-      <Rail>
-        {({ getRailProps }) => (
-          <div style={railStyle} {...getRailProps()} />
-        )}
-      </Rail>
-      <Handles>
-        {({ handles, getHandleProps }) => (
-          <div className="slider-handles">
-            {handles.map(handle => (
-              <Handle
-                key={handle.id}
-                handle={handle}
-                domain={domain}
-                getHandleProps={getHandleProps}
-              />
-            ))}
-          </div>
-        )}
-      </Handles>
-      <Tracks right={false}>
-        {({ tracks, getTrackProps }) => (
-          <div className="slider-tracks">
-            {tracks.map(({ id, source, target }) => (
-              <Track
-                key={id}
-                source={source}
-                target={target}
-                getTrackProps={getTrackProps}
-              />
-            ))}
-          </div>
-        )}
-      </Tracks>
-    </Slider>
-    <p>{displayPercentage}%</p>
-    </>
+        <Slider
+          mode={1}
+          step={1}
+          domain={domain}
+          rootStyle={sliderStyle}
+          onChange={(e) => {
+            console.log(e)
+            setDominantAuthorCutoff(e[0])
+            setDisplayPercentage(e[0])
+          }}
+          onUpdate={(e) => {
+            setDisplayPercentage(e[0])
+          }}
+          values={[displayPercentage]}
+        >
+          <Rail>{({ getRailProps }) => <div style={railStyle} {...getRailProps()} />}</Rail>
+          <Handles>
+            {({ handles, getHandleProps }) => (
+              <div className="slider-handles">
+                {handles.map((handle) => (
+                  <Handle key={handle.id} handle={handle} domain={domain} getHandleProps={getHandleProps} />
+                ))}
+              </div>
+            )}
+          </Handles>
+          <Tracks right={false}>
+            {({ tracks, getTrackProps }) => (
+              <div className="slider-tracks">
+                {tracks.map(({ id, source, target }) => (
+                  <Track key={id} source={source} target={target} getTrackProps={getTrackProps} />
+                ))}
+              </div>
+            )}
+          </Tracks>
+        </Slider>
+        <p>{displayPercentage}%</p>
+      </>
     )
   }
 
@@ -155,8 +141,9 @@ export function Legend({
       ) : null}
       {metricType === "TOP_CONTRIBUTOR" ? (
         <>
-        <fieldset className="rounded-lg border p-2">
-            <legend className="card__title ml-1.5 justify-start gap-2" 
+          <fieldset className="rounded-lg border p-2">
+            <legend
+              className="card__title ml-1.5 justify-start gap-2"
               title="Only colors a file according to its top contributor, if the top contributor has made at least the chosen percentage of total line changes"
             >
               <Icon path={mdiPercentBoxOutline} size="1.25em" />
