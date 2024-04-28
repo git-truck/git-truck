@@ -26,7 +26,7 @@ interface IndexData {
 async function getResponse(): Promise<IndexData> {
   const args = getArgsWithDefaults()
   const [repo, repositories] = await GitCaller.scanDirectoryForRepositories(args.path)
-  const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
+  const analyzedRepos = await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   const baseDir = resolve(repo ? getBaseDirFromPath(args.path) : args.path)
   return {
     repositories,
@@ -73,7 +73,13 @@ export default function Index() {
   )
 }
 
-function RepositoryGrid({ repositories, analyzedRepos }: { repositories: SerializeFrom<Repository>[], analyzedRepos: CompletedResult[] }) {
+function RepositoryGrid({
+  repositories,
+  analyzedRepos
+}: {
+  repositories: SerializeFrom<Repository>[]
+  analyzedRepos: CompletedResult[]
+}) {
   return repositories.length === 0 ? (
     <>
       <p>
@@ -101,11 +107,21 @@ function RepositoryGrid({ repositories, analyzedRepos }: { repositories: Seriali
   )
 }
 
-function RepositoryEntry({ repo, analyzedRepos }: { repo: SerializeFrom<Repository>, analyzedRepos: CompletedResult[]; index: number }): ReactNode {
+function RepositoryEntry({
+  repo,
+  analyzedRepos
+}: {
+  repo: SerializeFrom<Repository>
+  analyzedRepos: CompletedResult[]
+  index: number
+}): ReactNode {
   const [head, setHead] = useState(repo.currentHead)
   const path = useMemo(() => getPathFromRepoAndHead(repo.name, head), [head, repo.name])
 
-  const branchIsAnalyzed = useMemo(() => analyzedRepos.find(rep => rep.repo === repo.name && rep.branch === head), [head, analyzedRepos, repo.name])
+  const branchIsAnalyzed = useMemo(
+    () => analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head),
+    [head, analyzedRepos, repo.name]
+  )
   return (
     <Fragment key={repo.name}>
       <h2 className="card__title truncate" title={repo.name}>
@@ -124,7 +140,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: SerializeFrom<Reposito
         value={head}
         onChange={(e) => setHead(e.target.value)}
         headGroups={repo.refs}
-        analyzedBranches={analyzedRepos.filter(rep => rep.repo === repo.name)}
+        analyzedBranches={analyzedRepos.filter((rep) => rep.repo === repo.name)}
       />
       <div className="grid">
         <Link className={`btn rounded-full ${branchIsAnalyzed ? "btn--success" : ""}`} to={path}>

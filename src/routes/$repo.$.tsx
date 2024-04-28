@@ -48,7 +48,7 @@ export interface RepoData {
 }
 
 export interface RepoData2 {
-  dominantAuthors: Map<string, { author: string, contribcount: number}>
+  dominantAuthors: Map<string, { author: string; contribcount: number }>
   commitCounts: Map<string, number>
   lastChanged: Map<string, number>
   authorCounts: Map<string, number>
@@ -74,7 +74,7 @@ export interface RepoData2 {
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Map<string, number>
-  maxMinContribCounts: { max: number, min: number}
+  maxMinContribCounts: { max: number; min: number }
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -151,25 +151,25 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
-      : await InstanceManager.metadataDB.getLastRun(instance.repo, instance.branch)
+      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
   const authorColors =
     prevRes && !shouldUpdate(reason, "authorColors")
       ? prevRes.authorColors
-      : await InstanceManager.metadataDB.getAuthorColors()
+      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
   const commitCountPerDay =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? prevRes.commitCountPerDay
       : await instance.db.getCommitCountPerTime(timerange)
   const contribCounts =
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
-    ? prevRes.contribSumPerFile
-    : await instance.db.getContribSumPerFile()
-  const maxMinContribCounts = 
+      ? prevRes.contribSumPerFile
+      : await instance.db.getContribSumPerFile()
+  const maxMinContribCounts =
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
-    ? prevRes.maxMinContribCounts
-    : await instance.db.getMaxMinContribCounts()
-  const analyzedRepos = await InstanceManager.metadataDB.getCompletedRepos()
+      ? prevRes.maxMinContribCounts
+      : await instance.db.getMaxMinContribCounts()
+  const analyzedRepos = await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
   const repodata2: RepoData2 = {
@@ -289,7 +289,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof authorname === "string") {
     instance.prevInvokeReason = "authorcolor"
-    await InstanceManager.metadataDB.addAuthorColor(authorname, authorcolor as string)
+    await InstanceManager.getOrCreateMetadataDB().addAuthorColor(authorname, authorcolor as string)
     return null
   }
 

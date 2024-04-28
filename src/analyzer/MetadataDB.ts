@@ -31,6 +31,10 @@ export default class MetadataDB {
     this.instance = MetadataDB.init(path)
   }
 
+  public async close() {
+    await (await this.instance).close()
+  }
+
   public async setCompletion(repo: string, branch: string, hash: string) {
     await (
       await this.instance

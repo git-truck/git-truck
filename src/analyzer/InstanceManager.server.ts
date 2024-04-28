@@ -3,7 +3,12 @@ import ServerInstance from "./ServerInstance.server"
 
 export default class InstanceManager {
   private static instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
-  public static metadataDB = new MetadataDB()
+  public static metadataDB: MetadataDB
+
+  public static getOrCreateMetadataDB() {
+    if (!this.metadataDB) this.metadataDB = new MetadataDB()
+    return this.metadataDB
+  }
 
   public static getOrCreateInstance(repo: string, branch: string, path: string) {
     if (!this.instances) this.instances = new Map()
@@ -27,8 +32,9 @@ export default class InstanceManager {
   }
 
   public static async closeAllDBConnections() {
-    for (const [,repo] of this.instances) {
-      for (const [,branchInstance] of repo) {
+    if (this.metadataDB) await this.metadataDB.close()
+    for (const [, repo] of this.instances) {
+      for (const [, branchInstance] of repo) {
         await branchInstance.db.close()
       }
     }
