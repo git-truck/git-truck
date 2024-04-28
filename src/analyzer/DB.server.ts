@@ -173,12 +173,16 @@ export default class DB {
     ).all(`
       DELETE FROM authorunions;
     `)
-    const ins = Inserter.getSystemSpecificInserter<{alias: string, actualname: string}>("authorunions", this.tmpDir, await this.instance)
-    const splitunions: {alias: string, actualname: string}[] = []
+    const ins = Inserter.getSystemSpecificInserter<{ alias: string; actualname: string }>(
+      "authorunions",
+      this.tmpDir,
+      await this.instance
+    )
+    const splitunions: { alias: string; actualname: string }[] = []
     for (const union of unions) {
       const [actualname, ...aliases] = union
       for (const alias of aliases) {
-        splitunions.push({alias, actualname})
+        splitunions.push({ alias, actualname })
       }
     }
     await ins.addAndFinalize(splitunions)
@@ -191,7 +195,11 @@ export default class DB {
       DELETE FROM temporary_renames;
     `)
 
-    const ins = Inserter.getSystemSpecificInserter<RenameInterval>("temporary_renames", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<RenameInterval>(
+      "temporary_renames",
+      this.tmpDir,
+      await this.instance
+    )
     await ins.addAndFinalize(renames)
   }
 
@@ -211,7 +219,7 @@ export default class DB {
       SELECT * FROM authorunions;
     `)
 
-    return res as {alias: string, actualname: string}[]
+    return res as { alias: string; actualname: string }[]
   }
 
   public async getCommitTimeAtIndex(idx: number) {
@@ -232,18 +240,19 @@ export default class DB {
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
 
-
   public async getCurrentRenameIntervals() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
         SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampauthor DESC;
     `)
     return res.map((row) => {
-        return {
-            fromname: row["fromname"] as string|null,
-            toname: row["toname"] as string|null,
-            timestamp: 0,
-            timestampend: Number(row["timestamp"]),
-        } as RenameInterval
+      return {
+        fromname: row["fromname"] as string | null,
+        toname: row["toname"] as string | null,
+        timestamp: 0,
+        timestampend: Number(row["timestamp"])
+      } as RenameInterval
     })
   }
 
@@ -263,10 +272,12 @@ export default class DB {
       DELETE FROM hiddenfiles;
     `)
 
-    const ins = Inserter.getSystemSpecificInserter<{path: string}>("hiddenfiles", this.tmpDir, await this.instance)
-    await ins.addAndFinalize(hiddenFiles.map(path => {
-      return {path: path}
-    }))
+    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("hiddenfiles", this.tmpDir, await this.instance)
+    await ins.addAndFinalize(
+      hiddenFiles.map((path) => {
+        return { path: path }
+      })
+    )
   }
 
   public async getCommits(path: string, count: number) {
@@ -356,14 +367,18 @@ export default class DB {
   }
 
   public async getMaxMinContribCounts() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT MAX(contribsum) as max, MIN(contribsum) as min FROM (SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath);
     `)
     return { max: Number(res[0]["max"]), min: Number(res[0]["min"]) }
   }
 
   public async getContribSumPerFile() {
-    const res = await (await this.instance).all(`
+    const res = await (
+      await this.instance
+    ).all(`
       SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
 
@@ -390,7 +405,10 @@ export default class DB {
     `)
     return new Map(
       res.map((row) => {
-        return [row["filepath"] as string, { author: row["author"] as string, contribcount: Number(row["total_contribcount"])}]
+        return [
+          row["filepath"] as string,
+          { author: row["author"] as string, contribcount: Number(row["total_contribcount"]) }
+        ]
       })
     )
   }
@@ -410,15 +428,22 @@ export default class DB {
   }
 
   public async addRenames(renames: RenameEntry[], id?: string) {
-    const ins = Inserter.getSystemSpecificInserter<{fromname: string|null, toname: string|null, timestamp: number, timestampauthor: number}>("renames", this.tmpDir, await this.instance, id)
-    await ins.addAndFinalize(renames.map(r => {
-      return {
-        fromname: r.fromname,
-        toname: r.toname,
-        timestamp: r.timestamp,
-        timestampauthor: r.timestampauthor
-      }
-    }))
+    const ins = Inserter.getSystemSpecificInserter<{
+      fromname: string | null
+      toname: string | null
+      timestamp: number
+      timestampauthor: number
+    }>("renames", this.tmpDir, await this.instance, id)
+    await ins.addAndFinalize(
+      renames.map((r) => {
+        return {
+          fromname: r.fromname,
+          toname: r.toname,
+          timestamp: r.timestamp,
+          timestampauthor: r.timestampauthor
+        }
+      })
+    )
   }
 
   public async replaceFiles(files: RawGitObject[]) {
@@ -427,8 +452,12 @@ export default class DB {
     ).all(`
       DELETE FROM files;
     `)
-    const ins = Inserter.getSystemSpecificInserter<{path: string}>("files", this.tmpDir, await this.instance)
-    await ins.addAndFinalize(files.map(x => { return {path: x.path}}))
+    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("files", this.tmpDir, await this.instance)
+    await ins.addAndFinalize(
+      files.map((x) => {
+        return { path: x.path }
+      })
+    )
   }
 
   public async getFiles() {
@@ -437,7 +466,7 @@ export default class DB {
     ).all(`
       FROM files;
     `)
-    return res.map(row => row["path"] as string)
+    return res.map((row) => row["path"] as string)
   }
 
   public async commitTableEmpty() {
@@ -457,7 +486,8 @@ export default class DB {
         beforeTime ?? 1_000_000_000_000
       } ORDER BY committertime DESC LIMIT 1;
     `)
-    if (res.length < 1) throw new Error("Could not get latest commit hash. Commits table is empty. beforeTime set to " + beforeTime)
+    if (res.length < 1)
+      throw new Error("Could not get latest commit hash. Commits table is empty. beforeTime set to " + beforeTime)
     return res[0]["hash"] as string
   }
 
@@ -503,10 +533,10 @@ export default class DB {
 
   private getTimeStringFormat(timerange: [number, number]) {
     const durationDays = (timerange[1] - timerange[0]) / (60 * 60 * 24)
-    if (durationDays < 150) return ['%a %-d %B %Y', 'day']
-    if (durationDays < 1000) return ['Week %V %Y', 'week']
-    if (durationDays < 4000) return ['%B %Y', 'month']
-    return ['%Y', 'year']
+    if (durationDays < 150) return ["%a %-d %B %Y", "day"]
+    if (durationDays < 1000) return ["Week %V %Y", "week"]
+    if (durationDays < 4000) return ["%B %Y", "month"]
+    return ["%Y", "year"]
   }
 
   public async getCommitCountPerTime(timerange: [number, number]) {
@@ -514,23 +544,23 @@ export default class DB {
     const res = await (
       await this.instance
     ).all(`
-      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
+      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
     `)
-    const mapped =  res.map(x => {
-      return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["committertime"])}
+    const mapped = res.map((x) => {
+      return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["ct"]) }
     })
     const final: {
-      date: string;
-      count: number;
+      date: string
+      count: number
       timestamp: number
-  }[] = []
+    }[] = []
     const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
     for (const [dateString, timestamp] of allIntervals) {
-      const existing = mapped.find(x => x.date === dateString)
+      const existing = mapped.find((x) => x.date === dateString)
       if (existing) final.push(existing)
-        else final.push({date: dateString, count: 0, timestamp})
+      else final.push({ date: dateString, count: 0, timestamp })
     }
-    const sorted = final.sort((a,b) => a.timestamp - b.timestamp)
+    const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
     return sorted
   }
 
@@ -566,8 +596,18 @@ export default class DB {
   }
 
   public async addCommits(commits: Map<string, GitLogEntry>, id?: string) {
-    const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>("commits", this.tmpDir, await this.instance, id)
-    const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>("filechanges", this.tmpDir, await this.instance, id)
+    const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>(
+      "commits",
+      this.tmpDir,
+      await this.instance,
+      id
+    )
+    const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>(
+      "filechanges",
+      this.tmpDir,
+      await this.instance,
+      id
+    )
 
     for (const [hash, commit] of commits) {
       if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
@@ -578,12 +618,12 @@ export default class DB {
         authortime: commit.authortime
       })
       for (const change of commit.fileChanges) {
-          fileChangeInserter.addRow({
-            commithash: commit.hash, 
-            insertions: change.insertions, 
-            deletions: change.deletions,
-            filepath: change.path
-          })
+        fileChangeInserter.addRow({
+          commithash: commit.hash,
+          insertions: change.insertions,
+          deletions: change.deletions,
+          filepath: change.path
+        })
       }
     }
     await commitInserter.finalize()

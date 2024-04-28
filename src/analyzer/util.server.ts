@@ -21,7 +21,13 @@ export function sleep(ms: number) {
   })
 }
 
-export function runProcess(dir: string, command: string, args: string[], serverInstance?: ServerInstance, index?: number) {
+export function runProcess(
+  dir: string,
+  command: string,
+  args: string[],
+  serverInstance?: ServerInstance,
+  index?: number
+) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
@@ -46,41 +52,46 @@ export function runProcess(dir: string, command: string, args: string[], serverI
 }
 
 function getWeek(date: Date): number {
-  const tempDate = new Date(date);
-  tempDate.setHours(0, 0, 0, 0);
-  tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
-  const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-  const weekNo = Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  return weekNo;
+  const tempDate = new Date(date)
+  tempDate.setHours(0, 0, 0, 0)
+  tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7))
+  const yearStart = new Date(tempDate.getFullYear(), 0, 1)
+  const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return weekNo
 }
 
 export function getTimeIntervals(timeUnit: string, minTime: number, maxTime: number): [string, number][] {
-  const intervals: [string, number][] = [];
+  const intervals: [string, number][] = []
 
-  const startDate = new Date(minTime * 1000);
-  const endDate = new Date(maxTime * 1000);
+  const startDate = new Date(minTime * 1000)
+  const endDate = new Date(maxTime * 1000)
 
-  const currentDate = new Date(startDate);
+  const currentDate = new Date(startDate)
 
   while (currentDate <= endDate) {
     const currTime = currentDate.getTime() / 1000
-      if (timeUnit === "week") {
-          const weekNum = getWeek(currentDate)
-          intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime]);
-          currentDate.setDate(currentDate.getDate() + 7);
-      } else if (timeUnit === "year") {
-          intervals.push([currentDate.getFullYear().toString(), currTime]);
-          currentDate.setFullYear(currentDate.getFullYear() + 1);
-      } else if (timeUnit === "month") {
-          intervals.push([currentDate.toLocaleString('en-gb', { month: 'long', year: "numeric" }), currTime]);
-          currentDate.setMonth(currentDate.getMonth() + 1);
-      } else if (timeUnit === "day") {
-          intervals.push([currentDate.toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" }), currTime]);
-          currentDate.setDate(currentDate.getDate() + 1);
-      }
+    if (timeUnit === "week") {
+      const weekNum = getWeek(currentDate)
+      intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime])
+      currentDate.setDate(currentDate.getDate() + 7)
+    } else if (timeUnit === "year") {
+      intervals.push([currentDate.getFullYear().toString(), currTime])
+      currentDate.setFullYear(currentDate.getFullYear() + 1)
+    } else if (timeUnit === "month") {
+      intervals.push([currentDate.toLocaleString("en-gb", { month: "long", year: "numeric" }), currTime])
+      currentDate.setMonth(currentDate.getMonth() + 1)
+    } else if (timeUnit === "day") {
+      intervals.push([
+        currentDate
+          .toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" })
+          .replace(",", ""),
+        currTime
+      ])
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
   }
 
-  return intervals;
+  return intervals
 }
 
 export function analyzeRenamedFile(

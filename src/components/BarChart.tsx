@@ -5,16 +5,15 @@ import { useComponentSize } from "~/hooks"
 
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
-  const {repodata2} = useData()
+  const { repodata2 } = useData()
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
   const data = repodata2.commitCountPerDay
 
   useEffect(() => {
     if (!data || !svgRef.current) return
-
     const svg = d3.select(svgRef.current)
-    const width = size.width * 0.9
+    const width = size.width - 150
     const height = 30
 
     const xScale = d3
@@ -40,13 +39,15 @@ const BarChart = () => {
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => height - yScale(d.count))
       .attr("fill", "steelblue")
-      .append('title') // Append a title element for each bar
-      .text(d => `${d.date}: ${d.count} commits`);
+      .append("title") // Append a title element for each bar
+      .text((d) => `${d.date}: ${d.count} commits`)
   }, [data, size])
 
-  return <div className="flex justify-center" ref={ref}>
-    <svg ref={svgRef} width="calc(100% - 150px)" height={30}></svg>
-  </div>
+  return (
+    <div className="flex justify-center" ref={ref}>
+      <svg ref={svgRef} width="calc(100% - 150px)" height={30}></svg>
+    </div>
+  )
 }
 
 export default BarChart
