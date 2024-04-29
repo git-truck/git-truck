@@ -96,11 +96,6 @@ export const Options = memo(function Options() {
     TREE_MAP: mdiChartTree
   }
 
-  const hiearchyIcons: Record<HierarchyType, string> = {
-    NESTED: mdiFileTree,
-    FLAT: mdiChartTree
-  }
-
   const themeIcons: Record<Theme, string> = {
     SYSTEM: mdiCog,
     LIGHT: mdiWhiteBalanceSunny,
@@ -169,7 +164,7 @@ export const Options = memo(function Options() {
             iconMap={sizeMetricIcons}
           />
         </fieldset>
-        <fieldset className="rounded-lg border p-2">
+        {/* <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiFamilyTree} size="1.25em" />
             Hiearchy
@@ -182,7 +177,7 @@ export const Options = memo(function Options() {
             }}
             iconMap={hiearchyIcons}
           />
-        </fieldset>
+        </fieldset> */}
         {/* {hierarchyType === "NESTED" ? (
           <fieldset className="rounded-lg border p-2">
             <legend className="card__title ml-1.5 justify-start gap-2">
@@ -197,7 +192,7 @@ export const Options = memo(function Options() {
             />
           </fieldset>
         ) : null} */}
-        <fieldset className="rounded-lg border p-2">
+        {/* <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiThemeLightDark} size="1.25em" />
             Theme
@@ -208,7 +203,7 @@ export const Options = memo(function Options() {
             onChange={(theme: Theme) => setTheme(theme)}
             iconMap={themeIcons}
           />
-        </fieldset>
+        </fieldset> */}
 
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
@@ -258,9 +253,33 @@ export const Options = memo(function Options() {
             <Icon className="ml-1.5" path={mdiClockEdit} size="1.25em" />
             Show files with no activity
           </CheckboxWithLabel>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={hierarchyType === "FLAT"}
+            onChange={() => {
+              if (hierarchyType === "FLAT") setHierarchyType("NESTED")
+              else setHierarchyType("FLAT")
+            }}
+            title="Show all files on the same level, instead of as a file tree"
+          >
+            <Icon className="ml-1.5" path={mdiFileTree} size="1.25em" />
+            Flatten file tree
+          </CheckboxWithLabel>
+          <CheckboxWithLabel
+            className="text-sm"
+            checked={theme === "DARK"}
+            onChange={() => {
+              if (theme === "DARK") setTheme("LIGHT")
+              else setTheme("DARK")
+            }}
+            title="Use a dark theme instead of light"
+          >
+            <Icon className="ml-1.5" path={mdiThemeLightDark} size="1.25em" />
+            Use dark theme
+          </CheckboxWithLabel>
           <label
             className="label flex w-full items-center justify-start gap-2 text-sm"
-            title="Adjust the item rendering size threshold"
+            title="Increase this to improve render performance, decrease it to get higher level of detail"
           >
             <span className="flex grow items-center gap-2">
               <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
