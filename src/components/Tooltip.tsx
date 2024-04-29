@@ -123,7 +123,7 @@ function ColorMetricDependentInfo(props: {
       }
     case "MOST_CONTRIBUTIONS":
       const contribs = props.repodata2.contribSumPerFile.get(slicedPath)
-      if (!contribs) "No activity" 
+      if (!contribs) return <>No activity</> 
       return <>{contribs} line changes</>
     default:
       return null
