@@ -11,7 +11,7 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
 import byteSize from "byte-size"
-import { mdiAccountMultiple, mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
+import { mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -28,11 +28,9 @@ function OneFolderOut(path: string) {
 }
 
 export function DetailsCard({
-  className = "",
-  showUnionAuthorsModal
+  className = ""
 }: {
   className?: string
-  showUnionAuthorsModal: () => void
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
@@ -176,10 +174,6 @@ export function DetailsCard({
             <div className="card bg-white/70 text-black">
               <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
             </div>
-            <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
-              <Icon path={mdiAccountMultiple} />
-              Group authors
-            </button>
           </div>
           <div className="mt-2 flex gap-2">
             {isBlob ? (

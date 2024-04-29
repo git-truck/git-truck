@@ -35,6 +35,7 @@ import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
+import { AuthorOptions } from "~/components/AuthorOptions"
 
 export interface RepoData {
   repo: Repository
@@ -467,8 +468,8 @@ export default function Repo() {
                   "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
                     isFullscreen
                 })}
-                showUnionAuthorsModal={showUnionAuthorsModal}
               />
+              <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
               <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
               <Online>
                 <FeedbackCard />
