@@ -73,6 +73,7 @@ export interface RepoData2 {
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Map<string, number>
   maxMinContribCounts: { max: number; min: number }
+  commitCount: number
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -167,6 +168,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
       : await instance.db.getMaxMinContribCounts()
+  const commitCount = 
+    prevRes && !shouldUpdate(reason, "commitCount")
+      ? prevRes.commitCount
+      :await instance.db.getCommitCount()
   const analyzedRepos = await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
@@ -194,7 +199,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     commitCountPerDay,
     analyzedRepos,
     contribSumPerFile: contribCounts,
-    maxMinContribCounts
+    maxMinContribCounts,
+    commitCount
   }
 
   const fullData = {

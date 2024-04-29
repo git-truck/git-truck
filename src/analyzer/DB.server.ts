@@ -509,6 +509,15 @@ export default class DB {
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
 
+  public async getCommitCount() {
+    const res = await (
+      await this.instance
+    ).all(`
+      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed_cached;
+    `)
+    return Number(res[0]["count"])
+  }
+
   public async getMaxAndMinCommitCount() {
     const res = await (
       await this.instance

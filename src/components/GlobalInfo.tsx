@@ -104,6 +104,9 @@ export const GlobalInfo = memo(function GlobalInfo() {
 
                 <span>Files analyzed</span>
                 <span className="text-right">{repodata2.fileCount ?? 0}</span>
+
+                <span>Commits analyzed</span>
+                <span className="text-right">{repodata2.commitCount}</span>
               </div>
             </div>
           </div>
