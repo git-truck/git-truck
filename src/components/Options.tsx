@@ -76,9 +76,9 @@ export const Options = memo(function Options() {
     FILE_TYPE: mdiFileCodeOutline,
     LAST_CHANGED: mdiUpdate,
     MOST_COMMITS: mdiSourceCommit,
-    SINGLE_AUTHOR: mdiAccountAlertOutline,
+    // SINGLE_AUTHOR: mdiAccountAlertOutline,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    TRUCK_FACTOR: mdiTruckFastOutline,
+    // TRUCK_FACTOR: mdiTruckFastOutline,
     MOST_CONTRIBUTIONS: mdiPlusMinusVariant
   }
 
@@ -86,7 +86,7 @@ export const Options = memo(function Options() {
     FILE_SIZE: mdiResize,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
-    TRUCK_FACTOR: mdiTruckFastOutline,
+    // TRUCK_FACTOR: mdiTruckFastOutline,
     LAST_CHANGED: mdiUpdate,
     MOST_CONTRIBS: mdiPlusMinusVariant
   }
@@ -109,10 +109,10 @@ export const Options = memo(function Options() {
 
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
     FILE_TYPE: "FILE_SIZE",
-    TRUCK_FACTOR: "TRUCK_FACTOR",
-    TOP_CONTRIBUTOR: "TRUCK_FACTOR",
+    // TRUCK_FACTOR: "TRUCK_FACTOR",
+    TOP_CONTRIBUTOR: "MOST_CONTRIBS",
     MOST_COMMITS: "MOST_COMMITS",
-    SINGLE_AUTHOR: "TRUCK_FACTOR",
+    // SINGLE_AUTHOR: "TRUCK_FACTOR",
     LAST_CHANGED: "LAST_CHANGED",
     MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
   }

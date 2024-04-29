@@ -19,11 +19,11 @@ export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
 export const Metric = {
   FILE_TYPE: "File type",
-  TRUCK_FACTOR: "Truck factor",
+  // TRUCK_FACTOR: "Truck factor",
   TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Commits",
   MOST_CONTRIBUTIONS: "Line changes",
-  SINGLE_AUTHOR: "Single author",
+  // SINGLE_AUTHOR: "Single author",
   LAST_CHANGED: "Last changed"
 }
 

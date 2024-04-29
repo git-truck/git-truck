@@ -401,8 +401,7 @@ export default function Repo() {
             <>
               <GlobalInfo />
               <Options />
-              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-              <SearchCard />
+              <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
             </>
           ) : null}
           {!isFullscreen ? (
@@ -463,14 +462,15 @@ export default function Repo() {
           ) : null}
           {!isRightPanelCollapse && !isFullscreen ? (
             <>
+              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              <SearchCard />
+              <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
               <DetailsCard
                 className={clsx({
                   "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
                     isFullscreen
                 })}
               />
-              <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
-              <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
               <Online>
                 <FeedbackCard />
               </Online>
