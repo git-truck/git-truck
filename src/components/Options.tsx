@@ -1,8 +1,8 @@
 import type { MetricType } from "../metrics/metrics"
 import { Metric } from "../metrics/metrics"
 import { EnumSelect } from "./EnumSelect"
-import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
-import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
+import type { ChartType } from "../contexts/OptionsContext"
+import { Chart, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
 import { Icon } from "@mdi/react"
 import { memo, useTransition } from "react"
@@ -17,31 +17,23 @@ import {
   mdiResize,
   mdiSourceCommit,
   mdiScaleBalance,
-  mdiAccountAlertOutline,
-  mdiTruckFastOutline,
   mdiLink,
   mdiTransition,
   mdiLabel,
   mdiPalette,
   mdiImageSizeSelectSmall,
   mdiPuzzle,
-  mdiViewModule,
   mdiCog,
   mdiFileTree,
-  mdiFamilyTree,
   mdiContentCut,
   mdiThemeLightDark,
-  mdiWhiteBalanceSunny,
-  mdiMoonWaningCrescent,
   mdiClockEdit,
   mdiPlusMinusVariant
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { useLocalStorage } from "react-use"
-import { Depth, type DepthType, depthTypeIcons } from "~/metrics/chartDepth"
-import type { Theme } from "~/styling"
-import { Themes, useTheme } from "~/styling"
+import { useTheme } from "~/styling"
 
 export const Options = memo(function Options() {
   const [theme, setTheme] = useTheme()
@@ -49,7 +41,6 @@ export const Options = memo(function Options() {
   const {
     metricType,
     chartType,
-    depthType,
     sizeMetric,
     hierarchyType,
     transitionsEnabled,
@@ -60,7 +51,6 @@ export const Options = memo(function Options() {
     setLabelsVisible,
     setMetricType,
     setChartType,
-    setDepthType,
     setHierarchyType,
     setSizeMetricType,
     setRenderCutoff,
@@ -94,12 +84,6 @@ export const Options = memo(function Options() {
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
     TREE_MAP: mdiChartTree
-  }
-
-  const themeIcons: Record<Theme, string> = {
-    SYSTEM: mdiCog,
-    LIGHT: mdiWhiteBalanceSunny,
-    DARK: mdiMoonWaningCrescent
   }
 
   const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
@@ -164,47 +148,6 @@ export const Options = memo(function Options() {
             iconMap={sizeMetricIcons}
           />
         </fieldset>
-        {/* <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiFamilyTree} size="1.25em" />
-            Hiearchy
-          </legend>
-          <EnumSelect
-            enum={Hierarchy}
-            defaultValue={hierarchyType}
-            onChange={(hiearchyType: HierarchyType) => {
-              return setHierarchyType(hiearchyType)
-            }}
-            iconMap={hiearchyIcons}
-          />
-        </fieldset> */}
-        {/* {hierarchyType === "NESTED" ? (
-          <fieldset className="rounded-lg border p-2">
-            <legend className="card__title ml-1.5 justify-start gap-2">
-              <Icon path={mdiViewModule} size="1.25em" />
-              Depth
-            </legend>
-            <EnumSelect
-              enum={Depth}
-              defaultValue={depthType}
-              onChange={(depthType: DepthType) => setDepthType(depthType)}
-              iconMap={depthTypeIcons}
-            />
-          </fieldset>
-        ) : null} */}
-        {/* <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiThemeLightDark} size="1.25em" />
-            Theme
-          </legend>
-          <EnumSelect
-            enum={Themes}
-            defaultValue={theme}
-            onChange={(theme: Theme) => setTheme(theme)}
-            iconMap={themeIcons}
-          />
-        </fieldset> */}
-
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiCog} size="1.25em" />
