@@ -43,7 +43,7 @@ function Tick ({
           marginTop: 14,
           width: 1,
           height: 5,
-          backgroundColor: 'rgb(200,200,200)',
+          backgroundColor: 'rgb(150,150,150)',
           left: `${tick.percent}%`,
         }}
       />
@@ -56,6 +56,7 @@ function Tick ({
           marginLeft: `${-(100 / count) / 2}%`,
           width: `${100 / count}%`,
           left: `${tick.percent}%`,
+          maxWidth: "80px",
         }}
       >
         {text}
