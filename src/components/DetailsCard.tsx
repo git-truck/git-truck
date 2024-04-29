@@ -18,6 +18,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { MenuItem, MenuTab } from "./MenuTab"
 import { CommitsCard } from "./CommitsCard"
 import { usePrefersLightMode } from "~/styling"
+import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -34,7 +35,7 @@ export function DetailsCard({
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
-  const { metricType } = useOptions()
+  const { metricType, setLabelsVisible, labelsVisible, setShouldReenableLabels } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
   const { repodata2 } = useData()
@@ -185,6 +186,10 @@ export function DetailsCard({
                     type="submit"
                     disabled={state !== "idle"}
                     onClick={() => {
+                      if (labelsVisible && (isChrome || isChromium || isEdgeChromium)) {
+                        setShouldReenableLabels(true)
+                        setLabelsVisible(false)
+                      }
                       isProcessingHideRef.current = true
                     }}
                     title="Hide this file"
@@ -201,6 +206,10 @@ export function DetailsCard({
                       type="submit"
                       disabled={state !== "idle"}
                       onClick={() => {
+                        if (labelsVisible && (isChrome || isChromium || isEdgeChromium)) {
+                          setShouldReenableLabels(true)
+                          setLabelsVisible(false)
+                        }
                         isProcessingHideRef.current = true
                       }}
                     >
