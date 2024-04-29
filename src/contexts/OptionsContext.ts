@@ -93,7 +93,7 @@ const defaultOptions: Options = {
   labelsVisible: true,
   renderCutoff: 2,
   showFilesWithoutChanges: true,
-  dominantAuthorCutoff: 80,
+  dominantAuthorCutoff: 0,
   shouldReenableLabels: false
 }
 

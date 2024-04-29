@@ -75,7 +75,9 @@ export function AuthorOptions({showUnionAuthorsModal}: {showUnionAuthorsModal: (
     const submit = useSubmit()
     const transitionState = useNavigation()
     const { repo } = useData()
+    const { metricType } = useOptions()
   
+    if (metricType !== "TOP_CONTRIBUTOR") return null
     function rerollColors() {
       const form = new FormData()
       form.append("rerollColors", "")
