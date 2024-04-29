@@ -183,7 +183,7 @@ export const Options = memo(function Options() {
             iconMap={hiearchyIcons}
           />
         </fieldset>
-        {hierarchyType === "NESTED" ? (
+        {/* {hierarchyType === "NESTED" ? (
           <fieldset className="rounded-lg border p-2">
             <legend className="card__title ml-1.5 justify-start gap-2">
               <Icon path={mdiViewModule} size="1.25em" />
@@ -196,7 +196,7 @@ export const Options = memo(function Options() {
               iconMap={depthTypeIcons}
             />
           </fieldset>
-        ) : null}
+        ) : null} */}
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiThemeLightDark} size="1.25em" />
