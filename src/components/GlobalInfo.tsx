@@ -1,20 +1,54 @@
 import { Form, Link, useLocation, useNavigate, useNavigation } from "@remix-run/react"
-import { dateTimeFormatShort } from "~/util"
+import { dateTimeFormatShort, semverCompare } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
-import { mdiRefresh, mdiArrowTopLeft, mdiInformation } from "@mdi/js"
+import { mdiRefresh, mdiArrowTopLeft, mdiInformation, mdiArrowUpBoldCircleOutline } from "@mdi/js"
 import { CloseButton, Code } from "./util"
 import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
+import { ArrowContainer, Popover } from "react-tiny-popover"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
+const UpdateNotifier = memo(function UpdateNotifier() {
+  const { gitTruckInfo } = useData()
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  return (
+    <Popover
+    isOpen={isPopoverOpen}
+      positions={["right", "bottom", "left", "top"]} // preferred positions by priority
+      content={({ position, childRect, popoverRect }) => (
+        <ArrowContainer
+          position={position}
+          childRect={childRect}
+          popoverRect={popoverRect}
+          arrowSize={10}
+          arrowColor="white"
+        >
+          <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+            <p>Update available: {gitTruckInfo.latestVersion}</p>
+            <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
+            <p className="card-p">
+              To update, close application and run: <Code inline>npx git-truck@latest</Code>
+            </p>
+          </div>
+        </ArrowContainer>
+      )}
+      onClickOutside={() => setIsPopoverOpen(false)}>
+
+      <button title="Update available" className="btn bg-yellow-500" onClick={() => setIsPopoverOpen(!isPopoverOpen)}>
+          <Icon path={mdiArrowUpBoldCircleOutline} size="1.25em" />
+      </button>
+    </Popover>
+  )
+})
+
 export const GlobalInfo = memo(function GlobalInfo() {
   const client = useClient()
-  const { repodata2, repo } = useData()
+  const { repodata2, repo, gitTruckInfo } = useData()
   const transitionState = useNavigation()
 
   const location = useLocation()
@@ -37,6 +71,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
     }
   }, [transitionState.state])
   const isoString = new Date(repodata2.lastRunInfo.time).toISOString()
+  const updateAvailable = gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1
   return (
     <div className="flex flex-col gap-2">
       <div className="card">
@@ -94,6 +129,10 @@ export const GlobalInfo = memo(function GlobalInfo() {
               {isAnalyzing ? "Analyzing..." : "Refresh"}
             </button>
           </Form>
+          { updateAvailable ?
+            <UpdateNotifier />
+            : null
+          }
         </div>
         <RevisionSelect
           key={repodata2.branch}

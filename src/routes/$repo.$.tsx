@@ -19,8 +19,6 @@ import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
-import { useData } from "~/contexts/DataContext"
-import { semverCompare } from "~/util"
 import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
@@ -347,23 +345,10 @@ export const ErrorBoundary = () => {
   )
 }
 
-const UpdateNotifier = memo(function UpdateNotifier() {
-  const { gitTruckInfo } = useData()
-  return (
-    <div className="card">
-      <p>Update available: {gitTruckInfo.latestVersion}</p>
-      <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
-      <p className="card-p">
-        To update, close application and run: <Code inline>npx git-truck@latest</Code>
-      </p>
-    </div>
-  )
-})
-
 export default function Repo() {
   const client = useClient()
   const data = useTypedLoaderData<RepoData>()
-  const { gitTruckInfo, repodata2 } = data
+  const { repodata2 } = data
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
@@ -471,9 +456,6 @@ export default function Repo() {
           ) : null}
           {!isRightPanelCollapse && !isFullscreen ? (
             <>
-              {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
-                <UpdateNotifier />
-              ) : null}
               <DetailsCard
                 className={clsx({
                   "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
