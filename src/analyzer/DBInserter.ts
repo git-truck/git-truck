@@ -55,7 +55,16 @@ class JsonInserter<T> extends Inserter<T> {
 }
 
 class ArrowInserter<T> extends Inserter<T> {
+  private arrowLoaded = false
   public async finalize() {
+    if (!this.arrowLoaded) {
+      await this.db.all(`
+        INSTALL arrow;
+        LOAD arrow;
+      `)
+      this.arrowLoaded = true
+    }
+
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
