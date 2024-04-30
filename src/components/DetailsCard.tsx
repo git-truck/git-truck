@@ -228,6 +228,10 @@ export function DetailsCard({
                     type="submit"
                     disabled={state !== "idle"}
                     onClick={() => {
+                      if (labelsVisible && (isChrome || isChromium || isEdgeChromium)) {
+                        setShouldReenableLabels(true)
+                        setLabelsVisible(false)
+                      }
                       isProcessingHideRef.current = true
                       setPath(OneFolderOut(path))
                     }}
