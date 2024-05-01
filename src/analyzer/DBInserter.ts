@@ -70,9 +70,20 @@ class ArrowInserter<T> extends Inserter<T> {
       const sliced = this.rows.slice(i, i + bundleSize)
       const arrowTable = tableFromJSON(sliced as Record<string, unknown>[])
       const tempTableName = `temp_${this.table}_${this.id}`
-      await this.db.register_buffer(tempTableName, [tableToIPC(arrowTable)], true)
-      await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM ${tempTableName});`)
-      await this.db.unregister_buffer(tempTableName)
+      // this is meant to fix a rare issue where the buffer is not correctly created
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        try {
+          await this.db.unregister_buffer(tempTableName)
+          await this.db.register_buffer(tempTableName, [tableToIPC(arrowTable)], true)
+          await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM ${tempTableName});`)
+          await this.db.unregister_buffer(tempTableName)
+          break
+        } catch (e) {
+          console.warn("Insertion failed, retrying", e)
+          continue
+        }
+      }
     }
   }
 }
