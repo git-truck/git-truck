@@ -86,6 +86,19 @@ export const Options = memo(function Options() {
           />
         </fieldset>
         {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
+        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
+        <fieldset className="rounded-lg border p-2">
+          <legend className="card__title ml-1.5 justify-start gap-2">
+            <Icon path={mdiImageSizeSelectSmall} size="1.25em" />
+            Size
+          </legend>
+          <EnumSelect
+            enum={SizeMetric}
+            defaultValue={sizeMetric}
+            onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
+            iconMap={sizeMetricIcons}
+          />
+        </fieldset>
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiPalette} size="1.25em" />
@@ -105,19 +118,6 @@ export const Options = memo(function Options() {
               }
             }}
             iconMap={visualizationIcons}
-          />
-        </fieldset>
-        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiImageSizeSelectSmall} size="1.25em" />
-            Size
-          </legend>
-          <EnumSelect
-            enum={SizeMetric}
-            defaultValue={sizeMetric}
-            onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
-            iconMap={sizeMetricIcons}
           />
         </fieldset>
       </div>
