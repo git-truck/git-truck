@@ -9,6 +9,7 @@ import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
 import { ArrowContainer, Popover } from "react-tiny-popover"
+import { CollapsableSettings } from "./Settings"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
@@ -145,6 +146,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
           headGroups={repo.refs}
           analyzedBranches={repodata2.analyzedRepos.filter((rep) => rep.repo === repodata2.repo)}
         />
+        <CollapsableSettings />
       </div>
     </div>
   )

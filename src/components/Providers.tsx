@@ -142,6 +142,11 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           shouldReenableLabels: should
         })),
+      setLinkMetricAndSizeMetric: (link: boolean) => 
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          linkMetricAndSizeMetric: link
+        })),
     }),
     [options]
   )
