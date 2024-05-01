@@ -8,7 +8,6 @@ import { useMediaQuery } from "./hooks"
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
 export const Themes = {
-  SYSTEM: "System",
   LIGHT: "Light",
   DARK: "Dark"
 } as const
@@ -16,7 +15,7 @@ export const Themes = {
 export type Theme = keyof typeof Themes
 
 export const ThemeContext = createContext<[Theme, Dispatch<SetStateAction<Theme | undefined>>]>([
-  "SYSTEM",
+  "LIGHT",
   () => {
     throw new Error("ThemeContext not in the tree")
   }
@@ -28,7 +27,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useLocalStorage<Theme>("themeType", undefined)
 
   return (
-    <ThemeContext.Provider value={[theme === undefined ? "SYSTEM" : theme, setTheme]}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={[theme === undefined ? "LIGHT" : theme, setTheme]}>{children}</ThemeContext.Provider>
   )
 }
 
@@ -40,5 +39,5 @@ export function usePrefersLightMode() {
   const prefersLight = useMQPrefersColorSchemeLight()
   const [theme] = useTheme()
 
-  return theme === "SYSTEM" || theme === undefined ? prefersLight : theme === "LIGHT"
+  return theme === undefined ? prefersLight : theme === "LIGHT"
 }
