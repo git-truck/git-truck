@@ -9,8 +9,6 @@ import ClipLoader from "react-spinners/ClipLoader"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
-import { useOptions } from "~/contexts/OptionsContext"
-import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {range: [number, number], timerange: [number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, updateTimeseries(e: readonly number[]): void, disabled: boolean}) {
   const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)
@@ -158,7 +156,6 @@ function TimePicker({range, setRange, timerange, setsBeginning, updateTimeseries
 }
 
 export default function TimeSlider() {
-  const { setLabelsVisible, labelsVisible, setShouldReenableLabels } = useOptions()
   const sliderStyle: React.CSSProperties = {
     left: "70px",
     top: "30px",
@@ -193,10 +190,6 @@ export default function TimeSlider() {
         onUpdate={(e) => setRange([...e] as [number, number])}
         onChange={(e) => {
           updateTimeseries(e)
-          if (labelsVisible && (isChrome || isChromium || isEdgeChromium)) {
-            setShouldReenableLabels(true)
-            setLabelsVisible(false)
-          }
         }}
         values={range}
         disabled={disabled}

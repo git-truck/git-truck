@@ -137,11 +137,6 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           dominantAuthorCutoff: dominantAuthorCutoff
         })),
-      setShouldReenableLabels: (should: boolean) => 
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
-          shouldReenableLabels: should
-        })),
       setLinkMetricAndSizeMetric: (link: boolean) => 
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),

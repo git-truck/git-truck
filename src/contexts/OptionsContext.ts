@@ -48,7 +48,6 @@ export type Options = {
   renderCutoff: number
   showFilesWithoutChanges: boolean
   dominantAuthorCutoff: number
-  shouldReenableLabels: boolean
   linkMetricAndSizeMetric: boolean
 }
 
@@ -66,7 +65,6 @@ export type OptionsContextType = Options & {
   setRenderCutoff: (renderCutoff: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
-  setShouldReenableLabels: (should: boolean) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
 }
 
@@ -96,7 +94,6 @@ const defaultOptions: Options = {
   renderCutoff: 2,
   showFilesWithoutChanges: true,
   dominantAuthorCutoff: 0,
-  shouldReenableLabels: false,
   linkMetricAndSizeMetric: false
 }
 
@@ -142,9 +139,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setDominantAuthorCutoff: () => {
       throw new Error("No setDominantAuthorCutoffSetter provided")
-    },
-    setShouldReenableLabels: () => {
-      throw new Error("No setShouldReenableLabelsSetter provided")
     },
     setLinkMetricAndSizeMetric: () => {
       throw new Error("No setLinkMetricAndSizeMetricSetter provided")

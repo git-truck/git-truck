@@ -5,8 +5,6 @@ import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
 import { Icon } from "@mdi/react"
 import { memo, useId } from "react"
-import { useOptions } from "~/contexts/OptionsContext"
-import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -17,7 +15,6 @@ function hiddenFileFormat(ignored: string) {
 export const HiddenFiles = memo(function HiddenFiles() {
   const location = useLocation()
   const [expanded, setExpanded] = useBoolean(false)
-  const { setLabelsVisible, labelsVisible, setShouldReenableLabels } = useOptions()
   const navigationState = useNavigation()
   const { repodata2 } = useData()
   const expandHiddenFilesButtonId = useId()
@@ -41,12 +38,6 @@ export const HiddenFiles = memo(function HiddenFiles() {
                   className="btn--icon btn--hover-swap h-4"
                   title="Show file"
                   disabled={navigationState.state !== "idle"}
-                  onClick={() => {
-                    if (labelsVisible && (isChrome || isChromium || isEdgeChromium)) {
-                      setShouldReenableLabels(true)
-                      setLabelsVisible(false)
-                    }
-                  }}
                 >
                   <Icon path={mdiEyeOff} className="inline-block h-full" />
                   <Icon path={mdiEye} className="hover-swap inline-block h-full" />

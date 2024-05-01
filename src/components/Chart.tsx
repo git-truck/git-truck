@@ -30,6 +30,7 @@ import { useSearch } from "~/contexts/SearchContext"
 import type { RepoData2 } from "~/routes/$repo.$"
 import ignore, { type Ignore } from "ignore"
 import { cn, usePrefersLightMode } from "~/styling"
+import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -38,7 +39,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { repodata2 } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible, shouldReenableLabels, setShouldReenableLabels } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -90,10 +91,6 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       path,
       renderCutoff
     ).descendants()
-    if (shouldReenableLabels) {
-      setLabelsVisible(true)
-      setShouldReenableLabels(false)
-    }
     console.timeEnd("nodes")
     return res
   }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
@@ -130,6 +127,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         }
   }
 
+  const now = isChrome || isChromium || isEdgeChromium ? Date.now() : 0 // Necessary in chrome to update text positions
   return (
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
@@ -148,7 +146,6 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         }}
       >
         {nodes.map((d, i) => {
-          // TODO: fix labels not updating in chrome when changing interval (reenabling labels fixes)
           return (
             <g
               key={d.data.path}
@@ -163,7 +160,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
                 <>
                   <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
                   {labelsVisible && (
-                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}`} d={d}>
+                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`} d={d}>
                       {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
                     </NodeText>
                   )}
@@ -429,8 +426,8 @@ function createPartitionedHiearchy(
         return 1
       case "LAST_CHANGED":
         return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
-      case "TRUCK_FACTOR":
-        return repodata2.authorCounts.get(blob.path) ?? 1
+      // case "TRUCK_FACTOR":
+      //   return repodata2.authorCounts.get(blob.path) ?? 1
       case "MOST_CONTRIBS":
         return repodata2.contribSumPerFile.get(blob.path) ?? 1
     }
