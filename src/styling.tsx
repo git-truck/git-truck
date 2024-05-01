@@ -36,8 +36,8 @@ function useMQPrefersColorSchemeLight() {
 }
 
 export function usePrefersLightMode() {
-  const prefersLight = useMQPrefersColorSchemeLight()
+  // const prefersLight = useMQPrefersColorSchemeLight()
   const [theme] = useTheme()
 
-  return theme === undefined ? prefersLight : theme === "LIGHT"
+  return theme === undefined || theme === "LIGHT"
 }
