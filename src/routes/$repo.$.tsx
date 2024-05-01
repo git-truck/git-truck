@@ -35,7 +35,6 @@ import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
-import { AuthorOptions } from "~/components/AuthorOptions"
 
 export interface RepoData {
   repo: Repository
@@ -471,7 +470,6 @@ export default function Repo() {
               />
               {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
               <SearchCard />
-              <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
               <Online>
                 <FeedbackCard />
               </Online>

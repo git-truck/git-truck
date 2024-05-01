@@ -1,11 +1,11 @@
 import type { GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
-import { setDominanceColor } from "./singleAuthor"
+// import { setDominanceColor } from "./singleAuthor"
 import { CommitAmountTranslater } from "./mostCommits"
 import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
 import { setDominantAuthorColor } from "./topContributer"
-import { TruckFactorTranslater } from "./truckFactor"
+// import { TruckFactorTranslater } from "./truckFactor"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
@@ -48,12 +48,12 @@ export function getMetricDescription(metric: MetricType): string {
       return "Which files have had the most commits, in the selected time range?"
     case "LAST_CHANGED":
       return "How long ago did the files change?"
-    case "SINGLE_AUTHOR":
-      return "Which files are authored by only one person, in the selected time range?"
+    // case "SINGLE_AUTHOR":
+    //   return "Which files are authored by only one person, in the selected time range?"
     case "TOP_CONTRIBUTOR":
-      return "Which person has made the most line-changes to a file, in the selected time range?"
-    case "TRUCK_FACTOR":
-      return "How many authors have contributed to a given file?"
+      return "Shows the top author for each file. Adjust the minimum percentage of line changes, that the top author should have, for each file to be colored."
+    // case "TRUCK_FACTOR":
+    //   return "How many authors have contributed to a given file?"
     case "MOST_CONTRIBUTIONS":
       return "How many line changes (additions and deletions) have been made to the file?"
     default:
@@ -65,13 +65,13 @@ export function getMetricLegendType(metric: MetricType): LegendType {
   switch (metric) {
     case "FILE_TYPE":
     case "TOP_CONTRIBUTOR":
-    case "SINGLE_AUTHOR":
+    // case "SINGLE_AUTHOR":
       return "POINT"
     case "MOST_COMMITS":
     case "MOST_CONTRIBUTIONS":
       return "GRADIENT"
     case "LAST_CHANGED":
-    case "TRUCK_FACTOR":
+    // case "TRUCK_FACTOR":
       return "SEGMENTS"
     default:
       throw new Error("Uknown metric type: " + metric)
@@ -116,7 +116,7 @@ export function getMetricCalcs(
   const newestEpoch = data.repodata2.newestChangeDate
   const groupings = lastChangedGroupings(newestEpoch)
   const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
-  const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
+  // const truckmapper = new TruckFactorTranslater(data.repodata2.authors.length)
   const maxContribCount = data.repodata2.maxMinContribCounts.max
   const minContribCount = data.repodata2.maxMinContribCounts.min
   const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
@@ -131,13 +131,13 @@ export function getMetricCalcs(
         setExtensionColor(blob, cache)
       }
     ],
-    [
-      "SINGLE_AUTHOR",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorColors, data.repodata2.dominantAuthors, data.repodata2.authorCounts)
-      }
-    ],
+    // [
+    //   "SINGLE_AUTHOR",
+    //   (blob: GitBlobObject, cache: MetricCache) => {
+    //     if (!cache.legend) cache.legend = new Map<string, PointInfo>()
+    //     setDominanceColor(blob, cache, authorColors, data.repodata2.dominantAuthors, data.repodata2.authorCounts)
+    //   }
+    // ],
     [
       "MOST_COMMITS",
       (blob: GitBlobObject, cache: MetricCache) => {
@@ -182,20 +182,20 @@ export function getMetricCalcs(
         setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors, dominantAuthorCutoff, data.repodata2.contribSumPerFile)
       }
     ],
-    [
-      "TRUCK_FACTOR",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) {
-          cache.legend = [
-            Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
-            (n) => `${Math.pow(2, n)}`,
-            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.repodata2.authors.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(blob.path) ?? 0))
-          ]
-        }
-        truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
-      }
-    ],
+    // [
+    //   "TRUCK_FACTOR",
+    //   (blob: GitBlobObject, cache: MetricCache) => {
+    //     if (!cache.legend) {
+    //       cache.legend = [
+    //         Math.floor(Math.log2(data.repodata2.authors.length)) + 1,
+    //         (n) => `${Math.pow(2, n)}`,
+    //         (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.repodata2.authors.length)) + 1))}%)`,
+    //         (blob) => Math.floor(Math.log2(data.repodata2.authorCounts.get(blob.path) ?? 0))
+    //       ]
+    //     }
+    //     truckmapper.setColor(blob, cache, data.repodata2.authorCounts)
+    //   }
+    // ],
     [
       "MOST_CONTRIBUTIONS",
       (blob: GitBlobObject, cache: MetricCache) => {

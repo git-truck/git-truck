@@ -155,27 +155,18 @@ export function AuthorOptions({showUnionAuthorsModal}: {showUnionAuthorsModal: (
     }
   
     return (
-      <div className="card">
-        <h2 className="card__title">Author options</h2>
-        <button className="btn" onClick={showUnionAuthorsModal}>
-          <Icon path={mdiAccountMultiple} />
-          Group authors
-        </button>
-        <button className="btn" disabled={transitionState.state !== "idle"} onClick={rerollColors}>
-          <Icon path={mdiDiceMultipleOutline} />
-          Generate new author colors
-        </button>
-        <fieldset className="rounded-lg border p-2 pb-6">
-          <legend
-            className="card__title ml-1.5 justify-start gap-2"
-            title="Only colors a file according to its top contributor, if the top contributor has made at least the chosen percentage of total line changes"
-          >
-            <Icon path={mdiPercentBoxOutline} size="1.25em" />
-            Authorship cutoff percentage
-          </legend>
-          <p className="card-p">Choose the minimum percentage authorship the top contributor of each file should have, for that file to be colored the author's color</p>
-          <PercentageSlider />
-        </fieldset>
-      </div>
+      <>
+        <PercentageSlider />
+        <div className="mt-2 flex gap-2">
+          <button className="btn" onClick={showUnionAuthorsModal}>
+            <Icon path={mdiAccountMultiple} />
+            Group authors
+          </button>
+          <button className="btn" disabled={transitionState.state !== "idle"} onClick={rerollColors}>
+            <Icon path={mdiDiceMultipleOutline} />
+            New author colors
+          </button>
+        </div>
+        </>
     )
   }

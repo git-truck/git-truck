@@ -7,12 +7,14 @@ import { SegmentLegend } from "./SegmentLegend"
 import { GradientLegend } from "./GradiantLegend"
 import type { GitObject } from "~/analyzer/model"
 import { useDeferredValue } from "react"
+import { AuthorOptions } from "../AuthorOptions"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend({
   hoveredObject,
-  className = ""
+  className = "",
+  showUnionAuthorsModal
 }: {
   hoveredObject: GitObject | null
   showUnionAuthorsModal: () => void
@@ -43,6 +45,10 @@ export function Legend({
     <div className={`card flex-shrink-0 overflow-hidden ${className}`}>
       <h2 className="card__title">Legend: {Metric[metricType]}</h2>
       <p className="card-p">{getMetricDescription(metricType)}</p>
+      {metricType === "TOP_CONTRIBUTOR" ?
+        <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
+        : null
+      }
       {legend}
     </div>
   )
