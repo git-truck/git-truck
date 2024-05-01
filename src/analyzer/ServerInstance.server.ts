@@ -342,6 +342,34 @@ export default class ServerInstance {
     return Math.max(2, Math.min(availableThreadCount, threadsBasedOnMemory))
   }
 
+  private calculateSections(commitCount: number, threadCount: number): number[][] {
+    const sections: number[][] = [];
+    // Make the section that gather recent commits slightly bigger,
+    // as it is slower to get older commits
+    if (threadCount === 2) {
+        const section1Size = Math.floor((commitCount * 53) / 100)
+        sections.push([0, section1Size])
+        sections.push([section1Size, commitCount])
+    } else if (threadCount === 3) {
+        const section1Size = Math.floor((commitCount * 35) / 100)
+        const section2Size = Math.floor((commitCount * 33) / 100)
+        sections.push([0, section1Size])
+        sections.push([section1Size, section1Size + section2Size])
+        sections.push([section1Size + section2Size, commitCount])
+    } else if (threadCount === 4) {
+        const section1Size = Math.floor((commitCount * 27) / 100)
+        const section2Size = Math.floor((commitCount * 26) / 100)
+        const section3Size = Math.floor((commitCount * 24) / 100)
+        sections.push([0, section1Size])
+        sections.push([section1Size, section1Size + section2Size])
+        sections.push([section1Size + section2Size, section1Size + section2Size + section3Size])
+        sections.push([section1Size + section2Size + section3Size, commitCount])
+    } else {
+        throw new Error("Invalid threadCount. Only 2, 3, or 4 are allowed.")
+    }
+    return sections
+  }
+
   public async loadRepoData() {
     this.analyzationStatus = "Starting"
 
@@ -367,12 +395,13 @@ export default class ServerInstance {
     const threadCount = this.getThreadCount(commitCount)
     this.progress = Array(threadCount).fill(0)
     this.analyzationStatus = "Hydrating"
-    const sectionSize = Math.ceil(this.totalCommitCount / threadCount)
+    const sections = this.calculateSections(commitCount, threadCount)
     const promises = Array.from({ length: threadCount }, async (_, i) => {
-      const sectionStart = i * sectionSize
-      const sectionEnd = Math.min(sectionStart + sectionSize, commitCount)
-      console.log("start thread " + sectionStart + "-" + sectionEnd, i)
+      const sectionStart = sections[i][0]
+      const sectionEnd = sections[i][1]
+      log.debug("start thread " + sectionStart + "-" + sectionEnd + ", " + i)
       await this.gathererWorker(sectionStart, sectionEnd, i)
+      log.debug("finished thread: " + i)
     })
 
     await Promise.all(promises)
