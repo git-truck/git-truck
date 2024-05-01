@@ -51,7 +51,7 @@ interface PointLegendFragProps {
 
 function PointLegendFragment(props: PointLegendFragProps) {
   const { metricType } = useOptions()
-  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "SINGLE_AUTHOR"
+  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" //|| metricType === "SINGLE_AUTHOR"
 
   if (!props.show) return null
   return (
