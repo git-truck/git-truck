@@ -37,6 +37,7 @@ export function Handle(props: IHandleProps) {
     target: SliderItem
     getTrackProps: GetTrackProps
     disabled?: boolean
+    backgroundColor: string
   }
   
 export function Track(props: ITrackProps) {
@@ -46,7 +47,7 @@ export function Track(props: ITrackProps) {
           position: "absolute",
           height: 14,
           zIndex: 1,
-          backgroundColor: `${props.disabled ? "grey" : "#7aa0c4"}`,
+          backgroundColor: `${props.disabled ? "grey" : props.backgroundColor}`,
           borderRadius: 7,
           cursor: "pointer",
           left: `${props.source.percent}%`,

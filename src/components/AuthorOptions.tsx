@@ -8,6 +8,7 @@ import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { getPathFromRepoAndHead } from "~/util"
 import { Handle, Track } from "./sliderUtils"
+import { noEntryColor } from "~/const"
 
 interface TickProps {
   tick: SliderItem;
@@ -82,7 +83,7 @@ function PercentageSlider() {
       height: 14,
       borderRadius: 7,
       cursor: "pointer",
-      backgroundColor: "rgb(155,155,155)"
+      backgroundColor: "#7aa0c4"
     }
 
     const domain = [0, 100]
@@ -115,9 +116,9 @@ function PercentageSlider() {
           </Handles>
           <Tracks right={false}>
             {({ tracks, getTrackProps }) => (
-              <div className="slider-tracks">
+              <div className="slider-tracks" >
                 {tracks.map(({ id, source, target }) => (
-                  <Track key={id} source={source} target={target} getTrackProps={getTrackProps} />
+                  <Track backgroundColor={noEntryColor} key={id} source={source} target={target} getTrackProps={getTrackProps} />
                 ))}
               </div>
             )}

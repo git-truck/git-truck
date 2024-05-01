@@ -9,6 +9,7 @@ import ClipLoader from "react-spinners/ClipLoader"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
+import { missingInMapColor } from "~/const"
 
 function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {range: [number, number], timerange: [number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, updateTimeseries(e: readonly number[]): void, disabled: boolean}) {
   const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)
@@ -31,7 +32,7 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
     height: 14,
     borderRadius: 7,
     cursor: "pointer",
-    backgroundColor: "rgb(155,155,155)"
+    backgroundColor: missingInMapColor
   }
 
   return (
@@ -227,7 +228,7 @@ export default function TimeSlider() {
           {({ tracks, getTrackProps }) => (
             <div className="slider-tracks">
               {tracks.map(({ id, source, target }) => (
-                <Track key={id} source={source} target={target} getTrackProps={getTrackProps} disabled={disabled} />
+                <Track backgroundColor="#7aa0c4" key={id} source={source} target={target} getTrackProps={getTrackProps} disabled={disabled} />
               ))}
             </div>
           )}
