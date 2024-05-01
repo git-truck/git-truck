@@ -117,7 +117,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
         <div className="flex w-full auto-cols-max place-items-stretch gap-2">
           <Link className="btn btn--primary grow" to=".." title="See all repositories">
             <Icon path={mdiArrowTopLeft} size={0.75} />
-            <p>See more repositories</p>
+            <p>More repositories</p>
           </Link>
           <Form
             method="post"
@@ -129,7 +129,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
             <input type="hidden" name="refresh" value="true" />
             <button className="btn" disabled={transitionState.state !== "idle"}>
               <Icon path={mdiRefresh} size="1.25em" />
-              {isAnalyzing ? "Analyzing..." : "Refresh"}
+              {isAnalyzing ? "Loading" : "Refresh"}
             </button>
           </Form>
           { updateAvailable ?

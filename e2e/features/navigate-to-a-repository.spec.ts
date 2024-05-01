@@ -20,5 +20,5 @@ test("navigate to a repository", async ({ page }) => {
     .click()
 
   await page.waitForURL("/git-truck/main")
-  await page.waitForSelector("text=See more repositories")
+  await page.waitForSelector("text=More repositories")
 })
