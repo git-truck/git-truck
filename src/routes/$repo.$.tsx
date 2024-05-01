@@ -463,6 +463,7 @@ export default function Repo() {
           {!isRightPanelCollapse && !isFullscreen ? (
             <>
               <DetailsCard
+                showUnionAuthorsModal={showUnionAuthorsModal}
                 className={clsx({
                   "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
                   isFullscreen

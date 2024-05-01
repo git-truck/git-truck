@@ -11,7 +11,7 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
 import byteSize from "byte-size"
-import { mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder } from "@mdi/js"
+import { mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder, mdiAccountMultiple } from "@mdi/js"
 import { Icon } from "@mdi/react"
 import clsx from "clsx"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -28,9 +28,11 @@ function OneFolderOut(path: string) {
 }
 
 export function DetailsCard({
-  className = ""
+  className = "",
+  showUnionAuthorsModal
 }: {
-  className?: string
+  className?: string,
+  showUnionAuthorsModal: () => void
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
@@ -200,12 +202,13 @@ export function DetailsCard({
                       className="btn btn--outlined"
                       type="submit"
                       disabled={state !== "idle"}
+                      title={`Hide all files with .${extension} extension`}
                       onClick={() => {
                         isProcessingHideRef.current = true
                       }}
                     >
                       <Icon path={mdiEyeOffOutline} />
-                      <span>Hide .{extension} files</span>
+                      <span>Hide .{extension}</span>
                     </button>
                   </Form>
                 ) : null}
@@ -229,6 +232,10 @@ export function DetailsCard({
                 </Form>
               </>
             )}
+            <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
+              <Icon path={mdiAccountMultiple} />
+              Group authors
+            </button>
           </div>
         </MenuItem>
         <MenuItem title="Commits">
