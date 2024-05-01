@@ -3,7 +3,7 @@ import { dateTimeFormatShort, semverCompare } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
-import { mdiRefresh, mdiArrowTopLeft, mdiInformation, mdiArrowUpBoldCircleOutline } from "@mdi/js"
+import { mdiRefresh, mdiArrowTopLeft, mdiInformation, mdiArrowUpBoldCircleOutline, mdiFlaskOutline } from "@mdi/js"
 import { CloseButton, Code } from "./util"
 import { Icon } from "@mdi/react"
 import { useClient } from "~/hooks"
@@ -17,6 +17,7 @@ const analyzingTitle = "Analyzing | Git Truck"
 const UpdateNotifier = memo(function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+  const isExperimental = gitTruckInfo.version.includes("0.0.0")
   return (
     <Popover
     isOpen={isPopoverOpen}
@@ -29,20 +30,33 @@ const UpdateNotifier = memo(function UpdateNotifier() {
           arrowSize={10}
           arrowColor="white"
         >
+          {isExperimental ?
           <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
-            <p>Update available: {gitTruckInfo.latestVersion}</p>
+            <p>You are using an experimental build of Git Truck</p>
             <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
             <p className="card-p">
-              To update, close application and run: <Code inline>npx git-truck@latest</Code>
+              If you want to use a stable version, close the application and run: <Code inline>npx git-truck@latest</Code>
             </p>
           </div>
+          : <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+              <p>Update available: {gitTruckInfo.latestVersion}</p>
+              <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
+              <p className="card-p">
+                To update, close the application and run: <Code inline>npx git-truck@latest</Code>
+              </p>
+            </div>
+          }
         </ArrowContainer>
       )}
       onClickOutside={() => setIsPopoverOpen(false)}>
-
-      <button title="Update available" className="btn bg-yellow-500" onClick={() => setIsPopoverOpen(!isPopoverOpen)}>
-          <Icon path={mdiArrowUpBoldCircleOutline} size="1.25em" />
-      </button>
+      {isExperimental ?
+        <button title="You are using an experimental version" className="btn bg-lime-500" onClick={() => setIsPopoverOpen(!isPopoverOpen)}>
+          < Icon path={mdiFlaskOutline} size="1.25em" />
+        </button>
+      : <button title="Update available" className="btn bg-yellow-500" onClick={() => setIsPopoverOpen(!isPopoverOpen)}>
+          < Icon path={mdiArrowUpBoldCircleOutline} size="1.25em" />
+        </button>}
+      
     </Popover>
   )
 })
