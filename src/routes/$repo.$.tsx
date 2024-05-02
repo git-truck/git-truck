@@ -103,6 +103,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   }
 
   const reason = instance.prevInvokeReason
+  instance.prevInvokeReason = "unknown"
   const prevData = instance.prevResult
   const prevRes = prevData?.repodata2
 
