@@ -130,7 +130,16 @@ export const GlobalInfo = memo(function GlobalInfo() {
           </h2>
         </div>
         <div className="flex w-full auto-cols-max place-items-stretch gap-2">
-          <Link className="btn btn--primary grow" to=".." title="See all repositories">
+          <Link
+            className="btn btn--primary grow"
+            to="/"
+            // TODO: Implement browsing, requires new routing
+            // to={`/?${new URLSearchParams({
+            //   path: repo.parentDirPath
+            // }).toString()}`}
+            title="See all repositories"
+            prefetch="intent"
+          >
             <Icon path={mdiArrowTopLeft} size={0.75} />
             <p>More repositories</p>
           </Link>

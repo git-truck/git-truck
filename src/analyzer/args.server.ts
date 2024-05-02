@@ -29,3 +29,26 @@ export async function getArgs(): Promise<ArgsOptions> {
 
   return args
 }
+
+export async function getTruckConfigWithArgsFromPath(repoPath: string): Promise<[TruckConfig, TruckUserConfig]> {
+  const args = getArgsWithDefaults()
+
+  const pathIsRepo = await GitCaller.isGitRepo(args.path)
+  args.path = pathIsRepo ? getBaseDirFromPath(repoPath) : repoPath
+
+  let config: TruckUserConfig = {}
+  try {
+    const configContents = JSON.parse(await fs.readFile(resolve(repoPath, "truckconfig.json"), "utf-8"))
+    config = configContents
+  } catch (e) {
+    log.warn(`No truckconfig.json found in repo ${repoPath}`)
+  }
+
+  return [
+    {
+      ...args,
+      ...config
+    },
+    config
+  ]
+}

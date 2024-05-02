@@ -107,9 +107,18 @@ export class GitCaller {
 
   static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
     const repoDir = getDirName(repoPath)
+    const parentDir = getBaseDirFromPath(repoDir)
     const isRepo = await GitCaller.isGitRepo(repoPath)
+
     if (!isRepo) {
-      return null
+      return {
+        status: "Error",
+        // errorMessage: "Not a git repository",   // TODO: Implement browsing, requires new routing
+        errorMessage: "Not a valid git repository",
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir
+      }
     }
 
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
@@ -135,37 +144,67 @@ export class GitCaller {
         {} as { [branch: string]: boolean }
       )
 
-    const repo: Repository = {
-      name: repoDir,
-      path: repoPath,
-      data: null,
-      reasons: [],
-      currentHead: await GitCaller._getRepositoryHead(repoPath),
-      refs,
-      analyzedHeads
-    }
+    const repoHead = await GitCaller._getRepositoryHead(repoPath)
 
     try {
       const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
-      if (!error) {
-        const [branchHead, branch] = findBranchHeadResult
-        const [data, reasons] = await GitCaller.retrieveCachedResult({
-          repo: repoDir,
-          branch,
-          branchHead
-        })
-        repo.data = data
-        repo.reasons = reasons
+      if (error) {
+        return {
+          status: "Error",
+          errorMessage: error.message,
+          name: repoDir,
+          path: repoPath,
+          parentDirPath: parentDir
+        }
+      }
+
+      const [branchHead, branch] = findBranchHeadResult
+      const [data, reasons] = await GitCaller.retrieveCachedResult({
+        repo: repoDir,
+        branch,
+        branchHead
+      })
+
+      if (!data) {
+        return {
+          status: "Success",
+          isAnalyzed: false,
+          data: null,
+          reasons: reasons,
+          name: repoDir,
+          path: repoPath,
+          parentDirPath: parentDir,
+          currentHead: branch,
+          refs,
+          analyzedHeads
+        }
+      }
+
+      return {
+        status: "Success",
+        isAnalyzed: true,
+        data: data,
+        reasons: [],
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir,
+        currentHead: repoHead,
+        refs,
+        analyzedHeads
       }
     } catch (e) {
-      return null
+      return {
+        status: "Error",
+        errorMessage: e instanceof Error ? e.message : "Unknown error",
+        name: repoDir,
+        path: repoPath,
+        parentDirPath: parentDir
+      }
     }
     return repo
   }
 
-  static async scanDirectoryForRepositories(
-    argPath: string
-  ): Promise<[Repository | null, Repository[]]> {
+  static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
     let userRepo: Repository | null = null
     const [pathIsRepo] = await describeAsyncJob({
       job: () => GitCaller.isGitRepo(argPath),
@@ -280,7 +319,7 @@ export class GitCaller {
   static async retrieveCachedResult({
     repo,
     branch,
-    branchHead,
+    branchHead
   }: {
     repo: string
     branch: string

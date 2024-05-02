@@ -1,22 +1,32 @@
-import { Navigation, useFetcher } from "@remix-run/react"
+import { useFetcher, useNavigation } from "@remix-run/react"
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import anitruck from "~/assets/truck.gif"
+import { cn } from "~/styling"
 
 export type ProgressData = {
   progress: number
   analyzationStatus: AnalyzationStatus
 }
 
-export function LoadingIndicator(props: {transitionData: Navigation}) {
+export function LoadingIndicator({
+  className = "",
+  hideInitially = true,
+  loadingText
+}: {
+  loadingText?: string
+  hideInitially?: boolean
+  className?: string
+}) {
+  const transitionData = useNavigation()
   const fetcher = useFetcher<ProgressData>()
   useEffect(() => {
     if (fetcher.state === "idle") {
-      const [, repo, branch] = props.transitionData.location?.pathname.split("/") ?? ["", "", ""]
+      const [, repo, branch] = transitionData.location?.pathname.split("/") ?? ["", "", ""]
       fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
     }
-  }, [fetcher, fetcher.state])
+  }, [fetcher, fetcher.state, transitionData.location?.pathname])
 
   const progressText = useMemo(() => {
     if (!fetcher.data) return "Starting analysis"
@@ -27,9 +37,9 @@ export function LoadingIndicator(props: {transitionData: Navigation}) {
   }, [fetcher.data])
 
   return (
-    <div className={clsx("grid h-full w-full place-items-center", "")}>
-      <div className="flex animate-hide-initially flex-col px-2 py-2 opacity-0">
-        <p className="text-center text-3xl font-bold opacity-70">{progressText}</p>
+    <div className={clsx("grid h-full w-full place-items-center", className)}>
+      <div className={cn("flex  flex-col px-2 py-2", { "animate-hide-initially opacity-0": hideInitially })}>
+        <p className="text-center text-3xl font-bold opacity-70">{loadingText ?? progressText}</p>
         <img src={anitruck} alt={"🚛"} className="w-full min-w-0 max-w-sm self-center" />
       </div>
     </div>
