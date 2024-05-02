@@ -105,7 +105,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Index() {
   const { data, analyzedReposPromise, ...repositoyPromises } = useLoaderData<typeof loader>()
-  const { repositories, baseDir, baseDirName } = data
+  const castedRepos = repositoyPromises as { [k: string]: Promise<Repository | null> }
+  const { repositories, baseDir } = data
 
   const transitionData = useNavigation()
   const fetcher = useFetcher<typeof action>()
@@ -188,7 +189,7 @@ export default function Index() {
                 />
               }
             >
-              <Await resolve={Promise.all([repositoyPromises[`_${repoDir}`], analyzedReposPromise])}>
+              <Await resolve={Promise.all([castedRepos[`_${repoDir}`], analyzedReposPromise])}>
                 {([repo, analyzedRepos]) =>
                   repo !== null ? <RepositoryEntry key={repo.name} repo={repo} analyzedRepos={analyzedRepos} /> : null
                 }
