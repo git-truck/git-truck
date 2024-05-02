@@ -2,7 +2,9 @@
 
 Git Truck allows you to get an understanding of how your repository is structured, where there has been the most activity at different points in time, and who worked on which parts of the code base.
 
-## What it can help you with
+## How does it work? 
+
+GitTruck analyizes the whole history of your project based on your local .git folder. It runs completely locally. 
 
 For the files in your repository, Git Truck allows you to map metrics on:
 - the size of files (e.g. the file size in bytes, the number of commits to the file, etc.),
