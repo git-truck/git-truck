@@ -169,10 +169,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
       : await instance.db.getMaxMinContribCounts()
-  const commitCount = 
-    prevRes && !shouldUpdate(reason, "commitCount")
-      ? prevRes.commitCount
-      :await instance.db.getCommitCount()
+  const commitCount =
+    prevRes && !shouldUpdate(reason, "commitCount") ? prevRes.commitCount : await instance.db.getCommitCount()
   const analyzedRepos = await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
@@ -357,7 +355,7 @@ export default function Repo() {
   const data = useTypedLoaderData<RepoData>()
   const { repodata2 } = data
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
-  const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
+  const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(true)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
@@ -402,6 +400,11 @@ export default function Repo() {
               <GlobalInfo />
               <Options />
               <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              <SearchCard />
+              <Online>
+                <FeedbackCard />
+              </Online>
             </>
           ) : null}
           {!isFullscreen ? (
@@ -433,7 +436,11 @@ export default function Repo() {
           </header>
           {client ? (
             <>
-              <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+              <ChartWrapper
+                hoveredObject={hoveredObject}
+                setHoveredObject={setHoveredObject}
+                showUnionAuthorsModal={showUnionAuthorsModal}
+              />
               <div className="flex flex-col">
                 <TimeSlider />
                 <BarChart />
@@ -459,22 +466,6 @@ export default function Repo() {
                 <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
               </button>
             </div>
-          ) : null}
-          {!isRightPanelCollapse && !isFullscreen ? (
-            <>
-              <DetailsCard
-                showUnionAuthorsModal={showUnionAuthorsModal}
-                className={clsx({
-                  "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                  isFullscreen
-                })}
-              />
-              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-              <SearchCard />
-              <Online>
-                <FeedbackCard />
-              </Online>
-            </>
           ) : null}
         </aside>
       </div>
@@ -508,10 +499,12 @@ const FullscreenButton = memo(function FullscreenButton({
 
 function ChartWrapper({
   hoveredObject,
-  setHoveredObject
+  setHoveredObject,
+  showUnionAuthorsModal
 }: {
   hoveredObject: GitObject | null
   setHoveredObject: (obj: GitObject | null) => void
+  showUnionAuthorsModal: () => void
 }) {
   const chartWrapperRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLElement>(document.body)
@@ -519,7 +512,7 @@ function ChartWrapper({
 
   return (
     <div className="card grid overflow-y-hidden p-2" ref={chartWrapperRef}>
-      <Chart setHoveredObject={setHoveredObject} />
+      <Chart setHoveredObject={setHoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
       {createPortal(
         <Tooltip hoveredObject={hoveredObject} x={mouse.docX} y={mouse.docY} w={window.innerWidth} />,
         document.body

@@ -32,15 +32,23 @@ import type { RepoData2 } from "~/routes/$repo.$"
 import ignore, { type Ignore } from "ignore"
 import { cn, usePrefersLightMode } from "~/styling"
 import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
+import { DetailsCard } from "./DetailsCard"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
-export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObject: (obj: GitObject | null) => void }) {
+export const Chart = memo(function Chart({
+  setHoveredObject,
+  showUnionAuthorsModal
+}: {
+  setHoveredObject: (obj: GitObject | null) => void
+  showUnionAuthorsModal: () => void
+}) {
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { repodata2 } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible } =
+    useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -96,6 +104,23 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     return res
   }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
 
+  const currentNode = useMemo(() => {
+    const clickedNode = nodes.find((d) => d.data.path === clickedObject?.path)
+    if (!clickedNode)
+      return {
+        x: 0,
+        y: 0
+      }
+    const x =
+      chartType === "BUBBLE_CHART" ? clickedNode.x ?? 0 : clickedNode.x0 + (clickedNode.x1 - clickedNode.x0) / 2 ?? 0
+    const y =
+      chartType === "BUBBLE_CHART" ? clickedNode.y ?? 0 : clickedNode.y0 + (clickedNode.y1 - clickedNode.y0) / 2 ?? 0
+    return {
+      x,
+      y
+    }
+  }, [chartType, clickedObject?.path, nodes])
+
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -147,13 +172,15 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         }}
       >
         {nodes.map((d, i) => {
+          const isClicked = clickedObject?.path === d.data.path
+
           return (
             <g
               key={d.data.path}
               className={clsx("transition-opacity hover:opacity-60", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path
+                "animate-blink": isClicked
               })}
               {...createGroupHandlers(d, i === 0)}
             >
@@ -171,6 +198,37 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
           )
         })}
       </svg>
+      {clickedObject ? (
+        <div
+          className={cn("pointer-events-none absolute flex flex-col", {
+            "justify-end": currentNode.y > size.height / 2
+          })}
+          style={{
+            gridArea: "1 / 1 / -1 / 2",
+            width: "var(--side-panel-width)",
+
+            ...(currentNode.x <= size.width / 2 ? { left: currentNode.x } : { right: size.width - currentNode.x }),
+            ...(currentNode.y <= size.height / 2
+              ? { top: currentNode.y, bottom: 0 }
+              : { bottom: size.height - currentNode.y, top: 0 })
+            // transform: "translate(-50%, -50%)"
+          }}
+        >
+          <DetailsCard
+            clickedObject={clickedObject}
+            showUnionAuthorsModal={showUnionAuthorsModal}
+            className={cn(
+              "poi pointer-events-auto max-h-screen overflow-y-auto rounded-2xl shadow shadow-black/50 outline outline-1 outline-white transition-all",
+              {
+                "rounded-bl-none": currentNode.x <= size.width / 2 && currentNode.y > size.height / 2,
+                "rounded-br-none": currentNode.x > size.width / 2 && currentNode.y > size.height / 2,
+                "rounded-tl-none": currentNode.x <= size.width / 2 && currentNode.y <= size.height / 2,
+                "rounded-tr-none": currentNode.x > size.width / 2 && currentNode.y <= size.height / 2
+              }
+            )}
+          />
+        </div>
+      ) : null}
     </div>
   )
 })
@@ -203,7 +261,7 @@ function filterGitTree(
   }
 
   let filteredTree = filterNode(tree)
-  if (filteredTree === null) filteredTree = {...tree, children: []}
+  if (filteredTree === null) filteredTree = { ...tree, children: [] }
   if (filteredTree.type !== "tree") {
     throw new Error("Filtered tree must be a tree structure")
   }
@@ -416,23 +474,25 @@ function createPartitionedHiearchy(
 
   const castedTree = currentTree as GitObject
 
-  const hiearchy = hierarchy(castedTree).sum((d) => {
-    const blob = d as GitBlobObject
-    switch (sizeMetricType) {
-      case "FILE_SIZE":
-        return blob.sizeInBytes ?? 1
-      case "MOST_COMMITS":
-        return repodata2.commitCounts.get(blob.path) ?? 1
-      case "EQUAL_SIZE":
-        return 1
-      case "LAST_CHANGED":
-        return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
-      // case "TRUCK_FACTOR":
-      //   return repodata2.authorCounts.get(blob.path) ?? 1
-      case "MOST_CONTRIBS":
-        return repodata2.contribSumPerFile.get(blob.path) ?? 1
-    }
-  }).sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
+  const hiearchy = hierarchy(castedTree)
+    .sum((d) => {
+      const blob = d as GitBlobObject
+      switch (sizeMetricType) {
+        case "FILE_SIZE":
+          return blob.sizeInBytes ?? 1
+        case "MOST_COMMITS":
+          return repodata2.commitCounts.get(blob.path) ?? 1
+        case "EQUAL_SIZE":
+          return 1
+        case "LAST_CHANGED":
+          return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
+        // case "TRUCK_FACTOR":
+        //   return repodata2.authorCounts.get(blob.path) ?? 1
+        case "MOST_CONTRIBS":
+          return repodata2.contribSumPerFile.get(blob.path) ?? 1
+      }
+    })
+    .sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
 
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
 
