@@ -8,6 +8,10 @@ Git Truck allows you to decide which metrics should be applied to the size of fi
 
 You can mix and match these metrics to answer different questions about your project. The following examples show a few questions that Git Truck can answer for you.
 
+### ⚠️ Do some files have extreme levels of activity, indicating poor separation of concerns?
+
+![pandas](./teaser-images/pandas.png)
+
 ### 💻 Where in the system have we been working recently?
 
 ![pocketbase](./teaser-images/pocketbase.png)
