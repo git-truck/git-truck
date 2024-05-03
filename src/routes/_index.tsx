@@ -65,15 +65,19 @@ export const loader = async () => {
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
-  return defer({
-    data: {
-      repositories,
-      baseDir,
-      baseDirName: getDirName(baseDir)
-    },
+  return defer<{
+    repositories: string[]
+    baseDir: string
+    baseDirName: string
+    analyzedReposPromise: Promise<CompletedResult[]>
+    [key: string]: string | string[] | Promise<CompletedResult[]> | Repository
+  }>({
+    repositories,
+    baseDir,
+    baseDirName: getDirName(baseDir),
     analyzedReposPromise,
     ...repositoryPromises
-  } as const)
+  })
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -104,10 +108,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 }
 
 export default function Index() {
-  const { data, analyzedReposPromise, ...repositoyPromises } = useLoaderData<typeof loader>()
-  const castedRepos = repositoyPromises as { [k: string]: Promise<Repository | null> }
-  const { repositories, baseDir } = data
-
+  const { repositories, baseDir, analyzedReposPromise, ...repositoryPromises } = useLoaderData<typeof loader>()
+  const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository>>
   const transitionData = useNavigation()
   const fetcher = useFetcher<typeof action>()
 
@@ -189,7 +191,7 @@ export default function Index() {
                 />
               }
             >
-              <Await resolve={Promise.all([castedRepos[`_${repoDir}`], analyzedReposPromise])}>
+              <Await resolve={Promise.all([castedRepositoryPromises[`_${repoDir}`], analyzedReposPromise] as const)}>
                 {([repo, analyzedRepos]) =>
                   repo !== null ? <RepositoryEntry key={repo.name} repo={repo} analyzedRepos={analyzedRepos} /> : null
                 }
