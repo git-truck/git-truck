@@ -109,7 +109,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Index() {
   const { repositories, baseDir, analyzedReposPromise, ...repositoryPromises } = useLoaderData<typeof loader>()
-  const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository>>
+  const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const transitionData = useNavigation()
   const fetcher = useFetcher<typeof action>()
 
