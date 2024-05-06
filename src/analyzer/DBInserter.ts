@@ -19,6 +19,16 @@ export abstract class Inserter<T> {
 
   constructor(protected table: string, protected tempPath: string, protected db: Database, protected id: string) {}
 
+  public static getInserterType() {
+    switch (process.platform) {
+      case "darwin":
+      case "linux":
+        return "ARROW"
+      default:
+        return "JSON"
+    }
+  }
+
   public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database, id?: string): Inserter<T> {
     switch (process.platform) {
       case "darwin":
@@ -55,16 +65,7 @@ class JsonInserter<T> extends Inserter<T> {
 }
 
 class ArrowInserter<T> extends Inserter<T> {
-  private arrowLoaded = false
   public async finalize() {
-    if (!this.arrowLoaded) {
-      await this.db.all(`
-        INSTALL arrow;
-        LOAD arrow;
-      `)
-      this.arrowLoaded = true
-    }
-
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
@@ -79,7 +80,6 @@ class ArrowInserter<T> extends Inserter<T> {
         await this.db.unregister_buffer(tempTableName)
         const jsonInserter = new JsonInserter(this.table, this.tempPath, this.db, this.id)
         await jsonInserter.addAndFinalize(this.rows)
-        continue
       }
     }
   }
