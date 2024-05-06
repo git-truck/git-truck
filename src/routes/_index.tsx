@@ -318,7 +318,7 @@ function RepositoryEntry({
           to={`/?${new URLSearchParams({
             path: repo.path
           }).toString()}`}
-          prefetch="intent"
+          prefetch="none"
         >
           Browse
         </Link>
@@ -329,7 +329,7 @@ function RepositoryEntry({
           aria-disabled={repo.status === "Error" || repo.status === "Loading"}
           // to={`/repo/?${new URLSearchParams({ path: repo.fullPath ?? "", branch: head ?? "" }).toString()}`}
           to={path ?? ""}
-          prefetch="intent"
+          prefetch="none"
         >
           View
         </Link>
