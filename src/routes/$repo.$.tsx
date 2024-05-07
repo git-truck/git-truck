@@ -279,10 +279,10 @@ export const action: ActionFunction = async ({ request, params }) => {
     const start = Number(split[0])
     const end = Number(split[1])
 
-    if (start !== instance.prevResult?.repodata2.selectedRange[0]) {
-      instance.prevInvokeReason = "timeseriesstart"
-    } else if (end !== instance.prevResult?.repodata2.selectedRange[1]) {
+    if (end !== instance.prevResult?.repodata2.selectedRange[1]) {
       instance.prevInvokeReason = "timeseriesend"
+    } else if (start !== instance.prevResult?.repodata2.selectedRange[0]) {
+      instance.prevInvokeReason = "timeseriesstart"
     } else {
       instance.prevInvokeReason = "none"
       return null
