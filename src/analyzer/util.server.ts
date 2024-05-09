@@ -220,6 +220,7 @@ export async function describeAsyncJob<T>({
 }
 
 export const getBaseDirFromPath = (path: string) => resolvePath(path, "..")
+export const getRepoNameFromPath = (path: string) => resolvePath(path).split(sep).reverse()[0]
 export const getSiblingRepository = (path: string, repo: string) => resolvePath(getBaseDirFromPath(path), repo)
 
 /**

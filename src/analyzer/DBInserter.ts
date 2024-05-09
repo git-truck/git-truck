@@ -17,13 +17,23 @@ export abstract class Inserter<T> {
 
   public abstract finalize(): Promise<void>
 
-  constructor(protected table: string, protected db: Database, protected id: string) {}
+  constructor(protected table: string, protected tempPath: string, protected db: Database, protected id: string) {}
+
+  public static getInserterType() {
+    switch (process.platform) {
+      case "darwin":
+      case "linux":
+        return "ARROW"
+      default:
+        return "JSON"
+    }
+  }
 
   public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database, id?: string): Inserter<T> {
     switch (process.platform) {
       case "darwin":
       case "linux":
-        return new ArrowInserter<T>(table, db, id ?? "")
+        return new ArrowInserter<T>(table, tempPath, db, id ?? "")
       default:
         return new JsonInserter<T>(table, tempPath, db, id ?? "")
     }
@@ -33,7 +43,7 @@ export abstract class Inserter<T> {
 class JsonInserter<T> extends Inserter<T> {
   private tempFile: string
   constructor(table: string, tempPath: string, db: Database, id: string) {
-    super(table, db, id)
+    super(table, tempPath, db, id)
     this.tempFile = tempPath + table + id + ".json"
   }
 
@@ -55,34 +65,21 @@ class JsonInserter<T> extends Inserter<T> {
 }
 
 class ArrowInserter<T> extends Inserter<T> {
-  private arrowLoaded = false
   public async finalize() {
-    if (!this.arrowLoaded) {
-      await this.db.all(`
-        INSTALL arrow;
-        LOAD arrow;
-      `)
-      this.arrowLoaded = true
-    }
-
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {
       const sliced = this.rows.slice(i, i + bundleSize)
       const arrowTable = tableFromJSON(sliced as Record<string, unknown>[])
       const tempTableName = `temp_${this.table}_${this.id}`
-      // this is meant to fix a rare issue where the buffer is not correctly created
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        try {
-          await this.db.unregister_buffer(tempTableName)
-          await this.db.register_buffer(tempTableName, [tableToIPC(arrowTable)], true)
-          await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM ${tempTableName});`)
-          await this.db.unregister_buffer(tempTableName)
-          break
-        } catch (e) {
-          console.warn("Insertion failed, retrying", e)
-          continue
-        }
+      try {
+        await this.db.register_buffer(tempTableName, [tableToIPC(arrowTable)], true)
+        await this.db.exec(`INSERT INTO ${this.table} BY NAME (SELECT * FROM ${tempTableName});`)
+        await this.db.unregister_buffer(tempTableName)
+      } catch (e) {
+        console.warn("Arrow inserter failed, falling back to JSON inserter", e)
+        await this.db.unregister_buffer(tempTableName)
+        const jsonInserter = new JsonInserter(this.table, this.tempPath, this.db, this.id)
+        await jsonInserter.addAndFinalize(this.rows)
       }
     }
   }

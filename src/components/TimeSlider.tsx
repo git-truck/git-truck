@@ -165,9 +165,9 @@ export default function TimeSlider() {
   }
 
   const { repodata2 } = useData()
-  const { timerange } = repodata2
+  const { timerange, selectedRange } = repodata2
   const submit = useSubmit()
-  const [range, setRange] = useState(timerange)
+  const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
   
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"

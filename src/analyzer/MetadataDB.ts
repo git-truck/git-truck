@@ -3,6 +3,7 @@ import { resolve, dirname } from "path"
 import os from "os"
 import { promises as fs, existsSync } from "fs"
 import { CompletedResult } from "./model"
+import { Inserter } from "./DBInserter"
 
 export default class MetadataDB {
   private instance: Promise<Database>
@@ -23,6 +24,12 @@ export default class MetadataDB {
                 color VARCHAR
             );
         `)
+    if (Inserter.getInserterType() === "ARROW") {
+      await db.exec(`
+        INSTALL arrow;
+        LOAD arrow;
+      `)
+    }
     return db
   }
 

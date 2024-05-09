@@ -1,14 +1,51 @@
 import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
 
-export interface Repository {
+export type Repository = {
+  /**
+   * Relative path to the base directory that Git Truck was started in
+   */
   path: string
+  /**
+   * Full path to the repository
+   */
+  // fullPath: string // TODO: Implement browsing, requires new routing
+  /**
+   * Full path to the parent directory of the repository
+   */
+  parentDirPath: string
+  /**
+   * Directory name of the repository
+   */
   name: string
-  data: AnalyzerData | null
-  currentHead: string
-  refs: GitRefs
-  reasons: ANALYZER_CACHE_MISS_REASONS[]
-  analyzedHeads: Record<string, boolean>
-}
+} & (
+  | {
+      status: "Success"
+      isAnalyzed: true
+      refs: GitRefs
+      reasons: ANALYZER_CACHE_MISS_REASONS[]
+      analyzedHeads: Record<string, boolean>
+      data: AnalyzerData
+      currentHead: string
+    }
+  | {
+      name: string
+      fullPath: string
+      status: "Loading"
+    }
+  | {
+      status: "Success"
+      isAnalyzed: false
+      refs: GitRefs
+      reasons: ANALYZER_CACHE_MISS_REASONS[]
+      analyzedHeads: Record<string, boolean>
+      data: null
+      currentHead: string
+    }
+  | {
+      status: "Error"
+      errorMessage: string
+    }
+)
 
 export type GitObject = GitBlobObject | GitTreeObject
 

@@ -37,11 +37,17 @@ By selecting different time intervals on which the analysis is performed, in the
 
 ![web1](./teaser-images/web1.png)
 
+### ⚠️ Do some files have extreme levels of activity, indicating poor separation of concerns?
+
+![pandas](./teaser-images/pandas.png)
+
+Example from [Pandas](https://github.com/pandas-dev/pandas)
+
 ### 🛠️ Who is responsible for different subsystems?
 
 ![topauth](./teaser-images/topauth.png)
 
-### What is the folder structure of a complex project?
+### 📂 What is the folder structure of a complex project?
 
 ![linux](./teaser-images/linux.png)
 
