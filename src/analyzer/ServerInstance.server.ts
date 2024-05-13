@@ -29,7 +29,7 @@ export default class ServerInstance {
   public db: DB
   public progress = [0]
   public totalCommitCount = 0
-  private fileTreeAsOf = "HEAD"
+  private fileTreeAsOf: string | null = null
   public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
   public prevProgress = { str: "", timestamp: 0 }
@@ -72,6 +72,7 @@ export default class ServerInstance {
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
   public async analyzeTree() {
+    if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
     const lsTreeEntries: RawGitObject[] = []
     const matches = rawContent.matchAll(treeRegex)
