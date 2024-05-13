@@ -85,6 +85,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const path = resolve(args.path, params["repo"])
   const branch = params["*"]
   const repoName = params["repo"]
+  const isRepo = await GitCaller.isGitRepo(path)
+  if (!isRepo) throw new Error(`No repo found at ${path}`)
+  const isValidRevision = await GitCaller.isValidRevision(branch, path)
+  if (!isValidRevision) throw new Error(`Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`)
 
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   // to avoid double identical fetch at first load, which it does for some reason

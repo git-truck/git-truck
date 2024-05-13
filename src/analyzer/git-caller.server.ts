@@ -34,6 +34,12 @@ export class GitCaller {
     return Boolean(hasGitFolder && !findBranchHeadError)
   }
 
+  static async isValidRevision(revision: string, path: string) {
+    const gitFolder = join(path, ".git")
+    const [, findBranchHeadError] = await promiseHelper(GitCaller._revParse(gitFolder, revision))
+    return !findBranchHeadError
+  }
+
   /**
    *
    * @param repo The repo to find the branch head for

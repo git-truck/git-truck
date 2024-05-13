@@ -236,6 +236,15 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   }
 }
 
+export function isValidURI(uri: string) {
+  try {
+    decodeURIComponent(uri);
+    return true;
+  } catch (error) {
+      return false;
+  }
+}
+
 export async function getGitTruckInfo() {
   const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
   return {
