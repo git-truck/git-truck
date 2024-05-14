@@ -177,7 +177,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     prevRes && !shouldUpdate(reason, "commitCount")
       ? prevRes.commitCount
       :await instance.db.getCommitCount()
-  const analyzedRepos = await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedRepos = 
+    prevRes && !shouldUpdate(reason, "analyzedRepos")
+      ? prevRes.analyzedRepos
+      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
   const repodata2: RepoData2 = {
