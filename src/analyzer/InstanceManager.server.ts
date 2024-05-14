@@ -32,7 +32,6 @@ export default class InstanceManager {
   }
 
   public static async closeAllDBConnections() {
-    if (this.metadataDB) await this.metadataDB.close()
     for (const [, repo] of this.instances) {
       for (const [, branchInstance] of repo) {
         await branchInstance.db.close()

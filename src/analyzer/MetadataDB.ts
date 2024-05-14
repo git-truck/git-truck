@@ -1,106 +1,65 @@
-import { Database } from "duckdb-async"
-import { resolve, dirname } from "path"
+import { resolve } from "path"
 import os from "os"
-import { promises as fs, existsSync } from "fs"
+import { promises as fs } from "fs"
 import { CompletedResult } from "./model"
-import { Inserter } from "./DBInserter"
+
+interface MetadataJson {
+  completions: Record<string, { hash: string, time: number}>;
+  authorcolors: Record<string, string>;
+}
 
 export default class MetadataDB {
-  private instance: Promise<Database>
+  private path = resolve(os.tmpdir(), "git-truck-cache", "metadata.json")
+  private separator = "---"
 
-  private static async init(dbPath: string) {
-    const dir = dirname(dbPath)
-    if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
-    const db = await Database.create(dbPath, { temp_directory: dir })
-    await db.all(`
-            CREATE TABLE IF NOT EXISTS completions (
-                repo VARCHAR,
-                branch VARCHAR,
-                timestamp UINTEGER,
-                hash VARCHAR
-            );
-            CREATE TABLE IF NOT EXISTS authorcolors (
-                author VARCHAR,
-                color VARCHAR
-            );
-        `)
-    if (Inserter.getInserterType() === "ARROW") {
-      await db.exec(`
-        INSTALL arrow;
-        LOAD arrow;
-      `)
+  async readMetadata(): Promise<MetadataJson> {
+    try {
+        const data = JSON.parse(await fs.readFile(this.path, "utf8")) as MetadataJson
+        return data;
+    } catch (e) {
+        return {completions: {}, authorcolors: {}}
     }
-    return db
   }
-
-  constructor() {
-    const path = resolve(os.tmpdir(), "git-truck-cache", "metadata.db")
-    this.instance = MetadataDB.init(path)
-  }
-
-  public async close() {
-    await (await this.instance).close()
+  
+  async setMetadata(newData: MetadataJson) {
+    const asString = JSON.stringify(newData)
+    await fs.writeFile(this.path, asString, "utf8")
   }
 
   public async setCompletion(repo: string, branch: string, hash: string) {
-    await (
-      await this.instance
-    ).all(`
-            INSERT INTO completions (repo, branch, timestamp, hash) VALUES
-            ('${repo}', '${branch}', ${Math.floor(Date.now() / 1000)}, '${hash}');
-        `)
+    const currentMetadata = await this.readMetadata()
+    currentMetadata.completions[`${repo}${this.separator}${branch}`] = { hash, time: Math.floor(Date.now() / 1000) }
+    await this.setMetadata(currentMetadata)
   }
 
   public async addAuthorColor(author: string, color: string) {
-    await (
-      await this.instance
-    ).all(`
-          DELETE FROM authorcolors WHERE author = '${author}';
-        `)
-    if (color === "") return
-    await (
-      await this.instance
-    ).all(`
-          INSERT INTO authorcolors (author, color) VALUES ('${author}', '${color}');
-        `)
+    const currentMetadata = await this.readMetadata()
+    if (color === "") delete currentMetadata.authorcolors[author]
+    else currentMetadata.authorcolors[author] = color
+    await this.setMetadata(currentMetadata)
   }
 
   public async getAuthorColors() {
-    const res = await (
-      await this.instance
-    ).all(`
-            SELECT * FROM authorcolors;
-          `)
-    return new Map(
-      res.map((row) => {
-        return [row["author"] as string, row["color"] as `#${string}`]
-      })
-    )
+    const currentMetadata = await this.readMetadata()
+    const map = new Map<string, `#${string}`>();
+    Object.entries(currentMetadata.authorcolors).forEach(([key, value]) => {
+        map.set(key, value as `#${string}`);
+    });
+    return map
   }
 
   public async getLastRun(repo: string, branch: string) {
-    const res = await (
-      await this.instance
-    ).all(`
-          SELECT * FROM completions WHERE repo = '${repo}' AND branch = '${branch}' ORDER BY timestamp DESC LIMIT 1;
-        `)
-    if (res.length < 1) return undefined
-    try {
-      return { time: Number(res[0]["timestamp"]), hash: res[0]["hash"] as string }
-    } catch (e) {
-      return undefined
-    }
+    const currentMetadata = await this.readMetadata()
+    return currentMetadata.completions[`${repo}${this.separator}${branch}`] as {hash: string, time: number} | undefined
   }
 
   public async getCompletedRepos() {
-    const res = await (
-      await this.instance
-    ).all(`
-            SELECT repo, branch, MAX(timestamp) AS time FROM completions GROUP BY repo, branch;
-        `)
-    if (res.length < 1) return []
-    return res.map((row) => {
-      return { repo: row["repo"] as string, branch: row["branch"] as string, time: Number(row["time"]) }
-    }) as CompletedResult[]
+    const completedResults: CompletedResult[] = []
+    const currentMetadata = await this.readMetadata()
+    for (const [key, val] of Object.entries(currentMetadata.completions)) {
+      const [repo, branch] = key.split(this.separator)
+      completedResults.push({repo, branch, time: val.time})
+    }
+    return completedResults
   }
 }
