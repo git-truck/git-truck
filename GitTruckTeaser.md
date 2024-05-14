@@ -57,7 +57,7 @@ Example from [Linux](https://github.com/torvalds/linux)
 
 The only requirements are
 
-- [nodejs](https://nodejs.org/en/) version 16.13 to 21.x.x (Node 22 is not yet supported)
+- [nodejs](https://nodejs.org/en/) version 18 to 21 (Node 22 is only supported on Mac and Linux)
 - [git](https://git-scm.com/downloads) version 2.29 or newer.
 
 To run git truck, navigate to a repository or a folder containing multiple repositories in your terminal, and run `npx git-truck@duck`
