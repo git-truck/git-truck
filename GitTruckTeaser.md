@@ -4,7 +4,7 @@ Git Truck allows you to get an understanding of how your repository is structure
 
 ## How does it work?
 
-GitTruck analyses the history of your project based on your local .git folder. It runs completely locally.
+🔒 GitTruck analyses the history of your project based on your local .git folder. It runs **completely locally**, so your code stays on your machine, and it is **never uploaded to the cloud**, as is the case with many similar tools.
 
 For each file in your repository, Git Truck allows you to map metrics onto it:
 
@@ -55,7 +55,10 @@ Example from [Linux](https://github.com/torvalds/linux)
 
 ## How to get started
 
-The only requirements are [nodejs](https://nodejs.org/en/) version 16.13 or newer and [git](https://git-scm.com/downloads) version 2.29 or newer.
+The only requirements are
+
+- [nodejs](https://nodejs.org/en/) version 16.13 to 21.x.x (Node 22 is not yet supported)
+- [git](https://git-scm.com/downloads) version 2.29 or newer.
 
 To run git truck, navigate to a repository or a folder containing multiple repositories in your terminal, and run `npx git-truck@duck`
 
