@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { CSSProperties, useEffect, useId, useMemo, useRef, useState } from "react"
 import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import type { GitObject, GitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
@@ -29,12 +29,16 @@ function OneFolderOut(path: string) {
 
 export function DetailsCard({
   className = "",
+  clickedObject,
+  style = {},
   showUnionAuthorsModal
 }: {
-  className?: string,
+  className?: string
+  style?: CSSProperties
+  clickedObject: GitObject | null
   showUnionAuthorsModal: () => void
 }) {
-  const { setClickedObject, clickedObject } = useClickedObject()
+  const { setClickedObject } = useClickedObject()
   const location = useLocation()
   const { metricType } = useOptions()
   const { state } = useNavigation()
@@ -42,7 +46,7 @@ export function DetailsCard({
   const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
-  const slicedPath = useMemo(() => (clickedObject?.path ?? ""), [clickedObject])
+  const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
 
   const existingCommitCount = repodata2.commitCounts.get(slicedPath)
 
@@ -125,7 +129,7 @@ export function DetailsCard({
       colormap?.get(clickedObject.path) ?? ((prefersLightMode ? "#808080" : "#262626") as `#${string}`)
     const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
     return {
-      backgroundColor: backgroundColor,
+      backgroundColor: backgroundColor + "60",
       color: color,
       lightBackground: color === "#000000"
     }
@@ -137,17 +141,18 @@ export function DetailsCard({
   // TODO: handle binary file properly or remove the entry
   return (
     <div
-      className={clsx(className, "card flex flex-col gap-2 transition-colors", {
+      className={clsx(className, "card flex flex-col gap-2 bg-transparent backdrop-blur transition-all", {
         "text-gray-100": !lightBackground,
         "text-gray-800": lightBackground
       })}
       {...(backgroundColor
         ? {
             style: {
+              ...style,
               backgroundColor
             }
           }
-        : {})}
+        : { style })}
     >
       <div className="flex">
         <h2 className="card__title grid w-full grid-cols-[auto,1fr,auto] gap-2">
