@@ -457,7 +457,7 @@ export default function Repo() {
           })}
         >
           {!isFullscreen ? (
-            <div className="absolute z-10">
+            <div className="absolute">
               <button
                 type="button"
                 onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}

@@ -68,7 +68,7 @@ export const LegendDot = ({
           arrowSize={10}
           arrowColor="white"
         >
-          <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+          <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40 z-20">
             <HexColorPicker color={color} onChange={setColor} />
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
               Set color

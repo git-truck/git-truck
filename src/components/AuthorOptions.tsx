@@ -74,7 +74,8 @@ function PercentageSlider() {
       position: "relative",
       left: "43px",
       top: "7px",
-      width: "calc(100% - 55px)"
+      width: "calc(100% - 55px)",
+      zIndex: "0"
     }
 
     const railStyle: React.CSSProperties = {

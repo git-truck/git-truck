@@ -112,6 +112,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
             popoverRect={popoverRect}
             arrowSize={10}
             arrowColor="white"
+            className="z-20"
           >
             <div className="card bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
               <div className="grid max-w-lg grid-cols-[auto,1fr] gap-x-3 gap-y-1">
