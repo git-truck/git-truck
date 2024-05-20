@@ -23,14 +23,24 @@ export const FeedbackCard = memo(function FeedbackCard() {
           >
             Star Git Truck
           </GitHubButton>
-          <GitHubButton
+          {/* <GitHubButton
             href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
             data-icon="octicon-issue-opened"
             data-size="large"
             data-show-count="true"
           >
             Open an issue
+          </GitHubButton> */}
+          <a href="https://forms.gle/HdQQudQdThCXKaYN7" target="blank">
+
+          <GitHubButton
+            href="https://forms.gle/HdQQudQdThCXKaYN7"
+            data-icon="octicon-issue-opened"
+            data-size="large"
+            >
+            Answer brief survey
           </GitHubButton>
+          </a>
           {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
         </div>
       </div>
