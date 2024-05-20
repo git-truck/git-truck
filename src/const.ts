@@ -11,3 +11,5 @@ export const treemapBlobTextOffsetY = 3
 export const bubblePadding = 10
 export const circleTreeTextOffsetY = estimatedLetterHeightForDirText - 1
 export const circleBlobTextOffsetY = estimatedLetterHeightForDirText
+export const noEntryColor = "#c0c0c0"
+export const missingInMapColor = "#808080"

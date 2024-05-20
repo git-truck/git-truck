@@ -3,7 +3,7 @@ import { Await, Form, Link, useFetcher, useLoaderData, useNavigation } from "@re
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
-import type { Repository } from "~/analyzer/model"
+import type { CompletedResult, Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/util"
 import type { ReactNode } from "react"
@@ -11,19 +11,17 @@ import { Suspense, Fragment, useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
-import { existsSync, promises as fs } from "node:fs"
 import { join, resolve } from "node:path"
-import { getBaseDirFromPath } from "~/analyzer/util.server"
+import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
 import { mdiArrowUp, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
+import InstanceManager from "~/analyzer/InstanceManager.server"
+import { existsSync } from "node:fs"
+import { readdir } from "node:fs/promises"
 import { log } from "~/analyzer/log.server"
 
-// TODO: Implement browsing, requires new routing
-// export const loader = async ({ request }: LoaderFunctionArgs) => {
-// const queryPath = new URL(request.url).searchParams.get("path")
 export const loader = async () => {
   const queryPath = null
-
   const args = getArgsWithDefaults()
 
   if (queryPath) {
@@ -44,10 +42,10 @@ export const loader = async () => {
     // args.path
   )
 
-  const entries = await fs.readdir(baseDir, { withFileTypes: true })
+  const entries = await readdir(baseDir, { withFileTypes: true })
 
   // Get all directories that has a .git subdirectory
-  const repos = entries
+  const repositories = entries
     .filter(
       (entry) =>
         entry.isDirectory() &&
@@ -61,20 +59,24 @@ export const loader = async () => {
   // Get metadata for all repos in parallel
   // Returns an object, as `defer` does not support arrays
   // The keys are prefixed with an underscore to avoid conflicts with other properties returned from the loader
-  const repoPromises = Object.fromEntries(
-    repos.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo), args.invalidateCache)])
+  const repositoryPromises = Object.fromEntries(
+    repositories.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo))])
   )
 
+  const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+
   return defer<{
+    repositories: string[]
     baseDir: string
-    parentDir: string
-    repos: string[]
-    [key: string]: Repository | string | string[]
+    baseDirName: string
+    analyzedReposPromise: Promise<CompletedResult[]>
+    [key: string]: string | string[] | Promise<CompletedResult[]> | Repository
   }>({
+    repositories,
     baseDir,
-    parentDir: getBaseDirFromPath(baseDir),
-    repos,
-    ...repoPromises
+    baseDirName: getDirName(baseDir),
+    analyzedReposPromise,
+    ...repositoryPromises
   })
 }
 
@@ -106,7 +108,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 }
 
 export default function Index() {
-  const { baseDir, repos, parentDir, ...repoPromises } = useLoaderData<typeof loader>()
+  const { repositories, baseDir, analyzedReposPromise, ...repositoryPromises } = useLoaderData<typeof loader>()
+  const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const transitionData = useNavigation()
   const fetcher = useFetcher<typeof action>()
 
@@ -126,7 +129,7 @@ export default function Index() {
         </h1>
         <div className="flex flex-col gap-1">
           <p>
-            Found {repos.length} folder{repos.length === 1 ? "" : "s"}
+            Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
           </p>
           {/* <div className="flex w-full gap-2"> */}
           <div className="hidden w-full gap-2">
@@ -158,7 +161,7 @@ export default function Index() {
             <Link
               className="btn btn--primary"
               to={`/?${new URLSearchParams({
-                path: parentDir
+                path: baseDir
               }).toString()}`}
               prefetch="intent"
             >
@@ -167,28 +170,31 @@ export default function Index() {
           </div>
         </div>
       </div>
-      {repos.length > 0 ? (
+      {repositories.length > 0 ? (
         <RepositoryList>
           <div className="opacity-80">Folder</div>
           <div className="opacity-80">Status</div>
           <div className="col-span-2 opacity-80">Actions</div>
-          {repos.map((dir, i) => (
+          {repositories.map((repoDir, i) => (
             <Suspense
-              key={repos[i]}
+              key={repositories[i]}
               fallback={
                 <RepositoryEntry
                   repo={{
-                    name: dir,
-                    path: dir,
-                    fullPath: join(baseDir, dir),
+                    name: repoDir,
+                    path: repoDir,
+                    fullPath: join(baseDir, repoDir),
                     parentDirPath: baseDir,
                     status: "Loading"
                   }}
+                  analyzedRepos={[]}
                 />
               }
             >
-              <Await resolve={repoPromises[`_${dir}`]}>
-                {(repo) => (repo !== null ? <RepositoryEntry repo={repo as Repository} /> : null)}
+              <Await resolve={Promise.all([castedRepositoryPromises[`_${repoDir}`], analyzedReposPromise] as const)}>
+                {([repo, analyzedRepos]) =>
+                  repo !== null ? <RepositoryEntry key={repo.name} repo={repo} analyzedRepos={analyzedRepos} /> : null
+                }
               </Await>
             </Suspense>
           ))}
@@ -228,7 +234,13 @@ function RepositoryList({ children }: { children: ReactNode[] }) {
   )
 }
 
-function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNode {
+function RepositoryEntry({
+  repo,
+  analyzedRepos
+}: {
+  repo: SerializeFrom<Repository>
+  analyzedRepos: CompletedResult[]
+}): ReactNode {
   const isSuccesful = repo.status === "Success"
   const isError = repo.status === "Error"
 
@@ -236,7 +248,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
   const path = head ? getPathFromRepoAndHead(repo.name, head) : null
 
   const isFolder = repo.status === "Error" && repo.errorMessage === "Not a git repository"
-  const isAnalyzed = repo.status === "Success" && head !== null ? repo.analyzedHeads[head] : false
+  const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
 
   return (
     <Fragment key={repo.name}>
@@ -284,7 +296,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
             value={head ?? ""}
             onChange={(e) => setHead(e.target.value)}
             headGroups={repo.refs}
-            analyzedHeads={repo.analyzedHeads}
+            analyzedBranches={analyzedRepos.filter((rep) => rep.repo === repo.name)}
           />
         ) : isError && !isFolder ? (
           <div className="grow truncate" title={repo.errorMessage}>
@@ -306,7 +318,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
           to={`/?${new URLSearchParams({
             path: repo.path
           }).toString()}`}
-          prefetch="intent"
+          prefetch="none"
         >
           Browse
         </Link>
@@ -317,7 +329,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
           aria-disabled={repo.status === "Error" || repo.status === "Loading"}
           // to={`/repo/?${new URLSearchParams({ path: repo.fullPath ?? "", branch: head ?? "" }).toString()}`}
           to={path ?? ""}
-          prefetch="intent"
+          prefetch="none"
         >
           View
         </Link>

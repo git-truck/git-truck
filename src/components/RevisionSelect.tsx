@@ -1,19 +1,19 @@
 import type { SelectHTMLAttributes } from "react"
-import type { GitRefs } from "~/analyzer/model"
+import type { CompletedResult, GitRefs } from "~/analyzer/model"
 import { mdiSourceBranch } from "@mdi/js"
 import { Icon } from "@mdi/react"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs
-  analyzedHeads: Record<string, boolean>
+  analyzedBranches: CompletedResult[]
   iconGroupColorMap?: Record<string, string>
 }
 
 export function RevisionSelect({
   headGroups,
-  analyzedHeads,
   disabled,
   className = "",
+  analyzedBranches,
   ...props
 }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const groupsEntries = Object.entries(headGroups)
@@ -26,7 +26,7 @@ export function RevisionSelect({
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
               {Object.entries(heads).map(([headName, head]) => {
-                const isAnalyzed = analyzedHeads[head]
+                const isAnalyzed = analyzedBranches.find(rep => rep.branch === headName)
                 return (
                   <option
                     key={headName}

@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
-import type { AuthorshipType, MetricType } from "../metrics/metrics"
-import { Authorship, Metric } from "../metrics/metrics"
+import type { MetricType } from "../metrics/metrics"
+import { Metric } from "../metrics/metrics"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { Depth, type DepthType } from "~/metrics/chartDepth"
@@ -43,17 +43,18 @@ export type Options = {
   commitSortingOrdersType: CommitSortingOrdersType
   commitSearch: string
   sizeMetric: SizeMetricType
-  authorshipType: AuthorshipType
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
+  showFilesWithoutChanges: boolean
+  dominantAuthorCutoff: number
+  linkMetricAndSizeMetric: boolean
 }
 
 export type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: ChartType) => void
   setSizeMetricType: (sizeMetricType: SizeMetricType) => void
-  setAuthorshipType: (authorshipType: AuthorshipType) => void
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
   setDepthType: (depthType: DepthType) => void
@@ -62,6 +63,9 @@ export type OptionsContextType = Options & {
   setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
   setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
+  setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
+  setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
+  setLinkMetricAndSizeMetric: (link: boolean) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -81,14 +85,16 @@ const defaultOptions: Options = {
   depthType: Object.keys(Depth)[0] as DepthType,
   hierarchyType: Object.keys(Hierarchy)[0] as HierarchyType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
-  authorshipType: Object.keys(Authorship)[0] as AuthorshipType,
   commitSortingMethodsType: Object.keys(SortingMethods)[0] as CommitSortingMethodsType,
   // The parameter value is based on default sorting method - date (true) or author (false)
   commitSortingOrdersType: Object.keys(SortingOrders(true))[0] as CommitSortingOrdersType,
   commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
-  renderCutoff: 2
+  renderCutoff: 2,
+  showFilesWithoutChanges: true,
+  dominantAuthorCutoff: 0,
+  linkMetricAndSizeMetric: false
 }
 
 export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {}): OptionsContextType {
@@ -103,9 +109,6 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setSizeMetricType: () => {
       throw new Error("No sizeMetricTypeSetter provided")
-    },
-    setAuthorshipType: () => {
-      throw new Error("No AuthorshipTypeSetter provided")
     },
     setDepthType: () => {
       throw new Error("No DepthTypeSetter provided")
@@ -130,6 +133,15 @@ export function getDefaultOptionsContextValue(savedOptions: Partial<Options> = {
     },
     setRenderCutoff: () => {
       throw new Error("No renderCutoffSetter provided")
+    },
+    setShowFilesWithoutChanges: () => {
+      throw new Error("No showFilesWithoutChangesSetter provided")
+    },
+    setDominantAuthorCutoff: () => {
+      throw new Error("No setDominantAuthorCutoffSetter provided")
+    },
+    setLinkMetricAndSizeMetric: () => {
+      throw new Error("No setLinkMetricAndSizeMetricSetter provided")
     }
   }
 }

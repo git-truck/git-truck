@@ -1,6 +1,9 @@
 import { mdiForum } from "@mdi/js"
 import Icon from "@mdi/react"
 import { memo } from "react"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+import yearOfRat from "year-of-rat"
 import GitHubButton from "react-github-btn"
 
 export const FeedbackCard = memo(function FeedbackCard() {
@@ -20,14 +23,25 @@ export const FeedbackCard = memo(function FeedbackCard() {
           >
             Star Git Truck
           </GitHubButton>
-          <GitHubButton
+          {/* <GitHubButton
             href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
             data-icon="octicon-issue-opened"
             data-size="large"
             data-show-count="true"
           >
             Open an issue
+          </GitHubButton> */}
+          <a href="https://forms.gle/HdQQudQdThCXKaYN7" target="blank">
+
+          <GitHubButton
+            href="https://forms.gle/HdQQudQdThCXKaYN7"
+            data-icon="octicon-issue-opened"
+            data-size="large"
+            >
+            Answer brief survey
           </GitHubButton>
+          </a>
+          {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
         </div>
       </div>
     </div>

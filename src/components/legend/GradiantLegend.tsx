@@ -3,6 +3,7 @@ import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
 import { useMemo } from "react"
 import { getLightness } from "~/util"
+import { noEntryColor } from "~/const"
 
 export type GradLegendData = [
   minValue: string,
@@ -21,7 +22,8 @@ export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps
 
   const path = clickedObject?.path ?? hoveredObject?.path ?? null
   const color = path ? metricCache.colormap.get(path) : null
-  const blobLightness = color ? getLightness(color) : -1
+  let blobLightness = color ? getLightness(color) : -1
+  if (color === noEntryColor) blobLightness = -1
 
   const offset = useMemo(() => {
     const min = getLightness(minColor)
