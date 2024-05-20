@@ -161,6 +161,6 @@
   },
   "homepage": "https://github.com/git-truck/git-truck#readme",
   "dependencies": {
-    "duckdb-async": "^0.10.2"
+    "@tjomson/duckdb-async": "^0.10.3-dev3.3"
   }
 }
