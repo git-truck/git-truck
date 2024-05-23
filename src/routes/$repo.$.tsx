@@ -2,7 +2,7 @@ import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
 import { memo, Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
-import { ActionFunction, LoaderFunctionArgs, defer } from "@remix-run/node"
+import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "@remix-run/node"
 import { Link, isRouteErrorResponse, useRouteError, useLoaderData, Await, Params } from "@remix-run/react"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
@@ -76,9 +76,9 @@ export interface RepoData2 {
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  // if (!params["repo"] || !params["*"]) {
-  //   return redirect("/")
-  // }
+  if (!params["repo"] || !params["*"]) {
+    return redirect("/")
+  }
   const dataPromise = analyze(params)
   return defer({dataPromise})
 }
