@@ -44,7 +44,7 @@ export function DetailsCard({
   const [commitCount, setCommitCount] = useState<number | null>(null)
   const slicedPath = useMemo(() => (clickedObject?.path ?? ""), [clickedObject])
 
-  const existingCommitCount = repodata2.commitCounts.get(slicedPath)
+  const existingCommitCount = repodata2.commitCounts[slicedPath]
 
   const commitFetcher = useFetcher()
 
@@ -166,7 +166,7 @@ export function DetailsCard({
               {isBlob ? (
                 <>
                   <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
-                  <LastchangedEntry epoch={repodata2.lastChanged.get(slicedPath)} />
+                  <LastchangedEntry epoch={repodata2.lastChanged[slicedPath]} />
                 </>
               ) : (
                 <FileAndSubfolderCountEntries clickedTree={clickedObject} />

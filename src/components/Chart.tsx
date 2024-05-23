@@ -177,7 +177,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
 
 function filterGitTree(
   tree: GitTreeObject,
-  commitCounts: Map<string, number>,
+  commitCounts: Record<string, number>,
   showFilesWithoutChanges: boolean,
   ig: Ignore
 ): GitTreeObject {
@@ -186,7 +186,7 @@ function filterGitTree(
       return null
     }
     if (node.type === "blob") {
-      if (!showFilesWithoutChanges && !commitCounts.get(node.path)) return null
+      if (!showFilesWithoutChanges && !commitCounts[node.path]) return null
       return node
     } else {
       // It's a tree
@@ -422,15 +422,15 @@ function createPartitionedHiearchy(
       case "FILE_SIZE":
         return blob.sizeInBytes ?? 1
       case "MOST_COMMITS":
-        return repodata2.commitCounts.get(blob.path) ?? 1
+        return repodata2.commitCounts[blob.path] ?? 1
       case "EQUAL_SIZE":
         return 1
       case "LAST_CHANGED":
-        return (repodata2.lastChanged.get(blob.path) ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
+        return (repodata2.lastChanged[blob.path] ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
       // case "TRUCK_FACTOR":
       //   return repodata2.authorCounts.get(blob.path) ?? 1
       case "MOST_CONTRIBS":
-        return repodata2.contribSumPerFile.get(blob.path) ?? 1
+        return repodata2.contribSumPerFile[blob.path] ?? 1
     }
   }).sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
 

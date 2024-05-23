@@ -32,12 +32,12 @@ export type MetricType = keyof typeof Metric
 export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
-  predefinedAuthorColors: Map<string, `#${string}`>,
+  predefinedAuthorColors: Record<string, `#${string}`>,
   dominantAuthorCutoff: number
 ): MetricsData {
   const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
-  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)), authorColors]
+  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)), new Map(Object.entries(authorColors))]
 }
 
 export function getMetricDescription(metric: MetricType): string {
@@ -86,29 +86,29 @@ export interface MetricCache {
 export function generateAuthorColors(
   authors: string[],
   colorSeed: string | null,
-  predefinedAuthorColors: Map<string, `#${string}`>
-): Map<string, `#${string}`> {
-  const map = new Map<string, `#${string}`>()
+  predefinedAuthorColors: Record<string, `#${string}`>
+): Record<string, `#${string}`> {
+  const result: Record<string, `#${string}`> = {}
   const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
-    const existing = predefinedAuthorColors.get(author)
+    const existing = predefinedAuthorColors[author]
     if (existing) {
-      map.set(author, existing)
+      result[author] = existing
       continue
     }
     const hash = createHash("sha1")
     hash.update(author + seed)
     const hashed = hash.digest("hex")
     const color = uniqolor(hashed).color as `#${string}`
-    map.set(author, color)
+    result[author] = color
   }
-  return map
+  return result
 }
 
 export function getMetricCalcs(
   data: RepoData,
-  authorColors: Map<string, `#${string}`>,
+  authorColors: Record<string, `#${string}`>,
   dominantAuthorCutoff: number
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.repodata2.maxCommitCount
@@ -166,11 +166,11 @@ export function getMetricCalcs(
               getLastChangedIndex(
                 groupings,
                 newestEpoch,
-                data.repodata2.lastChanged.get(blob.path) ?? 0
+                data.repodata2.lastChanged[blob.path] ?? 0
               ) ?? -1
           ]
         }
-        const existing = data.repodata2.lastChanged.get(blob.path)
+        const existing = data.repodata2.lastChanged[blob.path]
         const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
         cache.colormap.set(blob.path, color)
       }

@@ -17,8 +17,8 @@ export class CommitAmountTranslater {
     return hslToHex(20, 100, this.translater.inverseTranslate(value))
   }
 
-  setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Map<string, number>) {
-    const existing = commitCountPerFile.get(blob.path)
+  setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Record<string, number>) {
+    const existing = commitCountPerFile[blob.path]
     const color = existing ? this.getColor(existing) : noEntryColor
     cache.colormap.set(blob.path, color)
   }

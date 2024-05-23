@@ -41,11 +41,7 @@ export default class MetadataDB {
 
   public async getAuthorColors() {
     const currentMetadata = await this.readMetadata()
-    const map = new Map<string, `#${string}`>();
-    Object.entries(currentMetadata.authorcolors).forEach(([key, value]) => {
-        map.set(key, value as `#${string}`);
-    });
-    return map
+    return currentMetadata.authorcolors as Record<string, `#${string}`>
   }
 
   public async getLastRun(repo: string, branch: string) {

@@ -5,15 +5,15 @@ import type { MetricCache } from "./metrics"
 import { noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(
-  authorColors: Map<string, `#${string}`>,
+  authorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>,
+  dominantAuthorPerFile: Record<string, { author: string, contribcount: number }>,
   dominantAuthorCutoff: number,
-  contribSumPerFile: Map<string, number>
+  contribSumPerFile: Record<string, number>
 ) {
-  const dominantAuthor = dominantAuthorPerFile.get(blob.path)
-  const contribSum = contribSumPerFile.get(blob.path)
+  const dominantAuthor = dominantAuthorPerFile[blob.path]
+  const contribSum = contribSumPerFile[blob.path]
   if (!dominantAuthor || !contribSum) {
     // console.warn("No dominant author for file", path)
     return
@@ -25,7 +25,7 @@ export function setDominantAuthorColor(
     cache.colormap.set(blob.path, noEntryColor)
     return
   }
-  const color = authorColors.get(dominantAuthor.author) ?? noEntryColor
+  const color = authorColors[dominantAuthor.author] ?? noEntryColor
 
   cache.colormap.set(blob.path, color)
 

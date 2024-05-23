@@ -1,4 +1,4 @@
-import { useFetcher, useNavigation } from "@remix-run/react"
+import { useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
@@ -19,14 +19,15 @@ export function LoadingIndicator({
   hideInitially?: boolean
   className?: string
 }) {
-  const transitionData = useNavigation()
+  const location = useLocation()
   const fetcher = useFetcher<ProgressData>()
   useEffect(() => {
     if (fetcher.state === "idle") {
-      const [, repo, branch] = transitionData.location?.pathname.split("/") ?? ["", "", ""]
+      const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
+      console.log("bruhhhhh", location.pathname)
       fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
     }
-  }, [fetcher, fetcher.state, transitionData.location?.pathname])
+  }, [fetcher, fetcher.state, location.pathname])
 
   const progressText = useMemo(() => {
     if (!fetcher.data) return "Starting analysis"

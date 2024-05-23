@@ -82,47 +82,46 @@ function ColorMetricDependentInfo(props: {
   repodata2: RepoData2
 }) {
   const slicedPath = props.hoveredBlob?.path ?? ""
-  const authorCount = props.repodata2.authorCounts.get(slicedPath)
   switch (props.metric) {
     case "MOST_COMMITS":
-      const noCommits = props.repodata2.commitCounts.get(slicedPath)
+      const noCommits = props.repodata2.commitCounts[slicedPath]
       if (!noCommits) return "No activity"
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
     case "LAST_CHANGED":
-      const epoch = props.repodata2.lastChanged.get(slicedPath)
+      const epoch = props.repodata2.lastChanged[slicedPath]
       if (!epoch) return "No activity"
       return <>{dateFormatRelative(epoch)}</>
-    case "SINGLE_AUTHOR":
-      switch (authorCount) {
-        case undefined:
-        case 0:
-          return "No activity"
-        case 1:
-          const dom = props.repodata2.dominantAuthors.get(slicedPath)
-          if (!dom) return null
-          return `${dom.author} is the only author`
-        default:
-          return `${authorCount} authors`
-      }
+    // case "SINGLE_AUTHOR":
+    //   switch (authorCount) {
+    //     case undefined:
+    //     case 0:
+    //       return "No activity"
+    //     case 1:
+    //       const dom = props.repodata2.dominantAuthors.get(slicedPath)
+    //       if (!dom) return null
+    //       return `${dom.author} is the only author`
+    //     default:
+    //       return `${authorCount} authors`
+    //   }
     case "TOP_CONTRIBUTOR":
-      const dominant = props.repodata2.dominantAuthors.get(slicedPath)
-      const contribSum = props.repodata2.contribSumPerFile.get(slicedPath)
+      const dominant = props.repodata2.dominantAuthors[slicedPath]
+      const contribSum = props.repodata2.contribSumPerFile[slicedPath]
       if (!dominant) return "No activity"
       if (!contribSum) return <>{dominant.author}</>
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
       return <>{dominant.author} {authorPercentage}%</>
-    case "TRUCK_FACTOR":
-      switch (authorCount) {
-        case undefined:
-        case 0:
-          return "No activity"
-        case 1:
-          return "1 author"
-        default:
-          return `${authorCount} authors`
-      }
+    // case "TRUCK_FACTOR":
+    //   switch (authorCount) {
+    //     case undefined:
+    //     case 0:
+    //       return "No activity"
+    //     case 1:
+    //       return "1 author"
+    //     default:
+    //       return `${authorCount} authors`
+    //   }
     case "MOST_CONTRIBUTIONS":
-      const contribs = props.repodata2.contribSumPerFile.get(slicedPath)
+      const contribs = props.repodata2.contribSumPerFile[slicedPath]
       if (!contribs) return <>No activity</> 
       return <>{contribs} line changes</>
     default:

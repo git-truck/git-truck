@@ -17,8 +17,8 @@ export class ContribAmountTranslater {
     return hslToHex(118, 50, this.translater.inverseTranslate(value))
   }
 
-  setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Map<string, number>) {
-    const existing = contribCountPerFile.get(blob.path)
+  setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {
+    const existing = contribCountPerFile[blob.path]
     const color = existing ? this.getColor(existing) : noEntryColor
     cache.colormap.set(blob.path, color)
   }

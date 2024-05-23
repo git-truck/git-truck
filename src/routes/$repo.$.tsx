@@ -1,11 +1,9 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
-import { memo, useEffect, useMemo, useRef, useState } from "react"
+import { memo, Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
-import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
-import { redirect } from "@remix-run/node"
-import { typedjson, useTypedLoaderData } from "remix-typedjson"
-import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
+import { ActionFunction, LoaderFunctionArgs, defer } from "@remix-run/node"
+import { Link, isRouteErrorResponse, useRouteError, useLoaderData, Await, Params } from "@remix-run/react"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
@@ -35,6 +33,7 @@ import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
+import { LoadingIndicator } from "~/components/LoadingIndicator"
 
 export interface RepoData {
   repo: Repository
@@ -46,10 +45,10 @@ export interface RepoData {
 }
 
 export interface RepoData2 {
-  dominantAuthors: Map<string, { author: string; contribcount: number }>
-  commitCounts: Map<string, number>
-  lastChanged: Map<string, number>
-  authorCounts: Map<string, number>
+  dominantAuthors: Record<string, { author: string; contribcount: number }>
+  commitCounts: Record<string, number>
+  lastChanged: Record<string, number>
+  authorCounts: Record<string, number>
   maxCommitCount: number
   minCommitCount: number
   newestChangeDate: number
@@ -67,157 +66,21 @@ export interface RepoData2 {
   branch: string
   timerange: [number, number]
   colorSeed: string | null
-  authorColors: Map<string, `#${string}`>
+  authorColors: Record<string, `#${string}`>
   commitCountPerDay: { date: string; count: number }[]
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
-  contribSumPerFile: Map<string, number>
+  contribSumPerFile: Record<string, number>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params["repo"] || !params["*"]) {
-    return redirect("/")
-  }
-
-  const args = await getArgs()
-  const path = resolve(args.path, params["repo"])
-  const branch = params["*"]
-  const repoName = params["repo"]
-  const isRepo = await GitCaller.isGitRepo(path)
-  if (!isRepo) throw new Error(`No repo found at ${path}`)
-  const isValidRevision = await GitCaller.isValidRevision(branch, path)
-  if (!isValidRevision) throw new Error(`Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`)
-
-  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
-  // to avoid double identical fetch at first load, which it does for some reason
-  if (instance.prevInvokeReason === "none" && instance.prevResult) {
-    return typedjson(instance.prevResult)
-  }
-  await instance.loadRepoData()
-
-  const timerange = await instance.db.getOverallTimeRange()
-  const selectedRange = instance.db.selectedRange
-
-  const repo = await GitCaller.getRepoMetadata(path)
-
-  if (!repo) {
-    throw Error("Error loading repo")
-  }
-
-  const reason = instance.prevInvokeReason
-  instance.prevInvokeReason = "unknown"
-  const prevData = instance.prevResult
-  const prevRes = prevData?.repodata2
-
-  console.time("fileTree")
-  const filetree =
-    prevRes && !shouldUpdate(reason, "filetree")
-      ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
-      : await instance.analyzeTree()
-  console.timeEnd("fileTree")
-
-  if (!prevRes || shouldUpdate(reason, "rename")) {
-    console.time("rename")
-    await instance.updateRenames()
-    console.timeEnd("rename")
-  }
-
-  console.time("updateCache")
-  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
-  console.timeEnd("updateCache")
-  console.time("dbQueries")
-  const dominantAuthors =
-    prevRes && !shouldUpdate(reason, "dominantAuthor")
-      ? prevRes.dominantAuthors
-      : await instance.db.getDominantAuthorPerFile()
-  const commitCounts =
-    prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
-  const lastChanged =
-    prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
-  const authorCounts =
-    prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
-  const { maxCommitCount, minCommitCount } =
-    prevRes && !shouldUpdate(reason, "maxMinCommitCount")
-      ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
-      : await instance.db.getMaxAndMinCommitCount()
-  const { newestChangeDate, oldestChangeDate } =
-    prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
-      ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
-      : await instance.db.getNewestAndOldestChangeDates()
-  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
-  const authorUnions =
-    prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions : await instance.db.getAuthorUnions()
-  const { rootTree, fileCount } = filetree
-  const hiddenFiles =
-    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
-  const lastRunInfo =
-    prevRes && !shouldUpdate(reason, "lastRunInfo")
-      ? prevRes.lastRunInfo
-      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
-  const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
-  const authorColors =
-    prevRes && !shouldUpdate(reason, "authorColors")
-      ? prevRes.authorColors
-      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
-  const commitCountPerDay =
-    prevRes && !shouldUpdate(reason, "commitCountPerDay")
-      ? prevRes.commitCountPerDay
-      : await instance.db.getCommitCountPerTime(timerange)
-  const contribCounts =
-    prevRes && !shouldUpdate(reason, "contribSumPerFile")
-      ? prevRes.contribSumPerFile
-      : await instance.db.getContribSumPerFile()
-  const maxMinContribCounts =
-    prevRes && !shouldUpdate(reason, "maxMinContribCounts")
-      ? prevRes.maxMinContribCounts
-      : await instance.db.getMaxMinContribCounts()
-  const commitCount = 
-    prevRes && !shouldUpdate(reason, "commitCount")
-      ? prevRes.commitCount
-      :await instance.db.getCommitCount()
-  const analyzedRepos = 
-    prevRes && !shouldUpdate(reason, "analyzedRepos")
-      ? prevRes.analyzedRepos
-      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
-  console.timeEnd("dbQueries")
-
-  const repodata2: RepoData2 = {
-    dominantAuthors,
-    commitCounts,
-    lastChanged,
-    authorCounts,
-    maxCommitCount,
-    minCommitCount,
-    newestChangeDate,
-    oldestChangeDate,
-    authors,
-    authorUnions,
-    fileTree: rootTree,
-    fileCount,
-    hiddenFiles,
-    lastRunInfo: lastRunInfo!,
-    repo: instance.repo,
-    branch,
-    timerange,
-    colorSeed,
-    selectedRange,
-    authorColors,
-    commitCountPerDay,
-    analyzedRepos,
-    contribSumPerFile: contribCounts,
-    maxMinContribCounts,
-    commitCount
-  }
-
-  const fullData = {
-    repo,
-    gitTruckInfo: await getGitTruckInfo(),
-    repodata2
-  } as RepoData
-  instance.prevResult = fullData
-  return typedjson<RepoData>(fullData)
+  // if (!params["repo"] || !params["*"]) {
+  //   return redirect("/")
+  // }
+  const dataPromise = analyze(params)
+  return defer({dataPromise})
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -359,10 +222,152 @@ export const ErrorBoundary = () => {
   )
 }
 
+async function analyze(params: Params) {
+
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"] ?? "")
+  const branch = params["*"]
+  const repoName = params["repo"]
+  const isRepo = await GitCaller.isGitRepo(path)
+  if (!isRepo) throw new Error(`No repo found at ${path}`)
+  if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
+  const isValidRevision = await GitCaller.isValidRevision(branch, path)
+  if (!isValidRevision) throw new Error(`Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`)
+
+  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  // to avoid double identical fetch at first load, which it does for some reason
+  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+    return instance.prevResult
+  }
+  await instance.loadRepoData()
+
+  const timerange = await instance.db.getOverallTimeRange()
+  const selectedRange = instance.db.selectedRange
+
+  const repo = await GitCaller.getRepoMetadata(path)
+
+  if (!repo) {
+    throw Error("Error loading repo")
+  }
+
+  const reason = instance.prevInvokeReason
+  instance.prevInvokeReason = "unknown"
+  const prevData = instance.prevResult
+  const prevRes = prevData?.repodata2
+
+  console.time("fileTree")
+  const filetree =
+    prevRes && !shouldUpdate(reason, "filetree")
+      ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
+      : await instance.analyzeTree()
+  console.timeEnd("fileTree")
+
+  if (!prevRes || shouldUpdate(reason, "rename")) {
+    console.time("rename")
+    await instance.updateRenames()
+    console.timeEnd("rename")
+  }
+
+  console.time("updateCache")
+  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
+  console.timeEnd("updateCache")
+  console.time("dbQueries")
+  const dominantAuthors =
+    prevRes && !shouldUpdate(reason, "dominantAuthor")
+      ? prevRes.dominantAuthors
+      : await instance.db.getDominantAuthorPerFile()
+  const commitCounts =
+    prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const lastChanged =
+    prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
+  const authorCounts =
+    prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } =
+    prevRes && !shouldUpdate(reason, "maxMinCommitCount")
+      ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
+      : await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } =
+    prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
+      ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
+      : await instance.db.getNewestAndOldestChangeDates()
+  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
+  const authorUnions =
+    prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions : await instance.db.getAuthorUnions()
+  const { rootTree, fileCount } = filetree
+  const hiddenFiles =
+    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const lastRunInfo =
+    prevRes && !shouldUpdate(reason, "lastRunInfo")
+      ? prevRes.lastRunInfo
+      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
+  const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
+  const authorColors =
+    prevRes && !shouldUpdate(reason, "authorColors")
+      ? prevRes.authorColors
+      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
+  const commitCountPerDay =
+    prevRes && !shouldUpdate(reason, "commitCountPerDay")
+      ? prevRes.commitCountPerDay
+      : await instance.db.getCommitCountPerTime(timerange)
+  const contribCounts =
+    prevRes && !shouldUpdate(reason, "contribSumPerFile")
+      ? prevRes.contribSumPerFile
+      : await instance.db.getContribSumPerFile()
+  const maxMinContribCounts =
+    prevRes && !shouldUpdate(reason, "maxMinContribCounts")
+      ? prevRes.maxMinContribCounts
+      : await instance.db.getMaxMinContribCounts()
+  const commitCount = 
+    prevRes && !shouldUpdate(reason, "commitCount")
+      ? prevRes.commitCount
+      :await instance.db.getCommitCount()
+  const analyzedRepos = 
+    prevRes && !shouldUpdate(reason, "analyzedRepos")
+      ? prevRes.analyzedRepos
+      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  console.timeEnd("dbQueries")
+
+  const repodata2: RepoData2 = {
+    dominantAuthors,
+    commitCounts,
+    lastChanged,
+    authorCounts,
+    maxCommitCount,
+    minCommitCount,
+    newestChangeDate,
+    oldestChangeDate,
+    authors,
+    authorUnions,
+    fileTree: rootTree,
+    fileCount,
+    hiddenFiles,
+    lastRunInfo: lastRunInfo!,
+    repo: instance.repo,
+    branch,
+    timerange,
+    colorSeed,
+    selectedRange,
+    authorColors,
+    commitCountPerDay,
+    analyzedRepos,
+    contribSumPerFile: contribCounts,
+    maxMinContribCounts,
+    commitCount
+  }
+
+  const fullData = {
+    repo,
+    gitTruckInfo: await getGitTruckInfo(),
+    repodata2
+  } as RepoData
+
+  return fullData
+}
+
 export default function Repo() {
   const client = useClient()
-  const data = useTypedLoaderData<RepoData>()
-  const { repodata2 } = data
+  const {dataPromise} = useLoaderData<typeof loader>()
+  // const { repodata2 } = dataPromise
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
@@ -397,7 +402,18 @@ export default function Repo() {
   )
 
   return (
-    <Providers data={data}>
+    <Suspense fallback={
+    <div className="grid h-screen place-items-center">
+      <LoadingIndicator />
+    </div>
+    }>
+      <Await resolve={dataPromise}>
+        {(dataPromise) =>
+        
+        
+
+
+    <Providers data={dataPromise as RepoData}>
       <div className={cn("app-container", containerClass)}>
         <aside
           className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
@@ -476,7 +492,7 @@ export default function Repo() {
                   isFullscreen
                 })}
               />
-              {repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+              {dataPromise.repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
               <SearchCard />
               <Online>
                 <FeedbackCard />
@@ -492,6 +508,9 @@ export default function Repo() {
         }}
       />
     </Providers>
+}
+    </Await>
+    </Suspense>
   )
 }
 
