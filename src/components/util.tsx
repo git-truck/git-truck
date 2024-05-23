@@ -73,7 +73,7 @@ export const LegendDot = ({
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
               Set color
             </button>
-            {repodata2.authorColors.get(authorColorToChange) ? (
+            {repodata2.authorColors[authorColorToChange] ? (
               <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
                 Use default color
               </button>
