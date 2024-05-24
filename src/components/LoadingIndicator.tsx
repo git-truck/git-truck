@@ -24,7 +24,6 @@ export function LoadingIndicator({
   useEffect(() => {
     if (fetcher.state === "idle") {
       const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
-      console.log("bruhhhhh", location.pathname)
       fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
     }
   }, [fetcher, fetcher.state, location.pathname])

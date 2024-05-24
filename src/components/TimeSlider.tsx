@@ -101,7 +101,6 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
           }}
           onClick={() => {
             setEndRangeDatePickerOpen(!endRangeDatePickerOpen)
-            console.log("bruh?")
           }}
         >
           {dateFormatShort(selectedEndDate.getTime())}
