@@ -1,4 +1,4 @@
-import * as konami from "react-konami-code"
+import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 
@@ -12,11 +12,7 @@ export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]
 }
 
-const { useKonami } = konami()
-
 export default function App() {
-  console.log(typeof useKonami)
-  console.log(typeof konami)
   useKonami(() => window.open("https://fruit-rush.joglr.dev", "_self"))
 
   return (
