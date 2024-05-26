@@ -15,7 +15,11 @@ export const FeedbackCard = memo(function FeedbackCard() {
         <h2>The newest version is now in testing, with many new features. To get started, run:</h2>
         <Code>npx git-truck@duck</Code>
         <h2>We would love to hear your thoughts about the new features</h2>
-        <a href="https://forms.gle/HdQQudQdThCXKaYN7"><GitHubButton data-icon="octicon-issue-opened" href="">Brief survey about v2.0</GitHubButton></a>
+        <a href="https://forms.gle/HdQQudQdThCXKaYN7">
+          <GitHubButton data-icon="octicon-issue-opened" href="">
+            Brief survey about v2.0
+          </GitHubButton>
+        </a>
         {/* <div className="flex items-center justify-between dark:contrast-75 dark:invert dark:sepia dark:filter">
           <GitHubButton
             href="https://github.com/git-truck/git-truck"
