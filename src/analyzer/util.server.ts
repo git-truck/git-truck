@@ -5,9 +5,9 @@ import { exec, spawn } from "node:child_process"
 import { readdir } from "node:fs/promises"
 import { join, resolve as resolvePath, sep } from "node:path"
 import { performance } from "node:perf_hooks"
-import pkg from "../../package.json"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
+import invariant from "tiny-invariant"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -245,8 +245,9 @@ export function isValidURI(uri: string) {
 
 export async function getGitTruckInfo() {
   const latestVersion = await getLatestVersion()
+  invariant(process.env.PACKAGE_VERSION, "PACKAGE_VERSION is not defined")
   return {
-    version: pkg.version,
+    version: process.env.PACKAGE_VERSION,
     latestVersion: latestVersion
   }
 }

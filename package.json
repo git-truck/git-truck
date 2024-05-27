@@ -11,7 +11,7 @@
     "README.md",
     "build/",
     "public/",
-    "cli.js"
+    "cli.cjs"
   ],
   "type": "module",
   "scripts": {
@@ -21,12 +21,12 @@
     "test:e2e:headed": "npx playwright test --headed",
     "pretest:e2e": "npm run build",
     "pretest:e2e:headed": "npm run build",
-    "build": "npm run build-vite && npm run build-cli",
-    "build-cli": "tsup --minify --treeshake --out-dir . ./src/cli.ts --external lightningcss",
+    "build": "cross-env NODE_ENV=production npm run build-vite && npm run build-cli",
+    "build-cli": "tsup --treeshake --out-dir . ./src/cli.ts --external vite lightningcss --format cjs --loader \".json=base64\" --cjsInterop",
     "build-vite": "remix vite:build",
     "dev": "tsx ./src/cli.ts --log debug",
     "watch": "remix watch",
-    "start": "cross-env NODE_ENV=production node ./server.mjs",
+    "start": "cross-env NODE_ENV=production node .",
     "clean": "rimraf -rf build public/build .cache .temp cli.js cli.cjs",
     "typecheck": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
@@ -38,6 +38,10 @@
     "check": "npm run format:check && npm run lint",
     "format:check": "prettier --check src scripts e2e",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint src scripts e2e"
+  },
+  "dependencies": {
+    "fastify": "^4.27.0",
+    "vite": "^5.2.11"
   },
   "devDependencies": {
     "@mdi/js": "^7.3.67",
@@ -124,7 +128,6 @@
     "tsx": "^4.7.2",
     "typescript": "^5.2.2",
     "uniqolor": "^1.1.0",
-    "vite": "^5.2.11",
     "vite-plugin-cjs-interop": "^2.1.0",
     "vite-tsconfig-paths": "^4.2.1",
     "yargs": "^17.7.2"

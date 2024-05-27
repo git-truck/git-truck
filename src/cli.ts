@@ -5,7 +5,7 @@ import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
 import path from "path"
-import pkg from "../package.json"
+// import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
@@ -21,41 +21,13 @@ async function main() {
   }
   const options = getArgsWithDefaults()
 
-  const currentV = pkg.version
-  let updateMessage = ""
-  try {
-    const latestV = await getLatestVersion()
-
-    // Soft clear the console
-    process.stdout.write("\u001b[2J\u001b[0;0H")
-    console.log()
-
-    updateMessage =
-      latestV && semverCompare(latestV, currentV) === 1
-        ? ` [!] Update available: ${latestV}
-
-To update, run:
-
-npx git-truck@latest
-
-Or to install globally:
-
-npm install -g git-truck@latest
-
-`
-        : " (latest)"
-  } catch (e) {
-    // ignore
-  }
-  console.log(`Git Truck version ${currentV}${updateMessage}\n`)
+  // Soft clear the console
+  process.stdout.write("\u001b[2J\u001b[0;0H")
+  console.log()
 
   if (args.h || args.help) {
     console.log()
-    console.log(`See
-
-${pkg.homepage}
-
-for usage instructions.`)
+    console.log(`See for usage instructions.`)
     console.log()
     process.exit(0)
   }
