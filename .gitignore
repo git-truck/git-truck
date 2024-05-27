@@ -16,3 +16,4 @@ cli.cjs
 /test-results/
 /playwright-report/
 /playwright/.cache/
+*.js

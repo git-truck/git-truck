@@ -1,4 +1,3 @@
-import { useKonami } from "react-konami-code"
 import type { MetaFunction } from "@remix-run/node"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse, useRouteError } from "@remix-run/react"
 
@@ -13,8 +12,6 @@ export const meta: MetaFunction = () => {
 }
 
 export default function App() {
-  useKonami(() => window.open("https://fruit-rush.joglr.dev", "_self"))
-
   return (
     <html lang="en">
       <head>
