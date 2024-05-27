@@ -5,7 +5,7 @@ import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
 import path from "path"
-import pkg from "../package.json"
+// import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
@@ -52,11 +52,7 @@ See what's changed here: ${generateVersionComparisonLink({
 
   if (args.h || args.help) {
     console.log()
-    console.log(`See
-
-${pkg.homepage}
-
-for usage instructions.`)
+    console.log(`See for usage instructions.`)
     console.log()
     process.exit(0)
   }
