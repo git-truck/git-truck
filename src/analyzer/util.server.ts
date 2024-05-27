@@ -7,7 +7,6 @@ import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
-import pkg from "../../package.json"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -197,7 +196,7 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
 export async function getGitTruckInfo() {
   const latestVersion = await getLatestVersion()
   return {
-    version: pkg.version,
+    version: process.env.PACKAGE_VERSION,
     latestVersion: latestVersion
   }
 }

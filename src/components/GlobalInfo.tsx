@@ -5,7 +5,7 @@ import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { mdiRefresh, mdiArrowTopLeft, mdiInformation } from "@mdi/js"
 import { CloseButton, Code } from "./util"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
 

@@ -19,10 +19,10 @@ import { hydrateData } from "./hydrate.server"
 import {} from "@remix-run/node"
 import ignore from "ignore"
 import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
-import pkg from "../../package.json"
 import { getCoAuthors } from "./coauthors.server"
 import { exec } from "node:child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
+import invariant from "tiny-invariant"
 
 let repoDir = "."
 
@@ -299,6 +299,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
 
+    invariant(process.env.PACKAGE_VERSION)
+
     data = {
       cached: false,
       hiddenFiles,
@@ -308,7 +310,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       branch: branchName,
       commit: hydratedRepoTree,
       interfaceVersion: AnalyzerDataInterfaceVersion,
-      currentVersion: pkg.version,
+      currentVersion: process.env.PACKAGE_VERSION,
       lastRunEpoch: runDateEpoch,
       commits: {}
     }
