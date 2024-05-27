@@ -7,7 +7,7 @@ function getRenameIntervals() {
     const finishedRenameChains = []
 
     files.forEach(file => currentPathToRenameChain.set(file, [
-      { fromName: file, toName: file, toNametimestampStart: 0, timestampEnd: Infinity }
+      { fromName: file, toName: file, timestampStart: 0, timestampEnd: Infinity }
     ]))
 
     for (const currentRename of renames) {
