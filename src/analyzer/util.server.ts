@@ -2,13 +2,11 @@ import { spawn } from "node:child_process"
 import { existsSync, promises as fs } from "node:fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
+import { dirname, join, resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
-import pkg from "../../package.json"
-import getLatestVersion from "latest-version"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -196,9 +194,33 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
 }
 
 export async function getGitTruckInfo() {
-  const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
+  const latestVersion = await getLatestVersion()
   return {
-    version: pkg.version,
+    version: process.env.PACKAGE_VERSION,
     latestVersion: latestVersion
   }
 }
+
+export async function getLatestVersion() {
+  const [result] = await promiseHelper(
+    fetch("https://unpkg.com/git-truck/package.json")
+      .then((res) => res.json())
+      .then((pkg) => pkg.version)
+  )
+
+  return result
+}
+
+export const readGitRepos = async (baseDir: string) =>
+  (await fs.readdir(baseDir, { withFileTypes: true }))
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        existsSync(join(baseDir, entry.name)) &&
+        !entry.name.startsWith(".") &&
+        // TODO: Implement browsing, requires new routing
+        isPathGitRepo(join(baseDir, entry.name, ".git"))
+    )
+    .map(({ name }) => ({ name, path: join(baseDir, name) }))
+
+export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))

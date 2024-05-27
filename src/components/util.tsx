@@ -1,5 +1,5 @@
 import { useTransition, type HTMLAttributes } from "react"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"

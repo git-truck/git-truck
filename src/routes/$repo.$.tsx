@@ -1,7 +1,7 @@
-import { resolve } from "path"
+import { resolve } from "node:path"
 import type { Dispatch, SetStateAction } from "react"
 import { memo, useEffect, useMemo, useRef, useState } from "react"
-import { useBoolean, useMouse } from "react-use"
+import { useMouse } from "react-use"
 import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { redirect } from "@remix-run/node"
 import { typedjson, useTypedLoaderData } from "remix-typedjson"
@@ -27,7 +27,7 @@ import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } fro
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
 import { Chart } from "~/components/Chart"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
@@ -233,7 +233,7 @@ export default function Repo() {
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
-  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
