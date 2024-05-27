@@ -1,5 +1,5 @@
 import { mdiChevronRight, mdiHome } from "@mdi/js"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { useMemo, Fragment } from "react"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"

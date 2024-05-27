@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes } from "react"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"

@@ -1,13 +1,13 @@
+import { useDeferredValue } from "react"
+import type { GitObject } from "~/analyzer/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"
 import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
+import { AuthorOptions } from "../AuthorOptions"
+import { GradientLegend } from "./GradiantLegend"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
-import { GradientLegend } from "./GradiantLegend"
-import type { GitObject } from "~/analyzer/model"
-import { useDeferredValue } from "react"
-import { AuthorOptions } from "../AuthorOptions"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
