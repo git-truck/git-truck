@@ -2,6 +2,7 @@ import { useRef, useEffect, useDeferredValue } from "react"
 import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
 import { useComponentSize } from "~/hooks"
+import { sliderPadding } from "~/const"
 
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -13,7 +14,7 @@ const BarChart = () => {
   useEffect(() => {
     if (!data || !svgRef.current) return
     const svg = d3.select(svgRef.current)
-    const width = size.width - 150
+    const width = size.width - sliderPadding
     const height = 30
 
     const xScale = d3
@@ -45,7 +46,7 @@ const BarChart = () => {
 
   return (
     <div className="flex justify-center" ref={ref}>
-      <svg ref={svgRef} width="calc(100% - 150px)" height={30}></svg>
+      <svg ref={svgRef} width={`calc(100% - ${sliderPadding}px)`} height={30}></svg>
     </div>
   )
 }

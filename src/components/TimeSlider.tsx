@@ -9,7 +9,9 @@ import ClipLoader from "react-spinners/ClipLoader"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
-import { missingInMapColor } from "~/const"
+import { missingInMapColor, sliderPadding } from "~/const"
+import Icon from "@mdi/react"
+import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
 
 function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {range: [number, number], timerange: [number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, updateTimeseries(e: readonly number[]): void, disabled: boolean}) {
   const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)
@@ -56,12 +58,13 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
         )}
       >
         <button
+          title="Set the date of the start of the time range"
           style={{
             left: `${percentageStart}%`,
             bottom: "100%",
             position: "absolute",
             transform: "translate(-100%, -15%)",
-            width: "80px",
+            width: "100px",
             whiteSpace: "nowrap"
           }}
           className="btn btn--primary"
@@ -69,6 +72,7 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
             setStartRangeDatePickerOpen(!startRangeDatePickerOpen)
           }}
         >
+          <Icon path={mdiCalendarArrowRight}/>
           {dateFormatShort(selectedStartDate.getTime())}
         </button>
       </Popover>
@@ -92,12 +96,13 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
         )}
       >
         <button
+          title="Set the date of the end of the time range"
           style={{
             left: `${percentageEnd}%`,
             bottom: "100%",
             position: "absolute",
             transform: "translate(0%, -15%)",
-            width: "80px",
+            width: "100px",
             whiteSpace: "nowrap"
           }}
           className="btn btn--primary"
@@ -106,6 +111,7 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
           }}
         >
           {dateFormatShort(selectedEndDate.getTime())}
+          <Icon path={mdiCalendarArrowLeft}/>
         </button>
       </Popover>
     </div>
@@ -159,10 +165,10 @@ function TimePicker({range, setRange, timerange, setsBeginning, updateTimeseries
 
 export default function TimeSlider() {
   const sliderStyle: React.CSSProperties = {
-    left: "70px",
+    left: sliderPadding / 2,
     top: "30px",
     position: "relative",
-    width: "calc(100% - 150px)"
+    width: `calc(100% - ${sliderPadding}px)`
   }
 
   const { repodata2 } = useData()

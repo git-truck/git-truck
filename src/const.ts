@@ -7,6 +7,7 @@ export const treemapTreeTextOffsetX = treemapNodeBorderRadius
 export const treemapTreeTextOffsetY = 3
 export const treemapBlobTextOffsetX = 4
 export const treemapBlobTextOffsetY = 3
+export const sliderPadding = 190
 
 export const bubblePadding = 10
 export const circleTreeTextOffsetY = estimatedLetterHeightForDirText - 1
