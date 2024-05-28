@@ -55,21 +55,22 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
           </ArrowContainer>
         )}
       >
-        <p
+        <button
           style={{
             left: `${percentageStart}%`,
             bottom: "100%",
             position: "absolute",
-            transform: "translate(-100%, -50%)",
+            transform: "translate(-100%, -15%)",
             width: "80px",
             whiteSpace: "nowrap"
           }}
+          className="btn btn--primary"
           onClick={() => {
             setStartRangeDatePickerOpen(!startRangeDatePickerOpen)
           }}
         >
           {dateFormatShort(selectedStartDate.getTime())}
-        </p>
+        </button>
       </Popover>
 
       <Popover
@@ -90,21 +91,22 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
           </ArrowContainer>
         )}
       >
-        <p
+        <button
           style={{
             left: `${percentageEnd}%`,
             bottom: "100%",
             position: "absolute",
-            transform: "translate(0%, -50%)",
+            transform: "translate(0%, -15%)",
             width: "80px",
             whiteSpace: "nowrap"
           }}
+          className="btn btn--primary"
           onClick={() => {
             setEndRangeDatePickerOpen(!endRangeDatePickerOpen)
           }}
         >
           {dateFormatShort(selectedEndDate.getTime())}
-        </p>
+        </button>
       </Popover>
     </div>
   )
