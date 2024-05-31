@@ -308,7 +308,7 @@ export default class ServerInstance {
       if (existing) {
         const prevRename = existing[existing.length - 1]
         prevRename.timestamp = rename.timestampend
-        rename.timestampend = prevRename.timestamp
+        // rename.timestampend = prevRename.timestamp
         if (rename.fromname !== null) {
           // add rename to chain, and set the current rename to the newly found rename
           existing.push(rename)

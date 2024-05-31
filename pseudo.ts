@@ -1,41 +1,64 @@
-function getRenameIntervals() {
-    const renames = getRenamesInTimeRangeFromDB()
-    renames.sortByTimestampDescending()
-    const files = getFilesInCurrentFileTree()
+function getRenameIntervals(timeRangeStart, timeRangeEnd) {
+  const renames = getRenamesInTimeRange(timeRangeStart, timeRangeEnd)
+  renames.sortByTimestampDescending()
+  const files = getFilesInCurrentFileTree(timeRangeEnd)
 
-    const currentPathToRenameChain = new Map()
-    const finishedRenameChains = []
+  const pathToRenameChain = new Map()
+  const finishedRenameChains = []
 
-    files.forEach(file => currentPathToRenameChain.set(file, [
-      { fromName: file, toName: file, timestampStart: 0, timestampEnd: Infinity }
-    ]))
+  for (const file of files) {
+    pathToRenameChain[file] = 
+      [{ fromName: file, toName: file, 
+        timestampStart: 0, 
+        timestampEnd: Infinity 
+      }]
+  }
 
-    for (const currentRename of renames) {
-      if (currentPathToRenameChain.get(currentRename.toName)) continue
-      const existingRenameChain = currentPathToRenameChain.get(currentRename.toName)
-      if  (!existingRenameChain) continue
+  for (const currentRename of renames) {
+    if (currentRename.toName === null) 
+      continue
+    const existingRenameChain = 
+      pathToRenameChain[currentRename.toName]
+    if  (existingRenameChain === null) 
+      continue
 
-      const previousRenameInChain = existingRenameChain.last()
-      previousRenameInChain.timestampStart = currentRename.timestampEnd
-      currentRename.timestampStart = previousRenameInChain.timestampStart
+    const previousRenameInChain = 
+      existingRenameChain.last()
 
-      if (currentRename.fromName === null) {
-        previousRenameInChain.timestampStart = currentRename.timestampEnd
-        finishedRenameChains.push(existingRenameChain)
-      } else {
-        existingRenameChain.push(currentRename)
-        currentPathToRenameChain.set(currentRename.fromName, existingRenameChain)
-      }
+    previousRenameInChain.timestampStart = 
+      currentRename.timestampEnd
+      
+    currentRename.timestampStart = 
+      previousRenameInChain.timestampStart
 
-      currentPathToRenameChain.delete(currentRename.toName)
+    if (currentRename.fromName === null) {
+      previousRenameInChain.timestampStart = 
+        currentRename.timestampEnd
+      finishedRenameChains.push(
+        existingRenameChain)
+    } else {
+      existingRenameChain.push(currentRename)
+      pathToRenameChain[currentRename.fromName] =
+        existingRenameChain
     }
 
-    finishedRenameChains.push(...currentPathToRenameChain.values())
+    pathToRenameChain.delete(
+      currentRename.toName)
+  }
 
-    const allRenamesAsList = finishedRenameChains.flatMap((chain) => {
-      const existingFileName = chain[0].toName
-      return chain.map((interval) => ({ ...interval, toName: existingFileName }))
+  finishedRenameChains.push(
+    ...pathToRenameChain.values()
+  )
+
+  const allRenamesAsList = 
+    finishedRenameChains.flatMap((chain) => 
+    {
+      return chain.map((interval) => (
+        { ...interval, 
+          toName: chain[0].toName 
+        }
+      ))
     })
 
-    return allRenamesAsList
+  return allRenamesAsList
 }
