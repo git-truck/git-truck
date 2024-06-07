@@ -1,4 +1,4 @@
-import { Database } from "@tjomson/duckdb-async"
+import { Database } from "duckdb-async"
 import type { CommitDTO, DBFileChange, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"

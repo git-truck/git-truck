@@ -1,4 +1,4 @@
-import type { Database } from "@tjomson/duckdb-async"
+import type { Database } from "duckdb-async"
 import { promises as fs } from "fs"
 import { tableToIPC, tableFromJSON} from "apache-arrow"
 
