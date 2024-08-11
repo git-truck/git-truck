@@ -23,5 +23,9 @@ export default defineConfig({
   ],
   define: {
     "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version)
+  },
+  test: {
+    globals: true,
+    exclude: ["e2e", "node_modules"]
   }
 })
