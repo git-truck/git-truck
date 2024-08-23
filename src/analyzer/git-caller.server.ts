@@ -207,7 +207,6 @@ export class GitCaller {
         parentDirPath: parentDir
       }
     }
-    return repo
   }
 
   static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
@@ -264,6 +263,7 @@ export class GitCaller {
 
     while (next.value) {
       const groups = next.value.groups
+      if (!groups) break
       next = matches.next()
       const hash: string = groups["hash"]
       const ref_type: string = groups["ref_type"]
