@@ -53,6 +53,5 @@ export const FeedbackCard = memo(function FeedbackCard() {
           {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
         </div>
       </div>
-    </div>
   )
 })
