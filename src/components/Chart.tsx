@@ -350,8 +350,8 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
   const fillColor = isBlob(d.data)
     ? getTextColorFromBackground(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
     : prefersLightMode
-      ? "#333"
-      : "#fff"
+    ? "#333"
+    : "#fff"
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
