@@ -25,7 +25,7 @@ jobs:
         with:
           patch-wording: "Fix,fix,Patch,patch"
           minor-wording: "Add,Feat,feat,NewVersion"
-          major-wording: "BREAKING CHANGE"
+          major-wording: "BREAKING CHANGE,MAJOR VERSION"
           commit-message: "Bump version to {{version}} [skip ci]"
           tag-prefix: "v"
         env:
