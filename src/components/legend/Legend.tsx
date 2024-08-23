@@ -45,10 +45,7 @@ export function Legend({
     <div className={`card flex-shrink-0 overflow-hidden ${className}`}>
       <h2 className="card__title">Legend: {Metric[metricType]}</h2>
       <p className="card-p">{getMetricDescription(metricType)}</p>
-      {metricType === "TOP_CONTRIBUTOR" ?
-        <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} />
-        : null
-      }
+      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
       {legend}
     </div>
   )

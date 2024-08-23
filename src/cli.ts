@@ -128,7 +128,7 @@ for usage instructions.`)
     afterMsg: "App started",
     errorMsg: "Failed to start app"
   })
-  }
+}
 
 main()
 
