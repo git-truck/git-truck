@@ -80,7 +80,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return redirect("/")
   }
   const dataPromise = analyze(params)
-  return defer({dataPromise})
+  return defer({ dataPromise })
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
@@ -223,7 +223,6 @@ export const ErrorBoundary = () => {
 }
 
 async function analyze(params: Params) {
-
   const args = await getArgs()
   const path = resolve(args.path, params["repo"] ?? "")
   const branch = params["*"]
@@ -232,7 +231,10 @@ async function analyze(params: Params) {
   if (!isRepo) throw new Error(`No repo found at ${path}`)
   if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
   const isValidRevision = await GitCaller.isValidRevision(branch, path)
-  if (!isValidRevision) throw new Error(`Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`)
+  if (!isValidRevision)
+    throw new Error(
+      `Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`
+    )
 
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   // to avoid double identical fetch at first load, which it does for some reason
@@ -317,11 +319,9 @@ async function analyze(params: Params) {
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
       : await instance.db.getMaxMinContribCounts()
-  const commitCount = 
-    prevRes && !shouldUpdate(reason, "commitCount")
-      ? prevRes.commitCount
-      :await instance.db.getCommitCount()
-  const analyzedRepos = 
+  const commitCount =
+    prevRes && !shouldUpdate(reason, "commitCount") ? prevRes.commitCount : await instance.db.getCommitCount()
+  const analyzedRepos =
     prevRes && !shouldUpdate(reason, "analyzedRepos")
       ? prevRes.analyzedRepos
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
@@ -366,7 +366,7 @@ async function analyze(params: Params) {
 
 export default function Repo() {
   const client = useClient()
-  const {dataPromise} = useLoaderData<typeof loader>()
+  const { dataPromise } = useLoaderData<typeof loader>()
   // const { repodata2 } = dataPromise
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
@@ -402,114 +402,112 @@ export default function Repo() {
   )
 
   return (
-    <Suspense fallback={
-    <div className="grid h-screen place-items-center">
-      <LoadingIndicator />
-    </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="grid h-screen place-items-center">
+          <LoadingIndicator />
+        </div>
+      }
+    >
       <Await resolve={dataPromise}>
-        {(dataPromise) =>
-        
-        
-
-
-    <Providers data={dataPromise as RepoData}>
-      <div className={cn("app-container", containerClass)}>
-        <aside
-          className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
-            "overflow-y-auto": !isFullscreen
-          })}
-        >
-          {!isLeftPanelCollapse ? (
-            <>
-              <GlobalInfo />
-              <Options />
-              <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-            </>
-          ) : null}
-          {!isFullscreen ? (
-            <div
-              className={cn("absolute z-10 justify-self-end", {
-                "left-0": isLeftPanelCollapse
-              })}
-            >
-              <button
-                type="button"
-                onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
-                className={clsx(
-                  "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
-                  {
-                    "left-arrow-space": !isLeftPanelCollapse
-                  }
-                )}
-              >
-                <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
-              </button>
-            </div>
-          ) : null}
-        </aside>
-
-        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
-          <header className="grid grid-flow-col items-center justify-between gap-2">
-            <Breadcrumb />
-            <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
-          </header>
-          {client ? (
-            <>
-              <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
-              <div className="flex flex-col">
-                <TimeSlider />
-                <BarChart />
-              </div>
-            </>
-          ) : (
-            <div />
-          )}
-        </main>
-
-        <aside
-          className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen
-          })}
-        >
-          {!isFullscreen ? (
-            <div className="absolute">
-              <button
-                type="button"
-                onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
-              >
-                <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
-              </button>
-            </div>
-          ) : null}
-          {!isRightPanelCollapse && !isFullscreen ? (
-            <>
-              <DetailsCard
-                showUnionAuthorsModal={showUnionAuthorsModal}
-                className={clsx({
-                  "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                  isFullscreen
+        {(dataPromise) => (
+          <Providers data={dataPromise as RepoData}>
+            <div className={cn("app-container", containerClass)}>
+              <aside
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
+                  "overflow-y-auto": !isFullscreen
                 })}
-              />
-              {dataPromise.repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-              <SearchCard />
-              <Online>
-                <FeedbackCard />
-              </Online>
-            </>
-          ) : null}
-        </aside>
-      </div>
-      <UnionAuthorsModal
-        open={unionAuthorsModalOpen}
-        onClose={() => {
-          setUnionAuthorsModalOpen(false)
-        }}
-      />
-    </Providers>
-}
-    </Await>
+              >
+                {!isLeftPanelCollapse ? (
+                  <>
+                    <GlobalInfo />
+                    <Options />
+                    <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+                  </>
+                ) : null}
+                {!isFullscreen ? (
+                  <div
+                    className={cn("absolute z-10 justify-self-end", {
+                      "left-0": isLeftPanelCollapse
+                    })}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
+                      className={clsx(
+                        "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
+                        {
+                          "left-arrow-space": !isLeftPanelCollapse
+                        }
+                      )}
+                    >
+                      <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
+                    </button>
+                  </div>
+                ) : null}
+              </aside>
+
+              <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
+                <header className="grid grid-flow-col items-center justify-between gap-2">
+                  <Breadcrumb />
+                  <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
+                </header>
+                {client ? (
+                  <>
+                    <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+                    <div className="flex flex-col">
+                      <TimeSlider />
+                      <BarChart />
+                    </div>
+                  </>
+                ) : (
+                  <div />
+                )}
+              </main>
+
+              <aside
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
+                  "overflow-y-auto": !isFullscreen
+                })}
+              >
+                {!isFullscreen ? (
+                  <div className="absolute">
+                    <button
+                      type="button"
+                      onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
+                      className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
+                    >
+                      <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
+                    </button>
+                  </div>
+                ) : null}
+                {!isRightPanelCollapse && !isFullscreen ? (
+                  <>
+                    <DetailsCard
+                      showUnionAuthorsModal={showUnionAuthorsModal}
+                      className={clsx({
+                        "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                          isFullscreen
+                      })}
+                    />
+                    {dataPromise.repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    <SearchCard />
+                    <Online>
+                      <FeedbackCard />
+                    </Online>
+                  </>
+                ) : null}
+              </aside>
+            </div>
+            <UnionAuthorsModal
+              open={unionAuthorsModalOpen}
+              onClose={() => {
+                setUnionAuthorsModalOpen(false)
+              }}
+            />
+          </Providers>
+        )}
+      </Await>
     </Suspense>
   )
 }

@@ -37,14 +37,8 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
 export const Options = memo(function Options() {
   const [theme] = useTheme()
   console.log(theme)
-  const {
-    metricType,
-    chartType,
-    sizeMetric,
-    linkMetricAndSizeMetric,
-    setMetricType,
-    setChartType,
-    setSizeMetricType  } = useOptions()
+  const { metricType, chartType, sizeMetric, linkMetricAndSizeMetric, setMetricType, setChartType, setSizeMetricType } =
+    useOptions()
 
   const visualizationIcons: Record<MetricType, string> = {
     FILE_TYPE: mdiFileCodeOutline,

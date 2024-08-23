@@ -16,14 +16,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-      
+
   const commitHashes = await instance.db.getCommitHashes(path, Number(count))
   if (commitHashes.length < 1) return []
   const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
   const fullCommits = await instance.getFullCommits(gitLogResult)
   const unions = await instance.db.getRawUnions()
-  return fullCommits.map(commit => {
-    const alias = unions.find(({alias}) => alias === commit.author)
+  return fullCommits.map((commit) => {
+    const alias = unions.find(({ alias }) => alias === commit.author)
     if (!alias) return commit
     return {
       ...commit,

@@ -109,7 +109,11 @@ function ColorMetricDependentInfo(props: {
       if (!dominant) return "No activity"
       if (!contribSum) return <>{dominant.author}</>
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
-      return <>{dominant.author} {authorPercentage}%</>
+      return (
+        <>
+          {dominant.author} {authorPercentage}%
+        </>
+      )
     // case "TRUCK_FACTOR":
     //   switch (authorCount) {
     //     case undefined:
@@ -122,7 +126,7 @@ function ColorMetricDependentInfo(props: {
     //   }
     case "MOST_CONTRIBUTIONS":
       const contribs = props.repodata2.contribSumPerFile[slicedPath]
-      if (!contribs) return <>No activity</> 
+      if (!contribs) return <>No activity</>
       return <>{contribs} line changes</>
     default:
       return null

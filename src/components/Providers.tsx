@@ -36,7 +36,12 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const metricsData: MetricsData = useMemo(() => {
     console.time("metrics")
-    const res = createMetricData(data, data.repodata2.colorSeed, data.repodata2.authorColors, options?.dominantAuthorCutoff ?? 70)
+    const res = createMetricData(
+      data,
+      data.repodata2.colorSeed,
+      data.repodata2.authorColors,
+      options?.dominantAuthorCutoff ?? 70
+    )
     console.timeEnd("metrics")
     return res
   }, [data, options?.dominantAuthorCutoff])
@@ -127,21 +132,21 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
         })),
-      setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => 
+      setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           showFilesWithoutChanges: showFilesWithoutChanges
         })),
-      setDominantAuthorCutoff: (dominantAuthorCutoff: number) => 
+      setDominantAuthorCutoff: (dominantAuthorCutoff: number) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           dominantAuthorCutoff: dominantAuthorCutoff
         })),
-      setLinkMetricAndSizeMetric: (link: boolean) => 
+      setLinkMetricAndSizeMetric: (link: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           linkMetricAndSizeMetric: link
-        })),
+        }))
     }),
     [options]
   )

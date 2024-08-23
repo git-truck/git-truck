@@ -8,7 +8,7 @@ export function setDominanceColor(
   blob: GitBlobObject,
   cache: MetricCache,
   authorColors: Map<string, `#${string}`>,
-  dominantAuthorPerFile: Map<string, { author: string, contribcount: number }>,
+  dominantAuthorPerFile: Map<string, { author: string; contribcount: number }>,
   authorCountsPerFile: Map<string, number>
 ) {
   const multipleAuthorsColor = "#e0e0e0"

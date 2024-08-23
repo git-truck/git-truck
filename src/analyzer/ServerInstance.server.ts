@@ -344,29 +344,29 @@ export default class ServerInstance {
   }
 
   private calculateSections(commitCount: number, threadCount: number): number[][] {
-    const sections: number[][] = [];
+    const sections: number[][] = []
     // Make the section that gather recent commits slightly bigger,
     // as it is slower to get older commits
     if (threadCount === 2) {
-        const section1Size = Math.floor((commitCount * 53) / 100)
-        sections.push([0, section1Size])
-        sections.push([section1Size, commitCount])
+      const section1Size = Math.floor((commitCount * 53) / 100)
+      sections.push([0, section1Size])
+      sections.push([section1Size, commitCount])
     } else if (threadCount === 3) {
-        const section1Size = Math.floor((commitCount * 35) / 100)
-        const section2Size = Math.floor((commitCount * 33) / 100)
-        sections.push([0, section1Size])
-        sections.push([section1Size, section1Size + section2Size])
-        sections.push([section1Size + section2Size, commitCount])
+      const section1Size = Math.floor((commitCount * 35) / 100)
+      const section2Size = Math.floor((commitCount * 33) / 100)
+      sections.push([0, section1Size])
+      sections.push([section1Size, section1Size + section2Size])
+      sections.push([section1Size + section2Size, commitCount])
     } else if (threadCount === 4) {
-        const section1Size = Math.floor((commitCount * 27) / 100)
-        const section2Size = Math.floor((commitCount * 26) / 100)
-        const section3Size = Math.floor((commitCount * 24) / 100)
-        sections.push([0, section1Size])
-        sections.push([section1Size, section1Size + section2Size])
-        sections.push([section1Size + section2Size, section1Size + section2Size + section3Size])
-        sections.push([section1Size + section2Size + section3Size, commitCount])
+      const section1Size = Math.floor((commitCount * 27) / 100)
+      const section2Size = Math.floor((commitCount * 26) / 100)
+      const section3Size = Math.floor((commitCount * 24) / 100)
+      sections.push([0, section1Size])
+      sections.push([section1Size, section1Size + section2Size])
+      sections.push([section1Size + section2Size, section1Size + section2Size + section3Size])
+      sections.push([section1Size + section2Size + section3Size, commitCount])
     } else {
-        throw new Error("Invalid threadCount. Only 2, 3, or 4 are allowed.")
+      throw new Error("Invalid threadCount. Only 2, 3, or 4 are allowed.")
     }
     return sections
   }

@@ -8,7 +8,7 @@ export function setDominantAuthorColor(
   authorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  dominantAuthorPerFile: Record<string, { author: string, contribcount: number }>,
+  dominantAuthorPerFile: Record<string, { author: string; contribcount: number }>,
   dominantAuthorCutoff: number,
   contribSumPerFile: Record<string, number>
 ) {

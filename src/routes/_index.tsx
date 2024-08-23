@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, defer, type SerializeFrom } from "@remix-run/node"
-import { Await, Form, Link, useFetcher, useLoaderData, useNavigation } from "@remix-run/react"
+import { Await, Form, Link, useFetcher, useLoaderData } from "@remix-run/react"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"

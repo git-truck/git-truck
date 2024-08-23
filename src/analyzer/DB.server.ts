@@ -339,14 +339,14 @@ export default class DB {
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath
       ORDER BY count DESC;
-    `);
-  
-    const result: Record<string, number> = {};
+    `)
+
+    const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"]] = Number(row["count"]);
-    });
-  
-    return result;
+      result[row["filepath"]] = Number(row["count"])
+    })
+
+    return result
   }
 
   public async getLastChangedPerFile(): Promise<Record<string, number>> {
@@ -356,16 +356,15 @@ export default class DB {
       SELECT filepath, MAX(committertime) AS max_time
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath;
-    `);
-  
-    const result: Record<string, number> = {};
+    `)
+
+    const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"]] = Number(row["max_time"]);
-    });
-  
-    return result;
+      result[row["filepath"]] = Number(row["max_time"])
+    })
+
+    return result
   }
-  
 
   public async getAuthorCountPerFile(): Promise<Record<string, number>> {
     const res = await (
@@ -374,16 +373,15 @@ export default class DB {
       SELECT filepath, count(DISTINCT author) AS author_count
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath;
-    `);
-  
-    const result: Record<string, number> = {};
+    `)
+
+    const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"]] = Number(row["author_count"]);
-    });
-  
-    return result;
+      result[row["filepath"]] = Number(row["author_count"])
+    })
+
+    return result
   }
-  
 
   public async getMaxMinContribCounts() {
     const res = await (
@@ -399,12 +397,15 @@ export default class DB {
       await this.instance
     ).all(`
       SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath;
-    `);
-  
-    return res.reduce((acc, row) => {
-      acc[row["filepath"]] = Number(row["contribsum"]);
-      return acc;
-    }, {} as Record<string, number>);
+    `)
+
+    return res.reduce(
+      (acc, row) => {
+        acc[row["filepath"]] = Number(row["contribsum"])
+        return acc
+      },
+      {} as Record<string, number>
+    )
   }
 
   public async getDominantAuthorPerFile() {
@@ -420,17 +421,17 @@ export default class DB {
       SELECT filepath, author, total_contribcount
       FROM RankedAuthors
       WHERE rank = 1;
-    `);
-  
-    const result: Record<string, {author: string, contribcount: number}> = {};
+    `)
+
+    const result: Record<string, { author: string; contribcount: number }> = {}
     res.forEach((row) => {
       result[row["filepath"]] = {
         author: row["author"],
-        contribcount: Number(row["total_contribcount"]),
-      };
-    });
-  
-    return result;
+        contribcount: Number(row["total_contribcount"])
+      }
+    })
+
+    return result
   }
 
   public async updateCachedResult() {

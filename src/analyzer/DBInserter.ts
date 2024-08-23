@@ -1,6 +1,6 @@
 import type { Database } from "duckdb-async"
 import { promises as fs } from "fs"
-import { tableToIPC, tableFromJSON} from "apache-arrow"
+import { tableToIPC, tableFromJSON } from "apache-arrow"
 
 const bundleSize = 5000
 
@@ -17,7 +17,12 @@ export abstract class Inserter<T> {
 
   public abstract finalize(): Promise<void>
 
-  constructor(protected table: string, protected tempPath: string, protected db: Database, protected id: string) {}
+  constructor(
+    protected table: string,
+    protected tempPath: string,
+    protected db: Database,
+    protected id: string
+  ) {}
 
   public static getInserterType() {
     switch (process.platform) {
@@ -59,7 +64,7 @@ class JsonInserter<T> extends Inserter<T> {
       await this.db.exec(`INSERT INTO ${this.table} SELECT * FROM '${this.tempFile}'`)
       await fs.rm(this.tempFile)
     }
-    
+
     this.rows = []
   }
 }
@@ -84,8 +89,6 @@ class ArrowInserter<T> extends Inserter<T> {
     }
   }
 }
-
-
 
 // private typeToDuckdbType(val: unknown, key: string) {
 //   switch (typeof val) {
@@ -112,12 +115,11 @@ class ArrowInserter<T> extends Inserter<T> {
 //   return types
 // }
 
-
-  // for (let i = 0; i < this.rows.length; i += bundleSize) {
-  //   const sliced = this.rows.slice(i, i + bundleSize)
-  //   const typesString = JSON.stringify(this.objToDuckdbStruct(this.rows[0]))
-  //   const dataString = JSON.stringify(sliced).replace(/'/g, "")
-  //   await this.db.exec(`
-  //     insert into ${this.table} (select unnest(j, recursive:=true) from (select from_json('${dataString}', '[${typesString}]') j));
-  //   `)
-  // }
+// for (let i = 0; i < this.rows.length; i += bundleSize) {
+//   const sliced = this.rows.slice(i, i + bundleSize)
+//   const typesString = JSON.stringify(this.objToDuckdbStruct(this.rows[0]))
+//   const dataString = JSON.stringify(sliced).replace(/'/g, "")
+//   await this.db.exec(`
+//     insert into ${this.table} (select unnest(j, recursive:=true) from (select from_json('${dataString}', '[${typesString}]') j));
+//   `)
+// }

@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { useEffect, useState, useTransition, type HTMLAttributes } from "react"
+import { useState, useTransition, type HTMLAttributes } from "react"
 import { Icon } from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
@@ -68,7 +68,7 @@ export const LegendDot = ({
           arrowSize={10}
           arrowColor="white"
         >
-          <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40 z-20">
+          <div className="card z-20 max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
             <HexColorPicker color={color} onChange={setColor} />
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
               Set color

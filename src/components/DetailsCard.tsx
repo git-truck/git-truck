@@ -31,7 +31,7 @@ export function DetailsCard({
   className = "",
   showUnionAuthorsModal
 }: {
-  className?: string,
+  className?: string
   showUnionAuthorsModal: () => void
 }) {
   const { setClickedObject, clickedObject } = useClickedObject()
@@ -42,7 +42,7 @@ export function DetailsCard({
   const { repodata2 } = useData()
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
-  const slicedPath = useMemo(() => (clickedObject?.path ?? ""), [clickedObject])
+  const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
 
   const existingCommitCount = repodata2.commitCounts[slicedPath]
 

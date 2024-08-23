@@ -40,18 +40,13 @@ export const FeedbackCard = memo(function FeedbackCard() {
           >
             Open an issue
           </GitHubButton> */}
-          <a href="https://forms.gle/HdQQudQdThCXKaYN7" target="blank">
-
-          <GitHubButton
-            href="https://forms.gle/HdQQudQdThCXKaYN7"
-            data-icon="octicon-issue-opened"
-            data-size="large"
-            >
+        <a href="https://forms.gle/HdQQudQdThCXKaYN7" target="blank">
+          <GitHubButton href="https://forms.gle/HdQQudQdThCXKaYN7" data-icon="octicon-issue-opened" data-size="large">
             Answer brief survey
           </GitHubButton>
-          </a>
-          {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
-        </div>
+        </a>
+        {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
       </div>
+    </div>
   )
 })

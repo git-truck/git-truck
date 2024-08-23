@@ -154,9 +154,9 @@ export interface FileChange {
 }
 
 export interface DBFileChange {
-  commithash: string,
-  insertions: number,
-  deletions: number,
+  commithash: string
+  insertions: number
+  deletions: number
   filepath: string
 }
 
@@ -168,9 +168,9 @@ export interface CommitDTO {
 }
 
 export interface CompletedResult {
-    repo: string;
-    branch: string;
-    time: number;
+  repo: string
+  branch: string
+  time: number
 }
 
 export interface FullCommitDTO extends CommitDTO {

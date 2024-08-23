@@ -13,7 +13,19 @@ import { missingInMapColor, sliderPadding } from "~/const"
 import Icon from "@mdi/react"
 import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
 
-function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {range: [number, number], timerange: [number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, updateTimeseries(e: readonly number[]): void, disabled: boolean}) {
+function DateTags({
+  range,
+  timerange,
+  setRange,
+  updateTimeseries,
+  disabled
+}: {
+  range: [number, number]
+  timerange: [number, number]
+  setRange: React.Dispatch<React.SetStateAction<[number, number]>>
+  updateTimeseries(e: readonly number[]): void
+  disabled: boolean
+}) {
   const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)
   const [endRangeDatePickerOpen, setEndRangeDatePickerOpen] = useState(false)
 
@@ -27,7 +39,7 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
     () => ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
     [range, timerange]
   )
-  
+
   const railStyle: React.CSSProperties = {
     position: "absolute",
     width: "100%",
@@ -53,7 +65,14 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
             arrowSize={10}
             arrowColor="white"
           >
-            <TimePicker range={range} setRange={setRange} timerange={timerange} setsBeginning={true} updateTimeseries={updateTimeseries} disabled={disabled} />
+            <TimePicker
+              range={range}
+              setRange={setRange}
+              timerange={timerange}
+              setsBeginning={true}
+              updateTimeseries={updateTimeseries}
+              disabled={disabled}
+            />
           </ArrowContainer>
         )}
       >
@@ -72,7 +91,7 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
             setStartRangeDatePickerOpen(!startRangeDatePickerOpen)
           }}
         >
-          <Icon path={mdiCalendarArrowRight}/>
+          <Icon path={mdiCalendarArrowRight} />
           {dateFormatShort(selectedStartDate.getTime())}
         </button>
       </Popover>
@@ -91,7 +110,14 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
             arrowSize={10}
             arrowColor="white"
           >
-            <TimePicker range={range} setRange={setRange} timerange={timerange} setsBeginning={false} updateTimeseries={updateTimeseries} disabled={disabled} />
+            <TimePicker
+              range={range}
+              setRange={setRange}
+              timerange={timerange}
+              setsBeginning={false}
+              updateTimeseries={updateTimeseries}
+              disabled={disabled}
+            />
           </ArrowContainer>
         )}
       >
@@ -111,55 +137,70 @@ function DateTags({range, timerange, setRange, updateTimeseries, disabled}: {ran
           }}
         >
           {dateFormatShort(selectedEndDate.getTime())}
-          <Icon path={mdiCalendarArrowLeft}/>
+          <Icon path={mdiCalendarArrowLeft} />
         </button>
       </Popover>
     </div>
   )
 }
 
-function TimePicker({range, setRange, timerange, setsBeginning, updateTimeseries, disabled}: { range:[number, number], setRange: React.Dispatch<React.SetStateAction<[number, number]>>, timerange: [number, number], setsBeginning: boolean, updateTimeseries(e: readonly number[]): void, disabled: boolean }) {
-  return(
+function TimePicker({
+  range,
+  setRange,
+  timerange,
+  setsBeginning,
+  updateTimeseries,
+  disabled
+}: {
+  range: [number, number]
+  setRange: React.Dispatch<React.SetStateAction<[number, number]>>
+  timerange: [number, number]
+  setsBeginning: boolean
+  updateTimeseries(e: readonly number[]): void
+  disabled: boolean
+}) {
+  return (
     <div>
-    <DatePicker
-      renderCustomHeader={({
-        date,
-        decreaseMonth,
-        increaseMonth,
-        prevMonthButtonDisabled,
-        nextMonthButtonDisabled,
-      }) => {
-        return (
-          <div className="flex justify-between m-2">
-            <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
-              {"<"}
-            </button>
-            <h2>{dateFormatCalendarHeader(date.getTime())}</h2>
-            <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
-              {">"}
-            </button>
-          </div>
-        )
-      }}
-      inline 
-      fixedHeight
-      disabled={disabled}
-      selected={new Date(range[setsBeginning ? 0 :1] * 1000)} 
-      minDate={new Date( setsBeginning ? timerange[0] * 1000 : Math.max(timerange[0] * 1000, range[0] * 1000))}
-      maxDate={new Date( setsBeginning ? Math.min(timerange[1] * 1000, range[1] * 1000) : timerange[1] * 1000)}
-      onChange={(x) => {
-        if (x) {
-          let newRange: [number, number]
-          if (setsBeginning) {
-            newRange = [x.getTime() / 1000, range[1]]
-          } else {
-            newRange = [range[0], x.getTime() / 1000]
+      <DatePicker
+        renderCustomHeader={({
+          date,
+          decreaseMonth,
+          increaseMonth,
+          prevMonthButtonDisabled,
+          nextMonthButtonDisabled
+        }) => {
+          return (
+            <div className="m-2 flex justify-between">
+              <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
+                {"<"}
+              </button>
+              <h2>{dateFormatCalendarHeader(date.getTime())}</h2>
+              <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
+                {">"}
+              </button>
+            </div>
+          )
+        }}
+        inline
+        fixedHeight
+        disabled={disabled}
+        selected={new Date(range[setsBeginning ? 0 : 1] * 1000)}
+        minDate={new Date(setsBeginning ? timerange[0] * 1000 : Math.max(timerange[0] * 1000, range[0] * 1000))}
+        maxDate={new Date(setsBeginning ? Math.min(timerange[1] * 1000, range[1] * 1000) : timerange[1] * 1000)}
+        onChange={(x) => {
+          if (x) {
+            let newRange: [number, number]
+            if (setsBeginning) {
+              newRange = [x.getTime() / 1000, range[1]]
+            } else {
+              newRange = [range[0], x.getTime() / 1000]
+            }
+            setRange(newRange)
+            updateTimeseries(newRange)
           }
-          setRange(newRange)
-          updateTimeseries(newRange)
-        }
-      }}/>
-      </div>
+        }}
+      />
+    </div>
   )
 }
 
@@ -175,7 +216,7 @@ export default function TimeSlider() {
   const { timerange, selectedRange } = repodata2
   const submit = useSubmit()
   const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
-  
+
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
@@ -205,12 +246,20 @@ export default function TimeSlider() {
         <Rail>
           {() => (
             <>
-              <DateTags setRange={setRange} timerange={timerange} range={range} updateTimeseries={updateTimeseries} disabled={disabled}/>
-              <div style={{
-                left: "-50px",
-                top: "-8px",
-                position: "absolute"
-              }}>
+              <DateTags
+                setRange={setRange}
+                timerange={timerange}
+                range={range}
+                updateTimeseries={updateTimeseries}
+                disabled={disabled}
+              />
+              <div
+                style={{
+                  left: "-50px",
+                  top: "-8px",
+                  position: "absolute"
+                }}
+              >
                 <ClipLoader title="Loading selected time range" size={30} loading={disabled} color="#7aa0c4" />
               </div>
             </>
@@ -235,7 +284,14 @@ export default function TimeSlider() {
           {({ tracks, getTrackProps }) => (
             <div className="slider-tracks">
               {tracks.map(({ id, source, target }) => (
-                <Track backgroundColor="#7aa0c4" key={id} source={source} target={target} getTrackProps={getTrackProps} disabled={disabled} />
+                <Track
+                  backgroundColor="#7aa0c4"
+                  key={id}
+                  source={source}
+                  target={target}
+                  getTrackProps={getTrackProps}
+                  disabled={disabled}
+                />
               ))}
             </div>
           )}

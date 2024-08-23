@@ -40,7 +40,8 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { repodata2 } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, setLabelsVisible } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } =
+    useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -203,7 +204,7 @@ function filterGitTree(
   }
 
   let filteredTree = filterNode(tree)
-  if (filteredTree === null) filteredTree = {...tree, children: []}
+  if (filteredTree === null) filteredTree = { ...tree, children: [] }
   if (filteredTree.type !== "tree") {
     throw new Error("Filtered tree must be a tree structure")
   }
@@ -416,23 +417,25 @@ function createPartitionedHiearchy(
 
   const castedTree = currentTree as GitObject
 
-  const hiearchy = hierarchy(castedTree).sum((d) => {
-    const blob = d as GitBlobObject
-    switch (sizeMetricType) {
-      case "FILE_SIZE":
-        return blob.sizeInBytes ?? 1
-      case "MOST_COMMITS":
-        return repodata2.commitCounts[blob.path] ?? 1
-      case "EQUAL_SIZE":
-        return 1
-      case "LAST_CHANGED":
-        return (repodata2.lastChanged[blob.path] ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
-      // case "TRUCK_FACTOR":
-      //   return repodata2.authorCounts.get(blob.path) ?? 1
-      case "MOST_CONTRIBS":
-        return repodata2.contribSumPerFile[blob.path] ?? 1
-    }
-  }).sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
+  const hiearchy = hierarchy(castedTree)
+    .sum((d) => {
+      const blob = d as GitBlobObject
+      switch (sizeMetricType) {
+        case "FILE_SIZE":
+          return blob.sizeInBytes ?? 1
+        case "MOST_COMMITS":
+          return repodata2.commitCounts[blob.path] ?? 1
+        case "EQUAL_SIZE":
+          return 1
+        case "LAST_CHANGED":
+          return (repodata2.lastChanged[blob.path] ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
+        // case "TRUCK_FACTOR":
+        //   return repodata2.authorCounts.get(blob.path) ?? 1
+        case "MOST_CONTRIBS":
+          return repodata2.contribSumPerFile[blob.path] ?? 1
+      }
+    })
+    .sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
 
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
 

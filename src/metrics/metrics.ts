@@ -37,7 +37,10 @@ export function createMetricData(
 ): MetricsData {
   const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
 
-  return [setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)), new Map(Object.entries(authorColors))]
+  return [
+    setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
+    new Map(Object.entries(authorColors))
+  ]
 }
 
 export function getMetricDescription(metric: MetricType): string {
@@ -65,13 +68,13 @@ export function getMetricLegendType(metric: MetricType): LegendType {
   switch (metric) {
     case "FILE_TYPE":
     case "TOP_CONTRIBUTOR":
-    // case "SINGLE_AUTHOR":
+      // case "SINGLE_AUTHOR":
       return "POINT"
     case "MOST_COMMITS":
     case "MOST_CONTRIBUTIONS":
       return "GRADIENT"
     case "LAST_CHANGED":
-    // case "TRUCK_FACTOR":
+      // case "TRUCK_FACTOR":
       return "SEGMENTS"
     default:
       throw new Error("Uknown metric type: " + metric)
@@ -162,12 +165,7 @@ export function getMetricCalcs(
             getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) =>
-              getLastChangedIndex(
-                groupings,
-                newestEpoch,
-                data.repodata2.lastChanged[blob.path] ?? 0
-              ) ?? -1
+            (blob) => getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged[blob.path] ?? 0) ?? -1
           ]
         }
         const existing = data.repodata2.lastChanged[blob.path]
@@ -179,7 +177,14 @@ export function getMetricCalcs(
       "TOP_CONTRIBUTOR",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, data.repodata2.dominantAuthors, dominantAuthorCutoff, data.repodata2.contribSumPerFile)
+        setDominantAuthorColor(
+          authorColors,
+          blob,
+          cache,
+          data.repodata2.dominantAuthors,
+          dominantAuthorCutoff,
+          data.repodata2.contribSumPerFile
+        )
       }
     ],
     // [
