@@ -1,3 +1,4 @@
+/*
 function getRenameIntervals(timeRangeStart, timeRangeEnd) {
   const renames = getRenamesInTimeRange(timeRangeStart, timeRangeEnd)
   renames.sortByTimestampDescending()
@@ -62,3 +63,4 @@ function getRenameIntervals(timeRangeStart, timeRangeEnd) {
 
   return allRenamesAsList
 }
+*/

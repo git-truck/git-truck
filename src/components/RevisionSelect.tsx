@@ -25,7 +25,7 @@ export function RevisionSelect({
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
-              {Object.entries(heads).map(([headName, _]) => {
+              {Object.entries(heads).map(([headName]) => {
                 const isAnalyzed = analyzedBranches.find((rep) => rep.branch === headName)
                 return (
                   <option

@@ -3,7 +3,6 @@ import type { Dispatch, ReactNode, SetStateAction } from "react"
 import { createContext, useContext } from "react"
 import { useLocalStorage } from "react-use"
 import { twMerge } from "tailwind-merge"
-import { useMediaQuery } from "./hooks"
 
 export const cn = (...args: ClassValue[]) => twMerge(clsx(args))
 
@@ -29,10 +28,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ThemeContext.Provider value={[theme === undefined ? "LIGHT" : theme, setTheme]}>{children}</ThemeContext.Provider>
   )
-}
-
-function useMQPrefersColorSchemeLight() {
-  return useMediaQuery("(prefers-color-scheme: light)")
 }
 
 export function usePrefersLightMode() {
