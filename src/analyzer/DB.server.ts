@@ -102,6 +102,21 @@ export default class DB {
     `)
   }
 
+  public async clearAllTables() {
+    await (
+      await this.instance
+    ).all(`
+      DELETE FROM commits;
+      DELETE FROM filechanges;
+      DELETE FROM authorunions;
+      DELETE FROM renames;
+      DELETE FROM hiddenfiles;
+      DELETE FROM metadata;
+      DELETE FROM temporary_renames;
+      DELETE FROM files;  
+    `)
+  }
+
   public async createIndexes() {
     await (
       await this.instance

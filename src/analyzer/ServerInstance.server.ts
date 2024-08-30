@@ -375,13 +375,16 @@ export default class ServerInstance {
     this.analyzationStatus = "Starting"
 
     let commitCount = await this.gitCaller.getCommitCount()
-    if (
-      (await InstanceManager.getOrCreateMetadataDB().getLastRun(this.repo, this.branch)) &&
-      !(await this.db.commitTableEmpty())
-    ) {
-      const latestCommit = await this.db.getLatestCommitHash()
-      commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit, this.branch)
-      log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
+    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun(this.repo, this.branch)
+    if (!(await this.db.commitTableEmpty())) {
+      if (priorRun) {
+        const latestCommit = await this.db.getLatestCommitHash()
+        commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit, this.branch)
+        log.info(`Repo has been analyzed previously, only analzying ${commitCount} commits`)
+      } else {
+        log.warn("Incomplete database found. Clearing and running complete analysis.")
+        await this.db.clearAllTables()
+      }
     }
 
     if (commitCount < 1) return
