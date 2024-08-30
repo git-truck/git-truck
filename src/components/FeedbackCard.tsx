@@ -14,22 +14,22 @@ export const FeedbackCard = memo(function FeedbackCard() {
         <Icon path={mdiForum} size={1} />
       </div>
       <div className="flex items-center justify-between dark:contrast-75 dark:invert dark:sepia dark:filter">
-          <GitHubButton
-            href="https://github.com/git-truck/git-truck"
-            data-icon="octicon-star"
-            data-size="large"
-            data-show-count="true"
-          >
-            Star Git Truck
-          </GitHubButton>
-          <GitHubButton
-            href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
-            data-icon="octicon-issue-opened"
-            data-size="large"
-            data-show-count="true"
-          >
-            Open an issue
-          </GitHubButton>
+        <GitHubButton
+          href="https://github.com/git-truck/git-truck"
+          data-icon="octicon-star"
+          data-size="large"
+          data-show-count="true"
+        >
+          Star Git Truck
+        </GitHubButton>
+        <GitHubButton
+          href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
+          data-icon="octicon-issue-opened"
+          data-size="large"
+          data-show-count="true"
+        >
+          Open an issue
+        </GitHubButton>
         {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
       </div>
     </div>
