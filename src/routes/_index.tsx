@@ -14,7 +14,7 @@ import { cn } from "~/styling"
 import { join, resolve } from "node:path"
 import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
-import { mdiArrowUp, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
+import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { readdir } from "node:fs/promises"
@@ -123,6 +123,13 @@ export default function Index() {
           <p>
             Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
           </p>
+          <Form className="w-4" method="post" action={"/clearCache"}>
+            <input type="hidden" name="clearCache" value={"true"} />
+            <button className="btn" title="Do this if you are experiencing issues">
+              <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
+              Clear analyzed results
+            </button>
+          </Form>
           {/* <div className="flex w-full gap-2"> */}
           <div className="hidden w-full gap-2">
             <Form method="get" className="flex grow gap-1">

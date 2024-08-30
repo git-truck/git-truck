@@ -28,6 +28,12 @@ export default class DB {
     return db
   }
 
+  public static async clearCache() {
+    const dir = resolve(os.tmpdir(), "git-truck-cache")
+    if (!existsSync(dir)) return
+    await fs.rm(dir, { recursive: true, force: true })
+  }
+
   constructor(
     private repo: string,
     private branch: string
