@@ -6,10 +6,10 @@ import { sliderPadding } from "~/const"
 
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
-  const data = repodata2.commitCountPerDay
+  const data = databaseInfo.commitCountPerDay
 
   useEffect(() => {
     if (!data || !svgRef.current) return

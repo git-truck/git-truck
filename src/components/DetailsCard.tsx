@@ -39,12 +39,12 @@ export function DetailsCard({
   const { metricType } = useOptions()
   const { state } = useNavigation()
   const { setPath, path } = usePath()
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
   const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
 
-  const existingCommitCount = repodata2.commitCounts[slicedPath]
+  const existingCommitCount = databaseInfo.commitCounts[slicedPath]
 
   const commitFetcher = useFetcher()
 
@@ -54,12 +54,12 @@ export function DetailsCard({
     } else {
       fetchCommitCount()
     }
-  }, [repodata2, clickedObject])
+  }, [databaseInfo, clickedObject])
 
   function fetchCommitCount() {
     const searchParams = new URLSearchParams()
-    searchParams.set("branch", repodata2.branch)
-    searchParams.set("repo", repodata2.repo)
+    searchParams.set("branch", databaseInfo.branch)
+    searchParams.set("repo", databaseInfo.repo)
     if (!clickedObject?.path) return
     searchParams.set("path", clickedObject.path)
     commitFetcher.load(`/commitcount?${searchParams.toString()}`)
@@ -82,13 +82,13 @@ export function DetailsCard({
 
   useEffect(() => {
     const searchParams = new URLSearchParams()
-    searchParams.set("branch", repodata2.branch)
-    searchParams.set("repo", repodata2.repo)
+    searchParams.set("branch", databaseInfo.branch)
+    searchParams.set("repo", databaseInfo.repo)
     if (!clickedObject?.path) return
     searchParams.set("path", clickedObject.path)
     searchParams.set("isblob", String(clickedObject.type === "blob"))
     fetcher.load(`/authordist?${searchParams.toString()}`)
-  }, [clickedObject, repodata2])
+  }, [clickedObject, databaseInfo])
 
   useEffect(() => {
     if (fetcher.state === "idle") {
@@ -107,8 +107,8 @@ export function DetailsCard({
 
   useEffect(() => {
     // Update clickedObject if data changes
-    setClickedObject((clickedObject) => findObjectInTree(repodata2.fileTree, clickedObject))
-  }, [repodata2, setClickedObject])
+    setClickedObject((clickedObject) => findObjectInTree(databaseInfo.fileTree, clickedObject))
+  }, [databaseInfo, setClickedObject])
 
   const [metricsData] = useMetrics()
   const { backgroundColor, lightBackground } = useMemo(() => {
@@ -164,7 +164,7 @@ export function DetailsCard({
               {isBlob ? (
                 <>
                   <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
-                  <LastchangedEntry epoch={repodata2.lastChanged[slicedPath]} />
+                  <LastchangedEntry epoch={databaseInfo.lastChanged[slicedPath]} />
                 </>
               ) : (
                 <FileAndSubfolderCountEntries clickedTree={clickedObject} />

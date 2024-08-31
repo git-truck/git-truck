@@ -71,7 +71,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
 
 export const GlobalInfo = memo(function GlobalInfo() {
   const client = useClient()
-  const { repodata2, repo, gitTruckInfo } = useData()
+  const { databaseInfo, repo, gitTruckInfo } = useData()
   const transitionState = useNavigation()
 
   const location = useLocation()
@@ -93,7 +93,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
       setIsAnalyzing(false)
     }
   }, [transitionState.state])
-  const isoString = new Date(repodata2.lastRunInfo.time).toISOString()
+  const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
   const updateAvailable =
     gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1
   return (
@@ -118,19 +118,19 @@ export const GlobalInfo = memo(function GlobalInfo() {
               <div className="grid auto-rows-fr grid-cols-2 gap-0">
                 <span>Analyzed</span>
                 <time className="text-right" dateTime={isoString} title={isoString}>
-                  {client ? dateTimeFormatShort(repodata2.lastRunInfo.time * 1000) : ""}
+                  {client ? dateTimeFormatShort(databaseInfo.lastRunInfo.time * 1000) : ""}
                 </time>
 
                 <span>As of commit</span>
                 <span className="text-right">
-                  <Code inline>#{repodata2.lastRunInfo.hash.slice(0, 7)}</Code>
+                  <Code inline>#{databaseInfo.lastRunInfo.hash.slice(0, 7)}</Code>
                 </span>
 
                 <span>Files analyzed</span>
-                <span className="text-right">{repodata2.fileCount ?? 0}</span>
+                <span className="text-right">{databaseInfo.fileCount ?? 0}</span>
 
                 <span>Commits analyzed</span>
-                <span className="text-right">{repodata2.commitCount}</span>
+                <span className="text-right">{databaseInfo.commitCount}</span>
               </div>
             </div>
           </div>
@@ -168,12 +168,12 @@ export const GlobalInfo = memo(function GlobalInfo() {
           {updateAvailable ? <UpdateNotifier /> : null}
         </div>
         <RevisionSelect
-          key={repodata2.branch}
+          key={databaseInfo.branch}
           disabled={isAnalyzing}
           onChange={(e) => switchBranch(e.target.value)}
-          defaultValue={repodata2.branch}
+          defaultValue={databaseInfo.branch}
           headGroups={repo.refs}
-          analyzedBranches={repodata2.analyzedRepos.filter((rep) => rep.repo === repodata2.repo)}
+          analyzedBranches={databaseInfo.analyzedRepos.filter((rep) => rep.repo === databaseInfo.repo)}
         />
         <CollapsableSettings />
       </div>

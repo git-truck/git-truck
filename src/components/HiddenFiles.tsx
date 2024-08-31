@@ -16,7 +16,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
   const location = useLocation()
   const [expanded, setExpanded] = useBoolean(false)
   const navigationState = useNavigation()
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
   const expandHiddenFilesButtonId = useId()
 
   return (
@@ -24,13 +24,13 @@ export const HiddenFiles = memo(function HiddenFiles() {
       <h2 className="card__title">
         <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
           <Icon path={mdiEyeOff} size="1.25em" />
-          Hidden files ({repodata2.hiddenFiles.length})
+          Hidden files ({databaseInfo.hiddenFiles.length})
           <ChevronButton id={expandHiddenFilesButtonId} className="absolute right-2 top-2" open={expanded} />
         </button>
       </h2>
       {expanded ? (
         <div>
-          {repodata2.hiddenFiles.map((hidden) => (
+          {databaseInfo.hiddenFiles.map((hidden) => (
             <div className="grid grid-cols-[auto_1fr] gap-2" key={hidden} title={hidden}>
               <Form className="w-4" method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />

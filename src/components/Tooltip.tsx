@@ -9,7 +9,7 @@ import { LegendDot } from "./util"
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
 import { useData } from "~/contexts/DataContext"
-import type { RepoData2 } from "~/routes/$repo.$"
+import type { DatabaseInfo } from "~/routes/$repo.$"
 
 interface TooltipProps {
   hoveredObject: GitObject | null
@@ -22,7 +22,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
   const color = useMemo(() => {
     if (!hoveredObject) {
       return null
@@ -69,7 +69,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
         ? ColorMetricDependentInfo({
             metric: metricType,
             hoveredBlob: hoveredObject,
-            repodata2
+            databaseInfo
           })
         : null}
     </div>
@@ -79,21 +79,21 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: GitBlobObject | null
-  repodata2: RepoData2
+  databaseInfo: DatabaseInfo
 }) {
   const slicedPath = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS":
-      const noCommits = props.repodata2.commitCounts[slicedPath]
+      const noCommits = props.databaseInfo.commitCounts[slicedPath]
       if (!noCommits) return "No activity"
       return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
     case "LAST_CHANGED":
-      const epoch = props.repodata2.lastChanged[slicedPath]
+      const epoch = props.databaseInfo.lastChanged[slicedPath]
       if (!epoch) return "No activity"
       return <>{dateFormatRelative(epoch)}</>
     case "TOP_CONTRIBUTOR":
-      const dominant = props.repodata2.dominantAuthors[slicedPath]
-      const contribSum = props.repodata2.contribSumPerFile[slicedPath]
+      const dominant = props.databaseInfo.dominantAuthors[slicedPath]
+      const contribSum = props.databaseInfo.contribSumPerFile[slicedPath]
       if (!dominant) return "No activity"
       if (!contribSum) return <>{dominant.author}</>
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
@@ -103,7 +103,7 @@ function ColorMetricDependentInfo(props: {
         </>
       )
     case "MOST_CONTRIBUTIONS":
-      const contribs = props.repodata2.contribSumPerFile[slicedPath]
+      const contribs = props.databaseInfo.contribSumPerFile[slicedPath]
       if (!contribs) return <>No activity</>
       return <>{contribs} line changes</>
     default:

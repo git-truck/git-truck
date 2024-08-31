@@ -38,8 +38,8 @@ export function Providers({ children, data }: ProvidersProps) {
     console.time("metrics")
     const res = createMetricData(
       data,
-      data.repodata2.colorSeed,
-      data.repodata2.authorColors,
+      data.databaseInfo.colorSeed,
+      data.databaseInfo.authorColors,
       options?.dominantAuthorCutoff ?? 70
     )
     console.timeEnd("metrics")

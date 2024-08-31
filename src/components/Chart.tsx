@@ -28,7 +28,7 @@ import { getTextColorFromBackground, isBlob, isTree } from "~/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
-import type { RepoData2 } from "~/routes/$repo.$"
+import type { DatabaseInfo } from "~/routes/$repo.$"
 import ignore, { type Ignore } from "ignore"
 import { cn, usePrefersLightMode } from "~/styling"
 import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
@@ -39,7 +39,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const [ref, rawSize] = useComponentSize()
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
   const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
@@ -71,20 +71,26 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
     const ig = ignore()
-    ig.add(repodata2.hiddenFiles)
-    const filtered = filterGitTree(repodata2.fileTree, repodata2.commitCounts, showFilesWithoutChanges, ig)
+    ig.add(databaseInfo.hiddenFiles)
+    const filtered = filterGitTree(databaseInfo.fileTree, databaseInfo.commitCounts, showFilesWithoutChanges, ig)
     if (hierarchyType === "NESTED") return filtered
     return {
       ...filtered,
       children: flatten(filtered)
     } as GitTreeObject
-  }, [repodata2.fileTree, hierarchyType, repodata2.hiddenFiles, repodata2.commitCounts, showFilesWithoutChanges])
+  }, [
+    databaseInfo.fileTree,
+    hierarchyType,
+    databaseInfo.hiddenFiles,
+    databaseInfo.commitCounts,
+    showFilesWithoutChanges
+  ])
 
   const nodes = useMemo(() => {
     console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
     const res = createPartitionedHiearchy(
-      repodata2,
+      databaseInfo,
       filetree,
       size,
       chartType,
@@ -94,7 +100,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     ).descendants()
     console.timeEnd("nodes")
     return res
-  }, [size, chartType, sizeMetric, path, renderCutoff, repodata2, filetree])
+  }, [size, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -391,7 +397,7 @@ function isCircularNode(d: CircleOrRectHiearchyNode) {
 }
 
 function createPartitionedHiearchy(
-  repodata2: RepoData2,
+  databaseInfo: DatabaseInfo,
   tree: GitTreeObject,
   size: { height: number; width: number },
   chartType: ChartType,
@@ -423,13 +429,15 @@ function createPartitionedHiearchy(
         case "FILE_SIZE":
           return blob.sizeInBytes ?? 1
         case "MOST_COMMITS":
-          return repodata2.commitCounts[blob.path] ?? 1
+          return databaseInfo.commitCounts[blob.path] ?? 1
         case "EQUAL_SIZE":
           return 1
         case "LAST_CHANGED":
-          return (repodata2.lastChanged[blob.path] ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
+          return (
+            (databaseInfo.lastChanged[blob.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
+          )
         case "MOST_CONTRIBS":
-          return repodata2.contribSumPerFile[blob.path] ?? 1
+          return databaseInfo.contribSumPerFile[blob.path] ?? 1
       }
     })
     .sort((a, b) => (b.value ?? 1) - (a.value ?? 1))

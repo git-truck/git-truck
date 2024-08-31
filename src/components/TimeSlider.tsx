@@ -212,8 +212,8 @@ export default function TimeSlider() {
     width: `calc(100% - ${sliderPadding}px)`
   }
 
-  const { repodata2 } = useData()
-  const { timerange, selectedRange } = repodata2
+  const { databaseInfo } = useData()
+  const { timerange, selectedRange } = databaseInfo
   const submit = useSubmit()
   const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
 
@@ -224,7 +224,7 @@ export default function TimeSlider() {
     const form = new FormData()
     form.append("timeseries", `${e[0]}-${e[1]}`)
     submit(form, {
-      action: `/${getPathFromRepoAndHead(repodata2.repo, repodata2.branch)}`,
+      action: `/${getPathFromRepoAndHead(databaseInfo.repo, databaseInfo.branch)}`,
       method: "post"
     })
   }

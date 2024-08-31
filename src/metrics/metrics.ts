@@ -31,10 +31,10 @@ export function createMetricData(
   predefinedAuthorColors: Record<string, `#${string}`>,
   dominantAuthorCutoff: number
 ): MetricsData {
-  const authorColors = generateAuthorColors(data.repodata2.authors, colorSeed, predefinedAuthorColors)
+  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors)
 
   return [
-    setupMetricsCache(data.repodata2.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
+    setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
     new Map(Object.entries(authorColors))
   ]
 }
@@ -104,13 +104,13 @@ export function getMetricCalcs(
   authorColors: Record<string, `#${string}`>,
   dominantAuthorCutoff: number
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
-  const maxCommitCount = data.repodata2.maxCommitCount
-  const minCommitCount = data.repodata2.minCommitCount
-  const newestEpoch = data.repodata2.newestChangeDate
+  const maxCommitCount = data.databaseInfo.maxCommitCount
+  const minCommitCount = data.databaseInfo.minCommitCount
+  const newestEpoch = data.databaseInfo.newestChangeDate
   const groupings = lastChangedGroupings(newestEpoch)
   const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
-  const maxContribCount = data.repodata2.maxMinContribCounts.max
-  const minContribCount = data.repodata2.maxMinContribCounts.min
+  const maxContribCount = data.databaseInfo.maxMinContribCounts.max
+  const minContribCount = data.databaseInfo.maxMinContribCounts.min
   const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
   return [
@@ -136,7 +136,7 @@ export function getMetricCalcs(
             commitmapper.getColor(maxCommitCount)
           ]
         }
-        commitmapper.setColor(blob, cache, data.repodata2.commitCounts)
+        commitmapper.setColor(blob, cache, data.databaseInfo.commitCounts)
       }
     ],
     [
@@ -144,13 +144,13 @@ export function getMetricCalcs(
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            getLastChangedIndex(groupings, newestEpoch, data.repodata2.oldestChangeDate) + 1,
+            getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, data.repodata2.lastChanged[blob.path] ?? 0) ?? -1
+            (blob) => getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
           ]
         }
-        const existing = data.repodata2.lastChanged[blob.path]
+        const existing = data.databaseInfo.lastChanged[blob.path]
         const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
         cache.colormap.set(blob.path, color)
       }
@@ -163,9 +163,9 @@ export function getMetricCalcs(
           authorColors,
           blob,
           cache,
-          data.repodata2.dominantAuthors,
+          data.databaseInfo.dominantAuthors,
           dominantAuthorCutoff,
-          data.repodata2.contribSumPerFile
+          data.databaseInfo.contribSumPerFile
         )
       }
     ],
@@ -182,7 +182,7 @@ export function getMetricCalcs(
             contribmapper.getColor(maxContribCount)
           ]
         }
-        contribmapper.setColor(blob, cache, data.repodata2.contribSumPerFile)
+        contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
       }
     ]
   ]

@@ -41,10 +41,10 @@ export interface RepoData {
     version: string
     latestVersion: string | null
   }
-  repodata2: RepoData2
+  databaseInfo: DatabaseInfo
 }
 
-export interface RepoData2 {
+export interface DatabaseInfo {
   dominantAuthors: Record<string, { author: string; contribcount: number }>
   commitCounts: Record<string, number>
   lastChanged: Record<string, number>
@@ -149,9 +149,9 @@ export const action: ActionFunction = async ({ request, params }) => {
     const start = Number(split[0])
     const end = Number(split[1])
 
-    if (end !== instance.prevResult?.repodata2.selectedRange[1]) {
+    if (end !== instance.prevResult?.databaseInfo.selectedRange[1]) {
       instance.prevInvokeReason = "timeseriesend"
-    } else if (start !== instance.prevResult?.repodata2.selectedRange[0]) {
+    } else if (start !== instance.prevResult?.databaseInfo.selectedRange[0]) {
       instance.prevInvokeReason = "timeseriesstart"
     } else {
       instance.prevInvokeReason = "none"
@@ -255,7 +255,7 @@ async function analyze(params: Params) {
   const reason = instance.prevInvokeReason
   instance.prevInvokeReason = "unknown"
   const prevData = instance.prevResult
-  const prevRes = prevData?.repodata2
+  const prevRes = prevData?.databaseInfo
 
   console.time("fileTree")
   const filetree =
@@ -327,7 +327,7 @@ async function analyze(params: Params) {
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
-  const repodata2: RepoData2 = {
+  const databaseInfo: DatabaseInfo = {
     dominantAuthors,
     commitCounts,
     lastChanged,
@@ -358,7 +358,7 @@ async function analyze(params: Params) {
   const fullData = {
     repo,
     gitTruckInfo: await getGitTruckInfo(),
-    repodata2
+    databaseInfo: databaseInfo
   } as RepoData
 
   return fullData
@@ -367,7 +367,6 @@ async function analyze(params: Params) {
 export default function Repo() {
   const client = useClient()
   const { dataPromise } = useLoaderData<typeof loader>()
-  // const { repodata2 } = dataPromise
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
@@ -490,7 +489,7 @@ export default function Repo() {
                           isFullscreen
                       })}
                     />
-                    {dataPromise.repodata2.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    {dataPromise.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
                     <SearchCard />
                     <Online>
                       <FeedbackCard />

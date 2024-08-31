@@ -35,7 +35,7 @@ export const LegendDot = ({
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [color, setColor] = useState(dotColor)
-  const { repodata2, repo } = useData()
+  const { databaseInfo, repo } = useData()
   const submit = useSubmit()
 
   if (!authorColorToChange)
@@ -73,7 +73,7 @@ export const LegendDot = ({
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
               Set color
             </button>
-            {repodata2.authorColors[authorColorToChange] ? (
+            {databaseInfo.authorColors[authorColorToChange] ? (
               <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
                 Use default color
               </button>

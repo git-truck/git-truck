@@ -31,7 +31,7 @@ export const SearchCard = memo(function SearchCard() {
   const { searchResults, setSearchResults } = useSearch()
   const searchResultsArray = useMemo(() => Object.values(searchResults), [searchResults])
   const id = useId()
-  const { repodata2 } = useData()
+  const { databaseInfo } = useData()
 
   useEffect(() => {
     const searchOverride = (event: KeyboardEvent) => {
@@ -66,7 +66,7 @@ export const SearchCard = memo(function SearchCard() {
               setSearchText(value)
               startTransition(() => {
                 if (value.trim() === "") setSearchResults({})
-                setSearchResults(findSearchResults(repodata2.fileTree, value))
+                setSearchResults(findSearchResults(databaseInfo.fileTree, value))
               })
             }}
           />
