@@ -1,9 +1,6 @@
 import { mdiForum } from "@mdi/js"
 import Icon from "@mdi/react"
 import { memo } from "react"
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
-import yearOfRat from "year-of-rat"
 import GitHubButton from "react-github-btn"
 
 export const FeedbackCard = memo(function FeedbackCard() {
@@ -30,7 +27,6 @@ export const FeedbackCard = memo(function FeedbackCard() {
         >
           Open an issue
         </GitHubButton>
-        {yearOfRat() ? <p>Ratting time 🐀🧀</p> : null}
       </div>
     </div>
   )
