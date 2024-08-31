@@ -91,18 +91,6 @@ function ColorMetricDependentInfo(props: {
       const epoch = props.repodata2.lastChanged[slicedPath]
       if (!epoch) return "No activity"
       return <>{dateFormatRelative(epoch)}</>
-    // case "SINGLE_AUTHOR":
-    //   switch (authorCount) {
-    //     case undefined:
-    //     case 0:
-    //       return "No activity"
-    //     case 1:
-    //       const dom = props.repodata2.dominantAuthors.get(slicedPath)
-    //       if (!dom) return null
-    //       return `${dom.author} is the only author`
-    //     default:
-    //       return `${authorCount} authors`
-    //   }
     case "TOP_CONTRIBUTOR":
       const dominant = props.repodata2.dominantAuthors[slicedPath]
       const contribSum = props.repodata2.contribSumPerFile[slicedPath]
@@ -114,16 +102,6 @@ function ColorMetricDependentInfo(props: {
           {dominant.author} {authorPercentage}%
         </>
       )
-    // case "TRUCK_FACTOR":
-    //   switch (authorCount) {
-    //     case undefined:
-    //     case 0:
-    //       return "No activity"
-    //     case 1:
-    //       return "1 author"
-    //     default:
-    //       return `${authorCount} authors`
-    //   }
     case "MOST_CONTRIBUTIONS":
       const contribs = props.repodata2.contribSumPerFile[slicedPath]
       if (!contribs) return <>No activity</>

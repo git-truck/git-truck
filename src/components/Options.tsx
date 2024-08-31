@@ -26,10 +26,8 @@ import { useTheme } from "~/styling"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
-  // TRUCK_FACTOR: "TRUCK_FACTOR",
   TOP_CONTRIBUTOR: "MOST_CONTRIBS",
   MOST_COMMITS: "MOST_COMMITS",
-  // SINGLE_AUTHOR: "TRUCK_FACTOR",
   LAST_CHANGED: "LAST_CHANGED",
   MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
 }
@@ -44,9 +42,7 @@ export const Options = memo(function Options() {
     FILE_TYPE: mdiFileCodeOutline,
     LAST_CHANGED: mdiUpdate,
     MOST_COMMITS: mdiSourceCommit,
-    // SINGLE_AUTHOR: mdiAccountAlertOutline,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    // TRUCK_FACTOR: mdiTruckFastOutline,
     MOST_CONTRIBUTIONS: mdiPlusMinusVariant
   }
 
@@ -54,7 +50,6 @@ export const Options = memo(function Options() {
     FILE_SIZE: mdiResize,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
-    // TRUCK_FACTOR: mdiTruckFastOutline,
     LAST_CHANGED: mdiUpdate,
     MOST_CONTRIBS: mdiPlusMinusVariant
   }
@@ -79,8 +74,6 @@ export const Options = memo(function Options() {
             iconMap={chartTypeIcons}
           />
         </fieldset>
-        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
-        {/* <div className="card flex flex-col gap-0 rounded-lg px-2"> */}
         <fieldset className="rounded-lg border p-2">
           <legend className="card__title ml-1.5 justify-start gap-2">
             <Icon path={mdiImageSizeSelectSmall} size="1.25em" />

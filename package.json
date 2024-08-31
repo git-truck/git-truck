@@ -31,7 +31,7 @@
     "pub-exp": "node ./scripts/publish-experimental.js",
     "prepublishOnly": "npm run clean && npm run build",
     "format:write": "prettier --log-level warn --write src scripts e2e",
-    "lint:fix": "eslint --fix --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint src scripts",
+    "lint:fix": "eslint --fix --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint src scripts e2e",
     "check:write": "npm run format:write && npm run lint:fix",
     "check": "npm run format:check && npm run lint",
     "format:check": "prettier --check src scripts e2e",

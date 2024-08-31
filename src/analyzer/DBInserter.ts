@@ -89,37 +89,3 @@ class ArrowInserter<T> extends Inserter<T> {
     }
   }
 }
-
-// private typeToDuckdbType(val: unknown, key: string) {
-//   switch (typeof val) {
-//     case "number":
-//       return "UINTEGER"
-//     case "string":
-//       return "VARCHAR"
-//     case "bigint":
-//       return "UBIGINT"
-//     default:
-//       if (key.includes("timestamp")) return "UINTEGER"
-//       if (key.includes("name")) return "VARCHAR"
-//       throw new Error("Unknown type " + key)
-//   }
-// }
-
-// private objToDuckdbStruct(obj: Record<string | number | symbol, unknown>) {
-//   const keys = Object.keys(obj)
-//   const types: Record<string, string> = {}
-//   for (const key of keys) {
-//     const val = obj[key]
-//     types[key] = this.typeToDuckdbType(val, key)
-//   }
-//   return types
-// }
-
-// for (let i = 0; i < this.rows.length; i += bundleSize) {
-//   const sliced = this.rows.slice(i, i + bundleSize)
-//   const typesString = JSON.stringify(this.objToDuckdbStruct(this.rows[0]))
-//   const dataString = JSON.stringify(sliced).replace(/'/g, "")
-//   await this.db.exec(`
-//     insert into ${this.table} (select unnest(j, recursive:=true) from (select from_json('${dataString}', '[${typesString}]') j));
-//   `)
-// }

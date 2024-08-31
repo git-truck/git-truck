@@ -428,8 +428,6 @@ function createPartitionedHiearchy(
           return 1
         case "LAST_CHANGED":
           return (repodata2.lastChanged[blob.path] ?? repodata2.oldestChangeDate + 1) - repodata2.oldestChangeDate
-        // case "TRUCK_FACTOR":
-        //   return repodata2.authorCounts.get(blob.path) ?? 1
         case "MOST_CONTRIBS":
           return repodata2.contribSumPerFile[blob.path] ?? 1
       }

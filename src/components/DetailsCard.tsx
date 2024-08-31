@@ -72,8 +72,6 @@ export function DetailsCard({
     }
   }, [commitFetcher])
 
-  // const commitCount = clickedObject?.type === "blob" ? repodata2.commitCounts.get(slicedPath) : 8
-
   const [authorContributions, setAuthorContributions] = useState<{ author: string; contribs: number }[] | null>(null)
   const contribSum = useMemo(() => {
     if (!authorContributions) return 0

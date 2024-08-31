@@ -15,7 +15,6 @@ export function setDominantAuthorColor(
   const dominantAuthor = dominantAuthorPerFile[blob.path]
   const contribSum = contribSumPerFile[blob.path]
   if (!dominantAuthor || !contribSum) {
-    // console.warn("No dominant author for file", path)
     return
   }
   const legend = cache.legend as PointLegendData

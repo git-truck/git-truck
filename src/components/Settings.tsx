@@ -66,8 +66,6 @@ export function Settings() {
             setSizeMetricType(relatedSizeMetric[metricType])
           }
         }}
-        // checkedIcon={mdiLink}
-        // uncheckedIcon={mdiLinkOff}
         title="Enable to sync size metric with color metric"
       >
         <Icon className="ml-1.5" path={mdiLink} size="1.25em" />
