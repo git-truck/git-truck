@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test"
-import { resolve } from "path"
-import { existsSync, promises as fs } from "fs"
-import os from "os"
 
 test("navigate to a repository", async ({ page }) => {
-  const dir = resolve(os.tmpdir(), "git-truck-cache")
-  if (!existsSync(dir)) return
-  await fs.rm(dir, { recursive: true, force: true })
   await page.goto("/")
 
   // Expect a title "to contain" a substring.
