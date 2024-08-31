@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useSubmit, useNavigation } from "@remix-run/react"
 import { useMemo, useState } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"

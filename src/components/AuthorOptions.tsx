@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import Icon from "@mdi/react"
 import { useNavigation, useSubmit } from "@remix-run/react"
