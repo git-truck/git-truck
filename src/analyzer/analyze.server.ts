@@ -7,22 +7,22 @@ import type {
   AnalyzerData,
   TruckUserConfig,
   TruckConfig
-} from "./model"
-import { AnalyzerDataInterfaceVersion } from "./model"
-import { log, setLogLevel } from "./log.server"
-import { describeAsyncJob, writeRepoToFile, getDirName } from "./util.server"
-import { GitCaller } from "./git-caller.server"
-import { emptyGitCommitHash } from "./constants"
+} from "./model.ts"
+import { AnalyzerDataInterfaceVersion } from "./model.ts"
+import { log, setLogLevel } from "./log.server.ts"
+import { describeAsyncJob, writeRepoToFile, getDirName } from "./util.server.ts"
+import { GitCaller } from "./git-caller.server.ts"
+import { emptyGitCommitHash } from "./constants.ts"
 import { resolve, isAbsolute, sep } from "node:path"
 import { performance } from "node:perf_hooks"
-import { hydrateData } from "./hydrate.server"
+import { hydrateData } from "./hydrate.server.ts"
 import {} from "@remix-run/node"
 import ignore from "ignore"
-import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server"
-import pkg from "../../package.json"
-import { getCoAuthors } from "./coauthors.server"
+import { applyIgnore, applyMetrics, initMetrics, TreeCleanup } from "./postprocessing.server.ts"
+import { getCoAuthors } from "./coauthors.server.ts"
 import { exec } from "node:child_process"
 import { makeDupeMap, nameUnion } from "~/authorUnionUtil.server"
+import invariant from "tiny-invariant"
 
 let repoDir = "."
 
@@ -299,6 +299,8 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
 
     const authorsUnion = nameUnion(authors, makeDupeMap(args.unionedAuthors ?? []))
 
+    invariant(process.env.PACKAGE_VERSION)
+
     data = {
       cached: false,
       hiddenFiles,
@@ -308,7 +310,7 @@ export async function analyze(args: TruckConfig): Promise<AnalyzerData> {
       branch: branchName,
       commit: hydratedRepoTree,
       interfaceVersion: AnalyzerDataInterfaceVersion,
-      currentVersion: pkg.version,
+      currentVersion: process.env.PACKAGE_VERSION,
       lastRunEpoch: runDateEpoch,
       commits: {}
     }

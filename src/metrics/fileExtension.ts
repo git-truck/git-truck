@@ -1,6 +1,6 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import { getColorFromExtension } from "./metricUtils"
-import type { MetricCache } from "./metrics"
+import { getColorFromExtension } from "./metricUtils.ts"
+import type { MetricCache } from "./metrics.ts"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 

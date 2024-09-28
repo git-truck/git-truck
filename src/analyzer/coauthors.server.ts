@@ -1,4 +1,4 @@
-import type { Person } from "./model"
+import type { Person } from "./model.ts"
 
 export function getCoAuthors(description: string) {
   const coauthorRegex = /Co-authored-by: (?<name>.*) <(?<email>.*)>/gm

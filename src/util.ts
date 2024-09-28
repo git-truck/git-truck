@@ -1,7 +1,7 @@
 import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model"
+import type { HydratedGitObject, HydratedGitTreeObject, HydratedGitBlobObject } from "./analyzer/model.ts"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0

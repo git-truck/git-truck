@@ -4,7 +4,7 @@ import { EnumSelect } from "./EnumSelect"
 import type { ChartType, HierarchyType } from "../contexts/OptionsContext"
 import { Chart, Hierarchy, useOptions } from "../contexts/OptionsContext"
 import { CheckboxWithLabel } from "./util"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { memo, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 

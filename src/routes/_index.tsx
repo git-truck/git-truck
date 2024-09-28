@@ -11,9 +11,9 @@ import { Suspense, Fragment, useState } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
-import { existsSync, promises as fs } from "node:fs"
-import { join, resolve } from "node:path"
-import { getBaseDirFromPath } from "~/analyzer/util.server"
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
+import { getBaseDirFromPath, isPathGitRepo, readGitRepos } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
 import { mdiArrowUp, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
 import { log } from "~/analyzer/log.server"
@@ -36,7 +36,7 @@ export const loader = async () => {
     }
   }
 
-  const baseDirIsRepo = existsSync(join(args.path, ".git"))
+  const baseDirIsRepo = isPathGitRepo(args.path)
 
   const baseDir = resolve(
     baseDirIsRepo ? getBaseDirFromPath(args.path) : args.path
@@ -44,32 +44,21 @@ export const loader = async () => {
     // args.path
   )
 
-  const entries = await fs.readdir(baseDir, { withFileTypes: true })
-
   // Get all directories that has a .git subdirectory
-  const repos = entries
-    .filter(
-      (entry) =>
-        entry.isDirectory() &&
-        existsSync(join(baseDir, entry.name)) &&
-        !entry.name.startsWith(".") &&
-        // TODO: Implement browsing, requires new routing
-        existsSync(join(baseDir, entry.name, ".git"))
-    )
-    .map(({ name }) => name)
+  const repos = await readGitRepos(baseDir)
 
   // Get metadata for all repos in parallel
   // Returns an object, as `defer` does not support arrays
   // The keys are prefixed with an underscore to avoid conflicts with other properties returned from the loader
   const repoPromises = Object.fromEntries(
-    repos.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo), args.invalidateCache)])
+    repos.map(({ name, path }) => [`_${name}`, GitCaller.getRepoMetadata(path, args.invalidateCache)])
   )
 
   return defer<{
     baseDir: string
     parentDir: string
-    repos: string[]
-    [key: string]: Repository | string | string[]
+    repos: { name: string; path: string }[]
+    [key: string]: Repository | string | string[] | { name: string; path: string }[]
   }>({
     baseDir,
     parentDir: getBaseDirFromPath(baseDir),
@@ -172,22 +161,20 @@ export default function Index() {
           <div className="opacity-80">Folder</div>
           <div className="opacity-80">Status</div>
           <div className="col-span-2 opacity-80">Actions</div>
-          {repos.map((dir, i) => (
+          {repos.map((repo, i) => (
             <Suspense
-              key={repos[i]}
+              key={repos[i].name}
               fallback={
                 <RepositoryEntry
                   repo={{
-                    name: dir,
-                    path: dir,
-                    fullPath: join(baseDir, dir),
+                    ...repo,
                     parentDirPath: baseDir,
                     status: "Loading"
                   }}
                 />
               }
             >
-              <Await resolve={repoPromises[`_${dir}`]}>
+              <Await resolve={repoPromises[`_${repo}`]}>
                 {(repo) => (repo !== null ? <RepositoryEntry repo={repo as Repository} /> : null)}
               </Await>
             </Suspense>
@@ -240,7 +227,7 @@ function RepositoryEntry({ repo }: { repo: SerializeFrom<Repository> }): ReactNo
 
   return (
     <Fragment key={repo.name}>
-      <h2 className="card__title flex justify-start gap-2" title={join(repo.parentDirPath, repo.name)}>
+      <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
           <Icon path={mdiGit} size={1} className="inline-block flex-shrink-0" title="Git repository" />
         ) : isFolder ? (

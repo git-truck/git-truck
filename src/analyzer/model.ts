@@ -1,5 +1,5 @@
 import type { AuthorshipType } from "~/metrics/metrics"
-import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
+import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server.ts"
 
 export type Repository = {
   /**
@@ -30,7 +30,7 @@ export type Repository = {
     }
   | {
       name: string
-      fullPath: string
+      // fullPath: string // TODO: Implement browsing, requires new routing
       status: "Loading"
     }
   | {
