@@ -5,9 +5,9 @@ import { exec, spawn } from "node:child_process"
 import { readdir } from "node:fs/promises"
 import { join, resolve as resolvePath, sep } from "node:path"
 import { performance } from "node:perf_hooks"
+import invariant from "tiny-invariant"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
-import invariant from "tiny-invariant"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]

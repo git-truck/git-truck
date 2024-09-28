@@ -10,7 +10,7 @@ import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { semverCompare, getPathFromRepoAndHead, generateVersionComparisonLink } from "./util"
-import { describeAsyncJob, getDirName, isValidURI, getLatestVersion } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import InstanceManager from "./analyzer/InstanceManager.server"
 
