@@ -7,14 +7,14 @@ import type {
   HydratedGitBlobObject,
   HydratedGitCommitObject,
   HydratedGitTreeObject
-} from "./model"
-import { analyzeRenamedFile } from "./util.server"
-import { GitCaller } from "./git-caller.server"
-import { getCoAuthors } from "./coauthors.server"
-import { log } from "./log.server"
-import { gitLogRegex, contribRegex } from "./constants"
+} from "./model.ts"
+import { analyzeRenamedFile } from "./util.server.ts"
+import { GitCaller } from "./git-caller.server.ts"
+import { getCoAuthors } from "./coauthors.server.ts"
+import { log } from "./log.server.ts"
+import { gitLogRegex, contribRegex } from "./constants.ts"
 import { cpus } from "node:os"
-import { setAnalyzationStatus } from "./analyze.server"
+import { setAnalyzationStatus } from "./analyze.server.ts"
 import { setFlagsFromString } from "node:v8"
 
 let renamedFiles: Map<string, { path: string; timestamp: number }[]>

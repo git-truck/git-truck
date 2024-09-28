@@ -1,5 +1,6 @@
 {
   "include": ["env.d.ts", "src/**/*.ts", "src/**/*.tsx", "package.json"],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2021"],
     "isolatedModules": true,

@@ -1,5 +1,5 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
-import type { MetricCache } from "./metrics"
+import type { MetricCache } from "./metrics.ts"
 import { hslToHex } from "~/util"
 
 export class TruckFactorTranslater {

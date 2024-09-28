@@ -7,11 +7,11 @@ import { createRequestHandler } from "@remix-run/express"
 import path from "path"
 // import pkg from "../package.json"
 import open from "open"
-import { GitCaller } from "./analyzer/git-caller.server"
-import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
-import { semverCompare, getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName, getLatestVersion } from "./analyzer/util.server"
-import { log, setLogLevel } from "./analyzer/log.server"
+import { GitCaller } from "./analyzer/git-caller.server.ts"
+import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server.ts"
+import { semverCompare, getPathFromRepoAndHead } from "./util.ts"
+import { describeAsyncJob, getDirName, getLatestVersion } from "./analyzer/util.server.ts"
+import { log, setLogLevel } from "./analyzer/log.server.ts"
 
 async function main() {
   const args = parseArgs()

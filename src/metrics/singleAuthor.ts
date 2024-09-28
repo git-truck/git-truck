@@ -1,7 +1,7 @@
 import type { HydratedGitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { AuthorshipType, MetricCache } from "./metrics"
+import type { AuthorshipType, MetricCache } from "./metrics.ts"
 
 export function setDominanceColor(
   blob: HydratedGitBlobObject,

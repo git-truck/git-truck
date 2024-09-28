@@ -1,5 +1,5 @@
 import type { Ignore } from "ignore"
-import type { HydratedGitTreeObject, AnalyzerData } from "./model"
+import type { HydratedGitTreeObject, AnalyzerData } from "./model.ts"
 
 export function initMetrics(data: AnalyzerData) {
   data.commit.oldestLatestChangeEpoch = Number.MAX_VALUE

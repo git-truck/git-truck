@@ -1,9 +1,9 @@
-import { log } from "./log.server"
-import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
+import { log } from "./log.server.ts"
+import { getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server.ts"
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
-import type { AnalyzerData, GitRefs, Repository } from "./model"
-import { AnalyzerDataInterfaceVersion } from "./model"
+import type { AnalyzerData, GitRefs, Repository } from "./model.ts"
+import { AnalyzerDataInterfaceVersion } from "./model.ts"
 import { branchCompare, semverCompare } from "~/util"
 import os from "node:os"
 

@@ -1,10 +1,10 @@
 import yargsParser from "yargs-parser"
 import { promises as fs } from "node:fs"
 import { resolve } from "node:path"
-import type { TruckConfig, TruckUserConfig } from "./model"
-import { GitCaller } from "./git-caller.server"
-import { getBaseDirFromPath } from "./util.server"
-import { log } from "./log.server"
+import type { TruckConfig, TruckUserConfig } from "./model.ts"
+import { GitCaller } from "./git-caller.server.ts"
+import { getBaseDirFromPath } from "./util.server.ts"
+import { log } from "./log.server.ts"
 
 export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   return yargsParser(rawArgs, {
