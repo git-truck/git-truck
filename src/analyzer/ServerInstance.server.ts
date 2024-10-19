@@ -50,7 +50,7 @@ export default class ServerInstance {
   }
 
   private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
-    const CHUNK_SIZE = 100_000
+    const CHUNK_SIZE = 70_000
 
     for (let start = sectionStart; start <= sectionEnd; start += CHUNK_SIZE) {
       const end = Math.min(start + CHUNK_SIZE, sectionEnd)
