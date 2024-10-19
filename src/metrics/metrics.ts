@@ -1,66 +1,56 @@
-import type { AnalyzerData, HydratedGitBlobObject, HydratedGitTreeObject } from "~/analyzer/model"
+import type { GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
-import { setDominanceColor } from "./singleAuthor"
 import { CommitAmountTranslater } from "./mostCommits"
 import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
 import { setDominantAuthorColor } from "./topContributer"
-import { TruckFactorTranslater } from "./truckFactor"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import uniqolor from "uniqolor"
+import type { RepoData } from "~/routes/$repo.$"
+import { noEntryColor } from "~/const"
+import { createHash } from "node:crypto"
+import { ContribAmountTranslater } from "./mostContribs"
 
-export type MetricsData = [Record<AuthorshipType, Map<MetricType, MetricCache>>, Map<string, string>]
-
-export const Authorship = {
-  HISTORICAL: "Complete history"
-  // BLAME: "Newest version",
-}
-
-export type AuthorshipType = keyof typeof Authorship
+export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
 export const Metric = {
   FILE_TYPE: "File type",
-  TRUCK_FACTOR: "Truck factor",
-  TOP_CONTRIBUTOR: "Top contributor",
   MOST_COMMITS: "Commits",
-  SINGLE_AUTHOR: "Single author",
+  MOST_CONTRIBUTIONS: "Line changes",
+  TOP_CONTRIBUTOR: "Top contributor",
   LAST_CHANGED: "Last changed"
 }
 
 export type MetricType = keyof typeof Metric
 
-export function createMetricData(data: AnalyzerData, colorSeed: string | undefined): MetricsData {
-  const authorColors = generateAuthorColors(data.authors, colorSeed)
+export function createMetricData(
+  data: RepoData,
+  colorSeed: string | null,
+  predefinedAuthorColors: Record<string, `#${string}`>,
+  dominantAuthorCutoff: number
+): MetricsData {
+  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors)
 
   return [
-    {
-      HISTORICAL: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "HISTORICAL", authorColors))
-      // BLAME: setupMetricsCache(data.commit.tree, getMetricCalcs(data, "BLAME", authorColors)),
-    },
-    authorColors
+    setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
+    new Map(Object.entries(authorColors))
   ]
 }
 
-export function getMetricDescription(metric: MetricType, authorshipType: AuthorshipType): string {
+export function getMetricDescription(metric: MetricType): string {
   switch (metric) {
     case "FILE_TYPE":
       return "Where are different types of files located?"
     case "MOST_COMMITS":
-      return "Which files have had the most commits, throughout the repository's history?"
+      return "Which files have had the most commits, in the selected time range?"
     case "LAST_CHANGED":
       return "How long ago did the files change?"
-    case "SINGLE_AUTHOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which files are authored by only one person, throughout the repository's history?"
-        : "Which files are authored by only one person, in the newest version?"
     case "TOP_CONTRIBUTOR":
-      return authorshipType === "HISTORICAL"
-        ? "Which person has made the most line-changes to a file, throughout the repository's history?"
-        : "Which person has made the most line-changes to a file, in the newest version?"
-    case "TRUCK_FACTOR":
-      return "How many authors have contributed to a given file?"
+      return "Shows the top author for each file. Adjust the minimum percentage of line changes, that the top author should have, for each file to be colored."
+    case "MOST_CONTRIBUTIONS":
+      return "How many line changes (additions and deletions) have been made to the file?"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -70,12 +60,11 @@ export function getMetricLegendType(metric: MetricType): LegendType {
   switch (metric) {
     case "FILE_TYPE":
     case "TOP_CONTRIBUTOR":
-    case "SINGLE_AUTHOR":
       return "POINT"
     case "MOST_COMMITS":
+    case "MOST_CONTRIBUTIONS":
       return "GRADIENT"
     case "LAST_CHANGED":
-    case "TRUCK_FACTOR":
       return "SEGMENTS"
     default:
       throw new Error("Uknown metric type: " + metric)
@@ -87,49 +76,47 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(authors: string[], colorSeed: string | undefined): Map<string, `#${string}`> {
-  const map = new Map<string, `#${string}`>()
+export function generateAuthorColors(
+  authors: string[],
+  colorSeed: string | null,
+  predefinedAuthorColors: Record<string, `#${string}`>
+): Record<string, `#${string}`> {
+  const result: Record<string, `#${string}`> = {}
+  const seed = colorSeed ?? ""
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
-    const seed = colorSeed ?? ""
-    const color = uniqolor(author + seed).color as `#${string}`
-    map.set(author, color)
-  }
-  return map
-}
-
-function FindMinMaxCommit(tree: HydratedGitTreeObject): [min: number, max: number] {
-  let min = Number.MAX_VALUE
-  let max = Number.MIN_VALUE
-  tree.children.forEach((element) => {
-    if (element.type == "blob") {
-      if (element.noCommits > max) max = element.noCommits
-      if (element.noCommits < min) min = element.noCommits
-    } else if (element.type == "tree") {
-      const [submin, submax] = FindMinMaxCommit(element)
-      if (submax > max) max = submax
-      if (submin < min) min = submin
+    const existing = predefinedAuthorColors[author]
+    if (existing) {
+      result[author] = existing
+      continue
     }
-  })
-  return [min, max]
+    const hash = createHash("sha1")
+    hash.update(author + seed)
+    const hashed = hash.digest("hex")
+    const color = uniqolor(hashed).color as `#${string}`
+    result[author] = color
+  }
+  return result
 }
 
 export function getMetricCalcs(
-  data: AnalyzerData,
-  authorshipType: AuthorshipType,
-  authorColors: Map<string, `#${string}`>
-): [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][] {
-  const commit = data.commit
-
-  const [mincom, maxcom] = FindMinMaxCommit(commit.tree)
-
-  const commitmapper = new CommitAmountTranslater(mincom, maxcom)
-  const truckmapper = new TruckFactorTranslater(data.authorsUnion.length)
+  data: RepoData,
+  authorColors: Record<string, `#${string}`>,
+  dominantAuthorCutoff: number
+): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
+  const maxCommitCount = data.databaseInfo.maxCommitCount
+  const minCommitCount = data.databaseInfo.minCommitCount
+  const newestEpoch = data.databaseInfo.newestChangeDate
+  const groupings = lastChangedGroupings(newestEpoch)
+  const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
+  const maxContribCount = data.databaseInfo.maxMinContribCounts.max
+  const minContribCount = data.databaseInfo.maxMinContribCounts.min
+  const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
   return [
     [
       "FILE_TYPE",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>()
         }
@@ -137,75 +124,73 @@ export function getMetricCalcs(
       }
     ],
     [
-      "SINGLE_AUTHOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominanceColor(blob, cache, authorshipType, authorColors)
-      }
-    ],
-    [
       "MOST_COMMITS",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            `${mincom}`,
-            `${maxcom}`,
+            `${minCommitCount}`,
+            `${maxCommitCount}`,
             undefined,
             undefined,
-            commitmapper.getColor(mincom),
-            commitmapper.getColor(maxcom)
+            commitmapper.getColor(minCommitCount),
+            commitmapper.getColor(maxCommitCount)
           ]
         }
-        commitmapper.setColor(blob, cache)
+        commitmapper.setColor(blob, cache, data.databaseInfo.commitCounts)
       }
     ],
     [
       "LAST_CHANGED",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        const newestEpoch = data.commit.newestLatestChangeEpoch
-        const groupings = lastChangedGroupings(newestEpoch)
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            getLastChangedIndex(groupings, newestEpoch, data.commit.oldestLatestChangeEpoch) + 1,
+            getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
             (n) => groupings[n].text,
             (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1
+            (blob) => getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
           ]
         }
-        cache.colormap.set(
-          blob.path,
-          groupings[getLastChangedIndex(groupings, newestEpoch, blob.lastChangeEpoch ?? 0) ?? -1].color
-        )
+        const existing = data.databaseInfo.lastChanged[blob.path]
+        const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
+        cache.colormap.set(blob.path, color)
       }
     ],
     [
       "TOP_CONTRIBUTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
-        if (!blob.dominantAuthor) blob.dominantAuthor = {} as Record<AuthorshipType, [string, number]>
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>()
-        setDominantAuthorColor(authorColors, blob, cache, authorshipType)
+        setDominantAuthorColor(
+          authorColors,
+          blob,
+          cache,
+          data.databaseInfo.dominantAuthors,
+          dominantAuthorCutoff,
+          data.databaseInfo.contribSumPerFile
+        )
       }
     ],
     [
-      "TRUCK_FACTOR",
-      (blob: HydratedGitBlobObject, cache: MetricCache) => {
+      "MOST_CONTRIBUTIONS",
+      (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
           cache.legend = [
-            Math.floor(Math.log2(data.authorsUnion.length)) + 1,
-            (n) => `${Math.pow(2, n)}`,
-            (n) => `hsl(0,75%,${50 + n * (40 / (Math.floor(Math.log2(data.authorsUnion.length)) + 1))}%)`,
-            (blob) => Math.floor(Math.log2(Object.entries(blob.unionedAuthors?.HISTORICAL ?? []).length))
+            `${minContribCount}`,
+            `${maxContribCount}`,
+            undefined,
+            undefined,
+            contribmapper.getColor(minContribCount),
+            contribmapper.getColor(maxContribCount)
           ]
         }
-        truckmapper.setColor(blob, cache)
+        contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
       }
     ]
   ]
 }
 
 export function setupMetricsCache(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][]
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
@@ -213,8 +198,8 @@ export function setupMetricsCache(
 }
 
 function setupMetricsCacheRec(
-  tree: HydratedGitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: HydratedGitBlobObject, cache: MetricCache) => void][],
+  tree: GitTreeObject,
+  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][],
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {

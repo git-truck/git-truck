@@ -1,40 +1,36 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { AuthorshipType, MetricCache } from "./metrics"
+import type { MetricCache } from "./metrics"
+import { noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(
-  authorColors: Map<string, `#${string}`>,
-  blob: HydratedGitBlobObject,
+  authorColors: Record<string, `#${string}`>,
+  blob: GitBlobObject,
   cache: MetricCache,
-  authorshipType: AuthorshipType
+  dominantAuthorPerFile: Record<string, { author: string; contribcount: number }>,
+  dominantAuthorCutoff: number,
+  contribSumPerFile: Record<string, number>
 ) {
-  const authorUnion = blob.unionedAuthors?.[authorshipType]
-  if (!authorUnion) {
-    console.warn("No author union found for file", blob.path)
+  const dominantAuthor = dominantAuthorPerFile[blob.path]
+  const contribSum = contribSumPerFile[blob.path]
+  if (!dominantAuthor || !contribSum) {
     return
   }
-  const sorted = Object.entries(authorUnion).sort(([k1, v1], [k2, v2]) => {
-    if (v1 === 0 || v2 === 0 || !k1 || !k2) return -1
-    return v2 - v1
-  })
-  if (!sorted[0]) {
-    console.warn("No sorted authors for file", blob.path)
-    return
-  }
-
-  const [dom] = sorted[0]
   const legend = cache.legend as PointLegendData
-  const color = authorColors.get(dom) ?? "#808080"
+
+  const authorPercentage = (dominantAuthor.contribcount / contribSum) * 100
+  if (authorPercentage < dominantAuthorCutoff) {
+    cache.colormap.set(blob.path, noEntryColor)
+    return
+  }
+  const color = authorColors[dominantAuthor.author] ?? noEntryColor
 
   cache.colormap.set(blob.path, color)
-  if (blob.dominantAuthor) {
-    blob.dominantAuthor[authorshipType] = sorted[0]
-  }
 
-  if (legend.has(dom)) {
-    legend.get(dom)?.add(1)
+  if (legend.has(dominantAuthor.author)) {
+    legend.get(dominantAuthor.author)?.add(1)
     return
   }
-  legend.set(dom, new PointInfo(color, 1))
+  legend.set(dominantAuthor.author, new PointInfo(color, 1))
 }

@@ -1,4 +1,3 @@
-import type { AuthorshipType } from "~/metrics/metrics"
 import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
 
 export type Repository = {
@@ -66,19 +65,24 @@ export interface TruckUserConfig {
   colorSeed?: string
 }
 
-export interface TruckConfig {
+export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
+export type RawGitObject = {
+  hash: string
+  type: RawGitObjectType
+  path: string
+  value?: string
+  size?: number
+}
+
+export interface ArgsOptions {
   log?: string
   out?: string
   branch?: string
   path: string
-  unionedAuthors: string[][]
-  hiddenFiles: string[]
-  invalidateCache: boolean
-  colorSeed?: string
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 15
+export const AnalyzerDataInterfaceVersion = 16
 
 export interface AnalyzerData {
   cached: boolean
@@ -86,7 +90,7 @@ export interface AnalyzerData {
   hiddenFiles: string[]
   repo: string
   branch: string
-  commit: HydratedGitCommitObject
+  commit: GitCommitObject
   authors: string[]
   authorsUnion: string[]
   currentVersion: string
@@ -103,20 +107,6 @@ export interface GitBlobObject extends AbstractGitObject {
   name: string
   path: string
   sizeInBytes: number
-  blameAuthors: Record<string, number>
-}
-
-export type HydratedGitObject = HydratedGitBlobObject | HydratedGitTreeObject
-
-export interface HydratedGitBlobObject extends GitBlobObject {
-  authors: Record<string, number>
-  noCommits: number
-  lastChangeEpoch?: number
-  isBinary?: boolean
-  unionedAuthors?: Record<AuthorshipType, Record<string, number>>
-  dominantAuthor?: Record<AuthorshipType, [string, number]>
-  isSearchResult?: boolean
-  commits: { hash: string; time: number }[]
 }
 
 export interface GitTreeObject extends AbstractGitObject {
@@ -124,11 +114,6 @@ export interface GitTreeObject extends AbstractGitObject {
   name: string
   path: string
   children: (GitTreeObject | GitBlobObject)[]
-}
-
-export interface HydratedGitTreeObject extends Omit<GitTreeObject, "children"> {
-  children: (HydratedGitTreeObject | HydratedGitBlobObject)[]
-  isSearchResult?: boolean
 }
 
 export interface GitCommitObject extends AbstractGitObject {
@@ -142,12 +127,6 @@ export interface GitCommitObject extends AbstractGitObject {
   description: string
   coauthors: Person[]
   fileCount?: number
-}
-
-export interface HydratedGitCommitObject extends Omit<GitCommitObject, "tree"> {
-  tree: HydratedGitTreeObject
-  newestLatestChangeEpoch: number
-  oldestLatestChangeEpoch: number
 }
 
 export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {
@@ -164,18 +143,65 @@ export type PersonWithTime = Person & {
   timezone: string
 }
 
+export type ModeType = "create" | "modify" | "delete"
+
 export interface FileChange {
   path: string
   isBinary: boolean
-  contribs: number
+  insertions: number
+  deletions: number
+  mode: ModeType
 }
 
-export interface GitLogEntry {
+export interface DBFileChange {
+  commithash: string
+  insertions: number
+  deletions: number
+  filepath: string
+}
+
+export interface CommitDTO {
   author: string
+  committertime: number
+  authortime: number
+  hash: string
+}
+
+export interface CompletedResult {
+  repo: string
+  branch: string
   time: number
+}
+
+export interface FullCommitDTO extends CommitDTO {
   body: string
   message: string
-  hash: string
+  fileChanges: FileChange[]
+}
+
+export interface GitLogEntry extends CommitDTO {
   coauthors: Person[]
   fileChanges: FileChange[]
+}
+
+export interface RenameEntry {
+  fromname: string | null
+  toname: string | null
+  timestamp: number
+  timestampauthor: number
+  timestampEnd?: number
+}
+
+export interface RenameInterval {
+  fromname: string | null
+  toname: string | null
+  timestamp: number
+  timestampend: number
+}
+
+export interface FileModification {
+  path: string
+  timestamp: number
+  timestampauthor: number
+  type: ModeType
 }

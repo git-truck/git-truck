@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from "react"
 import { createContext, useContext } from "react"
-import type { HydratedGitObject } from "~/analyzer/model"
+import type { GitObject } from "~/analyzer/model"
 
-export type SearchResults = Record<string, HydratedGitObject>
+export type SearchResults = Record<string, GitObject>
 
 type Search = {
   searchResults: SearchResults

@@ -1,10 +1,7 @@
 import yargsParser from "yargs-parser"
-import { promises as fs } from "node:fs"
-import { resolve } from "node:path"
-import type { TruckConfig, TruckUserConfig } from "./model"
+import type { ArgsOptions } from "./model"
 import { GitCaller } from "./git-caller.server"
 import { getBaseDirFromPath } from "./util.server"
-import { log } from "./log.server"
 
 export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   return yargsParser(rawArgs, {
@@ -14,61 +11,21 @@ export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   })
 }
 
-export function getArgsWithDefaults(): TruckConfig {
+export function getArgsWithDefaults(): ArgsOptions {
   const args = parseArgs()
   const tempArgs = {
     path: ".",
-    hiddenFiles: [] as string[],
-    unionedAuthors: [] as string[][],
-    invalidateCache: false,
     ...args
   }
 
   return tempArgs
 }
 
-export async function getTruckConfigWithArgs(repo: string): Promise<[TruckConfig, TruckUserConfig]> {
+export async function getArgs(): Promise<ArgsOptions> {
   const args = getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
   args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path
 
-  let config: TruckUserConfig = {}
-  try {
-    const configContents = JSON.parse(await fs.readFile(resolve(args.path, repo, "truckconfig.json"), "utf-8"))
-    config = configContents
-  } catch (e) {
-    log.warn(`No truckconfig.json found in repo ${repo}`)
-  }
-
-  return [
-    {
-      ...args,
-      ...config
-    },
-    config
-  ]
-}
-
-export async function getTruckConfigWithArgsFromPath(repoPath: string): Promise<[TruckConfig, TruckUserConfig]> {
-  const args = getArgsWithDefaults()
-
-  const pathIsRepo = await GitCaller.isGitRepo(args.path)
-  args.path = pathIsRepo ? getBaseDirFromPath(repoPath) : repoPath
-
-  let config: TruckUserConfig = {}
-  try {
-    const configContents = JSON.parse(await fs.readFile(resolve(repoPath, "truckconfig.json"), "utf-8"))
-    config = configContents
-  } catch (e) {
-    log.warn(`No truckconfig.json found in repo ${repoPath}`)
-  }
-
-  return [
-    {
-      ...args,
-      ...config
-    },
-    config
-  ]
+  return args
 }

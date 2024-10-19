@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { MetricLegendProps } from "./Legend"
 import { LegendDot } from "../util"
 import { ChevronButton } from "../ChevronButton"
+import { useOptions } from "~/contexts/OptionsContext"
 
 const legendCutoff = 3
 
@@ -49,6 +50,9 @@ interface PointLegendFragProps {
 }
 
 function PointLegendFragment(props: PointLegendFragProps) {
+  const { metricType } = useOptions()
+  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
+
   if (!props.show) return null
   return (
     <>
@@ -57,7 +61,11 @@ function PointLegendFragment(props: PointLegendFragProps) {
         return (
           <div key={label}>
             <div className="relative flex items-center gap-2 text-sm leading-none">
-              <LegendDot dotColor={info.color} />
+              {isAuthorRelatedLegend ? (
+                <LegendDot dotColor={info.color} authorColorToChange={label} />
+              ) : (
+                <LegendDot dotColor={info.color} />
+              )}
               <span className="font-bold">{label}</span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 export default {
-  serverDependenciesToBundle: "all",
+  serverDependenciesToBundle: [/^(?:(?!duckdb|mock-aws-s3|nock).)*$/],
   appDirectory: "src",
   serverBuildPath: "build/index.js",
   serverModuleFormat: "cjs",
@@ -8,7 +8,8 @@ export default {
   serverMinify: process.env.NODE_ENV === "production",
   browserNodeBuiltinsPolyfill: {
     modules: {
-      path: true
+      path: true,
+      crypto: true
     }
   }
 }

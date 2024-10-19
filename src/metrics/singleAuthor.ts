@@ -1,33 +1,36 @@
-import type { HydratedGitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/analyzer/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { AuthorshipType, MetricCache } from "./metrics"
+import type { MetricCache } from "./metrics"
+import { noEntryColor } from "~/const"
 
 export function setDominanceColor(
-  blob: HydratedGitBlobObject,
+  blob: GitBlobObject,
   cache: MetricCache,
-  authorshipType: AuthorshipType,
-  authorColors: Map<string, `#${string}`>
+  authorColors: Map<string, `#${string}`>,
+  dominantAuthorPerFile: Map<string, { author: string; contribcount: number }>,
+  authorCountsPerFile: Map<string, number>
 ) {
   const multipleAuthorsColor = "#e0e0e0"
-  const noAuthorsColor = "#404040"
-
-  const authorUnion = blob.unionedAuthors?.[authorshipType] ?? {}
-
+  const path = blob.path
+  const dominantAuthor = dominantAuthorPerFile.get(path)
   const legend = cache.legend as PointLegendData
-  const authors = Object.keys(authorUnion)
-  switch (authors.length) {
-    case 0: {
-      legend.set("No authors", new PointInfo(noAuthorsColor, 0))
-      cache.colormap.set(blob.path, noAuthorsColor)
+
+  const authorCount = authorCountsPerFile.get(path)
+
+  switch (authorCount) {
+    case undefined:
+    case 0:
+      legend.set("No authors", new PointInfo(noEntryColor, 0))
+      cache.colormap.set(blob.path, noEntryColor)
       return
-    }
-    case 1: {
-      const color = authorColors.get(authors[0]) ?? noAuthorsColor
-      legend.set(authors[0], new PointInfo(color, 2))
-      cache.colormap.set(blob.path, color)
+    case 1:
+      {
+        const color = authorColors.get(dominantAuthor?.author ?? "") ?? noEntryColor
+        legend.set(dominantAuthor?.author ?? "", new PointInfo(color, 2))
+        cache.colormap.set(blob.path, color)
+      }
       return
-    }
     default: {
       legend.set("Multiple authors", new PointInfo(multipleAuthorsColor, 1))
       cache.colormap.set(blob.path, multipleAuthorsColor)

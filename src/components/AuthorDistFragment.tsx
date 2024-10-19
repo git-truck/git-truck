@@ -3,7 +3,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { LegendDot } from "./util"
 
 interface AuthorDistFragProps {
-  items: [string, number][]
+  items: { author: string; contribs: number }[]
   show: boolean
   contribSum: number
 }
@@ -16,7 +16,8 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
   return (
     <>
       {props.items.map((legendItem) => {
-        const [author, contrib] = legendItem
+        const contrib = legendItem.contribs
+        const author = legendItem.author
         const roundedContrib = Math.round((contrib / props.contribSum) * 100)
         const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
         return (
@@ -25,7 +26,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
               className="flex items-center gap-2 overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold"
               title={author}
             >
-              <LegendDot className="ml-1" dotColor={authorColors.get(author) ?? "grey"} />
+              <LegendDot authorColorToChange={author} className="ml-1" dotColor={authorColors.get(author) ?? "grey"} />
               <span className="overflow-hidden overflow-ellipsis whitespace-pre font-bold opacity-80">{author}</span>
             </div>
             <p className="break-all text-right text-sm">{contribPercentage}%</p>

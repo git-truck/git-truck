@@ -1,17 +1,13 @@
 import { resolve } from "path"
 import type { Dispatch, SetStateAction } from "react"
-import { memo, useEffect, useMemo, useRef, useState } from "react"
+import { memo, Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useBoolean, useMouse } from "react-use"
-import type { ActionFunction, LoaderFunctionArgs } from "@remix-run/node"
-import { redirect } from "@remix-run/node"
-import { typedjson, useTypedLoaderData } from "remix-typedjson"
-import { Link, isRouteErrorResponse, useRouteError } from "@remix-run/react"
-import { analyze, openFile, updateTruckConfig } from "~/analyzer/analyze.server"
-import { getTruckConfigWithArgs } from "~/analyzer/args.server"
+import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "@remix-run/node"
+import { Link, isRouteErrorResponse, useRouteError, useLoaderData, Await, Params } from "@remix-run/react"
+import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { AnalyzerData, HydratedGitObject, Repository, TruckUserConfig } from "~/analyzer/model"
-import { getGitTruckInfo } from "~/analyzer/util.server"
-import { addAuthorUnion, makeDupeMap } from "~/authorUnionUtil.server"
+import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
+import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
 import { DetailsCard } from "~/components/DetailsCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -21,8 +17,6 @@ import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
-import { useData } from "~/contexts/DataContext"
-import { semverCompare } from "~/util"
 import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { FeedbackCard } from "~/components/FeedbackCard"
@@ -33,60 +27,67 @@ import clsx from "clsx"
 import { Tooltip } from "~/components/Tooltip"
 import { createPortal } from "react-dom"
 import randomstring from "randomstring"
+import InstanceManager from "~/analyzer/InstanceManager.server"
+import TimeSlider from "~/components/TimeSlider"
 import { Online } from "react-detect-offline"
 import { cn } from "~/styling"
-
-let invalidateCache = false
+import BarChart from "~/components/BarChart"
+import { shouldUpdate } from "~/analyzer/RefreshPolicy"
+import { LoadingIndicator } from "~/components/LoadingIndicator"
 
 export interface RepoData {
-  analyzerData: AnalyzerData
   repo: Repository
-  truckConfig: TruckUserConfig
   gitTruckInfo: {
     version: string
     latestVersion: string | null
   }
+  databaseInfo: DatabaseInfo
+}
+
+export interface DatabaseInfo {
+  dominantAuthors: Record<string, { author: string; contribcount: number }>
+  commitCounts: Record<string, number>
+  lastChanged: Record<string, number>
+  authorCounts: Record<string, number>
+  maxCommitCount: number
+  minCommitCount: number
+  newestChangeDate: number
+  oldestChangeDate: number
+  authors: string[]
+  authorUnions: string[][]
+  fileTree: GitTreeObject
+  hiddenFiles: string[]
+  lastRunInfo: {
+    time: number
+    hash: string
+  }
+  fileCount: number
+  repo: string
+  branch: string
+  timerange: [number, number]
+  colorSeed: string | null
+  authorColors: Record<string, `#${string}`>
+  commitCountPerDay: { date: string; count: number }[]
+  selectedRange: [number, number]
+  analyzedRepos: CompletedResult[]
+  contribSumPerFile: Record<string, number>
+  maxMinContribCounts: { max: number; min: number }
+  commitCount: number
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
-
-  const [args, truckConfig] = await getTruckConfigWithArgs(params["repo"] as string)
-  const options: TruckUserConfig = {
-    invalidateCache: invalidateCache || args.invalidateCache
-  }
-  options.path = resolve(args.path, params["repo"])
-  options.branch = params["*"]
-
-  if (params["*"]) {
-    options.branch = params["*"]
-  }
-
-  const analyzerData = await analyze({ ...args, ...options }).then((data) =>
-    addAuthorUnion(data, makeDupeMap(truckConfig.unionedAuthors ?? []))
-  )
-
-  invalidateCache = false
-  const repo = await GitCaller.getRepoMetadata(options.path, Boolean(options.invalidateCache))
-
-  if (!repo) {
-    throw Error("Error loading repo")
-  }
-
-  return typedjson<RepoData>({
-    analyzerData,
-    repo,
-    gitTruckInfo: await getGitTruckInfo(),
-    truckConfig
-  })
+  const dataPromise = analyze(params)
+  return defer({ dataPromise })
 }
 
 export const action: ActionFunction = async ({ request, params }) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
+
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -94,71 +95,79 @@ export const action: ActionFunction = async ({ request, params }) => {
   const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
+  const timeseries = formData.get("timeseries")
+  const authorname = formData.get("authorname")
+  const authorcolor = formData.get("authorcolor")
 
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"])
+  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+  instance.prevInvokeReason = "unknown"
   if (refresh) {
-    invalidateCache = true
+    instance.prevInvokeReason = "refresh"
     return null
   }
 
-  const [args] = await getTruckConfigWithArgs(params["repo"])
-  const path = resolve(args.path, params["repo"])
-
   if (ignore && typeof ignore === "string") {
-    await updateTruckConfig(path, (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.add(ignore)
+    instance.prevInvokeReason = "ignore"
+    const hidden = await instance.db.getHiddenFiles()
+    hidden.push(ignore)
+    await instance.db.replaceHiddenFiles(hidden)
 
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
     return null
   }
 
   if (unignore && typeof unignore === "string") {
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      const hiddenFilesSet = new Set((prevConfig?.hiddenFiles ?? []).map((x) => x.trim()))
-      hiddenFilesSet.delete(unignore.trim())
-
-      return {
-        ...prevConfig,
-        hiddenFiles: Array.from(hiddenFilesSet.values())
-      }
-    })
+    instance.prevInvokeReason = "unignore"
+    const hidden = await instance.db.getHiddenFiles()
+    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
     return null
   }
 
   if (typeof fileToOpen === "string") {
-    openFile(fileToOpen)
+    instance.prevInvokeReason = "open"
+    openFile(instance.path, fileToOpen)
     return null
   }
 
   if (typeof unionedAuthors === "string") {
-    try {
-      const json = JSON.parse(unionedAuthors)
-      await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-        return {
-          ...prevConfig,
-          unionedAuthors: json
-        }
-      })
-    } catch (e) {
-      console.error(e)
-    }
+    instance.prevInvokeReason = "unionedAuthors"
+    const json = JSON.parse(unionedAuthors) as string[][]
+    await instance.db.replaceAuthorUnions(json)
     return null
   }
 
   if (typeof rerollColors === "string") {
+    instance.prevInvokeReason = "rerollColors"
     const newSeed = randomstring.generate(6)
-    await updateTruckConfig(resolve(args.path, params["repo"]), (prevConfig) => {
-      return {
-        ...prevConfig,
-        colorSeed: newSeed
-      }
-    })
+    await instance.db.updateColorSeed(newSeed)
     return null
   }
+
+  if (typeof timeseries === "string") {
+    const split = timeseries.split("-")
+    const start = Number(split[0])
+    const end = Number(split[1])
+
+    if (end !== instance.prevResult?.databaseInfo.selectedRange[1]) {
+      instance.prevInvokeReason = "timeseriesend"
+    } else if (start !== instance.prevResult?.databaseInfo.selectedRange[0]) {
+      instance.prevInvokeReason = "timeseriesstart"
+    } else {
+      instance.prevInvokeReason = "none"
+      return null
+    }
+
+    await instance.updateTimeInterval(start, end)
+    return null
+  }
+
+  if (typeof authorname === "string") {
+    instance.prevInvokeReason = "authorcolor"
+    await InstanceManager.getOrCreateMetadataDB().addAuthorColor(authorname, authorcolor as string)
+    return null
+  }
+
   return null
 }
 
@@ -213,28 +222,156 @@ export const ErrorBoundary = () => {
   )
 }
 
-const UpdateNotifier = memo(function UpdateNotifier() {
-  const { gitTruckInfo } = useData()
-  return (
-    <div className="card">
-      <p>Update available: {gitTruckInfo.latestVersion}</p>
-      <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
-      <p className="card-p">
-        To update, close application and run: <Code inline>npx git-truck@latest</Code>
-      </p>
-    </div>
-  )
-})
+async function analyze(params: Params) {
+  const args = await getArgs()
+  const path = resolve(args.path, params["repo"] ?? "")
+  const branch = params["*"]
+  const repoName = params["repo"]
+  const isRepo = await GitCaller.isGitRepo(path)
+  if (!isRepo) throw new Error(`No repo found at ${path}`)
+  if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
+  const isValidRevision = await GitCaller.isValidRevision(branch, path)
+  if (!isValidRevision)
+    throw new Error(
+      `Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`
+    )
+
+  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  // to avoid double identical fetch at first load, which it does for some reason
+  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+    return instance.prevResult
+  }
+  await instance.loadRepoData()
+
+  const timerange = await instance.db.getOverallTimeRange()
+  const selectedRange = instance.db.selectedRange
+
+  const repo = await GitCaller.getRepoMetadata(path)
+
+  if (!repo) {
+    throw Error("Error loading repo")
+  }
+
+  const reason = instance.prevInvokeReason
+  instance.prevInvokeReason = "unknown"
+  const prevData = instance.prevResult
+  const prevRes = prevData?.databaseInfo
+
+  console.time("fileTree")
+  const filetree =
+    prevRes && !shouldUpdate(reason, "filetree")
+      ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
+      : await instance.analyzeTree()
+  console.timeEnd("fileTree")
+
+  if (!prevRes || shouldUpdate(reason, "rename")) {
+    console.time("rename")
+    await instance.updateRenames()
+    console.timeEnd("rename")
+  }
+
+  console.time("updateCache")
+  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
+  console.timeEnd("updateCache")
+  console.time("dbQueries")
+  const dominantAuthors =
+    prevRes && !shouldUpdate(reason, "dominantAuthor")
+      ? prevRes.dominantAuthors
+      : await instance.db.getDominantAuthorPerFile()
+  const commitCounts =
+    prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const lastChanged =
+    prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
+  const authorCounts =
+    prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+  const { maxCommitCount, minCommitCount } =
+    prevRes && !shouldUpdate(reason, "maxMinCommitCount")
+      ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
+      : await instance.db.getMaxAndMinCommitCount()
+  const { newestChangeDate, oldestChangeDate } =
+    prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
+      ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
+      : await instance.db.getNewestAndOldestChangeDates()
+  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
+  const authorUnions =
+    prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions : await instance.db.getAuthorUnions()
+  const { rootTree, fileCount } = filetree
+  const hiddenFiles =
+    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const lastRunInfo =
+    prevRes && !shouldUpdate(reason, "lastRunInfo")
+      ? prevRes.lastRunInfo
+      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
+  const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
+  const authorColors =
+    prevRes && !shouldUpdate(reason, "authorColors")
+      ? prevRes.authorColors
+      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
+  const commitCountPerDay =
+    prevRes && !shouldUpdate(reason, "commitCountPerDay")
+      ? prevRes.commitCountPerDay
+      : await instance.db.getCommitCountPerTime(timerange)
+  const contribCounts =
+    prevRes && !shouldUpdate(reason, "contribSumPerFile")
+      ? prevRes.contribSumPerFile
+      : await instance.db.getContribSumPerFile()
+  const maxMinContribCounts =
+    prevRes && !shouldUpdate(reason, "maxMinContribCounts")
+      ? prevRes.maxMinContribCounts
+      : await instance.db.getMaxMinContribCounts()
+  const commitCount =
+    prevRes && !shouldUpdate(reason, "commitCount") ? prevRes.commitCount : await instance.db.getCommitCount()
+  const analyzedRepos =
+    prevRes && !shouldUpdate(reason, "analyzedRepos")
+      ? prevRes.analyzedRepos
+      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  console.timeEnd("dbQueries")
+
+  const databaseInfo: DatabaseInfo = {
+    dominantAuthors,
+    commitCounts,
+    lastChanged,
+    authorCounts,
+    maxCommitCount,
+    minCommitCount,
+    newestChangeDate,
+    oldestChangeDate,
+    authors,
+    authorUnions,
+    fileTree: rootTree,
+    fileCount,
+    hiddenFiles,
+    lastRunInfo: lastRunInfo ?? ({} as { time: number; hash: string }),
+    repo: instance.repo,
+    branch,
+    timerange,
+    colorSeed,
+    selectedRange,
+    authorColors,
+    commitCountPerDay,
+    analyzedRepos,
+    contribSumPerFile: contribCounts,
+    maxMinContribCounts,
+    commitCount
+  }
+
+  const fullData = {
+    repo,
+    gitTruckInfo: await getGitTruckInfo(),
+    databaseInfo: databaseInfo
+  } as RepoData
+
+  return fullData
+}
 
 export default function Repo() {
   const client = useClient()
-  const data = useTypedLoaderData<RepoData>()
-  const { analyzerData, gitTruckInfo } = data
+  const { dataPromise } = useLoaderData<typeof loader>()
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
-  const [hoveredObject, setHoveredObject] = useState<HydratedGitObject | null>(null)
+  const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
   const containerClass = useMemo(
@@ -263,97 +400,114 @@ export default function Repo() {
     [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
   )
 
-  if (!analyzerData) return null
-
   return (
-    <Providers data={data}>
-      <div className={cn("app-container", containerClass)}>
-        <aside
-          className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
-            "overflow-y-auto": !isFullscreen
-          })}
-        >
-          {!isLeftPanelCollapse ? (
-            <>
-              <GlobalInfo />
-              <Options />
-              {analyzerData.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-              <SearchCard />
-            </>
-          ) : null}
-          {!isFullscreen ? (
-            <div
-              className={cn("absolute z-10 justify-self-end", {
-                "left-0": isLeftPanelCollapse
-              })}
-            >
-              <button
-                type="button"
-                onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
-                className={clsx(
-                  "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
-                  {
-                    "left-arrow-space": !isLeftPanelCollapse
-                  }
-                )}
-              >
-                <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
-              </button>
-            </div>
-          ) : null}
-        </aside>
-
-        <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
-          <header className="grid grid-flow-col items-center justify-between gap-2">
-            <Breadcrumb />
-            <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
-          </header>
-          {client ? <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} /> : <div />}
-        </main>
-
-        <aside
-          className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
-            "overflow-y-auto": !isFullscreen
-          })}
-        >
-          {!isFullscreen ? (
-            <div className="absolute z-10">
-              <button
-                type="button"
-                onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
-              >
-                <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
-              </button>
-            </div>
-          ) : null}
-          {!isRightPanelCollapse && !isFullscreen ? (
-            <>
-              {gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1 ? (
-                <UpdateNotifier />
-              ) : null}
-              <DetailsCard
-                className={clsx({
-                  "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                    isFullscreen
+    <Suspense
+      fallback={
+        <div className="grid h-screen place-items-center">
+          <LoadingIndicator />
+        </div>
+      }
+    >
+      <Await resolve={dataPromise}>
+        {(dataPromise) => (
+          <Providers data={dataPromise as RepoData}>
+            <div className={cn("app-container", containerClass)}>
+              <aside
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
+                  "overflow-y-auto": !isFullscreen
                 })}
-                showUnionAuthorsModal={showUnionAuthorsModal}
-              />
-              <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
-              <Online>
-                <FeedbackCard />
-              </Online>
-            </>
-          ) : null}
-        </aside>
-      </div>
-      <UnionAuthorsModal
-        open={unionAuthorsModalOpen}
-        onClose={() => {
-          setUnionAuthorsModalOpen(false)
-        }}
-      />
-    </Providers>
+              >
+                {!isLeftPanelCollapse ? (
+                  <>
+                    <GlobalInfo />
+                    <Options />
+                    <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+                  </>
+                ) : null}
+                {!isFullscreen ? (
+                  <div
+                    className={cn("absolute z-10 justify-self-end", {
+                      "left-0": isLeftPanelCollapse
+                    })}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
+                      className={clsx(
+                        "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
+                        {
+                          "left-arrow-space": !isLeftPanelCollapse
+                        }
+                      )}
+                    >
+                      <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
+                    </button>
+                  </div>
+                ) : null}
+              </aside>
+
+              <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
+                <header className="grid grid-flow-col items-center justify-between gap-2">
+                  <Breadcrumb />
+                  <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
+                </header>
+                {client ? (
+                  <>
+                    <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+                    <div className="flex flex-col">
+                      <TimeSlider />
+                      <BarChart />
+                    </div>
+                  </>
+                ) : (
+                  <div />
+                )}
+              </main>
+
+              <aside
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
+                  "overflow-y-auto": !isFullscreen
+                })}
+              >
+                {!isFullscreen ? (
+                  <div className="absolute">
+                    <button
+                      type="button"
+                      onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
+                      className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
+                    >
+                      <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
+                    </button>
+                  </div>
+                ) : null}
+                {!isRightPanelCollapse && !isFullscreen ? (
+                  <>
+                    <DetailsCard
+                      showUnionAuthorsModal={showUnionAuthorsModal}
+                      className={clsx({
+                        "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
+                          isFullscreen
+                      })}
+                    />
+                    {dataPromise.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    <SearchCard />
+                    <Online>
+                      <FeedbackCard />
+                    </Online>
+                  </>
+                ) : null}
+              </aside>
+            </div>
+            <UnionAuthorsModal
+              open={unionAuthorsModalOpen}
+              onClose={() => {
+                setUnionAuthorsModalOpen(false)
+              }}
+            />
+          </Providers>
+        )}
+      </Await>
+    </Suspense>
   )
 }
 
@@ -379,8 +533,8 @@ function ChartWrapper({
   hoveredObject,
   setHoveredObject
 }: {
-  hoveredObject: HydratedGitObject | null
-  setHoveredObject: (obj: HydratedGitObject | null) => void
+  hoveredObject: GitObject | null
+  setHoveredObject: (obj: GitObject | null) => void
 }) {
   const chartWrapperRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLElement>(document.body)

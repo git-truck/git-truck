@@ -13,10 +13,12 @@ test("navigate to a repository", async ({ page }) => {
   // Select an option from a <select> dropdown.
   await page.getByTestId("revision-select-git-truck").selectOption("main")
   // Click the analyze button.
-  await page.getByTitle("View git-truck", {
-    exact: true
-  }).click()
+  await page
+    .getByTitle("View git-truck", {
+      exact: true
+    })
+    .click()
 
   await page.waitForURL("/git-truck/main")
-  await page.waitForSelector("text=See more repositories")
+  await page.waitForSelector("text=More repositories")
 })

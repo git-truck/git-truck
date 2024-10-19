@@ -1,14 +1,15 @@
-import { spawn } from "node:child_process"
-import { existsSync, promises as fs } from "node:fs"
+import { spawn, exec } from "node:child_process"
+import { promises as fs } from "node:fs"
 import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
-import { dirname, resolve as resolvePath, sep } from "node:path"
+import { resolve as resolvePath, sep } from "node:path"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, AnalyzerData, GitObject } from "./model"
+import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./model"
 import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
 import pkg from "../../package.json"
 import getLatestVersion from "latest-version"
+import ServerInstance from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
@@ -20,7 +21,13 @@ export function sleep(ms: number) {
   })
 }
 
-export function runProcess(dir: string, command: string, args: string[]) {
+export function runProcess(
+  dir: string,
+  command: string,
+  args: string[],
+  serverInstance?: ServerInstance,
+  index?: number
+) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
   return new Promise((resolve, reject) => {
     try {
@@ -31,7 +38,10 @@ export function runProcess(dir: string, command: string, args: string[]) {
       const errorHandler = (buf: Error): void => reject(buf.toString().trim())
       prcs.once("error", errorHandler)
       prcs.stderr.once("data", errorHandler)
-      prcs.stdout.on("data", (buf) => chunks.push(buf))
+      prcs.stdout.on("data", (buf) => {
+        chunks.push(buf)
+        if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
+      })
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())
       })
@@ -41,10 +51,55 @@ export function runProcess(dir: string, command: string, args: string[]) {
   })
 }
 
+function getWeek(date: Date): number {
+  const tempDate = new Date(date)
+  tempDate.setHours(0, 0, 0, 0)
+  tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7))
+  const yearStart = new Date(tempDate.getFullYear(), 0, 1)
+  const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return weekNo
+}
+
+export function getTimeIntervals(timeUnit: string, minTime: number, maxTime: number): [string, number][] {
+  const intervals: [string, number][] = []
+
+  const startDate = new Date(minTime * 1000)
+  const endDate = new Date(maxTime * 1000)
+
+  const currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    const currTime = currentDate.getTime() / 1000
+    if (timeUnit === "week") {
+      const weekNum = getWeek(currentDate)
+      intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime])
+      currentDate.setDate(currentDate.getDate() + 7)
+    } else if (timeUnit === "year") {
+      intervals.push([currentDate.getFullYear().toString(), currTime])
+      currentDate.setFullYear(currentDate.getFullYear() + 1)
+    } else if (timeUnit === "month") {
+      intervals.push([currentDate.toLocaleString("en-gb", { month: "long", year: "numeric" }), currTime])
+      currentDate.setMonth(currentDate.getMonth() + 1)
+    } else if (timeUnit === "day") {
+      intervals.push([
+        currentDate
+          .toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" })
+          .replace(",", ""),
+        currTime
+      ])
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+  }
+
+  return intervals
+}
+
 export function analyzeRenamedFile(
   file: string,
-  renamedFiles: Map<string, { path: string; timestamp: number }[]>,
-  timestamp: number
+  timestamp: number,
+  authortime: number,
+  renamedFiles: RenameEntry[],
+  repo: string
 ) {
   const movedFileRegex = /(?:.*{(?<oldPath>.*)\s=>\s(?<newPath>.*)}.*)|(?:^(?<oldPath2>.*) => (?<newPath2>.*))$/gm
   const replaceRegex = /{.*}/gm
@@ -56,18 +111,14 @@ export function analyzeRenamedFile(
   if (groups["oldPath"] || groups["newPath"]) {
     const oldP = groups["oldPath"] ?? ""
     const newP = groups["newPath"] ?? ""
-    oldPath = file.replace(replaceRegex, oldP).replace("//", "/")
-    newPath = file.replace(replaceRegex, newP).replace("//", "/")
+    oldPath = repo + "/" + file.replace(replaceRegex, oldP).replace("//", "/")
+    newPath = repo + "/" + file.replace(replaceRegex, newP).replace("//", "/")
   } else {
-    oldPath = groups["oldPath2"] ?? ""
-    newPath = groups["newPath2"] ?? ""
+    oldPath = repo + "/" + groups["oldPath2"] ?? ""
+    newPath = repo + "/" + groups["newPath2"] ?? ""
   }
 
-  if (renamedFiles.has(oldPath)) {
-    renamedFiles.get(oldPath)?.push({ path: newPath, timestamp })
-  } else {
-    renamedFiles.set(oldPath, [{ path: newPath, timestamp }])
-  }
+  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime })
   return newPath
 }
 
@@ -84,16 +135,6 @@ export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject |
   const subtree = tree.children.find((x) => x.name === dirs[0])
   if (!subtree || subtree.type === "blob") return
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
-}
-
-export async function writeRepoToFile(outPath: string, analyzedData: AnalyzerData) {
-  const data = JSON.stringify(analyzedData, null, 2)
-  const dir = dirname(outPath)
-  if (!existsSync(dir)) {
-    await fs.mkdir(dir, { recursive: true })
-  }
-  await fs.writeFile(outPath, data)
-  return outPath
 }
 
 export function getDirName(dir: string) {
@@ -195,10 +236,52 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   }
 }
 
+export function isValidURI(uri: string) {
+  try {
+    decodeURIComponent(uri)
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
 export async function getGitTruckInfo() {
   const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
   return {
     version: pkg.version,
     latestVersion: latestVersion
   }
+}
+
+function getCommandLine() {
+  switch (process.platform) {
+    case "darwin":
+      return "open" // MacOS
+    case "win32":
+      return 'start ""' // Windows
+    default:
+      return "xdg-open" // Linux
+  }
+}
+
+export function openFile(repoDir: string, path: string) {
+  path = resolvePath(repoDir, "..", path.split("/").join("/"))
+  const command = `${getCommandLine()} "${path}"`
+  exec(command).stderr?.on("data", (e) => {
+    // TODO show error in UI
+    log.error(`Cannot open file ${resolvePath(repoDir, path)}: ${e}`)
+  })
+}
+
+export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUserConfig) => TruckUserConfig) {
+  const truckConfigPath = resolvePath(repoDir, "truckconfig.json")
+  let currentConfig: TruckUserConfig = {}
+  try {
+    const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
+    if (configFileContents) currentConfig = JSON.parse(configFileContents)
+  } catch (e) {
+    /* empty */
+  }
+  const updatedConfig = updaterFn(currentConfig)
+  await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
 }

@@ -1,13 +1,12 @@
-import { useFetcher } from "@remix-run/react"
+import { useFetcher, useLocation } from "@remix-run/react"
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
-import type { AnalyzationStatus } from "~/analyzer/analyze.server"
+import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
 
-type ProgressData = {
+export type ProgressData = {
   progress: number
-  totalCommitCount: number
   analyzationStatus: AnalyzationStatus
 }
 
@@ -20,19 +19,21 @@ export function LoadingIndicator({
   hideInitially?: boolean
   className?: string
 }) {
+  const location = useLocation()
   const fetcher = useFetcher<ProgressData>()
-
   useEffect(() => {
-    if (fetcher.state === "idle") fetcher.load(`/progress`)
-  }, [fetcher, fetcher.state])
+    if (fetcher.state === "idle") {
+      const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
+      fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
+    }
+  }, [fetcher, fetcher.state, location.pathname])
 
   const progressText = useMemo(() => {
-    if (!fetcher.data) return "Starting analyzation"
-    const { progress, totalCommitCount, analyzationStatus } = fetcher.data
-    if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analyzation"
+    if (!fetcher.data) return "Starting analysis"
+    const { progress, analyzationStatus } = fetcher.data
+    if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analysis"
     if (analyzationStatus === "GeneratingChart") return "Generating chart"
-    const percentage = progress && totalCommitCount ? Math.round((progress / totalCommitCount) * 100) : 0
-    return "Analyzing commits: " + percentage + "% done"
+    return "Analyzing commits: " + progress + "% done"
   }, [fetcher.data])
 
   return (

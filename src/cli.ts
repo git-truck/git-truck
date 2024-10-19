@@ -11,9 +11,10 @@ import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { semverCompare, getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import type { NextFunction } from "express-serve-static-core"
+import InstanceManager from "./analyzer/InstanceManager.server"
 
 async function main() {
   const args = parseArgs()
@@ -92,7 +93,7 @@ for usage instructions.`)
     }
 
     if (process.env.NODE_ENV !== "development") {
-      const openURL = url + (extension ?? "")
+      const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
       if (!args.headless) {
         log.debug(`Opening ${openURL}`)
@@ -120,6 +121,7 @@ for usage instructions.`)
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
       ;["SIGTERM", "SIGINT"].forEach((signal) => {
         process.once(signal, () => server?.close(console.error))
+        process.once(signal, async () => await InstanceManager.closeAllDBConnections())
       })
     },
     beforeMsg: "Starting app",
