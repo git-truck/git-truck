@@ -47,6 +47,7 @@
     "@remix-run/node": "2.2.0",
     "@remix-run/react": "2.2.0",
     "@remix-run/serve": "2.2.0",
+    "@remix-run/vite": "^2.2.0",
     "@styled-icons/material": "^10.47.0",
     "@styled-icons/material-outlined": "^10.47.0",
     "@styled-icons/octicons": "^10.47.0",

@@ -11,5 +11,11 @@ export default {
       path: true,
       crypto: true
     }
-  }
+  },
+  future: {
+    v2_routeConvention: true
+  },
+  serverBuildTarget: "node-cjs",
+  server: "./server.js",
+  ignoredRouteFiles: ["**/.*"]
 }

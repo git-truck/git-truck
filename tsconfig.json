@@ -17,6 +17,7 @@
     },
     "noEmit": true,
     "allowJs": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vite/client"]
   }
 }
