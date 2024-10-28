@@ -28,7 +28,7 @@
     "clean": "rimraf -rf build public/build .cache .temp",
     "typecheck": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
-    "pub-exp": "node ./scripts/publish-experimental.js",
+    "pub-exp": "node ./scripts/publish-experimental.mjs",
     "prepublishOnly": "npm run clean && npm run build",
     "format:write": "prettier --log-level warn --write src scripts e2e",
     "lint:fix": "eslint --fix --cache src scripts e2e",
