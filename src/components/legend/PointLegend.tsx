@@ -7,7 +7,6 @@ import { useOptions } from "~/contexts/OptionsContext"
 const legendCutoff = 3
 
 export class PointInfo {
-  // eslint-disable-next-line no-useless-constructor
   constructor(
     public readonly color: `#${string}`,
     public weight: number

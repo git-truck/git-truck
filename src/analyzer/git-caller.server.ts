@@ -19,7 +19,6 @@ export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
-  // eslint-disable-next-line no-useless-constructor
   constructor(
     private repo: string,
     public branch: string,
