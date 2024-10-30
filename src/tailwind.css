@@ -84,7 +84,7 @@
   }
 
   .btn--outlined {
-    @apply border-current bg-transparent  text-inherit hover:bg-transparent  hover:opacity-50 dark:hover:opacity-50;
+    @apply border-current bg-transparent text-inherit hover:bg-transparent hover:opacity-50 dark:hover:opacity-50;
   }
 
   .btn--outlined--light {

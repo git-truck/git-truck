@@ -262,7 +262,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         </div>
         <div className="overflow-y-auto">
-          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow lg:grid-cols-2 xl:grid-cols-3  dark:bg-gray-700">
+          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow lg:grid-cols-2 xl:grid-cols-3 dark:bg-gray-700">
             {authorUnions.length > 0 ? (
               groupedAuthorsEntries
             ) : (
