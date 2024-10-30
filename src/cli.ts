@@ -65,16 +65,17 @@ async function main() {
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
-    if (!args.headless) {
-      log.debug(`Opening ${openURL}`)
-      await describeAsyncJob({
-        job: () => open(openURL),
-        beforeMsg: "Opening Git Truck in your browser",
-        afterMsg: "Opened Git Truck in your browser",
-        errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
-      })
-    } else {
-      console.log(`Application available at ${url}`)
+      if (!args.headless) {
+        log.debug(`Opening ${openURL}`)
+        await describeAsyncJob({
+          job: () => open(openURL),
+          beforeMsg: "Opening Git Truck in your browser",
+          afterMsg: "Opened Git Truck in your browser",
+          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
+        })
+      } else {
+        console.log(`Application available at ${url}`)
+      }
     }
   }
 
