@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import sha1 from "sha1"
 import uniqolor from "uniqolor"
 import type { GitBlobObject, GitTreeObject } from "~/analyzer/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
@@ -90,9 +90,7 @@ export function generateAuthorColors(
       result[author] = existing
       continue
     }
-    const hash = createHash("sha1")
-    hash.update(author + seed)
-    const hashed = hash.digest("hex")
+    const hashed = sha1(author + seed)
     const color = uniqolor(hashed).color as `#${string}`
     result[author] = color
   }
