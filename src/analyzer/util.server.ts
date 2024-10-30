@@ -296,6 +296,6 @@ export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (b
         existsSync(join(baseDir, entry.name, ".git"))
     )
     .map(({ name }) => ({ name, path: join(baseDir, name), parentDirPath: baseDir, status: "Loading" }))
-  }
+}
 
 export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))
