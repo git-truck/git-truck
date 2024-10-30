@@ -1,7 +1,7 @@
 import type { MutableRefObject } from "react"
 import { useState, useEffect, useMemo } from "react"
 
-import { useComponentSize as useCompSize } from "react-use-size"
+import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
