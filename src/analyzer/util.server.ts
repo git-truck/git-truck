@@ -1,5 +1,4 @@
 import c from "ansi-colors"
-import type { Spinner } from "nanospinner"
 import { createSpinner } from "nanospinner"
 import { exec, spawn } from "node:child_process"
 import { readdir } from "node:fs/promises"
@@ -168,6 +167,7 @@ export function createTruckSpinner() {
     : null
 }
 
+type Spinner = ReturnType<typeof createSpinner>
 let spinner: null | Spinner = null
 
 export async function describeAsyncJob<T>({
