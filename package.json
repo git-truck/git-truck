@@ -31,25 +31,27 @@
     "clean": "rimraf -rf build public/build .cache .temp cli.js cli.cjs",
     "typecheck": "tsc",
     "pub-pre": "npm version prerelease && npm publish --tag next",
-    "pub-exp": "node ./scripts/publish-experimental.js",
+    "pub-exp": "node ./scripts/publish-experimental.mjs",
     "prepublishOnly": "npm run clean && npm run build",
     "format:write": "prettier --log-level warn --write src scripts e2e",
-    "lint:fix": "eslint --fix --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint src scripts e2e",
+    "lint:fix": "eslint --fix --cache src scripts e2e",
     "check:write": "npm run format:write && npm run lint:fix",
     "check": "npm run format:check && npm run lint",
     "format:check": "prettier --check src scripts e2e",
-    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint src scripts e2e"
+    "lint": "eslint --cache src scripts e2e"
   },
   "dependencies": {
+    "duckdb-async": "^1.0.0",
     "fastify": "^5.0.0",
+    "typescript-eslint": "^8.12.2",
     "vite": "^5.4.10"
   },
   "devDependencies": {
+    "@eslint/js": "^9.13.0",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@playwright/test": "^1.48.2",
     "@remix-run/dev": "2.13.1",
-    "@remix-run/eslint-config": "2.13.1",
     "@remix-run/express": "2.13.1",
     "@remix-run/node": "2.13.1",
     "@remix-run/react": "2.13.1",
@@ -64,6 +66,7 @@
     "@types/d3-hierarchy": "^3.1.7",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
+    "@types/node": "^22.8.4",
     "@types/randomstring": "^1.3.0",
     "@types/react": "^18.3.12",
     "@types/react-datepicker": "^7.0.0",
@@ -71,8 +74,8 @@
     "@types/react-dom": "^18.3.1",
     "@types/semver": "^7.5.8",
     "@types/yargs": "^17.0.33",
-    "@typescript-eslint/eslint-plugin": "^8.12.2",
-    "@typescript-eslint/parser": "^8.12.2",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
     "ansi-colors": "^4.1.3",
     "apache-arrow": "^18.0.0",
     "autoprefixer": "^10.4.20",
@@ -84,14 +87,17 @@
     "d3": "^7.9.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^16.4.5",
-    "eslint": "^9.13.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.37.2",
+    "eslint": "^8.38.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "express": "^4.21.1",
     "express-serve-static-core": "^0.1.1",
     "get-port": "^7.1.0",
     "gitignore-parser": "^0.0.2",
+    "globals": "^15.11.0",
     "husky": "^9.1.6",
     "ignore": "^6.0.2",
     "is-binary-path": "^3.0.0",
@@ -124,7 +130,7 @@
     "tiny-invariant": "^1.3.3",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3",
+    "typescript": "5.2",
     "uniqolor": "^1.1.1",
     "vite-plugin-cjs-interop": "^2.1.4",
     "vite-tsconfig-paths": "^5.0.1",
@@ -155,8 +161,5 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme",
-  "dependencies": {
-    "duckdb-async": "^1.0.0"
-  }
+  "homepage": "https://github.com/git-truck/git-truck#readme"
 }
