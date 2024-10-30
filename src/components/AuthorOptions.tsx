@@ -92,7 +92,6 @@ function PercentageSlider() {
         domain={domain}
         rootStyle={sliderStyle}
         onChange={(e) => {
-          console.log(e)
           setDominantAuthorCutoff(e[0])
           setDisplayPercentage(e[0])
         }}
