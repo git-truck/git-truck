@@ -62,6 +62,5 @@ The only requirements are
 - [nodejs](https://nodejs.org/en/) version 18 to 21 (Node 22 is only supported on Mac and Linux)
 - [git](https://git-scm.com/downloads) version 2.29 or newer.
 
-To run git truck, navigate to a repository or a folder containing multiple repositories in your terminal, and run `npx git-truck@duck`
+To run git truck, navigate to a repository or a folder containing multiple repositories in your terminal, and run `npx git-truck`
 
-This version is still in development, so please report any hiccups you might encounter.
