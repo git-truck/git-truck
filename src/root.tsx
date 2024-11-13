@@ -6,6 +6,7 @@ import { Code } from "./components/util"
 import "~/tailwind.css"
 import { ThemeProvider, cn, usePrefersLightMode } from "./styling"
 import "react-datepicker/dist/react-datepicker.css"
+import { ReactNode } from "react"
 
 export const meta: MetaFunction = () => {
   return [{ title: "Git Truck" }]

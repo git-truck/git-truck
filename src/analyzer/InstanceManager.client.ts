@@ -1,21 +1,16 @@
-import MetadataDB from "./MetadataDB"
-import ServerInstance from "./ServerInstance.server"
+import { log } from "./log"
+import ClientInstance from "./ClientInstance.client"
 
 export default class InstanceManager {
-  private static instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
-  public static metadataDB: MetadataDB
+  private static instances: Map<string, Map<string, ClientInstance>> = new Map() // repo -> branch -> instance
 
-  public static getOrCreateMetadataDB() {
-    if (!this.metadataDB) this.metadataDB = new MetadataDB()
-    return this.metadataDB
-  }
-
-  public static getOrCreateInstance(repo: string, branch: string, path: string) {
+  public static async getOrCreateInstance(repo: string, branch: string, path: string) {
+    log.debug(`Getting instance for ${repo} ${branch}`)
     if (!this.instances) this.instances = new Map()
     const existing = this.instances.get(repo)?.get(branch)
     if (existing) return existing
 
-    const newInstance = new ServerInstance(repo, branch, path)
+    const newInstance = await ClientInstance.createInstance(repo, branch, path)
     const existingRepo = this.instances.get(repo)
     if (existingRepo) {
       existingRepo.set(branch, newInstance)
@@ -34,7 +29,7 @@ export default class InstanceManager {
   public static async closeAllDBConnections() {
     for (const [, repo] of this.instances) {
       for (const [, branchInstance] of repo) {
-        await branchInstance.db.close()
+        await branchInstance.db.destroy()
       }
     }
     this.instances = new Map()

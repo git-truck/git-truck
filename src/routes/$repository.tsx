@@ -1,14 +1,14 @@
-import { DataFunctionArgs, redirect } from "@remix-run/node"
+import { LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import invariant from "tiny-invariant"
+import { invariant } from "ts-invariant"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 
 /**
  * Redirect to the repository's default branch
  */
-export const loader = async ({ params }: DataFunctionArgs) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { repository } = params
 
   invariant(repository, "Repository is required")

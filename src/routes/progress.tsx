@@ -1,14 +1,11 @@
-import { sleep } from "~/analyzer/util.server"
-import InstanceManager from "~/analyzer/InstanceManager.server"
-import type { LoaderFunctionArgs } from "@remix-run/node"
-import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
+import InstanceManager from "~/analyzer/InstanceManager.client"
 import { ProgressData } from "~/components/LoadingIndicator"
+import { sleep } from "~/util"
+import { ClientLoaderFunctionArgs } from "@remix-run/react"
 
-type ProgressResponse = { progress: number; analyzationStatus: AnalyzationStatus }
+const defaultResponse: ProgressData = { progress: 0, analyzationStatus: "Starting" }
 
-const defaultResponse: ProgressResponse = { progress: 0, analyzationStatus: "Starting" }
-
-export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressResponse> => {
+export const clientLoader = async ({ request }: ClientLoaderFunctionArgs) => {
   const url = new URL(request.url)
   const branch = url.searchParams.get("branch")
   const repo = url.searchParams.get("repo")
@@ -31,8 +28,10 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressR
   }
   instance.prevProgress.str = status + progressPercentage
   instance.prevProgress.timestamp = Date.now()
-  return {
+  const data: ProgressData = {
     progress: progressPercentage,
     analyzationStatus: instance.analyzationStatus
-  } as ProgressData
+  }
+
+  return data
 }

@@ -1,7 +1,7 @@
 import { useFetcher, useLocation } from "@remix-run/react"
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
-import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
+import type { AnalyzationStatus } from "~/analyzer/ClientInstance.client"
 import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
 

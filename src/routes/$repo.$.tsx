@@ -1,10 +1,17 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
-import { Icon } from "@mdi/react"
-import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "@remix-run/node"
-import { Await, Link, Params, isRouteErrorResponse, useLoaderData, useRouteError } from "@remix-run/react"
+import Icon from "@mdi/react"
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
+import {
+  Await,
+  ClientActionFunctionArgs,
+  ClientLoaderFunctionArgs,
+  Link,
+  isRouteErrorResponse,
+  useLoaderData,
+  useRouteError
+} from "@remix-run/react"
 import clsx from "clsx"
 import { resolve } from "path"
-import randomstring from "randomstring"
 import type { Dispatch, SetStateAction } from "react"
 import { Suspense, memo, useEffect, useMemo, useRef, useState } from "react"
 import { Online } from "react-detect-offline"
@@ -12,10 +19,10 @@ import { createPortal } from "react-dom"
 import { useMouse } from "react-use/esm"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import InstanceManager from "~/analyzer/InstanceManager.client"
 import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
-import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
+import { openFile } from "~/analyzer/util.server"
 import BarChart from "~/components/BarChart"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
@@ -34,13 +41,12 @@ import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 import { useClient } from "~/hooks"
 import { cn } from "~/styling"
+import { invariant } from "ts-invariant"
+import { log } from "~/analyzer/log"
+import { MetadataDBManager } from "~/analyzer/MetadataDbManager.server"
 
 export interface RepoData {
   repo: Repository
-  gitTruckInfo: {
-    version: string
-    latestVersion: string | null
-  }
   databaseInfo: DatabaseInfo
 }
 
@@ -75,33 +81,95 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params, context }: LoaderFunctionArgs) => {
+  const args = await getArgs()
+
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
-  const dataPromise = analyze(params)
-  return defer({ dataPromise })
+  log.debug(args.path)
+  const path = resolve(args.path, params["repo"] ?? "")
+  log.debug(`Resolved path: ${path}`)
+  const branch = params["*"]
+  const repoName = params["repo"]
+  const isRepo = await GitCaller.isGitRepo(path)
+  if (!isRepo) throw new Error(`No repo found at ${path}`)
+  if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
+  const isValidRevision = await GitCaller.isValidRevision(branch, path)
+  if (!isValidRevision)
+    throw new Error(
+      `Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`
+    )
+  const repo = await GitCaller.getRepoMetadata(path)
+  invariant(repo)
+  const rawContent = await new GitCaller(repo?.name, branch, path).lsTree(branch)
+  log.debug("Got raw content")
+
+  invariant(typeof context.version === "string", "Version is missing")
+  invariant(typeof context.latestVersion === "string", "Latest version is missing")
+
+  return {
+    args,
+    repo,
+    branch,
+    rawContent,
+    gitTruckInfo: {
+      version: context.version,
+      latestVersion: context.latestVersion
+    }
+  }
 }
 
-export const action: ActionFunction = async ({ request, params }) => {
+export const clientLoader = async ({ serverLoader }: ClientLoaderFunctionArgs) => {
+  console.log("client loader here")
+  const { repo, branch, rawContent, gitTruckInfo } = await serverLoader<typeof loader>()
+  console.log("Analyzing raw content from client loader")
+  const dataPromise = analyze(repo as Repository, branch, rawContent)
+  console.log(dataPromise)
+
+  return {
+    dataPromise,
+    gitTruckInfo
+  }
+}
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const fileToOpen = (await request.formData()).get("open")
+
+  if (typeof fileToOpen === "string") {
+    // instance.prevInvokeReason = "open"
+    openFile(fileToOpen)
+  }
+}
+
+export const clientAction = async ({ request, params }: ClientActionFunctionArgs) => {
+  // const data = await serverAction<typeof action>()
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
 
   const formData = await request.formData()
+  const repo = formData.get("repo")?.toString()
+  const branch = formData.get("branch")?.toString()
+  const path = formData.get("path")?.toString()
+  const baseDir = formData.get("basedir")
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
   const ignore = formData.get("ignore")
-  const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
   const timeseries = formData.get("timeseries")
   const authorname = formData.get("authorname")
   const authorcolor = formData.get("authorcolor")
 
-  const args = await getArgs()
-  const path = resolve(args.path, params["repo"])
-  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+  invariant(repo)
+  invariant(branch)
+  invariant(path)
+  invariant(baseDir)
+
+  // const args = await getArgs()
+  const instance = await InstanceManager.getOrCreateInstance(repo, branch ?? "", path) // TODO fix the branch and check path works
+  // TODO: Readd
   instance.prevInvokeReason = "unknown"
   if (refresh) {
     instance.prevInvokeReason = "refresh"
@@ -124,12 +192,6 @@ export const action: ActionFunction = async ({ request, params }) => {
     return null
   }
 
-  if (typeof fileToOpen === "string") {
-    instance.prevInvokeReason = "open"
-    openFile(instance.path, fileToOpen)
-    return null
-  }
-
   if (typeof unionedAuthors === "string") {
     instance.prevInvokeReason = "unionedAuthors"
     const json = JSON.parse(unionedAuthors) as string[][]
@@ -139,7 +201,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof rerollColors === "string") {
     instance.prevInvokeReason = "rerollColors"
-    const newSeed = randomstring.generate(6)
+    const newSeed = Math.random().toString(36).substring(2, 15)
     await instance.db.updateColorSeed(newSeed)
     return null
   }
@@ -164,7 +226,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof authorname === "string") {
     instance.prevInvokeReason = "authorcolor"
-    await InstanceManager.getOrCreateMetadataDB().addAuthorColor(authorname, authorcolor as string)
+    await MetadataDBManager.getOrCreateMetadataDB().addAuthorColor(authorname, authorcolor as string)
     return null
   }
 
@@ -222,21 +284,10 @@ export const ErrorBoundary = () => {
   )
 }
 
-async function analyze(params: Params) {
-  const args = await getArgs()
-  const path = resolve(args.path, params["repo"] ?? "")
-  const branch = params["*"]
-  const repoName = params["repo"]
-  const isRepo = await GitCaller.isGitRepo(path)
-  if (!isRepo) throw new Error(`No repo found at ${path}`)
-  if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
-  const isValidRevision = await GitCaller.isValidRevision(branch, path)
-  if (!isValidRevision)
-    throw new Error(
-      `Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`
-    )
+async function analyze(repo: Repository, branch: string, rawContent: string): Promise<RepoData> {
+  console.log("Getting or initializing instance")
 
-  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  const instance = await InstanceManager.getOrCreateInstance(repo.name, branch, repo.path)
   // to avoid double identical fetch at first load, which it does for some reason
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
     return instance.prevResult
@@ -245,8 +296,6 @@ async function analyze(params: Params) {
 
   const timerange = await instance.db.getOverallTimeRange()
   const selectedRange = instance.db.selectedRange
-
-  const repo = await GitCaller.getRepoMetadata(path)
 
   if (!repo) {
     throw Error("Error loading repo")
@@ -261,7 +310,7 @@ async function analyze(params: Params) {
   const filetree =
     prevRes && !shouldUpdate(reason, "filetree")
       ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
-      : await instance.analyzeTree()
+      : await instance.analyzeTree(rawContent)
   console.timeEnd("fileTree")
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
@@ -301,12 +350,12 @@ async function analyze(params: Params) {
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
-      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
+      : await MetadataDBManager.getOrCreateMetadataDB().getLastRun(instance.repo, instance.branch)
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
   const authorColors =
     prevRes && !shouldUpdate(reason, "authorColors")
       ? prevRes.authorColors
-      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
+      : await MetadataDBManager.getOrCreateMetadataDB().getAuthorColors()
   const commitCountPerDay =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? prevRes.commitCountPerDay
@@ -324,7 +373,7 @@ async function analyze(params: Params) {
   const analyzedRepos =
     prevRes && !shouldUpdate(reason, "analyzedRepos")
       ? prevRes.analyzedRepos
-      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+      : await MetadataDBManager.getOrCreateMetadataDB().getCompletedRepos()
   console.timeEnd("dbQueries")
 
   const databaseInfo: DatabaseInfo = {
@@ -355,18 +404,18 @@ async function analyze(params: Params) {
     commitCount
   }
 
-  const fullData = {
+  const fullData: RepoData = {
     repo,
-    gitTruckInfo: await getGitTruckInfo(),
     databaseInfo: databaseInfo
-  } as RepoData
+  }
 
   return fullData
 }
 
 export default function Repo() {
   const client = useClient()
-  const { dataPromise } = useLoaderData<typeof loader>()
+  const loaderData = useLoaderData<typeof clientLoader>()
+  const { dataPromise, gitTruckInfo } = loaderData
   const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
   const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
@@ -400,6 +449,14 @@ export default function Repo() {
     [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
   )
 
+  if (!dataPromise || !gitTruckInfo) {
+    return (
+      <div className="grid h-screen place-items-center">
+        <LoadingIndicator />
+      </div>
+    )
+  }
+
   return (
     <Suspense
       fallback={
@@ -409,8 +466,8 @@ export default function Repo() {
       }
     >
       <Await resolve={dataPromise}>
-        {(dataPromise) => (
-          <Providers data={dataPromise as RepoData}>
+        {(data) => (
+          <Providers data={data as RepoData}>
             <div className={cn("app-container", containerClass)}>
               <aside
                 className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
@@ -489,7 +546,7 @@ export default function Repo() {
                           isFullscreen
                       })}
                     />
-                    {dataPromise.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    {data.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
                     <SearchCard />
                     <Online>
                       <FeedbackCard />

@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
-import invariant from "tiny-invariant"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import { invariant } from "ts-invariant"
+import InstanceManager from "~/analyzer/InstanceManager.client"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)

@@ -1,8 +1,8 @@
-import type { LoaderFunctionArgs } from "@remix-run/node"
-import invariant from "tiny-invariant"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import { data, type LoaderFunctionArgs } from "@remix-run/node"
+import { invariant } from "ts-invariant"
+import InstanceManager from "~/analyzer/InstanceManager.client"
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const clientLoader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const branch = url.searchParams.get("branch")
   const repo = url.searchParams.get("repo")
@@ -22,12 +22,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
   const fullCommits = await instance.getFullCommits(gitLogResult)
   const unions = await instance.db.getRawUnions()
-  return fullCommits.map((commit) => {
+  return data(fullCommits.map((commit) => {
     const alias = unions.find(({ alias }) => alias === commit.author)
     if (!alias) return commit
     return {
       ...commit,
       author: alias.actualname
     }
-  })
+  }))
 }

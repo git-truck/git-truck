@@ -1,12 +1,12 @@
-import { log } from "./log.server"
-import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
+import { log } from "./log"
+import { describeAsyncJob, getBaseDirFromPath, getDirName, runProcess } from "./util.server"
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/util"
+import { branchCompare, promiseHelper, semverCompare } from "~/util"
 import os from "node:os"
-import ServerInstance from "./ServerInstance.server"
+// import ClientInstance from "./ServerInstance.client"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -28,9 +28,14 @@ export class GitCaller {
 
   static async isGitRepo(path: string): Promise<boolean> {
     const gitFolderPath = resolve(path, ".git")
+    log.debug(`[isGitRepo] Checking for git folder at ${gitFolderPath}`)
     const hasGitFolder = existsSync(gitFolderPath)
+    log.debug(`[isGitRepo] hasGitFolder: ${hasGitFolder}`)
     if (!hasGitFolder) return false
     const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead(path))
+    if (findBranchHeadError) {
+      log.error(findBranchHeadError)
+    }
     return Boolean(hasGitFolder && !findBranchHeadError)
   }
 
@@ -306,7 +311,7 @@ export class GitCaller {
     return result.trim()
   }
 
-  async gitLogSimple(skip: number, count: number, instance: ServerInstance, index: number) {
+  async gitLogSimple(skip: number, count: number) {
     const args = [
       "log",
       `--skip=${skip}`,
@@ -318,7 +323,7 @@ export class GitCaller {
       '--format="<|%aN|><|%ct %at|><|%H|>"'
     ]
 
-    const result = (await runProcess(this.path, "git", args, instance, index)) as string
+    const result = (await runProcess(this.path, "git", args)) as string
     return result.trim()
   }
 

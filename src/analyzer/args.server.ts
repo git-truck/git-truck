@@ -2,6 +2,8 @@ import yargsParser from "yargs-parser"
 import { GitCaller } from "./git-caller.server"
 import type { ArgsOptions } from "./model"
 import { getBaseDirFromPath } from "./util.server"
+import { log } from "./log"
+import { resolve } from "node:path"
 
 export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   return yargsParser(rawArgs, {
@@ -25,6 +27,8 @@ export async function getArgs(): Promise<ArgsOptions> {
   const args = getArgsWithDefaults()
 
   const pathIsRepo = await GitCaller.isGitRepo(args.path)
+  log.debug(`Path: ${pathIsRepo ? "" : "not "}a git repo`)
+  log.debug(`Path: ${resolve(args.path)}`)
   args.path = pathIsRepo ? getBaseDirFromPath(args.path) : args.path
 
   return args

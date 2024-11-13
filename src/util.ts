@@ -159,3 +159,23 @@ export function getLightness(hex: `#${string}`): number {
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
+
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+/**
+ * This functions handles try / catch for you, so your code stays flat.
+ * @param promise An async function
+ * @returns A tuple of the result and an error. If there is no error, the error will be null.
+ */
+export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Error] | [T, null]> {
+  try {
+    return [await promise, null]
+  } catch (e) {
+    return [null, e as Error]
+  }
+}

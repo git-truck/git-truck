@@ -1,5 +1,4 @@
 import type { Database } from "duckdb-async"
-import { promises as fs } from "fs"
 import { tableToIPC, tableFromJSON } from "apache-arrow"
 
 const bundleSize = 5000
@@ -25,23 +24,25 @@ export abstract class Inserter<T> {
   ) {}
 
   public static getInserterType() {
-    switch (process.platform) {
-      case "darwin":
-      case "linux":
-        return "ARROW"
-      default:
-        return "JSON"
-    }
+    return "JSON"
+    // switch (process.platform) {
+    //   case "darwin":
+    //   case "linux":
+    //     return "ARROW"
+    //   default:
+    //     return "JSON"
+    // }
   }
 
   public static getSystemSpecificInserter<T>(table: string, tempPath: string, db: Database, id?: string): Inserter<T> {
-    switch (process.platform) {
-      case "darwin":
-      case "linux":
-        return new ArrowInserter<T>(table, tempPath, db, id ?? "")
-      default:
-        return new JsonInserter<T>(table, tempPath, db, id ?? "")
-    }
+    return new JsonInserter<T>(table, tempPath, db, id ?? "")
+    // switch (process.platform) {
+    //   case "darwin":
+    //   case "linux":
+    //     return new ArrowInserter<T>(table, tempPath, db, id ?? "")
+    //   default:
+    //     return new JsonInserter<T>(table, tempPath, db, id ?? "")
+    // }
   }
 }
 
@@ -60,16 +61,16 @@ class JsonInserter<T> extends Inserter<T> {
         if (typeof value === "undefined") return null
         return value
       })
-      await fs.writeFile(this.tempFile, stringified)
+      // await fs.writeFile(this.tempFile, stringified)
       await this.db.exec(`INSERT INTO ${this.table} SELECT * FROM '${this.tempFile}'`)
-      await fs.rm(this.tempFile)
+      // await fs.rm(this.tempFile)
     }
 
     this.rows = []
   }
 }
 
-class ArrowInserter<T> extends Inserter<T> {
+class ArrowInserter<T, K> extends Inserter<T extends Record<string, K>> {
   public async finalize() {
     if (this.rows.length < 1) return
     for (let i = 0; i < this.rows.length; i += bundleSize) {

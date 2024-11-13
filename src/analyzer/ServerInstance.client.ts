@@ -1,5 +1,4 @@
-import DB from "./DB.server"
-import { GitCaller } from "./git-caller.server"
+import DB from "./DB.client"
 import type {
   GitBlobObject,
   GitTreeObject,
@@ -10,22 +9,21 @@ import type {
   FileModification,
   RenameInterval,
   FullCommitDTO
-} from "./model"
-import { log } from "./log.server"
-import { analyzeRenamedFile } from "./util.server"
-import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
-import { cpus, freemem, totalmem } from "node:os"
+} from "~/analyzer/model"
+import { analyzeRenamedFile } from "~/analyzer/util"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/analyzer/constants"
+// import { cpus, freemem, totalmem } from "node:os"
 import { RepoData } from "~/routes/$repo.$"
-import { InvocationReason } from "./RefreshPolicy"
-import InstanceManager from "./InstanceManager.server"
+import { InvocationReason } from "~/analyzer/RefreshPolicy"
+import InstanceManager from "~/analyzer/InstanceManager.client"
+import { log } from "./log"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
-export default class ServerInstance {
+export default class  ClientInstance {
   public analyzationStatus: AnalyzationStatus = "Starting"
   private repoSanitized: string
   private branchSanitized: string
-  public gitCaller: GitCaller
   public db: DB
   public progress = [0]
   public totalCommitCount = 0
@@ -41,7 +39,6 @@ export default class ServerInstance {
   ) {
     this.repoSanitized = repo.replace(/\W/g, "_")
     this.branchSanitized = branch.replace(/\W/g, "_")
-    this.gitCaller = new GitCaller(repo, branch, path)
     this.db = new DB(repo, branch)
   }
 
@@ -71,9 +68,7 @@ export default class ServerInstance {
 
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
-  public async analyzeTree() {
-    if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
-    const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
+  public async analyzeTree(rawContent: string) {
     const lsTreeEntries: RawGitObject[] = []
     const matches = rawContent.matchAll(treeRegex)
     let fileCount = 0
@@ -327,6 +322,7 @@ export default class ServerInstance {
   }
 
   private getThreadCount(repoCommitCount: number) {
+    return 1
     const estimatedBytesPerCommit = 1300
     const minimumBytesPerThread = 400_000_000
     const systemMemoryToNotUse = 800_000_000

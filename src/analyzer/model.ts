@@ -1,4 +1,4 @@
-import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
+import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.client"
 
 export type Repository = {
   /**

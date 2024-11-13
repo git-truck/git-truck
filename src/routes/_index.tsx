@@ -15,9 +15,10 @@ import { join, resolve } from "node:path"
 import { getBaseDirFromPath, getDirName, readGitRepos } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
 import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import InstanceManager from "~/analyzer/InstanceManager.client"
 import { existsSync } from "node:fs"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/analyzer/log"
+import { MetadataDBManager } from "~/analyzer/MetadataDbManager.server"
 
 export const loader = async () => {
   const queryPath = null
@@ -51,21 +52,22 @@ export const loader = async () => {
     repositories.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo.name))])
   )
 
-  const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedReposPromise = MetadataDBManager.getOrCreateMetadataDB().getCompletedRepos()
 
-  return defer<{
+  const result: {
     repositories: Repository[]
     baseDir: string
     baseDirName: string
     analyzedReposPromise: Promise<CompletedResult[]>
     [key: string]: string | string[] | Repository[] | Promise<CompletedResult[]> | Repository
-  }>({
+  } = {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
     analyzedReposPromise,
     ...repositoryPromises
-  })
+  }
+  return result
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {

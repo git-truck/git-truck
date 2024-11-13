@@ -1,6 +1,3 @@
-import { resolve } from "path"
-import os from "os"
-import { promises as fs } from "fs"
 import { CompletedResult } from "./model"
 
 interface MetadataJson {
@@ -9,21 +6,15 @@ interface MetadataJson {
 }
 
 export default class MetadataDB {
-  private path = resolve(os.tmpdir(), "git-truck-cache", "metadata.json")
+  private data: MetadataJson = { completions: {}, authorcolors: {} }
   private separator = "---"
 
   async readMetadata(): Promise<MetadataJson> {
-    try {
-      const data = JSON.parse(await fs.readFile(this.path, "utf8")) as MetadataJson
-      return data
-    } catch (e) {
-      return { completions: {}, authorcolors: {} }
-    }
+      return this.data
   }
 
   async setMetadata(newData: MetadataJson) {
-    const asString = JSON.stringify(newData)
-    await fs.writeFile(this.path, asString, "utf8")
+    this.data = newData
   }
 
   public async setCompletion(repo: string, branch: string, hash: string) {

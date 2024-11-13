@@ -1,29 +1,36 @@
 import { vitePlugin as remix } from "@remix-run/dev"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
-import { installGlobals } from "@remix-run/node"
-import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
 
-installGlobals()
+declare module "@remix-run/node" {
+  // or cloudflare, deno, etc.
+  interface Future {
+    v3_singleFetch: true;
+  }
+}
 
 export default defineConfig({
   ssr: {
-    noExternal: [/^node:/, /^d3/, "lightningcss"]
   },
   plugins: [
+    cjsInterop({
+      dependencies: ["@mdi/react"]
+    }),
     remix({
       appDirectory: "src",
-      serverModuleFormat: "esm"
+      serverModuleFormat: "esm",
+      future: {
+        unstable_optimizeDeps: true,
+        v3_fetcherPersist: true,
+        v3_lazyRouteDiscovery: true,
+        v3_relativeSplatPath: true,
+        v3_singleFetch: true,
+        v3_throwAbortReason: true
+      }
     }),
     tsconfigPaths(),
-    cjsInterop({
-      dependencies: ["@mdi/react", ...(process.env.NODE_ENV === "production" ? [] : ["react-use"])]
-    })
   ],
-  define: {
-    "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version)
-  },
   test: {
     globals: true,
     exclude: ["e2e", "node_modules"]

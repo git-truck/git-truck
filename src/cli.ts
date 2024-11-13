@@ -5,14 +5,13 @@ import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
 import path from "path"
-// import pkg from "../package.json"
+import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
-import { getPathFromRepoAndHead } from "./util"
+import { getPathFromRepoAndHead, promiseHelper } from "./util"
 import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
-import { log, setLogLevel } from "./analyzer/log.server"
-import InstanceManager from "./analyzer/InstanceManager.server"
+import { log, setLogLevel } from "./analyzer/log"
 
 async function main() {
   const args = parseArgs()
@@ -82,7 +81,7 @@ async function main() {
   describeAsyncJob({
     job: async () => {
       const app = await createApp(
-        process.env.NODE_ENV ?? "production",
+        process.env.NODE_ENV ?? "development",
         "/build",
         path.join(import.meta.url, "public", "build")
       )
@@ -90,7 +89,7 @@ async function main() {
       const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
       ;["SIGTERM", "SIGINT"].forEach((signal) => {
         process.once(signal, () => server?.close(console.error))
-        process.once(signal, async () => await InstanceManager.closeAllDBConnections())
+        // process.once(signal, async () => await InstanceManager.closeAllDBConnections())
       })
     },
     beforeMsg: "Starting app",
@@ -142,6 +141,12 @@ async function createApp(mode = "production", publicPath = "/build/", assetsBuil
     app.use(morgan("dev"))
   }
 
+  const [latestVersion] = await promiseHelper(
+    fetch("https://unpkg.com/git-truck/package.json")
+      .then((res) => res.json())
+      .then((pkg) => pkg.version)
+  )
+
   app.all(
     "*",
     // @ts-expect-error This error is wrong, the types are incorrect
@@ -150,7 +155,14 @@ async function createApp(mode = "production", publicPath = "/build/", assetsBuil
         ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
         : // Expected, this is present if the app has been built
           // eslint-disable-next-line import/no-unresolved
-          await import("../build/server/index.js")
+          await import("../build/server/index.js"),
+      async getLoadContext() {
+
+        return {
+          version: pkg.version,
+          latestVersion: latestVersion
+        }
+      }
     })
   )
 

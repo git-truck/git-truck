@@ -1,37 +1,51 @@
-import { Database } from "duckdb-async"
+import * as duckdb from "@duckdb/duckdb-wasm"
+import duckdb_wasm from "@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url"
+import mvp_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url"
+import duckdb_wasm_eh from "@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url"
+import eh_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url"
 import type { CommitDTO, DBFileChange, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
-import os from "os"
-import { resolve, dirname } from "path"
-import { promises as fs, existsSync } from "fs"
 import { Inserter } from "./DBInserter"
-import { getTimeIntervals } from "./util.server"
+import { getTimeIntervals } from "./util"
+import { log } from "./log"
 
 export default class DB {
-  private instance: Promise<Database>
+  private static duckDB: duckdb.AsyncDuckDB | null = null
+  private connection: Promise<duckdb.AsyncDuckDBConnection>
   private repoSanitized: string
   private branchSanitized: string
   public selectedRange: [number, number]
-  private tmpDir: string
+  // private tmpDir: stringf
 
-  private static async init(dbPath: string) {
-    const dir = dirname(dbPath)
-    if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
-    const db = await Database.create(dbPath, { temp_directory: dir })
-    await this.initTables(db)
-    await this.initViews(db, 0, 1_000_000_000_000)
-    if (Inserter.getInserterType() === "ARROW") {
-      await db.exec(`
-        INSTALL arrow;
-        LOAD arrow;
-      `)
+  /**
+   * Initializes the database and creates the necessary tables and views.
+   */
+  public static async init() {
+    if (this.duckDB) return
+
+    log.debug("Initializing DuckDB")
+
+    const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
+      mvp: {
+        mainModule: duckdb_wasm,
+        mainWorker: mvp_worker
+      },
+      eh: {
+        mainModule: duckdb_wasm_eh,
+        mainWorker: eh_worker
+      }
     }
-    return db
-  }
-
-  public static async clearCache() {
-    const dir = resolve(os.tmpdir(), "git-truck-cache")
-    if (!existsSync(dir)) return
-    await fs.rm(dir, { recursive: true, force: true })
+    // Select a bundle based on browser checks
+    const bundle = await duckdb.selectBundle(MANUAL_BUNDLES)
+    // Instantiate the asynchronus version of DuckDB-wasm
+    const worker = new Worker(bundle.mainWorker!)
+    const logger = new duckdb.ConsoleLogger()
+    const db = new duckdb.AsyncDuckDB(logger, worker)
+    const connection = await db.connect()
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker)
+    await this.initTables(connection)
+    await this.initViews(connection, 0, 1_000_000_000_000)
+    await connection.close()
+    this.duckDB = db
   }
 
   constructor(
@@ -40,26 +54,25 @@ export default class DB {
   ) {
     this.repoSanitized = repo.replace(/\W/g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
-    const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
-    this.tmpDir = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized)
-    this.instance = DB.init(dbPath)
+    // this.tmpDir = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized)
+    this.connection = this.insta
     this.selectedRange = [0, 1_000_000_000_000] as [number, number]
-  }
-
-  public async close() {
-    await (await this.instance).close()
+    if (!DB.duckDB) {
+      throw new Error("DuckDB not initialized")
+    }
+    this.connection = DB.duckDB.connect()
   }
 
   public async query(query: string) {
-    return await (await this.instance).all(query)
+    return (await (await this.connection).query(query)).toArray()
   }
 
   public async checkpoint() {
-    await (await this.instance).all("CHECKPOINT;")
+    await this.query("CHECKPOINT;")
   }
 
-  private static async initTables(db: Database) {
-    await db.all(`
+  private static async initTables(db: duckdb.AsyncDuckDBConnection) {
+    await db.query(`
       CREATE TABLE IF NOT EXISTS commits (
         hash VARCHAR,
         author VARCHAR,
@@ -103,9 +116,7 @@ export default class DB {
   }
 
   public async clearAllTables() {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       DELETE FROM commits;
       DELETE FROM filechanges;
       DELETE FROM authorunions;
@@ -113,21 +124,19 @@ export default class DB {
       DELETE FROM hiddenfiles;
       DELETE FROM metadata;
       DELETE FROM temporary_renames;
-      DELETE FROM files;  
+      DELETE FROM files;
     `)
   }
 
   public async createIndexes() {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       CREATE INDEX IF NOT EXISTS commitstime ON commits(committertime);
       CREATE INDEX IF NOT EXISTS renamestime ON renames(timestamp);
     `)
   }
 
-  private static async initViews(db: Database, start: number, end: number) {
-    await db.all(`
+  private static async initViews(db: duckdb.AsyncDuckDBConnection, start: number, end: number) {
+    await db.query(`
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime FROM
       commits c LEFT JOIN authorunions u ON c.author = u.alias
@@ -154,7 +163,7 @@ export default class DB {
       CREATE OR REPLACE VIEW filtered_files AS
       SELECT f.path
       FROM files f
-      LEFT JOIN hiddenfiles g ON 
+      LEFT JOIN hiddenfiles g ON
           (g.path LIKE '*.%' AND f.path GLOB g.path)
           OR (g.path NOT LIKE '*.%' AND f.path GLOB g.path || '*')
       WHERE g.path IS NULL;
@@ -168,7 +177,7 @@ export default class DB {
       SELECT fromname, toname, min(timestamp) AS timestamp, timestampauthor FROM renames
       WHERE timestamp BETWEEN ${start} AND ${end}
       group by fromname, toname, timestampauthor;
-      
+
       CREATE OR REPLACE VIEW combined_result AS
       SELECT f.commithash, f.insertions, f.deletions, c.committertime, c.authortime,
         CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
@@ -176,7 +185,7 @@ export default class DB {
             WHEN r.toname IS NOT NULL THEN r.toname
             ELSE f.filepath
         END AS filepath
-      FROM commits c 
+      FROM commits c
       LEFT JOIN authorunions u ON c.author = u.alias
       JOIN filechanges f ON f.commithash = c.hash
       LEFT JOIN temporary_renames r ON f.filepath = r.fromname AND c.committertime BETWEEN r.timestamp AND r.timestampend
@@ -190,19 +199,17 @@ export default class DB {
     const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
     const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
     this.selectedRange = [start, end]
-    await DB.initViews(await this.instance, start, end)
+    await DB.initViews(await this.connection, start, end)
   }
 
   public async replaceAuthorUnions(unions: string[][]) {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       DELETE FROM authorunions;
     `)
     const ins = Inserter.getSystemSpecificInserter<{ alias: string; actualname: string }>(
       "authorunions",
       this.tmpDir,
-      await this.instance
+      await this.connection
     )
     const splitunions: { alias: string; actualname: string }[] = []
     for (const union of unions) {
@@ -215,33 +222,27 @@ export default class DB {
   }
 
   public async replaceTemporaryRenames(renames: RenameInterval[]) {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       DELETE FROM temporary_renames;
     `)
 
     const ins = Inserter.getSystemSpecificInserter<RenameInterval>(
       "temporary_renames",
       this.tmpDir,
-      await this.instance
+      await this.connection
     )
     await ins.addAndFinalize(renames)
   }
 
   public async getAuthorUnions() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
     `)
     return res.map((row) => [row["actualname"] as string, ...(row["aliases"] as string[])])
   }
 
   public async getRawUnions() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT * FROM authorunions;
     `)
 
@@ -249,27 +250,21 @@ export default class DB {
   }
 
   public async getCommitTimeAtIndex(idx: number) {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT committertime FROM commits ORDER BY committertime DESC OFFSET ${idx} LIMIT 1;
     `)
     return res.length > 0 ? Number(res[0]["committertime"]) : 0
   }
 
   public async getOverallTimeRange() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT MIN(committertime) as min, MAX(committertime) as max from commits;
     `)
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
 
   public async getCurrentRenameIntervals() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
         SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampauthor DESC;
     `)
     return res.map((row) => {
@@ -283,22 +278,18 @@ export default class DB {
   }
 
   public async getHiddenFiles() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT path FROM hiddenfiles ORDER BY path ASC;
     `)
     return res.map((row) => row["path"] as string)
   }
 
   public async replaceHiddenFiles(hiddenFiles: string[]) {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       DELETE FROM hiddenfiles;
     `)
 
-    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("hiddenfiles", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("hiddenfiles", this.tmpDir, await this.connection)
     await ins.addAndFinalize(
       hiddenFiles.map((path) => {
         return { path: path }
@@ -307,10 +298,8 @@ export default class DB {
   }
 
   public async getCommits(path: string, count: number) {
-    const res = await (
-      await this.instance
-    ).all(`
-      SELECT distinct commithash, author, committertime, authortime, message, body 
+    const res = await this.query(`
+      SELECT distinct commithash, author, committertime, authortime, message, body
       FROM filechanges_commits_renamed_cached
       WHERE filepath GLOB '${path}*'
       ORDER BY committertime DESC, commithash
@@ -329,9 +318,7 @@ export default class DB {
   }
 
   public async getCommitHashes(path: string, count: number) {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT distinct commithash
       FROM filechanges_commits_renamed_cached
       WHERE filepath GLOB '${path}*'
@@ -344,18 +331,14 @@ export default class DB {
   }
 
   public async getCommitCountForPath(path: string) {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath GLOB '${path}*';
     `)
     return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT filepath, count(DISTINCT commithash) AS count
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath
@@ -371,9 +354,7 @@ export default class DB {
   }
 
   public async getLastChangedPerFile(): Promise<Record<string, number>> {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT filepath, MAX(committertime) AS max_time
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath;
@@ -388,9 +369,7 @@ export default class DB {
   }
 
   public async getAuthorCountPerFile(): Promise<Record<string, number>> {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT filepath, count(DISTINCT author) AS author_count
       FROM filechanges_commits_renamed_cached
       GROUP BY filepath;
@@ -405,18 +384,14 @@ export default class DB {
   }
 
   public async getMaxMinContribCounts() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT MAX(contribsum) as max, MIN(contribsum) as min FROM (SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath);
     `)
     return { max: Number(res[0]["max"]), min: Number(res[0]["min"]) }
   }
 
   public async getContribSumPerFile() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath;
     `)
 
@@ -430,12 +405,10 @@ export default class DB {
   }
 
   public async getDominantAuthorPerFile() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       WITH RankedAuthors AS (
         SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount,
-        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank 
+        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank
         FROM filechanges_commits_renamed_cached
         GROUP BY filepath, author
       )
@@ -457,16 +430,14 @@ export default class DB {
 
   public async updateCachedResult() {
     // TODO: fix combined_result
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
     CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
     SELECT * FROM filechanges_commits_renamed_files;
     `)
   }
 
   private async tableRowCount(table: string) {
-    return (await (await this.instance).all(`select count (*) as count from ${table};`))[0]["count"]
+    return (await this.query(`select count (*) as count from ${table};`))[0]["count"]
   }
 
   public async addRenames(renames: RenameEntry[], id?: string) {
@@ -475,7 +446,7 @@ export default class DB {
       toname: string | null
       timestamp: number
       timestampauthor: number
-    }>("renames", this.tmpDir, await this.instance, id)
+    }>("renames", this.tmpDir, await this.connection, id)
     await ins.addAndFinalize(
       renames.map((r) => {
         return {
@@ -489,12 +460,10 @@ export default class DB {
   }
 
   public async replaceFiles(files: RawGitObject[]) {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
       DELETE FROM files;
     `)
-    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("files", this.tmpDir, await this.instance)
+    const ins = Inserter.getSystemSpecificInserter<{ path: string }>("files", this.tmpDir, await this.connection)
     await ins.addAndFinalize(
       files.map((x) => {
         return { path: x.path }
@@ -503,27 +472,21 @@ export default class DB {
   }
 
   public async getFiles() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       FROM files;
     `)
     return res.map((row) => row["path"] as string)
   }
 
   public async commitTableEmpty() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT * FROM commits LIMIT 1;
     `)
     return res.length === 0
   }
 
   public async getLatestCommitHash(beforeTime?: number) {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT hash FROM commits WHERE committertime <= ${
         beforeTime ?? 1_000_000_000_000
       } ORDER BY committertime DESC LIMIT 1;
@@ -534,45 +497,35 @@ export default class DB {
   }
 
   public async getAuthors() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT DISTINCT author FROM commits_unioned;
     `)
     return res.map((row) => row["author"] as string)
   }
 
   public async getNewestAndOldestChangeDates() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
 
   public async getCommitCount() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed_cached;
     `)
     return Number(res[0]["count"])
   }
 
   public async getMaxAndMinCommitCount() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(distinct commithash) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC);
     `)
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
 
   public async getAuthorContribsForPath(path: string, isblob: boolean) {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
         isblob ? "=" : "GLOB"
       } '${path}${isblob ? "" : "*"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
@@ -592,9 +545,7 @@ export default class DB {
 
   public async getCommitCountPerTime(timerange: [number, number]) {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
     `)
     const mapped = res.map((x) => {
@@ -616,9 +567,7 @@ export default class DB {
   }
 
   public async updateColorSeed(seed: string) {
-    await (
-      await this.instance
-    ).all(`
+    await this.query(`
     DELETE FROM metadata WHERE field = 'colorseed';
       INSERT INTO metadata (field, value, value2) VALUES ('colorseed', null, '${seed}');
       `)
@@ -626,9 +575,7 @@ export default class DB {
   }
 
   public async getColorSeed() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT value2 FROM metadata WHERE field = 'colorseed';
     `)
     if (res.length < 1) return null
@@ -637,9 +584,7 @@ export default class DB {
   }
 
   public async getLastRunInfo() {
-    const res = await (
-      await this.instance
-    ).all(`
+    const res = await this.query(`
       SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;
     `)
     if (!res[0]) return { time: 0, hash: "" }
@@ -650,13 +595,13 @@ export default class DB {
     const commitInserter = Inserter.getSystemSpecificInserter<CommitDTO>(
       "commits",
       this.tmpDir,
-      await this.instance,
+      await this.connection,
       id
     )
     const fileChangeInserter = Inserter.getSystemSpecificInserter<DBFileChange>(
       "filechanges",
       this.tmpDir,
-      await this.instance,
+      await this.connection,
       id
     )
 

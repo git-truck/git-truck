@@ -25,6 +25,13 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
 
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
+const process = {
+  env: {
+    LOG_LEVEL: "DEBUG",
+    color: true
+  },
+}
+
 function setIntialLogLevel() {
   if (typeof process.env.LOG_LEVEL === "string") {
     setTimeout(() => {
