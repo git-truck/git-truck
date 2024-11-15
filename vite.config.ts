@@ -9,7 +9,11 @@ installGlobals()
 
 export default defineConfig({
   ssr: {
-    noExternal: [/^node:/, /^d3/, "lightningcss"]
+    // noExternal: [/^node:/, /^d3/, "lightningcss", "mock-aws-s3", "aws-sdk", "nock", "@mapbox/node-pre-gyp"]
+    external: ["duckdb", "mock-aws-s3", "nock", "@mapbox/node-pre-gyp"]
+  },
+  optimizeDeps: {
+    exclude: ["duckdb-async"]
   },
   plugins: [
     remix({
@@ -18,7 +22,7 @@ export default defineConfig({
     }),
     tsconfigPaths(),
     cjsInterop({
-      dependencies: ["@mdi/react", ...(process.env.NODE_ENV === "production" ? [] : ["react-use"])]
+      dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : []
     })
   ],
   define: {
