@@ -5,7 +5,7 @@ import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
 import path from "path"
-// import pkg from "../package.json"
+import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
@@ -25,9 +25,13 @@ async function main() {
   process.stdout.write("\u001b[2J\u001b[0;0H")
   console.log()
 
+  console.log(`Git Truck version ${pkg.version} (${process.env.NODE_ENV ?? "production"})`)
+
+  log.debug(process.env.NODE_ENV)
+
   if (args.h || args.help) {
     console.log()
-    console.log(`See for usage instructions.`)
+    console.log(`See ${pkg.homepage} for usage instructions.`)
     console.log()
     process.exit(0)
   }
@@ -36,6 +40,8 @@ async function main() {
   const port = await getPort({
     port: [...getPortLib.portNumbers(3000, 4000)]
   })
+
+  log.debug(process.env.NODE_ENV)
 
   // Serve application build
 
@@ -59,8 +65,10 @@ async function main() {
     })
 
     if (extensionError) {
-      console.error(extensionError)
+      log.error(extensionError)
     }
+
+    log.debug(process.env.NODE_ENV)
 
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension && isValidURI(extension) ? extension : "")
@@ -79,29 +87,6 @@ async function main() {
     }
   }
 
-  describeAsyncJob({
-    job: async () => {
-      const app = await createApp(
-        process.env.NODE_ENV ?? "production",
-        "/build",
-        path.join(import.meta.url, "public", "build")
-      )
-
-      const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
-      ;["SIGTERM", "SIGINT"].forEach((signal) => {
-        process.once(signal, () => server?.close(console.error))
-        process.once(signal, async () => await InstanceManager.closeAllDBConnections())
-      })
-    },
-    beforeMsg: "Starting app",
-    afterMsg: "App started",
-    errorMsg: "Failed to start app"
-  })
-}
-
-main()
-
-async function createApp(mode = "production", publicPath = "/build/", assetsBuildDirectory = "public/build/") {
   const viteDevServer =
     process.env.NODE_ENV === "production"
       ? undefined
@@ -111,48 +96,41 @@ async function createApp(mode = "production", publicPath = "/build/", assetsBuil
           })
         )
 
+  const remixHandler = createRequestHandler({
+    build: viteDevServer
+      ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+      : await import("../build/server/index.js")
+  })
+
   const app = express()
 
-  app.disable("x-powered-by")
-
-  // @ts-expect-error This error is wrong, the types are incorrect
   app.use(compression())
 
-  // @ts-expect-error This error is wrong, the types are incorrect
-  app.use(publicPath, express.static(assetsBuildDirectory, { immutable: true, maxAge: "1y" }))
+  // http://expressjs.com/en/advanced/best-practice-security.html#at-a-minimum-disable-x-powered-by-header
+  app.disable("x-powered-by")
 
+  // handle asset requests
   if (viteDevServer) {
-    // @ts-expect-error This error is wrong, the types are incorrect
     app.use(viteDevServer.middlewares)
   } else {
-    app.use(
-      "/assets",
-      // @ts-expect-error This error is wrong, the types are incorrect
-      express.static("build/client/assets", {
-        immutable: true,
-        maxAge: "1y"
-      })
-    )
+    // Vite fingerprints its assets so we can cache forever.
+    app.use("/assets", express.static("build/client/assets", { immutable: true, maxAge: "1y" }))
   }
-  // @ts-expect-error This error is wrong, the types are incorrect
+
+  // Everything else (like favicon.ico) is cached for an hour. You may want to be
+  // more aggressive with this caching.
   app.use(express.static("build/client", { maxAge: "1h" }))
 
-  if (mode === "development") {
-    // @ts-expect-error This error is wrong, the types are incorrect
-    app.use(morgan("dev"))
-  }
+  app.use(morgan("tiny"))
 
-  app.all(
-    "*",
-    // @ts-expect-error This error is wrong, the types are incorrect
-    createRequestHandler({
-      build: viteDevServer
-        ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
-        : // Expected, this is present if the app has been built
-          // eslint-disable-next-line import/no-unresolved
-          await import("../build/server/index.js")
-    })
-  )
+  // handle SSR requests
+  app.all("*", remixHandler)
 
-  return app
+  const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
+  ;["SIGTERM", "SIGINT"].forEach((signal) => {
+    process.once(signal, () => server.close(console.error))
+    process.once(signal, async () => await InstanceManager.closeAllDBConnections())
+  })
 }
+
+main()
