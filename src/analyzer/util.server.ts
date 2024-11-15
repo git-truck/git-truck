@@ -8,6 +8,7 @@ import invariant from "tiny-invariant"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
 import { existsSync } from "node:fs"
+import ServerInstance from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
   return array[array.length - 1]
