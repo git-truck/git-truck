@@ -13,7 +13,7 @@ export default defineConfig({
     external: ["duckdb", "mock-aws-s3", "nock", "@mapbox/node-pre-gyp"]
   },
   optimizeDeps: {
-    exclude: ["duckdb-async"]
+    // exclude: ["duckdb-async"]
   },
   plugins: [
     remix({
