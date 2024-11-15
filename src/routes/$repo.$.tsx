@@ -1,5 +1,5 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "@remix-run/node"
 import { Await, Link, Params, isRouteErrorResponse, useLoaderData, useRouteError } from "@remix-run/react"
 import clsx from "clsx"

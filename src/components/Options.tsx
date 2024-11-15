@@ -1,4 +1,4 @@
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { memo } from "react"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
