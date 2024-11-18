@@ -4,7 +4,6 @@ import express from "express"
 import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@remix-run/express"
-import path from "path"
 import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
@@ -25,9 +24,7 @@ async function main() {
   process.stdout.write("\u001b[2J\u001b[0;0H")
   console.log()
 
-  console.log(`Git Truck version ${pkg.version} (${process.env.NODE_ENV ?? "production"})`)
-
-  log.debug(process.env.NODE_ENV)
+  console.log(`Git Truck version ${pkg.version} (${process.env.NODE_ENV ?? "development"})`)
 
   if (args.h || args.help) {
     console.log()
@@ -40,8 +37,6 @@ async function main() {
   const port = await getPort({
     port: [...getPortLib.portNumbers(3000, 4000)]
   })
-
-  log.debug(process.env.NODE_ENV)
 
   // Serve application build
 
