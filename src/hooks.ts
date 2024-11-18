@@ -1,5 +1,5 @@
-import type { MutableRefObject } from "react"
-import { useState, useEffect, useMemo } from "react"
+import type { Dispatch, MutableRefObject, SetStateAction } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 
@@ -30,4 +30,55 @@ export function useMediaQuery(query: string) {
     return () => mediaQuery.removeEventListener("change", listener)
   }, [query])
   return matches
+}
+
+export function useLocalStorage<T>(key: string, initialValue: T | undefined = undefined) {
+  const [storedValue, setStoredValue] = useState<T | undefined>(() => {
+    try {
+      const item = window.localStorage.getItem(key)
+      return item ? JSON.parse(item) : initialValue
+    } catch (error) {
+      console.error(error)
+      return initialValue
+    }
+  })
+
+  const setValue: Dispatch<SetStateAction<T | undefined>> = useCallback(
+    (value) => {
+      try {
+        const valueToStore = value instanceof Function ? value(storedValue) : value
+        setStoredValue(valueToStore)
+        window.localStorage.setItem(key, JSON.stringify(valueToStore))
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    [key, storedValue]
+  )
+
+  return [storedValue, setValue] as const
+}
+
+export function useKey(key: string, callback: () => void) {
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === key) {
+        callback()
+      }
+    }
+    window.addEventListener("keydown", listener)
+    return () => window.removeEventListener("keydown", listener)
+  }, [key, callback])
+}
+
+export function useMouse() {
+  const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  useEffect(() => {
+    const listener = (event: MouseEvent) => {
+      setMouse({ x: event.clientX, y: event.clientY })
+    }
+    window.addEventListener("mousemove", listener)
+    return () => window.removeEventListener("mousemove", listener)
+  }, [])
+  return mouse
 }
