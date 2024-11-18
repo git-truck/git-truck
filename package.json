@@ -130,7 +130,7 @@
     "typescript": "5.2",
     "typescript-eslint": "^8.24.0",
     "uniqolor": "^1.1.1",
-    "vite": "^6.1.0",
+    "vite": "^5.4.11",
     "vite-plugin-cjs-interop": "^2.1.4",
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.1.4",
