@@ -118,7 +118,6 @@
     "react-konami-code": "^2.3.0",
     "react-spinners": "^0.14.1",
     "react-tiny-popover": "^8.1.2",
-    "react-use": "^17.5.1",
     "react-use-size": "^3.0.3",
     "remix-typedjson": "^0.4.1",
     "rimraf": "^6.0.1",
