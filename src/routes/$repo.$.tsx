@@ -9,7 +9,7 @@ import type { Dispatch, SetStateAction } from "react"
 import { Suspense, memo, useEffect, useMemo, useRef, useState } from "react"
 import { Online } from "react-detect-offline"
 import { createPortal } from "react-dom"
-import { useMouse } from "react-use/esm"
+import { useMouse, useClient } from "~/hooks"
 import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
@@ -32,7 +32,7 @@ import TimeSlider from "~/components/TimeSlider"
 import { Tooltip } from "~/components/Tooltip"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
-import { useClient } from "~/hooks"
+
 import { cn } from "~/styling"
 
 export interface RepoData {
