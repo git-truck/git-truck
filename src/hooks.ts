@@ -33,15 +33,16 @@ export function useMediaQuery(query: string) {
 }
 
 export function useLocalStorage<T>(key: string, initialValue: T | undefined = undefined) {
-  const [storedValue, setStoredValue] = useState<T | undefined>(() => {
+  const [storedValue, setStoredValue] = useState<T | undefined>(undefined)
+
+  useEffect(() => {
     try {
       const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
+      setStoredValue(item ? JSON.parse(item) : initialValue)
     } catch (error) {
       console.error(error)
-      return initialValue
     }
-  })
+  }, [key, initialValue])
 
   const setValue: Dispatch<SetStateAction<T | undefined>> = useCallback(
     (value) => {
