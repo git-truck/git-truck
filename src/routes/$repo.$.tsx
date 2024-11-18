@@ -80,10 +80,10 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     return redirect("/")
   }
   const dataPromise = analyze(params)
-  return defer({ dataPromise })
+  return { dataPromise }
 }
 
-export const action: ActionFunction = async ({ request, params }) => {
+export const action: ActionFunction = async ({ request, params }: LoaderFunctionArgs) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
@@ -409,8 +409,8 @@ export default function Repo() {
       }
     >
       <Await resolve={dataPromise}>
-        {(dataPromise) => (
-          <Providers data={dataPromise as RepoData}>
+        {(data) => (
+          <Providers data={data as RepoData}>
             <div className={cn("app-container", containerClass)}>
               <aside
                 className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
@@ -489,7 +489,7 @@ export default function Repo() {
                           isFullscreen
                       })}
                     />
-                    {dataPromise.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    {data.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
                     <SearchCard />
                     <Online>
                       <FeedbackCard />
