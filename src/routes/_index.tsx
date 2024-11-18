@@ -53,19 +53,20 @@ export const loader = async () => {
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
-  return defer<{
+  const data: {
     repositories: Repository[]
     baseDir: string
     baseDirName: string
     analyzedReposPromise: Promise<CompletedResult[]>
     [key: string]: string | string[] | Repository[] | Promise<CompletedResult[]> | Repository
-  }>({
+  } = {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
     analyzedReposPromise,
     ...repositoryPromises
-  })
+  }
+  return data
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
