@@ -8,12 +8,17 @@ import { cjsInterop } from "vite-plugin-cjs-interop"
 installGlobals()
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      external: ["duckdb-async"]
+    }
+  },
   ssr: {
-    // noExternal: [/^node:/, /^d3/, "lightningcss", "mock-aws-s3", "aws-sdk", "nock", "@mapbox/node-pre-gyp"]
-    external: ["duckdb", "mock-aws-s3", "nock", "@mapbox/node-pre-gyp"]
+    external: ["duckdb-async"]
   },
   optimizeDeps: {
-    // exclude: ["duckdb-async"]
+    entries: [],
+    exclude: ["@mapbox/node-pre-gyp", "aws-sdk", "nock", "mock-aws-s3"]
   },
   plugins: [
     remix({
