@@ -109,7 +109,20 @@ async function main() {
     app.use(viteDevServer.middlewares)
   } else {
     // Vite fingerprints its assets so we can cache forever.
-    app.use("/assets", express.static("build/client/assets", { immutable: true, maxAge: "1y" }))
+    app.use(
+      "/assets",
+      express.static("build/client/assets", {
+        immutable: true,
+        maxAge: "1y",
+        setHeaders(res, path, stat) {
+          console.log("checking file extension")
+          if (path.endsWith(".js")) {
+            console.log("setting js header")
+            res.setHeader("Content-Type", "application/javascript; charset=utf-8")
+          }
+        }
+      })
+    )
   }
 
   // Everything else (like favicon.ico) is cached for an hour. You may want to be
@@ -123,8 +136,15 @@ async function main() {
 
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
   ;["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, () => server.close(console.error))
-    process.once(signal, async () => await InstanceManager.closeAllDBConnections())
+    process.once(signal, async () => {
+      const promise = InstanceManager.closeAllDBConnections()
+      console.log("Shutting down server")
+      server.close(console.error)
+      console.log("Web server shut down")
+      console.log("Shutting down database")
+      await promise
+      console.log("Database shut down")
+    })
   })
 }
 

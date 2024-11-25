@@ -537,8 +537,7 @@ function ChartWrapper({
   setHoveredObject: (obj: GitObject | null) => void
 }) {
   const chartWrapperRef = useRef<HTMLDivElement>(null)
-  const bodyRef = useRef<HTMLElement>(document.body)
-  const mouse = useMouse(bodyRef)
+  const mouse = useMouse()
 
   return (
     <div className="card grid overflow-y-hidden p-2" ref={chartWrapperRef}>
