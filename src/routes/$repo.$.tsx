@@ -1,6 +1,6 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
 import Icon from "@mdi/react"
-import { redirect, Await, Link, Params, isRouteErrorResponse, useLoaderData, useRouteError } from "react-router"
+import { redirect, Await, Link, isRouteErrorResponse, useLoaderData, useRouteError } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
@@ -14,7 +14,7 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
-import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
+import { openFile } from "~/analyzer/util.server"
 import BarChart from "~/components/BarChart"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
@@ -75,11 +75,11 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
-export const loader = async ({ params }: Route.LoaderArgs) => {
+export const loader = async ({ params, context }: Route.LoaderArgs) => {
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
-  const dataPromise = analyze(params)
+  const dataPromise = analyze(params, context)
   return { dataPromise }
 }
 
@@ -222,7 +222,7 @@ export const ErrorBoundary = () => {
   )
 }
 
-async function analyze(params: Params) {
+async function analyze(params: Route.LoaderArgs["params"], context: Route.LoaderArgs["context"]) {
   const args = await getArgs()
   const path = resolve(args.path, params["repo"] ?? "")
   const branch = params["*"]
@@ -357,7 +357,7 @@ async function analyze(params: Params) {
 
   const fullData = {
     repo,
-    gitTruckInfo: await getGitTruckInfo(),
+    gitTruckInfo: context,
     databaseInfo: databaseInfo
   } as RepoData
 
