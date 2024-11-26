@@ -88,8 +88,6 @@ See what's changed here: ${generateVersionComparisonLink({
       log.error(extensionError)
     }
 
-    log.debug(process.env.NODE_ENV)
-
     if (process.env.NODE_ENV !== "development") {
       const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
@@ -171,12 +169,15 @@ See what's changed here: ${generateVersionComparisonLink({
   ;["SIGTERM", "SIGINT"].forEach((signal) => {
     process.once(signal, async () => {
       const promise = InstanceManager.closeAllDBConnections()
-      console.log("Shutting down server")
+      log.info("Shutting down server")
       server.close(console.error)
-      console.log("Web server shut down")
-      console.log("Shutting down database")
-      await promise
-      console.log("Database shut down")
+      log.info("Web server shut down")
+      await describeAsyncJob({
+        job: () => promise,
+        beforeMsg: "Stopping Git Truck...",
+        afterMsg: "Successfully stopped Git Truck",
+        errorMsg: "Failed to stop Git Truck"
+      })
     })
   })
 }
