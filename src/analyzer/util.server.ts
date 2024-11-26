@@ -278,9 +278,9 @@ let latestVersion: string | null = null
 export async function getLatestVersion() {
   if (!latestVersion) {
     const [result] = await promiseHelper(
-      fetch("https://unpkg.com/git-truck/package.json")
+      fetch("https://registry.npmjs.org/-/package/git-truck/dist-tags")
         .then((res) => res.json())
-        .then((pkg) => pkg.version)
+        .then((pkg) => pkg.latest)
     )
     latestVersion = result
   }
