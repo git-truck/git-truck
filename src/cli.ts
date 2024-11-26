@@ -3,13 +3,13 @@
 import express from "express"
 import compression from "compression"
 import morgan from "morgan"
-import { createRequestHandler } from "@react-router/express";
+import { createRequestHandler } from "@react-router/express"
 import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName, getLatestVersion, isValidURI } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import InstanceManager from "./analyzer/InstanceManager.server"
 
@@ -91,10 +91,18 @@ async function main() {
           })
         )
 
+  const latestVersion = await getLatestVersion()
+
   const reactRouterHandler = createRequestHandler({
     build: viteDevServer
       ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-      : await import("../build/server/index.js")
+      : await import("../build/server/index.js"),
+    getLoadContext() {
+      return {
+        version: pkg.version,
+        latestVersion: latestVersion
+      }
+    }
   })
 
   const app = express()

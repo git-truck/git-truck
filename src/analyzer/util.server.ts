@@ -246,15 +246,6 @@ export function isValidURI(uri: string) {
   }
 }
 
-export async function getGitTruckInfo() {
-  const latestVersion = await getLatestVersion()
-  invariant(process.env.PACKAGE_VERSION, "PACKAGE_VERSION is not defined")
-  return {
-    version: process.env.PACKAGE_VERSION,
-    latestVersion: latestVersion
-  }
-}
-
 function getCommandLine() {
   switch (process.platform) {
     case "darwin":
@@ -275,14 +266,19 @@ export function openFile(repoDir: string, path: string) {
   })
 }
 
-export async function getLatestVersion() {
-  const [result] = await promiseHelper(
-    fetch("https://unpkg.com/git-truck/package.json")
-      .then((res) => res.json())
-      .then((pkg) => pkg.version)
-  )
+let latestVersion: string | null = null
 
-  return result
+export async function getLatestVersion() {
+  if (!latestVersion) {
+    const [result] = await promiseHelper(
+      fetch("https://unpkg.com/git-truck/package.json")
+        .then((res) => res.json())
+        .then((pkg) => pkg.version)
+    )
+    latestVersion = result
+  }
+
+  return latestVersion
 }
 
 export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (baseDir) => {
