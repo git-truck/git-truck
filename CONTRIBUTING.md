@@ -7,7 +7,7 @@ This project is split up into two parts:
 - A CLI interface for launching the application
 - A fullstack application
 
-To run the fullstack application by itself, you can run `npm run dev`. This will startup the Remix Vite Dev Server, which supports Hot Module Reloading, meaning app state is preserved between rebuilds. This is not how the end user uses the application and does not support arguments. To test your local version of the CLI, you should instead install it globally by running `npm install -g .` in the root of the repo. Now, when you run `git-truck` in a git repository to test, it is symlinked and use your local development version.
+To run the fullstack application by itself, you can run `npm run dev`. This will startup the React Router Dev Server, which supports Hot Module Reloading, meaning app state is preserved between rebuilds. This is not how the end user uses the application and does not support arguments. To test your local version of the CLI, you should instead install it globally by running `npm install -g .` in the root of the repo. Now, when you run `git-truck` in a git repository to test, it is symlinked and use your local development version.
 **Note:** When testing the production build, remember to build the project with `npm run build` when making changes, so your changes are reflected.
 
 <!-- TODO: Make sure it is possible to change log levels -->
