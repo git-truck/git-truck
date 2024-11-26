@@ -1,13 +1,4 @@
-import type { MetaFunction } from "react-router";
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  isRouteErrorResponse,
-  useRouteError,
-} from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse, useRouteError } from "react-router"
 
 import "~/styles/vars.css"
 import { Code } from "./components/util"
@@ -15,7 +6,7 @@ import "~/tailwind.css"
 import { ThemeProvider, cn, usePrefersLightMode } from "./styling"
 import "react-datepicker/dist/react-datepicker.css"
 
-export const meta: MetaFunction = () => {
+export const meta = () => {
   return [{ title: "Git Truck" }]
 }
 
