@@ -53,20 +53,13 @@ export const loader = async () => {
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
-  const data: {
-    repositories: Repository[]
-    baseDir: string
-    baseDirName: string
-    analyzedReposPromise: Promise<CompletedResult[]>
-    [key: string]: string | string[] | Repository[] | Promise<CompletedResult[]> | Repository
-  } = {
+  return {
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
     analyzedReposPromise,
-    ...repositoryPromises
+    repositoryPromises
   }
-  return data
 }
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -97,7 +90,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 }
 
 export default function Index() {
-  const { repositories, baseDir, analyzedReposPromise, ...repositoryPromises } = useLoaderData<typeof loader>()
+  const { repositories, baseDir, analyzedReposPromise, repositoryPromises } = useLoaderData<typeof loader>()
   const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const fetcher = useFetcher<typeof action>()
 
@@ -220,13 +213,7 @@ function RepositoryList({ children }: { children: ReactNode[] }) {
   )
 }
 
-function RepositoryEntry({
-  repo,
-  analyzedRepos
-}: {
-  repo: SerializeFrom<Repository>
-  analyzedRepos: CompletedResult[]
-}): ReactNode {
+function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRepos: CompletedResult[] }): ReactNode {
   const isSuccesful = repo.status === "Success"
   const isError = repo.status === "Error"
 
