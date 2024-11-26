@@ -1,5 +1,4 @@
-import { ActionFunctionArgs, defer, type SerializeFrom } from "react-router";
-import { Await, Form, Link, useFetcher, useLoaderData } from "react-router";
+import { Await, Form, Link, useFetcher, useLoaderData } from "react-router"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
@@ -18,6 +17,7 @@ import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { log } from "~/analyzer/log.server"
+import { Route } from "./+types/_index"
 
 export const loader = async () => {
   const queryPath = null
@@ -69,7 +69,7 @@ export const loader = async () => {
   return data
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {
   const baseDir = new URL(request.url).searchParams.get("path")
 
   log.info(`Checking path: ${baseDir}`)
@@ -237,7 +237,7 @@ function RepositoryEntry({
   const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
 
   return (
-    (<Fragment key={repo.name}>
+    <Fragment key={repo.name}>
       <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
           <Icon path={mdiGit} size={1} className="inline-block flex-shrink-0" title="Git repository" />
@@ -299,14 +299,15 @@ function RepositoryEntry({
         //     Browse
         //   </button>
         // </Form>
-        (<Link
+        <Link
           className="btn btn--primary"
           to={`/?${new URLSearchParams({
             path: repo.path
           }).toString()}`}
           prefetch="none"
-        >Browse
-                  </Link>)
+        >
+          Browse
+        </Link>
       ) : (
         <Link
           className="btn btn--primary btn--outlined transition-colors"
@@ -320,6 +321,6 @@ function RepositoryEntry({
         </Link>
       )}
       <hr className="col-span-full last:hidden" />
-    </Fragment>)
-  );
+    </Fragment>
+  )
 }
