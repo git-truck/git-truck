@@ -3,13 +3,13 @@
 import express from "express"
 import compression from "compression"
 import morgan from "morgan"
-import { createRequestHandler } from "@remix-run/express"
+import { createRequestHandler } from "@react-router/express";
 import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
 import { semverCompare, getPathFromRepoAndHead, generateVersionComparisonLink } from "./util"
-import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
+import { describeAsyncJob, getDirName, getLatestVersion, isValidURI } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import InstanceManager from "./analyzer/InstanceManager.server"
 
@@ -116,9 +116,9 @@ See what's changed here: ${generateVersionComparisonLink({
           })
         )
 
-  const remixHandler = createRequestHandler({
+  const reactRouterHandler = createRequestHandler({
     build: viteDevServer
-      ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+      ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
       : await import("../build/server/index.js")
   })
 
@@ -157,7 +157,7 @@ See what's changed here: ${generateVersionComparisonLink({
   app.use(morgan("tiny"))
 
   // handle SSR requests
-  app.all("*", remixHandler)
+  app.all("*", reactRouterHandler)
 
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
   ;["SIGTERM", "SIGINT"].forEach((signal) => {

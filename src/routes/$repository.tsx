@@ -1,4 +1,4 @@
-import { DataFunctionArgs, redirect } from "@remix-run/node"
+import { DataFunctionArgs, redirect } from "react-router";
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import invariant from "tiny-invariant"
