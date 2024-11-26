@@ -63,20 +63,21 @@ async function main() {
       log.error(extensionError)
     }
 
-    if (process.env.NODE_ENV !== "development") {
-      const openURL = url + (extension && isValidURI(extension) ? extension : "")
+    if (!args.headless && process.env.NODE_ENV === "development") {
+      args.headless = true
+    }
+    const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
-      if (!args.headless) {
-        log.debug(`Opening ${openURL}`)
-        await describeAsyncJob({
-          job: () => open(openURL),
-          beforeMsg: "Opening Git Truck in your browser",
-          afterMsg: "Opened Git Truck in your browser",
-          errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
-        })
-      } else {
-        console.log(`Application available at ${url}`)
-      }
+    if (!args.headless) {
+      log.debug(`Opening ${openURL}`)
+      await describeAsyncJob({
+        job: () => open(openURL),
+        beforeMsg: "Opening Git Truck in your browser",
+        afterMsg: "Opened Git Truck in your browser",
+        errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
+      })
+    } else {
+      console.log(`Application available at ${url}`)
     }
   }
 
@@ -142,19 +143,23 @@ async function main() {
 
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
   ;["SIGTERM", "SIGINT"].forEach((signal) => {
-    process.once(signal, async () => {
-      const promise = InstanceManager.closeAllDBConnections()
-      log.info("Shutting down server")
-      server.close(console.error)
-      log.info("Web server shut down")
-      await describeAsyncJob({
-        job: () => promise,
-        beforeMsg: "Stopping Git Truck...",
-        afterMsg: "Successfully stopped Git Truck",
-        errorMsg: "Failed to stop Git Truck"
-      })
-    })
+    process.once(signal, stopHandler)
   })
+
+  process.on("uncaughtException", stopHandler)
+
+  async function stopHandler() {
+    const promise = InstanceManager.closeAllDBConnections()
+    log.info("Shutting down server")
+    server.close(console.error)
+    log.info("Web server shut down")
+    await describeAsyncJob({
+      job: () => promise,
+      beforeMsg: "Stopping Git Truck...",
+      afterMsg: "Successfully stopped Git Truck",
+      errorMsg: "Failed to stop Git Truck"
+    })
+  }
 }
 
 main()
