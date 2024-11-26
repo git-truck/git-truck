@@ -1,5 +1,5 @@
 import { useTransition, useState, useRef, useEffect } from "react"
-import { useNavigation, useSubmit } from "@remix-run/react"
+import { useNavigation, useSubmit } from "react-router";
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"

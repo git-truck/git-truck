@@ -1,4 +1,4 @@
-import { useFetcher, useLocation } from "@remix-run/react"
+import { useFetcher, useLocation } from "react-router";
 import clsx from "clsx"
 import { useEffect, useMemo } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
