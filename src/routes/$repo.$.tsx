@@ -1,7 +1,6 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
 import Icon from "@mdi/react"
-import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "react-router";
-import { Await, Link, Params, isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
+import { redirect, Await, Link, Params, isRouteErrorResponse, useLoaderData, useRouteError } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
@@ -34,6 +33,7 @@ import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { Code } from "~/components/util"
 
 import { cn } from "~/styling"
+import { Route } from "./+types/$repo.$"
 
 export interface RepoData {
   repo: Repository
@@ -75,7 +75,7 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params }: Route.LoaderArgs) => {
   if (!params["repo"] || !params["*"]) {
     return redirect("/")
   }
@@ -83,7 +83,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   return { dataPromise }
 }
 
-export const action: ActionFunction = async ({ request, params }: LoaderFunctionArgs) => {
+export const action = async ({ request, params }: Route.ActionArgs) => {
   if (!params["repo"]) {
     throw Error("This can never happen, since this route is only called if a repo exists in the URL")
   }
