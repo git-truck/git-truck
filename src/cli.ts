@@ -3,7 +3,7 @@
 import express from "express"
 import compression from "compression"
 import morgan from "morgan"
-import { createRequestHandler } from "@remix-run/express"
+import { createRequestHandler } from "@react-router/express";
 import pkg from "../package.json"
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server"
@@ -91,9 +91,9 @@ async function main() {
           })
         )
 
-  const remixHandler = createRequestHandler({
+  const reactRouterHandler = createRequestHandler({
     build: viteDevServer
-      ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+      ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
       : await import("../build/server/index.js")
   })
 
@@ -132,7 +132,7 @@ async function main() {
   app.use(morgan("tiny"))
 
   // handle SSR requests
-  app.all("*", remixHandler)
+  app.all("*", reactRouterHandler)
 
   const server = process.env.HOST ? app.listen(port, process.env.HOST, onListen) : app.listen(port, onListen)
   ;["SIGTERM", "SIGINT"].forEach((signal) => {

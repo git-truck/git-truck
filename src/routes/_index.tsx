@@ -1,5 +1,5 @@
-import { ActionFunctionArgs, defer, type SerializeFrom } from "@remix-run/node"
-import { Await, Form, Link, useFetcher, useLoaderData } from "@remix-run/react"
+import { ActionFunctionArgs, defer, type SerializeFrom } from "react-router";
+import { Await, Form, Link, useFetcher, useLoaderData } from "react-router";
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
@@ -237,7 +237,7 @@ function RepositoryEntry({
   const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
 
   return (
-    <Fragment key={repo.name}>
+    (<Fragment key={repo.name}>
       <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
           <Icon path={mdiGit} size={1} className="inline-block flex-shrink-0" title="Git repository" />
@@ -299,15 +299,14 @@ function RepositoryEntry({
         //     Browse
         //   </button>
         // </Form>
-        <Link
+        (<Link
           className="btn btn--primary"
           to={`/?${new URLSearchParams({
             path: repo.path
           }).toString()}`}
           prefetch="none"
-        >
-          Browse
-        </Link>
+        >Browse
+                  </Link>)
       ) : (
         <Link
           className="btn btn--primary btn--outlined transition-colors"
@@ -321,6 +320,6 @@ function RepositoryEntry({
         </Link>
       )}
       <hr className="col-span-full last:hidden" />
-    </Fragment>
-  )
+    </Fragment>)
+  );
 }

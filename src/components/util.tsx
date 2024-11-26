@@ -8,7 +8,7 @@ import anitruck from "~/assets/truck.gif"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit } from "@remix-run/react"
+import { useSubmit } from "react-router";
 import { getPathFromRepoAndHead } from "~/util"
 
 export const CloseButton = ({

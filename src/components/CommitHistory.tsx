@@ -7,7 +7,7 @@ import { Fragment, useEffect, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
-import { useFetcher } from "@remix-run/react"
+import { useFetcher } from "react-router";
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { CloseButton, LegendDot } from "./util"

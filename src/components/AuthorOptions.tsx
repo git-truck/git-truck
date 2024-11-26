@@ -1,6 +1,6 @@
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Form, useNavigation } from "@remix-run/react"
+import { Form, useNavigation } from "react-router";
 import { useState } from "react"
 import { Slider, Rail, Handles, Tracks, Ticks, SliderItem } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"

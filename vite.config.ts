@@ -1,11 +1,8 @@
-import { vitePlugin as remix } from "@remix-run/dev"
+import { reactRouter } from "@react-router/dev/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
-import { installGlobals } from "@remix-run/node"
 import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
-
-installGlobals()
 
 export default defineConfig({
   build: {
@@ -21,7 +18,7 @@ export default defineConfig({
     exclude: ["@mapbox/node-pre-gyp", "aws-sdk", "nock", "mock-aws-s3"]
   },
   plugins: [
-    remix({
+    reactRouter({
       appDirectory: "src",
       serverModuleFormat: "esm",
       future: {

@@ -1,6 +1,6 @@
 import { sleep } from "~/analyzer/util.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
-import type { LoaderFunctionArgs } from "@remix-run/node"
+import type { LoaderFunctionArgs } from "react-router";
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import { ProgressData } from "~/components/LoadingIndicator"
 

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { mdiAccountMultiple, mdiEyeOffOutline, mdiFile, mdiFolder, mdiOpenInNew } from "@mdi/js"
 import Icon from "@mdi/react"
-import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
+import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "react-router";
 import byteSize from "byte-size"
 import clsx from "clsx"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
