@@ -171,7 +171,14 @@ export function createTruckSpinner() {
 type Spinner = ReturnType<typeof createSpinner>
 let spinner: null | Spinner = null
 
+/**
+ * This function is a wrapper around a job that provides a spinner and logs the result of the job.
+ * @returns
+ */
 export async function describeAsyncJob<T>({
+  /**
+   * The job to run
+   */
   job = async () => null as T,
   beforeMsg = "",
   afterMsg = "",
