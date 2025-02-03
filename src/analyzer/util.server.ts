@@ -46,6 +46,7 @@ export function runProcess(
         resolve(Buffer.concat(chunks).toString().trim())
       })
     } catch (e) {
+      log.error(e as Error)
       reject(e)
     }
   })

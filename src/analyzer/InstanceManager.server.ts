@@ -34,7 +34,7 @@ export default class InstanceManager {
   public static async closeAllDBConnections() {
     for (const [, repo] of this.instances) {
       for (const [, branchInstance] of repo) {
-        await branchInstance.db.close()
+        await branchInstance.db.disconnect()
       }
     }
     this.instances = new Map()
