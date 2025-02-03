@@ -40,7 +40,7 @@
   "devDependencies": {
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
-    "@playwright/test": "^1.39.0",
+    "@playwright/test": "^1.50.1",
     "@remix-run/dev": "2.2.0",
     "@remix-run/eslint-config": "2.2.0",
     "@remix-run/express": "^2.2.0",
