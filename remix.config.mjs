@@ -9,7 +9,8 @@ export default {
   browserNodeBuiltinsPolyfill: {
     modules: {
       path: true,
-      crypto: true
+      crypto: true,
+      buffer: true
     }
   }
 }
