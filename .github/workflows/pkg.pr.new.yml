@@ -1,0 +1,184 @@
+name: Publish Any Commit
+
+on: [push, pull_request_target]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    outputs:
+      has-permissions: ${{ steps.checkPermissions.outputs.require-result }}
+    steps:
+      - name: Check permissions
+        id: checkPermissions
+        uses: actions-cool/check-user-permission@v2
+        with:
+          require: "write"
+
+  publish:
+    needs: check
+    if: github.event_name == 'push' || needs.check.outputs.has-permissions == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
+
+      - name: Build
+        run: bun run build
+
+      - name: Publish packages
+        run: bunx pkg-pr-new publish --json output.json --comment=off
+
+      - name: Post or update comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const output = JSON.parse(fs.readFileSync('output.json', 'utf8'));
+
+            const packages = (output.packages || [])
+              .map((p) => `- ${p.name}: ${p.url}`)
+              .join('\n');
+
+            const templates = (output.templates || [])
+              .map((t) => `- [${t.name}](${t.url})`)
+              .join('\n');
+
+            const sha =
+              context.eventName === 'pull_request' || context.eventName === 'pull_request_target'
+                ? context.payload.pull_request.head.sha
+                : context.payload.after;
+
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
+            const botCommentIdentifier = '## Try out this PR';
+
+            async function findBotComment(issueNumber) {
+              if (!issueNumber) return null;
+
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  per_page: 100,
+                }
+              );
+
+              return comments.find(
+                (comment) =>
+                  comment.user?.type === 'Bot' &&
+                  comment.body?.includes(botCommentIdentifier)
+              );
+            }
+
+            function buildBody(issueNumber) {
+              const npxTryCommand = issueNumber
+                ? `npx -y https://pkg.pr.new/${context.repo.repo}@${issueNumber}`
+                : null;
+
+              const bunxTryCommand = issueNumber
+                ? `bunx --bun https://pkg.pr.new/${context.repo.repo}@${issueNumber}`
+                : null;
+
+              return [
+                '## Try out this PR',
+                '',
+                ...(npxTryCommand
+                  ? [
+                      'Run one of these commands locally:',
+                      '',
+                      '```bash',
+                      npxTryCommand,
+                      bunxTryCommand,
+                      '```',
+                      '',
+                    ]
+                  : []),
+                packages ? '### Published Packages' : '',
+                packages,
+                packages ? '' : '',
+                templates ? '### Templates' : '',
+                templates,
+                templates ? '' : '',
+                `[View Commit](${commitUrl})`,
+              ]
+                .filter(Boolean)
+                .join('\n');
+            }
+
+            async function createOrUpdateComment(issueNumber) {
+              if (!issueNumber) {
+                console.log('No issue number provided. Cannot post or update comment.');
+                return;
+              }
+
+              const body = buildBody(issueNumber);
+              const existingComment = await findBotComment(issueNumber);
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  issue_number: issueNumber,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body,
+                });
+              }
+            }
+
+            async function logPublishInfo() {
+              console.log('\n' + '='.repeat(50));
+              console.log('Publish Information');
+              console.log('='.repeat(50));
+              console.log('\nPublished Packages:');
+              console.log(packages || '(none)');
+              console.log('\nTemplates:');
+              console.log(templates || '(none)');
+              console.log(`\nCommit URL: ${commitUrl}`);
+              console.log('\n' + '='.repeat(50));
+            }
+
+            if (
+              context.eventName === 'pull_request' ||
+              context.eventName === 'pull_request_target'
+            ) {
+              if (context.issue.number) {
+                await createOrUpdateComment(context.issue.number);
+              }
+            } else if (context.eventName === 'push') {
+              const pullRequests = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`,
+              });
+
+              if (pullRequests.data.length > 0) {
+                await createOrUpdateComment(pullRequests.data[0].number);
+              } else {
+                console.log(
+                  'No open pull request found for this push. Logging publish information to console:'
+                );
+                await logPublishInfo();
+              }
+            }
