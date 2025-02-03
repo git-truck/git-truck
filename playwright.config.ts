@@ -22,8 +22,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   /* Timeout */
   timeout: 2 * 60 * 1000,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Opt out of parallel tests. */
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
