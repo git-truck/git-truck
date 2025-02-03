@@ -1,5 +1,4 @@
 import { getCoAuthors } from "./coauthors.server"
-import { log } from "./log.server"
 import type { Person } from "./model"
 
 describe("getCoAuthors", () => {
