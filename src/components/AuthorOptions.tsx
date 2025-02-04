@@ -1,6 +1,6 @@
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import Icon from "@mdi/react"
-import { useNavigation, useSubmit } from "@remix-run/react"
+import { Form, useNavigation } from "@remix-run/react"
 import { useState } from "react"
 import { Slider, Rail, Handles, Tracks, Ticks, SliderItem } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
@@ -142,21 +142,11 @@ function PercentageSlider() {
 }
 
 export function AuthorOptions({ showUnionAuthorsModal }: { showUnionAuthorsModal: () => void }) {
-  const submit = useSubmit()
   const transitionState = useNavigation()
   const { repo } = useData()
   const { metricType } = useOptions()
 
   if (metricType !== "TOP_CONTRIBUTOR") return null
-  function rerollColors() {
-    const form = new FormData()
-    form.append("rerollColors", "")
-
-    submit(form, {
-      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
-      method: "post"
-    })
-  }
 
   return (
     <>
@@ -166,10 +156,13 @@ export function AuthorOptions({ showUnionAuthorsModal }: { showUnionAuthorsModal
           <Icon path={mdiAccountMultiple} />
           Group authors
         </button>
-        <button className="btn" disabled={transitionState.state !== "idle"} onClick={rerollColors}>
-          <Icon path={mdiDiceMultipleOutline} />
-          New author colors
-        </button>
+        <Form method="post" action={`/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`}>
+          <input type="hidden" name="rerollColors" value="" />
+          <button className="btn" type="submit" disabled={transitionState.state !== "idle"}>
+            <Icon path={mdiDiceMultipleOutline} />
+            New author colors
+          </button>
+        </Form>
       </div>
     </>
   )
