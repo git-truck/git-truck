@@ -39,4 +39,4 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - run: npx pkg-pr-new publish
+      - run: npx pkg-pr-new publish --compact
