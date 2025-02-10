@@ -1,4 +1,5 @@
-import invariant from "tiny-invariant"
+import type { LoaderFunctionArgs } from "@remix-run/node"
+import { invariant } from "~/util"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/commits"
 
