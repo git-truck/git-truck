@@ -27,7 +27,6 @@
     "build-vite": "react-router build",
     "dev": "tsx ./src/cli.ts",
     "dev:debug": "tsx ./src/cli.ts --log debug",
-    "watch": "remix watch",
     "start": "cross-env NODE_ENV=production node .",
     "serve": "react-router-serve build/server/index.js",
     "clean": "rimraf -rf build public/build .cache .temp cli.js cli.cjs",
