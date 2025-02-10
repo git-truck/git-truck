@@ -1,10 +1,10 @@
 import { redirect } from "react-router"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import invariant from "tiny-invariant"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { Route } from "./+types/$repository"
+import { invariant } from "~/util"
 
 /**
  * Redirect to the repository's default branch

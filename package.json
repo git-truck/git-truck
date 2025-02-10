@@ -127,7 +127,6 @@
     "sha1": "^1.1.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss": "^4.0.6",
-    "tiny-invariant": "^1.3.3",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",
     "typescript": "5.7",
