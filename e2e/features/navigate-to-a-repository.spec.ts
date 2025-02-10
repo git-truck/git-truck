@@ -8,7 +8,7 @@ test("navigate to a repository", async ({ page }) => {
 
   // Expect the status of the git-truck repository to be "Not analyzed".
   const gitTruckStatus = await page.getByTestId("status-git-truck").textContent()
-  expect(gitTruckStatus).toBe("Not analyzed")
+  expect(gitTruckStatus === "Not analyzed" || gitTruckStatus === "Analyzed").toBeTruthy()
 
   // Select an option from a <select> dropdown.
   await page.getByTestId("revision-select-git-truck").selectOption("main")

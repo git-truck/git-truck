@@ -40,7 +40,7 @@
   "devDependencies": {
     "@mdi/js": "^7.3.67",
     "@mdi/react": "^1.6.1",
-    "@playwright/test": "^1.39.0",
+    "@playwright/test": "^1.50.1",
     "@remix-run/dev": "2.2.0",
     "@remix-run/eslint-config": "2.2.0",
     "@remix-run/express": "^2.2.0",
@@ -60,7 +60,6 @@
     "@types/morgan": "^1.9.9",
     "@types/randomstring": "^1.1.11",
     "@types/react": "^18.2.34",
-    "@types/react-datepicker": "^6.2.0",
     "@types/react-detect-offline": "^2.4.5",
     "@types/react-dom": "^18.2.14",
     "@types/semver": "^7.5.4",
@@ -79,8 +78,6 @@
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^16.3.1",
     "eslint": "^8.52.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-react": "^7.33.2",
     "express": "^4.18.2",
     "express-serve-static-core": "^0.1.1",
@@ -97,12 +94,13 @@
     "nanospinner": "^1.1.0",
     "open": "^8.4.2",
     "postcss": "^8.4.31",
+    "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.5.11",
     "randomstring": "^1.3.0",
     "react": "^18.2.0",
     "react-colorful": "^5.6.1",
     "react-compound-slider": "^3.4.0",
-    "react-datepicker": "^6.9.0",
+    "react-datepicker": "^8.0.0",
     "react-detect-offline": "^2.4.5",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
@@ -160,6 +158,6 @@
   },
   "homepage": "https://github.com/git-truck/git-truck#readme",
   "dependencies": {
-    "duckdb-async": "^1.0.0"
+    "@duckdb/node-api": "^1.1.3-alpha.11"
   }
 }

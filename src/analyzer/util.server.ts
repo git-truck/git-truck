@@ -46,6 +46,7 @@ export function runProcess(
         resolve(Buffer.concat(chunks).toString().trim())
       })
     } catch (e) {
+      log.error(e as Error)
       reject(e)
     }
   })
@@ -114,8 +115,8 @@ export function analyzeRenamedFile(
     oldPath = repo + "/" + file.replace(replaceRegex, oldP).replace("//", "/")
     newPath = repo + "/" + file.replace(replaceRegex, newP).replace("//", "/")
   } else {
-    oldPath = repo + "/" + groups["oldPath2"] ?? ""
-    newPath = repo + "/" + groups["newPath2"] ?? ""
+    oldPath = repo + "/" + (groups["oldPath2"] ?? "")
+    newPath = repo + "/" + (groups["newPath2"] ?? "")
   }
 
   renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime })

@@ -9,9 +9,8 @@ With Git Truck you can:
 - See where there is the most activity in your project
 - See how your project has looked at different points in time
 
-
-| | |
-|-|-|
+|                                                                                           |                                                                                               |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | <img src="./teaser-images/readme1.png" alt="Where has the most work been done recently?"> | <img src="./teaser-images/readme2.png" alt="Who worked on different subsystems in the past?"> |
 
 You can read more about the features in the [feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser), or just try it and start exploring your projects!
@@ -22,15 +21,14 @@ You can read more about the features in the [feature overview](https://git-truck
 
 2. Run the command `npx -y git-truck`
 
-
 3. The application will now open in your default browser. Happy trucking!
 
-
-> [!NOTE]  
+> [!NOTE]
 > To use Git Truck, you will need to have the following programs installed:
-> - [Node.js](https://nodejs.org/en/) 18.0.0 or newer and npm 10.0 or newer
+>
+> - [Node.js](https://nodejs.org/en/) 20.0.0 or newer and npm 10.0 or newer
 > - [git](https://git-scm.com/downloads) 2.29 or newer
-> 
+>
 > Check your installed versions using `node --version`, `npm --version` and `git --version`.
 
 ## [What makes Git Truck different?](#what-makes-git-truck-different)
@@ -41,4 +39,4 @@ You can read more about the features in the [feature overview](https://git-truck
 
 🤷 Git provider agnostic - works with any git repository
 
-😊 No tracking, no ads, no cloud, no servers, no subscription 
+😊 No tracking, no ads, no cloud, no servers, no subscription

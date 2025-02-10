@@ -58,8 +58,8 @@ export default class ServerInstance {
       const renamedFiles: RenameEntry[] = []
       log.debug(`thread ${index} gathering ${start}-${end}`)
       await this.gatherCommitsInRange(start, end, commits, renamedFiles, index)
-      await this.db.addRenames(renamedFiles, index + "")
-      await this.db.addCommits(commits, index + "")
+      await this.db.addRenames(renamedFiles)
+      await this.db.addCommits(commits)
       this.progress[index] = end - sectionStart
     }
   }

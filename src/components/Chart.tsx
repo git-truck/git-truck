@@ -224,7 +224,9 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       strokeWidth: "1px",
-      fill: isBlob(d.data) ? metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor : "transparent"
+      fill: isBlob(d.data)
+        ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor)
+        : "transparent"
     }
 
     if (chartType === "BUBBLE_CHART") {
@@ -356,8 +358,8 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
   const fillColor = isBlob(d.data)
     ? getTextColorFromBackground(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
     : prefersLightMode
-    ? "#333"
-    : "#fff"
+      ? "#333"
+      : "#fff"
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,

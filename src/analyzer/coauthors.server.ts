@@ -3,15 +3,17 @@ import type { Person } from "./model"
 export function getCoAuthors(description: string) {
   const coauthorRegex = /Co-authored-by: (?<name>.*) <(?<email>.*)>/gm
   const coauthormatches = description.matchAll(coauthorRegex)
-  let next = coauthormatches.next()
+  let value = coauthormatches.next().value
   const coauthors: Person[] = []
 
-  while (next.value !== undefined) {
+  while (value !== undefined) {
     coauthors.push({
-      name: next.value.groups["name"].trimEnd(),
-      email: next.value.groups["email"]
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- We know that the groups are defined
+      name: value.groups!["name"].trimEnd(),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- We know that the groups
+      email: value.groups!["email"]
     })
-    next = coauthormatches.next()
+    value = coauthormatches.next().value
   }
   return coauthors
 }

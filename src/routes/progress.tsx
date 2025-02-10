@@ -24,9 +24,11 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProgressR
     await sleep(1000)
     progressPercentage =
       instance.totalCommitCount > 0
-        ? Math.floor((instance.progress.reduce((acc, curr) => acc + curr, 0) / instance.totalCommitCount) * 100)
+        ? Math.min(
+            Math.floor((instance.progress.reduce((acc, curr) => acc + curr, 0) / instance.totalCommitCount) * 100),
+            100
+          )
         : 0
-    if (progressPercentage > 100) progressPercentage = 100
     status = instance.analyzationStatus
   }
   instance.prevProgress.str = status + progressPercentage
