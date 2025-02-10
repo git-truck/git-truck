@@ -48,7 +48,7 @@ export const loader = async () => {
   // Returns an object, as `defer` does not support arrays
   // The keys are prefixed with an underscore to avoid conflicts with other properties returned from the loader
   const repositoryPromises = Object.fromEntries(
-    repositories.map((repo) => [`_${repo}`, GitCaller.getRepoMetadata(join(baseDir, repo.name))])
+    repositories.map((repo) => [`_${repo.path}`, GitCaller.getRepoMetadata(join(baseDir, repo.name))])
   )
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
@@ -170,9 +170,9 @@ export default function Index() {
                 />
               }
             >
-              <Await resolve={Promise.all([castedRepositoryPromises[`_${repo}`], analyzedReposPromise] as const)}>
+              <Await resolve={Promise.all([castedRepositoryPromises[`_${repo.path}`], analyzedReposPromise] as const)}>
                 {([repo, analyzedRepos]) =>
-                  repo !== null ? <RepositoryEntry key={repo.name} repo={repo} analyzedRepos={analyzedRepos} /> : null
+                  repo !== null ? <RepositoryEntry key={repo.path} repo={repo} analyzedRepos={analyzedRepos} /> : null
                 }
               </Await>
             </Suspense>
