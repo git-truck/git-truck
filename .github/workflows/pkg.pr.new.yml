@@ -1,7 +1,11 @@
 name: Publish Approved Pull Requests
 on:
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**"
 
 jobs:
   check:
