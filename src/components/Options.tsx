@@ -22,7 +22,6 @@ import {
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-import { useTheme } from "~/styling"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
@@ -33,8 +32,6 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
 }
 
 export const Options = memo(function Options() {
-  const [theme] = useTheme()
-  console.log(theme)
   const { metricType, chartType, sizeMetric, linkMetricAndSizeMetric, setMetricType, setChartType, setSizeMetricType } =
     useOptions()
 
