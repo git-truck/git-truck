@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
-import invariant from "tiny-invariant"
+import { invariant } from "~/util"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

@@ -1,9 +1,9 @@
 import { DataFunctionArgs, redirect } from "@remix-run/node"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import invariant from "tiny-invariant"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
+import { invariant } from "~/util"
 
 /**
  * Redirect to the repository's default branch
