@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - run: npx pkg-pr-new publish --json output.json --comment=off
+      - run: npx pkg-pr-new publish --json output.json --no-template --comment=off
       - name: Post or update comment
         uses: actions/github-script@v6
         with:
