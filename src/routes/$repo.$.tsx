@@ -34,7 +34,7 @@ import { Code } from "~/components/util"
 
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
-import { Route } from "./+types/$repo.$"
+import type { Route } from "./+types/$repo.$"
 
 export interface RepoData {
   repo: Repository
