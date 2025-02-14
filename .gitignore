@@ -18,3 +18,4 @@ cli.cjs
 /playwright/.cache/
 *.js
 .react-router/
+*.tsbuildinfo
