@@ -4,7 +4,7 @@ import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/util"
+import { branchCompare, semverCompare } from "../util"
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
 
