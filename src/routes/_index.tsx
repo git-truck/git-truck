@@ -272,7 +272,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
             analyzedBranches={analyzedRepos.filter((rep) => rep.repo === repo.name)}
           />
         ) : isError && !isFolder ? (
-          <div className="grow truncate" title={repo.errorMessage}>
+          <div className="grow truncate w-0" title={repo.errorMessage}>
             {repo.errorMessage ?? "Unknown error"}
           </div>
         ) : (
