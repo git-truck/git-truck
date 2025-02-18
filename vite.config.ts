@@ -1,4 +1,5 @@
 import { reactRouter } from "@react-router/dev/vite"
+import { reactRouterDevTools } from "react-router-devtools"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
@@ -19,6 +20,7 @@ export default defineConfig({
       "@duckdb/node-bindings-win32-x64",
       "@duckdb/node-bindings-darwin-x64",
       "@duckdb/node-bindings-darwin-arm64",
+      "@mongodb-js/zstd"
     ]
   },
   optimizeDeps: {
@@ -30,10 +32,12 @@ export default defineConfig({
       "@duckdb/node-bindings-win32-x64",
       "@duckdb/node-bindings-darwin-x64",
       "@duckdb/node-bindings-darwin-arm64",
+      "@mongodb-js/zstd"
     ]
   },
   plugins: [
     tailwindcss(),
+    // reactRouterDevTools(),
     reactRouter(),
     tsconfigPaths(),
     cjsInterop({

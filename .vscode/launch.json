@@ -6,9 +6,16 @@
   "configurations": [
     {
       "name": "Debug Git Truck",
-      "program": "${workspaceFolder}/cli.js",
+      "program": "${workspaceFolder}/cli.cjs",
       "request": "launch",
       "args": ["--log", "debug", "--headless"],
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
     },

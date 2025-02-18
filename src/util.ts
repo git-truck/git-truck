@@ -165,3 +165,10 @@ export function invariant<T>(condition: T, message: string): asserts condition i
     throw new Error(message)
   }
 }
+
+export function errorFromUnknown(unknown: unknown): Error {
+  if (unknown instanceof Error) return unknown
+  if (unknown instanceof Buffer) return new Error(unknown.toString().trim())
+  if (typeof unknown === "string") return new Error(unknown)
+  return new Error(JSON.stringify(unknown))
+}

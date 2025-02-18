@@ -4,7 +4,6 @@ import { exec, spawn } from "node:child_process"
 import { readdir } from "node:fs/promises"
 import { join, resolve as resolvePath, sep } from "node:path"
 import { performance } from "node:perf_hooks"
-import invariant from "tiny-invariant"
 import { getLogLevel, log, LOG_LEVEL } from "./log.server"
 import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
 import { existsSync } from "node:fs"
@@ -28,15 +27,23 @@ export function runProcess(
   index?: number
 ) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
+  const err = new Error()
   return new Promise((resolve, reject) => {
+    const errorHandler = (err: unknown): void => {
+      reject(err)
+    }
     try {
+      const resolvedPath = resolvePath(dir)
       const prcs = spawn(command, args, {
-        cwd: resolvePath(dir)
+        cwd: resolvedPath
       })
+      log.debug(`Started process ${prcs.pid} in ${resolvedPath}`)
       const chunks: Uint8Array[] = []
-      const errorHandler = (buf: Error): void => reject(buf.toString().trim())
       prcs.once("error", errorHandler)
-      prcs.stderr.once("data", errorHandler)
+      prcs.stderr.once("data", (e) => {
+        err.message = `Child process failed:\n ${dir}> ${command} ${args.join(", ")}\n Error: ${e.toString().trim()}`
+        errorHandler(err)
+      })
       prcs.stdout.on("data", (buf) => {
         chunks.push(buf)
         if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
@@ -44,9 +51,13 @@ export function runProcess(
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())
       })
+      prcs.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(`Process exited with code: ${code}`))
+        }
+      })
     } catch (e) {
-      log.error(e as Error)
-      reject(e)
+      errorHandler(e)
     }
   })
 }
@@ -222,7 +233,7 @@ export async function describeAsyncJob<T>({
     return [result, null]
   } catch (e) {
     error(errorMsg)
-    log.error(e as Error)
+    log.error(e)
     return [null, e as Error]
   }
 }

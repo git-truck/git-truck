@@ -1,5 +1,6 @@
 {
   "editor.formatOnSave": true,
+  // "files.autoSave": "off",
   "githubIssues.issueBranchTitle": "${issueNumber}/${sanitizedIssueTitle}",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "css.lint.unknownAtRules": "ignore",

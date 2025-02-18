@@ -27,11 +27,13 @@ export class GitCaller {
   ) {}
 
   static async isGitRepo(path: string): Promise<boolean> {
-    const gitFolderPath = resolve(path, ".git")
-    const hasGitFolder = existsSync(gitFolderPath)
-    if (!hasGitFolder) return false
-    const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead(path))
-    return Boolean(hasGitFolder && !findBranchHeadError)
+    try {
+      const result = Boolean(await runProcess(path, "git", ["rev-parse", "--is-inside-work-tree"]))
+      console.log(`isGitRepo(${path}) -> ${result}`)
+      return result
+    } catch (e) {
+      return false
+    }
   }
 
   static async isValidRevision(revision: string, path: string) {
@@ -55,13 +57,12 @@ export class GitCaller {
       branch = foundBranch
     }
 
-    const gitFolder = join(repo, ".git")
-    if (!existsSync(gitFolder)) {
-      throw Error("No git folder exists at " + gitFolder)
+    if (!this.isGitRepo(repo)) {
+      throw Error("No git folder exists at " + repo)
     }
     // Find file containing the branch head
 
-    const branchHead = await GitCaller._revParse(gitFolder, branch)
+    const branchHead = await GitCaller._revParse(repo, branch)
     log.debug(`${branch} -> [commit] ${branchHead}`)
 
     return [branchHead, branch]
@@ -93,12 +94,17 @@ export class GitCaller {
     return result.trim()
   }
 
-  async lsTree(hash: string) {
-    return await GitCaller._lsTree(this.path, hash)
+  async lsTree(hash: string, includeTrees = true) {
+    return await GitCaller._lsTree(this.path, hash, includeTrees)
   }
 
-  static async _lsTree(repo: string, hash: string) {
-    const result = (await runProcess(repo, "git", ["ls-tree", "-rlt", hash])) as string
+  static async _lsTree(repo: string, hash: string, includeTrees = true) {
+    console.log({
+      repo,
+      hash,
+      includeTrees
+    })
+    const result = (await runProcess(repo, "git", ["ls-tree", "-rl" + (includeTrees ? "t" : ""), hash])) as string
     return result.trim()
   }
 
@@ -150,14 +156,12 @@ export class GitCaller {
         {} as { [branch: string]: boolean }
       )
 
-    const repoHead = await GitCaller._getRepositoryHead(repoPath)
-
     try {
       const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
       if (error) {
         return {
           status: "Error",
-          errorMessage: error.message,
+          errorMessage: "Not a valid git repository",
           name: repoDir,
           path: repoPath,
           parentDirPath: parentDir
@@ -165,13 +169,13 @@ export class GitCaller {
       }
 
       const [branchHead, branch] = findBranchHeadResult
-      const [data, reasons] = await GitCaller.retrieveCachedResult({
+      const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
         repo: repoDir,
         branch,
         branchHead
       })
 
-      if (!data) {
+      if (!cachedData) {
         return {
           status: "Success",
           isAnalyzed: false,
@@ -189,12 +193,12 @@ export class GitCaller {
       return {
         status: "Success",
         isAnalyzed: true,
-        data: data,
+        data: cachedData,
         reasons: [],
         name: repoDir,
         path: repoPath,
         parentDirPath: parentDir,
-        currentHead: repoHead,
+        currentHead: branchHead,
         refs,
         analyzedHeads
       }

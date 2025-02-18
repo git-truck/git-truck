@@ -1,4 +1,5 @@
-import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
+import type { DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
+import { DuckDBInstance } from "@duckdb/node-api"
 import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"

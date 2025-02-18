@@ -25,7 +25,7 @@ export type Repository = {
       reasons: ANALYZER_CACHE_MISS_REASONS[]
       analyzedHeads: Record<string, boolean>
       data: AnalyzerData
-      currentHead: string
+      currentHead: string | null
     }
   | {
       name: string
