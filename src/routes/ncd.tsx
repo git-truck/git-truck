@@ -136,7 +136,9 @@ export const loader = async ({
     let countAfter = fileTree.length
     log.info(`Filtered out ${countBefore - countAfter} of ${countBefore} files`)
     log.info(
-      `Removed files: ${removedFiles.map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`).join(", ")}`
+      `Removed files: ${removedFiles.sort(
+        (a, b) => (a.size ?? 0) - (b.size ?? 0)
+      ).map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`).join(", ")}`
     )
     log.info(`Largest file : ${Math.max(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
     log.info(`Smallest file: ${Math.min(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
