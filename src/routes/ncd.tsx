@@ -9,6 +9,7 @@ import { useLoaderData } from "react-router"
 import { Fragment } from "react"
 import { cn } from "~/styling"
 import { exec, execFile, execFileSync, spawn } from "node:child_process"
+import { GitCaller } from "~/analyzer/git-caller.server"
 
 export function headers(_: Route.HeadersArgs) {
   _.loaderHeaders
@@ -22,6 +23,8 @@ const catFileCache = new Map<string, Buffer | null>()
 const erase = "\x1b[1A\x1b[K"
 const largeFileThreshold = 100_000
 const EMPTY_COMMIT = "0000000000000000000000000000000000000000"
+const NUL = "\0"
+
 export const loader = async ({
   request
 }: Route.LoaderArgs): Promise<{
@@ -72,10 +75,10 @@ export const loader = async ({
       // const firstLine = result.toString().split("\n")[0]
       // log.info(`cat-file: ${firstLine}`)
 
-      // catFileCache.set(key, result)
+      catFileCache.set(key, result)
       return result
     } catch (error) {
-      // catFileCache.set(key, null)
+      catFileCache.set(key, null)
       if (!(error instanceof Error)) {
         throw new Error(`Error reading blob ${hash} (${filePath ?? "unknown"}): ${error}`)
       }
@@ -240,14 +243,13 @@ export const loader = async ({
           process.stdout.write(`${erase}\nProcessing commit ${commit.hashShort} (${i + 1}/${ncdGoal})`)
           lastPrintTime = performance.now()
         }
-        const modifiedFilesList = (await difftree(repoPath, commit.hash)).modifiedFiles.filter(
-          (f) => f.newHash !== EMPTY_COMMIT
-        )
+        const commitFiles = (await lstree(repoPath, commit.hash)).files.filter((f) => f.hash !== EMPTY_COMMIT)
+        // const commitFiles = (await difftree(repoPath, commit.hash)).files.filter((f) => f.hash !== EMPTY_COMMIT)
 
         const committedFileData = []
 
-        for (const f of modifiedFilesList) {
-          const result = await catFile(repoPath, f.newHash)
+        for (const f of commitFiles) {
+          const result = await catFile(repoPath, f.hash)
           committedFileData.push(result)
         }
 
@@ -334,7 +336,6 @@ export const loader = async ({
 async function difftree(repoPath: string, commit: string) {
   // r: recursive
   // z: terminate with NUL
-  const NUL = "\0"
   const [hash, ...entries] = await new Promise<Array<string>>((resolve, reject) =>
     execFile(
       "git",
@@ -351,15 +352,43 @@ async function difftree(repoPath: string, commit: string) {
       }
     )
   )
-  const modifiedFiles = []
+  const files = []
   for (let i = 0; i < entries.length; i += 2) {
     const [data, fileName] = entries.slice(i, i + 2)
-    const [oldmode, newmode, oldHash, newHash, ...rest] = data.split(/\s+/)
-    modifiedFiles.push({ fileName, oldHash, newHash })
+    const [oldmode, newmode, oldHash, hash, ...rest] = data.split(/\s+/)
+    files.push({ fileName, oldHash, hash })
   }
   return {
     hash,
-    modifiedFiles
+    files
+  }
+}
+
+async function lstree(repoPath: string, hash: string) {
+  const entries = await new Promise<Array<string>>((resolve, reject) =>
+    execFile(
+      "git",
+      ["ls-tree", "-r", hash],
+      {
+        cwd: repoPath
+      },
+      (error, stdout) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(stdout.split("\n").filter(Boolean))
+        }
+      }
+    )
+  )
+  const files = []
+  for (const data of entries) {
+    const [mode, type, hash, filename] = data.split(/\s+/)
+    files.push({ fileName: filename, hash })
+  }
+  return {
+    hash,
+    files
   }
 }
 
