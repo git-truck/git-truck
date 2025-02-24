@@ -29,7 +29,6 @@ export class GitCaller {
   static async isGitRepo(path: string): Promise<boolean> {
     try {
       const result = Boolean(await runProcess(path, "git", ["rev-parse", "--is-inside-work-tree"]))
-      console.log(`isGitRepo(${path}) -> ${result}`)
       return result
     } catch (e) {
       return false
@@ -99,11 +98,6 @@ export class GitCaller {
   }
 
   static async _lsTree(repo: string, hash: string, includeTrees = true) {
-    console.log({
-      repo,
-      hash,
-      includeTrees
-    })
     const result = (await runProcess(repo, "git", ["ls-tree", "-rl" + (includeTrees ? "t" : ""), hash])) as string
     return result.trim()
   }

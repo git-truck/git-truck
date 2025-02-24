@@ -35,7 +35,8 @@ export function runProcess(
     try {
       const resolvedPath = resolvePath(dir)
       const prcs = spawn(command, args, {
-        cwd: resolvedPath
+        cwd: resolvedPath,
+        shell: false
       })
       log.debug(`Started process ${prcs.pid} in ${resolvedPath}`)
       const chunks: Uint8Array[] = []
@@ -317,12 +318,12 @@ export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (b
 
 export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))
 
-export function time<A extends readonly unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+export function time<A extends readonly unknown[], R>(fn: (...args: A) => R, description?: string): (...args: A) => R {
   return (...args: A) => {
     const start = performance.now()
     const result = fn(...args)
     const end = performance.now()
-    log.info(`⏳ [${fn.name.length > 0 ? fn.name : "anonymous"}] ${(end - start).toFixed(2)}ms`)
+    log.info(`⏳ [${description || (fn.name.length > 0 ? fn.name : "anonymous")}]: ${(end - start).toFixed(2)}ms`)
     return result
   }
 }

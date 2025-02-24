@@ -4,14 +4,14 @@ import express from "express"
 import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@react-router/express"
-import pkg from "../package.json"
+import pkg from "../package.json" assert { type: "json" }
 import open from "open"
-import { GitCaller } from "./analyzer/git-caller.server"
-import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
-import { getPathFromRepoAndHead } from "./util"
-import { describeAsyncJob, getDirName, getLatestVersion, isValidURI } from "./analyzer/util.server"
-import { log, setLogLevel } from "./analyzer/log.server"
-import InstanceManager from "./analyzer/InstanceManager.server"
+import { GitCaller } from "./analyzer/git-caller.server.ts"
+import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server.ts"
+import { getPathFromRepoAndHead } from "./util.ts"
+import { describeAsyncJob, getDirName, getLatestVersion, isValidURI } from "./analyzer/util.server.ts"
+import { log, setLogLevel } from "./analyzer/log.server.ts"
+import InstanceManager from "./analyzer/InstanceManager.server.ts"
 
 const args = parseArgs()
 if (args?.log) {

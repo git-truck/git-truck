@@ -3,12 +3,12 @@ import type { Route } from "./+types/ncd"
 import { invariant } from "~/util"
 import { compress } from "@mongodb-js/zstd"
 import { log } from "~/analyzer/log.server"
-import { describeAsyncJob, formatMsTime, runProcess, time } from "~/analyzer/util.server"
+import { describeAsyncJob, formatMsTime, promiseHelper, runProcess, time } from "~/analyzer/util.server"
 import { join } from "node:path"
 import { useLoaderData } from "react-router"
 import { Fragment } from "react"
-import { execSync } from "child_process"
 import { cn } from "~/styling"
+import { exec, execFile, execFileSync, spawn } from "node:child_process"
 
 export function headers(_: Route.HeadersArgs) {
   _.loaderHeaders
@@ -19,29 +19,9 @@ export function headers(_: Route.HeadersArgs) {
 
 const resultCache = new Map<string, Awaited<ReturnType<typeof loader>>>()
 const catFileCache = new Map<string, Buffer | null>()
-
-const catFile = (repoPath: string, hash: string, filePath: string): Buffer | null => {
-  const key = `${repoPath}:${hash}:${filePath}`
-  const cachedValue = catFileCache.get(key)
-  if (cachedValue !== undefined) {
-    return cachedValue
-  }
-  try {
-    const data = Buffer.from(
-      execSync(["git", "cat-file", "-p", `${hash}:${filePath}`].join(" "), {
-        cwd: repoPath,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"]
-      })
-    )
-    catFileCache.set(key, data)
-    return data
-  } catch (error) {
-    catFileCache.set(key, null)
-    return null
-  }
-}
-
+const erase = "\x1b[1A\x1b[K"
+const largeFileThreshold = 100_000
+const EMPTY_COMMIT = "0000000000000000000000000000000000000000"
 export const loader = async ({
   request
 }: Route.LoaderArgs): Promise<{
@@ -59,6 +39,53 @@ export const loader = async ({
     avgNcd: number
   }
 }> => {
+  const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
+    const key = `${repoPath}:${hash}:${filePath ?? ""}`
+    const cachedValue = catFileCache.get(key)
+    if (cachedValue !== undefined) {
+      return cachedValue
+    }
+
+    try {
+      const gitArgs = ["cat-file", "blob", hash + (filePath ? `:${filePath}` : "")]
+      // log.info(`> git ${gitArgs.join(" ")}`)
+      const result: Buffer<ArrayBufferLike> = await new Promise((resolve, reject) => {
+        const process = spawn("git", gitArgs, {
+          cwd: repoPath,
+          killSignal: "SIGKILL",
+          stdio: ["ignore", "pipe", "ignore"]
+        })
+        const buffers: Buffer[] = []
+        process.stdout.on("data", (data) => {
+          buffers.push(data)
+        })
+        process.on("error", reject)
+        process.on("exit", (code) => {
+          if (code === 0) {
+            resolve(Buffer.concat(buffers))
+          } else {
+            reject(new Error(`git cat-file exited with code ${code}`))
+          }
+        })
+      })
+
+      // const firstLine = result.toString().split("\n")[0]
+      // log.info(`cat-file: ${firstLine}`)
+
+      // catFileCache.set(key, result)
+      return result
+    } catch (error) {
+      // catFileCache.set(key, null)
+      if (!(error instanceof Error)) {
+        throw new Error(`Error reading blob ${hash} (${filePath ?? "unknown"}): ${error}`)
+      }
+      if (error.message.includes("Not a valid object name")) {
+        log.warn(`File ${filePath} not found in commit ${hash}`)
+        return null
+      }
+      throw error
+    }
+  }
   const abortSignal = request.signal
   const url = new URL(request.url)
   const repo = url.searchParams.get("repo")
@@ -68,6 +95,9 @@ export const loader = async ({
   invariant(repo, "repo is required")
   invariant(branch, "branch is required")
   invariant(path, "path is required")
+
+  // console.log(await difftree(join(path, repo), branch))
+  // return null
 
   const cachedResult = resultCache.get(`${repo}:${branch}:${path}`)
   if (cachedResult) {
@@ -84,19 +114,36 @@ export const loader = async ({
       beforeMsg: `Analyzing file tree for ${repo}@${branch}`,
       afterMsg: "Analyzed file tree",
       errorMsg: "Error analyzing file tree",
-      job: async () => (await ins.analyzeTreeFlat()).filter((f) => f.size! < 1_000_000)
+      job: async () => await ins.analyzeTreeFlat()
     })
 
     if (fileTree === null) {
       throw treeError
     }
 
-    fileTree = fileTree.filter((x) => x.path !== "package-lock.json")
+    let countBefore = fileTree.length
+    let allHasSize = fileTree.every((x) => x.size !== undefined)
+    if (!allHasSize) {
+      log.warn("Not all files have size")
+    }
+
+    const removedFiles = fileTree.filter((x) => x.size >= largeFileThreshold)
+    fileTree = fileTree.filter((x) => x.size < largeFileThreshold)
+
+    let countAfter = fileTree.length
+    log.info(`Filtered out ${countBefore - countAfter} of ${countBefore} files`)
+    log.info(
+      `Removed files: ${removedFiles.map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`).join(", ")}`
+    )
+    log.info(`Largest file : ${Math.max(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
+    log.info(`Smallest file: ${Math.min(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
     //  && x.path.includes("components"))
 
     // 2. Get all commit hashes
 
-    const commits = ((await runProcess(repoPath, "git", ["log", "--pretty=format:%H,%f"])) as string)
+    const commits = (
+      (await time(runProcess, "Read commit hashes")(repoPath, "git", ["log", "--pretty=format:%H,%f"])) as string
+    )
       .split("\n")
       .filter(Boolean)
       .map((l) => {
@@ -110,28 +157,68 @@ export const loader = async ({
           subject
         }
       })
-      // TODO: Stream commits, for the mean time, limit to 10
-      .slice(0, 50)
+
+    // TODO: Stream commits, for the mean time, limit to 10
+    // .slice(0, 10)
 
     // 3. Read the contents of the initial revision
 
-    const finalRevisionBuffers = fileTree.map((f) => {
-      const fileContent = execSync(["git", "cat-file", "-p", f.hash].join(" "), {
-        cwd: repoPath,
-        encoding: "buffer"
-      })
-      return fileContent
-    })
+    const frbGoal = fileTree.length
+    const frbStartTime = performance.now()
+    let lastPrintTime = performance.now()
+    console.log("")
+
+    const finalRevisionBuffers = await time(
+      () =>
+        Promise.all(
+          fileTree.map(async (f, i, all) => {
+            if (i + 1 === all.length || performance.now() - lastPrintTime > 1000 / 30) {
+              lastPrintTime = performance.now()
+              const ellapsedTime = performance.now() - frbStartTime
+              const elapsedTimeFormatted = formatMsTime(ellapsedTime)
+
+              const estimatedTimeRemaining = ((frbGoal - (i + 1)) * ellapsedTime) / (i + 1)
+              const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
+
+              const percent = ((i + 1) / frbGoal) * 100
+              process.stdout.write(
+                `${erase}\n[${(i + 1).toLocaleString()}/${frbGoal.toLocaleString()}] (${percent.toFixed(
+                  2
+                )}%) files processed (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
+                  estimatedTimeRemaining
+                )}, total time estimate: ${formatMsTime(
+                  estimatedTotalTime
+                )}, time per file: ${formatMsTime(ellapsedTime / (i + 1))})`
+              )
+            }
+            const [result, err] = await promiseHelper(catFile(repoPath, f.hash))
+            if (err) {
+              log.error(`Error reading file ${f.hash}: ${err}`)
+              return null
+            }
+            return result
+          })
+        ),
+      "Read initial revision"
+    )()
+
+    const count = finalRevisionBuffers.length
+    const filteredRevisionBuffers = finalRevisionBuffers.filter(Boolean) as Buffer[]
+    const countFiltered = filteredRevisionBuffers.length
+    const skippedFileCount = count - countFiltered
+    if (skippedFileCount) {
+      log.info(`Skipped ${skippedFileCount} of ${count} files`)
+    }
 
     log.info(
-      `Compressing final revision (${finalRevisionBuffers.reduce((acc, b) => acc + b.length, 0).toLocaleString()} bytes)`
+      `Compressing final revision (${filteredRevisionBuffers.reduce((acc, b) => acc + b.length, 0).toLocaleString()} bytes)`
     )
-    const bufferFinal = Buffer.concat(finalRevisionBuffers)
-    const ccFinal = (await time(compress)(bufferFinal)).length
+    const bufferFinal = Buffer.concat(filteredRevisionBuffers)
+    const ccFinal = (await time(compress, "Compress final revision")(bufferFinal)).length
 
     async function ncd(fileBuffer: Buffer): Promise<number> {
       const ccCommit = (await compress(fileBuffer)).length
-      const combined = Buffer.concat([...finalRevisionBuffers!, fileBuffer])
+      const combined = Buffer.concat([...filteredRevisionBuffers, fileBuffer])
       const ccCombined = (await compress(combined)).length
       const ncdValue = (ccCombined - Math.min(ccFinal, ccCommit)) / Math.max(ccFinal, ccCommit)
       return ncdValue
@@ -141,79 +228,69 @@ export const loader = async ({
       throw Error("Aborted")
     }
 
-    const goal = commits.length
-    const startTime = performance.now()
-    let lastPrintTime = 0
+    const ncdGoal = commits.length
+    const ncdStartTime = performance.now()
     console.log()
 
-    const commitNcdResults = await Promise.all(
-      commits.map(async (commit, i) => {
-        // const commitFiles = execSync(["git", "show", "--name-only", `--format=""`, commit.hash].join(" "), {
-        //   cwd: repoPath,
-        //   encoding: "utf8"
-        // })
-        //   .split("\n")
-        //   .filter(Boolean)
-        // const fileNCDs = await Promise.all(
-        //   commitFiles
-        //     .map(async (f) => {
-        //       try {
-        //         return {
-        //           file: f,
-        //           ncd: await ncd(
-        //             Buffer.from(
-        //               execSync(`git cat-file -p "${commit.hash}:${f}"`, {
-        //                 cwd: repoPath
-        //               })
-        //             )
-        //           )
-        //         }
-        //       } catch (error) {
-        //         log.error(`Error running command git cat-file -p ${commit.hash}:${f}: ${error}`)
-        //         return { file: f, ncd: null }
-        //       }
-        //     })
-        //     .filter(Boolean)
-        // )
+    const commitNcdResults = await time(async () => {
+      const results = []
+      let i = 0
+      for (const commit of commits) {
+        if (i + 1 === ncdGoal || performance.now() - lastPrintTime > 1000 / 30) {
+          process.stdout.write(`${erase}\nProcessing commit ${commit.hashShort} (${i + 1}/${ncdGoal})`)
+          lastPrintTime = performance.now()
+        }
+        const modifiedFilesList = (await difftree(repoPath, commit.hash)).modifiedFiles.filter(
+          (f) => f.newHash !== EMPTY_COMMIT
+        )
 
-        const committedFileData = fileTree.map((f) => catFile(repoPath, commit.hash, f.path.trim()))
+        const committedFileData = []
 
-        const filteredCommittedFiles = committedFileData.filter(Boolean)
+        for (const f of modifiedFilesList) {
+          const result = await catFile(repoPath, f.newHash)
+          committedFileData.push(result)
+        }
+
+        const filteredCommittedFiles = committedFileData.filter(Boolean) as Array<Buffer>
 
         const files = committedFileData.length
         const filesFiltered = filteredCommittedFiles.length
-        const commitNCD = await ncd(Buffer.concat(filteredCommittedFiles as Buffer[]))
+        const concatenatedFileBuffer = Buffer.concat(filteredCommittedFiles)
+
+        const commitNCD = await ncd(concatenatedFileBuffer)
 
         // Progress bar
-        if (i === goal - 1 || performance.now() - lastPrintTime > 1000 / 30) {
+        if (i + 1 === ncdGoal || performance.now() - lastPrintTime > 1000 / 30) {
           lastPrintTime = performance.now()
-          const ellapsedTime = performance.now() - startTime
-          const formattedTimeEllapsed = formatMsTime(ellapsedTime)
+          const ellapsedTime = performance.now() - ncdStartTime
+          const elapsedTimeFormatted = formatMsTime(ellapsedTime)
 
-          const estimatedTimeRemaining = ((goal - i) * ellapsedTime) / i
+          const estimatedTimeRemaining = ((ncdGoal - i) * ellapsedTime) / i
           const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
 
-          const percent = (i / goal) * 100
-          const erase = "\x1b[1A\x1b[K"
+          const percent = ((i + 1) / ncdGoal) * 100
+
           process.stdout.write(
-            `${erase}\n[${(i + 1).toLocaleString()}/${goal.toLocaleString()}] (${percent.toFixed(
+            `${erase}\n[${(i + 1).toLocaleString()}/${ncdGoal.toLocaleString()}] (${percent.toFixed(
               2
-            )}%) processed (${formattedTimeEllapsed}, time remaining: ${formatMsTime(
+            )}%) commits processed (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
               estimatedTimeRemaining
             )}, total time estimate: ${formatMsTime(
               estimatedTotalTime
-            )}, time pr. commit: ${formatMsTime(ellapsedTime / (i + 1))})`
+            )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})`
           )
         }
 
-        return {
+        results.push({
           ...commit,
           commitNCD,
           files,
           filesFiltered
-        }
-      })
-    )
+        })
+        i++
+      }
+      return results
+    }, "Calculate NCD")()
 
     let prevCommitNCD = Math.max(...commitNcdResults.map((c) => c.commitNCD))
     let commitMaxNCD = 0
@@ -254,6 +331,38 @@ export const loader = async ({
   }
 }
 
+async function difftree(repoPath: string, commit: string) {
+  // r: recursive
+  // z: terminate with NUL
+  const NUL = "\0"
+  const [hash, ...entries] = await new Promise<Array<string>>((resolve, reject) =>
+    execFile(
+      "git",
+      ["diff-tree", "-r", "-z", commit],
+      {
+        cwd: repoPath
+      },
+      (error, stdout) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(stdout.split(NUL).filter(Boolean))
+        }
+      }
+    )
+  )
+  const modifiedFiles = []
+  for (let i = 0; i < entries.length; i += 2) {
+    const [data, fileName] = entries.slice(i, i + 2)
+    const [oldmode, newmode, oldHash, newHash, ...rest] = data.split(/\s+/)
+    modifiedFiles.push({ fileName, oldHash, newHash })
+  }
+  return {
+    hash,
+    modifiedFiles
+  }
+}
+
 export default function Ncd() {
   const { commits } = useLoaderData<typeof loader>()
   const data = commits
@@ -279,11 +388,12 @@ export default function Ncd() {
         <p>Max NCD: {data.maxNcd}</p>
         <p>Avg NCD: {data.avgNcd}</p>
         <p>Commit count: {data.commitNcdResults.length}</p>
-        <div className={cn("m-auto grid max-w-2xl grid-cols-[min-content_2fr_min-content_min-content_4fr] gap-1")}>
-          <div>Hash</div>
-          <div>Subject</div>
-          <div>Commit NCD</div>
-          <div>Diff NCD</div>
+        <div className="m-auto grid max-w-2xl grid-cols-[min-content_2fr_min-content_min-content_4fr] gap-1 *:border-b *:border-black">
+          <div className="font-bold">Hash</div>
+          <div className="font-bold">Subject</div>
+          <div className="font-bold">NCD</div>
+          <div className="font-bold">Diff</div>
+          <div className="font-bold">Plot</div>
 
           {data.commitNcdResults.map((commit, i) => (
             <Fragment key={commit.hash}>
@@ -300,7 +410,9 @@ export default function Ncd() {
               >
                 {commit.diffNCD.toLocaleString()}
               </div>
-              <Bar value={commit.diffNCD} className="h-full rounded-full" />
+              <div>
+                <Bar value={commit.diffNCD} className="h-full rounded-full" />
+              </div>
 
               {/* {commit.files.map((file) => (
                 <Fragment key={file.file}>
