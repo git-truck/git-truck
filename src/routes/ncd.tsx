@@ -56,6 +56,7 @@ export const loader = async ({
         const process = spawn("git", gitArgs, {
           cwd: repoPath,
           killSignal: "SIGKILL",
+          shell: false,
           stdio: ["ignore", "pipe", "ignore"]
         })
         const buffers: Buffer[] = []
