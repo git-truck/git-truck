@@ -212,10 +212,6 @@ export const loader = async ({
       const results = []
       let i = 0
       for (const commit of commits) {
-        if (i + 1 === ncdGoal || performance.now() - lastPrintTime > 1000 / 30) {
-          process.stdout.write(`${erase}\nProcessing commit ${commit.hashShort} (${i + 1}/${ncdGoal})`)
-          lastPrintTime = performance.now()
-        }
         const commitFiles = (await lstree(repoPath, commit.hash)).files.filter((f) => f.hash !== EMPTY_COMMIT)
         // const commitFiles = (await difftree(repoPath, commit.hash)).files.filter((f) => f.hash !== EMPTY_COMMIT)
 
