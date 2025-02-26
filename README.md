@@ -13,7 +13,7 @@ With Git Truck you can:
 | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | <img src="./teaser-images/readme1.png" alt="Where has the most work been done recently?"> | <img src="./teaser-images/readme2.png" alt="Who worked on different subsystems in the past?"> |
 
-You can read more about the features in the [feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser), or just try it and start exploring your projects!
+You can read more about the features in the [feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser), [in papers about Git Truck](https://github.com/git-truck/papers/blob/master/README.md), or just try it and start exploring your projects!
 
 ## [Get started](#get-started)
 
