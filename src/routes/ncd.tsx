@@ -6,10 +6,9 @@ import { log } from "~/analyzer/log.server"
 import { describeAsyncJob, formatMsTime, promiseHelper, runProcess, time } from "~/analyzer/util.server"
 import { join } from "node:path"
 import { useLoaderData } from "react-router"
-import { Fragment } from "react"
+import { Fragment, useMemo } from "react"
 import { cn } from "~/styling"
-import { exec, execFile, execFileSync, spawn } from "node:child_process"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { execFile, spawn } from "node:child_process"
 
 export function headers(_: Route.HeadersArgs) {
   _.loaderHeaders
@@ -29,18 +28,11 @@ export const loader = async ({
   request
 }: Route.LoaderArgs): Promise<{
   commits: {
-    commitNcdResults: {
-      normNcd: number
-      diffNCD: number
-      commitNCD: number
-      hash: string
-      hashShort: string
-      subject: string
-    }[]
-    minNcd: number
-    maxNcd: number
-    avgNcd: number
-  }
+    commitNCD: number
+    hash: string
+    hashShort: string
+    subject: string
+  }[]
 }> => {
   const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
     const key = `${repoPath}:${hash}:${filePath ?? ""}`
@@ -264,38 +256,7 @@ export const loader = async ({
       return results
     }, "Calculate NCD")()
 
-    let prevCommitNCD = Math.max(...commitNcdResults.map((c) => c.commitNCD))
-    let commitMaxNCD = 0
-    let commitMinNCD = Infinity
-
-    const diffNCDs: number[] = []
-    commitNcdResults.reverse()
-    for (const { commitNCD } of commitNcdResults) {
-      if (commitNCD === null) {
-        continue
-      }
-      commitMaxNCD = Math.max(commitMaxNCD, commitNCD)
-      commitMinNCD = Math.min(commitMinNCD, commitNCD)
-      const diffFromLast = commitNCD - prevCommitNCD
-      diffNCDs.push(diffFromLast)
-      prevCommitNCD = commitNCD
-    }
-
-    diffNCDs.reverse()
-    commitNcdResults.reverse()
-
-    return {
-      commitNcdResults: commitNcdResults.map((commit, i) => ({
-        ...commit,
-        normNcd: (commit.commitNCD - commitMinNCD) / (commitMaxNCD - commitMinNCD),
-        diffNCD: diffNCDs[i] ?? 0
-      })),
-      minNcd: commitMinNCD,
-      maxNcd: commitMaxNCD,
-      avgNcd: commitNcdResults.length
-        ? commitNcdResults.reduce((acc, { commitNCD }) => acc + commitNCD, 0) / commitNcdResults.length
-        : 0
-    }
+    return commitNcdResults
   }
 
   return {
@@ -364,7 +325,37 @@ async function lstree(repoPath: string, hash: string) {
 
 export default function Ncd() {
   const { commits } = useLoaderData<typeof loader>()
-  const data = commits
+
+  const data = useMemo(() => {
+    let prevCommitNCD = Math.max(...commits.map((c) => c.commitNCD))
+    let commitMaxNCD = 0
+    let commitMinNCD = Infinity
+
+    const diffNCDs: number[] = []
+    for (const { commitNCD } of commits.slice().reverse()) {
+      if (commitNCD === null) {
+        continue
+      }
+      commitMaxNCD = Math.max(commitMaxNCD, commitNCD)
+      commitMinNCD = Math.min(commitMinNCD, commitNCD)
+      const diffFromLast = commitNCD - prevCommitNCD
+      diffNCDs.push(diffFromLast)
+      prevCommitNCD = commitNCD
+    }
+
+    diffNCDs.reverse()
+
+    return {
+      commitNcdResults: commits.map((commit, i) => ({
+        ...commit,
+        normNcd: (commit.commitNCD - commitMinNCD) / (commitMaxNCD - commitMinNCD),
+        diffNCD: diffNCDs[i],
+      })),
+      minNcd: commitMinNCD,
+      maxNcd: commitMaxNCD,
+      avgNcd: commits.length ? commits.reduce((acc, { commitNCD }) => acc + commitNCD, 0) / commits.length : 0
+    }
+  }, [commits])
 
   return (
     <div>
