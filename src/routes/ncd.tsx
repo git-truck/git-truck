@@ -106,7 +106,38 @@ export const loader = async ({
 
   const getResults = async () => {
     // 1. Read the file tree of the latest revision
-    const { files: fileTree } = await lstree(repoPath, branch)
+    let [fileTree, treeError] = await describeAsyncJob({
+      beforeMsg: `Analyzing file tree for ${repo}@${branch}`,
+      afterMsg: "Analyzed file tree",
+      errorMsg: "Error analyzing file tree",
+      job: async () => await ins.analyzeTreeFlat()
+    })
+
+    if (fileTree === null) {
+      throw treeError
+    }
+
+    let countBefore = fileTree.length
+    let allHasSize = fileTree.every((x) => x.size !== undefined)
+    if (!allHasSize) {
+      log.warn("Not all files have size")
+    }
+
+    const removedFiles = fileTree.filter((x) => x.size >= largeFileThreshold)
+    fileTree = fileTree.filter((x) => x.size < largeFileThreshold)
+
+    let countAfter = fileTree.length
+    log.info(`Filtered out ${countBefore - countAfter} of ${countBefore} files`)
+    log.info(
+      `Removed files: ${removedFiles.sort(
+        (a, b) => (a.size ?? 0) - (b.size ?? 0)
+      ).map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`).join(", ")}`
+    )
+    log.info(`Largest file : ${Math.max(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
+    log.info(`Smallest file: ${Math.min(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
+    //  && x.path.includes("components"))
+
+    // const { files: fileTree } = await lstree(repoPath, branch)
 
     // 2. Get all commit hashes
 
