@@ -5,10 +5,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Remix App",
-      "program": "${workspaceFolder}/cli.js",
+      "name": "Debug Git Truck",
+      "program": "${workspaceFolder}/cli.cjs",
       "request": "launch",
       "args": ["--log", "debug", "--headless"],
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
     },

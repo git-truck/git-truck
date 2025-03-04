@@ -159,3 +159,16 @@ export function getLightness(hex: `#${string}`): number {
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
+
+export function invariant<T>(condition: T, message: string): asserts condition is NonNullable<T> {
+  if (!condition) {
+    throw new Error(message)
+  }
+}
+
+export function errorFromUnknown(unknown: unknown): Error {
+  if (unknown instanceof Error) return unknown
+  if (unknown instanceof Buffer) return new Error(unknown.toString().trim())
+  if (typeof unknown === "string") return new Error(unknown)
+  return new Error(JSON.stringify(unknown))
+}

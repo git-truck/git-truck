@@ -25,11 +25,11 @@ export type Repository = {
       reasons: ANALYZER_CACHE_MISS_REASONS[]
       analyzedHeads: Record<string, boolean>
       data: AnalyzerData
-      currentHead: string
+      currentHead: string | null
     }
   | {
       name: string
-      fullPath: string
+      // fullPath: string // TODO: Implement browsing, requires new routing
       status: "Loading"
     }
   | {
