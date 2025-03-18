@@ -115,10 +115,4 @@ function prefix(label: LOG_LEVEL_LABEL): string {
   }
 }
 
-export const log = {
-  error,
-  warn,
-  info,
-  debug,
-  raw
-}
+export const log = { error, warn, info, debug, raw }

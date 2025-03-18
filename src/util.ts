@@ -172,3 +172,27 @@ export function errorFromUnknown(unknown: unknown): Error {
   if (typeof unknown === "string") return new Error(unknown)
   return new Error(JSON.stringify(unknown))
 }
+
+export const createdCachedFunction = <T extends (...args: unknown[]) => any>(fn: T) => {
+  const cache = new Map<string, ReturnType<T>>()
+  return (...args: Parameters<T>): ReturnType<T> => {
+    const key = JSON.stringify(args)
+    if (cache.has(key)) {
+      return cache.get(key)!
+    }
+    const result = fn(...args)
+    cache.set(key, result)
+    return result
+  }
+}
+
+/**
+ * Async map function
+ * @param arr Array or iterator object
+ * @param fn Function to map
+ * @returns Promise with the mapped results
+ */
+export async function amap<T, U>(arr: T[] | IteratorObject<T>, fn: (arg: T) => Promise<U>): Promise<U[]> {
+  const results = await Promise.all((Array.isArray(arr) ? arr : Array.from(arr)).map(fn))
+  return results
+}

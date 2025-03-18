@@ -7,6 +7,7 @@ import { AnalyzerDataInterfaceVersion } from "./model"
 import { branchCompare, semverCompare } from "../util"
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
+import { execFile, spawn } from "node:child_process"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -78,7 +79,7 @@ export class GitCaller {
   async gitLogSpecificCommits(commits: string[]) {
     const args = [
       "log",
-      "--no-walk",
+      "--no-walk=unsorted",
       "--numstat",
       '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
@@ -376,9 +377,9 @@ export class GitCaller {
     return result as string
   }
 
-  private async catFile(hash: string) {
+  async catFile(hash: string) {
     const result = await runProcess(this.path, "git", ["cat-file", "-p", hash])
-    return result as string
+    return Buffer.from(result)
   }
 
   async findBranchHead() {
@@ -393,7 +394,7 @@ export class GitCaller {
       }
     }
     const result = await this.catFile(hash)
-    this.catFileCache.set(hash, result)
+    this.catFileCache.set(hash, result.toString())
 
     return result
   }
@@ -423,3 +424,84 @@ export class GitCaller {
     log.debug(`Set ${setting} to ${value}`)
   }
 }
+
+
+export async function lstree(repoPath: string, hash: string) {
+  const entries = await new Promise<Array<string>>((resolve, reject) =>
+    execFile(
+      "git",
+      ["ls-tree", "-r", hash],
+      {
+        cwd: repoPath
+      },
+      (error, stdout) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(stdout.split("\n").filter(Boolean))
+        }
+      }
+    )
+  )
+  const files = []
+  for (const data of entries) {
+    const [mode, type, hash, filename] = data.split(/\s+/)
+    files.push({ fileName: filename, hash })
+  }
+  return {
+    hash,
+    files
+  }
+}
+
+const catFileCache = new Map<string, Buffer | null>()
+
+export const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
+  const key = `${repoPath}:${hash}:${filePath ?? ""}`
+  const cachedValue = catFileCache.get(key)
+  if (cachedValue !== undefined) {
+    return cachedValue
+  }
+
+  try {
+    const gitArgs = ["cat-file", "blob", hash + (filePath ? `:${filePath}` : "")]
+    // log.info(`> git ${gitArgs.join(" ")}`)
+    const result: Buffer<ArrayBufferLike> = await new Promise((resolve, reject) => {
+      const process = spawn("git", gitArgs, {
+        cwd: repoPath,
+        killSignal: "SIGKILL",
+        shell: false,
+        stdio: ["ignore", "pipe", "ignore"]
+      })
+      const buffers: Buffer[] = []
+      process.stdout.on("data", (data) => {
+        buffers.push(data)
+      })
+      process.on("error", reject)
+      process.on("exit", (code) => {
+        if (code === 0) {
+          resolve(Buffer.concat(buffers))
+        } else {
+          reject(new Error(`git cat-file exited with code ${code}`))
+        }
+      })
+    })
+
+    // const firstLine = result.toString().split("\n")[0]
+    // log.info(`cat-file: ${firstLine}`)
+
+    catFileCache.set(key, result)
+    return result
+  } catch (error) {
+    catFileCache.set(key, null)
+    if (!(error instanceof Error)) {
+      throw new Error(`Error reading blob ${hash} (${filePath ?? "unknown"}): ${error}`)
+    }
+    if (error.message.includes("Not a valid object name")) {
+      log.warn(`File ${filePath} not found in commit ${hash}`)
+      return null
+    }
+    throw error
+  }
+}
+

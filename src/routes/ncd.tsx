@@ -8,7 +8,8 @@ import { join } from "node:path"
 import { useLoaderData } from "react-router"
 import { Fragment, useMemo } from "react"
 import { cn } from "~/styling"
-import { execFile, spawn } from "node:child_process"
+import { execFile } from "node:child_process"
+import { GitCaller, lstree } from "~/analyzer/git-caller.server"
 
 export function headers(_: Route.HeadersArgs) {
   _.loaderHeaders
@@ -34,55 +35,6 @@ export const loader = async ({
     subject: string
   }[]
 }> => {
-  const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
-    const key = `${repoPath}:${hash}:${filePath ?? ""}`
-    const cachedValue = catFileCache.get(key)
-    if (cachedValue !== undefined) {
-      return cachedValue
-    }
-
-    try {
-      const gitArgs = ["cat-file", "blob", hash + (filePath ? `:${filePath}` : "")]
-      // log.info(`> git ${gitArgs.join(" ")}`)
-      const result: Buffer<ArrayBufferLike> = await new Promise((resolve, reject) => {
-        const process = spawn("git", gitArgs, {
-          cwd: repoPath,
-          killSignal: "SIGKILL",
-          shell: false,
-          stdio: ["ignore", "pipe", "ignore"]
-        })
-        const buffers: Buffer[] = []
-        process.stdout.on("data", (data) => {
-          buffers.push(data)
-        })
-        process.on("error", reject)
-        process.on("exit", (code) => {
-          if (code === 0) {
-            resolve(Buffer.concat(buffers))
-          } else {
-            reject(new Error(`git cat-file exited with code ${code}`))
-          }
-        })
-      })
-
-      // const firstLine = result.toString().split("\n")[0]
-      // log.info(`cat-file: ${firstLine}`)
-
-      catFileCache.set(key, result)
-      return result
-    } catch (error) {
-      catFileCache.set(key, null)
-      if (!(error instanceof Error)) {
-        throw new Error(`Error reading blob ${hash} (${filePath ?? "unknown"}): ${error}`)
-      }
-      if (error.message.includes("Not a valid object name")) {
-        log.warn(`File ${filePath} not found in commit ${hash}`)
-        return null
-      }
-      throw error
-    }
-  }
-  const abortSignal = request.signal
   const url = new URL(request.url)
   const repo = url.searchParams.get("repo")
   const branch = url.searchParams.get("branch")
@@ -91,6 +43,7 @@ export const loader = async ({
   invariant(repo, "repo is required")
   invariant(branch, "branch is required")
   invariant(path, "path is required")
+
 
   // console.log(await difftree(join(path, repo), branch))
   // return null
@@ -103,6 +56,8 @@ export const loader = async ({
   const ins = InstanceManager.getOrCreateInstance(repo, branch, path)
 
   const repoPath = join(path, repo)
+  const gitCaller = new GitCaller(repo, branch, repoPath)
+  const catFile = (_path: string, file: string) => gitCaller.catFile(file)
 
   const getResults = async () => {
     // 1. Read the file tree of the latest revision
@@ -117,8 +72,8 @@ export const loader = async ({
       throw treeError
     }
 
-    let countBefore = fileTree.length
-    let allHasSize = fileTree.every((x) => x.size !== undefined)
+    const countBefore = fileTree.length
+    const allHasSize = fileTree.every((x) => x.size !== undefined)
     if (!allHasSize) {
       log.warn("Not all files have size")
     }
@@ -126,7 +81,7 @@ export const loader = async ({
     const removedFiles = fileTree.filter((x) => x.size >= largeFileThreshold)
     fileTree = fileTree.filter((x) => x.size < largeFileThreshold)
 
-    let countAfter = fileTree.length
+    const countAfter = fileTree.length
     log.info(`Filtered out ${countBefore - countAfter} of ${countBefore} files`)
     log.info(
       `Removed files: ${removedFiles.sort(
@@ -222,10 +177,6 @@ export const loader = async ({
       const ccCombined = (await compress(combined)).length
       const ncdValue = (ccCombined - Math.min(ccFinal, ccCommit)) / Math.max(ccFinal, ccCommit)
       return ncdValue
-    }
-
-    if (abortSignal.aborted) {
-      throw Error("Aborted")
     }
 
     const ncdGoal = commits.length
@@ -326,33 +277,6 @@ async function difftree(repoPath: string, commit: string) {
   }
 }
 
-async function lstree(repoPath: string, hash: string) {
-  const entries = await new Promise<Array<string>>((resolve, reject) =>
-    execFile(
-      "git",
-      ["ls-tree", "-r", hash],
-      {
-        cwd: repoPath
-      },
-      (error, stdout) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(stdout.split("\n").filter(Boolean))
-        }
-      }
-    )
-  )
-  const files = []
-  for (const data of entries) {
-    const [mode, type, hash, filename] = data.split(/\s+/)
-    files.push({ fileName: filename, hash })
-  }
-  return {
-    hash,
-    files
-  }
-}
 
 export default function Ncd() {
   const { commits } = useLoaderData<typeof loader>()

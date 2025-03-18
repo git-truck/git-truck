@@ -6,7 +6,6 @@ import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "./util.server"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader"
-import { log } from "./log.server"
 
 export default class DB {
   private connectionPromise: Promise<DuckDBConnection>
@@ -37,7 +36,6 @@ export default class DB {
     this.repoSanitized = repo.replace(/\W/g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
-    log.info(`Using database at ${dbPath}`)
     this.connectionPromise = DB.init(dbPath)
     this.selectedRange = [0, 1_000_000_000_000] as [number, number]
   }
@@ -514,7 +512,7 @@ export default class DB {
 
   public async getCommitCount() {
     const res = await this.query(`
-      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed_cached;
+      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed;
     `)
     return Number(res[0]["count"])
   }

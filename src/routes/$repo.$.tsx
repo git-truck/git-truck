@@ -37,10 +37,7 @@ import type { Route } from "./+types/$repo.$"
 
 export interface RepoData {
   repo: Repository
-  gitTruckInfo: {
-    version: string
-    latestVersion: string | null
-  }
+  gitTruckInfo: { version: string; latestVersion: string | null }
   databaseInfo: DatabaseInfo
 }
 
@@ -57,10 +54,7 @@ export interface DatabaseInfo {
   authorUnions: string[][]
   fileTree: GitTreeObject
   hiddenFiles: string[]
-  lastRunInfo: {
-    time: number
-    hash: string
-  }
+  lastRunInfo: { time: number; hash: string }
   fileCount: number
   repo: string
   branch: string
@@ -355,11 +349,7 @@ async function analyze(params: Route.LoaderArgs["params"], context: Route.Loader
     commitCount
   }
 
-  const fullData = {
-    repo,
-    gitTruckInfo: context,
-    databaseInfo: databaseInfo
-  } as RepoData
+  const fullData = { repo, gitTruckInfo: context, databaseInfo: databaseInfo } as RepoData
 
   return fullData
 }
@@ -413,9 +403,7 @@ export default function Repo() {
           <Providers data={data as RepoData}>
             <div className={cn("app-container", containerClass)}>
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
-                  "overflow-y-auto": !isFullscreen
-                })}
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", { "overflow-y-auto": !isFullscreen })}
               >
                 {!isLeftPanelCollapse ? (
                   <>
@@ -425,19 +413,13 @@ export default function Repo() {
                   </>
                 ) : null}
                 {!isFullscreen ? (
-                  <div
-                    className={cn("absolute z-10 justify-self-end", {
-                      "left-0": isLeftPanelCollapse
-                    })}
-                  >
+                  <div className={cn("absolute z-10 justify-self-end", { "left-0": isLeftPanelCollapse })}>
                     <button
                       type="button"
                       onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
                       className={clsx(
-                        "btn btn--primary absolute top-[50vh] left-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
-                        {
-                          "left-arrow-space": !isLeftPanelCollapse
-                        }
+                        "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
+                        { "left-arrow-space": !isLeftPanelCollapse }
                       )}
                     >
                       <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
@@ -465,16 +447,14 @@ export default function Repo() {
               </main>
 
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
-                  "overflow-y-auto": !isFullscreen
-                })}
+                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", { "overflow-y-auto": !isFullscreen })}
               >
                 {!isFullscreen ? (
                   <div className="absolute">
                     <button
                       type="button"
                       onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                      className="btn btn--primary absolute top-[50vh] right-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
+                      className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
                     >
                       <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
                     </button>
@@ -485,7 +465,7 @@ export default function Repo() {
                     <DetailsCard
                       showUnionAuthorsModal={showUnionAuthorsModal}
                       className={clsx({
-                        "absolute right-2 bottom-0 max-h-screen -translate-x-full overflow-y-auto shadow-sm shadow-black/50":
+                        "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow-sm shadow-black/50":
                           isFullscreen
                       })}
                     />
