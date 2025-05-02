@@ -134,9 +134,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const requestUrl = new URL(args.request.url)
   const repo = requestUrl.searchParams.get("repo") ?? "git-truck"
   const branch = requestUrl.searchParams.get("branch") ?? "HEAD"
-  const path = requestUrl.searchParams.get("path") ?? "C:/Users/jonas/p/git-truck"
+  const path = requestUrl.searchParams.get("path") ?? `C:/Users/jonas/p/${repo}`
 
   const commits = await readCommits({ repo, branch, commits: commitHashes, path })
+
+  const averageCDDelta = commits.reduce((acc, commit) => acc + commit.cdDelta, 0) / commits.length
+
+  console.log(`Average CD Delta: ${averageCDDelta}`)
 
   return commits
     .map((d) =>
