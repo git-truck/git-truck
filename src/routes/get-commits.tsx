@@ -86,14 +86,14 @@ async function readCommits({
       return zCombined - zTarget
     }
 
-    const ncdFromPrev = await ncdComparedToRevision(`${commitHash}~1`)
-    const ncdFromLatest = await ncdComparedToRevision(branch)
+    // const ncdFromPrev = await ncdComparedToRevision(`${commitHash}~1`)
+    // const ncdFromLatest = await ncdComparedToRevision(branch)
 
     const cdFromLatest = await cdComparedToRevision(commitHash, branch)
     const cdFromLatestPrev = await cdComparedToRevision(`${commitHash}~1`, branch)
     const cdDelta = cdFromLatestPrev - cdFromLatest
 
-    const cdFromPrev = await cdComparedToRevision(commitHash, `${commitHash}~1`)
+    // const cdFromPrev = await cdComparedToRevision(commitHash, `${commitHash}~1`)
 
     const [insertions, deletions] = Array.from(contributionResults)
       .map((c) => c.groups!)
@@ -109,14 +109,9 @@ async function readCommits({
       commitHash,
       date,
       message,
-      size: commitBuffer.length,
       insertions,
       deletions,
-      cdFromPrev,
-      cdFromLatest,
-      cdDelta,
-      ncdFromPrev,
-      ncdFromLatest
+      cdDelta
     }
   })
 
@@ -124,17 +119,20 @@ async function readCommits({
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
-  // concatenated string of commit hashes
-  const commitHashesConcatenated = args.params.commits
-  // commit is a 40 character hash, so split them every 40 characters
-  const commitHashes = commitHashesConcatenated!.match(/.{1,40}/g)?.map((d) => d.trim()) ?? []
-
-  // get commit details for commits
-
   const requestUrl = new URL(args.request.url)
   const repo = requestUrl.searchParams.get("repo") ?? "git-truck"
   const branch = requestUrl.searchParams.get("branch") ?? "HEAD"
   const path = requestUrl.searchParams.get("path") ?? `C:/Users/jonas/p/${repo}`
+
+  const gitCaller = new GitCaller(repo, branch, path)
+
+
+
+  // commit is a 40 character hash, so split them every 40 characters
+  const commitHashes = requestUrl.searchParams.get("commits")?.match(/.{1,40}/g)?.map((d) => d.trim()) ?? (await gitCaller.gitLogHashes(0, 60)).split("\n")
+
+  // get commit details for commits
+
 
   const commits = await readCommits({ repo, branch, commits: commitHashes, path })
 
@@ -150,3 +148,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
     )
     .join("\n")
 }
+
+// export default function Commits() {
+
+// }
