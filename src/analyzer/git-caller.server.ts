@@ -305,6 +305,12 @@ export class GitCaller {
     return result.trim()
   }
 
+  async gitLogHashes(skip: number, count: number) {
+    const args = ["log", `--skip=${skip}`, `--max-count=${count}`, "--format=%H", this.branch]
+    const result = (await runProcess(this.path, "git", args)) as string
+    return result.trim()
+  }
+
   async gitLogSimple(skip: number, count: number, instance: ServerInstance, index: number) {
     const args = [
       "log",
@@ -425,7 +431,6 @@ export class GitCaller {
   }
 }
 
-
 export async function lstree(repoPath: string, hash: string) {
   const entries = await new Promise<Array<string>>((resolve, reject) =>
     execFile(
@@ -504,4 +509,3 @@ export const catFile = async (repoPath: string, hash: string, filePath?: string)
     throw error
   }
 }
-
