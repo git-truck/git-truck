@@ -42,7 +42,7 @@ export function runProcess(
       const chunks: Uint8Array[] = []
       prcs.once("error", errorHandler)
       prcs.stderr.once("data", (e) => {
-        err.message = `Child process failed:\n ${dir}> ${command} ${args.join(", ")}\n Error: ${e.toString().trim()}`
+        err.message = `Child process failed:\n ${dir}> ${command} ${args.join(" ")}\n Error: ${e.toString().trim()}`
         errorHandler(err)
       })
       prcs.stdout.on("data", (buf) => {
