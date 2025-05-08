@@ -2,6 +2,7 @@ import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
 import type { GitObject, GitBlobObject, GitTreeObject } from "./analyzer/model"
+import { formatMsTime } from "./analyzer/util.server"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
@@ -188,11 +189,51 @@ export const createdCachedFunction = <T extends (...args: unknown[]) => any>(fn:
 
 /**
  * Async map function
- * @param arr Array or iterator object
+ * @param arrayOrIterator Array or iterator object
  * @param fn Function to map
  * @returns Promise with the mapped results
  */
-export async function amap<T, U>(arr: T[] | IteratorObject<T>, fn: (arg: T) => Promise<U>): Promise<U[]> {
-  const results = await Promise.all((Array.isArray(arr) ? arr : Array.from(arr)).map(fn))
+export async function mapAsync<T, U>(
+  arrayOrIterator: T[] | IteratorObject<T>,
+  fn: (arg: T, index: number, array: T[]) => Promise<U>,
+  parallel = false
+): Promise<U[]> {
+  const array = Array.isArray(arrayOrIterator) ? arrayOrIterator : Array.from(arrayOrIterator)
+  if (parallel) {
+    return await Promise.all(array.map((v, i, a) => fn(v, i, a)))
+  }
+  const results = []
+
+  for (const [i, v] of Object.entries(array)) {
+    results.push(await fn(v, Number(i), array))
+  }
+
   return results
+}
+
+export const ansiErase = "\x1b[1A\x1b[K"
+
+export function printProgressBar<T>(results: T[], i: number, lastPrintTime: number, startTime: number) {
+  let goal = results.length
+  if (i + 1 === goal || performance.now() - lastPrintTime > 1000 / 30) {
+    lastPrintTime = performance.now()
+    const ellapsedTime = performance.now() - startTime
+    const elapsedTimeFormatted = formatMsTime(ellapsedTime)
+
+    const estimatedTimeRemaining = ((goal - i) * ellapsedTime) / i
+    const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
+
+    const percent = ((i + 1) / goal) * 100
+
+    process.stdout.write(
+      `${ansiErase}\n[${(i + 1).toLocaleString()}/${goal.toLocaleString()} commits] (${percent.toFixed(
+        2
+      )}%) (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
+        estimatedTimeRemaining
+      )}, total time estimate: ${formatMsTime(
+        estimatedTotalTime
+      )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})`
+    )
+  }
+  return lastPrintTime
 }

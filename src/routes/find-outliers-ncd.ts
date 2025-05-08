@@ -7,6 +7,7 @@ import { formatMsTime, promiseHelper, time } from "~/analyzer/util.server.js"
 import { compress } from "@mongodb-js/zstd"
 import { resolve } from "node:path"
 import { writeFileSync } from "node:fs"
+import { ansiErase, printProgressBar } from "~/util.js"
 
 type CommitData = { hash: string; message: string }
 
@@ -22,7 +23,7 @@ function findOutliers(data: number[]): { mean: number; stdDev: number; outliers:
   const lowerBound = mean - std_range * stdDev
   const upperBound = mean + std_range * stdDev
 
-  return { mean, stdDev, outliers: new Set(data.filter((value) => value < lowerBound || value > upperBound))}
+  return { mean, stdDev, outliers: new Set(data.filter((value) => value < lowerBound || value > upperBound)) }
 }
 
 async function readCommits({
@@ -54,7 +55,6 @@ async function readCommits({
   return commits
 }
 
-const erase = "\x1b[1A\x1b[K"
 const largeFileThreshold = 100_000
 const EMPTY_COMMIT = "0000000000000000000000000000000000000000"
 
@@ -81,7 +81,7 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
   )
   log.info(`Largest file : ${Math.max(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
   log.info(`Smallest file: ${Math.min(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
-  const frbGoal = fileTree.length
+
   const frbStartTime = performance.now()
   let lastPrintTime = performance.now()
 
@@ -89,25 +89,7 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
     () =>
       Promise.all(
         fileTree.map(async (f, i, all) => {
-          if (i + 1 === all.length || performance.now() - lastPrintTime > 1000 / 30) {
-            lastPrintTime = performance.now()
-            const ellapsedTime = performance.now() - frbStartTime
-            const elapsedTimeFormatted = formatMsTime(ellapsedTime)
-
-            const estimatedTimeRemaining = ((frbGoal - (i + 1)) * ellapsedTime) / (i + 1)
-            const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
-
-            const percent = ((i + 1) / frbGoal) * 100
-            process.stdout.write(
-              `${erase}\n[${(i + 1).toLocaleString()}/${frbGoal.toLocaleString()} files] (${percent.toFixed(
-                2
-              )}%) (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
-                estimatedTimeRemaining
-              )}, total time estimate: ${formatMsTime(
-                estimatedTotalTime
-              )}, time per file: ${formatMsTime(ellapsedTime / (i + 1))})`
-            )
-          }
+          lastPrintTime = printProgressBar(all, i, lastPrintTime, frbStartTime)
           const [result, err] = await promiseHelper(catFile(path, f.hash))
           if (err) {
             log.error(`Error reading file ${f.hash}: ${err}`)
@@ -141,7 +123,6 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
     return ncdValue
   }
 
-  const ncdGoal = commits.length
   const ncdStartTime = performance.now()
   console.log()
 
@@ -168,26 +149,7 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
       const commitNCD = await ncd(concatenatedFileBuffer)
 
       // Progress bar
-      if (i + 1 === ncdGoal || performance.now() - lastPrintTime > 1000 / 30) {
-        lastPrintTime = performance.now()
-        const ellapsedTime = performance.now() - ncdStartTime
-        const elapsedTimeFormatted = formatMsTime(ellapsedTime)
-
-        const estimatedTimeRemaining = ((ncdGoal - i) * ellapsedTime) / i
-        const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
-
-        const percent = ((i + 1) / ncdGoal) * 100
-
-        process.stdout.write(
-          `${erase}\n[${(i + 1).toLocaleString()}/${ncdGoal.toLocaleString()} commits] (${percent.toFixed(
-            2
-          )}%) (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
-            estimatedTimeRemaining
-          )}, total time estimate: ${formatMsTime(
-            estimatedTotalTime
-          )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})`
-        )
-      }
+      lastPrintTime = printProgressBar(commits, i, lastPrintTime, ncdStartTime)
 
       results.push({ ...commit, commitNCD, files, filesFiltered })
       i++
@@ -199,7 +161,7 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
 
   const ncds = commitNcdResults.map((commit) => commit.commitNCD)
 
-  const { mean, stdDev, outliers: ncdOutliers} = findOutliers(ncds)
+  const { mean, stdDev, outliers: ncdOutliers } = findOutliers(ncds)
 
   const outliers = commitNcdResults
   // .filter((d) => ncdOutliers.has(d.commitNCD))
@@ -217,7 +179,7 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
       commitNCD: d.commitNCD,
       files: d.files
     }))
-    // .filter(d => d.note === "below")
+  // .filter(d => d.note === "below")
 
   const csv = outliersForOutput.map((d) => `${d.hash},${d.message},${d.commitNCD},${d.files}`).join("\n")
   writeFileSync("outliers.csv", csv)

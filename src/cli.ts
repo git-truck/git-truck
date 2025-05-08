@@ -4,7 +4,7 @@ import express from "express"
 import compression from "compression"
 import morgan from "morgan"
 import { createRequestHandler } from "@react-router/express"
-import pkg from "../package.json" assert { type: "json" }
+import pkg from "../package.json" with { type: "json" }
 import open from "open"
 import { GitCaller } from "./analyzer/git-caller.server.ts"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server.ts"

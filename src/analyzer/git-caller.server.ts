@@ -89,6 +89,15 @@ export class GitCaller {
     return result.trim()
   }
 
+  async gitRemote() {
+    const args = [
+      "remote",
+      "-v",
+    ]
+    const result = (await runProcess(this.path, "git", args)) as string
+    return result.trim().split(/\s/)
+  }
+
   static async _getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
     return result.trim()
