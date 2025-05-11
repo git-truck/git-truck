@@ -59,6 +59,7 @@
     "@styled-icons/material-outlined": "^10.47.0",
     "@styled-icons/octicons": "^10.47.0",
     "@tailwindcss/vite": "^4.0.6",
+    "@total-typescript/ts-reset": "^0.6.1",
     "@types/byte-size": "^8.1.2",
     "@types/color-convert": "^2.0.4",
     "@types/compression": "^1.7.5",

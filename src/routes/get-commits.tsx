@@ -1,11 +1,12 @@
-import { catFile, GitCaller, lstree } from "~/analyzer/git-caller.server.js"
-import { contribRegex, gitLogRegex } from "~/analyzer/constants.js"
+import { catFile, GitCaller, lstreeCached } from "~/analyzer/git-caller.server.js"
+import { contribRegex, gitLogRegex, type gitLogRegexGroups } from "~/analyzer/constants.js"
 import type { LoaderFunctionArgs } from "react-router"
 import { compress } from "@mongodb-js/zstd"
 import { mapAsync, printProgressBar } from "~/util.js"
 import { log } from "~/analyzer/log.server"
 import { getArgs } from "~/analyzer/args.server"
 import { join, resolve } from "node:path"
+import { csv, csvFormat, dsvFormat } from "d3"
 
 const ignore = [
   "package-lock.json",
@@ -33,6 +34,13 @@ const ignore = [
   "db",
   "txt",
   "cfg",
+  "pdf",
+  "husky/pre-commit",
+  "license",
+  "truckignore",
+  "prettierrc",
+  "sln",
+  "eslintignore"
 ]
 
 const codeExtensions = [
@@ -52,6 +60,7 @@ const codeExtensions = [
   "rs",
   "test",
   "sh",
+  "http",
 
   "sql",
 
@@ -73,7 +82,10 @@ const codeExtensions = [
   "toml",
 
   // Docs
-  "md"
+  "md",
+
+  // Misc
+  "tape"
 ]
 
 const DEFAULT_COMMIT_COUNT = 100
@@ -83,90 +95,188 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   const { searchParams } = new URL(args.request.url)
 
+  /** Repository to analyze. This is the name of the folder in the base path. */
   const repo =
     searchParams.get("repo") ??
     (() => {
       throw new Error("Repository parameter is required.")
     })()
-  const branch = searchParams.get("branch") ?? "HEAD"
+
+  /** Revision to start from. Defaults to HEAD (currently checked out commit) */
+  const revision = searchParams.get("branch") ?? "HEAD"
+  /** Path to analyze. This is the path to the folder in the repository. Constructed automatically by default, but can be overridden if needed. */
   const path = searchParams.get("path") ?? join(basePath, repo)
+  /** Count of commits to analyze. Defaults to 100. */
   const count = Number(searchParams.get("count") ?? DEFAULT_COMMIT_COUNT)
+  /** Extensions to include in the analysis. Defaults to all code extensions. */
   const ext = searchParams.get("ext")?.split(",") ?? []
 
-  const gitCaller = new GitCaller(repo, branch, path)
-  log.warn(await gitCaller.gitRemote())
+  const gitCaller = new GitCaller(repo, revision, path)
 
-  // TODO: Since we are no longer accessing specific commits, but instead the history
-  // after a specific revision, we can consolidate these two calls into one by removing "no-walk" argument
-  const commitHashes = (await gitCaller.gitLogHashes(0, count)).split("\n")
-  if (commitHashes.length !== count) {
-    throw new Error(`Expected ${count} commits, but got ${commitHashes.length}.`)
-  }
-  const gitLog = await gitCaller.gitLogSpecificCommits(commitHashes)
+  const gitLog = await gitCaller.gitLog(0, count)
+  log.warn(await gitCaller.gitRemote())
 
   const results = gitLog.matchAll(gitLogRegex)
   const startTime = performance.now()
   let lastPrintTime = performance.now()
 
-  const commits = await mapAsync(results, async (result, i, results) => {
-    lastPrintTime = printProgressBar(results, i, lastPrintTime, startTime)
-    const {
-      hash: commitHash,
-      dateauthor: date,
-      message,
-      contributions
-    } = result.groups as {
-      hash: string
-      dateauthor: string
-      message: string
-      contributions: string
+  const baselineBuffer = Buffer.concat(await readCommitFileBuffers(revision))
+
+  const commits = (
+    await mapAsync(results, async (result, i, results) => {
+      // if last commit, ignore
+
+      if (i === results.length - 1) {
+        return null
+      }
+
+      const commit: gitLogRegexGroups = result.groups as gitLogRegexGroups
+      lastPrintTime = printProgressBar(results, i, lastPrintTime, startTime)
+
+      const contributionResults = commit.contributions.matchAll(contribRegex)
+
+      async function compDistComparedToCommit(targetCommit: string) {
+        const targetBuffer = Buffer.concat(await readCommitFileBuffers(targetCommit))
+        // const baselineBuffer = Buffer.concat(await readCommitFileBuffers(baselineRevision))
+
+        const zCombined = (await compress(Buffer.concat([baselineBuffer, targetBuffer]))).length
+        const zTarget = (await compress(targetBuffer)).length
+        // CD(x) = |R_x R_f| - |R_x|, where R_x is the X’ed commit and R_f is the final commit. Now you get a size in bytes, which is a little easier to understand.
+
+        return {
+          dist: baselineBuffer.length - targetBuffer.length,
+          compDist: zCombined - zTarget
+        }
+      }
+
+      /**
+       * Compression distance compared to the latest commit
+       */
+      const fromLatest = await compDistComparedToCommit(commit.hash)
+      /**
+       * Compression distance for previous commit compared to the latest commit
+       */
+      const fromLatestPrev = await compDistComparedToCommit(`${commit.hash}~1`)
+
+      // TODO: Investigate bug with incorrect insertions / deletions reported
+      const [insertions, deletions] = Array.from(contributionResults)
+        .map((c) => c.groups!)
+        .reduce(
+          ([ins, del], { file, insertions, deletions }) =>
+            file.includes("=>") ||
+            ignore.some((i) => file.endsWith(i) || !codeExtensions.some((ext) => file.endsWith(`.${ext}`)))
+              ? [ins, del]
+              : [
+                  ins + (insertions === "-" ? 0 : parseInt(insertions)),
+                  del + (deletions === "-" ? 0 : parseInt(deletions))
+                ],
+          [0, 0]
+        )
+
+      return {
+        i,
+        hash: commit.hash,
+        date: commit.dateauthor,
+        author: commit.author,
+        message: commit.message,
+        insertions,
+        deletions,
+        locc: insertions + deletions,
+        dist: fromLatest.dist,
+        distDelta: fromLatestPrev.dist - fromLatest.dist,
+        compDist: fromLatest.compDist,
+        compDistDelta: fromLatestPrev.compDist - fromLatest.compDist
+      }
+    })
+  ).filter(Boolean)
+
+  const averageCDDelta = commits.reduce((acc, commit) => acc + commit.compDistDelta, 0) / commits.length
+
+  const { totalDist, totalCompDist, totalLoCC, totalInsertions, totalDeletions, totalCommitCount } = Array.from(
+    commits.values()
+  ).reduce(
+    (acc, c) => {
+      acc.totalDist += c.distDelta
+      acc.totalCompDist += c.compDistDelta
+      acc.totalCommitCount += 1
+      acc.totalLoCC += c.locc
+      acc.totalInsertions += c.insertions
+      acc.totalDeletions += c.deletions
+      return acc
+    },
+    { totalDist: 0, totalCompDist: 0, totalLoCC: 0, totalInsertions: 0, totalDeletions: 0, totalCommitCount: 0 }
+  )
+
+  const authorMap = {
+    "Thomas Hoffmann Kilbak": "Thomas",
+    tjomson: "Thomas",
+    joglr: "Jonas",
+    "Thomas Kilbak": "Thomas",
+    "Jonas Røssum": "Jonas",
+    "Jonas Glerup Røssum": "Jonas",
+    "vhs-action 📼": "Bot",
+    "Automated Version Bump": "Bot"
+  } as const
+
+  const authorDistribution: Map<
+    string,
+    {
+      dist: number
+      count: number
+      insertions: number
+      deletions: number
+      locc: number
+      compDist: number
     }
-    const contributionResults = contributions.matchAll(contribRegex)
+  > = commits.reduce(
+    (acc, commit) => {
+      const author = authorMap[commit.author as keyof typeof authorMap] ?? commit.author
+      const dist = commit.compDistDelta
 
-    async function compressionDistanceComparedToRevision(targetRevision: string, baselineRevision: string) {
-      const targetBuffer = Buffer.concat(await readCommitFileBuffers(targetRevision))
-      const baselineBuffer = Buffer.concat(await readCommitFileBuffers(baselineRevision))
+      if (!acc.has(author)) {
+        acc.set(author, { author, dist: 0, count: 0, insertions: 0, deletions: 0, locc: 0, compDist: 0 })
+      }
 
-      const zCombined = (await compress(Buffer.concat([baselineBuffer, targetBuffer]))).length
-      const zTarget = (await compress(targetBuffer)).length
+      acc.get(author)!.count += 1 / totalCommitCount
+      acc.get(author)!.dist += commit.distDelta / totalDist
+      acc.get(author)!.compDist += commit.compDistDelta / totalCompDist
+      acc.get(author)!.insertions += commit.insertions / totalInsertions
+      acc.get(author)!.deletions += commit.deletions / totalDeletions
+      acc.get(author)!.locc += (commit.insertions + commit.deletions) / totalLoCC
 
-      // CD(x) = |R_x R_f| - |R_x|, where R_x is the X’ed commit and R_f is the final commit. Now you get a size in bytes, which is a little easier to understand.
-      return zCombined - zTarget
-    }
+      return acc
+    },
+    new Map<
+      string,
+      {
+        author: string
+        dist: number
+        count: number
+        insertions: number
+        deletions: number
+        locc: number
+        compDist: number
+      }
+    >()
+  )
 
-    const cdFromLatest = await compressionDistanceComparedToRevision(commitHash, branch)
-    const cdFromLatestPrev = await compressionDistanceComparedToRevision(`${commitHash}~1`, branch)
-    const cdDelta = cdFromLatestPrev - cdFromLatest
+  type AuthorDistribution = typeof authorDistribution extends Map<unknown, infer V> ? V : never
 
-    // const cdFromPrev = await cdComparedToRevision(commitHash, `${commitHash}~1`)
-    // TODO: Investigate bug with incorrect insertions / deletions reported
-    const [insertions, deletions] = Array.from(contributionResults)
-      .map((c) => c.groups!)
-      .reduce(
-        ([ins, del], { file, insertions, deletions }) =>
-          file.includes("=>") || ignore.some(i => file.endsWith(i) || !codeExtensions.some(ext => file.endsWith(`.${ext}`)))
-            ? [ins, del]
-            : [
-                ins + (insertions === "-" ? 0 : parseInt(insertions)),
-                del + (deletions === "-" ? 0 : parseInt(deletions))
-              ],
-        [0, 0]
-      )
-
-    return {
-      i,
-      commitHash,
-      date,
-      message,
-      insertions,
-      deletions,
-      cdDelta
-    }
-  })
-
-  const averageCDDelta = commits.reduce((acc, commit) => acc + commit.cdDelta, 0) / commits.length
-
-  console.log(`Average CD Delta: ${averageCDDelta}`)
+  console.log(
+    dsvFormat(",").format(
+      Array.from(authorDistribution.values())
+        .sort((a, b) => b["compDist"] - a["compDist"])
+        .map((entry) =>
+          Object.fromEntries(
+            Object.entries(entry).map(([k, v]) => [
+              k,
+              (typeof v === "number" ? v.toString().replace(".", ",") : v).replaceAll(";", "_")
+            ])
+          )
+        ),
+      ["author", "count", "dist", "compDist", "locc", "insertions", "deletions"]
+    )
+  )
 
   return commits
     .map((d) =>
@@ -177,8 +287,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
     .join("\n")
 
   async function readCommitFileBuffers(commit: string) {
-    process.stdout.write("🟩")
-    const fileList = await lstree(path, commit)
+    const fileList = await lstreeCached(path, commit)
 
     const inherentExtensions = fileList.files
       .map((f) => f.fileName.split(".")?.at(-1)?.toLowerCase())

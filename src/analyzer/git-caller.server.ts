@@ -90,10 +90,7 @@ export class GitCaller {
   }
 
   async gitRemote() {
-    const args = [
-      "remote",
-      "-v",
-    ]
+    const args = ["remote", "-v"]
     const result = (await runProcess(this.path, "git", args)) as string
     return result.trim().split(/\s/)
   }
@@ -302,7 +299,7 @@ export class GitCaller {
     const args = [
       "log",
       `--skip=${skip}`,
-      `--max-count=${count}`,
+      ...(count !== Infinity ? [`--max-count=${count}`] : []),
       this.branch,
       "--summary",
       "--numstat",
@@ -394,7 +391,7 @@ export class GitCaller {
 
   async catFile(hash: string) {
     const result = await runProcess(this.path, "git", ["cat-file", "-p", hash])
-    return Buffer.from(result)
+    return result as string
   }
 
   async findBranchHead() {
@@ -440,6 +437,8 @@ export class GitCaller {
   }
 }
 
+const lsTreeCache = new Map<string, { hash: string; files: Array<{ fileName: string; hash: string }> }>()
+
 export async function lstree(repoPath: string, hash: string) {
   const entries = await new Promise<Array<string>>((resolve, reject) =>
     execFile(
@@ -466,6 +465,18 @@ export async function lstree(repoPath: string, hash: string) {
     hash,
     files
   }
+}
+
+export async function lstreeCached(repoPath: string, hash: string) {
+  const key = `${repoPath}:${hash}`
+  const cachedValue = lsTreeCache.get(key)
+  if (cachedValue !== undefined) {
+    return cachedValue
+  }
+
+  const result = await lstree(repoPath, hash)
+  lsTreeCache.set(key, result)
+  return result
 }
 
 const catFileCache = new Map<string, Buffer | null>()
