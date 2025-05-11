@@ -214,6 +214,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
     "Thomas Kilbak": "Thomas",
     "Jonas Røssum": "Jonas",
     "Jonas Glerup Røssum": "Jonas",
+    "Kristoffer Højelse": "Kristoffer",
+    emiljapelt: "Emil",
+    "Mircea Filip Lungu": "Mircea",
     "vhs-action 📼": "Bot",
     "Automated Version Bump": "Bot"
   } as const
@@ -231,7 +234,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
   > = commits.reduce(
     (acc, commit) => {
       const author = authorMap[commit.author as keyof typeof authorMap] ?? commit.author
-      const dist = commit.compDistDelta
 
       if (!acc.has(author)) {
         acc.set(author, { author, dist: 0, count: 0, insertions: 0, deletions: 0, locc: 0, compDist: 0 })
