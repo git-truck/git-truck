@@ -260,31 +260,19 @@ export const loader = async (args: LoaderFunctionArgs) => {
     >()
   )
 
-  type AuthorDistribution = typeof authorDistribution extends Map<unknown, infer V> ? V : never
-
-  console.log(
-    dsvFormat(",").format(
-      Array.from(authorDistribution.values())
-        .sort((a, b) => b["compDist"] - a["compDist"])
-        .map((entry) =>
-          Object.fromEntries(
-            Object.entries(entry).map(([k, v]) => [
-              k,
-              (typeof v === "number" ? v.toString().replace(".", ",") : v).replaceAll(";", "_")
-            ])
-          )
-        ),
-      ["author", "count", "dist", "compDist", "locc", "insertions", "deletions"]
-    )
+  return dsvFormat(",").format(
+    Array.from(authorDistribution.values())
+      .sort((a, b) => b["compDist"] - a["compDist"])
+      .map((entry) =>
+        Object.fromEntries(
+          Object.entries(entry).map(([k, v]) => [
+            k,
+            (typeof v === "number" ? v.toString().replace(".", ",") : v).replaceAll(";", "_")
+          ])
+        )
+      ),
+    ["author", "count", "dist", "compDist", "locc", "insertions", "deletions"]
   )
-
-  return commits
-    .map((d) =>
-      Object.values(d)
-        .map((x) => (typeof x === "number" ? x.toString().replace(".", ",") : x).replaceAll(";", "_"))
-        .join(";")
-    )
-    .join("\n")
 
   async function readCommitFileBuffers(commit: string) {
     const fileList = await lstreeCached(path, commit)
