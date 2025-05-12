@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -55,7 +55,7 @@
 }
 
 @utility card__title {
-  @apply text-base-styles select-none text-sm font-bold uppercase tracking-widest opacity-80;
+  @apply text-base-styles text-sm font-bold tracking-widest uppercase opacity-80 select-none;
 
   /* Small screens */
 }
@@ -68,7 +68,7 @@
 
 @utility btn {
   /* Inputs */
-  @apply grid h-8 cursor-pointer select-none grid-flow-col items-center justify-center gap-2 text-nowrap rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-gray-600 transition duration-200 hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
+  @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-nowrap text-gray-600 transition duration-200 select-none hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
 
   & > svg {
     @apply inline-block h-4 w-4;
@@ -172,7 +172,7 @@
 
 @utility input {
   @apply h-8 w-full grow;
-  @apply overflow-scroll text-ellipsis rounded-sm border border-gray-300 px-1 text-sm transition-colors;
+  @apply overflow-scroll rounded-sm border border-gray-300 px-1 text-sm text-ellipsis transition-colors;
   @apply enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50;
   @apply outline-hidden focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white;
 
@@ -190,7 +190,7 @@
 }
 
 @utility label {
-  @apply cursor-pointer select-none font-bold hover:opacity-70;
+  @apply cursor-pointer font-bold select-none hover:opacity-70;
 
   /* Small screens */
 }
@@ -198,11 +198,11 @@
 @utility app-container {
   @apply grid h-auto w-full grid-cols-1 grid-rows-[50vh_auto_auto] transition-all;
   @apply md:h-screen md:grid-cols-[var(--side-panel-width)_1fr_var(--side-panel-width)] md:grid-rows-[1fr] md:overflow-hidden;
-  grid-template-areas: 'left main right';
+  grid-template-areas: "left main right";
 
   /* 768px = md */
   @media (max-width: 768px) {
-    grid-template-areas: 'main' 'left' 'right';
+    grid-template-areas: "main" "left" "right";
   }
 
   & > main {

@@ -1,4 +1,4 @@
-import { Form, Link, useLocation, useNavigate, useNavigation } from "react-router";
+import { Form, Link, useLocation, useNavigate, useNavigation } from "react-router"
 import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
@@ -125,7 +125,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
               <Icon path={mdiInformation} size="1.5em" />
             </button>
             <div
-              className={clsx("card absolute left-0 top-0 z-10 h-max w-max shadow-sm transition-opacity", {
+              className={clsx("card absolute top-0 left-0 z-10 h-max w-max shadow-sm transition-opacity", {
                 "hidden opacity-0": !analysisDetailsVisible
               })}
             >

@@ -32,9 +32,9 @@ export default class InstanceManager {
   }
 
   public static async closeAllDBConnections() {
-    const promises = Array.from(this.instances.values())
-      .flatMap(repoInstance => Array.from(repoInstance.values())
-      .flatMap(branchInstance => branchInstance.db.disconnect()))
+    const promises = Array.from(this.instances.values()).flatMap((repoInstance) =>
+      Array.from(repoInstance.values()).flatMap((branchInstance) => branchInstance.db.disconnect())
+    )
     await Promise.all(promises)
     this.instances = new Map()
   }

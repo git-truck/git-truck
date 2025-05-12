@@ -23,13 +23,13 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
         return (
           <Fragment key={author + contrib}>
             <div
-              className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold"
+              className="flex items-center gap-2 overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre"
               title={author}
             >
               <LegendDot authorColorToChange={author} className="ml-1" dotColor={authorColors.get(author) ?? "grey"} />
-              <span className="overflow-hidden text-ellipsis whitespace-pre font-bold opacity-80">{author}</span>
+              <span className="overflow-hidden font-bold text-ellipsis whitespace-pre opacity-80">{author}</span>
             </div>
-            <p className="break-all text-right text-sm">{contribPercentage}%</p>
+            <p className="text-right text-sm break-all">{contribPercentage}%</p>
           </Fragment>
         )
       })}

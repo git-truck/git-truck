@@ -1,7 +1,7 @@
 import { PassThrough } from "stream"
-import type { EntryContext } from "react-router";
-import { createReadableStreamFromReadable } from "@react-router/node";
-import { ServerRouter } from "react-router";
+import type { EntryContext } from "react-router"
+import { createReadableStreamFromReadable } from "@react-router/node"
+import { ServerRouter } from "react-router"
 import { renderToPipeableStream } from "react-dom/server"
 
 export const streamTimeout = 10_000_000
@@ -15,33 +15,30 @@ function handleBrowserRequest(
   reactRouterContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={reactRouterContext} url={request.url} />,
-      {
-        onShellReady() {
-          const body = new PassThrough()
+    const { pipe, abort } = renderToPipeableStream(<ServerRouter context={reactRouterContext} url={request.url} />, {
+      onShellReady() {
+        const body = new PassThrough()
 
-          responseHeaders.set("Content-Type", "text/html")
+        responseHeaders.set("Content-Type", "text/html")
 
-          resolve(
-            new Response(createReadableStreamFromReadable(body), {
-              headers: responseHeaders,
-              status: responseStatusCode
-            })
-          )
+        resolve(
+          new Response(createReadableStreamFromReadable(body), {
+            headers: responseHeaders,
+            status: responseStatusCode
+          })
+        )
 
-          pipe(body)
-        },
-        onShellError(error: unknown) {
-          reject(error)
-        },
-        onError(error: unknown) {
-          console.error(error)
-          responseStatusCode = 500
-        }
+        pipe(body)
+      },
+      onShellError(error: unknown) {
+        reject(error)
+      },
+      onError(error: unknown) {
+        console.error(error)
+        responseStatusCode = 500
       }
-    )
+    })
 
     setTimeout(abort, streamTimeout)
-  });
+  })
 }

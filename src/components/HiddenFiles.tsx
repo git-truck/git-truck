@@ -1,5 +1,5 @@
 import { useData } from "~/contexts/DataContext"
-import { Form, useLocation, useNavigation } from "react-router";
+import { Form, useLocation, useNavigation } from "react-router"
 import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
 import Icon from "@mdi/react"
@@ -24,7 +24,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
         <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
           <Icon path={mdiEyeOff} size="1.25em" />
           Hidden files ({databaseInfo.hiddenFiles.length})
-          <ChevronButton id={expandHiddenFilesButtonId} className="absolute right-2 top-2" open={expanded} />
+          <ChevronButton id={expandHiddenFilesButtonId} className="absolute top-2 right-2" open={expanded} />
         </button>
       </h2>
       {expanded ? (
