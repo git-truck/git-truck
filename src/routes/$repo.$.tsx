@@ -30,7 +30,7 @@ import { SearchCard } from "~/components/SearchCard"
 import TimeSlider from "~/components/TimeSlider"
 import { Tooltip } from "~/components/Tooltip"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { Code } from "~/components/util"
+import { ClearCacheForm, Code, ErrorPage } from "~/components/util"
 
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
@@ -179,23 +179,7 @@ export const ErrorBoundary = () => {
   }, [error])
 
   if (isRouteErrorResponse(error)) {
-    return (
-      <div className="app-container">
-        <div />
-        <div className="card">
-          <h1>An error occured!</h1>
-          <p>See console for more infomation.</p>
-          <p>Message: {error.data.message}</p>
-          <Code>{error.data.message}</Code>
-          <div>
-            <Link to=".">Retry</Link>
-          </div>
-          <div>
-            <Link to="..">Go back</Link>
-          </div>
-        </div>
-      </div>
-    )
+    return <ErrorPage errorMessage={error.data.message} />
   }
 
   let errorMessage = "Unknown error"
@@ -205,22 +189,7 @@ export const ErrorBoundary = () => {
     errorMessage = error.message
   }
 
-  return (
-    <div className="app-container">
-      <div />
-      <div className="card">
-        <h1>An error occured!</h1>
-        <p>See console for more infomation.</p>
-        <Code>{errorMessage}</Code>
-        <div>
-          <Link to=".">Retry</Link>
-        </div>
-        <div>
-          <Link to="..">Go back</Link>
-        </div>
-      </div>
-    </div>
-  )
+  return <ErrorPage errorMessage={errorMessage} />
 }
 
 async function analyze(params: Route.LoaderArgs["params"], context: Route.LoaderArgs["context"]) {

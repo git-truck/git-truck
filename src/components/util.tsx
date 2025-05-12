@@ -2,14 +2,16 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes } from "react"
 import Icon from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose, mdiDeleteForever } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit } from "react-router"
+import { Form, Link, useSubmit, type ErrorResponse } from "react-router"
 import { getPathFromRepoAndHead } from "~/util"
+import type { error } from "node:console"
+import { LoadingIndicator } from "./LoadingIndicator"
 
 export const CloseButton = ({
   className = "",
@@ -95,7 +97,7 @@ export const LegendDot = ({
 
 export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
   <code
-    className={`rounded-md bg-gray-100 p-1 font-mono text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100 ${
+    className={`rounded-md bg-gray-700 p-1 font-mono text-sm text-gray-100 dark:bg-gray-100 dark:text-gray-900 ${
       inline ? "inline-block" : "block"
     } whitespace-pre-wrap`}
     {...props}
@@ -147,6 +149,42 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
       }}
     >
       <Icon path={mdiMenuUp} size={2} className="stroke-white" />
+    </div>
+  )
+}
+
+export function ClearCacheForm() {
+  return (
+    <Form className="w-4" method="post" action={"/clearCache"}>
+      <input type="hidden" name="clearCache" value={"true"} />
+      <button className="btn" title="Do this if you are experiencing issues">
+        <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
+        Clear analyzed results
+      </button>
+    </Form>
+  )
+}
+
+export function ErrorPage({ errorMessage }: { errorMessage: string }) {
+  return (
+    <div className="app-container">
+      <div />
+
+      <div className="card">
+        <h1>An error occured!</h1>
+        <p>See console for more infomation.</p>
+        <Code>{errorMessage}</Code>
+        <div>
+          <ClearCacheForm />
+        </div>
+        <div>
+          <Link to=".">Retry</Link>
+        </div>
+        <div>
+          <Link to="..">Go back</Link>
+        </div>
+      </div>
+      <LoadingIndicator />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Fragment, useEffect, useState } from "react"
 import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
-import { useFetcher } from "react-router";
+import { useFetcher } from "react-router"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { CloseButton, LegendDot } from "./util"
@@ -67,10 +67,10 @@ function CommitDistFragment(props: CommitDistFragProps) {
 function InfoEntry(props: { keyString: string; value: string }) {
   return (
     <>
-      <div className="flex grow overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold">
+      <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         {props.keyString}
       </div>
-      <p className="text-ellipsis break-all text-sm">{props.value}</p>
+      <p className="text-sm break-all text-ellipsis">{props.value}</p>
     </>
   )
 }
@@ -82,10 +82,10 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
         {props.filechanges.map((filechange) => {
           return (
             <Fragment key={filechange.path}>
-              <div className="flex grow overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold text-green-600">
+              <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre text-green-600">
                 +{filechange.insertions}
               </div>
-              <div className="flex grow overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold text-red-600">
+              <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre text-red-600">
                 -{filechange.deletions}
               </div>
               <div className="grow overflow-hidden text-ellipsis whitespace-nowrap">{filechange.path}</div>
@@ -143,11 +143,9 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
                   </>
                 )}
                 <InfoEntry keyString="Message" value={props.value.message} />
-                <div className="flex grow overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold">
-                  Body
-                </div>
+                <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Body</div>
                 <div className="max-h-64 overflow-auto">
-                  <p className="text-ellipsis break-all text-sm">
+                  <p className="text-sm break-all text-ellipsis">
                     {props.value.body.length > 0 ? props.value.body : "<none>"}
                   </p>
                 </div>
@@ -171,7 +169,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       >
         <p
           onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-          className="cursor-pointer overflow-hidden text-ellipsis font-bold opacity-80 hover:opacity-70"
+          className="cursor-pointer overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
         >
           {props.value.message}
         </p>
@@ -235,7 +233,7 @@ export function CommitHistory(props: { commitCount: number }) {
 
         {fetcher.state === "idle" ? (
           commitShowCount < props.commitCount ? (
-            <span onClick={fetchCommits} className="whitespace-pre text-xs font-medium opacity-70 hover:cursor-pointer">
+            <span onClick={fetchCommits} className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer">
               Show more commits
             </span>
           ) : null

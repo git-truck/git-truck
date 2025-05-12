@@ -1,6 +1,6 @@
 import { Await, Form, Link, useFetcher, useLoaderData } from "react-router"
 import { getArgsWithDefaults } from "~/analyzer/args.server"
-import { Code } from "~/components/util"
+import { ClearCacheForm, Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import type { CompletedResult, Repository } from "~/analyzer/model"
 import { GitCaller } from "~/analyzer/git-caller.server"
@@ -105,13 +105,7 @@ export default function Index() {
           <p>
             Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
           </p>
-          <Form className="w-4" method="post" action={"/clearCache"}>
-            <input type="hidden" name="clearCache" value={"true"} />
-            <button className="btn" title="Do this if you are experiencing issues">
-              <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
-              Clear analyzed results
-            </button>
-          </Form>
+          <ClearCacheForm />
           {/* <div className="flex w-full gap-2"> */}
           <div className="hidden w-full gap-2">
             <Form method="get" className="flex grow gap-1">
@@ -272,7 +266,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
             analyzedBranches={analyzedRepos.filter((rep) => rep.repo === repo.name)}
           />
         ) : isError && !isFolder ? (
-          <div className="grow truncate w-0" title={repo.errorMessage}>
+          <div className="w-0 grow truncate" title={repo.errorMessage}>
             {repo.errorMessage ?? "Unknown error"}
           </div>
         ) : (
