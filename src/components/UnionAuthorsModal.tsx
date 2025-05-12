@@ -1,5 +1,5 @@
-import { useTransition, useState, useRef, useEffect } from "react"
-import { useNavigation, useSubmit } from "react-router";
+import { useTransition, useState, useRef, useEffect, type JSX } from "react"
+import { useNavigation, useSubmit } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
