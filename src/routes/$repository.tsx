@@ -1,7 +1,7 @@
 import { redirect } from "react-router"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import { getArgsWithDefaults } from "~/analyzer/args.server"
+import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import type { Route } from "./+types/$repository"
 import { invariant } from "~/util"
@@ -14,7 +14,7 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
 
   invariant(repository, "Repository is required")
 
-  const args = getArgsWithDefaults()
+  const args = await getArgs()
   const repositoryPath = join(args.path, repository)
 
   invariant(existsSync(repositoryPath), `Repo ${repository} does not exist`)
