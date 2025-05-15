@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { runProcess } from "./util.server"
+import { extractFileExtension, runProcess } from "./util.server"
 import { log } from "./log.server"
 import { spawn } from "node:child_process"
 import ServerInstance from "./ServerInstance.server"
@@ -114,3 +114,4 @@ describe("runProcess", () => {
     expect(mockServerInstance.updateProgress).toHaveBeenCalledWith(0)
   })
 })
+

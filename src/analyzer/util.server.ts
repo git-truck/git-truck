@@ -327,29 +327,3 @@ export function time<A extends readonly unknown[], R>(fn: (...args: A) => R, des
     return result
   }
 }
-
-
-export function formatMsTime(time: number) {
-  let unit = "ms";
-  if (time < 1000) {
-    return `${time.toFixed(2)}${unit}`;
-  }
-  time /= 1000;
-  if (time < 60) {
-    unit = "s";
-    return `${time.toFixed(2)}${unit}`;
-  }
-  time /= 60;
-  if (time < 60) {
-    unit = "m";
-    return `${time.toFixed(2)}${unit}`;
-  }
-  time /= 60;
-  if (time < 24) {
-    unit = "h";
-    return `${time.toFixed(2)}${unit}`;
-  }
-  time /= 24;
-  unit = "d";
-  return `${time.toFixed(2)}${unit}`;
-}

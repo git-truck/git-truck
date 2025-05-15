@@ -481,6 +481,11 @@ export async function lstreeCached(repoPath: string, hash: string) {
 
 const catFileCache = new Map<string, Buffer | null>()
 
+export const clearCaches = () => {
+  catFileCache.clear()
+  lsTreeCache.clear()
+}
+
 export const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
   const key = `${repoPath}:${hash}:${filePath ?? ""}`
   const cachedValue = catFileCache.get(key)

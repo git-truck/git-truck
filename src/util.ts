@@ -2,7 +2,6 @@ import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
 import type { GitObject, GitBlobObject, GitTreeObject } from "./analyzer/model"
-import { formatMsTime } from "./analyzer/util.server"
 
 export function diagonal(d: HierarchyRectangularNode<unknown>) {
   const dx = d.x1 - d.x0
@@ -215,7 +214,8 @@ export const ansiErase = "\x1b[1A\x1b[K"
 
 export function printProgressBar<T>(results: T[], i: number, lastPrintTime: number, startTime: number) {
   let goal = results.length
-  if (i + 1 === goal || performance.now() - lastPrintTime > 1000 / 30) {
+  const goalReached = i + 1 === goal
+  if (goalReached || performance.now() - lastPrintTime > 1000 / 30) {
     lastPrintTime = performance.now()
     const ellapsedTime = performance.now() - startTime
     const elapsedTimeFormatted = formatMsTime(ellapsedTime)
@@ -225,15 +225,54 @@ export function printProgressBar<T>(results: T[], i: number, lastPrintTime: numb
 
     const percent = ((i + 1) / goal) * 100
 
+    const rows = 8
+    const cols = 50
+    const squareCount = rows * cols
+
+    const squares = Array.from(new Array(squareCount))
+
+      .reduce((acc, _, i) => {
+        if (i % cols === 0) {
+          acc.push("\n")
+        }
+        acc.push(i < (squareCount * percent) / 100 ? "🟩" : "🟨")
+        return acc
+      }, [] as string[])
+      .join("")
+
     process.stdout.write(
-      `${ansiErase}\n[${(i + 1).toLocaleString()}/${goal.toLocaleString()} commits] (${percent.toFixed(
+      `${ansiErase.repeat(2 + rows)}\n[${(i + 1).toLocaleString()}/${goal.toLocaleString()} commits] (${percent.toFixed(
         2
       )}%) (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
         estimatedTimeRemaining
-      )}, total time estimate: ${formatMsTime(
-        estimatedTotalTime
-      )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})`
+      )}, total time${goalReached ? "" : " estimate"}: ${formatMsTime(
+        goalReached ? ellapsedTime : estimatedTotalTime
+      )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})\n${squares}`
     )
   }
   return lastPrintTime
+}
+export function formatMsTime(time: number) {
+  let unit = "ms"
+  if (time < 1000) {
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 1000
+  if (time < 60) {
+    unit = "s"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 60
+  if (time < 60) {
+    unit = "m"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 60
+  if (time < 24) {
+    unit = "h"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 24
+  unit = "d"
+  return `${time.toFixed(2)}${unit}`
 }

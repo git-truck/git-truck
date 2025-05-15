@@ -1,95 +1,166 @@
-import { catFile, GitCaller, lstreeCached } from "~/analyzer/git-caller.server.js"
+import { catFile, clearCaches, GitCaller, lstreeCached } from "~/analyzer/git-caller.server.js"
 import { contribRegex, gitLogRegex, type gitLogRegexGroups } from "~/analyzer/constants.js"
 import type { LoaderFunctionArgs } from "react-router"
 import { compress } from "@mongodb-js/zstd"
 import { mapAsync, printProgressBar } from "~/util.js"
 import { log } from "~/analyzer/log.server"
 import { getArgs } from "~/analyzer/args.server"
-import { join, resolve } from "node:path"
-import { csv, csvFormat, dsvFormat } from "d3"
+import { join } from "node:path"
+import { dsvFormat } from "d3"
+import { extractFileExtension } from "~/analyzer/file-util.server"
 
-const ignore = [
-  "package-lock.json",
-  "lock",
-  "bun.lockb",
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "svg",
-  "ico",
-  "webp",
-  "bmp",
-  "tiff",
-  "tif",
-  "mp4",
-  "mkv",
-  "avi",
-  "mov",
-  "wmv",
-  "flv",
-  "webm",
-  "piskel",
-  "gitignore",
-  "db",
-  "txt",
-  "cfg",
-  "pdf",
-  "husky/pre-commit",
+const ignoredExtensions = [
+  // Lock files
+  ".lock",
+  ".lockb",
+
+  // Binary
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".ico",
+  ".webp",
+  ".bmp",
+  ".tiff",
+  ".tif",
+  ".mp4",
+  ".mkv",
+  ".avi",
+  ".mov",
+  ".wmv",
+  ".flv",
+  ".webm",
+  ".db",
+  ".pdf",
+
+  ".eot",
+  ".otf",
+  ".ttf",
+  ".woff",
+
+  ".deb",
+
+  // Docs
   "license",
-  "truckignore",
-  "prettierrc",
-  "sln",
-  "eslintignore"
+
+  // Git Truck
+  ".piskel",
+
+  // Twooter
+  "dependency",
+  "flag_tool",
+
+  // Misc
+  ".svg",
+  ".txt",
+  ".template",
+
+  // Git
+  ".gitignore",
+  ".gitkeep",
+  "pre-commit",
+
+  // Misc
+  ".tape",
+  ".viz",
+  ".example",
+  ".log",
+  ".rst",
+  "test",
+  ".typed",
+  "codeowners",
+  "adoc",
+  ".textile",
+  ".in",
+
+  ".json"
 ]
 
 const codeExtensions = [
   // System
-  "c",
-  "h",
-  "cpp",
-  "hpp",
-  "cxx",
-  "cc",
-  "cs",
-  "java",
-  "go",
-  "rs",
-  "swift",
-  "py",
-  "rs",
-  "test",
-  "sh",
-  "http",
+  ".c",
+  ".h",
+  ".cpp",
+  ".hpp",
+  ".cxx",
+  ".cc",
+  ".cs",
+  ".razor",
+  ".java",
+  ".go",
+  ".rs",
+  ".swift",
+  ".ml",
+  ".py",
+  ".py3",
+  ".rs",
+  ".test",
+  ".sh",
+  ".http",
 
-  "sql",
+  ".sql",
 
   // Web
-  "mjs",
-  "js",
-  "jsx",
-  "ts",
-  "mts",
-  "tsx",
-  "html",
-  "css",
-  "scss",
-
-  // Config etc
-  "json",
-  "yml",
-  "yaml",
-  "toml",
+  ".mjs",
+  ".js",
+  ".cjs",
+  ".mjs",
+  ".jsx",
+  ".ts",
+  ".mts",
+  ".tsx",
+  ".html",
+  ".css",
+  ".scss",
 
   // Docs
-  "md",
+  ".md",
 
-  // Misc
-  "tape"
+  // Config
+  ".config",
+  ".cfg",
+  ".json",
+  ".yml",
+  ".yaml",
+  ".toml",
+  ".pre-commit",
+  ".truckignore",
+  ".prettierrc",
+  ".sln",
+  ".eslintignore",
+  ".csproj",
+  "makefile",
+  "vagrantfile",
+  "dockerfile"
 ]
+
+const sanitizeAuthor = (author: string) => {
+  return author.replaceAll(",", " ")
+}
+
+const isIncluded = (ext: string) => codeExtensions.includes(ext) && !ignoredExtensions.some((ig) => ig.endsWith(ext))
 
 const DEFAULT_COMMIT_COUNT = 100
 
+const authorMap = {
+  "Thomas Hoffmann Kilbak": "Thomas",
+  tjomson: "Thomas",
+  joglr: "Jonas",
+  nimrossum: "Jonas",
+  "Jonas Nim Røssum": "Jonas",
+  "Thomas Kilbak": "Thomas",
+  "Jonas Røssum": "Jonas",
+  "Jonas Glerup Røssum": "Jonas",
+  "Kristoffer Højelse": "Kristoffer",
+  emiljapelt: "Emil",
+  "Mircea Filip Lungu": "Mircea",
+  "vhs-action 📼": "Bot",
+  "Automated Version Bump": "Bot",
+  "[kaky]": "Kyhl",
+  hojelse: "Kristoffer",
+  "Dawid Wozniak": "Dawid",
+} as const
 export const loader = async (args: LoaderFunctionArgs) => {
   const basePath = (await getArgs()).path
 
@@ -97,10 +168,10 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   /** Repository to analyze. This is the name of the folder in the base path. */
   const repo =
-    searchParams.get("repo") ??
-    (() => {
-      throw new Error("Repository parameter is required.")
-    })()
+  searchParams.get("repo") ??
+  (() => {
+    throw new Error("Repository parameter is required.")
+  })()
 
   /** Revision to start from. Defaults to HEAD (currently checked out commit) */
   const revision = searchParams.get("branch") ?? "HEAD"
@@ -111,28 +182,31 @@ export const loader = async (args: LoaderFunctionArgs) => {
   /** Extensions to include in the analysis. Defaults to all code extensions. */
   const ext = searchParams.get("ext")?.split(",") ?? []
 
+  log.info(`Analyzing ${repo} (${revision}) in ${path} with ${count} commits`)
+
   const gitCaller = new GitCaller(repo, revision, path)
+
+  const startTime = performance.now()
 
   const gitLog = await gitCaller.gitLog(0, count)
   log.warn(await gitCaller.gitRemote())
 
   const results = gitLog.matchAll(gitLogRegex)
-  const startTime = performance.now()
   let lastPrintTime = performance.now()
 
   const baselineBuffer = Buffer.concat(await readCommitFileBuffers(revision))
+  const zFinal = (await compress(baselineBuffer)).length
 
   const commits = (
     await mapAsync(results, async (result, i, results) => {
-      // if last commit, ignore
+      lastPrintTime = printProgressBar(results, i, lastPrintTime, startTime)
 
+      // if last commit, ignore
       if (i === results.length - 1) {
         return null
       }
 
       const commit: gitLogRegexGroups = result.groups as gitLogRegexGroups
-      lastPrintTime = printProgressBar(results, i, lastPrintTime, startTime)
-
       const contributionResults = commit.contributions.matchAll(contribRegex)
 
       async function compDistComparedToCommit(targetCommit: string) {
@@ -140,12 +214,14 @@ export const loader = async (args: LoaderFunctionArgs) => {
         // const baselineBuffer = Buffer.concat(await readCommitFileBuffers(baselineRevision))
 
         const zCombined = (await compress(Buffer.concat([baselineBuffer, targetBuffer]))).length
-        const zTarget = (await compress(targetBuffer)).length
-        // CD(x) = |R_x R_f| - |R_x|, where R_x is the X’ed commit and R_f is the final commit. Now you get a size in bytes, which is a little easier to understand.
+        const zTargetCommit = (await compress(targetBuffer)).length
 
         return {
           dist: baselineBuffer.length - targetBuffer.length,
-          compDist: zCombined - zTarget
+          // CD(x) = |R_x R_f| - |R_x|, where R_x is the X’ed commit and R_f is the final commit. Now you get a size in bytes, which is a little easier to understand.
+          compDist: zCombined - zTargetCommit,
+          // NCD(commit) = (ccCombined - Math.min(ccFinal, ccCommit)) / Math.max(ccFinal, ccCommit)
+          normCompDist: (zCombined - Math.min(zFinal, zTargetCommit)) / Math.max(zFinal, zTargetCommit)
         }
       }
 
@@ -158,13 +234,12 @@ export const loader = async (args: LoaderFunctionArgs) => {
        */
       const fromLatestPrev = await compDistComparedToCommit(`${commit.hash}~1`)
 
-      // TODO: Investigate bug with incorrect insertions / deletions reported
       const [insertions, deletions] = Array.from(contributionResults)
         .map((c) => c.groups!)
         .reduce(
           ([ins, del], { file, insertions, deletions }) =>
-            file.includes("=>") ||
-            ignore.some((i) => file.endsWith(i) || !codeExtensions.some((ext) => file.endsWith(`.${ext}`)))
+            // Ignore renames
+            file.includes("=>") || !isIncluded(extractFileExtension(file))
               ? [ins, del]
               : [
                   ins + (insertions === "-" ? 0 : parseInt(insertions)),
@@ -177,7 +252,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         i,
         hash: commit.hash,
         date: commit.dateauthor,
-        author: commit.author,
+        author: sanitizeAuthor(authorMap[commit.author as keyof typeof authorMap] ?? commit.author),
         message: commit.message,
         insertions,
         deletions,
@@ -185,16 +260,15 @@ export const loader = async (args: LoaderFunctionArgs) => {
         dist: fromLatest.dist,
         distDelta: fromLatestPrev.dist - fromLatest.dist,
         compDist: fromLatest.compDist,
-        compDistDelta: fromLatestPrev.compDist - fromLatest.compDist
+        compDistDelta: fromLatestPrev.compDist - fromLatest.compDist,
+        normCompDist: fromLatest.normCompDist,
+        normCompDistDelta: fromLatestPrev.normCompDist - fromLatest.normCompDist,
+        size: baselineBuffer.length
       }
     })
   ).filter(Boolean)
 
-  const averageCDDelta = commits.reduce((acc, commit) => acc + commit.compDistDelta, 0) / commits.length
-
-  const { totalDist, totalCompDist, totalLoCC, totalInsertions, totalDeletions, totalCommitCount } = Array.from(
-    commits.values()
-  ).reduce(
+  const totals = Array.from(commits.values()).reduce(
     (acc, c) => {
       acc.totalDist += c.distDelta
       acc.totalCompDist += c.compDistDelta
@@ -207,19 +281,18 @@ export const loader = async (args: LoaderFunctionArgs) => {
     { totalDist: 0, totalCompDist: 0, totalLoCC: 0, totalInsertions: 0, totalDeletions: 0, totalCommitCount: 0 }
   )
 
-  const authorMap = {
-    "Thomas Hoffmann Kilbak": "Thomas",
-    tjomson: "Thomas",
-    joglr: "Jonas",
-    "Thomas Kilbak": "Thomas",
-    "Jonas Røssum": "Jonas",
-    "Jonas Glerup Røssum": "Jonas",
-    "Kristoffer Højelse": "Kristoffer",
-    emiljapelt: "Emil",
-    "Mircea Filip Lungu": "Mircea",
-    "vhs-action 📼": "Bot",
-    "Automated Version Bump": "Bot"
-  } as const
+  for (let [k, v] of Object.entries(totals)) {
+    if (v === 0) {
+      throw new Error(`${k} is zero. This is likely due to the repository being empty or not having any commits.`)
+    }
+    if (isNaN(v)) {
+      throw new Error(`${k} is NaN. This is likely due to the repository being empty or not having any commits.`)
+    }
+  }
+
+  const { totalDist, totalCompDist, totalLoCC, totalInsertions, totalDeletions, totalCommitCount } = totals
+
+  const timeSeries = []
 
   const authorDistribution: Map<
     string,
@@ -229,22 +302,26 @@ export const loader = async (args: LoaderFunctionArgs) => {
       insertions: number
       deletions: number
       locc: number
-      compDist: number
+      compDistDelta: number
     }
   > = commits.reduce(
     (acc, commit) => {
-      const author = authorMap[commit.author as keyof typeof authorMap] ?? commit.author
+      const author = sanitizeAuthor(authorMap[commit.author as keyof typeof authorMap] ?? commit.author)
 
       if (!acc.has(author)) {
-        acc.set(author, { author, dist: 0, count: 0, insertions: 0, deletions: 0, locc: 0, compDist: 0 })
+        acc.set(author, { author, dist: 0, count: 0, insertions: 0, deletions: 0, locc: 0, compDistDelta: 0 })
       }
 
       acc.get(author)!.count += 1 / totalCommitCount
       acc.get(author)!.dist += commit.distDelta / totalDist
-      acc.get(author)!.compDist += commit.compDistDelta / totalCompDist
+      acc.get(author)!.compDistDelta += commit.compDistDelta / totalCompDist
       acc.get(author)!.insertions += commit.insertions / totalInsertions
       acc.get(author)!.deletions += commit.deletions / totalDeletions
       acc.get(author)!.locc += (commit.insertions + commit.deletions) / totalLoCC
+
+      timeSeries.push({
+        date: commit.date
+      })
 
       return acc
     },
@@ -257,14 +334,15 @@ export const loader = async (args: LoaderFunctionArgs) => {
         insertions: number
         deletions: number
         locc: number
-        compDist: number
+        compDistDelta: number
       }
     >()
   )
 
+  // Author distribution
   return dsvFormat(",").format(
     Array.from(authorDistribution.values())
-      .sort((a, b) => b["compDist"] - a["compDist"])
+      .sort((a, b) => b["compDistDelta"] - a["compDistDelta"])
       .map((entry) =>
         Object.fromEntries(
           Object.entries(entry).map(([k, v]) => [
@@ -273,15 +351,31 @@ export const loader = async (args: LoaderFunctionArgs) => {
           ])
         )
       ),
-    ["author", "count", "dist", "compDist", "locc", "insertions", "deletions"]
+    ["author", "compDistDelta", "locc",]
+  )
+
+  // For benchmarking, disable caching
+  // clearCaches()
+
+  // Commits
+  return dsvFormat(",").format(
+    commits
+      // .sort((a, b) => b["compDist"] - a["compDist"])
+      .map((entry) =>
+        Object.fromEntries(
+          Object.entries(entry).map(([k, v]) => [
+            k,
+            (typeof v === "number" ? v.toString().replace(".", ",") : v).replaceAll(";", "_")
+          ])
+        )
+      ),
+    ["hash", "date", "author", "message", "locc", "insertions", "deletions", "dist", "distDelta", "compDist", "compDistDelta", "normCompDist", "normCompDistDelta", "size"]
   )
 
   async function readCommitFileBuffers(commit: string) {
     const fileList = await lstreeCached(path, commit)
 
-    const inherentExtensions = fileList.files
-      .map((f) => f.fileName.split(".")?.at(-1)?.toLowerCase())
-      .filter(Boolean) as string[]
+    const inherentExtensions = fileList.files.map((f) => extractFileExtension(f.fileName))
 
     const extensionCount = inherentExtensions.reduce((acc, ext) => {
       acc.set(ext, (acc.get(ext) ?? 0) + 1)
@@ -294,27 +388,29 @@ export const loader = async (args: LoaderFunctionArgs) => {
         : Array.from(extensionCount.entries())
             .sort((a, b) => b[1] - a[1])
             // Only include files that has an extension use by at least 8% of all files
-            .filter(([ext, count]) => {
-              const extensionFrequency = count / fileList.files.length
-              return extensionFrequency > 0.01
-            })
+            // .filter(([ext, count]) => {
+            //   const extensionFrequency = count / fileList.files.length
+            //   return extensionFrequency > 0.01
+            // })
             // Warn if a prevalent is found that is not specified as a code extension or ignore extension
             .map((entry) => {
-              if (!codeExtensions.includes(entry[0]) && !ignore.some((ig) => entry[0].endsWith(ig))) {
-                log.warn(`Extension ${entry[0]} is prevalent in commit ${commit.slice(7)}, but is not a code extension`)
+              if (!codeExtensions.includes(entry[0]) && !ignoredExtensions.some((ig) => entry[0].endsWith(ig))) {
+                // log.warn(
+                //   `Extension ${entry[0]} is present in commit ${commit.slice(0, 7)}, but is neither ignore or marked as a code extension. Do you want to exclude it?`
+                // )
               }
               return entry
             })
             // Only include extensions that are in the codeExtensions list
-            .filter(([ext]) => codeExtensions.includes(ext) && !ignore.some((ig) => ig.endsWith(ext)))
+            .filter(([ext]) => isIncluded(ext))
             .map(([ext]) => ext)
 
     const filteredFiles = fileList.files.filter(
       (file) =>
         // Include files that are in the codeExtensions list
-        extensionsToUse.some((ext) => file.fileName.endsWith(`.${ext}`)) &&
+        extensionsToUse.some((ext) => file.fileName.endsWith(ext)) &&
         // Exclude files that are in the ignore list
-        !ignore.some((i) => file.fileName.endsWith(i))
+        !ignoredExtensions.some((i) => file.fileName.endsWith(i))
     )
 
     const fileBuffers = (await mapAsync(filteredFiles, (f) => catFile(path, f.hash))) as Buffer[]

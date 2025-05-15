@@ -3,11 +3,11 @@ import { log } from "~/analyzer/log.server.js"
 import { catFile, GitCaller, lstree } from "~/analyzer/git-caller.server.js"
 import { gitLogRegex } from "~/analyzer/constants.js"
 import type { LoaderFunctionArgs } from "react-router"
-import { formatMsTime, promiseHelper, time } from "~/analyzer/util.server.js"
+import { promiseHelper, time } from "~/analyzer/util.server.js"
 import { compress } from "@mongodb-js/zstd"
 import { resolve } from "node:path"
 import { writeFileSync } from "node:fs"
-import { ansiErase, printProgressBar } from "~/util.js"
+import { printProgressBar } from "~/util.js"
 
 type CommitData = { hash: string; message: string }
 
@@ -58,12 +58,15 @@ async function readCommits({
 const largeFileThreshold = 100_000
 const EMPTY_COMMIT = "0000000000000000000000000000000000000000"
 
-export async function detectOutliers({ repo, branch, path }: { repo: string; branch: string; path: string }) {
+export const loader = async (args: LoaderFunctionArgs) => {
+  const requestUrl = new URL(args.request.url)
+  const repo = requestUrl.searchParams.get("repo") ?? "git-truck"
+  const branch = requestUrl.searchParams.get("branch") ?? "main"
+  const path = requestUrl.searchParams.get("path") ?? "C:/Users/jonas/p/git-truck"
   const rawData: CommitData[] = await readCommits({ repo, branch, path })
   const commits = rawData
 
   const ins = InstanceManager.getOrCreateInstance(repo, branch, resolve(path, ".."))
-  const gitCaller = new GitCaller(repo, branch, path)
 
   let fileTree = await ins.analyzeTreeFlat()
 
@@ -193,11 +196,4 @@ export async function detectOutliers({ repo, branch, path }: { repo: string; bra
     percentage: (outliersForOutput.length / commitNcdResults.length) * 100,
     outliers: outliersForOutput
   }
-}
-export const loader = async (args: LoaderFunctionArgs) => {
-  const requestUrl = new URL(args.request.url)
-  const repo = requestUrl.searchParams.get("repo") ?? "git-truck"
-  const branch = requestUrl.searchParams.get("branch") ?? "main"
-  const path = requestUrl.searchParams.get("path") ?? "C:/Users/jonas/p/git-truck"
-  return await detectOutliers({ repo, branch, path })
 }

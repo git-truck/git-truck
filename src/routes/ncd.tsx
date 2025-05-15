@@ -3,12 +3,12 @@ import type { Route } from "./+types/ncd"
 import { invariant } from "~/util"
 import { compress } from "@mongodb-js/zstd"
 import { log } from "~/analyzer/log.server"
-import { describeAsyncJob, formatMsTime, promiseHelper, runProcess, time } from "~/analyzer/util.server"
+import { describeAsyncJob, promiseHelper, runProcess, time } from "~/analyzer/util.server"
+import { formatMsTime } from "~/util"
 import { join } from "node:path"
 import { useLoaderData } from "react-router"
 import { Fragment, useMemo } from "react"
 import { cn } from "~/styling"
-import { execFile } from "node:child_process"
 import { GitCaller, lstree } from "~/analyzer/git-caller.server"
 
 export function headers(_: Route.HeadersArgs) {
@@ -19,7 +19,6 @@ export function headers(_: Route.HeadersArgs) {
 }
 
 const resultCache = new Map<string, Awaited<ReturnType<typeof loader>>>()
-const catFileCache = new Map<string, Buffer | null>()
 const erase = "\x1b[1A\x1b[K"
 const largeFileThreshold = 100_000
 const EMPTY_COMMIT = "0000000000000000000000000000000000000000"
@@ -43,7 +42,6 @@ export const loader = async ({
   invariant(repo, "repo is required")
   invariant(branch, "branch is required")
   invariant(path, "path is required")
-
 
   // console.log(await difftree(join(path, repo), branch))
   // return null
@@ -84,9 +82,10 @@ export const loader = async ({
     const countAfter = fileTree.length
     log.info(`Filtered out ${countBefore - countAfter} of ${countBefore} files`)
     log.info(
-      `Removed files: ${removedFiles.sort(
-        (a, b) => (a.size ?? 0) - (b.size ?? 0)
-      ).map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`).join(", ")}`
+      `Removed files: ${removedFiles
+        .sort((a, b) => (a.size ?? 0) - (b.size ?? 0))
+        .map((x) => `${x.path} (size: ${x.size?.toLocaleString()} bytes)`)
+        .join(", ")}`
     )
     log.info(`Largest file : ${Math.max(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
     log.info(`Smallest file: ${Math.min(...fileTree.map((x) => x.size ?? 0).filter(Boolean)).toLocaleString()} bytes`)
@@ -246,37 +245,6 @@ export const loader = async ({
   }
 }
 
-async function difftree(repoPath: string, commit: string) {
-  // r: recursive
-  // z: terminate with NUL
-  const [hash, ...entries] = await new Promise<Array<string>>((resolve, reject) =>
-    execFile(
-      "git",
-      ["diff-tree", "-r", "-z", commit],
-      {
-        cwd: repoPath
-      },
-      (error, stdout) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(stdout.split(NUL).filter(Boolean))
-        }
-      }
-    )
-  )
-  const files = []
-  for (let i = 0; i < entries.length; i += 2) {
-    const [data, fileName] = entries.slice(i, i + 2)
-    const [oldmode, newmode, oldHash, hash, ...rest] = data.split(/\s+/)
-    files.push({ fileName, oldHash, hash })
-  }
-  return {
-    hash,
-    files
-  }
-}
-
 
 export default function Ncd() {
   const { commits } = useLoaderData<typeof loader>()
@@ -304,7 +272,7 @@ export default function Ncd() {
       commitNcdResults: commits.map((commit, i) => ({
         ...commit,
         normNcd: (commit.commitNCD - commitMinNCD) / (commitMaxNCD - commitMinNCD),
-        diffNCD: diffNCDs[i],
+        diffNCD: diffNCDs[i]
       })),
       minNcd: commitMinNCD,
       maxNcd: commitMaxNCD,
@@ -340,7 +308,7 @@ export default function Ncd() {
           <div className="font-bold">Diff</div>
           <div className="font-bold">Plot</div>
 
-          {data.commitNcdResults.map((commit, i) => (
+          {data.commitNcdResults.map((commit) => (
             <Fragment key={commit.hash}>
               <div title={commit.hash}>{commit.hashShort}</div>
               <div className="max-w-64 truncate" title={commit.subject}>
@@ -402,10 +370,4 @@ function Bar({ value, className }: { value: number; className?: string }) {
   )
 }
 
-function tryOrElse<T>(fn: () => T, elseValue: T): T {
-  try {
-    return fn()
-  } catch (error) {
-    return elseValue
-  }
-}
+
