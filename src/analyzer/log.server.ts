@@ -53,43 +53,50 @@ export function setLogLevel(level: string) {
   logLevel = newLevel
 }
 
-export function error(message: Error | unknown) {
+export function error(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.ERROR) {
-    const messageString =
-      message instanceof Error ? `${prefix(ERROR)}${message.message}\n${message.stack}` : `${prefix(ERROR)}${message}`
-    console.error(messageString)
+    process.stderr.write(prefix(ERROR))
+    console.error(...messages)
   }
 }
 
-export function warn(message: unknown) {
+export function warn(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.WARN) {
-    const messageString = `${prefix(WARN)}${message}`
-    console.warn(messageString)
+    process.stderr.write(prefix(WARN))
+    console.warn(...messages)
   }
 }
 
-export function info(message: unknown) {
+export function info(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.INFO) {
-    const messageString = `${prefix(INFO)}${message}`
-    console.info(messageString)
+    process.stderr.write(prefix(INFO))
+    console.info(...messages)
   }
 }
 
-export function debug(message: unknown) {
+export function time(label: string) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    console.time(label)
+  }
+}
+
+export function timeEnd(label: string) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    process.stderr.write(prefix(INFO))
+    console.timeEnd(label)
+  }
+}
+
+export function debug(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.DEBUG) {
-    const messageString = `${prefix(DEBUG)}${message}`
-    console.debug(messageString)
-  }
-}
-
-export function raw(message: unknown) {
-  if (logLevel === null) return
-  if (logLevel >= LOG_LEVEL.INFO) {
-    console.info(message)
+    process.stderr.write(prefix(DEBUG))
+    console.debug(...messages)
   }
 }
 
@@ -117,5 +124,6 @@ export const log = {
   warn,
   info,
   debug,
-  raw
+  time,
+  timeEnd
 }
