@@ -19,7 +19,7 @@ You can read more about the features in the [feature overview](https://git-truck
 
 1. In your terminal, navigate to a git repository or a folder containing several repositories
 
-2. Run the command `npm i -g git-truck@latest` to install or update Git Truck.
+2. Run the command `npm install -g git-truck@latest` to install or update Git Truck.
 
 3. Now you can run Git Truck using the command `git truck`
 
