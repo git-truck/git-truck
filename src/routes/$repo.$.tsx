@@ -34,6 +34,7 @@ import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
 import { shouldUpdate } from "~/analyzer/RefreshPolicy"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
+import { log } from "~/analyzer/log.server"
 
 export interface RepoData {
   repo: Repository
@@ -257,23 +258,23 @@ async function analyze(params: Params) {
   const prevData = instance.prevResult
   const prevRes = prevData?.databaseInfo
 
-  console.time("fileTree")
+  log.time("fileTree")
   const filetree =
     prevRes && !shouldUpdate(reason, "filetree")
       ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
       : await instance.analyzeTree()
-  console.timeEnd("fileTree")
+  log.timeEnd("fileTree")
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
-    console.time("rename")
+    log.time("rename")
     await instance.updateRenames()
-    console.timeEnd("rename")
+    log.timeEnd("rename")
   }
 
-  console.time("updateCache")
+  log.time("updateCache")
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
-  console.timeEnd("updateCache")
-  console.time("dbQueries")
+  log.timeEnd("updateCache")
+  log.time("dbQueries")
   const dominantAuthors =
     prevRes && !shouldUpdate(reason, "dominantAuthor")
       ? prevRes.dominantAuthors
@@ -325,7 +326,7 @@ async function analyze(params: Params) {
     prevRes && !shouldUpdate(reason, "analyzedRepos")
       ? prevRes.analyzedRepos
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
-  console.timeEnd("dbQueries")
+  log.timeEnd("dbQueries")
 
   const databaseInfo: DatabaseInfo = {
     dominantAuthors,
