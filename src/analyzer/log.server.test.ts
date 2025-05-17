@@ -103,7 +103,7 @@ export function debug(...messages: unknown[]) {
 export function raw(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.INFO) {
-    console.info(messages.join(" "))
+    console.info(...messages)
   }
 }
 
