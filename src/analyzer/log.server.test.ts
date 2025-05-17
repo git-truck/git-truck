@@ -1,54 +1,137 @@
-import { log, setLogLevel } from "./log.server"
+import c from "ansi-colors"
 
-describe("log methods array argument concatenation", () => {
-  setLogLevel("DEBUG")
-  const consoleError = jest.spyOn(console, "error").mockImplementation(jest.fn())
-  const consoleWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn())
-  const consoleInfo = jest.spyOn(console, "info").mockImplementation(jest.fn())
-  const consoleDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn())
+export enum LOG_LEVEL {
+  SILENT,
+  ERROR,
+  WARN,
+  INFO,
+  DEBUG
+}
+export enum LOG_LEVEL_LABEL {
+  SILENT = "",
+  ERROR = "ERR",
+  WARN = "WRN",
+  INFO = "NFO",
+  DEBUG = "DBG"
+}
 
-  it("log.error concatenates array arguments", () => {
-    log.error(["foo", 123, { a: 1 }])
-    expect(consoleError).toHaveBeenCalled()
-    const call = consoleError.mock.calls[0][0]
-    expect(call).toContain("foo")
-    expect(call).toContain("123")
-    expect(call).toContain("[object Object]")
-  })
+const stringToLevelMap: Record<string, LOG_LEVEL> = {
+  SILENT: LOG_LEVEL.SILENT,
+  ERROR: LOG_LEVEL.ERROR,
+  WARN: LOG_LEVEL.WARN,
+  INFO: LOG_LEVEL.INFO,
+  DEBUG: LOG_LEVEL.DEBUG
+}
 
-  it("log.warn concatenates array arguments", () => {
-    log.warn("foo", 123, { a: 1 })
-    expect(consoleWarn).toHaveBeenCalled()
-    const call = consoleWarn.mock.calls[0][0]
-    expect(call).toContain("foo")
-    expect(call).toContain("123")
-    expect(call).toContain("[object Object]")
-  })
+const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
-  it("log.info concatenates array arguments", () => {
-    log.info("foo", 123, { a: 1 })
-    expect(consoleInfo).toHaveBeenCalled()
-    const call = consoleInfo.mock.calls[0][0]
-    expect(call).toContain("foo")
-    expect(call).toContain("123")
-    expect(call).toContain("[object Object]")
-  })
+function setIntialLogLevel() {
+  if (typeof process.env.LOG_LEVEL === "string") {
+    setTimeout(() => {
+      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
+    })
+    return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
+  }
+  if (typeof process.env.LOG_LEVEL === "number") {
+    setTimeout(() => {
+      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
+    })
+    return process.env.LOG_LEVEL
+  }
+  return null
+}
 
-  it("log.debug concatenates array arguments", () => {
-    log.debug("foo", 123, { a: 1 })
-    expect(consoleDebug).toHaveBeenCalled()
-    const call = consoleDebug.mock.calls[0][0]
-    expect(call).toContain("foo")
-    expect(call).toContain("123")
-    expect(call).toContain("[object Object]")
-  })
+let logLevel = setIntialLogLevel()
 
-  it("log.raw concatenates array arguments", () => {
-    log.raw("foo", 123, { a: 1 })
-    expect(consoleInfo).toHaveBeenCalled()
-    const call = consoleInfo.mock.calls[0][0]
-    expect(call).toContain("foo")
-    expect(call).toContain("123")
-    expect(call).toContain("[object Object]")
-  })
-})
+export const getLogLevel = () => logLevel
+
+export function setLogLevel(level: string) {
+  const newLevel = stringToLevelMap[level.trim().toUpperCase()]
+  if (typeof newLevel === "undefined") {
+    throw new Error(`Invalid log level: ${level}`)
+  }
+  logLevel = newLevel
+}
+
+export function error(...messages: unknown[]) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.ERROR) {
+    process.stderr.write(prefix(ERROR))
+    console.error(...messages)
+  }
+}
+
+export function warn(...messages: unknown[]) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.WARN) {
+    process.stderr.write(prefix(WARN))
+    console.warn(...messages)
+  }
+}
+
+export function info(...messages: unknown[]) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    process.stderr.write(prefix(INFO))
+    console.info(...messages)
+  }
+}
+
+export function time(label: string) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    console.time(label)
+  }
+}
+
+export function timeEnd(label: string) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    process.stderr.write(prefix(INFO))
+    console.timeEnd(label)
+  }
+}
+
+export function debug(...messages: unknown[]) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.DEBUG) {
+    process.stderr.write(prefix(DEBUG))
+    console.debug(...messages)
+  }
+}
+
+export function raw(...messages: unknown[]) {
+  if (logLevel === null) return
+  if (logLevel >= LOG_LEVEL.INFO) {
+    console.info(...messages)
+  }
+}
+
+function prefix(label: LOG_LEVEL_LABEL): string {
+  const formatPrefix = (label: LOG_LEVEL_LABEL, colorFn = (s: string) => s) =>
+    `${colorFn(` ${new Date().toLocaleTimeString()} ${label} `)} `
+
+  if (process.env.COLOR === "0") return `[${label}] `
+  switch (label) {
+    case LOG_LEVEL_LABEL.ERROR:
+      return formatPrefix(LOG_LEVEL_LABEL.ERROR, c.bgRedBright.black.bold)
+    case LOG_LEVEL_LABEL.WARN:
+      return formatPrefix(LOG_LEVEL_LABEL.WARN, c.bgYellow.black.bold)
+    case LOG_LEVEL_LABEL.INFO:
+      return formatPrefix(LOG_LEVEL_LABEL.INFO, c.bgBlueBright.black.bold)
+    case LOG_LEVEL_LABEL.DEBUG:
+      return formatPrefix(LOG_LEVEL_LABEL.DEBUG, c.bgWhite.bold)
+    default:
+      throw Error("Invalid log level")
+  }
+}
+
+export const log = {
+  error,
+  warn,
+  info,
+  debug,
+  time,
+  timeEnd,
+  raw
+}
