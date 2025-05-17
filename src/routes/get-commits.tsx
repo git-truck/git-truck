@@ -8,6 +8,7 @@ import { getArgs } from "~/analyzer/args.server"
 import { join } from "node:path"
 import { dsvFormat } from "d3"
 import { extractFileExtension } from "~/analyzer/file-util.server"
+import InstanceManager from "~/analyzer/InstanceManager.server"
 
 const ignoredExtensions = [
   // Lock files
@@ -181,6 +182,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const count = Number(searchParams.get("count") ?? DEFAULT_COMMIT_COUNT)
   /** Extensions to include in the analysis. Defaults to all code extensions. */
   const ext = searchParams.get("ext")?.split(",") ?? []
+
+  const instance = InstanceManager.getOrCreateInstance(repo, revision, path)
 
   log.info(`Analyzing ${repo} (${revision}) in ${path} with ${count} commits`)
 
