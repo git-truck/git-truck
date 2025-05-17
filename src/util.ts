@@ -159,3 +159,120 @@ export function getLightness(hex: `#${string}`): number {
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
+
+export function invariant<T>(condition: T, message: string): asserts condition is NonNullable<T> {
+  if (!condition) {
+    throw new Error(message)
+  }
+}
+
+export function errorFromUnknown(unknown: unknown): Error {
+  if (unknown instanceof Error) return unknown
+  if (unknown instanceof Buffer) return new Error(unknown.toString().trim())
+  if (typeof unknown === "string") return new Error(unknown)
+  return new Error(JSON.stringify(unknown))
+}
+
+export const createdCachedFunction = <T extends (...args: unknown[]) => any>(fn: T) => {
+  const cache = new Map<string, ReturnType<T>>()
+  return (...args: Parameters<T>): ReturnType<T> => {
+    const key = JSON.stringify(args)
+    if (cache.has(key)) {
+      return cache.get(key)!
+    }
+    const result = fn(...args)
+    cache.set(key, result)
+    return result
+  }
+}
+
+/**
+ * Async map function
+ * @param arrayOrIterator Array or iterator object
+ * @param fn Function to map
+ * @returns Promise with the mapped results
+ */
+export async function mapAsync<T, U>(
+  arrayOrIterator: T[] | IteratorObject<T>,
+  fn: (arg: T, index: number, array: T[]) => Promise<U>,
+  parallel = false
+): Promise<U[]> {
+  const array = Array.isArray(arrayOrIterator) ? arrayOrIterator : Array.from(arrayOrIterator)
+  if (parallel) {
+    return await Promise.all(array.map((v, i, a) => fn(v, i, a)))
+  }
+  const results = []
+
+  for (const [i, v] of Object.entries(array)) {
+    results.push(await fn(v, Number(i), array))
+  }
+
+  return results
+}
+
+export const ansiErase = "\x1b[1A\x1b[K"
+
+export function printProgressBar<T>(results: T[], i: number, lastPrintTime: number, startTime: number) {
+  let goal = results.length
+  const goalReached = i + 1 === goal
+  if (goalReached || performance.now() - lastPrintTime > 1000 / 30) {
+    lastPrintTime = performance.now()
+    const ellapsedTime = performance.now() - startTime
+    const elapsedTimeFormatted = formatMsTime(ellapsedTime)
+
+    const estimatedTimeRemaining = ((goal - i) * ellapsedTime) / i
+    const estimatedTotalTime = ellapsedTime + estimatedTimeRemaining
+
+    const percent = ((i + 1) / goal) * 100
+
+    const rows = 8
+    const cols = 50
+    const squareCount = rows * cols
+
+    const squares = Array.from(new Array(squareCount))
+
+      .reduce((acc, _, i) => {
+        if (i % cols === 0) {
+          acc.push("\n")
+        }
+        acc.push(i < (squareCount * percent) / 100 ? "🟩" : "🟨")
+        return acc
+      }, [] as string[])
+      .join("")
+
+    process.stdout.write(
+      `${ansiErase.repeat(2 + rows)}\n[${(i + 1).toLocaleString()}/${goal.toLocaleString()} commits] (${percent.toFixed(
+        2
+      )}%) (elapsed: ${elapsedTimeFormatted}, time remaining: ${formatMsTime(
+        estimatedTimeRemaining
+      )}, total time${goalReached ? "" : " estimate"}: ${formatMsTime(
+        goalReached ? ellapsedTime : estimatedTotalTime
+      )}, time per commit: ${formatMsTime(ellapsedTime / (i + 1))})\n${squares}`
+    )
+  }
+  return lastPrintTime
+}
+export function formatMsTime(time: number) {
+  let unit = "ms"
+  if (time < 1000) {
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 1000
+  if (time < 60) {
+    unit = "s"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 60
+  if (time < 60) {
+    unit = "m"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 60
+  if (time < 24) {
+    unit = "h"
+    return `${time.toFixed(2)}${unit}`
+  }
+  time /= 24
+  unit = "d"
+  return `${time.toFixed(2)}${unit}`
+}

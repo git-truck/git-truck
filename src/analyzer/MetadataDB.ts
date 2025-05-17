@@ -1,7 +1,7 @@
 import { resolve } from "path"
 import os from "os"
 import { promises as fs } from "fs"
-import { CompletedResult } from "./model"
+import type { CompletedResult } from "./model"
 
 interface MetadataJson {
   completions: Record<string, { hash: string; time: number }>

@@ -1,3 +1,4 @@
+import { log } from "./log.server.js"
 import MetadataDB from "./MetadataDB"
 import ServerInstance from "./ServerInstance.server"
 
@@ -11,6 +12,7 @@ export default class InstanceManager {
   }
 
   public static getOrCreateInstance(repo: string, branch: string, path: string) {
+    log.warn("getOrCreateInstance", repo, branch, path)
     if (!this.instances) this.instances = new Map()
     const existing = this.instances.get(repo)?.get(branch)
     if (existing) return existing
@@ -32,11 +34,10 @@ export default class InstanceManager {
   }
 
   public static async closeAllDBConnections() {
-    for (const [, repo] of this.instances) {
-      for (const [, branchInstance] of repo) {
-        await branchInstance.db.disconnect()
-      }
-    }
+    const promises = Array.from(this.instances.values())
+      .flatMap(repoInstance => Array.from(repoInstance.values())
+      .flatMap(branchInstance => branchInstance.db.disconnect()))
+    await Promise.all(promises)
     this.instances = new Map()
   }
 }

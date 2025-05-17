@@ -12,12 +12,13 @@ import type {
   FullCommitDTO
 } from "./model"
 import { log } from "./log.server"
-import { analyzeRenamedFile } from "./util.server"
+import { analyzeRenamedFile, runProcess } from "./util.server"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
 import { cpus, freemem, totalmem } from "node:os"
-import { RepoData } from "~/routes/$repo.$"
-import { InvocationReason } from "./RefreshPolicy"
+import type { RepoData } from "~/routes/$repo.$"
+import type { InvocationReason } from "./RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
+import { join } from "node:path"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
@@ -143,6 +144,30 @@ export default class ServerInstance {
     return { rootTree, fileCount }
   }
 
+  public async analyzeTreeFlat(includeTrees = false) {
+    const rawContent = (await runProcess(join(this.path, this.repo), "git", ["ls-tree", "-rl", this.branch])) as string
+    const lsTreeEntries: RawGitObject[] = []
+    const matches = rawContent.matchAll(treeRegex)
+
+    for (const match of matches) {
+      if (!match.groups) continue
+
+      const groups = match.groups
+      lsTreeEntries.push({
+        type: groups["type"] as "blob" | "tree",
+        hash: groups["hash"],
+        size: groups["size"] === "-" ? undefined : Number(groups["size"]),
+        path: groups["path"]
+      })
+    }
+
+    return lsTreeEntries
+  }
+
+  /**
+   * Cleans up the tree structure by removing empty trees and moving files up to their parent tree
+   * @param tree
+   */
   private treeCleanup(tree: GitTreeObject) {
     for (const child of tree.children) {
       if (child.type === "tree") {

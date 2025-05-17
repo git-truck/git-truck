@@ -1,4 +1,5 @@
-import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
+import type { DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
+import { DuckDBInstance } from "@duckdb/node-api"
 import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
 import os from "os"
 import { resolve, dirname } from "path"
@@ -511,7 +512,7 @@ export default class DB {
 
   public async getCommitCount() {
     const res = await this.query(`
-      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed_cached;
+      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed;
     `)
     return Number(res[0]["count"])
   }

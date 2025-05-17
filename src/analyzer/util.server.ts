@@ -1,14 +1,12 @@
-import { spawn, exec } from "node:child_process"
-import { promises as fs } from "node:fs"
-import type { Spinner } from "nanospinner"
-import { createSpinner } from "nanospinner"
-import { resolve as resolvePath, sep } from "node:path"
-import { getLogLevel, log, LOG_LEVEL } from "./log.server"
-import type { GitTreeObject, GitObject, TruckUserConfig, RenameEntry } from "./model"
-import { performance } from "node:perf_hooks"
 import c from "ansi-colors"
-import pkg from "../../package.json"
-import getLatestVersion from "latest-version"
+import { createSpinner } from "nanospinner"
+import { exec, spawn } from "node:child_process"
+import { readdir } from "node:fs/promises"
+import { join, resolve as resolvePath, sep } from "node:path"
+import { performance } from "node:perf_hooks"
+import { getLogLevel, log, LOG_LEVEL } from "./log.server"
+import type { GitObject, GitTreeObject, RenameEntry, Repository } from "./model"
+import { existsSync } from "node:fs"
 import ServerInstance from "./ServerInstance.server"
 
 export function last<T>(array: T[]) {
@@ -29,15 +27,24 @@ export function runProcess(
   index?: number
 ) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
+  const err = new Error()
   return new Promise((resolve, reject) => {
+    const errorHandler = (err: unknown): void => {
+      reject(err)
+    }
     try {
+      const resolvedPath = resolvePath(dir)
       const prcs = spawn(command, args, {
-        cwd: resolvePath(dir)
+        cwd: resolvedPath,
+        shell: false
       })
+      log.debug(`Started process ${prcs.pid} in ${resolvedPath}`)
       const chunks: Uint8Array[] = []
-      const errorHandler = (buf: Error): void => reject(buf.toString().trim())
       prcs.once("error", errorHandler)
-      prcs.stderr.once("data", errorHandler)
+      prcs.stderr.once("data", (e) => {
+        err.message = `Child process failed:\n ${dir}> ${command} ${args.join(" ")}\n Error: ${e.toString().trim()}`
+        errorHandler(err)
+      })
       prcs.stdout.on("data", (buf) => {
         chunks.push(buf)
         if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
@@ -45,9 +52,13 @@ export function runProcess(
       prcs.stdout.on("end", () => {
         resolve(Buffer.concat(chunks).toString().trim())
       })
+      prcs.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(`Process exited with code: ${code}`))
+        }
+      })
     } catch (e) {
-      log.error(e as Error)
-      reject(e)
+      errorHandler(e)
     }
   })
 }
@@ -169,9 +180,17 @@ export function createTruckSpinner() {
     : null
 }
 
+type Spinner = ReturnType<typeof createSpinner>
 let spinner: null | Spinner = null
 
+/**
+ * This function is a wrapper around a job that provides a spinner and logs the result of the job.
+ * @returns
+ */
 export async function describeAsyncJob<T>({
+  /**
+   * The job to run
+   */
   job = async () => null as T,
   beforeMsg = "",
   afterMsg = "",
@@ -215,7 +234,7 @@ export async function describeAsyncJob<T>({
     return [result, null]
   } catch (e) {
     error(errorMsg)
-    log.error(e as Error)
+    log.error(e)
     return [null, e as Error]
   }
 }
@@ -246,14 +265,6 @@ export function isValidURI(uri: string) {
   }
 }
 
-export async function getGitTruckInfo() {
-  const [latestVersion] = await promiseHelper(getLatestVersion(pkg.name))
-  return {
-    version: pkg.version,
-    latestVersion: latestVersion
-  }
-}
-
 function getCommandLine() {
   switch (process.platform) {
     case "darwin":
@@ -274,15 +285,45 @@ export function openFile(repoDir: string, path: string) {
   })
 }
 
-export async function updateTruckConfig(repoDir: string, updaterFn: (tc: TruckUserConfig) => TruckUserConfig) {
-  const truckConfigPath = resolvePath(repoDir, "truckconfig.json")
-  let currentConfig: TruckUserConfig = {}
-  try {
-    const configFileContents = await fs.readFile(truckConfigPath, "utf-8")
-    if (configFileContents) currentConfig = JSON.parse(configFileContents)
-  } catch (e) {
-    /* empty */
+let latestVersion: string | null = null
+
+export async function getLatestVersion() {
+  if (!latestVersion) {
+    const [result] = await promiseHelper(
+      fetch("https://registry.npmjs.org/-/package/git-truck/dist-tags")
+        .then((res) => res.json())
+        .then((pkg) => pkg.latest)
+    )
+    latestVersion = result
   }
-  const updatedConfig = updaterFn(currentConfig)
-  await fs.writeFile(truckConfigPath, JSON.stringify(updatedConfig, null, 2))
+
+  return latestVersion
+}
+
+export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (baseDir) => {
+  const entries = await readdir(baseDir, { withFileTypes: true })
+
+  // Get all directories that has a .git subdirectory
+  return entries
+    .filter(
+      (entry) =>
+        entry.isDirectory() &&
+        existsSync(join(baseDir, entry.name)) &&
+        !entry.name.startsWith(".") &&
+        // TODO: Implement browsing, requires new routing
+        existsSync(join(baseDir, entry.name, ".git"))
+    )
+    .map(({ name }) => ({ name, path: join(baseDir, name), parentDirPath: baseDir, status: "Loading" }))
+}
+
+export const isPathGitRepo = (path: string) => existsSync(join(path, ".git"))
+
+export function time<A extends readonly unknown[], R>(fn: (...args: A) => R, description?: string): (...args: A) => R {
+  return (...args: A) => {
+    const start = performance.now()
+    const result = fn(...args)
+    const end = performance.now()
+    log.info(`⏳ [${description || (fn.name.length > 0 ? fn.name : "anonymous")}]: ${(end - start).toFixed(2)}ms`)
+    return result
+  }
 }

@@ -1,19 +1,20 @@
-import { DataFunctionArgs, redirect } from "@remix-run/node"
+import { redirect } from "react-router"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import invariant from "tiny-invariant"
-import { getArgsWithDefaults } from "~/analyzer/args.server"
+import { getArgs } from "~/analyzer/args.server"
 import { GitCaller } from "~/analyzer/git-caller.server"
+import type { Route } from "./+types/$repository"
+import { invariant } from "~/util"
 
 /**
  * Redirect to the repository's default branch
  */
-export const loader = async ({ params }: DataFunctionArgs) => {
+export const loader = async ({ params }: Route.LoaderArgs) => {
   const { repository } = params
 
   invariant(repository, "Repository is required")
 
-  const args = getArgsWithDefaults()
+  const args = await getArgs()
   const repositoryPath = join(args.path, repository)
 
   invariant(existsSync(repositoryPath), `Repo ${repository} does not exist`)

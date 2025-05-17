@@ -4,9 +4,10 @@ import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "./model"
 import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/util"
+import { branchCompare, semverCompare } from "../util"
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
+import { execFile, spawn } from "node:child_process"
 
 export enum ANALYZER_CACHE_MISS_REASONS {
   OTHER_REPO = "The cache was not created for this repo",
@@ -27,11 +28,12 @@ export class GitCaller {
   ) {}
 
   static async isGitRepo(path: string): Promise<boolean> {
-    const gitFolderPath = resolve(path, ".git")
-    const hasGitFolder = existsSync(gitFolderPath)
-    if (!hasGitFolder) return false
-    const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead(path))
-    return Boolean(hasGitFolder && !findBranchHeadError)
+    try {
+      const result = Boolean(await runProcess(path, "git", ["rev-parse", "--is-inside-work-tree"]))
+      return result
+    } catch (e) {
+      return false
+    }
   }
 
   static async isValidRevision(revision: string, path: string) {
@@ -55,14 +57,13 @@ export class GitCaller {
       branch = foundBranch
     }
 
-    const gitFolder = join(repo, ".git")
-    if (!existsSync(gitFolder)) {
-      throw Error("No git folder exists at " + gitFolder)
+    if (!this.isGitRepo(repo)) {
+      throw Error("No git folder exists at " + repo)
     }
     // Find file containing the branch head
 
-    const branchHead = await GitCaller._revParse(gitFolder, branch)
-    log.debug(`${branch} -> [commit]${branchHead}`)
+    const branchHead = await GitCaller._revParse(repo, branch)
+    log.debug(`${branch} -> [commit] ${branchHead}`)
 
     return [branchHead, branch]
   }
@@ -78,7 +79,7 @@ export class GitCaller {
   async gitLogSpecificCommits(commits: string[]) {
     const args = [
       "log",
-      "--no-walk",
+      "--no-walk=unsorted",
       "--numstat",
       '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
@@ -88,17 +89,23 @@ export class GitCaller {
     return result.trim()
   }
 
+  async gitRemote() {
+    const args = ["remote", "-v"]
+    const result = (await runProcess(this.path, "git", args)) as string
+    return result.trim().split(/\s/)
+  }
+
   static async _getRepositoryHead(dir: string) {
     const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
     return result.trim()
   }
 
-  async lsTree(hash: string) {
-    return await GitCaller._lsTree(this.path, hash)
+  async lsTree(hash: string, includeTrees = true) {
+    return await GitCaller._lsTree(this.path, hash, includeTrees)
   }
 
-  static async _lsTree(repo: string, hash: string) {
-    const result = (await runProcess(repo, "git", ["ls-tree", "-rlt", hash])) as string
+  static async _lsTree(repo: string, hash: string, includeTrees = true) {
+    const result = (await runProcess(repo, "git", ["ls-tree", "-rl" + (includeTrees ? "t" : ""), hash])) as string
     return result.trim()
   }
 
@@ -150,14 +157,12 @@ export class GitCaller {
         {} as { [branch: string]: boolean }
       )
 
-    const repoHead = await GitCaller._getRepositoryHead(repoPath)
-
     try {
       const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
       if (error) {
         return {
           status: "Error",
-          errorMessage: error.message,
+          errorMessage: "Not a valid git repository",
           name: repoDir,
           path: repoPath,
           parentDirPath: parentDir
@@ -165,13 +170,13 @@ export class GitCaller {
       }
 
       const [branchHead, branch] = findBranchHeadResult
-      const [data, reasons] = await GitCaller.retrieveCachedResult({
+      const [cachedData, reasons] = await GitCaller.retrieveCachedResult({
         repo: repoDir,
         branch,
         branchHead
       })
 
-      if (!data) {
+      if (!cachedData) {
         return {
           status: "Success",
           isAnalyzed: false,
@@ -189,12 +194,12 @@ export class GitCaller {
       return {
         status: "Success",
         isAnalyzed: true,
-        data: data,
+        data: cachedData,
         reasons: [],
         name: repoDir,
         path: repoPath,
         parentDirPath: parentDir,
-        currentHead: repoHead,
+        currentHead: branchHead,
         refs,
         analyzedHeads
       }
@@ -294,7 +299,7 @@ export class GitCaller {
     const args = [
       "log",
       `--skip=${skip}`,
-      `--max-count=${count}`,
+      ...(count !== Infinity ? [`--max-count=${count}`] : []),
       this.branch,
       "--summary",
       "--numstat",
@@ -302,6 +307,12 @@ export class GitCaller {
       '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
+    const result = (await runProcess(this.path, "git", args)) as string
+    return result.trim()
+  }
+
+  async gitLogHashes(skip: number, count: number) {
+    const args = ["log", `--skip=${skip}`, `--max-count=${count}`, "--format=%H", this.branch]
     const result = (await runProcess(this.path, "git", args)) as string
     return result.trim()
   }
@@ -378,7 +389,7 @@ export class GitCaller {
     return result as string
   }
 
-  private async catFile(hash: string) {
+  async catFile(hash: string) {
     const result = await runProcess(this.path, "git", ["cat-file", "-p", hash])
     return result as string
   }
@@ -395,7 +406,7 @@ export class GitCaller {
       }
     }
     const result = await this.catFile(hash)
-    this.catFileCache.set(hash, result)
+    this.catFileCache.set(hash, result.toString())
 
     return result
   }
@@ -423,5 +434,103 @@ export class GitCaller {
   async setGitSetting(setting: string, value: string) {
     await runProcess(this.path, "git", ["config", setting, value])
     log.debug(`Set ${setting} to ${value}`)
+  }
+}
+
+const lsTreeCache = new Map<string, { hash: string; files: Array<{ fileName: string; hash: string }> }>()
+
+export async function lstree(repoPath: string, hash: string) {
+  const entries = await new Promise<Array<string>>((resolve, reject) =>
+    execFile(
+      "git",
+      ["ls-tree", "-r", hash],
+      {
+        cwd: repoPath
+      },
+      (error, stdout) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(stdout.split("\n").filter(Boolean))
+        }
+      }
+    )
+  )
+  const files = []
+  for (const data of entries) {
+    const [mode, type, hash, filename] = data.split(/\s+/)
+    files.push({ fileName: filename, hash })
+  }
+  return {
+    hash,
+    files
+  }
+}
+
+export async function lstreeCached(repoPath: string, hash: string) {
+  const key = `${repoPath}:${hash}`
+  const cachedValue = lsTreeCache.get(key)
+  if (cachedValue !== undefined) {
+    return cachedValue
+  }
+
+  const result = await lstree(repoPath, hash)
+  lsTreeCache.set(key, result)
+  return result
+}
+
+const catFileCache = new Map<string, Buffer | null>()
+
+export const clearCaches = () => {
+  catFileCache.clear()
+  lsTreeCache.clear()
+}
+
+export const catFile = async (repoPath: string, hash: string, filePath?: string): Promise<Buffer | null> => {
+  const key = `${repoPath}:${hash}:${filePath ?? ""}`
+  const cachedValue = catFileCache.get(key)
+  if (cachedValue !== undefined) {
+    return cachedValue
+  }
+
+  try {
+    const gitArgs = ["cat-file", "blob", hash + (filePath ? `:${filePath}` : "")]
+    // log.info(`> git ${gitArgs.join(" ")}`)
+    const result: Buffer<ArrayBufferLike> = await new Promise((resolve, reject) => {
+      const process = spawn("git", gitArgs, {
+        cwd: repoPath,
+        killSignal: "SIGKILL",
+        shell: false,
+        stdio: ["ignore", "pipe", "ignore"]
+      })
+      const buffers: Buffer[] = []
+      process.stdout.on("data", (data) => {
+        buffers.push(data)
+      })
+      process.on("error", reject)
+      process.on("exit", (code) => {
+        if (code === 0) {
+          resolve(Buffer.concat(buffers))
+        } else {
+          reject(new Error(`git cat-file exited with code ${code}`))
+        }
+      })
+    })
+
+    // const firstLine = result.toString().split("\n")[0]
+    // log.info(`cat-file: ${firstLine}`)
+
+    catFileCache.set(key, result)
+    return result
+  } catch (error) {
+    catFileCache.set(key, null)
+    if (!(error instanceof Error)) {
+      throw new Error(`Error reading blob ${hash} (${filePath ?? "unknown"}): ${error}`)
+    }
+    if (error.message.includes("Not a valid object name")) {
+      log.warn(`File ${filePath} not found in commit ${hash}`)
+      return null
+    }
+    throw error
   }
 }

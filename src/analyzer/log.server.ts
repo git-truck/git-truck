@@ -51,6 +51,9 @@ export function setLogLevel(level: string) {
     throw new Error(`Invalid log level: ${level}`)
   }
   logLevel = newLevel
+  setTimeout(() => {
+    log.debug(`Setting log level to ${level} from CLI`)
+  })
 }
 
 export function error(message: Error | unknown) {
@@ -112,10 +115,4 @@ function prefix(label: LOG_LEVEL_LABEL): string {
   }
 }
 
-export const log = {
-  error,
-  warn,
-  info,
-  debug,
-  raw
-}
+export const log = { error, warn, info, debug, raw }
