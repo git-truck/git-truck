@@ -28,7 +28,7 @@ You can read more about the features in the [feature overview](https://git-truck
 > [!NOTE]
 > To use Git Truck, you will need to have the following programs installed:
 >
-> - [Node.js](https://nodejs.org/en/) 20.0.0 or newer and npm 10.0 or newer
+> - [Node.js](https://nodejs.org/en/) 22.0.0 or newer and npm 10.0 or newer
 > - [git](https://git-scm.com/downloads) 2.29 or newer
 >
 > Check your installed versions using `node --version`, `npm --version` and `git --version`.
