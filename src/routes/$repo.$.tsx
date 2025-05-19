@@ -208,6 +208,7 @@ async function analyze(params: Route.LoaderArgs["params"], context: Route.Loader
 
   const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
   // to avoid double identical fetch at first load, which it does for some reason
+  // TODO: Fix this. This is due to react strict mode
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
     return instance.prevResult
   }
