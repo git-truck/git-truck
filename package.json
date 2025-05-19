@@ -4,14 +4,14 @@
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
-  "main": "./cli.cjs",
-  "bin": "./cli.cjs",
+  "main": "./cli.js",
+  "bin": "./cli.js",
   "files": [
     "LICENSE",
     "README.md",
     "build/",
     "public/",
-    "cli.cjs"
+    "cli.js"
   ],
   "type": "module",
   "scripts": {
@@ -23,7 +23,7 @@
     "pretest:e2e": "npm run build",
     "pretest:e2e:headed": "npm run build",
     "build": "cross-env NODE_ENV=production npm run build-vite && npm run build-cli",
-    "build-cli": "tsup --treeshake --out-dir . ./src/cli.ts --external vite lightningcss --format cjs --loader \".json=base64\" --cjsInterop --env.NODE_ENV production",
+    "build-cli": "tsdown",
     "build-vite": "react-router build",
     "dev": "tsx ./src/cli.ts",
     "dev:debug": "tsx ./src/cli.ts --log debug",
@@ -129,7 +129,7 @@
     "sha1": "^1.1.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss": "^4.0.6",
-    "tsup": "^8.3.6",
+    "tsdown": "^0.11.12",
     "tsx": "^4.19.2",
     "typescript": "5.7",
     "typescript-eslint": "^8.24.0",
@@ -139,6 +139,23 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5",
     "yargs": "^17.7.2"
+  },
+  "tsdown": {
+    "entry": "./src/cli.ts",
+    "outDir": ".",
+    "treeshake": true,
+    "clean": false,
+    "external": [
+      "vite",
+      "lightningcss"
+    ],
+    "loader": {
+      ".json": "base64"
+    },
+    "cjs-interop": true,
+    "env": {
+      "NODE_ENV": "production"
+    }
   },
   "prettier": {
     "semi": false,
