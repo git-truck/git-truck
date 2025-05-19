@@ -10,12 +10,12 @@ export default class InstanceManager {
     return this.metadataDB
   }
 
-  public static getOrCreateInstance(repo: string, branch: string, path: string) {
+  public static getOrCreateInstance(repo: string, branch: string, repoPath: string) {
     if (!this.instances) this.instances = new Map()
     const existing = this.instances.get(repo)?.get(branch)
     if (existing) return existing
 
-    const newInstance = new ServerInstance(repo, branch, path)
+    const newInstance = new ServerInstance(repo, branch, repoPath)
     const existingRepo = this.instances.get(repo)
     if (existingRepo) {
       existingRepo.set(branch, newInstance)
