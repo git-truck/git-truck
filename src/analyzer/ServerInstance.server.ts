@@ -37,11 +37,11 @@ export default class ServerInstance {
   constructor(
     public repo: string,
     public branch: string,
-    public path: string
+    public repoPath: string
   ) {
     this.repoSanitized = repo.replace(/\W/g, "_")
     this.branchSanitized = branch.replace(/\W/g, "_")
-    this.gitCaller = new GitCaller(repo, branch, path)
+    this.gitCaller = new GitCaller(repo, branch, repoPath)
     this.db = new DB(repo, branch)
   }
 
