@@ -1,15 +1,17 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes } from "react"
-import { Icon } from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
+import Icon from "@mdi/react"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose, mdiDeleteForever } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit } from "@remix-run/react"
+import { Form, Link, useSubmit, type ErrorResponse } from "react-router"
 import { getPathFromRepoAndHead } from "~/util"
+import type { error } from "node:console"
+import { LoadingIndicator } from "./LoadingIndicator"
 
 export const CloseButton = ({
   className = "",
@@ -18,7 +20,7 @@ export const CloseButton = ({
 }: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
   <button
     className={clsx(className, "inline-grid text-lg leading-none hover:opacity-80", {
-      "absolute right-2 top-2 z-10": absolute
+      "absolute top-2 right-2 z-10": absolute
     })}
     title="Close"
     {...props}
@@ -41,7 +43,7 @@ export const LegendDot = ({
   if (!authorColorToChange)
     return (
       <div
-        className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className}`}
+        className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className}`}
         style={{ ...style, backgroundColor: dotColor }}
       />
     )
@@ -68,7 +70,7 @@ export const LegendDot = ({
           arrowSize={10}
           arrowColor="white"
         >
-          <div className="card z-20 max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+          <div className="card z-20 max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
             <HexColorPicker color={color} onChange={setColor} />
             <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
               Set color
@@ -85,7 +87,7 @@ export const LegendDot = ({
       onClickOutside={() => setIsPopoverOpen(false)}
     >
       <div
-        className={`aspect-square h-4 w-4 rounded-full shadow-sm shadow-black ${className} cursor-pointer`}
+        className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className} cursor-pointer`}
         style={{ ...style, backgroundColor: dotColor }}
         onClick={() => setIsPopoverOpen(!isPopoverOpen)}
       />
@@ -95,7 +97,7 @@ export const LegendDot = ({
 
 export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
   <code
-    className={`rounded-md bg-gray-100 p-1 font-mono text-sm text-gray-900 dark:bg-gray-700 dark:text-gray-100 ${
+    className={`rounded-md bg-gray-700 p-1 font-mono text-sm text-gray-100 dark:bg-gray-100 dark:text-gray-900 ${
       inline ? "inline-block" : "block"
     } whitespace-pre-wrap`}
     {...props}
@@ -147,6 +149,42 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
       }}
     >
       <Icon path={mdiMenuUp} size={2} className="stroke-white" />
+    </div>
+  )
+}
+
+export function ClearCacheForm() {
+  return (
+    <Form className="w-4" method="post" action={"/clearCache"}>
+      <input type="hidden" name="clearCache" value={"true"} />
+      <button className="btn" title="Do this if you are experiencing issues">
+        <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
+        Clear analyzed results
+      </button>
+    </Form>
+  )
+}
+
+export function ErrorPage({ errorMessage }: { errorMessage: string }) {
+  return (
+    <div className="app-container">
+      <div />
+
+      <div className="card">
+        <h1>An error occured!</h1>
+        <p>See console for more infomation.</p>
+        <Code>{errorMessage}</Code>
+        <div>
+          <ClearCacheForm />
+        </div>
+        <div>
+          <Link to=".">Retry</Link>
+        </div>
+        <div>
+          <Link to="..">Go back</Link>
+        </div>
+      </div>
+      <LoadingIndicator />
     </div>
   )
 }

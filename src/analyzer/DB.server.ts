@@ -4,7 +4,7 @@ import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "./util.server"
-import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader"
+import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {
   private connectionPromise: Promise<DuckDBConnection>

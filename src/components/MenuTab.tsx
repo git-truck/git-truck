@@ -45,8 +45,8 @@ export const MenuTab = (props: PropsWithChildren<MenuTabProps>) => {
             key={item.title + idx + "--tab"}
             className={clsx("btn btn--outlined flex-1", {
               "opacity-50": selectedIdx === idx,
-              "rounded-br-none rounded-tr-none": idx !== items.length - 1,
-              "rounded-bl-none rounded-tl-none": idx === items.length - 1
+              "rounded-tr-none rounded-br-none": idx !== items.length - 1,
+              "rounded-tl-none rounded-bl-none": idx === items.length - 1
             })}
             onClick={() => {
               if (props.onChange) {

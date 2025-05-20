@@ -1,23 +1,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { mdiAccountMultiple, mdiEyeOffOutline, mdiFile, mdiFolder, mdiOpenInNew } from "@mdi/js"
+import Icon from "@mdi/react"
+import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "react-router"
+import byteSize from "byte-size"
+import clsx from "clsx"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "@remix-run/react"
 import type { GitObject, GitTreeObject } from "~/analyzer/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { CloseButton } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
+import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
-import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
-import byteSize from "byte-size"
-import { mdiOpenInNew, mdiEyeOffOutline, mdiFile, mdiFolder, mdiAccountMultiple } from "@mdi/js"
-import { Icon } from "@mdi/react"
-import clsx from "clsx"
-import { useMetrics } from "~/contexts/MetricContext"
-import { MenuItem, MenuTab } from "./MenuTab"
-import { CommitsCard } from "./CommitsCard"
 import { usePrefersLightMode } from "~/styling"
+import { dateFormatLong, getTextColorFromBackground, last } from "~/util"
+import { CommitsCard } from "./CommitsCard"
+import { MenuItem, MenuTab } from "./MenuTab"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -148,7 +148,7 @@ export function DetailsCard({
         : {})}
     >
       <div className="flex">
-        <h2 className="card__title grid w-full grid-cols-[auto,1fr,auto] gap-2">
+        <h2 className="card__title grid w-full grid-cols-[auto_1fr_auto] gap-2">
           <Icon path={clickedObject.type === "blob" ? mdiFile : mdiFolder} size="1.25em" />
           <span className="truncate" title={clickedObject.name}>
             {clickedObject.name}
@@ -159,7 +159,7 @@ export function DetailsCard({
       <MenuTab>
         <MenuItem title="General">
           <div className="flex grow flex-col gap-2">
-            <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
+            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
               <CommitsEntry count={commitCount ?? 0} />
               {isBlob ? (
                 <>
@@ -271,14 +271,14 @@ function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
 
   return (
     <>
-      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Files
       </div>
-      <p className="break-all text-sm">{fileCount}</p>
-      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+      <p className="text-sm break-all">{fileCount}</p>
+      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Folders
       </div>
-      <p className="break-all text-sm">{folderCount}</p>
+      <p className="text-sm break-all">{folderCount}</p>
     </>
   )
 }
@@ -286,10 +286,10 @@ function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
 function CommitsEntry(props: { count: number | undefined }) {
   return (
     <>
-      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Commits
       </div>
-      <p className="break-all text-sm">{props.count ?? "unknown"}</p>
+      <p className="text-sm break-all">{props.count ?? "unknown"}</p>
     </>
   )
 }
@@ -297,10 +297,10 @@ function CommitsEntry(props: { count: number | undefined }) {
 function LastchangedEntry(props: { epoch: number | undefined }) {
   return (
     <>
-      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Last changed
       </div>
-      <p className="break-all text-sm">{props.epoch ? dateFormatLong(props.epoch) : "unknown"}</p>
+      <p className="text-sm break-all">{props.epoch ? dateFormatLong(props.epoch) : "unknown"}</p>
     </>
   )
 }
@@ -311,10 +311,10 @@ function PathEntry(props: { path: string }) {
   if (!clickedObject) return null
   return (
     <>
-      <div className="flex grow items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
+      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Located at
       </div>
-      <div className="grid grid-cols-[1fr,auto] items-center justify-between gap-2 break-all text-sm">
+      <div className="grid grid-cols-[1fr_auto] items-center justify-between gap-2 text-sm break-all">
         <p className="truncate" title={props.path}>
           {props.path}
         </p>
@@ -338,10 +338,8 @@ function SizeEntry(props: { size: number; isBinary?: boolean }) {
   const size = byteSize(props.size ?? 0)
   return (
     <>
-      <div className="flex items-center overflow-hidden overflow-ellipsis whitespace-pre text-sm font-semibold">
-        Size
-      </div>
-      <p className="break-all text-sm">
+      <div className="flex items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Size</div>
+      <p className="text-sm break-all">
         {size.value} {size.unit}{" "}
         <span className="opacity-50">
           {props.isBinary ? (
@@ -378,7 +376,7 @@ function AuthorDistribution(props: {
           <ChevronButton id={authorDistributionExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
         ) : null}
       </div>
-      <div className="grid grid-cols-[1fr,auto] gap-1">
+      <div className="grid grid-cols-[1fr_auto] gap-1">
         {props.fetcher.state !== "idle" ? (
           <p>Loading authors...</p>
         ) : (
