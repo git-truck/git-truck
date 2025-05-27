@@ -23,8 +23,6 @@ export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
 export default class ServerInstance {
   public analyzationStatus: AnalyzationStatus = "Starting"
-  private repoSanitized: string
-  private branchSanitized: string
   public gitCaller: GitCaller
   public db: DB
   public progress = [0]
@@ -39,8 +37,6 @@ export default class ServerInstance {
     public branch: string,
     public repoPath: string
   ) {
-    this.repoSanitized = repo.replace(/\W/g, "_")
-    this.branchSanitized = branch.replace(/\W/g, "_")
     this.gitCaller = new GitCaller(repo, branch, repoPath)
     this.db = new DB(repo, branch)
   }
