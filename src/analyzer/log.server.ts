@@ -1,19 +1,27 @@
 import c from "ansi-colors"
 
-export enum LOG_LEVEL {
-  SILENT,
-  ERROR,
-  WARN,
-  INFO,
-  DEBUG
-}
-export enum LOG_LEVEL_LABEL {
-  SILENT = "",
-  ERROR = "ERR",
-  WARN = "WRN",
-  INFO = "NFO",
-  DEBUG = "DBG"
-}
+const LOG_LEVEL = {
+  SILENT: 0,
+  ERROR: 1,
+  WARN: 2,
+  INFO: 3,
+  DEBUG: 4
+} as const
+
+export type LOG_LEVEL_KEY = keyof typeof LOG_LEVEL
+export type LOG_LEVEL = (typeof LOG_LEVEL)[LOG_LEVEL_KEY]
+
+const LOG_LEVEL_LABEL = {
+  SILENT: "",
+  ERROR: "ERR",
+  WARN: "WRN",
+  INFO: "NFO",
+  DEBUG: "DBG"
+} as const
+
+export type LOG_LEVEL_LABEL = (typeof LOG_LEVEL_LABEL)[keyof typeof LOG_LEVEL_LABEL]
+
+const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
 const stringToLevelMap: Record<string, LOG_LEVEL> = {
   SILENT: LOG_LEVEL.SILENT,
@@ -23,7 +31,7 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
   DEBUG: LOG_LEVEL.DEBUG
 }
 
-const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
+// const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
 function setIntialLogLevel() {
   if (typeof process.env.LOG_LEVEL === "string") {

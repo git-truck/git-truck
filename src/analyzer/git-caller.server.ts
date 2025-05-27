@@ -8,12 +8,14 @@ import { branchCompare, semverCompare } from "../util"
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
 
-export enum ANALYZER_CACHE_MISS_REASONS {
-  OTHER_REPO = "The cache was not created for this repo",
-  NOT_CACHED = "No cache was found",
-  BRANCH_HEAD_CHANGED = "Branch head changed",
-  DATA_VERSION_MISMATCH = "Outdated cache"
+const ANALYZER_CACHE_MISS_REASONS = {
+  OTHER_REPO: "The cache was not created for this repo",
+  NOT_CACHED: "No cache was found",
+  BRANCH_HEAD_CHANGED: "Branch head changed",
+  DATA_VERSION_MISMATCH: "Outdated cache"
 }
+
+export type ANALYZER_CACHE_MISS_REASONS = (typeof ANALYZER_CACHE_MISS_REASONS)[keyof typeof ANALYZER_CACHE_MISS_REASONS]
 
 export class GitCaller {
   private useCache = true
