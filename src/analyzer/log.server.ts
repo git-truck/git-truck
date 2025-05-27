@@ -1,6 +1,6 @@
 import c from "ansi-colors"
 
-const LOG_LEVEL = {
+export const LOG_LEVEL = {
   SILENT: 0,
   ERROR: 1,
   WARN: 2,
