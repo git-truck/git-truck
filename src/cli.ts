@@ -120,7 +120,8 @@ See what's changed here: ${generateVersionComparisonLink({
   const reactRouterHandler = createRequestHandler({
     build: viteDevServer
       ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-      : await import("../build/server/index.js"),
+      : // @ts-expect-error
+        await import("../build/server/index.js"),
     getLoadContext() {
       return {
         version: pkg.version,
