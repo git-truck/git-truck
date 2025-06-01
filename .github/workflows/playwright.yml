@@ -26,6 +26,28 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Get installed Playwright version
+        id: playwright-version
+        shell: node {0}
+        run: |
+          const fs = require('fs');
+          const lock = JSON.parse(fs.readFileSync('./package-lock.json', 'utf8'));
+          let version = '';
+          if (lock.packages && lock.packages['node_modules/@playwright/test']) {
+            version = lock.packages['node_modules/@playwright/test'].version;
+          } else if (lock.dependencies && lock.dependencies['@playwright/test']) {
+            version = lock.dependencies['@playwright/test'].version;
+          }
+          require('fs').appendFileSync(process.env.GITHUB_ENV, `PLAYWRIGHT_VERSION=${version}\n`);
+
+      - name: Cache Playwright binaries
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ${{ github.workspace }}/.pw-browsers
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
       - name: Install dependencies
         run: npm install
 
@@ -34,9 +56,14 @@ jobs:
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
       - name: Run Playwright tests
         run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
