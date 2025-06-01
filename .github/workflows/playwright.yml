@@ -45,9 +45,7 @@ jobs:
         id: playwright-cache
         with:
           path: |
-            ~/.cache/ms-playwright
-            ~/Library/Caches/ms-playwright
-            %USERPROFILE%\AppData\Local\ms-playwright
+            ${{ github.workspace }}/.pw-browsers
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Install dependencies
@@ -59,9 +57,13 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
       - name: Run Playwright tests
         run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
