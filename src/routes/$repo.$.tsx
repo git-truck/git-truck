@@ -127,7 +127,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   if (typeof fileToOpen === "string") {
     instance.prevInvokeReason = "open"
-    openFile(instance.path, fileToOpen)
+    openFile(instance.repoPath, fileToOpen)
     return null
   }
 
