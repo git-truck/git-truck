@@ -10,7 +10,7 @@ import open from "open"
 import latestVersion from "latest-version"
 import { GitCaller } from "./analyzer/git-caller.server"
 import { getArgsWithDefaults, parseArgs } from "./analyzer/args.server"
-import { semverCompare, getPathFromRepoAndHead } from "./util"
+import { semverCompare, getPathFromRepoAndHead, generateVersionComparisonLink } from "./util"
 import { describeAsyncJob, getDirName, isValidURI } from "./analyzer/util.server"
 import { log, setLogLevel } from "./analyzer/log.server"
 import type { NextFunction } from "express-serve-static-core"
@@ -38,11 +38,12 @@ async function main() {
 
 To update, run:
 
-npx git-truck@latest
-
-Or to install globally:
-
 npm install -g git-truck@latest
+
+See what's changed here: ${generateVersionComparisonLink({
+            currentVersion: currentV,
+            latestVersion: latestV
+          })}
 
 `
         : " (latest)"
