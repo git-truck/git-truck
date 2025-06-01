@@ -159,3 +159,13 @@ export function getLightness(hex: `#${string}`): number {
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
+
+export function generateVersionComparisonLink({
+  currentVersion,
+  latestVersion
+}: {
+  currentVersion: string
+  latestVersion: string
+}): string {
+  return `https://github.com/git-truck/git-truck/compare/v${currentVersion}...v${latestVersion}`
+}

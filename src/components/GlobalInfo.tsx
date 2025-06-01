@@ -1,5 +1,5 @@
 import { Form, Link, useLocation, useNavigate, useNavigation } from "@remix-run/react"
-import { dateTimeFormatShort, semverCompare } from "~/util"
+import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
@@ -18,6 +18,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
   const { gitTruckInfo } = useData()
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const isExperimental = gitTruckInfo.version.includes("0.0.0")
+
   return (
     <Popover
       isOpen={isPopoverOpen}
@@ -36,7 +37,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
               <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
               <p className="card-p">
                 If you want to use a stable version, close the application and run:{" "}
-                <Code inline>npx git-truck@latest</Code>
+                <Code inline>npm i -g git-truck@latest</Code>
               </p>
             </div>
           ) : (
@@ -44,8 +45,23 @@ const UpdateNotifier = memo(function UpdateNotifier() {
               <p>Update available: {gitTruckInfo.latestVersion}</p>
               <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
               <p className="card-p">
-                To update, close the application and run: <Code inline>npx git-truck@latest</Code>
+                To update, close the application and run: <Code inline>npm install -g git-truck@latest</Code>
               </p>
+              {gitTruckInfo.latestVersion ? (
+                <p>
+                  <a
+                    className="text-blue-500 hover:underline"
+                    href={generateVersionComparisonLink({
+                      currentVersion: gitTruckInfo.version,
+                      latestVersion: gitTruckInfo.latestVersion
+                    })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    See what&apos;s new
+                  </a>
+                </p>
+              ) : null}
             </div>
           )}
         </ArrowContainer>
