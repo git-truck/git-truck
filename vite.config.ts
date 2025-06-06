@@ -6,6 +6,7 @@ import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
+import reactRouterConfig from "./react-router.config.ts"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
@@ -41,7 +42,9 @@ export default defineConfig(({ isSsrBuild }) => ({
   },
   plugins: [
     tailwindcss(),
-    reactRouterDevTools(),
+    reactRouterDevTools({
+      appDir: reactRouterConfig.appDirectory
+    }),
     reactRouter(),
     tsconfigPaths(),
     cjsInterop({ dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : [] })
