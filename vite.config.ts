@@ -6,8 +6,17 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
 
-export default defineConfig({
-  build: { rollupOptions: { external: ["@duckdb/node-api"] } },
+export default defineConfig(({ isSsrBuild }) => ({
+  build: {
+    rollupOptions: {
+      external: ["@duckdb/node-api"],
+      ...(isSsrBuild
+        ? {
+            input: "./src/server/app.ts"
+          }
+        : {})
+    }
+  },
   ssr: {
     external: [
       "@duckdb/node-api",
@@ -37,4 +46,4 @@ export default defineConfig({
   ],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
-})
+}))
