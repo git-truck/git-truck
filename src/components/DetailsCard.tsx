@@ -8,7 +8,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react"
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
-import { CloseButton } from "~/components/util"
+import { CloseButton, Tab, Tabs } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -17,7 +17,6 @@ import { usePath } from "~/contexts/PathContext"
 import { usePrefersLightMode } from "~/styling"
 import { dateFormatLong, getTextColorFromBackground, last } from "~/shared/util"
 import { CommitsCard } from "./CommitsCard"
-import { MenuItem, MenuTab } from "./MenuTab"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -43,6 +42,8 @@ export function DetailsCard({
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
   const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
+
+  const [currentTab, setCurrentTab] = useState("General")
 
   const existingCommitCount = databaseInfo.commitCounts[slicedPath]
 
@@ -156,90 +157,95 @@ export function DetailsCard({
           <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
         </h2>
       </div>
-      <MenuTab>
-        <MenuItem title="General">
-          <div className="flex grow flex-col gap-2">
-            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-              <CommitsEntry count={commitCount ?? 0} />
-              {isBlob ? (
-                <>
-                  <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
-                  <LastchangedEntry epoch={databaseInfo.lastChanged[slicedPath]} />
-                </>
-              ) : (
-                <FileAndSubfolderCountEntries clickedTree={clickedObject} />
-              )}
-              <PathEntry path={clickedObject.path} />
-            </div>
-            <div className="card bg-white/70 text-black">
-              <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
-            </div>
-          </div>
-          <div className="mt-2 flex gap-2">
-            {isBlob ? (
+      <Tabs
+        tabs={[
+          {
+            title: "General",
+            content: (
               <>
-                <Form className="w-max" method="post" action={location.pathname}>
-                  <input type="hidden" name="ignore" value={clickedObject.path} />
-                  <button
-                    className="btn btn--outlined"
-                    type="submit"
-                    disabled={state !== "idle"}
-                    onClick={() => {
-                      isProcessingHideRef.current = true
-                    }}
-                    title="Hide this file"
-                  >
-                    <Icon path={mdiEyeOffOutline} />
-                    Hide
+                <div className="flex grow flex-col gap-2">
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+                    <CommitsEntry count={commitCount ?? 0} />
+                    {isBlob ? (
+                      <>
+                        <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
+                        <LastchangedEntry epoch={databaseInfo.lastChanged[slicedPath]} />
+                      </>
+                    ) : (
+                      <FileAndSubfolderCountEntries clickedTree={clickedObject} />
+                    )}
+                    <PathEntry path={clickedObject.path} />
+                  </div>
+                  <div className="card bg-white/70 text-black">
+                    <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
+                  </div>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  {isBlob ? (
+                    <>
+                      <Form className="w-max" method="post" action={location.pathname}>
+                        <input type="hidden" name="ignore" value={clickedObject.path} />
+                        <button
+                          className="btn btn--outlined"
+                          type="submit"
+                          disabled={state !== "idle"}
+                          onClick={() => {
+                            isProcessingHideRef.current = true
+                          }}
+                          title="Hide this file"
+                        >
+                          <Icon path={mdiEyeOffOutline} />
+                          Hide
+                        </button>
+                      </Form>
+                      {clickedObject.name.includes(".") ? (
+                        <Form className="w-max" method="post" action={location.pathname}>
+                          <input type="hidden" name="ignore" value={`*.${extension}`} />
+                          <button
+                            className="btn btn--outlined"
+                            type="submit"
+                            disabled={state !== "idle"}
+                            title={`Hide all files with .${extension} extension`}
+                            onClick={() => {
+                              isProcessingHideRef.current = true
+                            }}
+                          >
+                            <Icon path={mdiEyeOffOutline} />
+                            <span>Hide .{extension}</span>
+                          </button>
+                        </Form>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <Form method="post" action={location.pathname}>
+                        <input type="hidden" name="ignore" value={clickedObject.path} />
+                        <button
+                          className="btn btn--outlined"
+                          type="submit"
+                          disabled={state !== "idle"}
+                          onClick={() => {
+                            isProcessingHideRef.current = true
+                            setPath(OneFolderOut(path))
+                          }}
+                        >
+                          <Icon path={mdiEyeOffOutline} />
+                          Hide this folder
+                        </button>
+                      </Form>
+                    </>
+                  )}
+                  <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
+                    <Icon path={mdiAccountMultiple} />
+                    Group authors
                   </button>
-                </Form>
-                {clickedObject.name.includes(".") ? (
-                  <Form className="w-max" method="post" action={location.pathname}>
-                    <input type="hidden" name="ignore" value={`*.${extension}`} />
-                    <button
-                      className="btn btn--outlined"
-                      type="submit"
-                      disabled={state !== "idle"}
-                      title={`Hide all files with .${extension} extension`}
-                      onClick={() => {
-                        isProcessingHideRef.current = true
-                      }}
-                    >
-                      <Icon path={mdiEyeOffOutline} />
-                      <span>Hide .{extension}</span>
-                    </button>
-                  </Form>
-                ) : null}
+                </div>
               </>
-            ) : (
-              <>
-                <Form method="post" action={location.pathname}>
-                  <input type="hidden" name="ignore" value={clickedObject.path} />
-                  <button
-                    className="btn btn--outlined"
-                    type="submit"
-                    disabled={state !== "idle"}
-                    onClick={() => {
-                      isProcessingHideRef.current = true
-                      setPath(OneFolderOut(path))
-                    }}
-                  >
-                    <Icon path={mdiEyeOffOutline} />
-                    Hide this folder
-                  </button>
-                </Form>
-              </>
-            )}
-            <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
-              <Icon path={mdiAccountMultiple} />
-              Group authors
-            </button>
-          </div>
-        </MenuItem>
-        <MenuItem title="Commits">
-          <CommitsCard commitCount={commitCount ?? 0} />
-        </MenuItem>
-      </MenuTab>
+            )
+          },
+          { title: "Commits", content: <CommitsCard commitCount={commitCount ?? 0} /> }
+        ]}
+      />
     </div>
   )
 }

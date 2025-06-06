@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { useState, useTransition, type HTMLAttributes } from "react"
+import { useState, useTransition, type HTMLAttributes, type ReactNode } from "react"
 import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
@@ -174,6 +174,42 @@ export function ErrorPage({ errorMessage }: { errorMessage: string }) {
         </div>
       </div>
       <LoadingIndicator />
+    </div>
+  )
+}
+
+export function Tab({ title, active, onClick }: { title: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      className={clsx("btn btn--outlined roundend-lg mx-[-0.5px] flex-1", {
+        "border-t-transparent border-r-transparent border-l-transparent": !active,
+        "rounded-b-[2px]": !active,
+        "rounded-b-none": active,
+        "border-b-transparent": active
+      })}
+      onClick={onClick}
+    >
+      {title}
+    </button>
+  )
+}
+
+export function Tabs({ tabs }: { tabs: { title: string; content: ReactNode }[] }) {
+  const [currentTab, setCurrentTab] = useState(tabs[0].title)
+
+  return (
+    <div>
+      <div className="flex">
+        {tabs.map((tab) => (
+          <Tab
+            key={tab.title}
+            title={tab.title}
+            active={currentTab === tab.title}
+            onClick={() => setCurrentTab(tab.title)}
+          />
+        ))}
+      </div>
+      <div className="mt-2">{tabs.find((tab) => tab.title === currentTab)?.content}</div>
     </div>
   )
 }
