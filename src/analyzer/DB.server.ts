@@ -57,7 +57,7 @@ export default class DB {
    * @returns The result of the callback
    */
   public async usingTableAppender(table: string, callback: (appender: DuckDBAppender) => Promise<void>) {
-    const appender = await (await this.connectionPromise).createAppender("main", table)
+    const appender = await (await this.connectionPromise).createAppender(table)
     try {
       await callback(appender)
     } finally {
