@@ -38,7 +38,7 @@ export default class DB {
 
   public async disconnect() {
     const connection = await this.connectionPromise
-    connection.disconnect()
+    connection.disconnectSync()
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
@@ -61,7 +61,7 @@ export default class DB {
     try {
       await callback(appender)
     } finally {
-      appender.close()
+      appender.closeSync()
     }
   }
 
