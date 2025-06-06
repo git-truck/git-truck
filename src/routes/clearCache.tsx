@@ -17,7 +17,7 @@ export function ClearCacheForm({ redirectPath }: { redirectPath?: string } = {})
   return (
     <Form className="w-4" method="post" action={"/clearCache"}>
       <input type="hidden" name="redirect" value={redirectPath} />
-      <button className="btn" title="Do this if you are experiencing issues">
+      <button className="btn" title="Click here if you are experiencing issues">
         <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
         Clear analyzed results
       </button>
