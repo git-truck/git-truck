@@ -3,6 +3,7 @@
   "include": [
     "src/server/**/*",
     "src/shared/**/*",
+    "scripts/**/*",
     "src/**/*.server.ts",
     "src/cli.ts",
     "vite.config.ts"

@@ -1,7 +1,7 @@
 import { execSync } from "child_process"
 import os from "os"
 import path from "path"
-import { invariant } from "../src/util"
+import { invariant } from "~/shared/util"
 
 const npxCacheDir = path.join(os.homedir(), ".npm/_npx/")
 
