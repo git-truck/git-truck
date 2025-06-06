@@ -1,16 +1,13 @@
+/// <reference types="vitest" />
 import { reactRouter } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
-import pkg from "./package.json" with { type: "json" }
+import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
 
 export default defineConfig({
-  build: {
-    rollupOptions: {
-      external: ["@duckdb/node-api"]
-    }
-  },
+  build: { rollupOptions: { external: ["@duckdb/node-api"] } },
   ssr: {
     external: [
       "@duckdb/node-api",
@@ -18,7 +15,7 @@ export default defineConfig({
       "@duckdb/node-bindings-linux-x64",
       "@duckdb/node-bindings-win32-x64",
       "@duckdb/node-bindings-darwin-x64",
-      "@duckdb/node-bindings-darwin-arm64",
+      "@duckdb/node-bindings-darwin-arm64"
     ]
   },
   optimizeDeps: {
@@ -29,22 +26,15 @@ export default defineConfig({
       "@duckdb/node-bindings-linux-x64",
       "@duckdb/node-bindings-win32-x64",
       "@duckdb/node-bindings-darwin-x64",
-      "@duckdb/node-bindings-darwin-arm64",
+      "@duckdb/node-bindings-darwin-arm64"
     ]
   },
   plugins: [
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
-    cjsInterop({
-      dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : []
-    })
+    cjsInterop({ dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : [] })
   ],
-  define: {
-    "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version)
-  },
-  test: {
-    globals: true,
-    exclude: ["e2e", "node_modules"]
-  }
+  define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
+  test: { exclude: ["e2e", "node_modules"] }
 })

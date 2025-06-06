@@ -2,16 +2,16 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes } from "react"
 import Icon from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose, mdiDeleteForever } from "@mdi/js"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
 import { Popover, ArrowContainer } from "react-tiny-popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { Form, Link, useSubmit, type ErrorResponse } from "react-router"
-import { getPathFromRepoAndHead } from "~/util"
-import type { error } from "node:console"
+import { Link, useLocation, useSubmit } from "react-router"
+import { getPathFromRepoAndHead } from "~/shared/util"
 import { LoadingIndicator } from "./LoadingIndicator"
+import { ClearCacheForm } from "~/routes/clearCache"
 
 export const CloseButton = ({
   className = "",
@@ -153,19 +153,8 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
   )
 }
 
-export function ClearCacheForm() {
-  return (
-    <Form className="w-4" method="post" action={"/clearCache"}>
-      <input type="hidden" name="clearCache" value={"true"} />
-      <button className="btn" title="Do this if you are experiencing issues">
-        <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
-        Clear analyzed results
-      </button>
-    </Form>
-  )
-}
-
 export function ErrorPage({ errorMessage }: { errorMessage: string }) {
+  const { pathname } = useLocation()
   return (
     <div className="app-container">
       <div />
@@ -175,7 +164,7 @@ export function ErrorPage({ errorMessage }: { errorMessage: string }) {
         <p>See console for more infomation.</p>
         <Code>{errorMessage}</Code>
         <div>
-          <ClearCacheForm />
+          <ClearCacheForm redirectPath={pathname} />
         </div>
         <div>
           <Link to=".">Retry</Link>

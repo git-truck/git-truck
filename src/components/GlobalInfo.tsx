@@ -1,5 +1,5 @@
-import { Form, Link, useLocation, useNavigate, useNavigation } from "react-router"
-import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/util"
+import { Form, Link, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router"
+import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/shared/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
@@ -15,7 +15,7 @@ const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
 const UpdateNotifier = memo(function UpdateNotifier() {
-  const { gitTruckInfo } = useData()
+  const { gitTruckInfo } = useLoaderData()
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const isExperimental = gitTruckInfo.version.includes("0.0.0")
 
@@ -85,9 +85,15 @@ const UpdateNotifier = memo(function UpdateNotifier() {
   )
 })
 
-export const GlobalInfo = memo(function GlobalInfo() {
+export function GlobalInfo({
+  installedVersion,
+  latestVersion
+}: {
+  installedVersion: string
+  latestVersion: string | null
+}) {
   const client = useClient()
-  const { databaseInfo, repo, gitTruckInfo } = useData()
+  const { databaseInfo, repo } = useData()
   const transitionState = useNavigation()
 
   const location = useLocation()
@@ -110,8 +116,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
     }
   }, [transitionState.state])
   const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
-  const updateAvailable =
-    gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1
+  const updateAvailable = latestVersion && semverCompare(latestVersion, installedVersion) === 1
   return (
     <div className="flex flex-col gap-2">
       <div className="card">
@@ -195,4 +200,4 @@ export const GlobalInfo = memo(function GlobalInfo() {
       </div>
     </div>
   )
-})
+}

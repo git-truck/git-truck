@@ -1,5 +1,5 @@
 import { useDeferredValue, type JSX } from "react"
-import type { GitObject } from "~/analyzer/model"
+import type { GitObject } from "~/shared/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
 import type { MetricCache } from "../../metrics/metrics"

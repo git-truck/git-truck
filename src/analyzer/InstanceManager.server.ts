@@ -1,4 +1,4 @@
-import MetadataDB from "./MetadataDB"
+import MetadataDB from "./MetadataDB.server"
 import ServerInstance from "./ServerInstance.server"
 
 export default class InstanceManager {

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/server/**/*",
+    "src/shared/**/*",
+    "src/**/*.server.ts",
+    "src/cli.ts",
+    "vite.config.ts"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node"]
+  }
+}

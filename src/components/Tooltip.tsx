@@ -2,13 +2,13 @@
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
 import { Fragment, memo, useMemo, useRef } from "react"
-import type { GitBlobObject, GitObject } from "~/analyzer/model"
+import type { GitBlobObject, GitObject } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
-import type { DatabaseInfo } from "~/routes/$repo.$"
+import type { DatabaseInfo } from "~/shared/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
+import { allExceptFirst, dateFormatRelative, isBlob } from "../shared/util"
 import { LegendDot } from "./util"
 
 interface TooltipProps {

@@ -1,4 +1,4 @@
-import type { GitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "./metrics"

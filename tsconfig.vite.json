@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", ".react-router/types/**/*", "server/**/*"],
+  "compilerOptions": {
+    "composite": true,
+    "strict": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": { "~/*": ["./src/*"] },
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true
+  }
+}

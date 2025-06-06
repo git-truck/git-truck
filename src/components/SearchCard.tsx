@@ -2,11 +2,11 @@ import { memo, useEffect, useMemo, useRef, useState, useTransition, useId } from
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
-import type { GitObject, GitTreeObject } from "~/analyzer/model"
+import type { GitObject, GitTreeObject } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { allExceptLast, getSeparator } from "~/util"
+import { allExceptLast, getSeparator } from "~/shared/util"
 import Icon from "@mdi/react"
 import { mdiFolder, mdiFileOutline, mdiMagnify } from "@mdi/js"
 

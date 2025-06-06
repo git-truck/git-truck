@@ -2,7 +2,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
 import { useMemo } from "react"
-import { getLightness } from "~/util"
+import { getLightness } from "~/shared/util"
 import { noEntryColor } from "~/const"
 
 export type GradLegendData = [

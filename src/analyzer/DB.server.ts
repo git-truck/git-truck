@@ -1,9 +1,9 @@
 import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
-import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "./model"
+import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "../shared/model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { getTimeIntervals } from "./util.server"
+import { getTimeIntervals } from "~/shared/util"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {
@@ -28,10 +28,7 @@ export default class DB {
     await fs.rm(dir, { recursive: true, force: true })
   }
 
-  constructor(
-    private repo: string,
-    private branch: string
-  ) {
+  constructor(repo: string, branch: string) {
     this.repoSanitized = repo.replace(/\W/g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
@@ -69,7 +66,7 @@ export default class DB {
   }
 
   public async checkpoint() {
-    await await this.run("CHECKPOINT;")
+    await this.run("CHECKPOINT;")
   }
 
   private static async initTables(db: DuckDBConnection) {
@@ -425,10 +422,7 @@ export default class DB {
       if (typeof author !== "string") {
         throw new Error("Error when getting dominant author per file: Author is not a string")
       }
-      result[row["filepath"] as string] = {
-        author: author,
-        contribcount: Number(row["total_contribcount"])
-      }
+      result[row["filepath"] as string] = { author: author, contribcount: Number(row["total_contribcount"]) }
     })
 
     return result
@@ -550,11 +544,7 @@ export default class DB {
     const mapped = res.map((x) => {
       return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["ct"]) }
     })
-    const final: {
-      date: string
-      count: number
-      timestamp: number
-    }[] = []
+    const final: { date: string; count: number; timestamp: number }[] = []
     const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
     for (const [dateString, timestamp] of allIntervals) {
       const existing = mapped.find((x) => x.date === dateString)

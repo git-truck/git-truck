@@ -1,4 +1,4 @@
-import { invariant } from "~/util"
+import { invariant } from "~/shared/util"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/commitcount"
 

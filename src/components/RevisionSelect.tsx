@@ -1,5 +1,5 @@
 import type { SelectHTMLAttributes } from "react"
-import type { CompletedResult, GitRefs } from "~/analyzer/model"
+import type { CompletedResult, GitRefs } from "~/shared/model"
 import { mdiSourceBranch } from "@mdi/js"
 import Icon from "@mdi/react"
 

@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Slider, Rail, Handles, Tracks, Ticks, type SliderItem } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { getPathFromRepoAndHead } from "~/util"
+import { getPathFromRepoAndHead } from "~/shared/util"
 import { Handle, Track } from "./sliderUtils"
 import { noEntryColor } from "~/const"
 

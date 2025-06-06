@@ -1,23 +1,23 @@
-import { Await, Form, Link, useFetcher, useLoaderData } from "react-router"
-import { getArgsWithDefaults } from "~/analyzer/args.server"
-import { ClearCacheForm, Code } from "~/components/util"
+import { Await, Form, Link, useFetcher, useLoaderData, useLocation } from "react-router"
+import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
-import type { CompletedResult, Repository } from "~/analyzer/model"
+import type { CompletedResult, Repository } from "~/shared/model.ts"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { getPathFromRepoAndHead } from "~/util"
+import { getPathFromRepoAndHead } from "~/shared/util.ts"
 import type { ReactNode } from "react"
-import { Suspense, Fragment, useState } from "react"
+import { Suspense, Fragment, useState, useEffect } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
 import { join, resolve } from "node:path"
-import { getBaseDirFromPath, getDirName, readGitRepos } from "~/analyzer/util.server"
+import { getArgsWithDefaults, getBaseDirFromPath, getDirName, readGitRepos } from "~/shared/util.server.ts"
 import Icon from "@mdi/react"
-import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
+import { mdiArrowUp, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/_index"
+import { ClearCacheForm } from "./clearCache.tsx"
 
 export const loader = async () => {
   const queryPath = null
@@ -48,7 +48,7 @@ export const loader = async () => {
   // Returns an object, as `defer` does not support arrays
   // The keys are prefixed with an underscore to avoid conflicts with other properties returned from the loader
   const repositoryPromises = Object.fromEntries(
-    repositories.map((repo) => [`_${repo.path}`, GitCaller.getRepoMetadata(join(baseDir, repo.name))])
+    repositories.map((repo) => [`_${repo.path}`, GitCaller.getRepoMetadata(repo.path)])
   )
 
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
@@ -93,6 +93,7 @@ export default function Index() {
   const { repositories, baseDir, analyzedReposPromise, repositoryPromises } = useLoaderData<typeof loader>()
   const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const fetcher = useFetcher<typeof action>()
+  const { pathname } = useLocation()
 
   return (
     <main className="m-auto flex min-h-screen w-full max-w-2xl flex-col gap-2 p-2">
@@ -105,7 +106,7 @@ export default function Index() {
           <p>
             Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
           </p>
-          <ClearCacheForm />
+          <ClearCacheForm redirectPath={pathname} />
           {/* <div className="flex w-full gap-2"> */}
           <div className="hidden w-full gap-2">
             <Form method="get" className="flex grow gap-1">
@@ -217,8 +218,12 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
   const isFolder = repo.status === "Error" && repo.errorMessage === "Not a git repository"
   const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
 
+  useEffect(() => {
+    console.log(repo)
+  }, [repo])
+
   return (
-    <Fragment key={repo.name}>
+    <Fragment key={repo.path}>
       <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
           <Icon path={mdiGit} size={1} className="inline-block shrink-0" title="Git repository" />

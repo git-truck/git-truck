@@ -1,4 +1,4 @@
-import type { ANALYZER_CACHE_MISS_REASONS } from "./git-caller.server"
+import type { ANALYZER_CACHE_MISS_REASONS } from "../analyzer/git-caller.server"
 
 export type Repository = {
   /**
@@ -204,4 +204,37 @@ export interface FileModification {
   timestamp: number
   timestampauthor: number
   type: ModeType
+}
+
+export interface RepoData {
+  repo: Repository
+  databaseInfo: DatabaseInfo
+}
+
+export interface DatabaseInfo {
+  dominantAuthors: Record<string, { author: string; contribcount: number }>
+  commitCounts: Record<string, number>
+  lastChanged: Record<string, number>
+  authorCounts: Record<string, number>
+  maxCommitCount: number
+  minCommitCount: number
+  newestChangeDate: number
+  oldestChangeDate: number
+  authors: string[]
+  authorUnions: string[][]
+  fileTree: GitTreeObject
+  hiddenFiles: string[]
+  lastRunInfo: { time: number; hash: string }
+  fileCount: number
+  repo: string
+  branch: string
+  timerange: [number, number]
+  colorSeed: string | null
+  authorColors: Record<string, `#${string}`>
+  commitCountPerDay: { date: string; count: number }[]
+  selectedRange: [number, number]
+  analyzedRepos: CompletedResult[]
+  contribSumPerFile: Record<string, number>
+  maxMinContribCounts: { max: number; min: number }
+  commitCount: number
 }

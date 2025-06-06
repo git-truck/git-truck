@@ -33,11 +33,7 @@ export default function App() {
 function Body({ children }: { children: React.ReactNode }) {
   const prefersLightMode = usePrefersLightMode()
   return (
-    <body
-      className={cn("bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300", {
-        dark: !prefersLightMode
-      })}
-    >
+    <body className={cn("bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300", { dark: !prefersLightMode })}>
       {children}
     </body>
   )

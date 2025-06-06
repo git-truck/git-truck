@@ -1,4 +1,4 @@
-import { sleep } from "~/analyzer/util.server"
+import { sleep } from "~/shared/util"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/progress"

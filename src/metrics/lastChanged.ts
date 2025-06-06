@@ -1,4 +1,4 @@
-import { dateFormatShort } from "~/util"
+import { dateFormatShort } from "~/shared/util"
 
 interface lastChangedGroup {
   epoch: number

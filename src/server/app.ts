@@ -2,7 +2,7 @@ import "react-router"
 import { createRequestHandler } from "@react-router/express"
 import express from "express"
 import pkg from "../../package.json"
-import { getLatestVersion } from "../analyzer/util.server.js"
+import { getLatestVersion } from "../shared/util.server.js"
 
 declare module "react-router" {
   interface AppLoadContext {

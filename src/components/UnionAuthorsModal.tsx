@@ -1,7 +1,7 @@
 import { useTransition, useState, useRef, useEffect, type JSX } from "react"
 import { useNavigation, useSubmit } from "react-router"
 import { useData } from "~/contexts/DataContext"
-import { getPathFromRepoAndHead } from "~/util"
+import { getPathFromRepoAndHead } from "~/shared/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import Icon from "@mdi/react"

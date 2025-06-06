@@ -2,9 +2,9 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import type { FileChange, FullCommitDTO } from "~/analyzer/model"
+import type { FileChange, FullCommitDTO } from "~/shared/model"
 import { Fragment, useEffect, useState } from "react"
-import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/util"
+import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import type { AccordionData } from "./accordion/Accordion"
 import Accordion from "./accordion/Accordion"
 import { useFetcher } from "react-router"
