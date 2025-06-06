@@ -218,10 +218,6 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
   const isFolder = repo.status === "Error" && repo.errorMessage === "Not a git repository"
   const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
 
-  useEffect(() => {
-    console.log(repo)
-  }, [repo])
-
   return (
     <Fragment key={repo.path}>
       <h2 className="card__title flex justify-start gap-2" title={repo.path}>
