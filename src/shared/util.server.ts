@@ -194,6 +194,6 @@ export async function getArgs(): Promise<ArgsOptions> {
 export const getBaseDirFromPath = (repoPath: string) => path.resolve(repoPath, "..")
 export const getRepoNameFromPath = (repoPath: string) => path.resolve(repoPath).split(sep).reverse()[0]
 export const getSiblingRepository = (repoPath: string, repo: string) => path.resolve(getBaseDirFromPath(repoPath), repo)
-export function getDirName(dir: string) {
-  return path.basename(dir)
+export function getDirName(repoPath: string) {
+  return path.basename(path.resolve(repoPath))
 }
