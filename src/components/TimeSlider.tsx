@@ -4,7 +4,7 @@ import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
 import ClipLoader from "react-spinners/ClipLoader"
-import { Popover, ArrowContainer } from "react-tiny-popover"
+import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
 import { missingInMapColor, sliderPadding } from "~/const"
@@ -55,7 +55,7 @@ function DateTags({
         onClickOutside={() => {
           setStartRangeDatePickerOpen(false)
         }}
-        content={({ position, childRect, popoverRect }) => (
+        content={({ position, childRect, popoverRect }: PopoverState) => (
           <ArrowContainer
             position={position}
             childRect={childRect}
@@ -100,7 +100,7 @@ function DateTags({
         onClickOutside={() => {
           setEndRangeDatePickerOpen(false)
         }}
-        content={({ position, childRect, popoverRect }) => (
+        content={({ position, childRect, popoverRect }: PopoverState) => (
           <ArrowContainer
             position={position}
             childRect={childRect}

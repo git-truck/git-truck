@@ -12,7 +12,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { CloseButton, LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
-import { Popover, ArrowContainer } from "react-tiny-popover"
+import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
 import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 
 type SortCommitsMethods = "date" | "author"
@@ -105,7 +105,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       <Popover
         isOpen={isPopoverOpen}
         positions={["left", "top", "bottom", "right"]} // preferred positions by priority
-        content={({ position, childRect, popoverRect }) => (
+        content={({ position, childRect, popoverRect }: PopoverState) => (
           <ArrowContainer
             position={position}
             childRect={childRect}

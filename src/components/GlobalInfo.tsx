@@ -8,7 +8,7 @@ import { CloseButton, Code } from "./util"
 import Icon from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
-import { ArrowContainer, Popover } from "react-tiny-popover"
+import { ArrowContainer, Popover, type PopoverState } from "react-tiny-popover"
 import { CollapsableSettings } from "./Settings"
 
 const title = "Git Truck"
@@ -23,7 +23,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
     <Popover
       isOpen={isPopoverOpen}
       positions={["right", "bottom", "left", "top"]} // preferred positions by priority
-      content={({ position, childRect, popoverRect }) => (
+      content={({ position, childRect, popoverRect }: PopoverState) => (
         <ArrowContainer
           position={position}
           childRect={childRect}

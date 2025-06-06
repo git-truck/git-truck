@@ -5,7 +5,7 @@ import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
-import { Popover, ArrowContainer } from "react-tiny-popover"
+import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
 import { Link, useLocation, useSubmit } from "react-router"
@@ -62,7 +62,7 @@ export const LegendDot = ({
     <Popover
       isOpen={isPopoverOpen}
       positions={["top", "left", "bottom", "right"]} // preferred positions by priority
-      content={({ position, childRect, popoverRect }) => (
+      content={({ position, childRect, popoverRect }: PopoverState) => (
         <ArrowContainer
           position={position}
           childRect={childRect}
