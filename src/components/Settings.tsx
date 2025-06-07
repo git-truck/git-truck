@@ -12,14 +12,13 @@ import {
   mdiThemeLightDark,
   mdiTransition
 } from "@mdi/js"
-import { useId, useTransition } from "react"
+import { useId, useState, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 import { ChevronButton } from "./ChevronButton"
-import { useBoolean } from "react-use"
 import { relatedSizeMetric } from "./Options"
 
 export function CollapsableSettings() {
-  const [expanded, setExpanded] = useBoolean(false)
+  const [expanded, setExpanded] = useState(false)
   const expandSettingsFilesButtonId = useId()
   return (
     <div className="card flex flex-col gap-2">
@@ -27,7 +26,7 @@ export function CollapsableSettings() {
         <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
           <Icon path={mdiCog} size="1.25em" />
           Settings
-          <ChevronButton id={expandSettingsFilesButtonId} className="absolute right-2 top-2" open={expanded} />
+          <ChevronButton id={expandSettingsFilesButtonId} className="absolute top-2 right-2" open={expanded} />
         </button>
       </h2>
       {expanded ? <Settings /> : null}

@@ -3,7 +3,8 @@
   --side-panel-width-units: 94;
   --side-panel-width: calc(var(--side-panel-width-units) * var(--unit));
   /* Generated with: https://shadows.brumm.af/ */
-  --shadow: 0.9px 0.9px 2.7px hsla(0, 0%, 0%, 0.07), 2.2px 2.2px 6.9px hsla(0, 0%, 0%, 0.048),
+  --shadow:
+    0.9px 0.9px 2.7px hsla(0, 0%, 0%, 0.07), 2.2px 2.2px 6.9px hsla(0, 0%, 0%, 0.048),
     4.4px 4.4px 14.2px hsla(0, 0%, 0%, 0.039), 9.1px 9.1px 29.2px hsla(0, 0%, 0%, 0.031),
     25px 25px 80px hsla(0, 0%, 0%, 0.022);
 }

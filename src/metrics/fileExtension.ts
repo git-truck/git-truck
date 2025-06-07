@@ -1,4 +1,4 @@
-import type { GitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/shared/model"
 import { getColorFromExtension } from "./metricUtils"
 import type { MetricCache } from "./metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"

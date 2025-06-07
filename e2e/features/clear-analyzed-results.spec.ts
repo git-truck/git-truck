@@ -6,7 +6,7 @@ test("navigate to a repository", async ({ page }) => {
   // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Git Truck/)
   await page
-    .getByTitle("Do this if you are experiencing issues", {
+    .getByTitle("Click here if you are experiencing issues", {
       exact: true
     })
     .click()
