@@ -1,7 +1,7 @@
-import type { GitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/shared/model"
 import type { MetricCache } from "./metrics"
 import { SpectrumTranslater } from "./metricUtils"
-import { hslToHex } from "../util"
+import { hslToHex } from "../shared/util"
 import { noEntryColor } from "~/const"
 
 export class ContribAmountTranslater {

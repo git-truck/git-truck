@@ -1,22 +1,21 @@
 {
-  "include": ["remix.env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.vite.json" }
+  ],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2019"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "node",
-    "module": "CommonJS",
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "bundler",
+    "paths": { "~/*": ["./src/*"] },
+    "checkJs": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "target": "ES2019",
     "strict": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["src/*"]
-    },
     "noEmit": true,
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true
   }
 }
