@@ -3,6 +3,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --color-blue-primary: #5698e4;
+  --color-red-primary: #e05151;
+  --color-grey-primary: #efefef;
+
   --animate-hide-initially: 0s 1s linear forwards hide_initially;
   --animate-blink: 1s linear infinite blink;
   --animate-stroke-pulse: 1s ease-in-out infinite stroke_pulse;
@@ -79,7 +83,7 @@
   }
 
   &.btn--primary {
-    @apply border-blue-500 bg-blue-500 text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
+    @apply border-blue-primary bg-blue-primary text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
   }
 
   /* Small screens */
@@ -99,11 +103,11 @@
 
 @utility btn--primary {
   &.btn {
-    @apply border-blue-500 bg-blue-500 text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
+    @apply border-blue-primary bg-blue-primary text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
   }
 
   &.btn--icon {
-    @apply text-blue-500 dark:text-blue-600;
+    @apply text-blue-primary dark:text-blue-600;
   }
 
   /* Small screens */
@@ -111,7 +115,7 @@
 
 @utility btn--icon {
   &.btn--primary {
-    @apply text-blue-500 dark:text-blue-600;
+    @apply text-blue-primary dark:text-blue-600;
   }
   @apply inline-grid cursor-pointer place-items-center fill-current;
 

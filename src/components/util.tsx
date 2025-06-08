@@ -11,7 +11,7 @@ import { useData } from "~/contexts/DataContext"
 import { Link, useLocation, useSubmit } from "react-router"
 import { getPathFromRepoAndHead } from "~/shared/util"
 import { LoadingIndicator } from "./LoadingIndicator"
-import { ClearCacheForm } from "~/routes/clearCache"
+import { ClearCacheForm } from "~/routes/clear-cache"
 
 export const CloseButton = ({
   className = "",

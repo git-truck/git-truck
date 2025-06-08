@@ -17,7 +17,10 @@ export const loader = async ({ params }: Route.LoaderArgs) => {
   const args = await getArgs()
   const repositoryPath = path.resolve(args.path, repository)
 
-  invariant(existsSync(repositoryPath), `Repo ${repository} does not exist at path ${repositoryPath}`)
+  if (!existsSync(repositoryPath)) {
+    throw redirect("/")
+    // throw new Error(`Repo ${repository} does not exist at path ${repositoryPath}`)
+  }
   invariant(await GitCaller.isGitRepo(repositoryPath), `Repo ${repository} is not a git repo`)
 
   // Get checked out branch and redirect to it

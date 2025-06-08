@@ -1,6 +1,6 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Await, isRouteErrorResponse, useLoaderData, useRouteError, useLocation } from "react-router"
+import { Await, isRouteErrorResponse, useLoaderData, useRouteError, useLocation, Link } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
@@ -34,7 +34,7 @@ import { ErrorPage } from "~/components/util"
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/$repo.$"
-import { ClearCacheForm } from "./clearCache"
+import { ClearCacheForm } from "./clear-cache"
 
 export const loader = async ({ params, context }: Route.LoaderArgs) => ({
   dataPromise: analyze({ repo: params.repo, branch: params["*"] }),
@@ -324,8 +324,17 @@ export default function Repo() {
     <Suspense
       fallback={
         <div className="grid h-screen place-items-center">
-          Stuck? Try clearing the cache:
-          <LoadingIndicator loadingText={<ClearCacheForm redirectPath={pathname} />} />
+          <LoadingIndicator
+            showProgress
+            loadingText={
+              <div className="flex flex-col items-center gap-2">
+                Stuck? Try going back and clearing the cache:
+                <Link to="/clear-cache" className="btn btn--primary">
+                  Clear Cache
+                </Link>
+              </div>
+            }
+          />
         </div>
       }
     >

@@ -17,7 +17,7 @@ import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/_index"
-import { ClearCacheForm } from "./clearCache.tsx"
+import { ClearCacheForm } from "./clear-cache.tsx"
 
 export const loader = async () => {
   const queryPath = null
@@ -90,10 +90,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
 }
 
 export default function Index() {
-  const { repositories, baseDir, analyzedReposPromise, repositoryPromises } = useLoaderData<typeof loader>()
+  let { repositories, baseDir, analyzedReposPromise, repositoryPromises } = useLoaderData<typeof loader>()
   const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const fetcher = useFetcher<typeof action>()
-  const { pathname } = useLocation()
 
   return (
     <main className="m-auto flex min-h-screen w-full max-w-2xl flex-col gap-2 p-2">
@@ -106,7 +105,7 @@ export default function Index() {
           <p>
             Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
           </p>
-          <ClearCacheForm redirectPath={pathname} />
+          <ClearCacheForm />
           {/* <div className="flex w-full gap-2"> */}
           <div className="hidden w-full gap-2">
             <Form method="get" className="flex grow gap-1">
@@ -175,7 +174,9 @@ export default function Index() {
         </RepositoryList>
       ) : (
         <div className="card w-full place-items-center">
-          <LoadingIndicator loadingText="This looks empty... Try another folder" hideInitially={false} />
+          <h2 className="text-2xl font-bold">This looks empty...</h2>
+          <p>Try running Git Truck in another folder</p>
+          <LoadingIndicator />
         </div>
       )}
     </main>
@@ -213,7 +214,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
   const isError = repo.status === "Error"
 
   const [head, setHead] = useState(isSuccesful ? repo.currentHead : null)
-  const path = head ? getPathFromRepoAndHead(repo.name, head) : null
+  const path = head ? getPathFromRepoAndHead(repo.name, head) : repo.name
 
   const isFolder = repo.status === "Error" && repo.errorMessage === "Not a git repository"
   const isAnalyzed = analyzedRepos.find((rep) => rep.repo === repo.name && rep.branch === head)
@@ -294,7 +295,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
         <Link
           className="btn btn--primary btn--outlined transition-colors"
           title={`View ${repo.name}`}
-          aria-disabled={repo.status === "Error" || repo.status === "Loading"}
+          aria-disabled={repo.status === "Error"}
           // to={`/repo/?${new URLSearchParams({ path: repo.path ?? "", branch: head ?? "" }).toString()}`}
           to={path ?? ""}
           prefetch="none"
