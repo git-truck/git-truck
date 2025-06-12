@@ -10,15 +10,10 @@ import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
 import { allExceptFirst, dateFormatRelative, isBlob } from "../shared/util"
 import { LegendDot } from "./util"
+import { useMouse } from "~/hooks"
 
-interface TooltipProps {
-  hoveredObject: GitObject | null
-  x: number
-  y: number
-  w: number
-}
-
-export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipProps) {
+export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject: GitObject | null }) {
+  const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
