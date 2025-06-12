@@ -28,7 +28,7 @@ export function Breadcrumb() {
   }, [path, repo.name])
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="-m-2 flex items-center gap-1 overflow-x-auto p-2">
       {paths.length > 1
         ? paths.map(([name, p], i) => {
             if (p === "" || i === paths.length - 1)
@@ -49,13 +49,13 @@ export function Breadcrumb() {
               return (
                 <Fragment key={p}>
                   <button
-                    className="card flex flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
+                    className="card flex min-w-fit cursor-pointer flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
                     onClick={() => setPath(p)}
                   >
                     {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
                     {name}
                   </button>
-                  <Icon path={mdiChevronRight} size={1} />
+                  <Icon path={mdiChevronRight} size={1} className="min-w-fit" />
                 </Fragment>
               )
           })
