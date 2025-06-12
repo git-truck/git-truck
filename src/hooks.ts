@@ -1,14 +1,13 @@
-import type { Dispatch, MutableRefObject, SetStateAction } from "react"
+import type { Dispatch, RefObject, SetStateAction } from "react"
 import { useState, useEffect, useMemo, useCallback } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
+type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
 export function useComponentSize() {
   const { ref, width, height } = useCompSize()
-  const size: RefAndSize = useMemo(() => [ref, { width, height }], [ref, width, height])
+  const size: RefAndSize<HTMLDivElement> = useMemo(() => [ref, { width, height }], [ref, width, height])
   return size
 }
 
