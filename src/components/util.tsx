@@ -19,7 +19,7 @@ export const CloseButton = ({
   ...props
 }: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
   <button
-    className={clsx(className, "inline-grid text-lg leading-none hover:opacity-80", {
+    className={clsx(className, "btn--icon inline-grid text-lg leading-none hover:opacity-80", {
       "absolute top-2 right-2 z-10": absolute
     })}
     title="Close"

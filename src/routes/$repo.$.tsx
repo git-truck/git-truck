@@ -1,14 +1,13 @@
 import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Await, isRouteErrorResponse, useLoaderData, useRouteError, useLocation, Link } from "react-router"
+import { Await, isRouteErrorResponse, useLoaderData, useRouteError, Link } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
-import type { Dispatch, SetStateAction } from "react"
-import { Suspense, memo, useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, useEffect, useReducer, useState } from "react"
 import { Online } from "react-detect-offline"
 import { createPortal } from "react-dom"
-import { useMouse, useClient } from "~/hooks"
+import { useClient } from "~/hooks"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
@@ -34,7 +33,6 @@ import { ErrorPage } from "~/components/util"
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/$repo.$"
-import { ClearCacheForm } from "./clear-cache"
 
 export const loader = async ({ params, context }: Route.LoaderArgs) => ({
   dataPromise: analyze({ repo: params.repo, branch: params["*"] }),
@@ -286,40 +284,48 @@ export default function Repo() {
   const client = useClient()
   const { dataPromise, versionInfo } = useLoaderData<typeof loader>()
 
-  const { pathname } = useLocation()
-  const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
-  const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
+  const [{ leftExpanded, rightExpanded }, dispatch] = useReducer(
+    (prevState, action: "expandLeft" | "expandRight" | "toggleLeft" | "toggleRight" | "toggleBoth") => {
+      switch (action) {
+        case "expandLeft": {
+          return { leftExpanded: true, rightExpanded: prevState.rightExpanded }
+        }
+        case "expandRight": {
+          return { leftExpanded: prevState.leftExpanded, rightExpanded: true }
+        }
+
+        case "toggleLeft": {
+          return { leftExpanded: !prevState.leftExpanded, rightExpanded: prevState.rightExpanded }
+        }
+        case "toggleRight": {
+          return { leftExpanded: prevState.leftExpanded, rightExpanded: !prevState.rightExpanded }
+        }
+        case "toggleBoth": {
+          // If both panels are not expanded,
+          if (!prevState.leftExpanded && !prevState.rightExpanded) {
+            // then we expand both
+            return { leftExpanded: true, rightExpanded: true }
+          }
+          // Otherwise, one of them must be expanded, so we collapse both
+          return { leftExpanded: false, rightExpanded: false }
+        }
+      }
+    },
+    {
+      leftExpanded: true,
+      rightExpanded: true
+    }
+  )
+
+  const toggleLeft = () => dispatch("toggleLeft")
+  const toggleRight = () => dispatch("toggleRight")
+  const toggleBoth = () => dispatch("toggleBoth")
+
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
-  const containerClass = useMemo(
-    function getContainerClass() {
-      // The fullscreen overrides the collapses
-      if (isFullscreen) {
-        return "fullscreen"
-      }
-
-      // The classes for collapses
-      if (isLeftPanelCollapse && isRightPanelCollapse) {
-        return "both-collapse"
-      }
-
-      if (isLeftPanelCollapse) {
-        return "left-collapse"
-      }
-
-      if (isRightPanelCollapse) {
-        return "right-collapse"
-      }
-
-      // The default class is none
-      return ""
-    },
-    [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
-  )
-
+  const bothExpanded = leftExpanded && rightExpanded
   return (
     <Suspense
       fallback={
@@ -341,11 +347,26 @@ export default function Repo() {
       <Await resolve={dataPromise}>
         {(data) => (
           <Providers data={data as RepoData}>
-            <div className={cn("app-container", containerClass)}>
+            <div
+              className={cn(
+                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"_"right"] lg:h-screen lg:grid-cols-[0_1fr_0] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main_right"]`,
+                bothExpanded ? "grid-rows-[50vh_auto_auto]" : "grid-rows-[100vh_auto_auto]",
+                {
+                  "lg:grid-cols-[var(--side-panel-width)_1fr_var(--side-panel-width)]": bothExpanded,
+
+                  "lg:grid-cols-[0_1fr_var(--side-panel-width)]": rightExpanded && !leftExpanded,
+
+                  "lg:grid-cols-[var(--side-panel-width)_1fr_0]": leftExpanded && !rightExpanded
+                }
+              )}
+            >
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", { "overflow-y-auto": !isFullscreen })}
+                className={clsx(
+                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:left] lg:pr-0 lg:transition-transform",
+                  leftExpanded ? "overflow-y-auto" : "lg:-translate-x-[var(--side-panel-width)]"
+                )}
               >
-                {!isLeftPanelCollapse ? (
+                {leftExpanded ? (
                   <>
                     <GlobalInfo
                       installedVersion={versionInfo.installedVersion}
@@ -355,30 +376,48 @@ export default function Repo() {
                     <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
                   </>
                 ) : null}
-                {!isFullscreen ? (
-                  <div className={cn("absolute z-10 justify-self-end", { "left-0": isLeftPanelCollapse })}>
-                    <button
-                      type="button"
-                      onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
-                      className={clsx(
-                        "btn btn--primary absolute top-[50vh] left-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
-                        { "left-arrow-space": !isLeftPanelCollapse }
-                      )}
-                    >
-                      <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
-                    </button>
-                  </div>
-                ) : null}
               </aside>
-
-              <main className="grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden p-2">
+              <main
+                className={cn(
+                  "relative grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden p-2 [grid-area:main] lg:transition-transform"
+                )}
+              >
                 <header className="grid grid-flow-col items-center justify-between gap-2">
                   <Breadcrumb />
-                  <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
+                  <button className="card btn btn--primary p-1" onClick={toggleBoth} title="Toggle full view">
+                    <Icon path={bothExpanded ? mdiFullscreen : mdiFullscreenExit} size={1} />
+                  </button>
                 </header>
+                <>
+                  <button
+                    type="button"
+                    title="Collapse left panel"
+                    onClick={toggleLeft}
+                    className="btn--icon btn--primary card absolute top-1/2 left-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-r-full p-0 lg:flex"
+                  >
+                    <Icon path={leftExpanded ? mdiChevronLeft : mdiChevronRight} size={1} />
+                  </button>
+                  <button
+                    type="button"
+                    title="Collapse right panel"
+                    onClick={toggleRight}
+                    className="btn--icon btn--primary card absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-l-full p-0 lg:flex"
+                  >
+                    <Icon path={rightExpanded ? mdiChevronRight : mdiChevronLeft} size={1} />
+                  </button>
+                </>
                 {client ? (
                   <>
-                    <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+                    <div className="card grid overflow-hidden p-2">
+                      <Chart setHoveredObject={setHoveredObject} />
+                      {createPortal(<Tooltip hoveredObject={hoveredObject} />, document.body)}
+                      {!rightExpanded ? (
+                        <DetailsCard
+                          showUnionAuthorsModal={showUnionAuthorsModal}
+                          className="absolute top-2 right-2 z-0 max-h-screen w-[var(--side-panel-width)] overflow-y-auto shadow-sm shadow-black/50"
+                        />
+                      ) : null}
+                    </div>
                     <div className="flex flex-col">
                       <TimeSlider />
                       <BarChart />
@@ -390,28 +429,14 @@ export default function Repo() {
               </main>
 
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", { "overflow-y-auto": !isFullscreen })}
+                className={clsx(
+                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:right] lg:pl-0 lg:transition-transform",
+                  rightExpanded ? "overflow-y-auto" : "lg:translate-x-[var(--side-panel-width)]"
+                )}
               >
-                {!isFullscreen ? (
-                  <div className="absolute">
-                    <button
-                      type="button"
-                      onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                      className="btn btn--primary absolute top-[50vh] right-0 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
-                    >
-                      <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
-                    </button>
-                  </div>
-                ) : null}
-                {!isRightPanelCollapse && !isFullscreen ? (
+                {rightExpanded ? (
                   <>
-                    <DetailsCard
-                      showUnionAuthorsModal={showUnionAuthorsModal}
-                      className={clsx({
-                        "absolute right-2 bottom-0 max-h-screen -translate-x-full overflow-y-auto shadow-sm shadow-black/50":
-                          isFullscreen
-                      })}
-                    />
+                    <DetailsCard showUnionAuthorsModal={showUnionAuthorsModal} />
                     {data.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
                     <SearchCard />
                     <Online>
@@ -431,44 +456,5 @@ export default function Repo() {
         )}
       </Await>
     </Suspense>
-  )
-}
-
-const FullscreenButton = memo(function FullscreenButton({
-  setIsFullscreen,
-  isFullscreen
-}: {
-  setIsFullscreen: Dispatch<SetStateAction<boolean>>
-  isFullscreen: boolean
-}) {
-  return (
-    <button
-      className="card btn btn--primary p-1"
-      onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
-      title="Toggle full view"
-    >
-      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
-    </button>
-  )
-})
-
-function ChartWrapper({
-  hoveredObject,
-  setHoveredObject
-}: {
-  hoveredObject: GitObject | null
-  setHoveredObject: (obj: GitObject | null) => void
-}) {
-  const chartWrapperRef = useRef<HTMLDivElement>(null)
-  const mouse = useMouse()
-
-  return (
-    <div className="card grid overflow-y-hidden p-2" ref={chartWrapperRef}>
-      <Chart setHoveredObject={setHoveredObject} />
-      {createPortal(
-        <Tooltip hoveredObject={hoveredObject} x={mouse.x} y={mouse.y} w={window.innerWidth} />,
-        document.body
-      )}
-    </div>
   )
 }
