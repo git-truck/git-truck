@@ -6,8 +6,8 @@ import { resolve } from "path"
 import randomstring from "randomstring"
 import { Suspense, useEffect, useReducer, useState } from "react"
 import { Online } from "react-detect-offline"
-import { createPortal } from "react-dom"
-import { useClient } from "~/hooks"
+import { createPortal, flushSync } from "react-dom"
+import { useClient, useFullscreen } from "~/hooks"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
@@ -282,32 +282,23 @@ async function analyze({ repo, branch }: { repo: string; branch: string }) {
 
 export default function Repo() {
   const client = useClient()
+  const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)
   const { dataPromise, versionInfo } = useLoaderData<typeof loader>()
 
   const [{ leftExpanded, rightExpanded }, dispatch] = useReducer(
-    (prevState, action: "expandLeft" | "expandRight" | "toggleLeft" | "toggleRight" | "toggleBoth") => {
+    (prevState, action: "toggleLeft" | "toggleRight" | "collapseBoth" | "expandBoth") => {
       switch (action) {
-        case "expandLeft": {
-          return { leftExpanded: true, rightExpanded: prevState.rightExpanded }
+        case "collapseBoth": {
+          return { leftExpanded: false, rightExpanded: false }
         }
-        case "expandRight": {
-          return { leftExpanded: prevState.leftExpanded, rightExpanded: true }
+        case "expandBoth": {
+          return { leftExpanded: true, rightExpanded: true }
         }
-
         case "toggleLeft": {
           return { leftExpanded: !prevState.leftExpanded, rightExpanded: prevState.rightExpanded }
         }
         case "toggleRight": {
           return { leftExpanded: prevState.leftExpanded, rightExpanded: !prevState.rightExpanded }
-        }
-        case "toggleBoth": {
-          // If both panels are not expanded,
-          if (!prevState.leftExpanded && !prevState.rightExpanded) {
-            // then we expand both
-            return { leftExpanded: true, rightExpanded: true }
-          }
-          // Otherwise, one of them must be expanded, so we collapse both
-          return { leftExpanded: false, rightExpanded: false }
         }
       }
     },
@@ -319,7 +310,8 @@ export default function Repo() {
 
   const toggleLeft = () => dispatch("toggleLeft")
   const toggleRight = () => dispatch("toggleRight")
-  const toggleBoth = () => dispatch("toggleBoth")
+  const collapseBoth = () => dispatch("collapseBoth")
+  const expandBoth = () => dispatch("expandBoth")
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
@@ -384,8 +376,17 @@ export default function Repo() {
               >
                 <header className="grid grid-flow-col items-center justify-between gap-2">
                   <Breadcrumb />
-                  <button className="card btn btn--primary p-1" onClick={toggleBoth} title="Toggle full view">
-                    <Icon path={bothExpanded ? mdiFullscreen : mdiFullscreenExit} size={1} />
+                  <button
+                    className="card btn btn--primary p-1"
+                    onClick={() =>
+                      flushSync(() => {
+                        toggleFullscreen()
+                        isFullscreen ? expandBoth() : collapseBoth()
+                      })
+                    }
+                    title="Toggle full view"
+                  >
+                    <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
                   </button>
                 </header>
                 <>

@@ -1,7 +1,8 @@
 import type { Dispatch, RefObject, SetStateAction } from "react"
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
+import { promiseHelper } from "./shared/util"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
@@ -81,4 +82,34 @@ export function useMouse() {
     return () => window.removeEventListener("mousemove", listener)
   }, [])
   return mouse
+}
+
+export function useFullscreen<T extends Element>(getElement: () => T | RefObject<T>) {
+  const isFullscreen = useSyncExternalStore(
+    (handler) => {
+      document.addEventListener("fullscreenchange", handler)
+      return () => {
+        document.removeEventListener("fullscreenchange", handler)
+      }
+    },
+    () => Boolean(document.fullscreenElement),
+    () => false
+  )
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      const element = getElement()
+      if (element instanceof Element) {
+        void promiseHelper(document.documentElement.requestFullscreen())
+      } else {
+        void promiseHelper(element.current.requestFullscreen())
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    }
+  }
+
+  return { isFullscreen, toggleFullscreen } as const
 }
