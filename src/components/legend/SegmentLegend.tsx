@@ -1,8 +1,8 @@
-import type { GitBlobObject } from "~/analyzer/model"
+import type { GitBlobObject } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
-import { isBlob } from "~/util"
+import { isBlob } from "~/shared/util"
 
 export type SegmentLegendData = [
   steps: number,

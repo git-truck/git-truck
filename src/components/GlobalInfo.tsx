@@ -1,21 +1,21 @@
-import { Form, Link, useLocation, useNavigate, useNavigation } from "@remix-run/react"
-import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/util"
+import { Form, Link, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router"
+import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/shared/util"
 import { useData } from "../contexts/DataContext"
 import { memo, useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { mdiRefresh, mdiArrowTopLeft, mdiInformation, mdiArrowUpBoldCircleOutline, mdiFlaskOutline } from "@mdi/js"
 import { CloseButton, Code } from "./util"
-import { Icon } from "@mdi/react"
+import Icon from "@mdi/react"
 import { useClient } from "~/hooks"
 import clsx from "clsx"
-import { ArrowContainer, Popover } from "react-tiny-popover"
+import { ArrowContainer, Popover, type PopoverState } from "react-tiny-popover"
 import { CollapsableSettings } from "./Settings"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
 const UpdateNotifier = memo(function UpdateNotifier() {
-  const { gitTruckInfo } = useData()
+  const { gitTruckInfo } = useLoaderData()
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const isExperimental = gitTruckInfo.version.includes("0.0.0")
 
@@ -23,7 +23,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
     <Popover
       isOpen={isPopoverOpen}
       positions={["right", "bottom", "left", "top"]} // preferred positions by priority
-      content={({ position, childRect, popoverRect }) => (
+      content={({ position, childRect, popoverRect }: PopoverState) => (
         <ArrowContainer
           position={position}
           childRect={childRect}
@@ -32,7 +32,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
           arrowColor="white"
         >
           {isExperimental ? (
-            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
               <p>You are using an experimental build of Git Truck</p>
               <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
               <p className="card-p">
@@ -41,7 +41,7 @@ const UpdateNotifier = memo(function UpdateNotifier() {
               </p>
             </div>
           ) : (
-            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur dark:bg-gray-800/40">
+            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
               <p>Update available: {gitTruckInfo.latestVersion}</p>
               <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
               <p className="card-p">
@@ -85,9 +85,15 @@ const UpdateNotifier = memo(function UpdateNotifier() {
   )
 })
 
-export const GlobalInfo = memo(function GlobalInfo() {
+export function GlobalInfo({
+  installedVersion,
+  latestVersion
+}: {
+  installedVersion: string
+  latestVersion: string | null
+}) {
   const client = useClient()
-  const { databaseInfo, repo, gitTruckInfo } = useData()
+  const { databaseInfo, repo } = useData()
   const transitionState = useNavigation()
 
   const location = useLocation()
@@ -110,8 +116,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
     }
   }, [transitionState.state])
   const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
-  const updateAvailable =
-    gitTruckInfo.latestVersion && semverCompare(gitTruckInfo.latestVersion, gitTruckInfo.version) === 1
+  const updateAvailable = latestVersion && semverCompare(latestVersion, installedVersion) === 1
   return (
     <div className="flex flex-col gap-2">
       <div className="card">
@@ -125,7 +130,7 @@ export const GlobalInfo = memo(function GlobalInfo() {
               <Icon path={mdiInformation} size="1.5em" />
             </button>
             <div
-              className={clsx("card absolute left-0 top-0 z-10 h-max w-max shadow transition-opacity", {
+              className={clsx("card absolute top-0 left-0 z-10 h-max w-max shadow-sm transition-opacity", {
                 "hidden opacity-0": !analysisDetailsVisible
               })}
             >
@@ -195,4 +200,4 @@ export const GlobalInfo = memo(function GlobalInfo() {
       </div>
     </div>
   )
-})
+}

@@ -1,5 +1,6 @@
+import { it, expect, describe } from "vitest"
 import { getCoAuthors } from "./coauthors.server"
-import type { Person } from "./model"
+import type { Person } from "../shared/model"
 
 describe("getCoAuthors", () => {
   it("should return an empty array when there are no co-authors", () => {

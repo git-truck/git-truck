@@ -1,11 +1,11 @@
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Form, useNavigation } from "@remix-run/react"
+import { Form, useNavigation } from "react-router"
 import { useState } from "react"
-import { Slider, Rail, Handles, Tracks, Ticks, SliderItem } from "react-compound-slider"
+import { Slider, Rail, Handles, Tracks, Ticks, type SliderItem } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { getPathFromRepoAndHead } from "~/util"
+import { getPathFromRepoAndHead } from "~/shared/util"
 import { Handle, Track } from "./sliderUtils"
 import { noEntryColor } from "~/const"
 
@@ -92,7 +92,6 @@ function PercentageSlider() {
         domain={domain}
         rootStyle={sliderStyle}
         onChange={(e) => {
-          console.log(e)
           setDominantAuthorCutoff(e[0])
           setDisplayPercentage(e[0])
         }}

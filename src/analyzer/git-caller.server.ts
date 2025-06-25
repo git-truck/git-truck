@@ -1,19 +1,24 @@
 import { log } from "./log.server"
-import { describeAsyncJob, getBaseDirFromPath, getDirName, promiseHelper, runProcess } from "./util.server"
+import { describeAsyncJob, runProcess } from "../shared/util.server"
+import { promiseHelper } from "~/shared/util"
+import { getBaseDirFromPath } from "~/shared/util.server"
+import { getDirName } from "~/shared/util.server"
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
-import type { AnalyzerData, GitRefs, Repository } from "./model"
-import { AnalyzerDataInterfaceVersion } from "./model"
-import { branchCompare, semverCompare } from "~/util"
+import type { AnalyzerData, GitRefs, Repository } from "../shared/model"
+import { AnalyzerDataInterfaceVersion } from "../shared/model"
+import { branchCompare, semverCompare } from "../shared/util"
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
 
-export enum ANALYZER_CACHE_MISS_REASONS {
-  OTHER_REPO = "The cache was not created for this repo",
-  NOT_CACHED = "No cache was found",
-  BRANCH_HEAD_CHANGED = "Branch head changed",
-  DATA_VERSION_MISMATCH = "Outdated cache"
+const ANALYZER_CACHE_MISS_REASONS = {
+  OTHER_REPO: "The cache was not created for this repo",
+  NOT_CACHED: "No cache was found",
+  BRANCH_HEAD_CHANGED: "Branch head changed",
+  DATA_VERSION_MISMATCH: "Outdated cache"
 }
+
+export type ANALYZER_CACHE_MISS_REASONS = (typeof ANALYZER_CACHE_MISS_REASONS)[keyof typeof ANALYZER_CACHE_MISS_REASONS]
 
 export class GitCaller {
   private useCache = true
@@ -62,7 +67,7 @@ export class GitCaller {
     // Find file containing the branch head
 
     const branchHead = await GitCaller._revParse(gitFolder, branch)
-    log.debug(`${branch} -> [commit]${branchHead}`)
+    log.debug(`${branch} -> [commit] ${branchHead}`)
 
     return [branchHead, branch]
   }

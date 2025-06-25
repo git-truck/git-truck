@@ -27,7 +27,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm install
+        run: rm package-lock.json && npm install
 
       - name: Run unit tests
         run: npm run test:unit

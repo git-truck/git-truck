@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react"
 import { createContext, useContext } from "react"
-import type { GitObject } from "~/analyzer/model"
+import type { GitObject } from "~/shared/model"
 
 export type SearchResults = Record<string, GitObject>
 
