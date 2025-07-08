@@ -1,9 +1,8 @@
-import { useFetcher, useLocation } from "@remix-run/react"
+import { useFetcher, useLocation } from "react-router"
 import clsx from "clsx"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, type ReactNode } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import anitruck from "~/assets/truck.gif"
-import { cn } from "~/styling"
 
 export type ProgressData = {
   progress: number
@@ -12,11 +11,11 @@ export type ProgressData = {
 
 export function LoadingIndicator({
   className = "",
-  hideInitially = true,
+  showProgress = false,
   loadingText
 }: {
-  loadingText?: string
-  hideInitially?: boolean
+  loadingText?: ReactNode
+  showProgress?: boolean
   className?: string
 }) {
   const location = useLocation()
@@ -28,19 +27,34 @@ export function LoadingIndicator({
     }
   }, [fetcher, fetcher.state, location.pathname])
 
-  const progressText = useMemo(() => {
-    if (!fetcher.data) return "Starting analysis"
+  const [progressText, progress] = useMemo<[string, number]>(() => {
+    if (!fetcher.data) return ["Starting analysis", 0]
     const { progress, analyzationStatus } = fetcher.data
-    if (!analyzationStatus || analyzationStatus === "Starting") return "Starting analysis"
-    if (analyzationStatus === "GeneratingChart") return "Generating chart"
-    return "Analyzing commits: " + progress + "% done"
+    console.log(analyzationStatus)
+    switch (analyzationStatus) {
+      case "Starting":
+        return ["Starting analysis", 0]
+      case "GeneratingChart":
+        return ["Generating chart", 100]
+      default:
+        return ["Analyzing commits", progress]
+    }
   }, [fetcher.data])
 
   return (
     <div className={clsx("grid h-full w-full place-items-center", className)}>
-      <div className={cn("flex  flex-col px-2 py-2", { "animate-hide-initially opacity-0": hideInitially })}>
-        <p className="text-center text-3xl font-bold opacity-70">{loadingText ?? progressText}</p>
-        <img src={anitruck} alt={"🚛"} className="w-full min-w-0 max-w-sm self-center" />
+      <div className="flex flex-col gap-6 px-2 py-2">
+        {showProgress ? <p className="text-center text-3xl font-bold opacity-70">{progressText}</p> : null}
+        {showProgress ? (
+          <div className="grid overflow-hidden rounded-2xl bg-gray-300">
+            <div
+              className="bg-blue-primary h-6 rounded-2xl px-4 transition-[width]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        ) : null}
+        <img src={anitruck} alt={"🚛"} className="w-full max-w-sm min-w-0 self-center" />
+        {loadingText ? <p className="text-center font-bold opacity-70">{loadingText}</p> : null}
       </div>
     </div>
   )

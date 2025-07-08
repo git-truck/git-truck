@@ -1,24 +1,19 @@
 /* eslint-disable no-case-declarations */
+import { mdiFolder, mdiMenuRight } from "@mdi/js"
+import Icon from "@mdi/react"
 import { Fragment, memo, useMemo, useRef } from "react"
-import type { GitBlobObject, GitObject } from "~/analyzer/model"
+import type { GitBlobObject, GitObject } from "~/shared/model"
+import { useData } from "~/contexts/DataContext"
+import type { DatabaseInfo } from "~/shared/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob } from "../util"
+import { allExceptFirst, dateFormatRelative, isBlob } from "../shared/util"
 import { LegendDot } from "./util"
-import { mdiFolder, mdiMenuRight } from "@mdi/js"
-import Icon from "@mdi/react"
-import { useData } from "~/contexts/DataContext"
-import type { DatabaseInfo } from "~/routes/$repo.$"
+import { useMouse } from "~/hooks"
 
-interface TooltipProps {
-  hoveredObject: GitObject | null
-  x: number
-  y: number
-  w: number
-}
-
-export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipProps) {
+export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject: GitObject | null }) {
+  const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
@@ -40,7 +35,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject, x, y }: TooltipPro
 
   return (
     <div
-      className={`card absolute left-0 top-0 z-50 flex w-max flex-row place-items-center rounded-full bg-gray-100/50 py-0 pl-1 pr-2 backdrop-blur will-change-transform dark:bg-gray-800/40 ${
+      className={`card absolute top-0 left-0 z-50 flex w-max flex-row place-items-center rounded-full bg-gray-100/50 py-0 pr-2 pl-1 backdrop-blur will-change-transform dark:bg-gray-800/40 ${
         visible ? "visible" : "hidden"
       }`}
       ref={tooltipRef}

@@ -38,7 +38,7 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
         <PointLegendFragment show={true} items={items.slice(0, legendCutoff)} />
         <PointLegendFragment show={!collapse} items={items.slice(legendCutoff)} />
         <PointLegendOther show={collapse} items={items.slice(legendCutoff)} toggle={() => setCollapse(!collapse)} />
-        <ChevronButton className="absolute bottom-2 right-2" open={!collapse} onClick={() => setCollapse(!collapse)} />
+        <ChevronButton className="absolute right-2 bottom-2" open={!collapse} onClick={() => setCollapse(!collapse)} />
       </>
     )
   }

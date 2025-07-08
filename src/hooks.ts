@@ -1,14 +1,14 @@
-import type { MutableRefObject } from "react"
-import { useState, useEffect, useMemo } from "react"
+import type { Dispatch, RefObject, SetStateAction } from "react"
+import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
-import { useComponentSize as useCompSize } from "react-use-size"
+import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
+import { promiseHelper } from "./shared/util"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RefAndSize = [MutableRefObject<any>, { width: number; height: number }]
+type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
 export function useComponentSize() {
   const { ref, width, height } = useCompSize()
-  const size: RefAndSize = useMemo(() => [ref, { width, height }], [ref, width, height])
+  const size: RefAndSize<HTMLDivElement> = useMemo(() => [ref, { width, height }], [ref, width, height])
   return size
 }
 
@@ -30,4 +30,86 @@ export function useMediaQuery(query: string) {
     return () => mediaQuery.removeEventListener("change", listener)
   }, [query])
   return matches
+}
+
+export function useLocalStorage<T>(key: string, initialValue: T | undefined = undefined) {
+  const [storedValue, setStoredValue] = useState<T | undefined>(undefined)
+
+  useEffect(() => {
+    try {
+      const item = window.localStorage.getItem(key)
+      setStoredValue(item ? JSON.parse(item) : initialValue)
+    } catch (error) {
+      console.error(error)
+    }
+  }, [key, initialValue])
+
+  const setValue: Dispatch<SetStateAction<T | undefined>> = useCallback(
+    (value) => {
+      try {
+        const valueToStore = value instanceof Function ? value(storedValue) : value
+        setStoredValue(valueToStore)
+        window.localStorage.setItem(key, JSON.stringify(valueToStore))
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    [key, storedValue]
+  )
+
+  return [storedValue, setValue] as const
+}
+
+export function useKey(key: string, callback: () => void) {
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === key) {
+        callback()
+      }
+    }
+    window.addEventListener("keydown", listener)
+    return () => window.removeEventListener("keydown", listener)
+  }, [key, callback])
+}
+
+export function useMouse() {
+  const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  useEffect(() => {
+    const listener = (event: MouseEvent) => {
+      setMouse({ x: event.clientX, y: event.clientY })
+    }
+    window.addEventListener("mousemove", listener)
+    return () => window.removeEventListener("mousemove", listener)
+  }, [])
+  return mouse
+}
+
+export function useFullscreen<T extends Element>(getElement: () => T | RefObject<T>) {
+  const isFullscreen = useSyncExternalStore(
+    (handler) => {
+      document.addEventListener("fullscreenchange", handler)
+      return () => {
+        document.removeEventListener("fullscreenchange", handler)
+      }
+    },
+    () => Boolean(document.fullscreenElement),
+    () => false
+  )
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      const element = getElement()
+      if (element instanceof Element) {
+        void promiseHelper(document.documentElement.requestFullscreen())
+      } else {
+        void promiseHelper(element.current.requestFullscreen())
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    }
+  }
+
+  return { isFullscreen, toggleFullscreen } as const
 }

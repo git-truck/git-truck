@@ -1,11 +1,12 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { log, setLogLevel } from "./log.server"
 
 describe("log methods array argument concatenation", () => {
   setLogLevel("DEBUG")
-  const consoleError = jest.spyOn(console, "error").mockImplementation(jest.fn())
-  const consoleWarn = jest.spyOn(console, "warn").mockImplementation(jest.fn())
-  const consoleInfo = jest.spyOn(console, "info").mockImplementation(jest.fn())
-  const consoleDebug = jest.spyOn(console, "debug").mockImplementation(jest.fn())
+  const consoleError = vi.spyOn(console, "error").mockImplementation(vi.fn())
+  const consoleWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn())
+  const consoleInfo = vi.spyOn(console, "info").mockImplementation(vi.fn())
+  const consoleDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn())
 
   beforeEach(() => {
     consoleDebug.mockClear()

@@ -10,21 +10,19 @@ import type {
   FileModification,
   RenameInterval,
   FullCommitDTO
-} from "./model"
+} from "../shared/model"
 import { log } from "./log.server"
-import { analyzeRenamedFile } from "./util.server"
-import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "./constants"
+import { analyzeRenamedFile } from "~/shared/util"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants"
 import { cpus, freemem, totalmem } from "node:os"
-import { RepoData } from "~/routes/$repo.$"
-import { InvocationReason } from "./RefreshPolicy"
+import type { RepoData } from "~/shared/model"
+import type { InvocationReason } from "../shared/RefreshPolicy"
 import InstanceManager from "./InstanceManager.server"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
 export default class ServerInstance {
   public analyzationStatus: AnalyzationStatus = "Starting"
-  private repoSanitized: string
-  private branchSanitized: string
   public gitCaller: GitCaller
   public db: DB
   public progress = [0]
@@ -39,8 +37,6 @@ export default class ServerInstance {
     public branch: string,
     public repoPath: string
   ) {
-    this.repoSanitized = repo.replace(/\W/g, "_")
-    this.branchSanitized = branch.replace(/\W/g, "_")
     this.gitCaller = new GitCaller(repo, branch, repoPath)
     this.db = new DB(repo, branch)
   }

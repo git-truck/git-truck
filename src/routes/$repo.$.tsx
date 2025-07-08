@@ -1,94 +1,45 @@
+import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
+import Icon from "@mdi/react"
+import { Await, isRouteErrorResponse, useLoaderData, useRouteError, Link } from "react-router"
+import clsx from "clsx"
 import { resolve } from "path"
-import type { Dispatch, SetStateAction } from "react"
-import { memo, Suspense, useEffect, useMemo, useRef, useState } from "react"
-import { useBoolean, useMouse } from "react-use"
-import { ActionFunction, LoaderFunctionArgs, defer, redirect } from "@remix-run/node"
-import { Link, isRouteErrorResponse, useRouteError, useLoaderData, Await, Params } from "@remix-run/react"
-import { getArgs } from "~/analyzer/args.server"
+import randomstring from "randomstring"
+import { Suspense, useEffect, useReducer, useState } from "react"
+import { Online } from "react-detect-offline"
+import { createPortal, flushSync } from "react-dom"
+import { useClient, useFullscreen } from "~/hooks"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import type { CompletedResult, GitObject, GitTreeObject, Repository } from "~/analyzer/model"
-import { getGitTruckInfo, openFile } from "~/analyzer/util.server"
+import InstanceManager from "~/analyzer/InstanceManager.server"
+import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
+import { shouldUpdate } from "~/shared/RefreshPolicy"
+import { getArgs, openFile } from "~/shared/util.server"
+import BarChart from "~/components/BarChart"
+import { Breadcrumb } from "~/components/Breadcrumb"
+import { Chart } from "~/components/Chart"
 import { DetailsCard } from "~/components/DetailsCard"
+import { FeedbackCard } from "~/components/FeedbackCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
+import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
-import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { Code } from "~/components/util"
-import { mdiFullscreen, mdiFullscreenExit, mdiChevronRight, mdiChevronLeft } from "@mdi/js"
-import { Breadcrumb } from "~/components/Breadcrumb"
-import { FeedbackCard } from "~/components/FeedbackCard"
-import { Chart } from "~/components/Chart"
-import { Icon } from "@mdi/react"
-import { useClient } from "~/hooks"
-import clsx from "clsx"
-import { Tooltip } from "~/components/Tooltip"
-import { createPortal } from "react-dom"
-import randomstring from "randomstring"
-import InstanceManager from "~/analyzer/InstanceManager.server"
 import TimeSlider from "~/components/TimeSlider"
-import { Online } from "react-detect-offline"
+import { Tooltip } from "~/components/Tooltip"
+import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
+import { ErrorPage } from "~/components/util"
+
 import { cn } from "~/styling"
-import BarChart from "~/components/BarChart"
-import { shouldUpdate } from "~/analyzer/RefreshPolicy"
-import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { log } from "~/analyzer/log.server"
+import type { Route } from "./+types/$repo.$"
 
-export interface RepoData {
-  repo: Repository
-  gitTruckInfo: {
-    version: string
-    latestVersion: string | null
-  }
-  databaseInfo: DatabaseInfo
-}
+export const loader = async ({ params, context }: Route.LoaderArgs) => ({
+  dataPromise: analyze({ repo: params.repo, branch: params["*"] }),
+  versionInfo: context
+})
 
-export interface DatabaseInfo {
-  dominantAuthors: Record<string, { author: string; contribcount: number }>
-  commitCounts: Record<string, number>
-  lastChanged: Record<string, number>
-  authorCounts: Record<string, number>
-  maxCommitCount: number
-  minCommitCount: number
-  newestChangeDate: number
-  oldestChangeDate: number
-  authors: string[]
-  authorUnions: string[][]
-  fileTree: GitTreeObject
-  hiddenFiles: string[]
-  lastRunInfo: {
-    time: number
-    hash: string
-  }
-  fileCount: number
-  repo: string
-  branch: string
-  timerange: [number, number]
-  colorSeed: string | null
-  authorColors: Record<string, `#${string}`>
-  commitCountPerDay: { date: string; count: number }[]
-  selectedRange: [number, number]
-  analyzedRepos: CompletedResult[]
-  contribSumPerFile: Record<string, number>
-  maxMinContribCounts: { max: number; min: number }
-  commitCount: number
-}
-
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params["repo"] || !params["*"]) {
-    return redirect("/")
-  }
-  const dataPromise = analyze(params)
-  return defer({ dataPromise })
-}
-
-export const action: ActionFunction = async ({ request, params }) => {
-  if (!params["repo"]) {
-    throw Error("This can never happen, since this route is only called if a repo exists in the URL")
-  }
-
+export const action = async ({ request, params: { repo, "*": branch } }: Route.ActionArgs) => {
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const unignore = formData.get("unignore")
@@ -101,8 +52,8 @@ export const action: ActionFunction = async ({ request, params }) => {
   const authorcolor = formData.get("authorcolor")
 
   const args = await getArgs()
-  const path = resolve(args.path, params["repo"])
-  const instance = InstanceManager.getOrCreateInstance(params["repo"], params["*"] ?? "", path) // TODO fix the branch and check path works
+  const path = resolve(args.path, repo)
+  const instance = InstanceManager.getOrCreateInstance(repo, branch, path) // TODO fix the branch and check path works
   instance.prevInvokeReason = "unknown"
   if (refresh) {
     instance.prevInvokeReason = "refresh"
@@ -179,23 +130,7 @@ export const ErrorBoundary = () => {
   }, [error])
 
   if (isRouteErrorResponse(error)) {
-    return (
-      <div className="app-container">
-        <div />
-        <div className="card">
-          <h1>An error occured!</h1>
-          <p>See console for more infomation.</p>
-          <p>Message: {error.data.message}</p>
-          <Code>{error.data.message}</Code>
-          <div>
-            <Link to=".">Retry</Link>
-          </div>
-          <div>
-            <Link to="..">Go back</Link>
-          </div>
-        </div>
-      </div>
-    )
+    return <ErrorPage errorMessage={error.data.message} />
   }
 
   let errorMessage = "Unknown error"
@@ -205,40 +140,24 @@ export const ErrorBoundary = () => {
     errorMessage = error.message
   }
 
-  return (
-    <div className="app-container">
-      <div />
-      <div className="card">
-        <h1>An error occured!</h1>
-        <p>See console for more infomation.</p>
-        <Code>{errorMessage}</Code>
-        <div>
-          <Link to=".">Retry</Link>
-        </div>
-        <div>
-          <Link to="..">Go back</Link>
-        </div>
-      </div>
-    </div>
-  )
+  return <ErrorPage errorMessage={errorMessage} />
 }
 
-async function analyze(params: Params) {
+async function analyze({ repo, branch }: { repo: string; branch: string }) {
   const args = await getArgs()
-  const path = resolve(args.path, params["repo"] ?? "")
-  const branch = params["*"]
-  const repoName = params["repo"]
+  const path = resolve(args.path, repo)
   const isRepo = await GitCaller.isGitRepo(path)
   if (!isRepo) throw new Error(`No repo found at ${path}`)
-  if (!repoName || !branch) throw new Error(`Invalid repo and branch: ${repoName} ${branch}`)
   const isValidRevision = await GitCaller.isValidRevision(branch, path)
-  if (!isValidRevision)
+  if (!isValidRevision) {
     throw new Error(
-      `Invalid revision of repo ${params["repo"]}: ${branch}\nIf it is a remote branch, make sure it is pulled locally`
+      `Invalid revision of repo ${repo}: ${branch}\nIf ${branch} is a remote branch, make sure it is pulled locally`
     )
+  }
 
-  const instance = InstanceManager.getOrCreateInstance(repoName, branch, path)
+  const instance = InstanceManager.getOrCreateInstance(repo, branch, path)
   // to avoid double identical fetch at first load, which it does for some reason
+  // TODO: Fix this. This is due to react strict mode
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
     return instance.prevResult
   }
@@ -247,9 +166,9 @@ async function analyze(params: Params) {
   const timerange = await instance.db.getOverallTimeRange()
   const selectedRange = instance.db.selectedRange
 
-  const repo = await GitCaller.getRepoMetadata(path)
+  const repositoryMetadata = await GitCaller.getRepoMetadata(path)
 
-  if (!repo) {
+  if (!repositoryMetadata) {
     throw Error("Error loading repo")
   }
 
@@ -356,105 +275,150 @@ async function analyze(params: Params) {
     commitCount
   }
 
-  const fullData = {
-    repo,
-    gitTruckInfo: await getGitTruckInfo(),
-    databaseInfo: databaseInfo
-  } as RepoData
+  const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
 
   return fullData
 }
 
 export default function Repo() {
   const client = useClient()
-  const { dataPromise } = useLoaderData<typeof loader>()
-  const [isLeftPanelCollapse, setIsLeftPanelCollapse] = useState<boolean>(false)
-  const [isRightPanelCollapse, setIsRightPanelCollapse] = useState<boolean>(false)
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
-  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useBoolean(false)
+  const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)
+  const { dataPromise, versionInfo } = useLoaderData<typeof loader>()
+
+  const [{ leftExpanded, rightExpanded }, dispatch] = useReducer(
+    (prevState, action: "toggleLeft" | "toggleRight" | "collapseBoth" | "expandBoth") => {
+      switch (action) {
+        case "collapseBoth": {
+          return { leftExpanded: false, rightExpanded: false }
+        }
+        case "expandBoth": {
+          return { leftExpanded: true, rightExpanded: true }
+        }
+        case "toggleLeft": {
+          return { leftExpanded: !prevState.leftExpanded, rightExpanded: prevState.rightExpanded }
+        }
+        case "toggleRight": {
+          return { leftExpanded: prevState.leftExpanded, rightExpanded: !prevState.rightExpanded }
+        }
+      }
+    },
+    {
+      leftExpanded: true,
+      rightExpanded: true
+    }
+  )
+
+  const toggleLeft = () => dispatch("toggleLeft")
+  const toggleRight = () => dispatch("toggleRight")
+  const collapseBoth = () => dispatch("collapseBoth")
+  const expandBoth = () => dispatch("expandBoth")
+
+  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
-  const containerClass = useMemo(
-    function getContainerClass() {
-      // The fullscreen overrides the collapses
-      if (isFullscreen) {
-        return "fullscreen"
-      }
-
-      // The classes for collapses
-      if (isLeftPanelCollapse && isRightPanelCollapse) {
-        return "both-collapse"
-      }
-
-      if (isLeftPanelCollapse) {
-        return "left-collapse"
-      }
-
-      if (isRightPanelCollapse) {
-        return "right-collapse"
-      }
-
-      // The default class is none
-      return ""
-    },
-    [isFullscreen, isLeftPanelCollapse, isRightPanelCollapse]
-  )
-
+  const bothExpanded = leftExpanded && rightExpanded
   return (
     <Suspense
       fallback={
         <div className="grid h-screen place-items-center">
-          <LoadingIndicator />
+          <LoadingIndicator
+            showProgress
+            loadingText={
+              <div className="flex flex-col items-center gap-2">
+                Stuck? Try going back and clearing the cache:
+                <Link to="/clear-cache" className="btn btn--primary">
+                  Clear Cache
+                </Link>
+              </div>
+            }
+          />
         </div>
       }
     >
       <Await resolve={dataPromise}>
-        {(dataPromise) => (
-          <Providers data={dataPromise as RepoData}>
-            <div className={cn("app-container", containerClass)}>
+        {(data) => (
+          <Providers data={data as RepoData}>
+            <div
+              className={cn(
+                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"_"right"] lg:h-screen lg:grid-cols-[0_1fr_0] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main_right"]`,
+                bothExpanded ? "grid-rows-[50vh_auto_auto]" : "grid-rows-[100vh_auto_auto]",
+                {
+                  "lg:grid-cols-[var(--side-panel-width)_1fr_var(--side-panel-width)]": bothExpanded,
+
+                  "lg:grid-cols-[0_1fr_var(--side-panel-width)]": rightExpanded && !leftExpanded,
+
+                  "lg:grid-cols-[var(--side-panel-width)_1fr_0]": leftExpanded && !rightExpanded
+                }
+              )}
+            >
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pr-0", {
-                  "overflow-y-auto": !isFullscreen
-                })}
+                className={clsx(
+                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:left] lg:pr-0 lg:transition-transform",
+                  leftExpanded ? "overflow-y-auto" : "lg:-translate-x-[var(--side-panel-width)]"
+                )}
               >
-                {!isLeftPanelCollapse ? (
+                {leftExpanded ? (
                   <>
-                    <GlobalInfo />
+                    <GlobalInfo
+                      installedVersion={versionInfo.installedVersion}
+                      latestVersion={versionInfo.latestVersion}
+                    />
                     <Options />
                     <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
                   </>
                 ) : null}
-                {!isFullscreen ? (
-                  <div
-                    className={cn("absolute z-10 justify-self-end", {
-                      "left-0": isLeftPanelCollapse
-                    })}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setIsLeftPanelCollapse(!isLeftPanelCollapse)}
-                      className={clsx(
-                        "btn btn--primary absolute left-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0",
-                        {
-                          "left-arrow-space": !isLeftPanelCollapse
-                        }
-                      )}
-                    >
-                      <Icon path={isLeftPanelCollapse ? mdiChevronRight : mdiChevronLeft} size={1} />
-                    </button>
-                  </div>
-                ) : null}
               </aside>
-
-              <main className="grid h-full min-w-[100px] grid-rows-[auto,1fr] gap-2 overflow-y-hidden p-2">
+              <main
+                className={cn(
+                  "relative grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden p-2 [grid-area:main] lg:transition-transform"
+                )}
+              >
                 <header className="grid grid-flow-col items-center justify-between gap-2">
                   <Breadcrumb />
-                  <FullscreenButton setIsFullscreen={setIsFullscreen} isFullscreen={isFullscreen} />
+                  <button
+                    className="card btn btn--primary p-1"
+                    onClick={() =>
+                      flushSync(() => {
+                        toggleFullscreen()
+                        isFullscreen ? expandBoth() : collapseBoth()
+                      })
+                    }
+                    title="Toggle full view"
+                  >
+                    <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
+                  </button>
                 </header>
+                <>
+                  <button
+                    type="button"
+                    title="Collapse left panel"
+                    onClick={toggleLeft}
+                    className="btn--icon btn--primary card absolute top-1/2 left-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-r-full p-0 lg:flex"
+                  >
+                    <Icon path={leftExpanded ? mdiChevronLeft : mdiChevronRight} size={1} />
+                  </button>
+                  <button
+                    type="button"
+                    title="Collapse right panel"
+                    onClick={toggleRight}
+                    className="btn--icon btn--primary card absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-l-full p-0 lg:flex"
+                  >
+                    <Icon path={rightExpanded ? mdiChevronRight : mdiChevronLeft} size={1} />
+                  </button>
+                </>
                 {client ? (
                   <>
-                    <ChartWrapper hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />
+                    <div className="card grid overflow-hidden p-2">
+                      <Chart setHoveredObject={setHoveredObject} />
+                      {createPortal(<Tooltip hoveredObject={hoveredObject} />, document.body)}
+                      {!rightExpanded ? (
+                        <DetailsCard
+                          showUnionAuthorsModal={showUnionAuthorsModal}
+                          className="absolute top-2 right-2 z-0 max-h-screen w-[var(--side-panel-width)] overflow-y-auto shadow-sm shadow-black/50"
+                        />
+                      ) : null}
+                    </div>
                     <div className="flex flex-col">
                       <TimeSlider />
                       <BarChart />
@@ -466,31 +430,15 @@ export default function Repo() {
               </main>
 
               <aside
-                className={clsx("grid auto-rows-min items-start gap-2 p-2 pl-0", {
-                  "overflow-y-auto": !isFullscreen
-                })}
+                className={clsx(
+                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:right] lg:pl-0 lg:transition-transform",
+                  rightExpanded ? "overflow-y-auto" : "lg:translate-x-[var(--side-panel-width)]"
+                )}
               >
-                {!isFullscreen ? (
-                  <div className="absolute">
-                    <button
-                      type="button"
-                      onClick={() => setIsRightPanelCollapse(!isRightPanelCollapse)}
-                      className="btn btn--primary absolute right-0 top-[50vh] flex h-6 w-6 cursor-pointer items-center justify-center rounded-full p-0"
-                    >
-                      <Icon path={isRightPanelCollapse ? mdiChevronLeft : mdiChevronRight} size={1} />
-                    </button>
-                  </div>
-                ) : null}
-                {!isRightPanelCollapse && !isFullscreen ? (
+                {rightExpanded ? (
                   <>
-                    <DetailsCard
-                      showUnionAuthorsModal={showUnionAuthorsModal}
-                      className={clsx({
-                        "absolute bottom-0 right-2 max-h-screen -translate-x-full overflow-y-auto shadow shadow-black/50":
-                          isFullscreen
-                      })}
-                    />
-                    {dataPromise.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
+                    <DetailsCard showUnionAuthorsModal={showUnionAuthorsModal} />
+                    {data.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
                     <SearchCard />
                     <Online>
                       <FeedbackCard />
@@ -509,45 +457,5 @@ export default function Repo() {
         )}
       </Await>
     </Suspense>
-  )
-}
-
-const FullscreenButton = memo(function FullscreenButton({
-  setIsFullscreen,
-  isFullscreen
-}: {
-  setIsFullscreen: Dispatch<SetStateAction<boolean>>
-  isFullscreen: boolean
-}) {
-  return (
-    <button
-      className="card btn btn--primary p-1"
-      onClick={() => setIsFullscreen((isFullscreen) => !isFullscreen)}
-      title="Toggle full view"
-    >
-      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
-    </button>
-  )
-})
-
-function ChartWrapper({
-  hoveredObject,
-  setHoveredObject
-}: {
-  hoveredObject: GitObject | null
-  setHoveredObject: (obj: GitObject | null) => void
-}) {
-  const chartWrapperRef = useRef<HTMLDivElement>(null)
-  const bodyRef = useRef<HTMLElement>(document.body)
-  const mouse = useMouse(bodyRef)
-
-  return (
-    <div className="card grid overflow-y-hidden p-2" ref={chartWrapperRef}>
-      <Chart setHoveredObject={setHoveredObject} />
-      {createPortal(
-        <Tooltip hoveredObject={hoveredObject} x={mouse.docX} y={mouse.docY} w={window.innerWidth} />,
-        document.body
-      )}
-    </div>
   )
 }
