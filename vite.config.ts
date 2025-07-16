@@ -1,9 +1,12 @@
 /// <reference types="vitest" />
 import { reactRouterDevTools } from "react-router-devtools"
 import { reactRouter } from "@react-router/dev/vite"
+import { reactCompilerPreset } from "@vitejs/plugin-react"
+// import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import pkg from "./package.json"
+import babel from "@rolldown/plugin-babel"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
@@ -40,7 +43,14 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-arm64"
     ]
   },
-  plugins: [tailwindcss(), reactRouterDevTools(), reactRouter()],
+  plugins: [
+    babel({
+      presets: [reactCompilerPreset()]
+    }),
+    tailwindcss(),
+    reactRouterDevTools(),
+    reactRouter()
+  ],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
 }))
