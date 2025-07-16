@@ -7,6 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
 import { cjsInterop } from "vite-plugin-cjs-interop"
 import reactRouterConfig from "./react-router.config.ts"
+import babel from "vite-plugin-babel"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
@@ -46,6 +47,9 @@ export default defineConfig(({ isSsrBuild }) => ({
       appDir: reactRouterConfig.appDirectory
     }),
     reactRouter(),
+    babel({
+      plugins: [["babel-plugin-react-compiler", { target: "19" }]]
+    }),
     tsconfigPaths(),
     cjsInterop({ dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : [] })
   ],
