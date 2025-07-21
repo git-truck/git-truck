@@ -136,16 +136,21 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   }
 
   const now = isChrome || isChromium || isEdgeChromium ? Date.now() : 0 // Necessary in chrome to update text positions
+  const hasSearchResults = Object.values(searchResults).length > 0
   return (
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
         key={`svg|${size.width}|${size.height}`}
-        className={clsx("grid h-full w-full place-items-center stroke-gray-300 dark:stroke-gray-700", {
-          "cursor-zoom-out": path.includes("/")
-        })}
+        className={clsx(
+          "stroke-border dark:stroke-border-dark grid h-full w-full place-items-center dark:fill-gray-100",
+          {
+            "cursor-zoom-out": path.includes("/")
+          }
+        )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
         onClick={() => {
+          if (!path.includes("/")) return
           // Move up to parent
           const parentPath = path.split("/").slice(0, -1).join("/")
           // Check if parent is root
@@ -154,26 +159,31 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         }}
       >
         {nodes.map((d, i) => {
+          const isSearchMatch = Boolean(searchResults[d.data.path])
           return (
             <g
               key={d.data.path}
               className={clsx("transition-opacity hover:opacity-60", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path
+                "hover:opacity-80": isBlob(d.data),
+                "opacity-30":
+                  (!isSearchMatch && hasSearchResults) ||
+                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
+                "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
               })}
               {...createGroupHandlers(d, i === 0)}
             >
-              {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
-                <>
-                  <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
-                  {labelsVisible && (
-                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`} d={d}>
-                      {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
-                    </NodeText>
-                  )}
-                </>
-              )}
+              <Node key={d.data.path} d={d} />
+              {labelsVisible && i !== 0 ? (
+                <NodeText
+                  key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`}
+                  isSearchMatch={isSearchMatch}
+                  d={d}
+                >
+                  {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                </NodeText>
+              ) : null}
             </g>
           )
         })}
@@ -331,7 +341,15 @@ function collapseText({
   return displayText
 }
 
-function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
+function NodeText({
+  d,
+  isSearchMatch,
+  children = null
+}: {
+  d: CircleOrRectHiearchyNode
+  isSearchMatch?: boolean
+  children?: React.ReactNode
+}) {
   const [metricsData] = useMetrics()
   const { metricType } = useOptions()
   const prefersLightMode = usePrefersLightMode()
@@ -374,13 +392,23 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
       {isTree(d.data) && isBubbleChart ? (
         <text
-          className="pointer-events-none fill-none stroke-gray-100 stroke-[7px] font-mono text-sm font-bold dark:stroke-gray-800"
+          className={cn("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
+            "stroke-primary-bg dark:stroke-primary-bg-dark": isBubbleChart,
+            "stroke-secondary-bg dark:stroke-secondary-bg-dark": !isBubbleChart
+          })}
           strokeLinecap="round"
         >
-          <textPath {...textPathBaseProps}>{children}</textPath>
+          <textPath className="transition-all" {...textPathBaseProps}>
+            {children}
+          </textPath>
         </text>
       ) : null}
-      <text fill={fillColor} className="pointer-events-none stroke-none">
+      <text
+        fill={textFillClass}
+        className={cn(textFillClass, "pointer-events-none stroke-none", {
+          "font-bold underline": isSearchMatch
+        })}
+      >
         <textPath
           {...textPathBaseProps}
           className={clsx("stroke-none font-mono", {
