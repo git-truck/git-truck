@@ -46,7 +46,7 @@ export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps
         </span>
       </div>
       <div
-        className="relative h-6 w-full rounded-full"
+        className="relative h-4 rounded-b-sm"
         style={{
           backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`
         }}
