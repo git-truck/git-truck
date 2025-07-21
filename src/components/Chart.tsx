@@ -47,28 +47,6 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { setPath } = usePath()
   const { showFilesWithoutChanges } = useOptions()
 
-  let numberOfDepthLevels: number | undefined = undefined
-  switch (depthType) {
-    case "One":
-      numberOfDepthLevels = 1
-      break
-    case "Two":
-      numberOfDepthLevels = 2
-      break
-    case "Three":
-      numberOfDepthLevels = 3
-      break
-    case "Four":
-      numberOfDepthLevels = 4
-      break
-    case "Five":
-      numberOfDepthLevels = 5
-      break
-    case "Full":
-    default:
-      numberOfDepthLevels = undefined
-  }
-
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
     const ig = ignore()
