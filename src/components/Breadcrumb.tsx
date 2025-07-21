@@ -8,58 +8,51 @@ export function Breadcrumb() {
   const { repo } = useData()
   const { path, setPath } = usePath()
   const paths = useMemo<[string, string][]>(() => {
-    let temppath = path
-    let paths: [string, string][] = []
-    for (let i = 0; i < 8; i++) {
-      if (temppath === "") {
-        break
-      }
-      const idx = temppath.lastIndexOf("/")
-      paths.push([temppath.substring(idx + 1), temppath])
-      temppath = temppath.substring(0, idx)
+    const parts = path === "" ? [] : path.split("/")
+    const segments: [string, string][] = parts.map((part, index) => {
+      const fullPath = parts.slice(0, index + 1).join("/")
+      return [part, fullPath]
+    })
+
+    if (segments.length > 3) {
+      return [segments[0], ["...", ""], segments[segments.length - 2], segments[segments.length - 1]]
     }
 
-    if (temppath !== "") {
-      paths = paths.slice(0, paths.length - 1)
-      paths.push(["...", ""])
-      paths.push([repo.name, repo.name])
-    }
-    return paths.reverse()
+    return segments
   }, [path, repo.name])
 
   return (
-    <div className="-m-2 flex items-center gap-1 overflow-x-auto p-2">
-      {paths.length > 1
-        ? paths.map(([name, p], i) => {
-            if (p === "" || i === paths.length - 1)
-              if (p === "")
-                return (
-                  <Fragment key={p}>
-                    <span className="font-bold">{name}</span>
-                    <Icon path={mdiChevronRight} size={1} />
-                  </Fragment>
-                )
-              else
-                return (
-                  <span className="font-bold" key={p}>
-                    {name}
-                  </span>
-                )
-            else
-              return (
-                <Fragment key={p}>
-                  <button
-                    className="card flex min-w-fit cursor-pointer flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
-                    onClick={() => setPath(p)}
-                  >
-                    {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
-                    {name}
-                  </button>
-                  <Icon path={mdiChevronRight} size={1} className="min-w-fit" />
-                </Fragment>
-              )
-          })
-        : null}
+    <div className="text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto p-2">
+      {paths.map(([name, p], i) => {
+        if (p === "" || i === paths.length - 1)
+          if (p === "")
+            return (
+              <Fragment key={p}>
+                <span className="font-bold">{name}</span>
+                <Icon path={mdiChevronRight} size={1} />
+              </Fragment>
+            )
+          else
+            return (
+              <span className="font-bold" key={p}>
+                {name}
+              </span>
+            )
+        else
+          return (
+            <Fragment key={p}>
+              <button
+                title={`Navigate to ${name}`}
+                className="card flex min-w-fit cursor-pointer flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
+                onClick={() => setPath(p)}
+              >
+                {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
+                {name}
+              </button>
+              <Icon path={mdiChevronRight} size={1} className="min-w-fit" />
+            </Fragment>
+          )
+      })}
     </div>
   )
 }
