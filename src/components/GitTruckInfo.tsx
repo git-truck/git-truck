@@ -1,0 +1,66 @@
+import { semverCompare } from "~/shared/util"
+import gitTruckLogo from "~/assets/truck.png"
+import gitTruckLogoGif from "~/assets/truck.gif"
+import { UpdateNotifier } from "./UpdateNotifier"
+import { mdiAlertOutline, mdiGithub } from "@mdi/js"
+import Icon from "@mdi/react"
+import { Online } from "react-detect-offline"
+import { Link, useNavigation } from "react-router"
+import { cn } from "~/styling"
+
+export function GitTruckInfo({
+  installedVersion,
+  latestVersion
+}: {
+  installedVersion: string
+  latestVersion: string | null
+}) {
+  const updateAvailable = latestVersion && semverCompare(latestVersion, installedVersion) === 1
+  const navigationData = useNavigation()
+  const loading = navigationData.state !== "idle"
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <a className="flex gap-2">
+          <img
+            src={loading ? gitTruckLogoGif : gitTruckLogo}
+            alt="Git Truck Logo"
+            className="tertiary size-10 rounded-full border p-1"
+          />
+          <div className="flex flex-col">
+            <h1 className="text-secondary-text dark:text-secondary-text-dark flex items-center gap-2 text-xl font-semibold">
+              Git Truck
+            </h1>
+            <span className="text-tertiary-text dark:text-tertiary-text-dark text-xs">Version {installedVersion}</span>
+          </div>
+        </a>
+        {updateAvailable ? <UpdateNotifier /> : null}
+      </div>
+      <Online>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <a
+            href="https://github.com/git-truck/git-truck"
+            className="btn text-btn text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Star Git Truck on GitHub"
+          >
+            <Icon path={mdiGithub} size={1} />
+            Star Git Truck
+          </a>
+          <a
+            href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
+            className="btn text-btn text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open an issue"
+          >
+            <Icon path={mdiAlertOutline} size={1} />
+            Open an issue
+          </a>
+        </div>
+      </Online>
+    </div>
+  )
+}
