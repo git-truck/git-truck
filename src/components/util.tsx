@@ -5,13 +5,12 @@ import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
-import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
+import { Popover } from "./Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { Link, useLocation, useSubmit } from "react-router"
+import { useSubmit } from "react-router"
 import { getPathFromRepoAndHead } from "~/shared/util"
-import { LoadingIndicator } from "./LoadingIndicator"
-import { ClearCacheForm } from "~/routes/clear-cache"
+import { cn } from "~/styling"
 
 export const CloseButton = ({
   className = "",
@@ -19,9 +18,13 @@ export const CloseButton = ({
   ...props
 }: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
   <button
-    className={clsx(className, "btn--icon inline-grid text-lg leading-none hover:opacity-80", {
-      "absolute top-2 right-2 z-10": absolute
-    })}
+    className={clsx(
+      className,
+      "icon-btn inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
+      {
+        "absolute top-2 right-2 z-10": absolute
+      }
+    )}
     title="Close"
     {...props}
   >
@@ -35,7 +38,6 @@ export const LegendDot = ({
   dotColor,
   authorColorToChange = undefined
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [color, setColor] = useState(dotColor)
   const { databaseInfo, repo } = useData()
   const submit = useSubmit()
@@ -43,7 +45,7 @@ export const LegendDot = ({
   if (!authorColorToChange)
     return (
       <div
-        className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className}`}
+        className={cn("aspect-square h-4 w-4 rounded-full shadow-xs shadow-black", className)}
         style={{ ...style, backgroundColor: dotColor }}
       />
     )
@@ -60,46 +62,43 @@ export const LegendDot = ({
 
   return (
     <Popover
-      isOpen={isPopoverOpen}
-      positions={["top", "left", "bottom", "right"]} // preferred positions by priority
-      content={({ position, childRect, popoverRect }: PopoverState) => (
-        <ArrowContainer
-          position={position}
-          childRect={childRect}
-          popoverRect={popoverRect}
-          arrowSize={10}
-          arrowColor="white"
-        >
-          <div className="card z-20 max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
-            <HexColorPicker color={color} onChange={setColor} />
-            <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
-              Set color
-            </button>
-            {databaseInfo.authorColors[authorColorToChange] ? (
-              <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
-                Use default color
-              </button>
-            ) : null}
-            <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)} />
-          </div>
-        </ArrowContainer>
+      popoverTitle="Choose color"
+      positions={["left", "bottom", "top", "right"]}
+      trigger={({ onClick }) => (
+        <div
+          className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className} cursor-pointer`}
+          style={{ ...style, backgroundColor: dotColor }}
+          onClick={onClick}
+        />
       )}
-      onClickOutside={() => setIsPopoverOpen(false)}
     >
-      <div
-        className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className} cursor-pointer`}
-        style={{ ...style, backgroundColor: dotColor }}
-        onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-      />
+      <HexColorPicker color={color} onChange={setColor} />
+      <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
+        Set color
+      </button>
+      {databaseInfo.authorColors[authorColorToChange] ? (
+        <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
+          Use default color
+        </button>
+      ) : null}
     </Popover>
   )
 }
 
-export const Code = ({ inline = false, ...props }: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
+export const Code = ({
+  inline = false,
+  className = "",
+  ...props
+}: { inline?: boolean } & HTMLAttributes<HTMLDivElement>) => (
   <code
-    className={`rounded-md bg-gray-700 p-1 font-mono text-sm text-gray-100 dark:bg-gray-100 dark:text-gray-900 ${
-      inline ? "inline-block" : "block"
-    } whitespace-pre-wrap`}
+    className={cn(
+      "primary rounded border px-2 py-1 font-mono text-sm",
+      inline ? "inline-block" : "block",
+      {
+        "select-all": inline
+      },
+      className
+    )}
     {...props}
   />
 )
@@ -149,31 +148,6 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
       }}
     >
       <Icon path={mdiMenuUp} size={2} className="stroke-white" />
-    </div>
-  )
-}
-
-export function ErrorPage({ errorMessage }: { errorMessage: string }) {
-  const { pathname } = useLocation()
-  return (
-    <div className="app-container">
-      <div />
-
-      <div className="card">
-        <h1>An error occured!</h1>
-        <p>See console for more infomation.</p>
-        <Code>{errorMessage}</Code>
-        <div>
-          <ClearCacheForm redirectPath={pathname} />
-        </div>
-        <div>
-          <Link to=".">Retry</Link>
-        </div>
-        <div>
-          <Link to="..">Go back</Link>
-        </div>
-      </div>
-      <LoadingIndicator />
     </div>
   )
 }

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { mdiAccountMultiple, mdiEyeOffOutline, mdiFile, mdiFolder, mdiOpenInNew } from "@mdi/js"
 import Icon from "@mdi/react"
 import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "react-router"
@@ -8,15 +7,15 @@ import { useEffect, useId, useMemo, useRef, useState } from "react"
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
-import { CloseButton, Tab, Tabs } from "~/components/util"
+import { CloseButton, LegendDot, Tabs } from "~/components/util"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { usePath } from "~/contexts/PathContext"
 import { usePrefersLightMode } from "~/styling"
-import { dateFormatLong, getTextColorFromBackground, last } from "~/shared/util"
-import { CommitsCard } from "./CommitsCard"
+import { dateFormatLong, last } from "~/shared/util"
+import { CommitHistory } from "./CommitHistory"
 
 function OneFolderOut(path: string) {
   const index = path.lastIndexOf("/")
@@ -42,8 +41,6 @@ export function DetailsCard({
   const isProcessingHideRef = useRef(false)
   const [commitCount, setCommitCount] = useState<number | null>(null)
   const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
-
-  const [currentTab, setCurrentTab] = useState("General")
 
   const existingCommitCount = databaseInfo.commitCounts[slicedPath]
 
@@ -112,21 +109,23 @@ export function DetailsCard({
   }, [databaseInfo, setClickedObject])
 
   const [metricsData] = useMetrics()
-  const { backgroundColor, lightBackground } = useMemo(() => {
+  const { clickedObjectColor } = useMemo<{ clickedObjectColor: string | null }>(() => {
     if (!clickedObject) {
       return {
-        backgroundColor: null,
-        color: null
+        clickedObjectColor: null
       }
     }
     const colormap = metricsData.get(metricType)?.colormap
-    const backgroundColor =
-      colormap?.get(clickedObject.path) ?? ((prefersLightMode ? "#808080" : "#262626") as `#${string}`)
-    const color = backgroundColor ? getTextColorFromBackground(backgroundColor) : null
+    const clickedObjectColor = colormap?.get(clickedObject.path)
+
+    if (!clickedObjectColor) {
+      return {
+        clickedObjectColor: null
+      }
+    }
+
     return {
-      backgroundColor: backgroundColor,
-      color: color,
-      lightBackground: color === "#000000"
+      clickedObjectColor
     }
   }, [clickedObject, metricsData, metricType, prefersLightMode])
 
@@ -135,22 +134,16 @@ export function DetailsCard({
   const extension = last(clickedObject.name.split("."))
   // TODO: handle binary file properly or remove the entry
   return (
-    <div
-      className={clsx(className, "card flex flex-col gap-2 transition-colors", {
-        "text-gray-100": !lightBackground,
-        "text-gray-800": lightBackground
-      })}
-      {...(backgroundColor
-        ? {
-            style: {
-              backgroundColor
-            }
-          }
-        : {})}
-    >
+    <div className={clsx("card flex flex-col gap-2 backdrop-blur-sm transition-colors", className)}>
       <div className="flex">
-        <h2 className="card__title grid w-full grid-cols-[auto_1fr_auto] gap-2">
-          <Icon path={clickedObject.type === "blob" ? mdiFile : mdiFolder} size="1.25em" />
+        <h2 className="card__title grid w-full grid-cols-[auto_1fr_auto] gap-2 pl-0.5 text-current">
+          {clickedObject.type === "tree" ? (
+            <Icon path={mdiFolder} size="1.25em" />
+          ) : clickedObjectColor ? (
+            <LegendDot dotColor={clickedObjectColor} />
+          ) : (
+            <Icon path={mdiFile} size="1.25em" />
+          )}
           <span className="truncate" title={clickedObject.name}>
             {clickedObject.name}
           </span>
@@ -176,7 +169,7 @@ export function DetailsCard({
                     )}
                     <PathEntry path={clickedObject.path} />
                   </div>
-                  <div className="card bg-white/70 text-black">
+                  <div className="card">
                     <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
                   </div>
                 </div>
@@ -243,7 +236,7 @@ export function DetailsCard({
               </>
             )
           },
-          { title: "Commits", content: <CommitsCard commitCount={commitCount ?? 0} /> }
+          { title: "Commits", content: <CommitHistory commitCount={commitCount ?? 0} /> }
         ]}
       />
     </div>
@@ -326,7 +319,7 @@ function PathEntry(props: { path: string }) {
         </p>
         <Form method="post" action={location.pathname} title={clickedObject.name}>
           <input type="hidden" name="open" value={clickedObject.path} />
-          <button className="btn--icon" disabled={state !== "idle"}>
+          <button className="icon-btn" disabled={state !== "idle"}>
             <Icon
               path={mdiOpenInNew}
               size="1.25em"
@@ -374,7 +367,9 @@ function AuthorDistribution(props: {
   const authorsAreCutoff = (props.authors?.length ?? 0) > authorCutoff + 1
   return (
     <div className="flex flex-col gap-2">
-      <div className={`flex justify-between ${authorsAreCutoff ? "cursor-pointer hover:opacity-70" : ""}`}>
+      <div
+        className={`flex justify-between ${authorsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
+      >
         <label className="label grow" htmlFor={authorDistributionExpandId}>
           <h3 className="font-bold">Author distribution</h3>
         </label>
@@ -401,7 +396,7 @@ function AuthorDistribution(props: {
                 />
                 {collapsed ? (
                   <button
-                    className="text-left text-xs opacity-70 hover:opacity-100"
+                    className="cursor-pointer text-left text-xs opacity-70 hover:opacity-100"
                     onClick={() => setCollapsed(!collapsed)}
                   >
                     + {(props.authors?.slice(authorCutoff) ?? []).length} more

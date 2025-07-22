@@ -12,7 +12,7 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
 import { CloseButton, LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
-import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
+import { Popover } from "./Popover"
 import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 
 type SortCommitsMethods = "date" | "author"
@@ -98,81 +98,67 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
 }
 
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   return (
     <div title={`By: ${props.value.author}`} className="flex items-center gap-2 overflow-hidden text-ellipsis">
       <LegendDot className="ml-1" dotColor={props.authorColor} authorColorToChange={props.value.author} />
       <Popover
-        isOpen={isPopoverOpen}
-        positions={["left", "top", "bottom", "right"]} // preferred positions by priority
-        content={({ position, childRect, popoverRect }: PopoverState) => (
-          <ArrowContainer
-            position={position}
-            childRect={childRect}
-            popoverRect={popoverRect}
-            arrowSize={10}
-            arrowColor="white"
-            className="z-20"
+        positions={["left", "top", "bottom", "right"]}
+        popoverTitle="Commit Details"
+        trigger={({ onClick }) => (
+          <p
+            onClick={onClick}
+            className="cursor-pointer overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
           >
-            <div className="card bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
-              <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-                <CloseButton absolute={true} onClick={() => setIsPopoverOpen(false)} />
-                <InfoEntry keyString="Hash" value={props.value.hash} />
-                <InfoEntry keyString="Author" value={props.value.author} />
-                {props.value.committertime === props.value.authortime ? (
-                  <InfoEntry
-                    keyString="Date"
-                    value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
-                      props.value.committertime
-                    )})`}
-                  />
-                ) : (
-                  <>
-                    <InfoEntry
-                      keyString="Date committed"
-                      value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
-                        props.value.committertime
-                      )})`}
-                    />
-                    <InfoEntry
-                      keyString="Date authored"
-                      value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
-                        props.value.authortime
-                      )})`}
-                    />
-                  </>
-                )}
-                <InfoEntry keyString="Message" value={props.value.message} />
-                <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Body</div>
-                <div className="max-h-64 overflow-auto">
-                  <p className="text-sm break-all text-ellipsis">
-                    {props.value.body.length > 0 ? props.value.body : "<none>"}
-                  </p>
-                </div>
-                <InfoEntry
-                  keyString="File changes"
-                  value={
-                    props.value.fileChanges.length +
-                    " files (+" +
-                    props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) +
-                    ", -" +
-                    props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) +
-                    ")"
-                  }
-                />
-              </div>
-              <FileChangesEntry filechanges={props.value.fileChanges} />
-            </div>
-          </ArrowContainer>
+            {props.value.message}
+          </p>
         )}
-        onClickOutside={() => setIsPopoverOpen(false)}
       >
-        <p
-          onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-          className="cursor-pointer overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
-        >
-          {props.value.message}
-        </p>
+        <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+          <InfoEntry keyString="Hash" value={props.value.hash} />
+          <InfoEntry keyString="Author" value={props.value.author} />
+          {props.value.committertime === props.value.authortime ? (
+            <InfoEntry
+              keyString="Date"
+              value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
+                props.value.committertime
+              )})`}
+            />
+          ) : (
+            <>
+              <InfoEntry
+                keyString="Date committed"
+                value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
+                  props.value.committertime
+                )})`}
+              />
+              <InfoEntry
+                keyString="Date authored"
+                value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
+                  props.value.authortime
+                )})`}
+              />
+            </>
+          )}
+          <InfoEntry keyString="Message" value={props.value.message} />
+          <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Body</div>
+          <div className="max-h-64 overflow-auto">
+            <p className="text-sm break-all text-ellipsis">
+              {props.value.body.length > 0 ? props.value.body : "<none>"}
+            </p>
+          </div>
+          <InfoEntry
+            keyString="File changes"
+            value={
+              props.value.fileChanges.length +
+              " files (+" +
+              props.value.fileChanges.reduce((acc, curr) => acc + curr.insertions, 0) +
+              ", -" +
+              props.value.fileChanges.reduce((acc, curr) => acc + curr.deletions, 0) +
+              ")"
+            }
+          />
+        </div>
+        <FileChangesEntry filechanges={props.value.fileChanges} />
       </Popover>
     </div>
   )
