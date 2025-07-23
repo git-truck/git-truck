@@ -20,21 +20,22 @@ export const HiddenFiles = memo(function HiddenFiles() {
 
   return (
     <div className="card flex flex-col gap-2">
-      <h2 className="card__title">
-        <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
-          <Icon path={mdiEyeOff} size="1.25em" />
-          Hidden files ({databaseInfo.hiddenFiles.length})
-          <ChevronButton id={expandHiddenFilesButtonId} className="absolute top-2 right-2" open={expanded} />
-        </button>
-      </h2>
+      <button
+        className="card__title flex cursor-pointer justify-start gap-2 hover:opacity-70"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <Icon path={mdiEyeOff} size="1.25em" />
+        Hidden files ({databaseInfo.hiddenFiles.length})
+        <ChevronButton id={expandHiddenFilesButtonId} className="absolute top-2 right-2" open={expanded} />
+      </button>
       {expanded ? (
         <div>
           {databaseInfo.hiddenFiles.map((hidden) => (
-            <div className="grid grid-cols-[auto_1fr] gap-2" key={hidden} title={hidden}>
+            <div className="grid grid-cols-[auto_1fr] items-center gap-2" key={hidden} title={hidden}>
               <Form className="w-4" method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <button
-                  className="btn--icon btn--hover-swap h-4"
+                  className="icon-btn btn--hover-swap h-4"
                   title="Show file"
                   disabled={navigationState.state !== "idle"}
                 >
