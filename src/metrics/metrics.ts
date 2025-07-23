@@ -1,5 +1,4 @@
 import sha1 from "sha1"
-import uniqolor from "uniqolor"
 import type { GitBlobObject, GitTreeObject } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
@@ -12,6 +11,7 @@ import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
 import { CommitAmountTranslater } from "./mostCommits"
 import { ContribAmountTranslater } from "./mostContribs"
 import { setDominantAuthorColor } from "./topContributer"
+import { scaleOrdinal, schemeCategory10, schemeSet3 } from "d3"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -29,9 +29,10 @@ export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
   predefinedAuthorColors: Record<string, `#${string}`>,
-  dominantAuthorCutoff: number
+  dominantAuthorCutoff: number,
+  prefersLight: boolean
 ): MetricsData {
-  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors)
+  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors, prefersLight)
 
   return [
     setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
@@ -79,22 +80,27 @@ export interface MetricCache {
 export function generateAuthorColors(
   authors: string[],
   colorSeed: string | null,
-  predefinedAuthorColors: Record<string, `#${string}`>
+  predefinedAuthorColors: Record<string, `#${string}`>,
+  prefersLight: boolean
 ): Record<string, `#${string}`> {
-  const result: Record<string, `#${string}`> = {}
+  const authorColorMap: Record<string, `#${string}`> = {}
   const seed = colorSeed ?? ""
+  const colorsForLightTheme = schemeCategory10
+  const colorsForDarkTheme = schemeSet3
+  const colors = scaleOrdinal(prefersLight ? colorsForLightTheme : colorsForDarkTheme).range()
   for (let i = 0; i < authors.length; i++) {
     const author = authors[i]
     const existing = predefinedAuthorColors[author]
     if (existing) {
-      result[author] = existing
+      authorColorMap[author] = existing
       continue
     }
     const hashed = sha1(author + seed)
-    const color = uniqolor(hashed).color as `#${string}`
-    result[author] = color
+    // const color = uniqolor(hashed).color as `#${string}`
+    const color = colors[i % colors.length] as `#${string}`
+    authorColorMap[author] = color
   }
-  return result
+  return authorColorMap
 }
 
 export function getMetricCalcs(

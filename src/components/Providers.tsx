@@ -21,6 +21,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DepthType } from "~/metrics/chartDepth"
 import type { CommitTab } from "~/contexts/CommitTabContext"
 import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
+import { usePrefersLightMode } from "~/styling"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -33,17 +34,19 @@ export function Providers({ children, data }: ProvidersProps) {
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
+  const prefersLight = usePrefersLightMode()
 
   const metricsData: MetricsData = useMemo(() => {
     const res = createMetricData(
       data,
       data.databaseInfo.colorSeed,
       data.databaseInfo.authorColors,
-      options?.dominantAuthorCutoff ?? 70
+      options?.dominantAuthorCutoff ?? 70,
+      prefersLight
     )
 
     return res
-  }, [data, options?.dominantAuthorCutoff])
+  }, [data, options?.dominantAuthorCutoff, prefersLight])
 
   const commitTabValue = useMemo(
     () => ({
