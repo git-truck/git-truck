@@ -1,106 +1,25 @@
-import { Form, Link, useLoaderData, useLocation, useNavigate, useNavigation } from "react-router"
-import { dateTimeFormatShort, generateVersionComparisonLink, semverCompare } from "~/shared/util"
+import { useNavigate, useNavigation } from "react-router"
+import { dateTimeFormatShort } from "~/shared/util"
 import { useData } from "../contexts/DataContext"
-import { memo, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
-import { mdiRefresh, mdiArrowTopLeft, mdiInformation, mdiArrowUpBoldCircleOutline, mdiFlaskOutline } from "@mdi/js"
-import { CloseButton, Code } from "./util"
+import { mdiMenu } from "@mdi/js"
+import { Code } from "./util"
 import Icon from "@mdi/react"
 import { useClient } from "~/hooks"
-import clsx from "clsx"
-import { ArrowContainer, Popover, type PopoverState } from "react-tiny-popover"
-import { CollapsableSettings } from "./Settings"
+import { Popover } from "./Popover"
 
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
-const UpdateNotifier = memo(function UpdateNotifier() {
-  const { gitTruckInfo } = useLoaderData()
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false)
-  const isExperimental = gitTruckInfo.version.includes("0.0.0")
-
-  return (
-    <Popover
-      isOpen={isPopoverOpen}
-      positions={["right", "bottom", "left", "top"]} // preferred positions by priority
-      content={({ position, childRect, popoverRect }: PopoverState) => (
-        <ArrowContainer
-          position={position}
-          childRect={childRect}
-          popoverRect={popoverRect}
-          arrowSize={10}
-          arrowColor="white"
-        >
-          {isExperimental ? (
-            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
-              <p>You are using an experimental build of Git Truck</p>
-              <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
-              <p className="card-p">
-                If you want to use a stable version, close the application and run:{" "}
-                <Code inline>npm i -g git-truck@latest</Code>
-              </p>
-            </div>
-          ) : (
-            <div className="card max-w-lg bg-gray-100/50 pr-10 backdrop-blur-sm dark:bg-gray-800/40">
-              <p>Update available: {gitTruckInfo.latestVersion}</p>
-              <p className="card-p">Currently installed: {gitTruckInfo.version}</p>
-              <p className="card-p">
-                To update, close the application and run: <Code inline>npm install -g git-truck@latest</Code>
-              </p>
-              {gitTruckInfo.latestVersion ? (
-                <p>
-                  <a
-                    className="text-blue-500 hover:underline"
-                    href={generateVersionComparisonLink({
-                      currentVersion: gitTruckInfo.version,
-                      latestVersion: gitTruckInfo.latestVersion
-                    })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    See what&apos;s new
-                  </a>
-                </p>
-              ) : null}
-            </div>
-          )}
-        </ArrowContainer>
-      )}
-      onClickOutside={() => setIsPopoverOpen(false)}
-    >
-      {isExperimental ? (
-        <button
-          title="You are using an experimental version"
-          className="btn bg-lime-500"
-          onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-        >
-          <Icon path={mdiFlaskOutline} size="1.25em" />
-        </button>
-      ) : (
-        <button title="Update available" className="btn bg-yellow-500" onClick={() => setIsPopoverOpen(!isPopoverOpen)}>
-          <Icon path={mdiArrowUpBoldCircleOutline} size="1.25em" />
-        </button>
-      )}
-    </Popover>
-  )
-})
-
-export function GlobalInfo({
-  installedVersion,
-  latestVersion
-}: {
-  installedVersion: string
-  latestVersion: string | null
-}) {
+export function GlobalInfo({ onMenuClick = () => {} }) {
   const client = useClient()
   const { databaseInfo, repo } = useData()
   const transitionState = useNavigation()
 
-  const location = useLocation()
   const navigate = useNavigate()
 
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisDetailsVisible, setAnalysisDetailsVisible] = useState(false)
 
   useEffect(() => {
     document.title = isAnalyzing ? analyzingTitle : title
@@ -116,88 +35,54 @@ export function GlobalInfo({
     }
   }, [transitionState.state])
   const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
-  const updateAvailable = latestVersion && semverCompare(latestVersion, installedVersion) === 1
   return (
     <div className="flex flex-col gap-2">
-      <div className="card">
-        <div className="flex items-center justify-between gap-2">
-          <div className="relative flex items-center">
+      <div className="relative flex w-full items-center justify-between gap-2">
+        <Popover
+          popoverTitle="Analysis details"
+          trigger={({ onClick }) => (
             <button
-              className="btn--icon btn--primary"
-              title="See analysis details"
-              onClick={() => setAnalysisDetailsVisible(true)}
+              className="text-primary-text dark:text-primary-text-dark hover:text-secondary-text dark:hover:text-secondary-text-dark grow cursor-pointer justify-start gap-2 truncate text-xl"
+              onClick={onClick}
+              title="View analysis details"
             >
-              <Icon path={mdiInformation} size="1.5em" />
+              {repo.name}
             </button>
-            <div
-              className={clsx("card absolute top-0 left-0 z-10 h-max w-max shadow-sm transition-opacity", {
-                "hidden opacity-0": !analysisDetailsVisible
-              })}
-            >
-              <h2 className="card__title">Analysis details</h2>
-              <CloseButton onClick={() => setAnalysisDetailsVisible(false)} />
-              <div className="grid auto-rows-fr grid-cols-2 gap-0">
-                <span>Analyzed</span>
-                <time className="text-right" dateTime={isoString} title={isoString}>
-                  {client ? dateTimeFormatShort(databaseInfo.lastRunInfo.time * 1000) : ""}
-                </time>
+          )}
+        >
+          <div className="grid auto-rows-fr grid-cols-2 gap-0">
+            <span>Time analyzed</span>
+            <time className="text-right" dateTime={isoString} title={isoString}>
+              {client ? dateTimeFormatShort(databaseInfo.lastRunInfo.time * 1000) : ""}
+            </time>
 
-                <span>As of commit</span>
-                <span className="text-right">
-                  <Code inline>#{databaseInfo.lastRunInfo.hash.slice(0, 7)}</Code>
-                </span>
+            <span>As of commit</span>
+            <span className="text-right">
+              <Code inline>{databaseInfo.lastRunInfo.hash.slice(0, 7)}</Code>
+            </span>
 
-                <span>Files analyzed</span>
-                <span className="text-right">{databaseInfo.fileCount ?? 0}</span>
+            <span>Files analyzed</span>
+            <span className="text-right">{databaseInfo.fileCount ?? 0}</span>
 
-                <span>Commits analyzed</span>
-                <span className="text-right">{databaseInfo.commitCount}</span>
-              </div>
-            </div>
+            <span>Commits analyzed</span>
+            <span className="text-right">{databaseInfo.commitCount}</span>
           </div>
-          <h2 className="card__title grow justify-start gap-2" title={repo.name}>
-            {repo.name}
-          </h2>
-        </div>
-        <div className="flex w-full auto-cols-max place-items-stretch gap-2">
-          <Link
-            className="btn btn--primary grow"
-            to="/"
-            // TODO: Implement browsing, requires new routing
-            // to={`/?${new URLSearchParams({
-            //   path: repo.parentDirPath
-            // }).toString()}`}
-            title="See all repositories"
-            prefetch="intent"
-          >
-            <Icon path={mdiArrowTopLeft} size={0.75} />
-            <p>More repositories</p>
-          </Link>
-          <Form
-            method="post"
-            action={location.pathname}
-            onSubmit={() => {
-              setIsAnalyzing(true)
-            }}
-          >
-            <input type="hidden" name="refresh" value="true" />
-            <button className="btn" disabled={transitionState.state !== "idle"}>
-              <Icon path={mdiRefresh} size="1.25em" />
-              {isAnalyzing ? "Loading" : "Refresh"}
-            </button>
-          </Form>
-          {updateAvailable ? <UpdateNotifier /> : null}
-        </div>
-        <RevisionSelect
-          key={databaseInfo.branch}
-          disabled={isAnalyzing}
-          onChange={(e) => switchBranch(e.target.value)}
-          defaultValue={databaseInfo.branch}
-          headGroups={repo.refs}
-          analyzedBranches={databaseInfo.analyzedRepos.filter((rep) => rep.repo === databaseInfo.repo)}
-        />
-        <CollapsableSettings />
+        </Popover>
+        <button className="icon-btn" title="See analysis details" onClick={onMenuClick}>
+          <Icon path={mdiMenu} size="1.5em" />
+        </button>
       </div>
+
+      <RevisionSelect
+        title="Select branch"
+        className="grow-0"
+        key={databaseInfo.branch}
+        disabled={isAnalyzing}
+        onChange={(e) => switchBranch(e.target.value)}
+        defaultValue={databaseInfo.branch}
+        headGroups={repo.refs}
+        analyzedBranches={databaseInfo.analyzedRepos.filter((rep) => rep.repo === databaseInfo.repo)}
+      />
     </div>
   )
 }
