@@ -1,32 +1,48 @@
 import Icon from "@mdi/react"
 import clsx from "clsx"
+import { cn } from "~/styling"
+import { Field, Label, Radio, RadioGroup } from "@headlessui/react"
 
-interface EnumSelectProps<T extends string> {
+export function EnumSelect<T extends string>(props: {
   enum: Record<T, string>
   defaultValue: T
   onChange: (metric: T) => void
   hidden?: boolean
+  large?: boolean
   iconMap: Record<T, string>
-}
-
-export function EnumSelect<T extends string>(props: EnumSelectProps<T>) {
+}) {
   const enumEntries = Object.entries(props.enum) as [T, string][]
 
   return (
-    <div className="flex flex-wrap gap-0">
+    <RadioGroup
+      value={props.defaultValue}
+      onChange={props.onChange}
+      className={cn("flex flex-wrap gap-0", { "gap-2": props.large })}
+      aria-label=""
+    >
       {enumEntries.map(([key, value]) => (
-        <button
+        <Field
           key={key}
-          className={clsx("btn flex h-auto w-max justify-between gap-2 rounded-lg px-1 py-1 text-xs/none", {
-            "btn--primary": key === props.defaultValue,
-            "btn--outlined border-transparent hover:text-blue-500": key !== props.defaultValue
+          className={clsx("group cursor-pointer gap-2 text-xs transition-all duration-200", {
+            "has-data-checked:bg-blue-primary has-data-checked:fill-primary-text-dark has-data-checked:text-primary-text-dark has-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary flex-col place-items-center items-center rounded border border-transparent p-1":
+              props.large,
+            "has-data-checked:btn--primary btn hover:text-blue-primary flex h-auto w-max items-center justify-between gap-2 rounded-lg border-transparent px-1 py-1 text-xs/none":
+              !props.large
           })}
-          onClick={() => props.onChange(key)}
         >
-          <Icon path={props.iconMap[key]} size="1rem" color="inherit" />
-          {value}
-        </button>
+          <Radio value={key}>
+            <div
+              className={cn("flex items-center", {
+                "flex-col": props.large,
+                "gap-2": !props.large
+              })}
+            >
+              <Icon path={props.iconMap[key]} size={props.large ? "1.5rem" : "1rem"} color="currentColor" />
+              <Label className="cursor-pointer">{value}</Label>
+            </div>
+          </Radio>
+        </Field>
       ))}
-    </div>
+    </RadioGroup>
   )
 }
