@@ -21,11 +21,11 @@ export function LoadingIndicator({
   const location = useLocation()
   const fetcher = useFetcher<ProgressData>()
   useEffect(() => {
-    if (fetcher.state === "idle") {
+    if (fetcher.state === "idle" && showProgress) {
       const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
       fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
     }
-  }, [fetcher, fetcher.state, location.pathname])
+  }, [fetcher, fetcher.state, location.pathname, showProgress])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!fetcher.data) return ["Starting analysis", 0]
@@ -37,14 +37,14 @@ export function LoadingIndicator({
       case "GeneratingChart":
         return ["Generating chart", 100]
       default:
-        return ["Analyzing commits", progress]
+        return ["Analyzing commit history", progress]
     }
   }, [fetcher.data])
 
   return (
     <div className={clsx("grid h-full w-full place-items-center", className)}>
       <div className="flex flex-col gap-6 px-2 py-2">
-        {showProgress ? <p className="text-center text-3xl font-bold opacity-70">{progressText}</p> : null}
+        {showProgress ? <div className="text-center text-3xl font-bold opacity-70">{progressText}</div> : null}
         {showProgress ? (
           <div className="grid overflow-hidden rounded-2xl bg-gray-300">
             <div
