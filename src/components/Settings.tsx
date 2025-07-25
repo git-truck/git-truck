@@ -1,36 +1,28 @@
 import { CheckboxWithLabel } from "./util"
 import { useOptions } from "../contexts/OptionsContext"
-import { useTheme } from "~/styling"
 import Icon from "@mdi/react"
-import {
-  mdiClockEdit,
-  mdiCog,
-  mdiContentCut,
-  mdiFileTree,
-  mdiLabel,
-  mdiLink,
-  mdiThemeLightDark,
-  mdiTransition
-} from "@mdi/js"
+import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useId, useState, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
-import { ChevronButton } from "./ChevronButton"
 import { relatedSizeMetric } from "./Options"
+import { Popover } from "./Popover"
 
 export function CollapsableSettings() {
-  const [expanded, setExpanded] = useState(false)
-  const expandSettingsFilesButtonId = useId()
   return (
-    <div className="card flex flex-col gap-2">
-      <h2 className="card__title">
-        <button className="flex justify-start gap-2 hover:opacity-70" onClick={() => setExpanded(!expanded)}>
+    <Popover
+      positions={["bottom", "right", "left", "top"]}
+      trigger={({ onClick }) => (
+        <button
+          className="btn btn--text relative flex cursor-pointer justify-between gap-2 hover:opacity-70"
+          onClick={onClick}
+        >
           <Icon path={mdiCog} size="1.25em" />
-          Settings
-          <ChevronButton id={expandSettingsFilesButtonId} className="absolute top-2 right-2" open={expanded} />
+          <span className="justify-self-start">View settings</span>
         </button>
-      </h2>
-      {expanded ? <Settings /> : null}
-    </div>
+      )}
+    >
+      <Settings />
+    </Popover>
   )
 }
 
@@ -51,7 +43,6 @@ export function Settings() {
     setRenderCutoff,
     setShowFilesWithoutChanges
   } = useOptions()
-  const [theme, setTheme] = useTheme()
   const [isTransitioning, startTransition] = useTransition()
 
   return (
@@ -109,7 +100,7 @@ export function Settings() {
         <Icon className="ml-1.5" path={mdiFileTree} size="1.25em" />
         Flatten file tree
       </CheckboxWithLabel>
-      <CheckboxWithLabel
+      {/* <CheckboxWithLabel
         className="text-sm"
         checked={theme === "DARK"}
         onChange={() => {
@@ -120,7 +111,7 @@ export function Settings() {
       >
         <Icon className="ml-1.5" path={mdiThemeLightDark} size="1.25em" />
         Use dark theme
-      </CheckboxWithLabel>
+      </CheckboxWithLabel> */}
       <label
         className="label flex w-full items-center justify-start gap-2 text-sm"
         title="Increase this to improve render performance, decrease it to get higher level of detail"

@@ -1,0 +1,46 @@
+import { ArrowContainer, Popover as ReactPopower, type PopoverState } from "react-tiny-popover"
+import { CloseButton } from "./util"
+import { useState } from "react"
+
+export function Popover({
+  popoverTitle,
+  positions = ["top", "bottom", "left", "right"],
+  trigger,
+  children,
+  ...props
+}: Omit<React.ComponentProps<typeof ReactPopower>, "content" | "isOpen"> & {
+  popoverTitle?: string
+  className?: string
+  trigger: (props: { isOpen: boolean; onOpen: () => void; onClose: () => void; onClick: () => void }) => React.ReactNode
+}) {
+  const [isOpen, setOpen] = useState(false)
+
+  const onOpen = () => setOpen(true)
+  const onClose = () => setOpen(false)
+  const onClick = () => setOpen(!isOpen)
+
+  return (
+    <ReactPopower
+      positions={positions}
+      {...props}
+      isOpen={isOpen}
+      onClickOutside={onClose}
+      content={(popoverProps: PopoverState) => (
+        <ArrowContainer
+          {...popoverProps}
+          arrowSize={10}
+          arrowColor="currentColor"
+          arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-10"
+        >
+          <div className="bg-tertiary-bg dark:bg-secondary-bg-dark relative max-w-lg rounded p-2 pr-10 shadow-2xl">
+            {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
+            <CloseButton onClick={onClose} />
+            <div className="text-secondary-text dark:text-secondary-text-dark flex flex-col gap-1">{children}</div>
+          </div>
+        </ArrowContainer>
+      )}
+    >
+      <div>{trigger({ isOpen, onOpen, onClose, onClick })}</div>
+    </ReactPopower>
+  )
+}
