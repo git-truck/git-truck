@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { useState, useTransition, type HTMLAttributes, type ReactNode } from "react"
 import Icon from "@mdi/react"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiMenuUp, mdiClose } from "@mdi/js"
+import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
 import { Popover } from "./Popover"
@@ -140,14 +138,18 @@ export function CheckboxWithLabel({
 export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offset: number }) => {
   return (
     <div
-      className={clsx("absolute bottom-0 w-min -translate-x-1/2 translate-y-1/2 transition-all", {
+      className={clsx("absolute top-1/2 w-min -translate-x-1/2 -translate-y-1/2 transition-all", {
         "opacity-0": !visible
       })}
       style={{
         left: `${offset <= 100 ? offset : -20}%`
       }}
     >
-      <Icon path={mdiMenuUp} size={2} className="stroke-white" />
+      <Icon
+        path={mdiCircle}
+        size={0.5}
+        className="text-primary-text-dark dark:text-primary-text stroke-primary-text dark:stroke-primary-text-dark stroke-2"
+      />
     </div>
   )
 }
