@@ -7,7 +7,6 @@ import { getPathFromRepoAndHead } from "~/shared/util.ts"
 import type { ReactNode } from "react"
 import { Suspense, Fragment, useState, useEffect } from "react"
 import { RevisionSelect } from "~/components/RevisionSelect"
-import gitTruckLogo from "~/assets/truck.png"
 import { cn } from "~/styling"
 import { join, resolve } from "node:path"
 import { getArgsWithDefaults, getBaseDirFromPath, getDirName, readGitRepos } from "~/shared/util.server.ts"
@@ -17,9 +16,9 @@ import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/_index"
-import { ClearCacheForm } from "./clear-cache.tsx"
+import { GitTruckInfo } from "~/components/GitTruckInfo"
 
-export const loader = async () => {
+export const loader = async ({ context }: Route.LoaderArgs) => {
   const queryPath = null
   const args = getArgsWithDefaults()
 
@@ -54,6 +53,7 @@ export const loader = async () => {
   const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
   return {
+    versionInfo: context,
     repositories,
     baseDir,
     baseDirName: getDirName(baseDir),
@@ -90,23 +90,27 @@ export const action = async ({ request }: Route.ActionArgs) => {
 }
 
 export default function Index() {
-  let { repositories, baseDir, analyzedReposPromise, repositoryPromises } = useLoaderData<typeof loader>()
+  const { versionInfo, repositories, baseDir, analyzedReposPromise, repositoryPromises } =
+    useLoaderData<typeof loader>()
   const castedRepositoryPromises = repositoryPromises as unknown as Record<string, Promise<Repository | null>>
   const fetcher = useFetcher<typeof action>()
 
   return (
-    <main className="m-auto flex min-h-screen w-full max-w-2xl flex-col gap-2 p-2">
+    <main className="app-container flex min-h-screen flex-col gap-2 p-2">
       <div className="card">
-        <h1 className="flex items-center text-4xl">
-          <img src={gitTruckLogo} alt="Git Truck" className="mr-2 inline-block h-12" />
-          Git Truck
-        </h1>
+        <GitTruckInfo installedVersion={versionInfo.installedVersion} latestVersion={versionInfo.latestVersion} />
+      </div>
+      <div className="card">
         <div className="flex flex-col gap-1">
-          <p>
-            Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
-          </p>
-          <ClearCacheForm />
           {/* <div className="flex w-full gap-2"> */}
+          <div className="flex w-full items-center justify-between gap-2">
+            <p>
+              Found {repositories.length} folder{repositories.length === 1 ? "" : "s"}
+            </p>
+            <Link to="/clear-cache" className="btn btn--danger btn--text max-w-min">
+              Clear cache
+            </Link>
+          </div>
           <div className="hidden w-full gap-2">
             <Form method="get" className="flex grow gap-1">
               {!fetcher.data?.ok && fetcher.data?.message ? (
@@ -144,41 +148,44 @@ export default function Index() {
             </Link>
           </div>
         </div>
-      </div>
-      {repositories.length > 0 ? (
-        <RepositoryList>
-          <div className="opacity-80">Folder</div>
-          <div className="opacity-80">Status</div>
-          <div className="col-span-2 opacity-80">Actions</div>
-          {repositories.map((repo, i) => (
-            <Suspense
-              key={repositories[i].path}
-              fallback={
-                <RepositoryEntry
-                  repo={{
-                    ...repo,
-                    parentDirPath: baseDir,
-                    status: "Loading"
-                  }}
-                  analyzedRepos={[]}
-                />
-              }
-            >
-              <Await resolve={Promise.all([castedRepositoryPromises[`_${repo.path}`], analyzedReposPromise] as const)}>
-                {([repo, analyzedRepos]) =>
-                  repo !== null ? <RepositoryEntry key={repo.path} repo={repo} analyzedRepos={analyzedRepos} /> : null
+        {repositories.length > 0 ? (
+          <RepositoryList>
+            <div className="text-secondary-text dark:text-secondary-text-dark">Repository</div>
+            <div className="text-secondary-text dark:text-secondary-text-dark">Status</div>
+            <div className="text-secondary-text dark:text-secondary-text-dark">Branch</div>
+            <div className="text-secondary-text dark:text-secondary-text-dark">Actions</div>
+            {repositories.map((repo, i) => (
+              <Suspense
+                key={repositories[i].path}
+                fallback={
+                  <RepositoryEntry
+                    repo={{
+                      ...repo,
+                      parentDirPath: baseDir,
+                      status: "Loading"
+                    }}
+                    analyzedRepos={[]}
+                  />
                 }
-              </Await>
-            </Suspense>
-          ))}
-        </RepositoryList>
-      ) : (
-        <div className="card w-full place-items-center">
-          <h2 className="text-2xl font-bold">This looks empty...</h2>
-          <p>Try running Git Truck in another folder</p>
-          <LoadingIndicator />
-        </div>
-      )}
+              >
+                <Await
+                  resolve={Promise.all([castedRepositoryPromises[`_${repo.path}`], analyzedReposPromise] as const)}
+                >
+                  {([repo, analyzedRepos]) =>
+                    repo !== null ? <RepositoryEntry key={repo.path} repo={repo} analyzedRepos={analyzedRepos} /> : null
+                  }
+                </Await>
+              </Suspense>
+            ))}
+          </RepositoryList>
+        ) : (
+          <div className="card w-full place-items-center">
+            <h2 className="text-2xl font-bold">This looks empty...</h2>
+            <p>Try running Git Truck in another folder</p>
+            <LoadingIndicator />
+          </div>
+        )}
+      </div>
     </main>
   )
 }
@@ -191,14 +198,14 @@ function RepositoryList({ children }: { children: ReactNode[] }) {
       </p>
     </>
   ) : (
-    <div className="card row-start-auto grid w-full grid-flow-row grid-cols-[1fr_1fr_1fr_auto] flex-wrap items-center gap-2">
+    <div className="row-start-auto grid w-full grid-flow-row grid-cols-[1fr_1fr_1fr_auto] flex-wrap items-center gap-2">
       {/* <h2 className="card__title truncate break-all" title="Clone repository">
         Clone repository
       </h2>
       <span className="select-none rounded-full bg-linear-to-r  from-blue-500 to-blue-600 px-2 py-1.5 text-center text-xs font-bold uppercase leading-none tracking-widest text-white/90">
         Coming soon
       </span>
-      <input type="text" className="input input--hover-border" placeholder="git@github.com/owner/repo.git" />
+      <input type="text" className="input" placeholder="git@github.com/owner/repo.git" />
 
       <button className="btn rounded-full" disabled title="Coming soon!">
         Clone
@@ -260,7 +267,6 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
       <div className="flex place-items-center gap-1">
         {isSuccesful ? (
           <RevisionSelect
-            className="input--hover-border"
             data-testid={`revision-select-${repo.name}`}
             value={head ?? ""}
             onChange={(e) => setHead(e.target.value)}
@@ -293,7 +299,7 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
         </Link>
       ) : (
         <Link
-          className="btn btn--primary btn--outlined transition-colors"
+          className="btn btn--primary"
           title={`View ${repo.name}`}
           aria-disabled={repo.status === "Error"}
           // to={`/repo/?${new URLSearchParams({ path: repo.path ?? "", branch: head ?? "" }).toString()}`}
