@@ -4,14 +4,15 @@ import gitTruckLogoGif from "~/assets/truck.gif"
 import { UpdateNotifier } from "./UpdateNotifier"
 import { mdiAlertOutline, mdiGithub } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Online } from "react-detect-offline"
-import { Link, useNavigation } from "react-router"
+import { useNavigation } from "react-router"
 import { cn } from "~/styling"
 
 export function GitTruckInfo({
+  className = "",
   installedVersion,
   latestVersion
 }: {
+  className?: string
   installedVersion: string
   latestVersion: string | null
 }) {
@@ -20,7 +21,7 @@ export function GitTruckInfo({
   const loading = navigationData.state !== "idle"
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center justify-between gap-2">
         <a className="flex gap-2">
           <img
@@ -35,32 +36,31 @@ export function GitTruckInfo({
             <span className="text-tertiary-text dark:text-tertiary-text-dark text-xs">Version {installedVersion}</span>
           </div>
         </a>
-        {updateAvailable ? <UpdateNotifier /> : null}
+        {updateAvailable ? <UpdateNotifier installedVersion={installedVersion} latestVersion={latestVersion} /> : null}
       </div>
-      <Online>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <a
-            href="https://github.com/git-truck/git-truck"
-            className="btn text-btn text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Star Git Truck on GitHub"
-          >
-            <Icon path={mdiGithub} size={1} />
-            Star Git Truck
-          </a>
-          <a
-            href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
-            className="btn text-btn text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Open an issue"
-          >
-            <Icon path={mdiAlertOutline} size={1} />
-            Open an issue
-          </a>
-        </div>
-      </Online>
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <a
+          href="https://github.com/git-truck/git-truck"
+          className="btn btn--text text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Star Git Truck on GitHub"
+        >
+          <Icon path={mdiGithub} size={1} />
+          Star Git Truck
+        </a>
+        <a
+          href="https://github.com/git-truck/git-truck/issues/new?template=user-issue.md"
+          className="btn btn--text text-secondary-text dark:text-secondary-text-dark flex items-center gap-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open an issue"
+        >
+          <Icon path={mdiAlertOutline} size={1} />
+          Open an issue
+        </a>
+      </div>
     </div>
   )
 }
