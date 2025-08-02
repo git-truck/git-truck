@@ -11,7 +11,7 @@ import reactRouterConfig from "./react-router.config.ts"
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
     rollupOptions: {
-      external: ["@duckdb/node-api"],
+      external: (id) => id === "@duckdb/node-api",
       ...(isSsrBuild
         ? {
             input: "./src/server/app.ts"
