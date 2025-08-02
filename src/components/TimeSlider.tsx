@@ -4,7 +4,7 @@ import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
 import ClipLoader from "react-spinners/ClipLoader"
-import { Popover, ArrowContainer, type PopoverState } from "react-tiny-popover"
+import { Popover } from "./Popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
 import { missingInMapColor, sliderPadding } from "~/const"
@@ -24,9 +24,6 @@ function DateTags({
   updateTimeseries(e: readonly number[]): void
   disabled: boolean
 }) {
-  const [startRangeDatePickerOpen, setStartRangeDatePickerOpen] = useState(false)
-  const [endRangeDatePickerOpen, setEndRangeDatePickerOpen] = useState(false)
-
   const selectedStartDate = useMemo(() => new Date(range[0] * 1000), [range])
   const selectedEndDate = useMemo(() => new Date(range[1] * 1000), [range])
   const percentageStart = useMemo(
@@ -50,93 +47,63 @@ function DateTags({
   return (
     <div style={railStyle}>
       <Popover
-        isOpen={startRangeDatePickerOpen}
-        positions={["top", "left", "right", "bottom"]}
-        onClickOutside={() => {
-          setStartRangeDatePickerOpen(false)
-        }}
-        content={({ position, childRect, popoverRect }: PopoverState) => (
-          <ArrowContainer
-            position={position}
-            childRect={childRect}
-            popoverRect={popoverRect}
-            arrowSize={10}
-            arrowColor="white"
+        trigger={({ onClick }) => (
+          <button
+            title="Set the date of the start of the time range"
+            style={{
+              left: `${percentageStart}%`,
+              bottom: "100%",
+              position: "absolute",
+              transform: "translate(-100%, -15%)",
+              width: "100px",
+              whiteSpace: "nowrap"
+            }}
+            className="btn btn--primary"
+            onClick={onClick}
           >
-            <TimePicker
-              range={range}
-              setRange={setRange}
-              timerange={timerange}
-              setsBeginning={true}
-              updateTimeseries={updateTimeseries}
-              disabled={disabled}
-            />
-          </ArrowContainer>
+            <Icon path={mdiCalendarArrowRight} />
+            {dateFormatShort(selectedStartDate.getTime())}
+          </button>
         )}
       >
-        <button
-          title="Set the date of the start of the time range"
-          style={{
-            left: `${percentageStart}%`,
-            bottom: "100%",
-            position: "absolute",
-            transform: "translate(-100%, -15%)",
-            width: "100px",
-            whiteSpace: "nowrap"
-          }}
-          className="btn btn--primary"
-          onClick={() => {
-            setStartRangeDatePickerOpen(!startRangeDatePickerOpen)
-          }}
-        >
-          <Icon path={mdiCalendarArrowRight} />
-          {dateFormatShort(selectedStartDate.getTime())}
-        </button>
+        <TimePicker
+          range={range}
+          setRange={setRange}
+          timerange={timerange}
+          setsBeginning={true}
+          updateTimeseries={updateTimeseries}
+          disabled={disabled}
+        />
       </Popover>
 
       <Popover
-        isOpen={endRangeDatePickerOpen}
-        positions={["top", "left", "right", "bottom"]}
-        onClickOutside={() => {
-          setEndRangeDatePickerOpen(false)
-        }}
-        content={({ position, childRect, popoverRect }: PopoverState) => (
-          <ArrowContainer
-            position={position}
-            childRect={childRect}
-            popoverRect={popoverRect}
-            arrowSize={10}
-            arrowColor="white"
+        trigger={({ onClick }) => (
+          <button
+            title="Set the date of the end of the time range"
+            // style={{
+            //   left: `${percentageEnd}%`,
+            //   bottom: "100%",
+            //   position: "absolute",
+            //   transform: "translate(0%, -15%)",
+            //   width: "100px",
+            //   whiteSpace: "nowrap"
+            // }}
+            className="btn btn--primary"
+            onClick={onClick}
           >
-            <TimePicker
-              range={range}
-              setRange={setRange}
-              timerange={timerange}
-              setsBeginning={false}
-              updateTimeseries={updateTimeseries}
-              disabled={disabled}
-            />
-          </ArrowContainer>
+            {dateFormatShort(selectedEndDate.getTime())}
+            <Icon path={mdiCalendarArrowLeft} />
+          </button>
         )}
       >
-        <button
-          title="Set the date of the end of the time range"
-          style={{
-            left: `${percentageEnd}%`,
-            bottom: "100%",
-            position: "absolute",
-            transform: "translate(0%, -15%)",
-            width: "100px",
-            whiteSpace: "nowrap"
-          }}
-          className="btn btn--primary"
-          onClick={() => {
-            setEndRangeDatePickerOpen(!endRangeDatePickerOpen)
-          }}
-        >
-          {dateFormatShort(selectedEndDate.getTime())}
-          <Icon path={mdiCalendarArrowLeft} />
-        </button>
+        <TimePicker
+          range={range}
+          setRange={setRange}
+          timerange={timerange}
+          setsBeginning={false}
+          updateTimeseries={updateTimeseries}
+          disabled={disabled}
+        />
       </Popover>
     </div>
   )

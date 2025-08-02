@@ -21,24 +21,18 @@ export function EnumSelect<T extends string>(props: {
       aria-label=""
     >
       {enumEntries.map(([key, value]) => (
-        <Field
-          key={key}
-          className={clsx("group cursor-pointer gap-2 text-xs transition-all duration-200", {
-            "has-data-checked:bg-blue-primary has-data-checked:fill-primary-text-dark has-data-checked:text-primary-text-dark has-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary flex-col place-items-center items-center rounded border border-transparent p-1":
-              props.large,
-            "has-data-checked:btn--primary btn hover:text-blue-primary flex h-auto w-max items-center justify-between gap-2 rounded-lg border-transparent px-1 py-1 text-xs/none":
-              !props.large
-          })}
-        >
-          <Radio value={key}>
+        <Field key={key}>
+          <Radio value={key} className="group">
             <div
-              className={cn("flex items-center", {
-                "flex-col": props.large,
-                "gap-2": !props.large
+              className={clsx("group btn cursor-pointer gap-2 text-xs transition-all duration-200", {
+                "group-data-checked:bg-blue-primary group-data-checked:fill-primary-text-dark group-data-checked:text-primary-text-dark group-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary h-auto flex-col place-items-center items-center rounded border border-transparent p-1":
+                  props.large,
+                "group-data-checked:btn--primary hover:text-primary-text dark:hover:text-primary-text-dark flex h-auto w-max items-center justify-between gap-2 rounded-lg border-transparent px-1 py-1 text-xs/none":
+                  !props.large
               })}
             >
               <Icon path={props.iconMap[key]} size={props.large ? "1.5rem" : "1rem"} color="currentColor" />
-              <Label className="cursor-pointer">{value}</Label>
+              <Label className="cursor-pointer font-normal">{value}</Label>
             </div>
           </Radio>
         </Field>

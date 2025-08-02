@@ -1,4 +1,3 @@
-import Icon from "@mdi/react"
 import { memo } from "react"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
@@ -10,11 +9,9 @@ import {
   mdiChartBubble,
   mdiChartTree,
   mdiFileCodeOutline,
-  mdiImageSizeSelectSmall,
-  mdiPalette,
+  mdiKnife,
   mdiPlusMinusVariant,
   mdiPodiumGold,
-  mdiPuzzle,
   mdiResize,
   mdiScaleBalance,
   mdiSourceCommit,
@@ -22,6 +19,7 @@ import {
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
+import { CollapsableSettings } from "./Settings"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
@@ -53,57 +51,52 @@ export const Options = memo(function Options() {
 
   const chartTypeIcons: Record<ChartType, string> = {
     BUBBLE_CHART: mdiChartBubble,
-    TREE_MAP: mdiChartTree
+    TREE_MAP: mdiChartTree,
+    PARTITION: mdiKnife
   }
 
   return (
     <>
-      <div className="card">
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiPuzzle} size="1.25em" />
-            Layout
-          </legend>
-          <EnumSelect
-            enum={Chart}
-            defaultValue={chartType}
-            onChange={(chartType: ChartType) => setChartType(chartType)}
-            iconMap={chartTypeIcons}
-          />
-        </fieldset>
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiImageSizeSelectSmall} size="1.25em" />
-            Size
-          </legend>
-          <EnumSelect
-            enum={SizeMetric}
-            defaultValue={sizeMetric}
-            onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
-            iconMap={sizeMetricIcons}
-          />
-        </fieldset>
-        <fieldset className="rounded-lg border p-2">
-          <legend className="card__title ml-1.5 justify-start gap-2">
-            <Icon path={mdiPalette} size="1.25em" />
-            Color
-          </legend>
-          <EnumSelect
-            enum={Metric}
-            defaultValue={metricType}
-            onChange={(metric: MetricType) => {
-              setMetricType(metric)
-              if (!linkMetricAndSizeMetric) {
-                return
-              }
-              const relatedSizeMetricType = relatedSizeMetric[metric]
-              if (relatedSizeMetricType) {
-                setSizeMetricType(relatedSizeMetricType)
-              }
-            }}
-            iconMap={visualizationIcons}
-          />
-        </fieldset>
+      <div className="absolute top-2 right-2">
+        <CollapsableSettings />
+      </div>
+      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
+        <h2 className="card__title">Layout</h2>
+        <EnumSelect
+          // large
+          enum={Chart}
+          defaultValue={chartType}
+          onChange={(chartType: ChartType) => setChartType(chartType)}
+          iconMap={chartTypeIcons}
+        />
+      </div>
+      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
+        <h2 className="card__title">Size</h2>
+        <EnumSelect
+          // large
+          enum={SizeMetric}
+          defaultValue={sizeMetric}
+          onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
+          iconMap={sizeMetricIcons}
+        />
+      </div>
+      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
+        <h2 className="card__title">Color</h2>
+        <EnumSelect
+          enum={Metric}
+          defaultValue={metricType}
+          onChange={(metric: MetricType) => {
+            setMetricType(metric)
+            if (!linkMetricAndSizeMetric) {
+              return
+            }
+            const relatedSizeMetricType = relatedSizeMetric[metric]
+            if (relatedSizeMetricType) {
+              setSizeMetricType(relatedSizeMetricType)
+            }
+          }}
+          iconMap={visualizationIcons}
+        />
       </div>
     </>
   )

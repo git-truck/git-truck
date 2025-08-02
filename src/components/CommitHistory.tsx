@@ -10,10 +10,9 @@ import Accordion from "./accordion/Accordion"
 import { useFetcher } from "react-router"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useData } from "~/contexts/DataContext"
-import { CloseButton, LegendDot } from "./util"
+import { LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "./Popover"
-import { SortingMethods, SortingOrders, useOptions } from "~/contexts/OptionsContext"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -25,41 +24,23 @@ interface CommitDistFragProps {
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
-  const sortMethod: SortCommitsMethods = props.sortBy !== undefined ? props.sortBy : "date"
   const [, authorColors] = useMetrics()
-  const { commitSortingOrdersType, commitSortingMethodsType } = useOptions()
-  const isDateSortingMethod: boolean = commitSortingMethodsType == Object.keys(SortingMethods)[0]
-  const isDefaultSortingOrdersSelected: boolean =
-    commitSortingOrdersType == Object.keys(SortingOrders(isDateSortingMethod))[0]
-  const cleanGroupItems: { [key: string]: FullCommitDTO[] } = sortCommits(props.items.slice(0, props.count), sortMethod)
-
-  const items: Array<AccordionData> = new Array<AccordionData>()
-  for (const [key, values] of Object.entries(cleanGroupItems)) {
-    items.push({
-      title: key,
-      content: (
-        <>
-          {values.map((value: FullCommitDTO) => {
-            return (
-              <CommitListEntry
-                key={value.hash + "--itemContentAccordion"}
-                authorColor={authorColors.get(value.author) ?? "grey"}
-                value={value}
-              />
-            )
-          })}
-        </>
-      )
-    })
-  }
 
   return (
     <Accordion
-      key={items.length > 0 ? items[0].title : new Date().toDateString()}
       titleLabels={true}
       multipleOpen={true}
       openByDefault={true}
-      items={isDefaultSortingOrdersSelected ? items : items.reverse()}
+      items={props.items.map((value) => ({
+        title: value.message,
+        content: (
+          <CommitListEntry
+            key={value.hash + "--itemContentAccordion"}
+            authorColor={authorColors.get(value.author) ?? "grey"}
+            value={value}
+          />
+        )
+      }))}
     />
   )
 }
@@ -229,31 +210,4 @@ export function CommitHistory(props: { commitCount: number }) {
       </div>
     </>
   )
-}
-
-function sortCommits(items: FullCommitDTO[], method: SortCommitsMethods): { [key: string]: FullCommitDTO[] } {
-  const cleanGroupItems: { [key: string]: FullCommitDTO[] } = {}
-  switch (method) {
-    // case AUTHOR
-    case Object.keys(SortingMethods)[1]:
-      for (const commit of items) {
-        const author: string = commit.author
-        if (!cleanGroupItems[author]) {
-          cleanGroupItems[author] = []
-        }
-        cleanGroupItems[author].push(commit)
-      }
-      break
-    // case DATE
-    case Object.keys(SortingMethods)[0]:
-    default:
-      for (const commit of items) {
-        const date: string = dateFormatLong(commit.committertime)
-        if (!cleanGroupItems[date]) {
-          cleanGroupItems[date] = []
-        }
-        cleanGroupItems[date].push(commit)
-      }
-  }
-  return cleanGroupItems
 }

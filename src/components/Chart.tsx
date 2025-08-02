@@ -1,5 +1,5 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
-import { hierarchy, pack, treemap, treemapResquarify } from "d3-hierarchy"
+import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { MouseEventHandler } from "react"
 import type { JSX } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
@@ -8,24 +8,29 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
-  estimatedLetterHeightForDirText,
-  estimatedLetterWidth,
+  estimatedLetterHeightForTreeText,
+  estimatedLetterWidthForTreeText,
   circleTreeTextOffsetY,
   treemapBlobTextOffsetX,
   treemapBlobTextOffsetY,
-  treemapNodeBorderRadius,
+  treemapBlobBorderRadius,
   treemapPaddingTop,
   treemapTreeTextOffsetX,
   circleBlobTextOffsetY,
   treemapTreeTextOffsetY,
-  missingInMapColor
+  missingInMapColor,
+  noEntryColor,
+  treemapPaddingInner,
+  treemapPaddingOuter,
+  estimatedLetterWidthForBlobText,
+  treemapTreeBorderRadius
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { getTextColorFromBackground, isBlob, isTree } from "~/shared/util"
+import { isDarkColor, isBlob, isTree } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -41,7 +46,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -68,6 +73,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const nodes = useMemo(() => {
     console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
+
     const res = createPartitionedHiearchy(
       databaseInfo,
       filetree,
@@ -141,7 +147,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
           return (
             <g
               key={d.data.path}
-              className={clsx("transition-opacity hover:opacity-60", {
+              className={clsx("transition duration-400", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
                 "hover:opacity-80": isBlob(d.data),
@@ -206,16 +212,19 @@ function filterGitTree(
   return filteredTree
 }
 
-function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch: boolean }) {
+function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       strokeWidth: "1px",
-      fill: isBlob(d.data)
-        ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor)
-        : "transparent"
+      ...(isBlob(d.data)
+        ? {
+            fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
+            stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+          }
+        : {})
     }
 
     if (chartType === "BUBBLE_CHART") {
@@ -223,7 +232,7 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
       props = {
         ...props,
         x: circleDatum.x - circleDatum.r,
-        y: circleDatum.y - circleDatum.r + estimatedLetterHeightForDirText - 1,
+        y: circleDatum.y - circleDatum.r + estimatedLetterHeightForTreeText - 1,
         width: circleDatum.r * 2,
         height: circleDatum.r * 2,
         rx: circleDatum.r,
@@ -234,12 +243,13 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
 
       props = {
         ...props,
-        x: datum.x0,
-        y: datum.y0,
-        width: datum.x1 - datum.x0,
-        height: datum.y1 - datum.y0,
-        rx: treemapNodeBorderRadius,
-        ry: treemapNodeBorderRadius
+        x: 0.5 + datum.x0,
+        y: 0.5 + datum.y0,
+        width: datum.x1 - datum.x0 - 1,
+        height: datum.y1 - datum.y0 - 1,
+        ...(isTree(d.data)
+          ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
+          : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
       }
     }
     return props
@@ -248,10 +258,15 @@ function Node({ d, isSearchMatch }: { d: CircleOrRectHiearchyNode; isSearchMatch
   return (
     <rect
       {...commonProps}
-      className={cn(isSearchMatch ? "stroke-red-500" : isBlob(d.data) ? "stroke-transparent" : "", {
+      className={cn({
+        "stroke-inherit": isTree(d.data),
+        "fill-secondary-bg dark:fill-primary-bg-dark": isTree(d.data) && isCircularNode(d),
+
+        "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data) && isCircularNode(d),
+        "fill-secondary-bg dark:fill-secondary-bg-dark": isTree(d.data) && !isCircularNode(d),
+
         "cursor-pointer": isBlob(d.data),
-        "transition-all duration-500 ease-in-out": transitionsEnabled,
-        "animate-stroke-pulse": isSearchMatch
+        "transition-all duration-500 ease-in-out": transitionsEnabled
       })}
     />
   )
@@ -270,18 +285,20 @@ function collapseText({
   displayText: string
   chartType: ChartType
 }): string | null {
+  const estimatedLetterWidth = isTree(d.data) ? estimatedLetterWidthForTreeText : estimatedLetterWidthForBlobText
   let textIsTooLong: (text: string) => boolean
   let textIsTooTall: (text: string) => boolean
   if (chartType === "BUBBLE_CHART") {
     const circleDatum = d as HierarchyCircularNode<GitObject>
-    textIsTooLong = (text: string) => circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidth
+    textIsTooLong = (text: string) =>
+      circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidthForTreeText
     textIsTooTall = () => false
   } else {
     const datum = d as HierarchyRectangularNode<GitObject>
-    textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidth
+    textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidthForTreeText
     textIsTooTall = () => {
       const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
-      return heightAvailable < estimatedLetterHeightForDirText
+      return heightAvailable < estimatedLetterHeightForTreeText
     }
   }
 
@@ -303,8 +320,18 @@ function collapseText({
 
   if (textIsTooLong(displayText)) {
     displayText = displayText.replace(/\/.+\//gm, "/.../")
+    // TODO: Fix NodeTexts in BubbleChart
     if (textIsTooLong(displayText)) {
-      return null
+      const availableLength =
+        (chartType === "BUBBLE_CHART"
+          ? (d as HierarchyCircularNode<GitObject>).r * Math.PI
+          : (d as HierarchyRectangularNode<GitObject>).x1 -
+            (d as HierarchyRectangularNode<GitObject>).x0 -
+            treemapTreeTextOffsetX) / estimatedLetterWidth
+      1
+      displayText = displayText.slice(0, availableLength)
+
+      // displayText = displayText.slice(0, Math.floor(displayText.length / 2))
     }
   }
 
@@ -352,11 +379,11 @@ function NodeText({
     )
   }
 
-  const fillColor = isBlob(d.data)
-    ? getTextColorFromBackground(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
-    : prefersLightMode
-      ? "#333"
-      : "#fff"
+  const textFillClass = isBlob(d.data)
+    ? isDarkColor(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
+      ? "fill-primary-text-dark"
+      : "fill-primary-text"
+    : undefined
 
   const textPathBaseProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
@@ -453,13 +480,21 @@ function createPartitionedHiearchy(
 
   const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
 
-  if (chartType === "TREE_MAP") {
-    const treeMapPartition = treemap<GitObject>()
-      .tile(treemapResquarify)
-      .size([size.width, size.height])
-      .paddingInner(2)
-      .paddingOuter(4)
-      .paddingTop(treemapPaddingTop)
+  if (chartType === "TREE_MAP" || chartType === "PARTITION") {
+    const treeMapPartition =
+      chartType === "TREE_MAP"
+        ? treemap<GitObject>()
+            .size([size.width, size.height])
+            .round(true)
+            .tile(treemapResquarify)
+            .paddingInner(treemapPaddingInner)
+            .paddingOuter(treemapPaddingOuter)
+            .paddingTop(treemapPaddingTop)
+        : partition<GitObject>().size([size.width, size.height]).padding(treemapPaddingOuter)
+    // .tile(treemapResquarify)
+    // .paddingInner(treemapPaddingInner)
+    // .paddingOuter(treemapPaddingOuter)
+    // .paddingTop(treemapPaddingTop)
 
     const tmPartition = treeMapPartition(hiearchy)
 
@@ -472,7 +507,7 @@ function createPartitionedHiearchy(
   }
   if (chartType === "BUBBLE_CHART") {
     const bubbleChartPartition = pack<GitObject>()
-      .size([size.width, size.height - estimatedLetterHeightForDirText])
+      .size([size.width, size.height - estimatedLetterHeightForTreeText])
       .padding(bubblePadding)
     const bPartition = bubbleChartPartition(hiearchy)
     filterTree(bPartition, (child) => {

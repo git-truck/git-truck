@@ -4,6 +4,7 @@ import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { ChevronButton } from "./ChevronButton"
 import Icon from "@mdi/react"
 import { memo, useId, useState } from "react"
+import { Popover } from "./Popover"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -13,29 +14,34 @@ function hiddenFileFormat(ignored: string) {
 
 export const HiddenFiles = memo(function HiddenFiles() {
   const location = useLocation()
-  const [expanded, setExpanded] = useState(false)
   const navigationState = useNavigation()
   const { databaseInfo } = useData()
   const expandHiddenFilesButtonId = useId()
 
   return (
-    <div className="card flex flex-col gap-2">
-      <button
-        className="card__title flex cursor-pointer justify-start gap-2 hover:opacity-70"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <Icon path={mdiEyeOff} size="1.25em" />
-        Hidden files ({databaseInfo.hiddenFiles.length})
-        <ChevronButton id={expandHiddenFilesButtonId} className="absolute top-2 right-2" open={expanded} />
-      </button>
-      {expanded ? (
-        <div>
-          {databaseInfo.hiddenFiles.map((hidden) => (
+    <Popover
+      popoverTitle={`Hidden files (${databaseInfo.hiddenFiles.length})`}
+      className="min-w-10"
+      trigger={({ onClick }) => (
+        <button
+          className="btn"
+          title="Hidden files"
+          aria-label="Hidden files"
+          aria-controls={expandHiddenFilesButtonId}
+          onClick={onClick}
+        >
+          <Icon path={mdiEyeOff} />
+        </button>
+      )}
+    >
+      <div className="flex flex-col gap-2">
+        {databaseInfo.hiddenFiles.length > 0 ? (
+          databaseInfo.hiddenFiles.map((hidden) => (
             <div className="grid grid-cols-[auto_1fr] items-center gap-2" key={hidden} title={hidden}>
               <Form className="w-4" method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <button
-                  className="icon-btn btn--hover-swap h-4"
+                  className="btn--icon btn--hover-swap h-4"
                   title="Show file"
                   disabled={navigationState.state !== "idle"}
                 >
@@ -45,9 +51,11 @@ export const HiddenFiles = memo(function HiddenFiles() {
               </Form>
               <span className="text-sm opacity-70">{hiddenFileFormat(hidden)}</span>
             </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
+          ))
+        ) : (
+          <div className="text-sm opacity-70">No hidden files</div>
+        )}
+      </div>
+    </Popover>
   )
 })

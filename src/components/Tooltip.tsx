@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import Icon from "@mdi/react"
 import { Fragment, memo, useMemo, useRef } from "react"
@@ -8,14 +7,15 @@ import type { DatabaseInfo } from "~/shared/model"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob } from "../shared/util"
+import { allExceptFirst, dateFormatRelative, isBlob, numToFriendlyString } from "../shared/util"
 import { LegendDot } from "./util"
 import { useMouse } from "~/hooks"
+import { cn } from "~/styling"
 
 export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject: GitObject | null }) {
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { metricType } = useOptions()
+  const { chartType, metricType } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const color = useMemo(() => {
@@ -35,9 +35,13 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject:
 
   return (
     <div
-      className={`card absolute top-0 left-0 z-50 flex w-max flex-row place-items-center rounded-full bg-gray-100/50 py-0 pr-2 pl-1 backdrop-blur will-change-transform dark:bg-gray-800/40 ${
-        visible ? "visible" : "hidden"
-      }`}
+      className={cn(
+        "secondary border-border-highlight dark:border-border-highlight-dark text-primary-text dark:text-primary-text-dark bg-tertiary-bg/50 dark:bg-tertiary-bg-dark/40 absolute top-0 left-0 z-50 flex w-max flex-row place-items-center gap-2 border [background-image:none] py-0 pr-2 pl-1 text-xs backdrop-blur will-change-transform",
+        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-md",
+        {
+          hidden: !visible
+        }
+      )}
       ref={tooltipRef}
       style={{
         transform: visible ? `translate(${xTransform}, ${yTransform})` : "none"
@@ -50,7 +54,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject:
       ) : (
         <Icon className="ml-0.5" path={mdiFolder} size={0.75} />
       )}
-      <span className="card__subtitle items-center font-bold">
+      <span className="text-base-styles text-primary-text dark:text-primary-text-dark items-center text-base font-bold">
         {hoveredObject && isBlob(hoveredObject)
           ? hoveredObject?.name
           : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
@@ -60,13 +64,9 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject:
               </Fragment>
             ))}
       </span>
-      {hoveredObject?.type === "blob"
-        ? ColorMetricDependentInfo({
-            metric: metricType,
-            hoveredBlob: hoveredObject,
-            databaseInfo
-          })
-        : null}
+      {hoveredObject?.type === "blob" ? (
+        <ColorMetricDependentInfo metric={metricType} hoveredBlob={hoveredObject} databaseInfo={databaseInfo} />
+      ) : null}
     </div>
   )
 })
@@ -78,15 +78,17 @@ function ColorMetricDependentInfo(props: {
 }) {
   const slicedPath = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
-    case "MOST_COMMITS":
+    case "MOST_COMMITS": {
       const noCommits = props.databaseInfo.commitCounts[slicedPath]
       if (!noCommits) return "No activity"
-      return `${noCommits} commit${noCommits > 1 ? "s" : ""}`
-    case "LAST_CHANGED":
+      return `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
+    }
+    case "LAST_CHANGED": {
       const epoch = props.databaseInfo.lastChanged[slicedPath]
       if (!epoch) return "No activity"
       return <>{dateFormatRelative(epoch)}</>
-    case "TOP_CONTRIBUTOR":
+    }
+    case "TOP_CONTRIBUTOR": {
       const dominant = props.databaseInfo.dominantAuthors[slicedPath]
       const contribSum = props.databaseInfo.contribSumPerFile[slicedPath]
       if (!dominant) return "No activity"
@@ -97,11 +99,14 @@ function ColorMetricDependentInfo(props: {
           {dominant.author} {authorPercentage}%
         </>
       )
-    case "MOST_CONTRIBUTIONS":
+    }
+    case "MOST_CONTRIBUTIONS": {
       const contribs = props.databaseInfo.contribSumPerFile[slicedPath]
       if (!contribs) return <>No activity</>
-      return <>{contribs} line changes</>
-    default:
+      return <>{numToFriendlyString(contribs)} line changes</>
+    }
+    default: {
       return null
+    }
   }
 }

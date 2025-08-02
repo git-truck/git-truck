@@ -2,22 +2,26 @@ import { CheckboxWithLabel } from "./util"
 import { useOptions } from "../contexts/OptionsContext"
 import Icon from "@mdi/react"
 import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
-import { useId, useState, useTransition } from "react"
+import { useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 import { relatedSizeMetric } from "./Options"
 import { Popover } from "./Popover"
+import { cn } from "~/styling"
 
-export function CollapsableSettings() {
+export function CollapsableSettings({ className = "" }: { className?: string }) {
   return (
     <Popover
-      positions={["bottom", "right", "left", "top"]}
+      // positions={["bottom", "right", "left", "top"]}
       trigger={({ onClick }) => (
         <button
-          className="btn btn--text relative flex cursor-pointer justify-between gap-2 hover:opacity-70"
+          title="Visualization settings"
+          className={cn(
+            "btn--icon hover:text-primary-text dark:hover:text-primary-text-dark relative flex cursor-pointer justify-between gap-2",
+            className
+          )}
           onClick={onClick}
         >
           <Icon path={mdiCog} size="1.25em" />
-          <span className="justify-self-start">View settings</span>
         </button>
       )}
     >

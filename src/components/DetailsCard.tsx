@@ -204,29 +204,27 @@ export function DetailsCard({
                             }}
                           >
                             <Icon path={mdiEyeOffOutline} />
-                            <span>Hide .{extension}</span>
+                            <span>Hide *.{extension}</span>
                           </button>
                         </Form>
                       ) : null}
                     </>
                   ) : (
-                    <>
-                      <Form method="post" action={location.pathname}>
-                        <input type="hidden" name="ignore" value={clickedObject.path} />
-                        <button
-                          className="btn btn--outlined"
-                          type="submit"
-                          disabled={state !== "idle"}
-                          onClick={() => {
-                            isProcessingHideRef.current = true
-                            setPath(OneFolderOut(path))
-                          }}
-                        >
-                          <Icon path={mdiEyeOffOutline} />
-                          Hide this folder
-                        </button>
-                      </Form>
-                    </>
+                    <Form method="post" action={location.pathname}>
+                      <input type="hidden" name="ignore" value={clickedObject.path} />
+                      <button
+                        className="btn btn--outlined"
+                        type="submit"
+                        disabled={state !== "idle"}
+                        onClick={() => {
+                          isProcessingHideRef.current = true
+                          setPath(OneFolderOut(path))
+                        }}
+                      >
+                        <Icon path={mdiEyeOffOutline} />
+                        Hide this folder
+                      </button>
+                    </Form>
                   )}
                   <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
                     <Icon path={mdiAccountMultiple} />
@@ -319,7 +317,7 @@ function PathEntry(props: { path: string }) {
         </p>
         <Form method="post" action={location.pathname} title={clickedObject.name}>
           <input type="hidden" name="open" value={clickedObject.path} />
-          <button className="icon-btn" disabled={state !== "idle"}>
+          <button className="btn--icon" disabled={state !== "idle"}>
             <Icon
               path={mdiOpenInNew}
               size="1.25em"

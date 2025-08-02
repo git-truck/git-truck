@@ -1,7 +1,7 @@
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import Icon from "@mdi/react"
 import { Form, useNavigation } from "react-router"
-import { useState } from "react"
+import { startTransition, useState } from "react"
 import { Slider, Rail, Handles, Tracks, Ticks, type SliderItem } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -85,18 +85,23 @@ function PercentageSlider() {
 
   const domain = [0, 100]
   return (
-    <>
+    <div className="relative">
       <Slider
+        className="mb-10"
         mode={1}
         step={1}
         domain={domain}
         rootStyle={sliderStyle}
         onChange={(e) => {
           setDominantAuthorCutoff(e[0])
-          setDisplayPercentage(e[0])
+          startTransition(() => {
+            setDisplayPercentage(e[0])
+          })
         }}
         onUpdate={(e) => {
-          setDisplayPercentage(e[0])
+          startTransition(() => {
+            setDisplayPercentage(e[0])
+          })
         }}
         values={[displayPercentage]}
       >
@@ -135,29 +140,29 @@ function PercentageSlider() {
           )}
         </Ticks>
       </Slider>
-      <p>{displayPercentage}%</p>
-    </>
+      <p className="absolute top-0">{displayPercentage}%</p>
+    </div>
   )
 }
 
 export function AuthorOptions({ showUnionAuthorsModal }: { showUnionAuthorsModal: () => void }) {
   const transitionState = useNavigation()
   const { repo } = useData()
-  const { metricType } = useOptions()
-
-  if (metricType !== "TOP_CONTRIBUTOR") return null
 
   return (
     <>
+      <p className="text-xs/normal">
+        Adjust the minimum percentage of line changes, that the top author should have, for each file to be colored.
+      </p>
       <PercentageSlider />
-      <div className="mt-2 flex gap-2">
-        <button className="btn" onClick={showUnionAuthorsModal}>
+      <div className="mt-2 flex justify-evenly gap-2">
+        <button className="btn btn--text" onClick={showUnionAuthorsModal}>
           <Icon path={mdiAccountMultiple} />
           Group authors
         </button>
         <Form method="post" action={`/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`}>
           <input type="hidden" name="rerollColors" value="" />
-          <button className="btn" type="submit" disabled={transitionState.state !== "idle"}>
+          <button className="btn btn--text" type="submit" disabled={transitionState.state !== "idle"}>
             <Icon path={mdiDiceMultipleOutline} />
             New author colors
           </button>

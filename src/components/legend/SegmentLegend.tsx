@@ -3,16 +3,22 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
 import { isBlob } from "~/shared/util"
+import { useOptions } from "~/contexts/OptionsContext"
+import { getMetricLegendType } from "~/metrics/metrics"
 
-export type SegmentLegendData = [
-  steps: number,
-  textGenerator: (n: number) => string,
-  colorGenerator: (n: number) => string,
+export type SegmentLegendData = {
+  steps: number
+  textGenerator: (n: number) => string
+  colorGenerator: (n: number) => string
   offsetStepCalc: (blob: GitBlobObject) => number
-]
+}
 
 export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {
-  const [steps, textGenerator, colorGenerator, offsetStepCalc] = metricCache.legend as SegmentLegendData
+  const { metricType } = useOptions()
+  if (getMetricLegendType(metricType) !== "SEGMENTS") {
+    throw new Error(`SegmentLegend expects metricType to be SEGMENTS, got ${metricType}`)
+  }
+  const { steps, textGenerator, colorGenerator, offsetStepCalc } = metricCache.legend as SegmentLegendData
   const width = 100 / steps
 
   let arrowVisible = false
@@ -27,7 +33,7 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
   return (
     <>
       <div className="relative">
-        <div className="flex whitespace-nowrap">
+        <div className="relative flex whitespace-nowrap">
           {[...Array(steps)].map((_, i) => {
             return steps >= 4 ? (
               <MetricSegment
@@ -46,8 +52,8 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
               ></TopMetricSegment>
             )
           })}
+          <LegendBarIndicator offset={arrowOffset} visible={arrowVisible} />
         </div>
-        <LegendBarIndicator offset={arrowOffset} visible={arrowVisible} />
       </div>
     </>
   )

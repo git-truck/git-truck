@@ -1,4 +1,4 @@
-import { useDeferredValue, type JSX } from "react"
+import { useDeferredValue, useMemo, type ReactNode } from "react"
 import type { GitObject } from "~/shared/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
@@ -28,25 +28,30 @@ export function Legend({
 
   if (metricCache === undefined) return null
 
-  let legend: JSX.Element = <></>
-  switch (getMetricLegendType(metricType)) {
-    case "POINT":
-      legend = <PointLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
-      break
-    case "GRADIENT":
-      legend = <GradientLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
-      break
-    case "SEGMENTS":
-      legend = <SegmentLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
-      break
-  }
+  const legend = useMemo<ReactNode>(() => {
+    switch (getMetricLegendType(metricType)) {
+      case "POINT": {
+        return <PointLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+      }
+
+      case "GRADIENT": {
+        return <GradientLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+      }
+
+      case "SEGMENTS": {
+        return <SegmentLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+      }
+    }
+  }, [metricCache, deferredHoveredObject])
 
   return (
-    <div className={`flex flex-col overflow-hidden ${className}`}>
-      <h2 className="card__title">Legend: {Metric[metricType]}</h2>
-      <p className="card-p mb-2">{getMetricDescription(metricType)}</p>
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <div>
+        <h2 className="card__title">Legend: {Metric[metricType]}</h2>
+        <p className="card-p mb-2">{getMetricDescription(metricType)}</p>
+        {legend}
+      </div>
       {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
-      {legend}
     </div>
   )
 }

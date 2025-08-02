@@ -4,21 +4,14 @@ import { ClickedObjectContext } from "~/contexts/ClickedContext"
 import type { RepoData } from "~/shared/model"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
-import type {
-  ChartType,
-  CommitSortingMethodsType,
-  CommitSortingOrdersType,
-  HierarchyType,
-  OptionsContextType
-} from "../contexts/OptionsContext"
-import { getDefaultOptionsContextValue, OptionsContext } from "../contexts/OptionsContext"
+import type { ChartType, HierarchyType, Options, OptionsContextType } from "../contexts/OptionsContext"
+import { getDefaultOptionsContextValue as getDefaultOptions, OptionsContext } from "../contexts/OptionsContext"
 import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
-import type { DepthType } from "~/metrics/chartDepth"
 import type { CommitTab } from "~/contexts/CommitTabContext"
 import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
 import { usePrefersLightMode } from "~/styling"
@@ -29,11 +22,12 @@ interface ProvidersProps {
 }
 
 export function Providers({ children, data }: ProvidersProps) {
-  const [options, setOptions] = useState<OptionsContextType | null>(null)
+  const [options, setOptions] = useState<Options>(getDefaultOptions())
   const [commitTab, setCommitTab] = useState<CommitTab | null>(null)
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const [path, setPath] = useState(data.repo.name)
   const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
+
   const prefersLight = usePrefersLightMode()
 
   const metricsData: MetricsData = useMemo(() => {
@@ -70,83 +64,67 @@ export function Providers({ children, data }: ProvidersProps) {
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
-      ...getDefaultOptionsContextValue(),
       ...options,
       setMetricType: (metricType: MetricType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           metricType
         })),
       setChartType: (chartType: ChartType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           chartType
         })),
-      setDepthType: (depthType: DepthType) =>
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
-          depthType
-        })),
+
       setHierarchyType: (hierarchyType: HierarchyType) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           hierarchyType
-        })),
-      setCommitSortingMethodsType: (commitSortingMethodsType: CommitSortingMethodsType) =>
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
-          commitSortingMethodsType
-        })),
-      setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) =>
-        setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
-          commitSortingOrdersType
         })),
       setCommitSearch: (commitSearch: string) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           commitSearch
         })),
-      setSizeMetricType: (sizeMetric: SizeMetricType) =>
-        setOptions((prevOptions) => ({ ...(prevOptions ?? getDefaultOptionsContextValue()), sizeMetric })),
+      setSizeMetricType: (sizeMetric: SizeMetricType) => setOptions((prevOptions) => ({ ...prevOptions, sizeMetric })),
       setHoveredBlob: (blob: GitBlobObject | null) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           hoveredBlob: blob
         })),
       setClickedObject: (object: GitObject | null) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           clickedObject: object
         })),
       setTransitionsEnabled: (enabled: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           transitionsEnabled: enabled
         })),
       setLabelsVisible: (visible: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           labelsVisible: visible
         })),
       setRenderCutoff: (renderCutoff: number) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           renderCutoff: renderCutoff
         })),
       setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           showFilesWithoutChanges: showFilesWithoutChanges
         })),
       setDominantAuthorCutoff: (dominantAuthorCutoff: number) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           dominantAuthorCutoff: dominantAuthorCutoff
         })),
       setLinkMetricAndSizeMetric: (link: boolean) =>
         setOptions((prevOptions) => ({
-          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          ...prevOptions,
           linkMetricAndSizeMetric: link
         }))
     }),
@@ -175,7 +153,8 @@ export function Providers({ children, data }: ProvidersProps) {
     const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
     if (savedOptions) {
       setOptions({
-        ...getDefaultOptionsContextValue(JSON.parse(savedOptions)),
+        ...getDefaultOptions(),
+        ...JSON.parse(savedOptions),
         hasLoadedSavedOptions: true
       })
     }

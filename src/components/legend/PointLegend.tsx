@@ -3,6 +3,7 @@ import type { MetricLegendProps } from "./Legend"
 import { LegendDot } from "../util"
 import { ChevronButton } from "../ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
+import { cn } from "~/styling"
 
 const legendCutoff = 3
 
@@ -34,12 +35,16 @@ export function PointLegend({ metricCache }: MetricLegendProps) {
     return <PointLegendFragment show={true} items={items} />
   } else {
     return (
-      <>
+      <div className="flex flex-wrap gap-2">
         <PointLegendFragment show={true} items={items.slice(0, legendCutoff)} />
         <PointLegendFragment show={!collapse} items={items.slice(legendCutoff)} />
         <PointLegendOther show={collapse} items={items.slice(legendCutoff)} toggle={() => setCollapse(!collapse)} />
-        <ChevronButton className="absolute right-2 bottom-2" open={!collapse} onClick={() => setCollapse(!collapse)} />
-      </>
+        <ChevronButton
+          className={cn("absolute right-2 bottom-2", { hidden: collapse })}
+          open={!collapse}
+          onClick={() => setCollapse(!collapse)}
+        />
+      </div>
     )
   }
 }
@@ -59,15 +64,13 @@ function PointLegendFragment(props: PointLegendFragProps) {
       {props.items.map((legendItem) => {
         const [label, info] = legendItem
         return (
-          <div key={label}>
-            <div className="relative flex items-center gap-2 text-sm leading-none">
-              {isAuthorRelatedLegend ? (
-                <LegendDot dotColor={info.color} authorColorToChange={label} />
-              ) : (
-                <LegendDot dotColor={info.color} />
-              )}
-              <span className="font-bold">{label}</span>
-            </div>
+          <div key={label} className="relative flex items-center gap-0.5 text-sm leading-none">
+            {isAuthorRelatedLegend ? (
+              <LegendDot dotColor={info.color} authorColorToChange={label} />
+            ) : (
+              <LegendDot dotColor={info.color} />
+            )}
+            <span className="font-bold">{label}</span>
           </div>
         )
       })}
@@ -86,20 +89,11 @@ function PointLegendOther(props: LegendOtherProps) {
 
   return (
     <button className="w-fit hover:opacity-70" onClick={props.toggle}>
-      <div className="relative flex items-center gap-2 text-sm leading-none">
-        {props.items.slice(0, 14).map(([label, info], i) => {
-          const margin = i === 0 ? 0 : -16
-          return (
-            <LegendDot
-              key={`dot${label}`}
-              dotColor={info.color}
-              style={{
-                marginLeft: margin
-              }}
-            />
-          )
-        })}
-        <span className="font-bold">{props.items.length} more</span>
+      <div className="relative mt-0.5 ml-3 flex items-center gap-2 text-sm leading-none">
+        {props.items.slice(0, 14).map(([label, info], i) => (
+          <LegendDot className="-ml-3" key={label} dotColor={info.color} />
+        ))}
+        <span className="text-xs">+ {props.items.length} more</span>
       </div>
     </button>
   )

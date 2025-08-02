@@ -1,4 +1,4 @@
-import { useState, useTransition, type HTMLAttributes, type ReactNode } from "react"
+import { useState, useTransition, type HTMLAttributes, type ReactNode, type JSX } from "react"
 import Icon from "@mdi/react"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
@@ -9,6 +9,7 @@ import { useData } from "~/contexts/DataContext"
 import { useSubmit } from "react-router"
 import { getPathFromRepoAndHead } from "~/shared/util"
 import { cn } from "~/styling"
+import { useOptions, type ChartType } from "~/contexts/OptionsContext"
 
 export const CloseButton = ({
   className = "",
@@ -18,7 +19,7 @@ export const CloseButton = ({
   <button
     className={clsx(
       className,
-      "icon-btn inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
+      "btn--icon inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
       {
         "absolute top-2 right-2 z-10": absolute
       }
@@ -32,21 +33,15 @@ export const CloseButton = ({
 
 export const LegendDot = ({
   className = "",
-  style = {},
   dotColor,
   authorColorToChange = undefined
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo, repo } = useData()
+  const { chartType } = useOptions()
   const submit = useSubmit()
 
-  if (!authorColorToChange)
-    return (
-      <div
-        className={cn("aspect-square h-4 w-4 rounded-full shadow-xs shadow-black", className)}
-        style={{ ...style, backgroundColor: dotColor }}
-      />
-    )
+  if (!authorColorToChange) return <Dot className={className} chartType={chartType} color={color} />
 
   function updateColor(author: string, color: string) {
     const form = new FormData()
@@ -63,11 +58,7 @@ export const LegendDot = ({
       popoverTitle="Choose color"
       positions={["left", "bottom", "top", "right"]}
       trigger={({ onClick }) => (
-        <div
-          className={`aspect-square h-4 w-4 rounded-full shadow-xs shadow-black ${className} cursor-pointer`}
-          style={{ ...style, backgroundColor: dotColor }}
-          onClick={onClick}
-        />
+        <Dot className={cn("cursor-pointer", className)} chartType={chartType} color={dotColor} onClick={onClick} />
       )}
     >
       <HexColorPicker color={color} onChange={setColor} />
@@ -80,6 +71,32 @@ export const LegendDot = ({
         </button>
       ) : null}
     </Popover>
+  )
+}
+
+const Dot = ({
+  color,
+  chartType,
+  className = "",
+  ...props
+}: {
+  color: string
+  as?: keyof JSX.IntrinsicElements
+  className?: string
+  chartType: ChartType
+  onClick?: () => void
+}) => {
+  const Component = props.onClick ? "button" : "div"
+  return (
+    <Component
+      {...props}
+      className={cn(
+        "aspect-square h-4 w-4 shadow-xs shadow-black transition-[border-radius]",
+        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-sm",
+        className
+      )}
+      style={{ backgroundColor: color }}
+    />
   )
 }
 

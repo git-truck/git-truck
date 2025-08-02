@@ -28,7 +28,7 @@ export function UpdateNotifier({
             className={cn(
               isExperimental
                 ? "btn text-primary-text-dark bg-purple-500"
-                : "icon-btn relative self-center rounded-full p-1"
+                : "btn--icon relative self-center rounded-full p-1"
             )}
             onClick={onClick}
           >
