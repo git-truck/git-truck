@@ -13,9 +13,5 @@ cli.cjs
 /test-results/
 /playwright-report/
 /playwright/.cache/
-/test-results/
-/playwright-report/
-/playwright/.cache/
-*.js
 .react-router/
 *.tsbuildinfo
