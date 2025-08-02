@@ -7,7 +7,7 @@ import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/shared/util"
-import Icon, { Stack } from "@mdi/react"
+import Icon from "@mdi/react"
 import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiCircle, mdiFile } from "@mdi/js"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -152,14 +152,20 @@ const SearchResultsList = memo(function SearchResults() {
           {result.type === "tree" ? (
             <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
           ) : (
-            <Stack
+            <Icon
+              color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
+              path={mdiFile}
               size={0.75}
               className="shrink-0"
-              color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-            >
-              <Icon path={mdiFile} size={0.75} className="shrink-0" />
-              {/* <Icon path={mdiCircle} size={0.5} className="" /> */}
-            </Stack>
+            />
+            // <Stack
+            //   size={0.75}
+            //   className="shrink-0"
+            //   color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
+            // >
+            //   <Icon path={mdiFile} size={0.75} className="shrink-0" />
+            //   {/* <Icon path={mdiCircle} size={0.5} className="" /> */}
+            // </Stack>
             // <LegendDot
             //   dotColor={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
             //   className="shrink-0"
