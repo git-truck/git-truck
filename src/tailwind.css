@@ -1,78 +1,144 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* @custom-variant dark (&:where(.dark, .dark *)); */
 
 @theme {
-  --color-blue-primary: #5698e4;
-  --color-red-primary: #e05151;
-  --color-grey-primary: #efefef;
+  --unit: 4px;
+  --side-panel-width-units: 94;
+  --side-panel-width: calc(var(--side-panel-width-units) * var(--unit));
+  --spacing-sidepanel: calc(var(--side-panel-width-units) * var(--unit));
 
+  --spacing-button: calc(var(--spacing) * 8);
+
+  --color-blue-primary: hsl(212, 46%, 50%);
+  --color-blue-secondary: hsl(212, 72%, 62%);
+
+  /* Light */
+  --color-primary-bg: var(--color-gray-200);
+  --color-secondary-bg: var(--color-gray-100);
+  --color-tertiary-bg: var(--color-gray-50);
+
+  --color-border: var(--color-gray-300);
+  --color-border-highlight: var(--color-gray-600);
+
+  --color-primary-text: var(--color-gray-700);
+  --color-secondary-text: var(--color-gray-500);
+  --color-tertiary-text: var(--color-gray-400);
+
+  /* Dark */
+  --color-primary-bg-dark: var(--color-gray-950);
+  --color-secondary-bg-dark: var(--color-gray-900);
+  --color-tertiary-bg-dark: var(--color-gray-800);
+
+  --color-border-dark: var(--color-gray-600);
+  --color-border-highlight-dark: var(--color-gray-400);
+
+  --color-primary-text-dark: var(--color-gray-50);
+  --color-secondary-text-dark: var(--color-gray-300);
+  --color-tertiary-text-dark: var(--color-gray-400);
+
+  /* Animations */
   --animate-hide-initially: 0s 1s linear forwards hide_initially;
-  --animate-blink: 1s linear infinite blink;
+
+  --animate-blink: 1.2s linear infinite blink;
   --animate-stroke-pulse: 1s ease-in-out infinite stroke_pulse;
 
   --font-mono: Roboto Mono, monospace;
 
   --background-image-arrow: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
-}
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+  @keyframes dash {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+  /* For progress bars that should only show after 100ms */
+  @keyframes hide_initially {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes blink {
+    0% {
+      opacity: 100%;
+    }
+    50% {
+      opacity: 50%;
+    }
+    100% {
+      opacity: 100%;
+    }
+  }
+
+  @keyframes stroke_pulse {
+    0% {
+      stroke-width: 1px;
+      stroke-opacity: 0%;
+    }
+    50% {
+      stroke-opacity: 50%;
+    }
+    99% {
+      stroke-width: 5px;
+      stroke-opacity: 0%;
+    }
+    100% {
+      stroke-width: 1px;
+      stroke-opacity: 0%;
+    }
   }
 }
 
-@utility card {
-  @apply relative flex w-auto flex-col gap-2 rounded-lg bg-gray-100 p-2 shadow-md dark:bg-gray-800;
+@utility primary {
+  @apply bg-primary-bg dark:bg-primary-bg-dark text-primary-text dark:text-primary-text-dark border-border dark:border-border-dark outline-border dark:outline-border-dark;
+}
 
-  /* Small screens */
+@utility secondary {
+  /* @apply bg-secondary-bg dark:bg-secondary-bg-dark; */
+  @apply bg-secondary-bg dark:bg-secondary-bg-dark;
+
+  @apply text-secondary-text dark:text-secondary-text-dark border-border dark:border-border-dark;
+}
+
+@utility secondary-tertiary {
+  /* @apply bg-secondary-bg dark:bg-secondary-bg-dark; */
+  @apply from-secondary-bg to-tertiary-bg dark:from-secondary-bg-dark dark:to-tertiary-bg-dark bg-linear-0;
+
+  @apply text-secondary-text dark:text-secondary-text-dark border-border dark:border-border-dark;
+}
+
+@utility tertiary {
+  @apply bg-tertiary-bg dark:bg-tertiary-bg-dark text-primary-text dark:text-primary-text-dark border-border dark:border-border-dark outline-border dark:outline-border-dark;
+}
+
+.app-container {
+  @apply m-auto w-full max-w-2xl;
+}
+
+@utility card {
+  @apply tertiary text-secondary-text dark:text-secondary-text-dark relative flex w-auto flex-col gap-2 rounded-sm border p-2 shadow-md;
 }
 
 @utility card__header {
   @apply flex flex-row items-center gap-2;
-
-  /* Small screens */
 }
 
 @utility card__content {
   @apply flex flex-col gap-2;
-
-  /* Small screens */
 }
 
 @utility card-p {
-  @apply text-sm opacity-80;
-
-  /* Small screens */
+  @apply text-sm;
 }
 
 @utility card__title {
-  @apply text-base-styles text-sm font-bold tracking-widest uppercase opacity-80 select-none;
-
-  /* Small screens */
-}
-
-@utility card__subtitle {
-  @apply text-base-styles text-base;
-
-  /* Small screens */
+  @apply text-base-styles text-secondary-text dark:text-secondary-text-dark text-xs leading-relaxed tracking-wider select-none;
 }
 
 @utility btn {
-  /* Inputs */
-  @apply grid h-8 cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md border border-gray-200 bg-gray-200 fill-current px-2 text-sm font-bold text-nowrap text-gray-600 transition duration-200 select-none hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 dark:border-gray-600 dark:bg-gray-600 dark:text-gray-200;
+  @apply h-button tertiary grid cursor-pointer grid-flow-col items-center justify-center gap-2 rounded-md border fill-current px-2 text-sm font-bold text-nowrap transition duration-200 select-none hover:opacity-50 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50;
 
   & > svg {
     @apply inline-block h-4 w-4;
@@ -81,126 +147,96 @@
   &:disabled {
     cursor: not-allowed;
   }
-
-  &.btn--primary {
-    @apply border-blue-primary bg-blue-primary text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
-  }
-
-  /* Small screens */
 }
 
-@utility btn--outlined {
-  @apply border-current bg-transparent text-inherit hover:bg-transparent hover:opacity-50 dark:hover:opacity-50;
-
-  /* Small screens */
-}
-
-@utility btn--outlined--light {
-  @apply border-current bg-transparent text-white/90 hover:bg-transparent hover:text-white/50;
-
-  /* Small screens */
-}
-
-@utility btn--primary {
-  &.btn {
-    @apply border-blue-primary bg-blue-primary text-white enabled:hover:opacity-70 dark:border-blue-700 dark:bg-blue-700;
-  }
-
-  &.btn--icon {
-    @apply text-blue-primary dark:text-blue-600;
-  }
-
-  /* Small screens */
-}
-
+/* Button Variants */
 @utility btn--icon {
-  &.btn--primary {
-    @apply text-blue-primary dark:text-blue-600;
-  }
   @apply inline-grid cursor-pointer place-items-center fill-current;
 
   & > * {
     @apply hover:opacity-70;
   }
-
-  /* Small screens */
 }
 
-@utility btn--success {
-  @apply border-green-500 bg-green-500 text-white;
-
-  /* Small screens */
-}
-
-@utility btn--danger {
-  @apply border-red-500 bg-red-500 text-white;
-
-  /* Small screens */
+@utility btn--outlined {
+  @apply text-secondary-text dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark border-current bg-transparent hover:bg-transparent;
 }
 
 @utility btn--hover-swap {
-  & .hover-swap {
-    display: none;
+  @apply grid grid-cols-1 grid-rows-1 place-items-center;
+
+  & > * {
+    grid-area: 1 / 1;
+    transition: opacity 0.2s ease;
   }
 
   & > .hover-swap {
-    display: none;
+    opacity: 0;
   }
-  & > :not(.hover-swap) {
-    opacity: 0.5;
-  }
+
   &:hover > .hover-swap {
-    display: block;
+    opacity: 1;
   }
+
   &:hover > :not(.hover-swap) {
-    display: none;
+    opacity: 0;
   }
-
-  /* Small screens */
-}
-
-@utility hover-swap {
-  .btn--hover-swap & {
-    display: none;
-  }
-
-  .btn--hover-swap > & {
-    display: none;
-  }
-  .btn--hover-swap:hover > & {
-    display: block;
-  }
-
-  /* Small screens */
 }
 
 @utility input {
-  @apply h-8 w-full grow;
-  @apply overflow-scroll rounded-sm border border-gray-300 px-1 text-sm text-ellipsis transition-colors;
-  @apply enabled:cursor-pointer enabled:hover:border-gray-400 disabled:cursor-not-allowed disabled:opacity-50;
-  @apply outline-hidden focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white;
+  @apply tertiary focus-visible:ring-blue-primary dark:focus-visible:ring-blue-secondary text-secondary-text dark:text-secondary-text-dark has-[input]:focus-visible:ring-blue-primary dark:has-[input]:focus-within:ring-blue-secondary placeholder:text-secondary-text dark:placeholder:text-secondary-text-dark hover:border-border-highlight dark:hover:border-border-highlight-dark h-8 w-full grow overflow-scroll rounded-sm border px-1 text-sm text-ellipsis outline-hidden transition-colors not-[select]:px-2 focus-visible:ring-2 *:focus-visible:ring-0 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50;
 
-  &:not(select) {
-    @apply px-2;
+  & input {
+    @apply focus-visible:ring-transparent;
   }
 
-  /* Small screens */
-}
-
-@utility input--hover-border {
-  @apply border-transparent hover:border-gray-400;
-
-  /* Small screens */
+  &select {
+    @apply bg-inherit text-inherit;
+  }
+  & optgroup {
+    @apply bg-inherit text-inherit;
+  }
 }
 
 @utility label {
   @apply cursor-pointer font-bold select-none hover:opacity-70;
+}
 
-  /* Small screens */
+/* Button Variants */
+@utility btn--primary {
+  @apply text-primary-text-dark border-blue-secondary bg-blue-primary dark:border-blue-secondary dark:bg-blue-primary rounded enabled:hover:opacity-70;
+
+  &.btn--icon {
+    @apply text-primary-text-dark;
+  }
+  &.btn-text {
+    @apply text-blue-primary dark:text-blue-primary border-transparent bg-transparent;
+  }
+  &.btn--outlined {
+    @apply border-blue-primary text-blue-primary dark:border-blue-secondary dark:text-blue-secondary bg-transparent;
+  }
+}
+@utility btn--text {
+  @apply border-transparent bg-transparent text-inherit hover:bg-transparent hover:opacity-50;
+}
+
+@utility btn--danger {
+  @apply text-primary-text-dark rounded border-red-900 bg-red-700 enabled:hover:opacity-70 dark:border-red-800 dark:bg-red-800;
+
+  &.btn--text {
+    @apply border-transparent bg-transparent text-red-700 dark:text-red-400;
+  }
+  &.btn--outlined {
+    @apply border-red-700 text-red-700 dark:border-red-400 dark:text-red-400;
+  }
+}
+
+@utility badge {
+  @apply bg-blue-primary inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-white;
 }
 
 @utility text-base-styles {
-  @apply line-clamp-1;
+  @apply text-primary-text dark:text-primary-text-dark line-clamp-1;
   /* font-weight: bold; */
   display: flex;
   align-items: center;
@@ -220,10 +256,11 @@
   input,
   button,
   textarea,
-  select {
+  select,
+  optgroup,
+  option {
+    @apply bg-inherit text-inherit;
     font: inherit;
-    color: inherit;
-    background-color: inherit;
   }
 
   input,
@@ -231,17 +268,6 @@
   textarea,
   select {
     @apply outline-hidden focus:outline-hidden focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white;
-  }
-
-  select {
-    color: inherit;
-    background-color: inherit;
-  }
-
-  optgroup,
-  option {
-    color: initial;
-    background-color: initial;
   }
 
   code {
