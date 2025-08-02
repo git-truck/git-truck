@@ -84,6 +84,17 @@ const mockRepoData: RepoData = {
 }
 
 export default function UI() {
+  // Use state to simulate hover for tooltip demo
+  const [tooltipHovered, setTooltipHovered] = useState(false)
+
+  // Minimal mock blob object for tooltip
+  const mockBlob = {
+    type: "blob" as const,
+    name: "demo.txt",
+    path: "src/demo.txt",
+    hash: "abc123",
+    sizeInBytes: 42
+  }
   return (
     <Providers data={mockRepoData}>
       <div className="mx-auto max-w-3xl space-y-8 p-2">
@@ -231,30 +242,16 @@ export default function UI() {
             <h2 className="card__title">Tooltip (Demo)</h2>
             <div className="flex flex-col items-start gap-2 p-4">
               <span>Hover over the button to show tooltip:</span>
-              {(() => {
-                // Minimal mock blob object for tooltip
-                const mockBlob = {
-                  type: "blob" as const,
-                  name: "demo.txt",
-                  path: "src/demo.txt",
-                  hash: "abc123",
-                  sizeInBytes: 42
-                }
-                // Use state to simulate hover
-                const [hovered, setHovered] = useState(false)
-                return (
-                  <div className="">
-                    <button
-                      className="btn btn--icon"
-                      onMouseEnter={() => setHovered(true)}
-                      onMouseLeave={() => setHovered(false)}
-                    >
-                      <span className="icon">🛈</span> Hover me
-                    </button>
-                    {hovered && <Tooltip hoveredObject={mockBlob} />}
-                  </div>
-                )
-              })()}
+              <div className="">
+                <button
+                  className="btn btn--icon"
+                  onMouseEnter={() => setTooltipHovered(true)}
+                  onMouseLeave={() => setTooltipHovered(false)}
+                >
+                  <span className="icon">🛈</span> Hover me
+                </button>
+                {tooltipHovered && <Tooltip hoveredObject={mockBlob} />}
+              </div>
             </div>
           </div>
         </div>

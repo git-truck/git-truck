@@ -1,5 +1,4 @@
-import sha1 from "sha1"
-import type { GitBlobObject, GitTreeObject , RepoData } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -83,7 +82,6 @@ export function generateAuthorColors(
   prefersLight: boolean
 ): Record<string, `#${string}`> {
   const authorColorMap: Record<string, `#${string}`> = {}
-  const seed = colorSeed ?? ""
   const colorsForLightTheme = schemeCategory10
   const colorsForDarkTheme = schemeSet3
   const colors = scaleOrdinal(prefersLight ? colorsForLightTheme : colorsForDarkTheme).range()
@@ -94,7 +92,7 @@ export function generateAuthorColors(
       authorColorMap[author] = existing
       continue
     }
-    const hashed = sha1(author + seed)
+    // const hashed = sha1(author + seed)
     // const color = uniqolor(hashed).color as `#${string}`
     const color = colors[i % colors.length] as `#${string}`
     authorColorMap[author] = color

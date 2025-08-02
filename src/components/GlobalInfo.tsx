@@ -12,6 +12,7 @@ import { Popover } from "./Popover"
 const title = "Git Truck"
 const analyzingTitle = "Analyzing | Git Truck"
 
+// eslint-disable-next-line react/prop-types
 export function GlobalInfo({ onMenuClick = () => {} }) {
   const client = useClient()
   const { databaseInfo, repo } = useData()

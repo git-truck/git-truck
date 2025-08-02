@@ -8,10 +8,9 @@ import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { allExceptLast, getSeparator } from "~/shared/util"
 import Icon from "@mdi/react"
-import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiCircle, mdiFile } from "@mdi/js"
+import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiFile } from "@mdi/js"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { LegendDot } from "./util"
 
 function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, GitObject> = {}

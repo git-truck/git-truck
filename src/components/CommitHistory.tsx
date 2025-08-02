@@ -4,8 +4,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import type { FileChange, FullCommitDTO } from "~/shared/model"
 import { Fragment, useEffect, useState } from "react"
-import { dateFormatLong, dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
-import type { AccordionData } from "./accordion/Accordion"
+import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import Accordion from "./accordion/Accordion"
 import { useFetcher } from "react-router"
 import { useClickedObject } from "~/contexts/ClickedContext"

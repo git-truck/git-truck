@@ -15,8 +15,7 @@ export type GradLegendData = {
 }
 
 export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps) {
-  const { minValue, maxValue, minValueAltFormat, maxValueAltFormat, minColor, maxColor } =
-    metricCache.legend as GradLegendData
+  const { minValue, maxValue, minColor, maxColor } = metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()
 

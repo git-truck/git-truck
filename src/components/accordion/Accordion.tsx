@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import AccordionItem from "./AccordionItem"
 
 export type AccordionData = {
@@ -24,15 +24,20 @@ function Accordion({
 }) {
   const [currentIdx, setCurrentIdx] = useState(new Array<number>())
   const btnOnClick = (idx: number) => {
-    multipleOpen
-      ? setCurrentIdx((currentValue) =>
-          currentValue.includes(idx) ? currentValue.filter((item) => item !== idx) : [...currentValue, idx]
-        )
-      : setCurrentIdx((currentValue) => (currentValue.includes(idx) ? [] : [idx]))
+    if (multipleOpen) {
+      setCurrentIdx((currentValue) =>
+        currentValue.includes(idx) ? currentValue.filter((item) => item !== idx) : [...currentValue, idx]
+      )
+    } else {
+      setCurrentIdx((currentValue) => (currentValue.includes(idx) ? [] : [idx]))
+    }
   }
-  if (openByDefault && !multipleOpen) {
-    setCurrentIdx([0])
-  }
+
+  useEffect(() => {
+    if (openByDefault && !multipleOpen) {
+      setCurrentIdx([0])
+    }
+  }, [openByDefault, multipleOpen])
   return (
     <ul className="m-0 block overflow-x-hidden">
       {items.map((item, idx) => (

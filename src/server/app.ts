@@ -17,7 +17,8 @@ const getLatestVersionPromise = getLatestVersion()
 
 app.use(
   createRequestHandler({
-    // @ts-ignore Virtual module provided by React Router
+    // @ts-expect-error Virtual module provided by React Router
+    // eslint-disable-next-line import/no-unresolved
     build: () => import("virtual:react-router/server-build"),
     async getLoadContext() {
       return { installedVersion: pkg.version, latestVersion: await getLatestVersionPromise }

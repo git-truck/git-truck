@@ -1,8 +1,8 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
-import type { MouseEventHandler , JSX } from "react"
+import type { MouseEventHandler, JSX } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
-import type { GitBlobObject, GitObject, GitTreeObject , DatabaseInfo } from "~/shared/model"
+import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
@@ -34,7 +34,7 @@ import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
-import { cn, usePrefersLightMode } from "~/styling"
+import { cn } from "~/styling"
 import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
@@ -326,7 +326,6 @@ function collapseText({
           : (d as HierarchyRectangularNode<GitObject>).x1 -
             (d as HierarchyRectangularNode<GitObject>).x0 -
             treemapTreeTextOffsetX) / estimatedLetterWidth
-      1
       displayText = displayText.slice(0, availableLength)
 
       // displayText = displayText.slice(0, Math.floor(displayText.length / 2))
@@ -355,7 +354,6 @@ function NodeText({
 }) {
   const [metricsData] = useMetrics()
   const { metricType } = useOptions()
-  const prefersLightMode = usePrefersLightMode()
   const isBubbleChart = isCircularNode(d)
 
   if (children === null) return null

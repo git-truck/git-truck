@@ -291,7 +291,7 @@ export function isValidURI(uri: string) {
   try {
     decodeURIComponent(uri)
     return true
-  } catch (error) {
+  } catch {
     return false
   }
 }

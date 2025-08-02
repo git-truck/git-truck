@@ -26,9 +26,9 @@ export function Legend({
 
   const metricCache = metricsData.get(metricType) ?? undefined
 
-  if (metricCache === undefined) return null
-
   const legend = useMemo<ReactNode>(() => {
+    if (metricCache === undefined) return null
+
     switch (getMetricLegendType(metricType)) {
       case "POINT": {
         return <PointLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
@@ -42,7 +42,9 @@ export function Legend({
         return <SegmentLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
       }
     }
-  }, [metricCache, deferredHoveredObject])
+  }, [metricCache, deferredHoveredObject, metricType])
+
+  if (legend === null) return null
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>

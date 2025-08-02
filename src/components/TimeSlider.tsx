@@ -30,10 +30,6 @@ function DateTags({
     () => ((range[0] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
     [range, timerange]
   )
-  const percentageEnd = useMemo(
-    () => ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
-    [range, timerange]
-  )
 
   const railStyle: React.CSSProperties = {
     position: "absolute",

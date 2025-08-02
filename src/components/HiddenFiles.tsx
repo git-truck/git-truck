@@ -1,9 +1,8 @@
 import { useData } from "~/contexts/DataContext"
 import { Form, useLocation, useNavigation } from "react-router"
 import { mdiEyeOff, mdiEye } from "@mdi/js"
-import { ChevronButton } from "./ChevronButton"
 import Icon from "@mdi/react"
-import { memo, useId, useState } from "react"
+import { memo, useId } from "react"
 import { Popover } from "./Popover"
 
 function hiddenFileFormat(ignored: string) {

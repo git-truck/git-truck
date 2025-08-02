@@ -16,7 +16,7 @@ export default class MetadataDB {
     try {
       const data = JSON.parse(await fs.readFile(this.path, "utf8")) as MetadataJson
       return data
-    } catch (e) {
+    } catch {
       return { completions: {}, authorcolors: {} }
     }
   }

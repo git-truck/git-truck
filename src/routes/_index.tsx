@@ -1,4 +1,4 @@
-import { Await, Form, Link, useFetcher, useLoaderData, useLocation } from "react-router"
+import { Await, Form, Link, useFetcher, useLoaderData } from "react-router"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import type { CompletedResult, Repository } from "~/shared/model.ts"

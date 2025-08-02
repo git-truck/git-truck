@@ -8,7 +8,6 @@ import { cn } from "~/styling"
 const legendCutoff = 3
 
 export class PointInfo {
-   
   constructor(
     public readonly color: `#${string}`,
     public weight: number
@@ -90,7 +89,7 @@ function PointLegendOther(props: LegendOtherProps) {
   return (
     <button className="w-fit hover:opacity-70" onClick={props.toggle}>
       <div className="relative mt-0.5 ml-3 flex items-center gap-2 text-sm leading-none">
-        {props.items.slice(0, 14).map(([label, info], i) => (
+        {props.items.slice(0, 14).map(([label, info]) => (
           <LegendDot className="-ml-3" key={label} dotColor={info.color} />
         ))}
         <span className="text-xs">+ {props.items.length} more</span>

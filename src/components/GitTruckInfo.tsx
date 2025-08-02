@@ -23,7 +23,7 @@ export function GitTruckInfo({
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center justify-between gap-2">
-        <a className="flex gap-2">
+        <div className="flex gap-2">
           <img
             src={loading ? gitTruckLogoGif : gitTruckLogo}
             alt="Git Truck Logo"
@@ -35,7 +35,7 @@ export function GitTruckInfo({
             </h1>
             <span className="text-tertiary-text dark:text-tertiary-text-dark text-xs">Version {installedVersion}</span>
           </div>
-        </a>
+        </div>
         {updateAvailable ? <UpdateNotifier installedVersion={installedVersion} latestVersion={latestVersion} /> : null}
       </div>
 

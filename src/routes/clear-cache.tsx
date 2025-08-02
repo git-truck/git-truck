@@ -1,6 +1,6 @@
 import { mdiDeleteForever } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Link, redirect, useFetcher, useLoaderData, useLocation, useNavigation } from "react-router"
+import { Link, redirect, useFetcher, useLoaderData, useLocation } from "react-router"
 import DB from "~/analyzer/DB.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/clear-cache"
@@ -50,8 +50,6 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
 
 export default function ClearCache() {
   const { versionInfo } = useLoaderData<typeof loader>()
-  const navigation = useNavigation()
-  const isTransitioning = navigation.state !== "idle"
 
   return (
     <>

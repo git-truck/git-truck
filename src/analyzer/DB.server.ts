@@ -223,8 +223,16 @@ export default class DB {
 
     await this.usingTableAppender("temporary_renames", async (appender) => {
       for (const rename of renames) {
-        rename.fromname ? appender.appendVarchar(rename.fromname) : appender.appendDefault()
-        rename.toname ? appender.appendVarchar(rename.toname) : appender.appendDefault()
+        if (rename.fromname) {
+          appender.appendVarchar(rename.fromname)
+        } else {
+          appender.appendDefault()
+        }
+        if (rename.toname) {
+          appender.appendVarchar(rename.toname)
+        } else {
+          appender.appendDefault()
+        }
         appender.appendUInteger(rename.timestamp)
         appender.appendUInteger(rename.timestampend)
         appender.endRow()
@@ -443,8 +451,16 @@ export default class DB {
   public async addRenames(renames: RenameEntry[]) {
     await this.usingTableAppender("renames", async (appender) => {
       for (const rename of renames) {
-        rename.fromname ? appender.appendVarchar(rename.fromname) : appender.appendDefault()
-        rename.toname ? appender.appendVarchar(rename.toname) : appender.appendDefault()
+        if (rename.fromname) {
+          appender.appendVarchar(rename.fromname)
+        } else {
+          appender.appendDefault()
+        }
+        if (rename.toname) {
+          appender.appendVarchar(rename.toname)
+        } else {
+          appender.appendDefault()
+        }
         appender.appendUInteger(rename.timestamp)
         appender.appendUInteger(rename.timestampauthor)
         appender.endRow()

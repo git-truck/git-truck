@@ -1,4 +1,4 @@
-import { mdiArrowTopLeft, mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit, mdiMenu } from "@mdi/js"
+import { mdiFullscreen, mdiFullscreenExit, mdiMenu } from "@mdi/js"
 import Icon from "@mdi/react"
 import { Await, useLoaderData, Link } from "react-router"
 import clsx from "clsx"
@@ -31,7 +31,6 @@ import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/$repo.$"
 import { RefreshButton } from "~/components/RefreshButton"
-import { CollapsableSettings } from "~/components/Settings"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 
 export const loader = async ({ params, context }: Route.LoaderArgs) => ({
@@ -289,10 +288,6 @@ export default function Repo() {
   )
 
   const toggleLeft = () => dispatch("toggleLeft")
-  const toggleRight = () => dispatch("toggleRight")
-  const collapseBoth = () => dispatch("collapseBoth")
-  const expandBoth = () => dispatch("expandBoth")
-  const toggleBoth = () => (bothExpanded ? collapseBoth() : expandBoth())
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
