@@ -7,7 +7,7 @@ interface ColorResult {
 
 const extensionToColor = new Map<string, ColorResult>()
 
-for (const [key, value] of Object.entries(
+for (const [lang, { color, extensions }] of Object.entries(
   languageMap as Record<
     string,
     {
@@ -16,17 +16,16 @@ for (const [key, value] of Object.entries(
     }
   >
 )) {
-  if (value.color) {
-    if (!value.extensions) {
-      continue
-    }
-    for (const ext of value.extensions) {
-      const extWithoutDot = ext.startsWith(".") ? ext.slice(1) : ext
-      extensionToColor.set(extWithoutDot, {
-        lang: key,
-        color: value.color as `#${string}`
-      })
-    }
+  if (!extensions) {
+    continue
+  }
+
+  for (const ext of extensions) {
+    const extWithoutDot = ext.startsWith(".") ? ext.slice(1) : ext
+    extensionToColor.set(extWithoutDot, {
+      lang,
+      color: color as `#${string}` | null
+    })
   }
 }
 

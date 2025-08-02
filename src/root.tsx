@@ -1,10 +1,22 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, isRouteErrorResponse, useRouteError } from "react-router"
+import {
+  Link,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  isRouteErrorResponse,
+  useLocation,
+  useRouteError
+} from "react-router"
 
 import "~/styles/vars.css"
 import { Code } from "./components/util"
 import "~/tailwind.css"
-import { ThemeProvider, cn, usePrefersLightMode } from "./styling"
+import { cn } from "./styling"
 import "react-datepicker/dist/react-datepicker.css"
+import { ClearCacheForm } from "./routes/clear-cache"
+import { LoadingIndicator } from "./components/LoadingIndicator"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -12,67 +24,78 @@ export const meta = () => {
 
 export default function App() {
   return (
+    <Shell>
+      <Outlet />
+    </Shell>
+  )
+}
+
+function Shell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  // const prefersLightMode = usePrefersLightMode()
+  return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
+        {/* <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.documentElement.classList.toggle(
+                "dark",
+                localStorage.${themeLocalStorageKey} === "DARK" || (!("${themeLocalStorageKey}" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches));
+              `
+          }}
+        ></script> */}
       </head>
-      <ThemeProvider>
-        <Body>
-          <Outlet />
-          <ScrollRestoration />
-          <Scripts />
-        </Body>
-      </ThemeProvider>
+      <body
+        className={cn(
+          "bg-primary-bg dark:bg-primary-bg-dark text-primary-text dark:text-primary-text-dark",
+          // { dark: !prefersLightMode },
+          className
+        )}
+      >
+        {children}
+      </body>
+      <ScrollRestoration />
+      <Scripts />
     </html>
   )
 }
 
-function Body({ children }: { children: React.ReactNode }) {
-  const prefersLightMode = usePrefersLightMode()
-  return (
-    <body className={cn("bg-gray-200 text-gray-700 dark:bg-gray-900 dark:text-gray-300", { dark: !prefersLightMode })}>
-      {children}
-    </body>
-  )
-}
-
 export const ErrorBoundary = () => {
+  const { pathname } = useLocation()
   const error = useRouteError()
 
-  if (isRouteErrorResponse(error)) {
-    return (
-      <html lang="en">
-        <head>
-          <title>Oops! An error wasn&apos;t handled</title>
-          <Meta />
-          <Links />
-        </head>
-        <body>
-          <h1>Error: {error.status}</h1>
-          <Code>{error.data.message}</Code>
-          <Scripts />
-        </body>
-      </html>
-    )
-  } else if (error instanceof Error) {
-    return (
-      <html lang="en">
-        <head>
-          <title>Oops! An error wasn&apos;t handled</title>
-          <Meta />
-          <Links />
-        </head>
-        <body>
-          <h1>{error.message}</h1>
-          <Code>{error.stack}</Code>
-          <Scripts />
-        </body>
-      </html>
-    )
-  } else {
-    return null
-  }
+  const errorMessage = isRouteErrorResponse(error)
+    ? error.data.message
+    : error instanceof Error
+      ? error.message
+      : "An unknown error occurred"
+
+  return (
+    <Shell className="bg-red-200">
+      <div className="app-container">
+        <div />
+        <div className="card my-2">
+          <h1 className="">Oh no, the Git Truck crashed!</h1>
+          <p>See console for more infomation.</p>
+          <Code>{errorMessage}</Code>
+          <div>
+            <ClearCacheForm redirectPath={pathname} />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Link className="btn" to={pathname}>
+              Retry
+            </Link>
+            <Link className="btn btn--primary" to="..">
+              Go back
+            </Link>
+          </div>
+        </div>
+        <LoadingIndicator />
+      </div>
+    </Shell>
+  )
 }

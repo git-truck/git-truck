@@ -102,7 +102,7 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const brightnessCalculationCache = new Map<`#${string}`, "#000000" | "#ffffff">()
+const brightnessCalculationCache = new Map<`#${string}`, boolean>()
 
 function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
@@ -121,21 +121,21 @@ function hexToRgb(hexString: `#${string}`): [number, number, number] {
   return rgb
 }
 
-export const getTextColorFromBackground = (color: `#${string}`): "#000000" | "#ffffff" => {
+export const isDarkColor = (color: `#${string}`): boolean => {
   // Verify that the color is a hex color
   if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-    return "#000000"
+    throw new Error(`Invalid hex color: ${color}`)
   }
   const cachedColor = brightnessCalculationCache.get(color)
-  if (cachedColor) {
+  if (cachedColor !== undefined) {
     return cachedColor
   }
 
   const brightness = weightedDistanceIn3D(color)
-  const foreground = brightness > 186 ? "#000000" : "#ffffff"
-  brightnessCalculationCache.set(color, foreground)
+  const isDark = brightness < 186
+  brightnessCalculationCache.set(color, isDark)
 
-  return foreground
+  return isDark
 }
 
 const colorCache = new Map<string, `#${string}`>()
@@ -293,5 +293,15 @@ export function isValidURI(uri: string) {
     return true
   } catch (error) {
     return false
+  }
+}
+
+export const numToFriendlyString = (num: number): string => {
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(1)}K`
+  } else {
+    return num.toString()
   }
 }

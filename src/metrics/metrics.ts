@@ -49,7 +49,7 @@ export function getMetricDescription(metric: MetricType): string {
     case "LAST_CHANGED":
       return "How long ago did the files change?"
     case "TOP_CONTRIBUTOR":
-      return "Shows the top author for each file. Adjust the minimum percentage of line changes, that the top author should have, for each file to be colored."
+      return "Shows the top author for each file. "
     case "MOST_CONTRIBUTIONS":
       return "How many line changes (additions and deletions) have been made to the file?"
     default:
@@ -131,14 +131,14 @@ export function getMetricCalcs(
       "MOST_COMMITS",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
-          cache.legend = [
-            `${minCommitCount}`,
-            `${maxCommitCount}`,
-            undefined,
-            undefined,
-            commitmapper.getColor(minCommitCount),
-            commitmapper.getColor(maxCommitCount)
-          ]
+          cache.legend = {
+            minValue: minCommitCount,
+            maxValue: maxCommitCount,
+            minValueAltFormat: undefined,
+            maxValueAltFormat: undefined,
+            minColor: commitmapper.getColor(minCommitCount),
+            maxColor: commitmapper.getColor(maxCommitCount)
+          }
         }
         commitmapper.setColor(blob, cache, data.databaseInfo.commitCounts)
       }
@@ -147,12 +147,13 @@ export function getMetricCalcs(
       "LAST_CHANGED",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
-          cache.legend = [
-            getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
-            (n) => groupings[n].text,
-            (n) => groupings[n].color,
-            (blob) => getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
-          ]
+          cache.legend = {
+            steps: getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
+            textGenerator: (n) => groupings[n].text,
+            colorGenerator: (n) => groupings[n].color,
+            offsetStepCalc: (blob) =>
+              getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
+          }
         }
         const existing = data.databaseInfo.lastChanged[blob.path]
         const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
@@ -177,14 +178,14 @@ export function getMetricCalcs(
       "MOST_CONTRIBUTIONS",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) {
-          cache.legend = [
-            `${minContribCount}`,
-            `${maxContribCount}`,
-            undefined,
-            undefined,
-            contribmapper.getColor(minContribCount),
-            contribmapper.getColor(maxContribCount)
-          ]
+          cache.legend = {
+            minValue: minContribCount,
+            maxValue: maxContribCount,
+            minValueAltFormat: undefined,
+            maxValueAltFormat: undefined,
+            minColor: contribmapper.getColor(minContribCount),
+            maxColor: contribmapper.getColor(maxContribCount)
+          }
         }
         contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
       }

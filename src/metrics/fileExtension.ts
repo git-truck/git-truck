@@ -7,7 +7,9 @@ import { noEntryColor } from "~/const"
 
 export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extension = blob.name.substring(blob.name.lastIndexOf(".") + 1)
-  const color = getColorFromExtension(extension)?.color
+  const extensionInfo = getColorFromExtension(extension)
+  const color = extensionInfo?.color
+  // const lang = extensionInfo?.lang ?? extension
   const legend = cache.legend as PointLegendData
   if (color) {
     if (legend.has(extension)) {
