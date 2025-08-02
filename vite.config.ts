@@ -5,13 +5,12 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
-import { cjsInterop } from "vite-plugin-cjs-interop"
 import reactRouterConfig from "./react-router.config.ts"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
     rollupOptions: {
-      external: (id) => id === "@duckdb/node-api",
+      external: ["@duckdb/node-api"],
       ...(isSsrBuild
         ? {
             input: "./src/server/app.ts"
@@ -46,8 +45,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       appDir: reactRouterConfig.appDirectory
     }),
     reactRouter(),
-    tsconfigPaths(),
-    cjsInterop({ dependencies: process.env.NODE_ENV === "production" ? ["@mdi/react"] : [] })
+    tsconfigPaths()
   ],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
