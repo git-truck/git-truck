@@ -20,7 +20,7 @@ function cleanUp() {
   execSync(`npx rimraf ${npxCacheDir}`, { stdio: "ignore" })
 }
 
-let reps = Number(args[1]) || 1
+const reps = Number(args[1]) || 1
 let jobIndex = 0
 
 for (let i = 0; i < versionsToCompare.length; i++) {

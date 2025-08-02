@@ -8,9 +8,9 @@ export function getCoAuthors(description: string) {
 
   while (value !== undefined) {
     coauthors.push({
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- We know that the groups are defined
+       
       name: value.groups!["name"].trimEnd(),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- We know that the groups
+       
       email: value.groups!["email"]
     })
     value = coauthormatches.next().value

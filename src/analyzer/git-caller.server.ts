@@ -1,13 +1,13 @@
 import { log } from "./log.server"
-import { describeAsyncJob, runProcess } from "../shared/util.server"
-import { promiseHelper } from "~/shared/util"
-import { getBaseDirFromPath } from "~/shared/util.server"
-import { getDirName } from "~/shared/util.server"
+import { describeAsyncJob, runProcess , getBaseDirFromPath , getDirName } from "../shared/util.server"
+import { promiseHelper , branchCompare, semverCompare } from "~/shared/util"
+
+
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "../shared/model"
 import { AnalyzerDataInterfaceVersion } from "../shared/model"
-import { branchCompare, semverCompare } from "../shared/util"
+
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server"
 
@@ -24,7 +24,7 @@ export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
-  // eslint-disable-next-line no-useless-constructor
+   
   constructor(
     private repo: string,
     public branch: string,

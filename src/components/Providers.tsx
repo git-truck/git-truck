@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
-import type { GitBlobObject, GitObject } from "~/shared/model"
+import type { GitBlobObject, GitObject , RepoData } from "~/shared/model"
 import { ClickedObjectContext } from "~/contexts/ClickedContext"
-import type { RepoData } from "~/shared/model"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import type { ChartType, HierarchyType, Options, OptionsContextType } from "../contexts/OptionsContext"

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+ 
 import { execSync } from "child_process"
 
 const hasUncommittedChanges = execSync("git status --porcelain", { stdio: "pipe" })?.toString().trim().length > 0
