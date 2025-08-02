@@ -85,9 +85,9 @@ export default [
   },
   {
     ignores: [
-      '!**/.server', 
-      '!**/.client', 
-      'build/**', 
+      '!**/.server',
+      '!**/.client',
+      'build/**',
       'node_modules/**',
       'cli.js',
       '.react-router/**',
