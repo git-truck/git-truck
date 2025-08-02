@@ -1,12 +1,11 @@
-import { mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit } from "@mdi/js"
+import { mdiArrowTopLeft, mdiChevronLeft, mdiChevronRight, mdiFullscreen, mdiFullscreenExit, mdiMenu } from "@mdi/js"
 import Icon from "@mdi/react"
-import { Await, isRouteErrorResponse, useLoaderData, useRouteError, Link } from "react-router"
+import { Await, useLoaderData, Link } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
-import { Suspense, useEffect, useReducer, useState } from "react"
-import { Online } from "react-detect-offline"
-import { createPortal, flushSync } from "react-dom"
+import { Suspense, useReducer, useState } from "react"
+import { createPortal } from "react-dom"
 import { useClient, useFullscreen } from "~/hooks"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
@@ -17,7 +16,6 @@ import BarChart from "~/components/BarChart"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { DetailsCard } from "~/components/DetailsCard"
-import { FeedbackCard } from "~/components/FeedbackCard"
 import { GlobalInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
@@ -28,11 +26,13 @@ import { SearchCard } from "~/components/SearchCard"
 import TimeSlider from "~/components/TimeSlider"
 import { Tooltip } from "~/components/Tooltip"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-import { ErrorPage } from "~/components/util"
 
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/$repo.$"
+import { RefreshButton } from "~/components/RefreshButton"
+import { CollapsableSettings } from "~/components/Settings"
+import { GitTruckInfo } from "~/components/GitTruckInfo"
 
 export const loader = async ({ params, context }: Route.LoaderArgs) => ({
   dataPromise: analyze({ repo: params.repo, branch: params["*"] }),
@@ -123,26 +123,6 @@ export const action = async ({ request, params: { repo, "*": branch } }: Route.A
   return null
 }
 
-export const ErrorBoundary = () => {
-  const error = useRouteError()
-  useEffect(() => {
-    console.error(error)
-  }, [error])
-
-  if (isRouteErrorResponse(error)) {
-    return <ErrorPage errorMessage={error.data.message} />
-  }
-
-  let errorMessage = "Unknown error"
-  if (typeof error === "string") {
-    errorMessage = error
-  } else if (typeof error === "object" && error !== null && "message" in error && typeof error.message === "string") {
-    errorMessage = error.message
-  }
-
-  return <ErrorPage errorMessage={errorMessage} />
-}
-
 async function analyze({ repo, branch }: { repo: string; branch: string }) {
   const args = await getArgs()
   const path = resolve(args.path, repo)
@@ -156,8 +136,8 @@ async function analyze({ repo, branch }: { repo: string; branch: string }) {
   }
 
   const instance = InstanceManager.getOrCreateInstance(repo, branch, path)
-  // to avoid double identical fetch at first load, which it does for some reason
-  // TODO: Fix this. This is due to react strict mode
+  // // to avoid double identical fetch at first load, which it does for some reason
+  // // TODO: Fix this. This is due to react strict mode
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
     return instance.prevResult
   }
@@ -304,7 +284,7 @@ export default function Repo() {
     },
     {
       leftExpanded: true,
-      rightExpanded: true
+      rightExpanded: false
     }
   )
 
@@ -312,6 +292,7 @@ export default function Repo() {
   const toggleRight = () => dispatch("toggleRight")
   const collapseBoth = () => dispatch("collapseBoth")
   const expandBoth = () => dispatch("expandBoth")
+  const toggleBoth = () => (bothExpanded ? collapseBoth() : expandBoth())
 
   const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
@@ -341,83 +322,90 @@ export default function Repo() {
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"_"right"] lg:h-screen lg:grid-cols-[0_1fr_0] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main_right"]`,
+                `grid grid-cols-1 gap-2 p-2 transition-all [grid-template-areas:"main"_"left"_"right"] lg:h-screen lg:grid-cols-[0_1fr_0] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main_right"]`,
                 bothExpanded ? "grid-rows-[50vh_auto_auto]" : "grid-rows-[100vh_auto_auto]",
                 {
-                  "lg:grid-cols-[var(--side-panel-width)_1fr_var(--side-panel-width)]": bothExpanded,
+                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)]": bothExpanded,
 
-                  "lg:grid-cols-[0_1fr_var(--side-panel-width)]": rightExpanded && !leftExpanded,
+                  "lg:grid-cols-[0_1fr_var(--spacing-sidepanel)]": rightExpanded && !leftExpanded,
 
-                  "lg:grid-cols-[var(--side-panel-width)_1fr_0]": leftExpanded && !rightExpanded
+                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr_0]": leftExpanded && !rightExpanded
                 }
               )}
             >
               <aside
                 className={clsx(
-                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:left] lg:pr-0 lg:transition-transform",
-                  leftExpanded ? "overflow-y-auto" : "lg:-translate-x-[var(--side-panel-width)]"
+                  "flex flex-col items-stretch justify-start gap-2 [grid-area:left] lg:pr-0 lg:transition-transform",
+                  leftExpanded ? "overflow-y-auto" : "lg:-translate-x-sidepanel"
                 )}
               >
                 {leftExpanded ? (
                   <>
-                    <GlobalInfo
+                    <GlobalInfo onMenuClick={toggleLeft} />
+
+                    <div className="card relative">
+                      <Options />
+                      <Legend
+                        className="justify-self-end"
+                        hoveredObject={hoveredObject}
+                        showUnionAuthorsModal={showUnionAuthorsModal}
+                      />
+                    </div>
+                    <DetailsCard
+                      showUnionAuthorsModal={showUnionAuthorsModal}
+                      className={cn(
+                        "max-h-screen w-[var(--spacing-sidepanel)] overflow-y-auto shadow-sm shadow-black/50 backdrop-blur-sm"
+                      )}
+                    />
+                    <div className="grow"> </div>
+                    <GitTruckInfo
+                      className="sticky bottom-0"
                       installedVersion={versionInfo.installedVersion}
                       latestVersion={versionInfo.latestVersion}
                     />
-                    <Options />
-                    <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
                   </>
                 ) : null}
               </aside>
               <main
                 className={cn(
-                  "relative grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden p-2 [grid-area:main] lg:transition-transform"
+                  "relative grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden [grid-area:main] lg:transition-transform"
                 )}
               >
                 <header className="grid grid-flow-col items-center justify-between gap-2">
-                  <Breadcrumb />
-                  <button
-                    className="card btn btn--primary p-1"
-                    onClick={() =>
-                      flushSync(() => {
-                        toggleFullscreen()
-                        isFullscreen ? expandBoth() : collapseBoth()
-                      })
-                    }
-                    title="Toggle full view"
-                  >
-                    <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
-                  </button>
+                  <div className="flex gap-2">
+                    {!leftExpanded ? (
+                      <button
+                        type="button"
+                        title={"Show left panel"}
+                        onClick={toggleLeft}
+                        className="btn--icon hidden aspect-square h-8 w-8 cursor-pointer items-center justify-center rounded-r-full p-1 lg:flex"
+                      >
+                        <Icon path={mdiMenu} size="1.25em" />
+                      </button>
+                    ) : (
+                      <div />
+                    )}
+                    <Breadcrumb />
+                  </div>
+                  <div className="flex gap-2">
+                    <SearchCard />
+                    <RefreshButton />
+                    <HiddenFiles />
+                    <button
+                      className={cn("btn p-1", { "btn--primary": isFullscreen })}
+                      onClick={toggleFullscreen}
+                      title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                    >
+                      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
+                    </button>
+                  </div>
                 </header>
-                <>
-                  <button
-                    type="button"
-                    title="Collapse left panel"
-                    onClick={toggleLeft}
-                    className="btn--icon btn--primary card absolute top-1/2 left-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-r-full p-0 lg:flex"
-                  >
-                    <Icon path={leftExpanded ? mdiChevronLeft : mdiChevronRight} size={1} />
-                  </button>
-                  <button
-                    type="button"
-                    title="Collapse right panel"
-                    onClick={toggleRight}
-                    className="btn--icon btn--primary card absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-full cursor-pointer items-center justify-center rounded-l-full p-0 lg:flex"
-                  >
-                    <Icon path={rightExpanded ? mdiChevronRight : mdiChevronLeft} size={1} />
-                  </button>
-                </>
+
                 {client ? (
                   <>
-                    <div className="card grid overflow-hidden p-2">
+                    <div className="grid overflow-hidden">
                       <Chart setHoveredObject={setHoveredObject} />
                       {createPortal(<Tooltip hoveredObject={hoveredObject} />, document.body)}
-                      {!rightExpanded ? (
-                        <DetailsCard
-                          showUnionAuthorsModal={showUnionAuthorsModal}
-                          className="absolute top-2 right-2 z-0 max-h-screen w-[var(--side-panel-width)] overflow-y-auto shadow-sm shadow-black/50"
-                        />
-                      ) : null}
                     </div>
                     <div className="flex flex-col">
                       <TimeSlider />
@@ -429,23 +417,7 @@ export default function Repo() {
                 )}
               </main>
 
-              <aside
-                className={clsx(
-                  "grid auto-rows-min items-start gap-2 p-2 [grid-area:right] lg:pl-0 lg:transition-transform",
-                  rightExpanded ? "overflow-y-auto" : "lg:translate-x-[var(--side-panel-width)]"
-                )}
-              >
-                {rightExpanded ? (
-                  <>
-                    <DetailsCard showUnionAuthorsModal={showUnionAuthorsModal} />
-                    {data.databaseInfo.hiddenFiles.length > 0 ? <HiddenFiles /> : null}
-                    <SearchCard />
-                    <Online>
-                      <FeedbackCard />
-                    </Online>
-                  </>
-                ) : null}
-              </aside>
+              <div />
             </div>
             <UnionAuthorsModal
               open={unionAuthorsModalOpen}
