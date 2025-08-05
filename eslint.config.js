@@ -10,6 +10,7 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
+import globals from 'globals';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -32,8 +33,8 @@ export default [
         },
       },
       globals: {
-        browser: true,
-        es6: true,
+        ...globals.browser,
+        ...globals.es2015,
       },
     },
     settings: {
@@ -79,7 +80,7 @@ export default [
     files: ['.eslintrc.cjs', 'scripts/*.{js,ts}'],
     languageOptions: {
       globals: {
-        node: true,
+        ...globals.node,
       },
     },
   },
