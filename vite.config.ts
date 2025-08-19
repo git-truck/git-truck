@@ -27,21 +27,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-x64",
       "@duckdb/node-bindings-darwin-arm64"
     ],
-    noExternal: [
-      "ansi-colors",
-      "nanospinner",
-      "latest-version",
-      "get-port",
-      "open",
-      "randomstring",
-      "semver",
-      "yargs-parser",
-      "language-map",
-      "sha1",
-      "byte-size",
-      "ignore",
-      "uniqolor"
-    ]
+    noExternal: true  // Bundle all dependencies except those listed in 'external'
   },
   optimizeDeps: {
     entries: [],
