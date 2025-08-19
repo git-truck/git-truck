@@ -4,6 +4,9 @@ import express from "express"
 import pkg from "../package.json"
 import getPort, { portNumbers } from "get-port"
 import open from "open"
+import { dirname, join } from "path"
+import { fileURLToPath } from "url"
+import { existsSync, readFileSync } from "fs"
 import { GitCaller } from "./analyzer/git-caller.server.ts"
 import { getArgsWithDefaults, parseArgs , describeAsyncJob, getLatestVersion , getDirName } from "./shared/util.server.ts"
 import { getPathFromRepoAndHead, generateVersionComparisonLink, semverCompare , isValidURI, promiseHelper } from "./shared/util.ts"
@@ -33,10 +36,47 @@ if (args.h || args.help) {
 console.log(`Git Truck version ${pkg.version}${await getUpdateMessage()}\n`)
 
 const BUILD_PATH = "./build/server/index.js"
-const BUILD_CLIENT_PATH = "build/client"
+const BUILD_CLIENT_PATH = "build/client"  
 const BUILD_ASSETS_PATH = "build/client/assets"
 const SERVER_APP_PATH = "./src/server/app.ts"
+
+// Function to find package root directory
+function findPackageRoot(): string {
+  let packageRoot = dirname(fileURLToPath(import.meta.url))
+  while (packageRoot !== dirname(packageRoot)) {
+    try {
+      const packageJsonPath = join(packageRoot, "package.json")
+      if (existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"))
+        if (packageJson.name === "git-truck") {
+          return packageRoot
+        }
+      }
+    } catch {
+      // Continue searching
+    }
+    packageRoot = dirname(packageRoot)
+  }
+  return process.cwd() // Fallback to current directory
+}
+
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
+
+// Resolve paths based on package location for production builds
+let resolvedBuildPath: string
+let resolvedClientPath: string  
+let resolvedAssetsPath: string
+
+if (DEVELOPMENT) {
+  resolvedBuildPath = BUILD_PATH
+  resolvedClientPath = BUILD_CLIENT_PATH
+  resolvedAssetsPath = BUILD_ASSETS_PATH
+} else {
+  const packageRoot = findPackageRoot()
+  resolvedBuildPath = join(packageRoot, BUILD_PATH)
+  resolvedClientPath = join(packageRoot, BUILD_CLIENT_PATH)
+  resolvedAssetsPath = join(packageRoot, BUILD_ASSETS_PATH)
+}
 const PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
 
 const app = express()
@@ -56,9 +96,9 @@ if (DEVELOPMENT) {
     }
   })
 } else {
-  app.use("/assets", express.static(BUILD_ASSETS_PATH, { immutable: true, maxAge: "1y" }))
-  app.use(express.static(BUILD_CLIENT_PATH, { maxAge: "1h" }))
-  app.use(await import(BUILD_PATH).then((mod) => mod.app))
+  app.use("/assets", express.static(resolvedAssetsPath, { immutable: true, maxAge: "1y" }))
+  app.use(express.static(resolvedClientPath, { maxAge: "1h" }))
+  app.use(await import(resolvedBuildPath).then((mod) => mod.app))
 }
 
 const server = process.env.HOST ? app.listen(PORT, process.env.HOST, onListen) : app.listen(PORT, onListen)
