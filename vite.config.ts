@@ -26,6 +26,21 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-win32-x64",
       "@duckdb/node-bindings-darwin-x64",
       "@duckdb/node-bindings-darwin-arm64"
+    ],
+    noExternal: [
+      "ansi-colors",
+      "nanospinner",
+      "latest-version",
+      "get-port",
+      "open",
+      "randomstring",
+      "semver",
+      "yargs-parser",
+      "language-map",
+      "sha1",
+      "byte-size",
+      "ignore",
+      "uniqolor"
     ]
   },
   optimizeDeps: {
