@@ -1,5 +1,5 @@
-import MetadataDB from "./MetadataDB.server"
-import ServerInstance from "./ServerInstance.server"
+import MetadataDB from "./MetadataDB.server.ts"
+import ServerInstance from "./ServerInstance.server.ts"
 
 export default class InstanceManager {
   private static instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance

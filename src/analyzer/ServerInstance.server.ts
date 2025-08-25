@@ -1,5 +1,5 @@
-import DB from "./DB.server"
-import { GitCaller } from "./git-caller.server"
+import DB from "./DB.server.ts"
+import { GitCaller } from "./git-caller.server.ts"
 import type {
   GitBlobObject,
   GitTreeObject,
@@ -11,14 +11,14 @@ import type {
   RenameInterval,
   FullCommitDTO,
   RepoData
-} from "../shared/model"
-import { log } from "./log.server"
-import { analyzeRenamedFile } from "~/shared/util"
-import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants"
+} from "../shared/model.ts"
+import { log } from "./log.server.ts"
+import { analyzeRenamedFile } from "../shared/util.ts"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 
-import type { InvocationReason } from "../shared/RefreshPolicy"
-import InstanceManager from "./InstanceManager.server"
+import type { InvocationReason } from "../shared/RefreshPolicy.ts"
+import InstanceManager from "./InstanceManager.server.ts"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 

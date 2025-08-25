@@ -3,7 +3,7 @@ import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval 
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { getTimeIntervals } from "~/shared/util"
+import { getTimeIntervals } from "../shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {

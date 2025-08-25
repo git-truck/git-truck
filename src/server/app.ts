@@ -1,7 +1,7 @@
 import "react-router"
 import { createRequestHandler } from "@react-router/express"
 import express from "express"
-import pkg from "../../package.json"
+import pkg from "../../package.json" with { type: "json" }
 import { getLatestVersion } from "../shared/util.server.js"
 
 declare module "react-router" {
@@ -12,7 +12,6 @@ declare module "react-router" {
 }
 
 export const app: express.Express = express()
-
 const getLatestVersionPromise = getLatestVersion()
 
 app.use(

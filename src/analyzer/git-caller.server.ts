@@ -1,14 +1,14 @@
-import { log } from "./log.server"
-import { describeAsyncJob, runProcess, getBaseDirFromPath, getDirName } from "../shared/util.server"
-import { promiseHelper, branchCompare, semverCompare } from "~/shared/util"
+import { log } from "./log.server.ts"
+import { describeAsyncJob, runProcess, getBaseDirFromPath, getDirName } from "../shared/util.server.ts"
+import { promiseHelper, branchCompare, semverCompare } from "../shared/util.ts"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
-import type { AnalyzerData, GitRefs, Repository } from "../shared/model"
-import { AnalyzerDataInterfaceVersion } from "../shared/model"
+import type { AnalyzerData, GitRefs, Repository } from "../shared/model.ts"
+import { AnalyzerDataInterfaceVersion } from "../shared/model.ts"
 
 import os from "node:os"
-import ServerInstance from "./ServerInstance.server"
+import ServerInstance from "./ServerInstance.server.ts"
 
 const ANALYZER_CACHE_MISS_REASONS = {
   OTHER_REPO: "The cache was not created for this repo",
