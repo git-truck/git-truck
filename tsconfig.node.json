@@ -11,6 +11,8 @@
   ],
   "compilerOptions": {
     "composite": true,
-    "types": ["node"]
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   }
 }

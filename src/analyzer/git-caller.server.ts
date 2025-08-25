@@ -1,7 +1,6 @@
 import { log } from "./log.server"
-import { describeAsyncJob, runProcess , getBaseDirFromPath , getDirName } from "../shared/util.server"
-import { promiseHelper , branchCompare, semverCompare } from "~/shared/util"
-
+import { describeAsyncJob, runProcess, getBaseDirFromPath, getDirName } from "../shared/util.server"
+import { promiseHelper, branchCompare, semverCompare } from "~/shared/util"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
@@ -24,12 +23,15 @@ export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
-   
-  constructor(
-    private repo: string,
-    public branch: string,
-    private repoPath: string
-  ) {}
+  private repo: string
+  public branch: string
+  private repoPath: string
+
+  constructor(repo: string, branch: string, repoPath: string) {
+    this.repo = repo
+    this.branch = branch
+    this.repoPath = repoPath
+  }
 
   static async isGitRepo(path: string): Promise<boolean> {
     const gitFolderPath = resolve(path, ".git")

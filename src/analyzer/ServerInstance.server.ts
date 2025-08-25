@@ -9,8 +9,9 @@ import type {
   RenameEntry,
   FileModification,
   RenameInterval,
-  FullCommitDTO
-, RepoData } from "../shared/model"
+  FullCommitDTO,
+  RepoData
+} from "../shared/model"
 import { log } from "./log.server"
 import { analyzeRenamedFile } from "~/shared/util"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants"
@@ -32,11 +33,13 @@ export default class ServerInstance {
   public prevInvokeReason: InvocationReason = "unknown"
   public prevProgress = { str: "", timestamp: 0 }
 
-  constructor(
-    public repo: string,
-    public branch: string,
-    public repoPath: string
-  ) {
+  public repo: string
+  public branch: string
+  public repoPath: string
+  constructor(repo: string, branch: string, repoPath: string) {
+    this.repo = repo
+    this.branch = branch
+    this.repoPath = repoPath
     this.gitCaller = new GitCaller(repo, branch, repoPath)
     this.db = new DB(repo, branch)
   }

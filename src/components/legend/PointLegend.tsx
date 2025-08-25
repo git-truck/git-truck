@@ -8,10 +8,13 @@ import { cn } from "~/styling"
 const legendCutoff = 3
 
 export class PointInfo {
-  constructor(
-    public readonly color: `#${string}`,
-    public weight: number
-  ) {}
+  public readonly color: `#${string}`
+  public weight: number
+
+  constructor(color: `#${string}`, weight: number) {
+    this.color = color
+    this.weight = weight
+  }
 
   add(value: number) {
     this.weight += value
