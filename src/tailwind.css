@@ -193,8 +193,13 @@
   &select {
     @apply bg-inherit text-inherit;
   }
-  & optgroup {
-    @apply bg-inherit text-inherit;
+  
+  & select option {
+    @apply bg-tertiary-bg dark:bg-tertiary-bg-dark text-primary-text dark:text-primary-text-dark;
+  }
+  
+  & select optgroup {
+    @apply bg-secondary-bg dark:bg-secondary-bg-dark text-primary-text dark:text-primary-text-dark font-bold;
   }
 }
 
