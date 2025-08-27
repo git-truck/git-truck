@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { mdiArrowTopLeft, mdiMenu } from "@mdi/js"
 import { Code } from "./util"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { useClient } from "~/hooks"
 import { Popover } from "./Popover"
 

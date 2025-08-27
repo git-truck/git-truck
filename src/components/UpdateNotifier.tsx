@@ -1,5 +1,5 @@
 import { mdiFlaskOutline, mdiArrowUpBoldCircleOutline } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { generateVersionComparisonLink } from "~/shared/util"
 import { Code } from "./util"
 import { Popover } from "./Popover"

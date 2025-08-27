@@ -1,5 +1,5 @@
 import { mdiDeleteForever } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { Link, redirect, useFetcher, useLoaderData, useLocation } from "react-router"
 import DB from "~/analyzer/DB.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"

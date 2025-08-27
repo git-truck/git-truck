@@ -1,6 +1,6 @@
 import { CheckboxWithLabel } from "./util"
 import { useOptions } from "../contexts/OptionsContext"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useTransition } from "react"
 import anitruck from "~/assets/truck.gif"

@@ -1,5 +1,5 @@
 import { mdiFullscreen, mdiFullscreenExit, mdiMenu } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { Await, useLoaderData, Link } from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"

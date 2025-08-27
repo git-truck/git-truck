@@ -1,5 +1,5 @@
 import { mdiAccountMultiple, mdiEyeOffOutline, mdiFile, mdiFolder, mdiOpenInNew } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "react-router"
 import byteSize from "byte-size"
 import clsx from "clsx"

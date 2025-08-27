@@ -1,4 +1,4 @@
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import clsx from "clsx"
 import { cn } from "~/styling"
 import { Field, Label, Radio, RadioGroup } from "@headlessui/react"

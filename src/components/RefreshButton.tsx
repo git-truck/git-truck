@@ -1,5 +1,5 @@
 import { mdiRefresh } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { Form, useNavigation } from "react-router"
 import { cn } from "~/styling"
 

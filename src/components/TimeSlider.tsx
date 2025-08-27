@@ -8,7 +8,7 @@ import { Popover } from "./Popover"
 import DatePicker from "react-datepicker"
 import { Handle, Track } from "./sliderUtils"
 import { missingInMapColor, sliderPadding } from "~/const"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
 
 function DateTags({

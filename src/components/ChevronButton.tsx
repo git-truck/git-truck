@@ -1,5 +1,5 @@
 import { mdiChevronDown } from "@mdi/js"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import type { HTMLAttributes, JSX } from "react"
 import { cn } from "~/styling"
 

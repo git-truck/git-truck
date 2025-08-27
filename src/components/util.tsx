@@ -1,5 +1,5 @@
 import { useState, useTransition, type HTMLAttributes, type ReactNode, type JSX } from "react"
-import Icon from "@mdi/react"
+import { Icon } from "~/components/Icon"
 import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
