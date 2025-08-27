@@ -402,7 +402,7 @@ export default function Repo() {
                       <Chart setHoveredObject={setHoveredObject} />
                       {createPortal(<Tooltip hoveredObject={hoveredObject} />, document.body)}
                     </div>
-                    <div className="flex flex-col">
+                    <div className="z-0 flex flex-col">
                       <TimeSlider />
                       <BarChart />
                     </div>
