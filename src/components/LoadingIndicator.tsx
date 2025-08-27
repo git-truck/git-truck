@@ -30,7 +30,6 @@ export function LoadingIndicator({
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!fetcher.data) return ["Starting analysis", 0]
     const { progress, analyzationStatus } = fetcher.data
-    console.log(analyzationStatus)
     switch (analyzationStatus) {
       case "Starting":
         return ["Starting analysis", 0]
