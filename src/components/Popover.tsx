@@ -30,9 +30,9 @@ export function Popover({
           {...popoverProps}
           arrowSize={10}
           arrowColor="currentColor"
-          arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-10"
+          arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-30"
         >
-          <div className="bg-tertiary-bg dark:bg-secondary-bg-dark relative max-w-lg rounded p-2 pr-10 shadow-2xl">
+          <div className="bg-tertiary-bg dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 shadow-2xl">
             {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
             <CloseButton onClick={onClose} />
             <div className="text-secondary-text dark:text-secondary-text-dark flex flex-col gap-1">{children}</div>
