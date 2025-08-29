@@ -15,5 +15,7 @@
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true
+    // TODO: Re enable and fix violations
+    // "noUncheckedIndexedAccess": true
   }
 }

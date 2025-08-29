@@ -317,13 +317,12 @@ function PathEntry(props: { path: string }) {
         </p>
         <Form method="post" action={location.pathname} title={clickedObject.name}>
           <input type="hidden" name="open" value={clickedObject.path} />
-          <button className="btn--icon" disabled={state !== "idle"}>
-            <Icon
-              path={mdiOpenInNew}
-              size="1.25em"
-              className="w-max"
-              title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
-            />
+          <button
+            className="btn--icon"
+            disabled={state !== "idle"}
+            title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
+          >
+            <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
           </button>
         </Form>
       </div>

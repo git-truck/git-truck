@@ -1,12 +1,12 @@
 import { useSubmit, useNavigation } from "react-router"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
-import ClipLoader from "react-spinners/ClipLoader"
+// import ClipLoader from "react-spinners/ClipLoader"
 import { Popover } from "./Popover"
 import DatePicker from "react-datepicker"
-import { Handle, Track } from "./sliderUtils"
+import { Handle, TicksByCount, Track } from "./sliderUtils"
 import { missingInMapColor, sliderPadding } from "~/const"
 import { Icon } from "~/components/Icon"
 import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
@@ -24,24 +24,25 @@ function DateTags({
   updateTimeseries(e: readonly number[]): void
   disabled: boolean
 }) {
-  const selectedStartDate = useMemo(() => new Date(range[0] * 1000), [range])
-  const selectedEndDate = useMemo(() => new Date(range[1] * 1000), [range])
-  const percentageStart = useMemo(
-    () => ((range[0] - timerange[0]) / (timerange[1] - timerange[0])) * 100,
-    [range, timerange]
-  )
+  const timerangeSpan = timerange[1] - timerange[0]
 
-  const railStyle: React.CSSProperties = {
-    position: "absolute",
-    width: "100%",
-    height: 14,
-    borderRadius: 7,
-    cursor: "pointer",
-    backgroundColor: missingInMapColor
-  }
+  const selectedStartDate = range[0] * 1000
+  const selectedEndDate = range[1] * 1000
+  const percentageStart = ((range[0] - timerange[0]) / timerangeSpan) * 100
+
+  const percentageEnd = ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100
 
   return (
-    <div style={railStyle}>
+    <div
+      style={{
+        position: "absolute",
+        width: "100%",
+        height: 14,
+        borderRadius: 7,
+        cursor: "pointer",
+        backgroundColor: missingInMapColor
+      }}
+    >
       <Popover
         trigger={({ onClick }) => (
           <button
@@ -50,7 +51,7 @@ function DateTags({
               left: `${percentageStart}%`,
               bottom: "100%",
               position: "absolute",
-              transform: "translate(-100%, -15%)",
+              transform: "translate(0%, -15%)",
               width: "100px",
               whiteSpace: "nowrap"
             }}
@@ -58,7 +59,7 @@ function DateTags({
             onClick={onClick}
           >
             <Icon path={mdiCalendarArrowRight} />
-            {dateFormatShort(selectedStartDate.getTime())}
+            {dateFormatShort(selectedStartDate)}
           </button>
         )}
       >
@@ -76,18 +77,18 @@ function DateTags({
         trigger={({ onClick }) => (
           <button
             title="Set the date of the end of the time range"
-            // style={{
-            //   left: `${percentageEnd}%`,
-            //   bottom: "100%",
-            //   position: "absolute",
-            //   transform: "translate(0%, -15%)",
-            //   width: "100px",
-            //   whiteSpace: "nowrap"
-            // }}
+            style={{
+              left: `${percentageEnd}%`,
+              bottom: "100%",
+              position: "absolute",
+              transform: "translate(-100%, -15%)",
+              width: "100px",
+              whiteSpace: "nowrap"
+            }}
             className="btn btn--primary"
             onClick={onClick}
           >
-            {dateFormatShort(selectedEndDate.getTime())}
+            {dateFormatShort(selectedEndDate)}
             <Icon path={mdiCalendarArrowLeft} />
           </button>
         )}
@@ -174,7 +175,7 @@ export default function TimeSlider() {
   }
 
   const { databaseInfo } = useData()
-  const { timerange, selectedRange } = databaseInfo
+  const { newestChangeDate, oldestChangeDate, timerange, selectedRange } = databaseInfo
   const submit = useSubmit()
   const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
 
@@ -191,7 +192,24 @@ export default function TimeSlider() {
   }
 
   return (
-    <div style={{ height: 60, width: "100%", textAlign: "center" }}>
+    <div style={{ height: 100, width: "100%", textAlign: "center" }}>
+      {/* <LabeledTicks
+        onTop
+        valueMap={{
+          0: dateFormatShort(oldestChangeDate * 1000),
+          25: dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) / 4) * 1000),
+          50: dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) / 2) * 1000),
+          75: dateFormatShort((oldestChangeDate + ((newestChangeDate - oldestChangeDate) / 4) * 3) * 1000),
+          100: dateFormatShort(newestChangeDate * 1000)
+        }}
+      /> */}
+      <TicksByCount
+        count={3}
+        tickToLabel={(t) => {
+          console.log(t)
+          return dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)
+        }}
+      />
       <Slider
         mode={2}
         step={1}
@@ -214,7 +232,7 @@ export default function TimeSlider() {
                 updateTimeseries={updateTimeseries}
                 disabled={disabled}
               />
-              <div
+              {/* <div
                 style={{
                   left: "-50px",
                   top: "-8px",
@@ -222,7 +240,7 @@ export default function TimeSlider() {
                 }}
               >
                 <ClipLoader title="Loading selected time range" size={30} loading={disabled} color="#7aa0c4" />
-              </div>
+              </div> */}
             </>
           )}
         </Rail>

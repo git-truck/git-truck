@@ -230,11 +230,17 @@ function RepositoryEntry({ repo, analyzedRepos }: { repo: Repository; analyzedRe
     <Fragment key={repo.path}>
       <h2 className="card__title flex justify-start gap-2" title={repo.path}>
         {!isError ? (
-          <Icon path={mdiGit} size={1} className="inline-block shrink-0" title="Git repository" />
+          <span title="Git repository">
+            <Icon path={mdiGit} size={1} className="inline-block shrink-0" />
+          </span>
         ) : isFolder ? (
-          <Icon path={mdiFolder} size={1} className="inline-block shrink-0" title="Folder" />
+          <span title="Folder">
+            <Icon path={mdiFolder} size={1} className="inline-block shrink-0" />
+          </span>
         ) : (
-          <Icon path={mdiTruckAlert} size={1} className="inline-block shrink-0" title="Error" />
+          <span title="Error">
+            <Icon path={mdiTruckAlert} size={1} className="inline-block shrink-0" />
+          </span>
         )}
         <span className="truncate text-left">{repo.name}</span>
       </h2>

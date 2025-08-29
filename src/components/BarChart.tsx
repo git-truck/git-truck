@@ -2,7 +2,7 @@ import { useRef, useEffect, useDeferredValue } from "react"
 import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
 import { useComponentSize } from "~/hooks"
-import { sliderPadding } from "~/const"
+import { sliderPadding, treemapTreeBorderRadius } from "~/const"
 
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -15,7 +15,7 @@ const BarChart = () => {
     if (!data || !svgRef.current) return
     const svg = d3.select(svgRef.current)
     const width = size.width - sliderPadding
-    const height = 30
+    const height = 50
 
     const xScale = d3
       .scaleBand()
@@ -37,16 +37,17 @@ const BarChart = () => {
       .append("rect")
       .attr("x", (d) => xScale(d.date) || 0)
       .attr("y", (d) => yScale(d.count))
+      .attr("rx", treemapTreeBorderRadius)
+      .attr("ry", treemapTreeBorderRadius)
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => height - yScale(d.count))
-      .attr("fill", "steelblue")
       .append("title") // Append a title element for each bar
       .text((d) => `${d.date}: ${d.count} commits`)
   }, [data, size])
 
   return (
     <div className="flex justify-center" ref={ref}>
-      <svg ref={svgRef} width={`calc(100% - ${sliderPadding}px)`} height={30}></svg>
+      <svg ref={svgRef} width={`calc(100% - ${sliderPadding}px)`} height={50} className="fill-blue-primary"></svg>
     </div>
   )
 }

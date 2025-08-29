@@ -402,13 +402,17 @@ export default function Repo() {
                       <Chart setHoveredObject={setHoveredObject} />
                       {createPortal(<Tooltip hoveredObject={hoveredObject} />, document.body)}
                     </div>
-                    <div className="z-0 flex flex-col">
-                      <TimeSlider />
+                    <div className="card z-0 flex flex-col gap-5">
+                      <h2 className="card__title">Commit timeline</h2>
                       <BarChart />
+                      <TimeSlider />
                     </div>
                   </>
                 ) : (
-                  <div />
+                  <>
+                    <div />
+                    <div />
+                  </>
                 )}
               </main>
 

@@ -27,16 +27,16 @@ export function dateFormatCalendarHeader(epochTime?: number) {
   })
 }
 
-export function dateFormatShort(epochTime: number) {
-  return new Date(epochTime).toLocaleString("en-gb", {
+export function dateFormatShort(epochTimeMillis: number) {
+  return new Date(epochTimeMillis).toLocaleString("en-gb", {
     day: "2-digit",
     month: "short",
     year: "2-digit"
   })
 }
 
-export function dateTimeFormatShort(epochTime: number) {
-  return new Date(epochTime).toLocaleString("da-dk", {
+export function dateTimeFormatShort(epochTimeMillis: number) {
+  return new Date(epochTimeMillis).toLocaleString("da-dk", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",

@@ -2,65 +2,12 @@ import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Form, useNavigation } from "react-router"
 import { startTransition, useState } from "react"
-import { Slider, Rail, Handles, Tracks, Ticks, type SliderItem } from "react-compound-slider"
+import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { getPathFromRepoAndHead } from "~/shared/util"
-import { Handle, Track } from "./sliderUtils"
+import { Handle, LabeledTicks, Track } from "./sliderUtils"
 import { noEntryColor } from "~/const"
-
-interface TickProps {
-  tick: SliderItem
-  count: number
-}
-
-function Tick({ tick, count }: TickProps) {
-  let text = ""
-  let align: "left" | "center" | "right" = "center"
-
-  switch (tick.value) {
-    case 0:
-      text = "Top author"
-      align = "right"
-      break
-    case 50:
-      text = "Majority author"
-      align = "center"
-      break
-    case 100:
-      text = "Single author"
-      align = "left"
-  }
-
-  return (
-    <div>
-      <div
-        style={{
-          position: "absolute",
-          marginTop: 14,
-          width: 1,
-          height: 5,
-          backgroundColor: "rgb(150,150,150)",
-          left: `${tick.percent}%`
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          marginTop: 22,
-          fontSize: 10,
-          textAlign: align,
-          marginLeft: `${-(100 / count) / 2}%`,
-          width: `${100 / count}%`,
-          left: `${tick.percent}%`,
-          maxWidth: "80px"
-        }}
-      >
-        {text}
-      </div>
-    </div>
-  )
-}
 
 function PercentageSlider() {
   const { dominantAuthorCutoff, setDominantAuthorCutoff } = useOptions()
@@ -130,15 +77,13 @@ function PercentageSlider() {
             </div>
           )}
         </Tracks>
-        <Ticks count={3}>
-          {({ ticks }) => (
-            <div className="slider-ticks">
-              {ticks.map((tick) => (
-                <Tick key={tick.id} tick={tick} count={ticks.length} />
-              ))}
-            </div>
-          )}
-        </Ticks>
+        <LabeledTicks
+          valueMap={{
+            0: "Top author",
+            50: "Majority author",
+            100: "Single author"
+          }}
+        />
       </Slider>
       <p className="absolute top-0">{displayPercentage}%</p>
     </div>

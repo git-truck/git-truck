@@ -386,7 +386,7 @@ function NodeText({
     dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
     textAnchor: isBubbleChart ? "middle" : "start",
     href: `#path-${d.data.path}`
-  }
+  } as const
 
   return (
     <>
