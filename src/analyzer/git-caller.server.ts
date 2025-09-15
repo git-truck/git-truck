@@ -128,27 +128,10 @@ export class GitCaller {
     }
 
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
-    const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
-    const headsWithCaches = await Promise.all(
-      Array.from(allHeads).map(async ([headName, head]) => {
-        const [result] = await GitCaller.retrieveCachedResult({
-          repo: getDirName(repoPath),
-          branch: headName,
-          branchHead: head
-        })
-        return {
-          headName,
-          head,
-          isAnalyzed: result !== null
-        }
-      })
-    )
-    const analyzedHeads = headsWithCaches
-      .filter((head) => head.isAnalyzed)
-      .reduce(
-        (acc, headEntry) => ({ ...acc, [headEntry.head]: true, [headEntry.headName]: true }),
-        {} as { [branch: string]: boolean }
-      )
+    
+    // Performance optimization: Only check cache for current HEAD instead of all branches/tags
+    // This reduces filesystem operations from O(branches+tags) to O(1) for initial page load
+    const analyzedHeads = {} as { [branch: string]: boolean }
 
     const repoHead = await GitCaller._getRepositoryHead(repoPath)
 
@@ -170,6 +153,12 @@ export class GitCaller {
         branch,
         branchHead
       })
+
+      // Only populate analyzedHeads for the current HEAD branch to improve performance
+      if (data) {
+        analyzedHeads[branchHead] = true
+        analyzedHeads[branch] = true
+      }
 
       if (!data) {
         return {
