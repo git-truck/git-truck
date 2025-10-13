@@ -26,7 +26,7 @@
     "build-cli": "cross-env NODE_ENV=production tsdown",
     "build-vite": "react-router build",
     "dev": "cross-env NODE_ENV=development node ./src/cli.ts",
-    "dev:bun": "cross-env NODE_ENV=development bun run ./src/cli.ts",
+    "dev:bun": "bunx cross-env NODE_ENV=development bun run ./src/cli.ts",
     "dev:verbose": "cross-env NODE_ENV=development tsx ./src/cli.ts --log debug",
     "start": "cross-env NODE_ENV=production node .",
     "clean": "npx -y rimraf build .react-router .cache .temp cli.js cli.cjs",
