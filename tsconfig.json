@@ -14,7 +14,9 @@
     "noEmit": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     // TODO: Re enable and fix violations
     // "noUncheckedIndexedAccess": true
   }
