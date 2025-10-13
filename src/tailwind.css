@@ -10,8 +10,8 @@
 
   --spacing-button: calc(var(--spacing) * 8);
 
-  --color-blue-primary: hsl(212, 46%, 50%);
-  --color-blue-secondary: hsl(212, 72%, 62%);
+  --color-blue-primary: hsl(212, 100%, 50%);
+  --color-blue-secondary: hsl(212, 100%, 60%);
 
   /* Light */
   --color-primary-bg: var(--color-gray-200);
