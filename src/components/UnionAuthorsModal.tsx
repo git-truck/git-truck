@@ -95,7 +95,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     .slice(0)
     .sort(stringSorter)
 
-  useKey("Escape", onClose)
+  useKey({ key: "Escape" }, onClose)
 
   const getColorFromDisplayName = (displayName: string) => authorColors.get(displayName) ?? "#333"
 

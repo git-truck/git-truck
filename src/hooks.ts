@@ -12,37 +12,39 @@ export function useComponentSize() {
   return size
 }
 
-export function useClient() {
+export function useIsClient() {
   const [client, setClient] = useState(false)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClient(true)
   }, [setClient])
   return client
 }
 
 export function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false)
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(query)
-    setMatches(mediaQuery.matches)
-    const listener = () => setMatches(mediaQuery.matches)
-    mediaQuery.addEventListener("change", listener)
-    return () => mediaQuery.removeEventListener("change", listener)
-  }, [query])
-  return matches
+  return useSyncExternalStore(
+    (callback) => {
+      const mediaQuery = window.matchMedia(query)
+      mediaQuery.addEventListener("change", callback)
+      return () => mediaQuery.removeEventListener("change", callback)
+    },
+    () => {
+      return window.matchMedia(query).matches
+    },
+    () => false
+  )
 }
 
 export function useLocalStorage<T>(key: string, initialValue: T | undefined = undefined) {
-  const [storedValue, setStoredValue] = useState<T | undefined>(undefined)
-
-  useEffect(() => {
+  const [storedValue, setStoredValue] = useState<T | undefined>(() => {
     try {
       const item = window.localStorage.getItem(key)
-      setStoredValue(item ? JSON.parse(item) : initialValue)
+      return item ? JSON.parse(item) : initialValue
     } catch (error) {
       console.error(error)
+      return initialValue
     }
-  }, [key, initialValue])
+  })
 
   const setValue: Dispatch<SetStateAction<T | undefined>> = useCallback(
     (value) => {
@@ -60,11 +62,21 @@ export function useLocalStorage<T>(key: string, initialValue: T | undefined = un
   return [storedValue, setValue] as const
 }
 
-export function useKey(key: string, callback: () => void) {
+export function useKey(
+  key: { key: string; ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+  callback: (event: KeyboardEvent) => void
+) {
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
-      if (event.key === key) {
-        callback()
+      if (event.key === key.key) {
+        const ctrlMatch = key.ctrl === undefined || event.ctrlKey === key.ctrl
+        const shiftMatch = key.shift === undefined || event.shiftKey === key.shift
+        const altMatch = key.alt === undefined || event.altKey === key.alt
+        const metaMatch = key.meta === undefined || event.metaKey === key.meta
+
+        if (ctrlMatch && shiftMatch && altMatch && metaMatch) {
+          callback(event)
+        }
       }
     }
     window.addEventListener("keydown", listener)
