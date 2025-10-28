@@ -1,6 +1,5 @@
 {
   "name": "Bun",
-  "image": "ghcr.io/nhaef/devcontainer-bun:latest",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -11,5 +10,8 @@
         "usernamehw.errorlens"
       ]
     }
-  }
+  },
+  "onCreateCommand": "curl -fsSL https://bun.sh/install | bash",
+  "postCreateCommand": "bun install",
+  "forwardPorts": [3000]
 }
