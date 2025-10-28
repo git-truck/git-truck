@@ -1,4 +1,5 @@
 {
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
   "name": "Bun",
   "customizations": {
     "vscode": {
