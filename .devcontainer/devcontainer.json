@@ -1,12 +1,15 @@
 {
-    "name": "Bun",
-    "image": "ghcr.io/nhaef/devcontainer-bun:latest",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode"
-            ]
-        }
+  "name": "Bun",
+  "image": "ghcr.io/nhaef/devcontainer-bun:latest",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "YoavBls.pretty-ts-errors",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "usernamehw.errorlens"
+      ]
     }
+  }
 }
