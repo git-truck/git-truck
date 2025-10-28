@@ -552,7 +552,9 @@ export default class DB {
     return ["%Y", "year"]
   }
 
-  public async getCommitCountPerTime(timerange: [number, number]) {
+  public async getCommitCountPerTime(
+    timerange: [number, number]
+  ): Promise<[{ date: string; count: number; timestamp: number }[], string]> {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
     const res = await this.query(`
       SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
@@ -568,7 +570,7 @@ export default class DB {
       else final.push({ date: dateString, count: 0, timestamp })
     }
     const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
-    return sorted
+    return [sorted, timeUnit]
   }
 
   public async updateColorSeed(seed: string) {
