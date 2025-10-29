@@ -1,16 +1,16 @@
-import { memo, useEffect, useMemo, useRef, useState, useTransition, useId } from "react"
+import { memo, useMemo, useRef, useState, useTransition, useId, createRef } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
-import { usePath } from "~/contexts/PathContext"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { allExceptLast, getSeparator } from "~/shared/util"
+import { getSeparator } from "~/shared/util"
 import { Icon } from "~/components/Icon"
 import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiFile } from "@mdi/js"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
+import { useKey } from "~/hooks"
 
 function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, GitObject> = {}
@@ -36,19 +36,31 @@ export const SearchCard = memo(function SearchCard() {
   const id = useId()
   const { databaseInfo } = useData()
 
-  useEffect(() => {
-    const searchOverride = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === "f") {
-        event.preventDefault()
-        searchFieldRef.current?.focus()
-      }
-    }
-    document.body.addEventListener("keydown", searchOverride)
-    return () => {
-      document.body.removeEventListener("keydown", searchOverride)
-    }
-  }, [])
+  const options = useOptions()
+  const [metrics] = useMetrics()
 
+  const resultRefs = Object.keys(searchResults).map(() => createRef<HTMLButtonElement>())
+
+  useKey({ key: "f", ctrl: true }, (event) => {
+    event.preventDefault()
+    searchFieldRef.current?.focus()
+  })
+
+  function onClickObject(object: GitObject) {
+    setClickedObject(object)
+    // if (object.type === "tree") {
+    //   setPath(object.path)
+    // } else {
+    //   const sep = getSeparator(object.path)
+    //   setPath(allExceptLast(object.path.split(sep)).join(sep))
+    // }
+  }
+
+  function focusResultAtIndex(nextIndex: number) {
+    resultRefs[nextIndex].current?.focus()
+  }
+
+  const items = Object.values(searchResults)
   return (
     <form
       className="w-sidepanel absolute top-0 bottom-0 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2 transition-[width,translate] not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:w-min not-focus-within:has-placeholder-shown:translate-x-0"
@@ -81,6 +93,10 @@ export const SearchCard = memo(function SearchCard() {
               setSearchText("")
               setSearchResults({})
               event.currentTarget.blur()
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault()
+              focusResultAtIndex(0)
             }
           }}
           onFocus={() => {
@@ -115,66 +131,65 @@ export const SearchCard = memo(function SearchCard() {
           </p>
         ) : null}
       </label>
-      {searchResultsArray.length > 0 ? <SearchResultsList /> : null}
+      {searchResultsArray.length > 0 ? (
+        <div className="card bg-tertiary-bg/10 dark:bg-tertiary-bg-dark/50 w-sidepanel relative max-h-1/5 min-h-0 overflow-auto backdrop-blur-lg">
+          {items.map((object, i) => (
+            <button
+              onKeyDown={(event) => {
+                const currentIndex = resultRefs.findIndex((ref) => ref.current === event.currentTarget)
+                if (event.key === "ArrowDown") {
+                  event.preventDefault()
+                  const nextIndex = currentIndex + (1 % resultRefs.length)
+                  focusResultAtIndex(nextIndex)
+                }
+                if (event.key === "ArrowUp") {
+                  event.preventDefault()
+                  const prevIndex = currentIndex - 1
+                  if (prevIndex === -1) {
+                    searchFieldRef.current?.focus()
+                    searchFieldRef.current?.select()
+                    return
+                  }
+                  focusResultAtIndex(prevIndex)
+                }
+              }}
+              ref={resultRefs[i]}
+              className="flex cursor-pointer items-center justify-start gap-2 text-sm font-bold"
+              key={object.path}
+              title={object.path}
+              type="reset"
+              value={object.path}
+              onClick={() => onClickObject(object)}
+            >
+              {object.type === "tree" ? (
+                <Icon path={object.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
+              ) : (
+                <Icon
+                  color={metrics.get(options.metricType)?.colormap.get(object.path) ?? "grey"}
+                  path={mdiFile}
+                  size={0.75}
+                  className="shrink-0"
+                />
+                // <Stack
+                //   size={0.75}
+                //   className="shrink-0"
+                //   color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
+                // >
+                //   <Icon path={mdiFile} size={0.75} className="shrink-0" />
+                //   {/* <Icon path={mdiCircle} size={0.5} className="" /> */}
+                // </Stack>
+                // <LegendDot
+                //   dotColor={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
+                //   className="shrink-0"
+                // />
+              )}
+              <span className="text-secondary-text dark:hover:text-primary-text-dark hover:text-primary-text dark:text-secondary-text-dark truncate">
+                {object.path.split(getSeparator(object.path)).slice(1).join("/") ?? object.path}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </form>
-  )
-})
-
-const SearchResultsList = memo(function SearchResults() {
-  const options = useOptions()
-  const { setPath } = usePath()
-  const { setClickedObject } = useClickedObject()
-  const [metrics] = useMetrics()
-  const { searchResults } = useSearch()
-
-  function onClick(object: GitObject) {
-    setClickedObject(object)
-    if (object.type === "tree") {
-      setPath(object.path)
-    } else {
-      const sep = getSeparator(object.path)
-      setPath(allExceptLast(object.path.split(sep)).join(sep))
-    }
-  }
-
-  return (
-    <div className="card bg-tertiary-bg/10 dark:bg-tertiary-bg-dark/50 w-sidepanel relative max-h-1/5 min-h-0 overflow-auto backdrop-blur-lg">
-      {Object.values(searchResults).map((result) => (
-        <button
-          className="flex cursor-pointer items-center justify-start gap-2 text-sm font-bold"
-          key={result.path}
-          title={result.path}
-          type="reset"
-          value={result.path}
-          onClick={() => onClick(result)}
-        >
-          {result.type === "tree" ? (
-            <Icon path={result.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
-          ) : (
-            <Icon
-              color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-              path={mdiFile}
-              size={0.75}
-              className="shrink-0"
-            />
-            // <Stack
-            //   size={0.75}
-            //   className="shrink-0"
-            //   color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-            // >
-            //   <Icon path={mdiFile} size={0.75} className="shrink-0" />
-            //   {/* <Icon path={mdiCircle} size={0.5} className="" /> */}
-            // </Stack>
-            // <LegendDot
-            //   dotColor={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-            //   className="shrink-0"
-            // />
-          )}
-          <span className="text-secondary-text dark:hover:text-primary-text-dark hover:text-primary-text dark:text-secondary-text-dark truncate">
-            {result.path.split(getSeparator(result.path)).slice(1).join("/") ?? result.path}
-          </span>
-        </button>
-      ))}
-    </div>
   )
 })

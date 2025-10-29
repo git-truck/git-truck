@@ -1,15 +1,23 @@
 import { useState, useTransition, type HTMLAttributes, type ReactNode, type JSX } from "react"
 import { Icon } from "~/components/Icon"
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline, mdiClose, mdiCircle } from "@mdi/js"
+import {
+  mdiCheckboxOutline,
+  mdiCheckboxBlankOutline,
+  mdiClose,
+  mdiCircle,
+  mdiFullscreen,
+  mdiFullscreenExit
+} from "@mdi/js"
 import clsx from "clsx"
 import anitruck from "~/assets/truck.gif"
 import { Popover } from "./Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit } from "react-router"
+import { useSubmit, useSearchParams } from "react-router"
 import { getPathFromRepoAndHead } from "~/shared/util"
 import { cn } from "~/styling"
 import { useOptions, type ChartType } from "~/contexts/OptionsContext"
+import { useIsClient, useFullscreen } from "~/hooks"
 
 export const CloseButton = ({
   className = "",
@@ -19,7 +27,7 @@ export const CloseButton = ({
   <button
     className={clsx(
       className,
-      "btn--icon inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
+      "btn btn--text inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
       {
         "absolute top-2 right-2 z-10": absolute
       }
@@ -37,9 +45,10 @@ export const LegendDot = ({
   authorColorToChange = undefined
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
-  const { databaseInfo, repo } = useData()
+  const { databaseInfo } = useData()
   const { chartType } = useOptions()
   const submit = useSubmit()
+  const [searchParams] = useSearchParams()
 
   if (!authorColorToChange) return <Dot className={className} chartType={chartType} color={color} />
 
@@ -48,7 +57,7 @@ export const LegendDot = ({
     form.append("authorname", author)
     form.append("authorcolor", color)
     submit(form, {
-      action: `/${getPathFromRepoAndHead(repo.name, repo.currentHead)}`,
+      action: `/${getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: databaseInfo.branch })}`,
       method: "post"
     })
   }
@@ -171,38 +180,67 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
   )
 }
 
-export function Tab({ title, active, onClick }: { title: string; active: boolean; onClick: () => void }) {
+export function Tab({
+  title,
+  active,
+  className = "",
+  onClick
+}: {
+  title: string
+  className?: string
+  active: boolean
+  onClick?: () => void
+}) {
   return (
     <button
-      className={clsx("btn btn--outlined roundend-lg mx-[-0.5px] flex-1", {
-        "border-t-transparent border-r-transparent border-l-transparent": !active,
-        "rounded-b-[2px]": !active,
-        "rounded-b-none": active,
-        "border-b-transparent": active
+      className={clsx("btn btn--outlined roundend-t-lg w-full", className, {
+        "rounded-b-none border-x-0 border-t-transparent border-r-transparent border-l-transparent": !active,
+        "rounded-b-none border-b-0 border-b-transparent": active
       })}
-      onClick={onClick}
+      onClick={() => onClick?.()}
     >
       {title}
     </button>
   )
 }
 
-export function Tabs({ tabs }: { tabs: { title: string; content: ReactNode }[] }) {
-  const [currentTab, setCurrentTab] = useState(tabs[0].title)
+type Tab<T> = { id: T extends string ? T : never; title: string; content: ReactNode }
+
+export function Tabs<T>({ tabs, onChange }: { tabs: Tab<T>[]; onChange?: (tab: Tab<T>) => void }) {
+  const [currentTab, setCurrentTab] = useState(tabs[0].id)
+
+  const setTab = (tab: Tab<T>) => {
+    setCurrentTab(tab.id)
+    onChange?.(tab)
+  }
 
   return (
-    <div>
+    <>
       <div className="flex">
         {tabs.map((tab) => (
-          <Tab
-            key={tab.title}
-            title={tab.title}
-            active={currentTab === tab.title}
-            onClick={() => setCurrentTab(tab.title)}
-          />
+          <Tab key={tab.id} title={tab.title} active={currentTab === tab.id} onClick={() => setTab(tab)} />
         ))}
       </div>
-      <div className="mt-2">{tabs.find((tab) => tab.title === currentTab)?.content}</div>
-    </div>
+      <div className="mt-2">{tabs.find((tab) => tab.id === currentTab)?.content}</div>
+    </>
+  )
+}
+
+export function ClientOnly({ children, fallback = null }: { children: () => ReactNode; fallback?: ReactNode }) {
+  const isClient = useIsClient()
+
+  if (!isClient) return fallback
+  return children()
+}
+export function FullscreenButton() {
+  const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)
+  return (
+    <button
+      className={cn("btn aspect-square p-1", { "btn--primary": isFullscreen })}
+      onClick={toggleFullscreen}
+      title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+    >
+      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
+    </button>
   )
 }

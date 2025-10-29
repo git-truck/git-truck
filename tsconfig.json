@@ -4,8 +4,10 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "lib": ["ES2022"],
+    "lib": ["ES2024"],
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./src/*"] },
     "checkJs": true,
     "verbatimModuleSyntax": true,
@@ -16,7 +18,7 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedParameters": false
     // TODO: Re enable and fix violations
     // "noUncheckedIndexedAccess": true
   }

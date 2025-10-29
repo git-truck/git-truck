@@ -1,17 +1,20 @@
-import type { Dispatch, SetStateAction } from "react"
-import { createContext, useContext } from "react"
+import { useCallback, useMemo } from "react"
+import { useSearchParams } from "react-router"
 
-export interface Path {
+export function usePath(): {
   path: string
-  setPath: Dispatch<SetStateAction<string>>
-}
-
-export const PathContext = createContext<Path | undefined>(undefined)
-
-export function usePath() {
-  const context = useContext(PathContext)
-  if (!context) {
-    throw new Error("useOptions must be used within a PathProvider")
-  }
-  return context
+  setPath: (newPath: string) => void
+} {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const path = useMemo(() => searchParams.get("path") ?? "", [searchParams])
+  const setPath = useCallback(
+    (newPath: string) =>
+      setSearchParams((prev) => ({
+        ...prev,
+        isblob: false,
+        path: newPath
+      })),
+    [setSearchParams]
+  )
+  return { path, setPath }
 }

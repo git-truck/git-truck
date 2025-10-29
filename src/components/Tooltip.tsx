@@ -1,6 +1,6 @@
 import { mdiFolder, mdiMenuRight } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Fragment, memo, useMemo, useRef } from "react"
+import { Fragment, useMemo, useRef } from "react"
 import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
@@ -11,10 +11,10 @@ import { LegendDot } from "./util"
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 
-export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject: GitObject | null }) {
+export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { chartType, metricType } = useOptions()
+  const { metricType, dominantAuthorCutoff } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const color = useMemo(() => {
@@ -36,7 +36,7 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject:
     <div
       className={cn(
         "secondary border-border-highlight dark:border-border-highlight-dark text-primary-text dark:text-primary-text-dark bg-tertiary-bg/50 dark:bg-tertiary-bg-dark/40 absolute top-0 left-0 z-50 flex w-max flex-row place-items-center gap-2 border [background-image:none] py-0 pr-2 pl-1 text-xs backdrop-blur will-change-transform",
-        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-md",
+        className,
         {
           hidden: !visible
         }
@@ -63,17 +63,23 @@ export const Tooltip = memo(function Tooltip({ hoveredObject }: { hoveredObject:
               </Fragment>
             ))}
       </span>
-      {hoveredObject?.type === "blob" ? (
-        <ColorMetricDependentInfo metric={metricType} hoveredBlob={hoveredObject} databaseInfo={databaseInfo} />
-      ) : null}
+      {hoveredObject?.type === "blob"
+        ? ColorMetricDependentInfo({
+            metric: metricType,
+            hoveredBlob: hoveredObject,
+            databaseInfo: databaseInfo,
+            dominantAuthorCutoff
+          })
+        : null}
     </div>
   )
-})
+}
 
 function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: GitBlobObject | null
   databaseInfo: DatabaseInfo
+  dominantAuthorCutoff: number
 }) {
   const slicedPath = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
@@ -85,7 +91,7 @@ function ColorMetricDependentInfo(props: {
     case "LAST_CHANGED": {
       const epoch = props.databaseInfo.lastChanged[slicedPath]
       if (!epoch) return "No activity"
-      return <>{dateFormatRelative(epoch)}</>
+      return dateFormatRelative(epoch)
     }
     case "TOP_CONTRIBUTOR": {
       const dominant = props.databaseInfo.dominantAuthors[slicedPath]
@@ -93,16 +99,16 @@ function ColorMetricDependentInfo(props: {
       if (!dominant) return "No activity"
       if (!contribSum) return <>{dominant.author}</>
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
-      return (
-        <>
-          {dominant.author} {authorPercentage}%
-        </>
-      )
+      if (authorPercentage < props.dominantAuthorCutoff) {
+        // TODO show multiple authors if no dominant author
+        return <>Multiple dominant authors ({authorPercentage}%)</>
+      }
+      return `${dominant.author} ${authorPercentage}%`
     }
     case "MOST_CONTRIBUTIONS": {
       const contribs = props.databaseInfo.contribSumPerFile[slicedPath]
-      if (!contribs) return <>No activity</>
-      return <>{numToFriendlyString(contribs)} line changes</>
+      if (!contribs) return "No activity"
+      return `${numToFriendlyString(contribs)} line changes`
     }
     default: {
       return null

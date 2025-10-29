@@ -1,17 +1,15 @@
 import c from "ansi-colors"
 import { createSpinner } from "nanospinner"
 import { exec, spawn } from "node:child_process"
-import { readdir } from "node:fs/promises"
 import path from "node:path"
 import { performance } from "node:perf_hooks"
 import { getLogLevel, log, LOG_LEVEL } from "../analyzer/log.server.ts"
-import type { ArgsOptions, Repository } from "./model"
-import { existsSync } from "node:fs"
+import type { ArgsOptions } from "./model"
 import ServerInstance from "../analyzer/ServerInstance.server.ts"
-import { formatMs, promiseHelper } from "./util.ts"
+import { formatMs, invariant, promiseHelper } from "./util.ts"
 import yargsParser from "yargs-parser"
 import { GitCaller } from "../analyzer/git-caller.server.ts"
-import { sep } from "path/posix"
+// use Node's path utilities for cross-platform behavior
 
 export function runProcess(
   dir: string,
@@ -123,12 +121,16 @@ function getCommandLine() {
   }
 }
 
-export function openFile(repoDir: string, repoPath: string) {
-  repoPath = path.resolve(repoDir, "..", repoPath.split("/").join("/"))
-  const command = `${getCommandLine()} "${repoPath}"`
+export function openFile(repositoryDir: string, filePath: string) {
+  invariant(
+    filePath.startsWith(getRepoNameFromPath(repositoryDir)),
+    "Can only open files within the repository directory"
+  )
+  filePath = path.resolve(repositoryDir, "..", filePath)
+  const command = `${getCommandLine()} "${filePath}"`
   exec(command).stderr?.on("data", (e) => {
     // TODO show error in UI
-    log.error(`Cannot open file ${path.resolve(repoDir, repoPath)}: ${e}`)
+    log.error(`Cannot open file ${path.resolve(repositoryDir, filePath)}: ${e}`)
   })
 }
 
@@ -136,6 +138,7 @@ let latestVersion: string | null = null
 
 export async function getLatestVersion() {
   if (!latestVersion) {
+    console.info("Fetching latest version from npm registry...")
     const [result] = await promiseHelper(
       fetch("https://registry.npmjs.org/-/package/git-truck/dist-tags")
         .then((res) => res.json() as Promise<{ latest: string }>)
@@ -144,26 +147,9 @@ export async function getLatestVersion() {
     latestVersion = result
   }
 
+  console.info("Returning cached latest version...")
   return latestVersion
 }
-
-export const readGitRepos: (baseDir: string) => Promise<Repository[]> = async (baseDir) => {
-  const entries = await readdir(baseDir, { withFileTypes: true })
-
-  // Get all directories that has a .git subdirectory
-  return entries
-    .filter(
-      (entry) =>
-        entry.isDirectory() &&
-        existsSync(path.join(baseDir, entry.name)) &&
-        !entry.name.startsWith(".") &&
-        // TODO: Implement browsing, requires new routing
-        existsSync(path.join(baseDir, entry.name, ".git"))
-    )
-    .map(({ name }) => ({ name, path: path.join(baseDir, name), parentDirPath: baseDir, status: "Loading" }))
-}
-
-export const isPathGitRepo = (repoPath: string) => existsSync(path.join(repoPath, ".git"))
 
 export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
   return yargsParser(rawArgs, {
@@ -191,9 +177,9 @@ export async function getArgs(): Promise<ArgsOptions> {
 
   return args
 }
-export const getBaseDirFromPath = (repoPath: string) => path.resolve(repoPath, "..")
-export const getRepoNameFromPath = (repoPath: string) => path.resolve(repoPath).split(sep).reverse()[0]
-export const getSiblingRepository = (repoPath: string, repo: string) => path.resolve(getBaseDirFromPath(repoPath), repo)
-export function getDirName(repoPath: string) {
-  return path.basename(path.resolve(repoPath))
-}
+export const getBaseDirFromPath = (repositoryPath: string) => path.resolve(repositoryPath, "..")
+
+export const getRepoNameFromPath = (repositoryPath: string) => path.basename(path.resolve(repositoryPath))
+
+export const getSiblingRepository = (repositoryPath: string, repo: string) =>
+  path.resolve(getBaseDirFromPath(repositoryPath), repo)

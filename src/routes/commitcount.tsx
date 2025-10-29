@@ -1,18 +1,9 @@
-import { invariant } from "~/shared/util"
-import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/commitcount"
+import { currentRepositoryContext } from "~/routes/view"
 
-export const loader = async ({ request }: Route.LoaderArgs) => {
-  const url = new URL(request.url)
-  const branch = url.searchParams.get("branch")
-  const repo = url.searchParams.get("repo")
-  const path = url.searchParams.get("path")
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const { repositoryPath, instance } = context.get(currentRepositoryContext)
 
-  invariant(branch, "branch is required")
-  invariant(repo, "repo is required")
-  invariant(path, "path is required")
-
-  const instance = InstanceManager.getInstance(repo, branch)
   if (!instance) return []
-  return await instance.db.getCommitCountForPath(path)
+  return await instance.db.getCommitCountForPath(repositoryPath)
 }

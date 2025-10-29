@@ -1,14 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import type { FileChange, FullCommitDTO } from "~/shared/model"
-import { Fragment, useEffect, useState } from "react"
+import { Fragment } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
-import Accordion from "./accordion/Accordion"
-import { useFetcher } from "react-router"
+import { useLocation, useNavigation, useSearchParams } from "react-router"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useData } from "~/contexts/DataContext"
 import { LegendDot } from "./util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "./Popover"
@@ -25,23 +19,13 @@ interface CommitDistFragProps {
 function CommitDistFragment(props: CommitDistFragProps) {
   const [, authorColors] = useMetrics()
 
-  return (
-    <Accordion
-      titleLabels={true}
-      multipleOpen={true}
-      openByDefault={true}
-      items={props.items.map((value) => ({
-        title: value.message,
-        content: (
-          <CommitListEntry
-            key={value.hash + "--itemContentAccordion"}
-            authorColor={authorColors.get(value.author) ?? "grey"}
-            value={value}
-          />
-        )
-      }))}
+  return props.items.map((value) => (
+    <CommitListEntry
+      key={value.hash + "--itemContentAccordion"}
+      authorColor={authorColors.get(value.author) ?? "grey"}
+      value={value}
     />
-  )
+  ))
 }
 
 function InfoEntry(props: { keyString: string; value: string }) {
@@ -85,12 +69,12 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         positions={["left", "top", "bottom", "right"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <p
+          <button
             onClick={onClick}
-            className="cursor-pointer overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
+            className="cursor-pointer truncate overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
           >
             {props.value.message}
-          </p>
+          </button>
         )}
       >
         <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
@@ -144,42 +128,41 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   )
 }
 
-export function CommitHistory(props: { commitCount: number }) {
-  const analyzerData = useData()
-  const [commits, setCommits] = useState<FullCommitDTO[] | null>(null)
-  const [commitShowCount, setCommitShowCount] = useState(10)
+export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO[] | null; commitCount: number }) {
+  const navigation = useNavigation()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const commitIncrement = 10
+  const commitShowCount = Number(searchParams.get("count") ?? String(commitIncrement))
   const { clickedObject } = useClickedObject()
-  const fetcher = useFetcher()
 
-  function fetchCommits() {
-    if (!clickedObject) return
-    setCommitShowCount((prev) => prev + commitIncrement)
-    const searchParams = new URLSearchParams()
-    searchParams.set("branch", analyzerData.databaseInfo.branch)
-    searchParams.set("repo", analyzerData.databaseInfo.repo)
-    searchParams.set("path", clickedObject.path)
-    searchParams.set("count", commitShowCount + commitIncrement + "")
-    fetcher.load(`/commits?${searchParams.toString()}`)
-  }
+  // function fetchCommits() {
+  //   if (!clickedObject) return
+  //   setCommitShowCount((prev) => prev + commitIncrement)
+  //   const searchParams = new URLSearchParams()
+  //   // searchParams.set("branch", analyzerData.databaseInfo.branch)
+  //   // searchParams.set("repo", analyzerData.databaseInfo.repo)
+  //   searchParams.set("path", clickedObject.path)
+  //   searchParams.set("count", commitShowCount + commitIncrement + "")
+  //   navigate(`./commits?${searchParams.toString()}`)
+  // }
 
-  useEffect(() => {
-    setCommitShowCount(0)
-    fetchCommits()
-  }, [clickedObject])
+  // useEffect(() => {
+  //   setCommitShowCount(0)
+  //   fetchCommits()
+  // }, [clickedObject])
 
-  useEffect(() => {
-    if (fetcher.state !== "idle") return
-    const data = fetcher.data as FullCommitDTO[] | null
-    setCommits(data)
-  }, [fetcher])
+  // useEffect(() => {
+  //   if (fetcher.state !== "idle") return
+  //   const data = fetcher.data as FullCommitDTO[] | null
+  // }, [fetcher])
 
   if (!clickedObject) return null
 
   if (!commits) {
     return (
       <>
-        <h3 className="font-bold">Commit history</h3>
         <h3>Loading commits...</h3>
       </>
     )
@@ -191,17 +174,27 @@ export function CommitHistory(props: { commitCount: number }) {
 
   return (
     <>
-      <div className="flex justify-between">
-        <h3 className="font-bold">Commit history</h3>
-      </div>
       <div>
         <CommitDistFragment items={commits} count={commitShowCount} />
 
-        {fetcher.state === "idle" ? (
-          commitShowCount < props.commitCount ? (
-            <span onClick={fetchCommits} className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer">
+        {navigation.state === "idle" ? (
+          commitShowCount < commitCount ? (
+            <button
+              onClick={() =>
+                setSearchParams(
+                  (prev) => {
+                    prev.set("count", String(Number(prev.get("count") ?? String(commitIncrement)) + commitIncrement))
+                    return prev
+                  },
+                  {
+                    state: location.state
+                  }
+                )
+              }
+              className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
+            >
               Show more commits
-            </span>
+            </button>
           ) : null
         ) : (
           <h3>Loading commits...</h3>

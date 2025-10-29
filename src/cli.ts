@@ -1,16 +1,11 @@
-#!/usr/bin/env node
-
 import express from "express"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
-import { GitCaller } from "./analyzer/git-caller.server.ts"
-import { getArgsWithDefaults, parseArgs, describeAsyncJob, getLatestVersion, getDirName } from "./shared/util.server.ts"
+import { parseArgs, describeAsyncJob, getLatestVersion } from "./shared/util.server.ts"
 import {
-  getPathFromRepoAndHead,
   generateVersionComparisonLink,
   semverCompare,
-  isValidURI,
   promiseHelper
 } from "./shared/util.ts"
 
@@ -21,7 +16,6 @@ const args = parseArgs()
 if (args?.log) {
   setLogLevel(args.log as string)
 }
-const options = getArgsWithDefaults()
 
 // Soft clear the console
 process.stdout.write("\u001b[2J\u001b[0;0H")
@@ -50,7 +44,7 @@ if (DEVELOPMENT) {
   app.use(viteDevServer.middlewares)
   app.use(async (req, res, next) => {
     try {
-      const source = await viteDevServer.ssrLoadModule(SERVER_APP_PATH)
+      const source: { app: typeof app } = (await viteDevServer.ssrLoadModule(SERVER_APP_PATH)) as { app: typeof app }
       return await source.app(req, res, next)
     } catch (error) {
       if (typeof error === "object" && error instanceof Error) {
@@ -112,32 +106,14 @@ async function stopHandler() {
 async function onListen() {
   const url = `http://localhost:${PORT}`
 
-  const [extension, extensionError] = await describeAsyncJob({
-    job: async () => {
-      // If CWD or path argument is a git repo, go directly to that repo in the visualizer
-      if (await GitCaller.isGitRepo(options.path)) {
-        const repoName = getDirName(options.path)
-        if (repoName) {
-          const currentHead = await GitCaller._getRepositoryHead(options.path)
-          return `/${getPathFromRepoAndHead(repoName, currentHead)}`
-        } else return ""
-      }
-    },
-    beforeMsg: "Checking for git repo",
-    afterMsg: "Done checking for git repo",
-    errorMsg: "Failed to check for git repo"
-  })
-
-  if (extensionError) {
-    log.error(extensionError)
-  }
-
   if (!args.headless && process.env.NODE_ENV === "development") {
     args.headless = true
   }
-  const openURL = url + (extension && isValidURI(extension) ? extension : "")
 
   if (!args.headless) {
+    const openURL = url
+    // + (extension && isValidURI(extension) ? extension : "")
+
     log.debug(`Opening ${openURL}`)
     await describeAsyncJob({
       job: () => open(openURL),

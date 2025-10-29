@@ -2,8 +2,8 @@ import { memo } from "react"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { Metric } from "../metrics/metrics"
-import { EnumSelect } from "./EnumSelect"
+import { getMetricDescription, Metric } from "../metrics/metrics"
+import { IconRadioGroup } from "./EnumSelect"
 
 import {
   mdiChartBubble,
@@ -62,9 +62,9 @@ export const Options = memo(function Options() {
       </div>
       <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
         <h2 className="card__title">Layout</h2>
-        <EnumSelect
+        <IconRadioGroup
           // large
-          enum={Chart}
+          group={Chart}
           defaultValue={chartType}
           onChange={(chartType: ChartType) => setChartType(chartType)}
           iconMap={chartTypeIcons}
@@ -72,18 +72,25 @@ export const Options = memo(function Options() {
       </div>
       <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
         <h2 className="card__title">Size</h2>
-        <EnumSelect
+        <IconRadioGroup
           // large
-          enum={SizeMetric}
+          group={SizeMetric}
           defaultValue={sizeMetric}
           onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
           iconMap={sizeMetricIcons}
         />
       </div>
-      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
+      <div>
         <h2 className="card__title">Color</h2>
-        <EnumSelect
-          enum={Metric}
+        <IconRadioGroup
+          titleMap={Object.keys(Metric).reduce(
+            (acc, key) => {
+              acc[key as MetricType] = getMetricDescription(key as MetricType)
+              return acc
+            },
+            {} as Record<MetricType, string>
+          )}
+          group={Metric}
           defaultValue={metricType}
           onChange={(metric: MetricType) => {
             setMetricType(metric)

@@ -1,26 +1,13 @@
-import "react-router"
 import { createRequestHandler } from "@react-router/express"
 import express from "express"
-import pkg from "../../package.json" with { type: "json" }
-import { getLatestVersion } from "../shared/util.server.js"
-
-declare module "react-router" {
-  interface AppLoadContext {
-    installedVersion: string
-    latestVersion: string | null
-  }
-}
 
 export const app: express.Express = express()
-const getLatestVersionPromise = getLatestVersion()
 
 app.use(
   createRequestHandler({
-    // @ts-expect-error Virtual module provided by React Router
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore Virtual module provided by React Router
     // eslint-disable-next-line import/no-unresolved
-    build: () => import("virtual:react-router/server-build"),
-    async getLoadContext() {
-      return { installedVersion: pkg.version, latestVersion: await getLatestVersionPromise }
-    }
+    build: () => import("virtual:react-router/server-build")
   })
 )

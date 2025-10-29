@@ -26,6 +26,7 @@ export function setDominantAuthorColor(
   }
   const color = authorColors[dominantAuthor.author] ?? noEntryColor
 
+  legend.set("Multiple authors", new PointInfo(noEntryColor, Infinity))
   cache.colormap.set(blob.path, color)
 
   if (legend.has(dominantAuthor.author)) {

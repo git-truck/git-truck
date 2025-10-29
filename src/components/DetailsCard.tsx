@@ -1,112 +1,26 @@
-import { mdiAccountMultiple, mdiEyeOffOutline, mdiFile, mdiFolder, mdiOpenInNew } from "@mdi/js"
+import { mdiFile, mdiFolder, mdiGit } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { type Fetcher, Form, useFetcher, useLocation, useNavigation } from "react-router"
-import byteSize from "byte-size"
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router"
 import clsx from "clsx"
-import { useEffect, useId, useMemo, useRef, useState } from "react"
-import type { GitObject, GitTreeObject } from "~/shared/model"
-import { AuthorDistFragment } from "~/components/AuthorDistFragment"
-import { ChevronButton } from "~/components/ChevronButton"
-import { CloseButton, LegendDot, Tabs } from "~/components/util"
-import { useClickedObject } from "~/contexts/ClickedContext"
+import { useMemo, type ReactNode } from "react"
+import type { GitObject } from "~/shared/model"
+import { CloseButton, LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { usePath } from "~/contexts/PathContext"
-import { usePrefersLightMode } from "~/styling"
-import { dateFormatLong, last } from "~/shared/util"
-import { CommitHistory } from "./CommitHistory"
+import { getPathFromRepoAndHead } from "~/shared/util"
+import { IconRadioGroup } from "./EnumSelect"
 
-function OneFolderOut(path: string) {
-  const index = path.lastIndexOf("/")
-  const index2 = path.lastIndexOf("\\")
-  if (index !== -1) return path.slice(0, index)
-  if (index2 !== -1) return path.slice(0, index2)
-  return path
-}
-
-export function DetailsCard({
-  className = "",
-  showUnionAuthorsModal
-}: {
-  className?: string
-  showUnionAuthorsModal: () => void
-}) {
-  const { setClickedObject, clickedObject } = useClickedObject()
+export function DetailsCard({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const [searchParams] = useSearchParams()
+  // const clickedObjectPath = searchParams.get("path")
+  // const navigate = useNavigate()
+  // const { setClickedObject, clickedObject } = useClickedObject()
   const location = useLocation()
+  const navigate = useNavigate()
+  const clickedObject = location.state?.clickedObject as GitObject | null | undefined
   const { metricType } = useOptions()
-  const { state } = useNavigation()
-  const { setPath, path } = usePath()
   const { databaseInfo } = useData()
-  const isProcessingHideRef = useRef(false)
-  const [commitCount, setCommitCount] = useState<number | null>(null)
-  const slicedPath = useMemo(() => clickedObject?.path ?? "", [clickedObject])
-
-  const existingCommitCount = databaseInfo.commitCounts[slicedPath]
-
-  const commitFetcher = useFetcher()
-
-  useEffect(() => {
-    if (clickedObject?.type === "blob" && existingCommitCount) {
-      setCommitCount(existingCommitCount)
-    } else {
-      fetchCommitCount()
-    }
-  }, [databaseInfo, clickedObject])
-
-  function fetchCommitCount() {
-    const searchParams = new URLSearchParams()
-    searchParams.set("branch", databaseInfo.branch)
-    searchParams.set("repo", databaseInfo.repo)
-    if (!clickedObject?.path) return
-    searchParams.set("path", clickedObject.path)
-    commitFetcher.load(`/commitcount?${searchParams.toString()}`)
-  }
-
-  useEffect(() => {
-    if (commitFetcher.state === "idle") {
-      const data = commitFetcher.data as number
-      setCommitCount(data)
-    }
-  }, [commitFetcher])
-
-  const [authorContributions, setAuthorContributions] = useState<{ author: string; contribs: number }[] | null>(null)
-  const contribSum = useMemo(() => {
-    if (!authorContributions) return 0
-    return authorContributions.reduce((acc, curr) => acc + curr.contribs, 0)
-  }, [authorContributions])
-
-  const fetcher = useFetcher()
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams()
-    searchParams.set("branch", databaseInfo.branch)
-    searchParams.set("repo", databaseInfo.repo)
-    if (!clickedObject?.path) return
-    searchParams.set("path", clickedObject.path)
-    searchParams.set("isblob", String(clickedObject.type === "blob"))
-    fetcher.load(`/authordist?${searchParams.toString()}`)
-  }, [clickedObject, databaseInfo])
-
-  useEffect(() => {
-    if (fetcher.state === "idle") {
-      const data = (fetcher.data ?? []) as { author: string; contribs: number }[]
-      setAuthorContributions(data)
-    }
-  }, [fetcher])
-  const prefersLightMode = usePrefersLightMode()
-
-  useEffect(() => {
-    if (isProcessingHideRef.current) {
-      setClickedObject(null)
-      isProcessingHideRef.current = false
-    }
-  }, [clickedObject, setClickedObject, state])
-
-  useEffect(() => {
-    // Update clickedObject if data changes
-    setClickedObject((clickedObject) => findObjectInTree(databaseInfo.fileTree, clickedObject))
-  }, [databaseInfo, setClickedObject])
 
   const [metricsData] = useMetrics()
   const { clickedObjectColor } = useMemo<{ clickedObjectColor: string | null }>(() => {
@@ -127,11 +41,10 @@ export function DetailsCard({
     return {
       clickedObjectColor
     }
-  }, [clickedObject, metricsData, metricType, prefersLightMode])
+  }, [clickedObject, metricsData, metricType])
 
   if (!clickedObject) return null
-  const isBlob = clickedObject.type === "blob"
-  const extension = last(clickedObject.name.split("."))
+
   // TODO: handle binary file properly or remove the entry
   return (
     <div className={clsx("card flex flex-col gap-2 backdrop-blur-sm transition-colors", className)}>
@@ -147,10 +60,17 @@ export function DetailsCard({
           <span className="truncate" title={clickedObject.name}>
             {clickedObject.name}
           </span>
-          <CloseButton absolute={false} onClick={() => setClickedObject(null)} />
+          <Link
+            to={getPathFromRepoAndHead({
+              path: searchParams.get("path")!,
+              branch: databaseInfo.branch
+            })}
+          >
+            <CloseButton absolute={false} />
+          </Link>
         </h2>
       </div>
-      <Tabs
+      {/* <Tabs
         tabs={[
           {
             title: "General",
@@ -170,7 +90,7 @@ export function DetailsCard({
                     <PathEntry path={clickedObject.path} />
                   </div>
                   <div className="card">
-                    <AuthorDistribution authors={authorContributions} contribSum={contribSum} fetcher={fetcher} />
+                    <Outlet />
                   </div>
                 </div>
                 <div className="mt-2 flex gap-2">
@@ -236,190 +156,61 @@ export function DetailsCard({
           },
           { title: "Commits", content: <CommitHistory commitCount={commitCount ?? 0} /> }
         ]}
-      />
-    </div>
-  )
-}
-
-function findObjectInTree(tree: GitTreeObject, object: GitObject | null) {
-  if (object === null) return null
-  let currentTree = tree
-  const steps = object.path.slice(1).split("/")
-
-  for (let i = 0; i < steps.length; i++) {
-    for (const child of currentTree.children) {
-      if (child.hash === object.hash) return child
-      if (child.type === "tree") {
-        const childSteps = child.name.split("/")
-        if (childSteps[0] === steps[i]) {
-          currentTree = child
-          i += childSteps.length - 1
-          break
+      /> */}
+      <IconRadioGroup
+        large
+        group={
+          {
+            general: "Details",
+            commits: "Commits"
+          } as const
         }
-      }
-    }
-  }
-  return currentTree.path === object.path ? currentTree : null
-}
-
-function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
-  const folderCount = props.clickedTree.children.filter((child) => child.type === "tree").length
-  const fileCount = props.clickedTree.children.length - folderCount
-
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Files
-      </div>
-      <p className="text-sm break-all">{fileCount}</p>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Folders
-      </div>
-      <p className="text-sm break-all">{folderCount}</p>
-    </>
-  )
-}
-
-function CommitsEntry(props: { count: number | undefined }) {
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Commits
-      </div>
-      <p className="text-sm break-all">{props.count ?? "unknown"}</p>
-    </>
-  )
-}
-
-function LastchangedEntry(props: { epoch: number | undefined }) {
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Last changed
-      </div>
-      <p className="text-sm break-all">{props.epoch ? dateFormatLong(props.epoch) : "unknown"}</p>
-    </>
-  )
-}
-
-function PathEntry(props: { path: string }) {
-  const { state } = useNavigation()
-  const { clickedObject } = useClickedObject()
-  if (!clickedObject) return null
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Located at
-      </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-between gap-2 text-sm break-all">
-        <p className="truncate" title={props.path}>
-          {props.path}
-        </p>
-        <Form method="post" action={location.pathname} title={clickedObject.name}>
-          <input type="hidden" name="open" value={clickedObject.path} />
-          <button
-            className="btn--icon"
-            disabled={state !== "idle"}
-            title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
-          >
-            <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
-          </button>
-        </Form>
-      </div>
-    </>
-  )
-}
-
-function SizeEntry(props: { size: number; isBinary?: boolean }) {
-  const size = byteSize(props.size ?? 0)
-  return (
-    <>
-      <div className="flex items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Size</div>
-      <p className="text-sm break-all">
-        {size.value} {size.unit}{" "}
-        <span className="opacity-50">
-          {props.isBinary ? (
-            <>
-              <br />
-              (binary file)
-            </>
-          ) : null}
-        </span>
-      </p>
-    </>
-  )
-}
-
-const authorCutoff = 2
-
-function AuthorDistribution(props: {
-  authors: { author: string; contribs: number }[] | null
-  contribSum: number
-  fetcher: Fetcher
-}) {
-  const authorDistributionExpandId = useId()
-
-  const [collapsed, setCollapsed] = useState<boolean>(true)
-
-  const authorsAreCutoff = (props.authors?.length ?? 0) > authorCutoff + 1
-  return (
-    <div className="flex flex-col gap-2">
-      <div
-        className={`flex justify-between ${authorsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
-      >
-        <label className="label grow" htmlFor={authorDistributionExpandId}>
-          <h3 className="font-bold">Author distribution</h3>
-        </label>
-        {authorsAreCutoff ? (
-          <ChevronButton id={authorDistributionExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
-        ) : null}
-      </div>
-      <div className="grid grid-cols-[1fr_auto] gap-1">
-        {props.fetcher.state !== "idle" ? (
-          <p>Loading authors...</p>
-        ) : (
-          <>
-            {authorsAreCutoff ? (
-              <>
-                <AuthorDistFragment
-                  show={true}
-                  items={props.authors?.slice(0, authorCutoff) ?? []}
-                  contribSum={props.contribSum}
-                />
-                <AuthorDistFragment
-                  show={!collapsed}
-                  items={props.authors?.slice(authorCutoff) ?? []}
-                  contribSum={props.contribSum}
-                />
-                {collapsed ? (
-                  <button
-                    className="cursor-pointer text-left text-xs opacity-70 hover:opacity-100"
-                    onClick={() => setCollapsed(!collapsed)}
-                  >
-                    + {(props.authors?.slice(authorCutoff) ?? []).length} more
-                  </button>
-                ) : null}
-              </>
-            ) : (
-              <>
-                {(props.authors ?? []).length > 0 && hasContributions(props.authors) ? (
-                  <AuthorDistFragment show={true} items={props.authors ?? []} contribSum={props.contribSum} />
-                ) : (
-                  <p>No authors found</p>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+        iconMap={{
+          general: mdiFolder,
+          commits: mdiGit
+        }}
+        defaultValue={new URLSearchParams(location.search).get("tab") === "commits" ? "commits" : "general"}
+        onChange={(v) => {
+          const searchParams = new URLSearchParams(location.search)
+          searchParams.set("tab", v)
+          navigate(
+            {
+              ...location,
+              search: searchParams.toString()
+            },
+            { state: location.state }
+          )
+        }}
+      />
+      {/*  <div className="grid grid-cols-2 place-items-stretch">
+        <Link
+          to={{
+            ...location,
+            pathname: "./details"
+          }}
+          state={location.state}
+        >
+          <Tab
+            className={location.pathname.endsWith("details") ? "secondary" : ""}
+            title="General"
+            active={location.pathname.endsWith("details")}
+          />
+        </Link>
+        <Link
+          to={{
+            ...location,
+            pathname: "./commits"
+          }}
+          state={location.state}
+        >
+          <Tab
+            className={location.pathname.endsWith("details") ? "secondary" : ""}
+            title="Commits"
+            active={location.pathname.endsWith("commits")}
+          />
+        </Link>
+      </div> */}
+      {children}
     </div>
   )
-}
-
-function hasContributions(authors?: { author: string; contribs: number }[] | null) {
-  if (!authors) return false
-  for (const { contribs } of authors) {
-    if (contribs > 0) return true
-  }
-  return false
 }

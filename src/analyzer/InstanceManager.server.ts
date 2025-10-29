@@ -10,25 +10,25 @@ export default class InstanceManager {
     return this.metadataDB
   }
 
-  public static getOrCreateInstance(repo: string, branch: string, repoPath: string) {
+  public static getOrCreateInstance({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
     if (!this.instances) this.instances = new Map()
-    const existing = this.instances.get(repo)?.get(branch)
+    const existing = this.instances.get(repositoryPath)?.get(branch)
     if (existing) return existing
 
-    const newInstance = new ServerInstance(repo, branch, repoPath)
-    const existingRepo = this.instances.get(repo)
+    const newInstance = new ServerInstance({ repositoryPath, branch })
+    const existingRepo = this.instances.get(repositoryPath)
     if (existingRepo) {
       existingRepo.set(branch, newInstance)
     } else {
-      this.instances.set(repo, new Map([[branch, newInstance]]))
+      this.instances.set(repositoryPath, new Map([[branch, newInstance]]))
     }
 
     return newInstance
   }
 
-  public static getInstance(repo: string, branch: string) {
+  public static getInstance(path: string, branch: string) {
     if (!this.instances) this.instances = new Map()
-    return this.instances.get(repo)?.get(branch)
+    return this.instances.get(path)?.get(branch)
   }
 
   public static async closeAllDBConnections() {

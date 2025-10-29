@@ -19,6 +19,7 @@ import { cpus, freemem, totalmem } from "node:os"
 
 import type { InvocationReason } from "../shared/RefreshPolicy.ts"
 import InstanceManager from "./InstanceManager.server.ts"
+import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
 
@@ -33,15 +34,15 @@ export default class ServerInstance {
   public prevInvokeReason: InvocationReason = "unknown"
   public prevProgress = { str: "", timestamp: 0 }
 
-  public repo: string
+  public repositoryPath: string
+  public repositoryName: string
   public branch: string
-  public repoPath: string
-  constructor(repo: string, branch: string, repoPath: string) {
-    this.repo = repo
+  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+    this.repositoryPath = repositoryPath
+    this.repositoryName = getRepoNameFromPath(repositoryPath)
     this.branch = branch
-    this.repoPath = repoPath
-    this.gitCaller = new GitCaller(repo, branch, repoPath)
-    this.db = new DB(repo, branch)
+    this.gitCaller = new GitCaller({ repositoryPath: repositoryPath, branch })
+    this.db = new DB({ repositoryPath: repositoryPath, branch })
   }
 
   public updateProgress(index: number) {
@@ -85,14 +86,14 @@ export default class ServerInstance {
         type: groups["type"] as "blob" | "tree",
         hash: groups["hash"],
         size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-        path: this.repo + "/" + groups["path"]
+        path: this.repositoryName + "/" + groups["path"]
       })
     }
 
     const rootTree = {
       type: "tree",
-      path: this.repo,
-      name: this.repo,
+      path: this.repositoryName,
+      name: this.repositoryName,
       hash: this.fileTreeAsOf,
       children: []
     } as GitTreeObject
@@ -204,12 +205,18 @@ export default class ServerInstance {
           const fileHasMoved = file.includes("=>")
           let filePath = file
           if (fileHasMoved) {
-            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles, this.repo)
+            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles, this.repositoryName)
           }
 
           const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
           const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, insertions, deletions, path: this.repo + "/" + filePath, mode: "modify" }) // TODO remove modetype
+          fileChanges.push({
+            isBinary,
+            insertions,
+            deletions,
+            path: this.repositoryName + "/" + filePath,
+            mode: "modify"
+          }) // TODO remove modetype
         }
       }
       commits.set(hash, { author, committertime, authortime, hash, coauthors: [], fileChanges })
@@ -374,7 +381,7 @@ export default class ServerInstance {
     this.analyzationStatus = "Starting"
 
     let commitCount = await this.gitCaller.getCommitCount()
-    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun(this.repo, this.branch)
+    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun(this.repositoryName, this.branch)
     if (!(await this.db.commitTableEmpty())) {
       if (priorRun) {
         const latestCommit = await this.db.getLatestCommitHash()
@@ -416,7 +423,7 @@ export default class ServerInstance {
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
     await InstanceManager.getOrCreateMetadataDB().setCompletion(
-      this.repo,
+      this.repositoryName,
       this.branch,
       await this.db.getLatestCommitHash()
     )

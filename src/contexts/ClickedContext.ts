@@ -1,18 +1,27 @@
-import type { Dispatch, SetStateAction } from "react"
-import { createContext, useContext } from "react"
+import { useCallback } from "react"
 import type { GitObject } from "../shared/model"
-
-export interface clickedObject {
-  clickedObject: GitObject | null
-  setClickedObject: Dispatch<SetStateAction<GitObject | null>>
-}
-
-export const ClickedObjectContext = createContext<clickedObject | null>(null)
+import { useLocation, useSearchParams } from "react-router"
 
 export function useClickedObject() {
-  const context = useContext(ClickedObjectContext)
-  if (!context) {
-    throw new Error("useClickedObject must be used within a ClickedObjectProvider")
-  }
-  return context
+  const location = useLocation()
+  const clickedObject = (location.state?.clickedObject ?? null) as GitObject | null
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const setClickedObject = useCallback(
+    (object: GitObject | null) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      if (!object) {
+        newSearchParams.delete("path")
+      } else {
+        newSearchParams.set("path", object.path)
+      }
+
+      setSearchParams(newSearchParams, {
+        state: { clickedObject: object }
+      })
+    },
+    [setSearchParams, searchParams]
+  )
+
+  return { clickedObject, setClickedObject }
 }

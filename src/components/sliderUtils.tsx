@@ -1,36 +1,76 @@
-import type { ReactNode } from "react"
-import { type SliderItem, type GetHandleProps, type GetTrackProps, Ticks } from "react-compound-slider"
+import type { CSSProperties, ReactNode } from "react"
+import {
+  type SliderItem,
+  type GetHandleProps,
+  type GetTrackProps,
+  Ticks,
+  type GetRailProps
+} from "react-compound-slider"
 import { Fragment } from "react/jsx-runtime"
 import { cn } from "~/styling"
 
-export function Handle(props: {
+export function Handle({
+  domain: [min, max],
+  children,
+  disabled,
+  handle,
+  title,
+  getHandleProps,
+  className,
+  onClick
+}: {
   domain: number[]
+  children?: ReactNode
   handle: SliderItem
+  title?: string
   getHandleProps: GetHandleProps
+  className?: string
   disabled?: boolean
+  onClick?: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "btn btn--primary z-10 size-5 rounded-full disabled:grayscale",
+        disabled ? "cursor-progress" : "cursor-col-resize",
+        className
+      )}
+      role="slider"
+      aria-disabled={disabled}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={handle.value}
+      title={title}
+      style={{
+        left: `${handle.percent}%`,
+        position: "absolute",
+        marginLeft: "-10px",
+        marginTop: "-6px"
+      }}
+      {...getHandleProps(handle.id)}
+    >
+      {children}
+    </button>
+  )
+}
+
+export function SliderRail({
+  getRailProps,
+  className = "",
+  children
+}: {
+  getRailProps: GetRailProps
+  className?: string
+  children?: ReactNode
 }) {
   return (
     <div
-      className="bg-blue-primary disabled:bg-blue-primary/50"
-      role="slider"
-      aria-valuemin={props.domain[0]}
-      aria-valuemax={props.domain[1]}
-      aria-valuenow={props.handle.value}
-      style={{
-        left: `${props.handle.percent}%`,
-        position: "absolute",
-        marginLeft: "-11px",
-        marginTop: "-6px",
-        zIndex: 2,
-        width: 24,
-        height: 24,
-        cursor: "pointer",
-        borderRadius: "50%",
-        boxShadow: "1px 1px 1px 1px rgba(0, 0, 0, 0.2)"
-        // backgroundColor: `${props.disabled ? "grey" : "#34568f"}`
-      }}
-      {...props.getHandleProps(props.handle.id)}
-    />
+      className={cn("bg-blue-secondary/20 absolute h-2 w-full cursor-pointer rounded-full p-0", className)}
+      {...getRailProps()}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -43,13 +83,11 @@ export function Track(props: {
 }) {
   return (
     <div
-      className={cn(props.disabled ? "bg-primary-text-dark dark:bg-primary-text" : "bg-blue-primary")}
+      className={cn(
+        "btn btn--primary absolute h-2 cursor-pointer rounded-full p-0",
+        props.disabled ? "bg-primary-text-dark dark:bg-primary-text" : "bg-blue-primary"
+      )}
       style={{
-        position: "absolute",
-        height: 14,
-        zIndex: 1,
-        borderRadius: 7,
-        cursor: "pointer",
         left: `${props.source.percent}%`,
         width: `${props.target.percent - props.source.percent}%`
       }}
@@ -62,7 +100,7 @@ const alignToJustify = {
   left: "start",
   center: "center",
   right: "end"
-}
+} as const
 
 export function LabeledTicks({ valueMap, onTop = false }: { valueMap: Record<number, ReactNode>; onTop?: boolean }) {
   const entries = Object.entries(valueMap)
@@ -104,93 +142,60 @@ export function LabeledTicks({ valueMap, onTop = false }: { valueMap: Record<num
 }
 
 export function TicksByCount({
+  className = "",
   count,
   tickToLabel,
-  onTop = false
+  onTop = true,
+  align,
+  below = false
 }: {
+  className?: string
   count: number
-  tickToLabel: (tick: number) => ReactNode
+  tickToLabel: (tick: number, index: number) => ReactNode
   onTop?: boolean
+  /** Alignment of the labels. If not provided, left for first tick, right for last tick, center otherwise.*/
+  align?: "left" | "center" | "right"
+  below?: boolean
 }) {
   return (
-    <Ticks count={count}>
-      {({ ticks }) => (
-        <div className="grid grid-flow-col grid-cols-3 [grid-template-rows:1fr_auto] pt-4">
-          {ticks.map((tick) => {
-            const tickLabelInfo = tickToLabel(tick.value)
-            const align = tick.value === 0 ? "left" : tick.value === 1 ? "right" : "center"
-            const justification = tickLabelInfo ? alignToJustify[align] : "center"
-            const Tick = (
-              <div className={`flex justify-${justification}`}>
-                <div className="h-2 w-[1px] bg-gray-950 dark:bg-gray-50" />
-              </div>
-            )
-            const Label = (
-              <div
-                className="truncate text-xs"
-                style={{
-                  textAlign: align
-                }}
-              >
-                {tickLabelInfo}
-              </div>
-            )
-            return (
-              <Fragment key={tick.id}>
-                {onTop ? Label : Tick}
-                {onTop ? Tick : Label}
-              </Fragment>
-            )
-          })}
-        </div>
-      )}
-    </Ticks>
-  )
-}
+    <div
+      className={cn("grid grid-flow-col grid-cols-(--cols) gap-1 text-xs", {
+        "[grid-template-rows:auto]": !below && !onTop,
+        "[grid-template-rows:auto_auto]": below !== onTop,
+        "[grid-template-rows:auto_auto_auto]": below && onTop
+      }, className)}
+      style={
+        {
+          "--cols": `repeat(${count}, minmax(0, 1fr))`
+        } as CSSProperties
+      }
+    >
+      {new Array(count).fill(0).map((_, i) => {
+        const tick = i / (count - 1)
+        const tickLabelInfo = tickToLabel(tick, i)
+        const alignment = align ?? (tick === 0 ? "left" : tick === 1 ? "right" : "center")
+        const justification = tickLabelInfo ? alignToJustify[alignment] : ("center" as const)
 
-export function Tick({
-  tick,
-  count,
-  valueMap = {}
-}: {
-  tick: SliderItem
-  count: number
-  valueMap?: {
-    [key: number]: {
-      text: string
-      align: "left" | "center" | "right"
-    }
-  }
-}) {
-  const text = valueMap[tick.value]?.text ?? ""
-  const align: "left" | "center" | "right" = "center"
-
-  return (
-    <div className="grid grid-cols-3 gap-2">
-      <div
-        style={{
-          // position: "absolute",
-          // marginTop: 14,
-          width: 1,
-          height: 5,
-          backgroundColor: "rgb(150,150,150)",
-          left: `${tick.percent}%`
-        }}
-      />
-      <div
-        style={{
-          // position: "absolute",
-          // marginTop: 22,
-          fontSize: 10,
-          textAlign: align,
-          marginLeft: `${-(100 / count) / 2}%`,
-          width: `${100 / count}%`,
-          left: `${tick.percent}%`,
-          maxWidth: "80px"
-        }}
-      >
-        {text}
-      </div>
+        return (
+          <Fragment key={i}>
+            {onTop ? <Tick justification={justification} /> : null}
+            <div className={cn(`text-${alignment}`)}>{tickLabelInfo === 0 ? "" : tickLabelInfo}</div>
+            {below ? <Tick justification={justification} /> : null}
+          </Fragment>
+        )
+      })}
     </div>
   )
 }
+
+export const Tick = ({
+  className = "",
+  justification = "start"
+}: {
+  className?: string
+  justification?: "start" | "center" | "end"
+}) => (
+  <div className={cn("flex", `justify-${justification}`, className)}>
+    <div className="h-2 w-[1px] bg-gray-950 dark:bg-gray-50" />
+  </div>
+)

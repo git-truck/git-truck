@@ -2,7 +2,9 @@ import type { Dispatch, RefObject, SetStateAction } from "react"
 import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
-import { promiseHelper } from "./shared/util"
+import { getPathFromRepoAndHead, promiseHelper } from "./shared/util"
+import { useLocation, useNavigate, useSearchParams, type NavigateOptions } from "react-router"
+import type { LinkSearchParams, LinkSegments } from "./shared/model"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
@@ -124,4 +126,39 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
   }
 
   return { isFullscreen, toggleFullscreen } as const
+}
+
+export function useCreateLink() {
+  const location = useLocation()
+  const [currentSearch] = useSearchParams()
+  const navigate = useNavigate()
+
+  const currentSegments = location.pathname.split("/").filter((seg) => seg.length > 0) as LinkSegments
+  const currentParams = Object.fromEntries(currentSearch.entries()) as LinkSearchParams
+
+  const composeLinkNavigation = ({
+    params = currentParams,
+    segments = currentSegments
+  }: {
+    params?: Partial<LinkSearchParams>
+    segments?: LinkSegments
+  } = {
+    params: currentParams,
+    segments: currentSegments
+  }) => {
+    const url = getPathFromRepoAndHead(
+      {
+        ...currentParams,
+        ...params
+      } as LinkSearchParams,
+      segments
+    )
+    return {
+      url,
+      navigate(options: NavigateOptions) {
+        navigate(url, options)
+      }
+    }
+  }
+  return composeLinkNavigation
 }

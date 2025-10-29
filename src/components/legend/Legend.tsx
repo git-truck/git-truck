@@ -2,8 +2,7 @@ import { useDeferredValue, useMemo, type ReactNode } from "react"
 import type { GitObject } from "~/shared/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
-import type { MetricCache } from "../../metrics/metrics"
-import { getMetricDescription, getMetricLegendType, Metric } from "../../metrics/metrics"
+import { getMetricDescription, getMetricLegendType } from "../../metrics/metrics"
 import { AuthorOptions } from "../AuthorOptions"
 import { GradientLegend } from "./GradiantLegend"
 import { PointLegend } from "./PointLegend"
@@ -31,15 +30,15 @@ export function Legend({
 
     switch (getMetricLegendType(metricType)) {
       case "POINT": {
-        return <PointLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+        return <PointLegend />
       }
 
       case "GRADIENT": {
-        return <GradientLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+        return <GradientLegend hoveredObject={deferredHoveredObject} />
       }
 
       case "SEGMENTS": {
-        return <SegmentLegend metricCache={metricCache} hoveredObject={deferredHoveredObject} />
+        return <SegmentLegend hoveredObject={deferredHoveredObject} />
       }
     }
   }, [metricCache, deferredHoveredObject, metricType])
@@ -48,17 +47,10 @@ export function Legend({
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      <div>
-        <h2 className="card__title">Legend: {Metric[metricType]}</h2>
-        <p className="card-p mb-2">{getMetricDescription(metricType)}</p>
-        {legend}
-      </div>
+      {/* <h2 className="card__title">Legend: {Metric[metricType]}</h2> */}
+      <p className="card-p mb-2">{getMetricDescription(metricType)}</p>
       {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
+      {legend}
     </div>
   )
-}
-
-export interface MetricLegendProps {
-  hoveredObject: GitObject | null
-  metricCache: MetricCache
 }

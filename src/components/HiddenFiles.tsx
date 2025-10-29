@@ -40,7 +40,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
               <Form className="w-4" method="post" action={location.pathname}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <button
-                  className="btn--icon btn--hover-swap h-4"
+                  className="btn btn--hover-swap h-4"
                   title="Show file"
                   disabled={navigationState.state !== "idle"}
                 >

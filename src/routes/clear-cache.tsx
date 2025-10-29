@@ -6,9 +6,10 @@ import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/clear-cache"
 import { cn } from "~/styling"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
+import { versionContext } from "./view"
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
-  return { versionInfo: context }
+  return { versionInfo: context.get(versionContext) }
 }
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -60,9 +61,9 @@ export default function ClearCache() {
         <div className="card">
           <h1 className="text-2xl font-bold">Clear Git Truck cache</h1>
           <p>
-            This will clear all analyzed results and reset the database cache. Only this if you are experiencing issues.
+            This will clear all analyzed results and reset the database cache. This is only necessary if you are experiencing issues.
           </p>
-          <div className="flex h-full place-items-center gap-2 rounded-lg border border-orange-500/70 p-4 text-orange-500">
+          <div className="flex h-full place-items-center gap-2 rounded-lg border bg-amber-500/70 p-4 text-white">
             <Icon path={mdiDeleteForever} className="inline-block h-12" />
             <div>
               <span className="font-bold">Warning: </span>

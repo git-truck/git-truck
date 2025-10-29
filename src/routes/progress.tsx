@@ -1,17 +1,10 @@
 import { sleep } from "~/shared/util"
-import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/progress"
+import { currentRepositoryContext } from "~/routes/view"
 
-const defaultResponse: ProgressData = { progress: 0, analyzationStatus: "Starting" }
-
-export const loader = async ({ request }: Route.LoaderArgs): Promise<ProgressData> => {
-  const url = new URL(request.url)
-  const branch = url.searchParams.get("branch")
-  const repo = url.searchParams.get("repo")
-  if (!repo || !branch) return defaultResponse
-  const instance = InstanceManager.getInstance(repo, branch)
-  if (!instance) return defaultResponse
+export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {
+  const { instance } = context.get(currentRepositoryContext)
   let progressPercentage = instance.progress.reduce((acc, curr) => acc + curr, 0)
   let status = instance.analyzationStatus
   while (

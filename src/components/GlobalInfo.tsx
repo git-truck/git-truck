@@ -1,54 +1,37 @@
-import { Link, useNavigate, useNavigation } from "react-router"
-import { dateTimeFormatShort } from "~/shared/util"
+import { Link, useNavigate } from "react-router"
+import { dateTimeFormatShort, getPathFromRepoAndHead } from "~/shared/util"
 import { useData } from "../contexts/DataContext"
-import { useEffect, useState } from "react"
 import { RevisionSelect } from "./RevisionSelect"
 import { mdiArrowTopLeft, mdiMenu } from "@mdi/js"
 import { Code } from "./util"
 import { Icon } from "~/components/Icon"
-import { useClient } from "~/hooks"
+import { useIsClient } from "~/hooks"
 import { Popover } from "./Popover"
+import { cn } from "~/styling"
 
-const title = "Git Truck"
-const analyzingTitle = "Analyzing | Git Truck"
-
-// eslint-disable-next-line react/prop-types
-export function GlobalInfo({ onMenuClick = () => {} }) {
-  const client = useClient()
+export function GlobalInfo({
+  className = "",
+  onMenuClick = () => {}
+}: {
+  className?: string
+  onMenuClick?: () => void
+}) {
+  const client = useIsClient()
   const { databaseInfo, repo } = useData()
-  const transitionState = useNavigation()
-
   const navigate = useNavigate()
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-
-  useEffect(() => {
-    document.title = isAnalyzing ? analyzingTitle : title
-  }, [isAnalyzing])
-
-  const switchBranch = (branch: string) => {
-    setIsAnalyzing(true)
-    navigate(["", repo.name, branch].join("/"))
-  }
-  useEffect(() => {
-    if (transitionState.state === "idle") {
-      setIsAnalyzing(false)
-    }
-  }, [transitionState.state])
   const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
   return (
-    <div className="flex flex-col gap-2">
+    <div className={cn("flex flex-col gap-2", className)}>
       <div className="relative flex w-full items-center justify-between gap-2">
         <div className="flex justify-evenly gap-2">
           <Link
-            className="btn btn--text"
-            to="/"
+            className="btn"
+            // to="/"
             // TODO: Implement browsing, requires new routing
-            // to={`/?${new URLSearchParams({
-            //   path: repo.parentDirPath
-            // }).toString()}`}
+            to={getPathFromRepoAndHead({ path: repo.parentDirPath }, ["browse"])}
             title="Browse repositories in parent folder"
-            prefetch="intent"
+            // prefetch="render"
           >
             <Icon path={mdiArrowTopLeft} size={0.75} />
           </Link>
@@ -61,7 +44,7 @@ export function GlobalInfo({ onMenuClick = () => {} }) {
               onClick={onClick}
               title="View analysis details"
             >
-              {repo.name}
+              {repo.repositoryName}
             </button>
           )}
         >
@@ -86,15 +69,13 @@ export function GlobalInfo({ onMenuClick = () => {} }) {
 
         <RevisionSelect
           title="Select branch"
-          className="grow-0"
           key={databaseInfo.branch}
-          disabled={isAnalyzing}
-          onChange={(e) => switchBranch(e.target.value)}
+          onChange={(e) => navigate(getPathFromRepoAndHead({ path: repo.repositoryPath, branch: e.target.value }))}
           defaultValue={databaseInfo.branch}
           headGroups={repo.refs}
           analyzedBranches={databaseInfo.analyzedRepos.filter((rep) => rep.repo === databaseInfo.repo)}
         />
-        <button className="btn--icon" title="See analysis details" onClick={onMenuClick}>
+        <button className="btn" title="See analysis details" onClick={onMenuClick}>
           <Icon path={mdiMenu} size="1.5em" />
         </button>
       </div>

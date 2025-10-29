@@ -1,12 +1,22 @@
 import { useClickedObject } from "~/contexts/ClickedContext"
-import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
 import { useMemo } from "react"
 import { getLightness, numToFriendlyString } from "~/shared/util"
 import { noEntryColor } from "~/const"
+import type { GitObject } from "~/shared/model"
+import { useMetrics } from "~/contexts/MetricContext"
+import { useOptions } from "~/contexts/OptionsContext"
 
 export type GradLegendData = {
+  /**
+   * @deprecated
+   * @todo remove deprecated fields and add support for multi stop gradients
+   */
   minValue: number
+  /**
+   * @deprecated
+   * @todo remove deprecated fields and add support for multi stop gradients
+   */
   maxValue: number
   minValueAltFormat: string | undefined
   maxValueAltFormat: string | undefined
@@ -14,7 +24,13 @@ export type GradLegendData = {
   maxColor: `#${string}`
 }
 
-export function GradientLegend({ hoveredObject, metricCache }: MetricLegendProps) {
+export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | null }) {
+  const { metricType } = useOptions()
+  const [metricsData] = useMetrics()
+
+  const metricCache = metricsData.get(metricType)
+
+  if (metricCache === undefined) throw new Error("Metric cache is undefined")
   const { minValue, maxValue, minColor, maxColor } = metricCache.legend as GradLegendData
 
   const { clickedObject } = useClickedObject()

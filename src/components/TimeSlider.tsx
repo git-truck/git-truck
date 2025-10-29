@@ -1,108 +1,135 @@
-import { useSubmit, useNavigation } from "react-router"
-import { useState } from "react"
+import { useSubmit, useNavigation, useSearchParams } from "react-router"
+import { useState, useTransition } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { dateFormatCalendarHeader, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
-// import ClipLoader from "react-spinners/ClipLoader"
-import { Popover } from "./Popover"
+import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
 import DatePicker from "react-datepicker"
-import { Handle, TicksByCount, Track } from "./sliderUtils"
-import { missingInMapColor, sliderPadding } from "~/const"
-import { Icon } from "~/components/Icon"
-import { mdiCalendarArrowLeft, mdiCalendarArrowRight } from "@mdi/js"
+import { Handle, SliderRail, TicksByCount, Track } from "./sliderUtils"
+import { Popover } from "./Popover"
+import { cn } from "~/styling"
+import { Icon } from "./Icon"
+import { mdiDotsHorizontal } from "@mdi/js"
 
-function DateTags({
-  range,
-  timerange,
-  setRange,
-  updateTimeseries,
-  disabled
-}: {
-  range: [number, number]
-  timerange: [number, number]
-  setRange: React.Dispatch<React.SetStateAction<[number, number]>>
-  updateTimeseries(e: readonly number[]): void
-  disabled: boolean
-}) {
-  const timerangeSpan = timerange[1] - timerange[0]
+export default function TimeSlider() {
+  const [_, startTransition] = useTransition()
+
+  const { databaseInfo } = useData()
+  const { newestChangeDate, oldestChangeDate, timerange, selectedRange } = databaseInfo
+  const submit = useSubmit()
+  const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
+
+  const navigationData = useNavigation()
+  const disabled = navigationData.state !== "idle"
+  const [searchParams] = useSearchParams()
+
+  function updateTimeseries(e: readonly number[]) {
+    const form = new FormData()
+    form.append("timeseries", `${e[0]}-${e[1]}`)
+    submit(form, {
+      action: getPathFromRepoAndHead({
+        path: searchParams.get("path")!,
+        branch: databaseInfo.branch
+      }),
+      method: "post"
+    })
+  }
 
   const selectedStartDate = range[0] * 1000
   const selectedEndDate = range[1] * 1000
-  const percentageStart = ((range[0] - timerange[0]) / timerangeSpan) * 100
-
-  const percentageEnd = ((range[1] - timerange[0]) / (timerange[1] - timerange[0])) * 100
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        width: "100%",
-        height: 14,
-        borderRadius: 7,
-        cursor: "pointer",
-        backgroundColor: missingInMapColor
-      }}
-    >
-      <Popover
-        trigger={({ onClick }) => (
-          <button
-            title="Set the date of the start of the time range"
-            style={{
-              left: `${percentageStart}%`,
-              bottom: "100%",
-              position: "absolute",
-              transform: "translate(0%, -15%)",
-              width: "100px",
-              whiteSpace: "nowrap"
-            }}
-            className="btn btn--primary"
-            onClick={onClick}
-          >
-            <Icon path={mdiCalendarArrowRight} />
-            {dateFormatShort(selectedStartDate)}
-          </button>
-        )}
+    <>
+      <Slider
+        className="relative"
+        mode={2}
+        step={1}
+        domain={timerange}
+        onUpdate={(e) =>
+          startTransition(() => {
+            setRange([...e] as [number, number])
+          })
+        }
+        onChange={(e) => {
+          startTransition(() => {
+            updateTimeseries(e)
+          })
+        }}
+        values={range}
+        disabled={disabled}
       >
-        <TimePicker
-          range={range}
-          setRange={setRange}
-          timerange={timerange}
-          setsBeginning={true}
-          updateTimeseries={updateTimeseries}
-          disabled={disabled}
-        />
-      </Popover>
-
-      <Popover
-        trigger={({ onClick }) => (
-          <button
-            title="Set the date of the end of the time range"
-            style={{
-              left: `${percentageEnd}%`,
-              bottom: "100%",
-              position: "absolute",
-              transform: "translate(-100%, -15%)",
-              width: "100px",
-              whiteSpace: "nowrap"
-            }}
-            className="btn btn--primary"
-            onClick={onClick}
-          >
-            {dateFormatShort(selectedEndDate)}
-            <Icon path={mdiCalendarArrowLeft} />
-          </button>
-        )}
-      >
-        <TimePicker
-          range={range}
-          setRange={setRange}
-          timerange={timerange}
-          setsBeginning={false}
-          updateTimeseries={updateTimeseries}
-          disabled={disabled}
-        />
-      </Popover>
-    </div>
+        <Rail>{SliderRail}</Rail>
+        <Handles>
+          {({ handles, getHandleProps }) => (
+            <div>
+              {handles.map((handle, i) => (
+                <Handle
+                  title="Drag to adjust interval, click to set specific date"
+                  key={handle.id}
+                  className={cn("w-auto", i === 0 ? "rounded-r-none" : "-translate-x-[calc(100%-12px)] rounded-l-none")}
+                  handle={handle}
+                  domain={timerange}
+                  getHandleProps={getHandleProps}
+                >
+                  <time
+                    className={cn("bottom-0 flex flex-row gap-0.5 text-xs text-nowrap", {
+                      "flex-row-reverse": i === 0
+                    })}
+                    dateTime={dateFormatISO(i === 0 ? selectedStartDate : selectedEndDate)}
+                    title={`Click or drag to set the ${i === 0 ? "start" : "end"} of time range`}
+                  >
+                    {dateFormatShort(i === 0 ? selectedStartDate : selectedEndDate)}
+                    <Popover
+                      trigger={({ onClick }) => (
+                        <button
+                          className="btn--text"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onClick()
+                          }}
+                          title="Open date picker"
+                        >
+                          <Icon path={mdiDotsHorizontal} />
+                        </button>
+                      )}
+                    >
+                      <TimePicker
+                        range={range}
+                        setRange={setRange}
+                        timerange={timerange}
+                        setsBeginning
+                        updateTimeseries={updateTimeseries}
+                        disabled={disabled}
+                      />
+                    </Popover>
+                  </time>
+                </Handle>
+              ))}
+            </div>
+          )}
+        </Handles>
+        <Tracks left={false} right={false}>
+          {({ tracks, getTrackProps }) => (
+            <div>
+              {tracks.map(({ id, source, target }) => (
+                <Track
+                  backgroundColor="#7aa0c4"
+                  key={id}
+                  source={source}
+                  target={target}
+                  getTrackProps={getTrackProps}
+                  // disabled={disabled}
+                />
+              ))}
+            </div>
+          )}
+        </Tracks>
+      </Slider>
+      <TicksByCount
+        count={5}
+        // align="left"
+        tickToLabel={(t) => dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)}
+      />
+    </>
   )
 }
 
@@ -162,120 +189,6 @@ function TimePicker({
           }
         }}
       />
-    </div>
-  )
-}
-
-export default function TimeSlider() {
-  const sliderStyle: React.CSSProperties = {
-    left: sliderPadding / 2,
-    top: "30px",
-    position: "relative",
-    width: `calc(100% - ${sliderPadding}px)`
-  }
-
-  const { databaseInfo } = useData()
-  const { newestChangeDate, oldestChangeDate, timerange, selectedRange } = databaseInfo
-  const submit = useSubmit()
-  const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
-
-  const navigationData = useNavigation()
-  const disabled = navigationData.state !== "idle"
-
-  function updateTimeseries(e: readonly number[]) {
-    const form = new FormData()
-    form.append("timeseries", `${e[0]}-${e[1]}`)
-    submit(form, {
-      action: `/${getPathFromRepoAndHead(databaseInfo.repo, databaseInfo.branch)}`,
-      method: "post"
-    })
-  }
-
-  return (
-    <div style={{ height: 100, width: "100%", textAlign: "center" }}>
-      {/* <LabeledTicks
-        onTop
-        valueMap={{
-          0: dateFormatShort(oldestChangeDate * 1000),
-          25: dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) / 4) * 1000),
-          50: dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) / 2) * 1000),
-          75: dateFormatShort((oldestChangeDate + ((newestChangeDate - oldestChangeDate) / 4) * 3) * 1000),
-          100: dateFormatShort(newestChangeDate * 1000)
-        }}
-      /> */}
-      <TicksByCount
-        count={3}
-        tickToLabel={(t) => {
-          console.log(t)
-          return dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)
-        }}
-      />
-      <Slider
-        mode={2}
-        step={1}
-        domain={timerange}
-        rootStyle={sliderStyle}
-        onUpdate={(e) => setRange([...e] as [number, number])}
-        onChange={(e) => {
-          updateTimeseries(e)
-        }}
-        values={range}
-        disabled={disabled}
-      >
-        <Rail>
-          {() => (
-            <>
-              <DateTags
-                setRange={setRange}
-                timerange={timerange}
-                range={range}
-                updateTimeseries={updateTimeseries}
-                disabled={disabled}
-              />
-              {/* <div
-                style={{
-                  left: "-50px",
-                  top: "-8px",
-                  position: "absolute"
-                }}
-              >
-                <ClipLoader title="Loading selected time range" size={30} loading={disabled} color="#7aa0c4" />
-              </div> */}
-            </>
-          )}
-        </Rail>
-        <Handles>
-          {({ handles, getHandleProps }) => (
-            <div className="slider-handles">
-              {handles.map((handle) => (
-                <Handle
-                  key={handle.id}
-                  handle={handle}
-                  domain={timerange}
-                  getHandleProps={getHandleProps}
-                  disabled={disabled}
-                />
-              ))}
-            </div>
-          )}
-        </Handles>
-        <Tracks left={false} right={false}>
-          {({ tracks, getTrackProps }) => (
-            <div className="slider-tracks">
-              {tracks.map(({ id, source, target }) => (
-                <Track
-                  backgroundColor="#7aa0c4"
-                  key={id}
-                  source={source}
-                  target={target}
-                  getTrackProps={getTrackProps}
-                  disabled={disabled}
-                />
-              ))}
-            </div>
-          )}
-        </Tracks>
-      </Slider>
     </div>
   )
 }

@@ -1,10 +1,12 @@
-import type { GitBlobObject } from "~/shared/model"
+import type { GitBlobObject, GitObject } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import type { MetricLegendProps } from "./Legend"
 import { LegendBarIndicator } from "../util"
 import { isBlob } from "~/shared/util"
 import { useOptions } from "~/contexts/OptionsContext"
 import { getMetricLegendType } from "~/metrics/metrics"
+import { cn } from "~/styling"
+import { Tick } from "../sliderUtils"
+import { useMetrics } from "~/contexts/MetricContext"
 
 export type SegmentLegendData = {
   steps: number
@@ -13,8 +15,13 @@ export type SegmentLegendData = {
   offsetStepCalc: (blob: GitBlobObject) => number
 }
 
-export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps) {
+export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | null }) {
   const { metricType } = useOptions()
+  const [metricsData] = useMetrics()
+
+  const metricCache = metricsData.get(metricType)
+
+  if (metricCache === undefined) throw new Error("Metric cache is undefined")
   if (getMetricLegendType(metricType) !== "SEGMENTS") {
     throw new Error(`SegmentLegend expects metricType to be SEGMENTS, got ${metricType}`)
   }
@@ -33,23 +40,19 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
   return (
     <>
       <div className="relative">
-        <div className="relative flex whitespace-nowrap">
+        <div className="relative flex text-xs whitespace-nowrap">
           {[...Array(steps)].map((_, i) => {
             return steps >= 4 ? (
               <MetricSegment
-                key={`legend-${i}`}
+                className={i === 0 ? "rounded-l-sm" : i === steps - 1 ? "rounded-r-sm" : ""}
+                key={i}
                 width={width}
                 color={colorGenerator(i)}
                 text={textGenerator(i)}
                 top={i % 2 === 0}
-              ></MetricSegment>
+              />
             ) : (
-              <TopMetricSegment
-                key={`legend-${i}`}
-                width={width}
-                color={colorGenerator(i)}
-                text={textGenerator(i)}
-              ></TopMetricSegment>
+              <TopMetricSegment key={i} width={width} color={colorGenerator(i)} text={textGenerator(i)} />
             )
           })}
           <LegendBarIndicator offset={arrowOffset} visible={arrowVisible} />
@@ -60,29 +63,34 @@ export function SegmentLegend({ hoveredObject, metricCache }: MetricLegendProps)
 }
 
 interface SegmentMetricProps {
+  className?: string
   width: number
   color: string
   text: string
   top: boolean
 }
 
-export function MetricSegment({ width, color, text, top }: SegmentMetricProps) {
+export function MetricSegment({ className = "", width, color, text, top }: SegmentMetricProps) {
   if (top)
     return (
       <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-        <div style={{ textAlign: "left", height: "20px", marginBottom: "-6px" }}>{text}</div>
-        <div style={{ textAlign: "left", height: "20px", marginBottom: "-2px" }}>{"/"}</div>
-        <div style={{ backgroundColor: color, height: "20px" }}></div>
-        <div style={{ textAlign: "left", height: "40px" }}></div>
+        <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
+        <Tick className="ml-1" />
+        <div className={cn("h-4", className)} style={{ backgroundColor: color }}></div>
+        <Tick className="invisible" />
       </div>
     )
   else
     return (
       <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-        <div style={{ textAlign: "left", height: "32px" }}></div>
-        <div style={{ backgroundColor: color, height: "20px" }}></div>
-        <div style={{ textAlign: "left", height: "20px", marginTop: "-7px" }}>{"\\"}</div>
-        <div style={{ textAlign: "left", height: "20px", marginTop: "-4px" }}>{text}</div>
+        {/* <div style={{ textAlign: "left", height: "32px" }}></div> */}
+        <div className="invisible" style={{ textAlign: "left", height: "20px" }}>
+          {text}
+        </div>
+        <Tick className="invisible" />
+        <div className={cn("h-4", className)} style={{ backgroundColor: color }}></div>
+        <Tick />
+        <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
       </div>
     )
 }
@@ -96,8 +104,8 @@ interface TopSegmentMetricProps {
 export function TopMetricSegment({ width, color, text }: TopSegmentMetricProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-      <div style={{ textAlign: "left", height: "20px", marginBottom: "-6px" }}>{text}</div>
-      <div style={{ textAlign: "left", height: "20px", marginBottom: "-2px" }}>{"/"}</div>
+      <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
+      <Tick />
       <div style={{ backgroundColor: color, height: "20px" }}></div>
     </div>
   )

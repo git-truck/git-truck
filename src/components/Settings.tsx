@@ -16,7 +16,7 @@ export function CollapsableSettings({ className = "" }: { className?: string }) 
         <button
           title="Visualization settings"
           className={cn(
-            "btn--icon hover:text-primary-text dark:hover:text-primary-text-dark relative flex cursor-pointer justify-between gap-2",
+            "btn hover:text-primary-text dark:hover:text-primary-text-dark relative flex cursor-pointer justify-between gap-2",
             className
           )}
           onClick={onClick}

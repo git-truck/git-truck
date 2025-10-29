@@ -1,14 +1,6 @@
-import type { HierarchyRectangularNode } from "d3-hierarchy"
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "./model"
-
-export function diagonal(d: HierarchyRectangularNode<unknown>) {
-  const dx = d.x1 - d.x0
-  const dy = d.y1 - d.y0
-
-  return Math.sqrt(dx ** 2 + dy ** 2)
-}
+import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry, LinkSegments } from "./model"
 
 export function dateFormatLong(epochTime?: number) {
   if (!epochTime) return "Invalid date"
@@ -27,12 +19,17 @@ export function dateFormatCalendarHeader(epochTime?: number) {
   })
 }
 
-export function dateFormatShort(epochTimeMillis: number) {
+export function dateFormatShort(epochTimeMillis: number, options: Intl.DateTimeFormatOptions = {}) {
   return new Date(epochTimeMillis).toLocaleString("en-gb", {
     day: "2-digit",
     month: "short",
-    year: "2-digit"
+    year: "numeric",
+    ...options
   })
+}
+
+export function dateFormatISO(epochTimeMillis: number) {
+  return new Date(epochTimeMillis).toISOString().split("T")[0]
 }
 
 export function dateTimeFormatShort(epochTimeMillis: number) {
@@ -78,7 +75,16 @@ export function getSeparator(path: string) {
   return "/"
 }
 
-export const getPathFromRepoAndHead = (repo: string, branch: string) => [repo, encodeURIComponent(branch)].join("/")
+export const getPathFromRepoAndHead = (
+  params: { path: string; branch?: string },
+  segments: LinkSegments = ["view"]
+) => {
+  const searchParams = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) searchParams.set(key, value)
+  })
+  return `/${segments.map(encodeURIComponent).join("/")}?${searchParams.toString()}`
+}
 
 export const branchCompare = (a: string, b: string): number => {
   const defaultBranchNames = ["main", "master"]
@@ -181,7 +187,8 @@ export function sleep(ms: number) {
     setTimeout(resolve, ms)
   })
 }
-export function getWeek(date: Date): number {
+
+function getWeek(date: Date): number {
   const tempDate = new Date(date)
   tempDate.setHours(0, 0, 0, 0)
   tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7))
@@ -189,6 +196,7 @@ export function getWeek(date: Date): number {
   const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
   return weekNo
 }
+
 export function getTimeIntervals(timeUnit: string, minTime: number, maxTime: number): [string, number][] {
   const intervals: [string, number][] = []
 
@@ -287,15 +295,6 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   }
 }
 
-export function isValidURI(uri: string) {
-  try {
-    decodeURIComponent(uri)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export const numToFriendlyString = (num: number): string => {
   if (num >= 1_000_000) {
     return `${(num / 1_000_000).toFixed(1)}M`
@@ -304,4 +303,16 @@ export const numToFriendlyString = (num: number): string => {
   } else {
     return num.toString()
   }
+}
+export function rgbToHex(rgb: string): `#${string}` {
+  const [r, g, b] = rgb.match(/\d+/g)?.map(Number) ?? [0, 0, 0]
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
+export function resolveParentFolder(path: string) {
+  const index = path.lastIndexOf("/")
+  const index2 = path.lastIndexOf("\\")
+  if (index !== -1) return path.slice(0, index)
+  if (index2 !== -1) return path.slice(0, index2)
+  return path
 }

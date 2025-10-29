@@ -4,7 +4,7 @@ import type { MouseEventHandler, JSX } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize } from "~/hooks"
+import { useComponentSize, useCreateLink } from "~/hooks"
 import {
   bubblePadding,
   estimatedLetterHeightForTreeText,
@@ -46,9 +46,10 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
   const { path } = usePath()
-  const { clickedObject, setClickedObject } = useClickedObject()
+  const { clickedObject } = useClickedObject()
   const { setPath } = usePath()
   const { showFilesWithoutChanges } = useOptions()
+  const createLink = useCreateLink()
 
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
@@ -93,30 +94,36 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     d: CircleOrRectHiearchyNode,
     isRoot: boolean
   ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d, isRoot) => {
-    return isBlob(d.data)
-      ? {
-          onClick: (evt) => {
-            evt.stopPropagation()
-            return setClickedObject(d.data)
+    return {
+      onClick: (evt) => {
+        evt.stopPropagation()
+        createLink({
+          params: {
+            objectPath: d.data.path,
+            isblob: isBlob(d.data)
           },
-          onMouseOver: () => setHoveredObject(d.data as GitObject),
-          onMouseOut: () => setHoveredObject(null)
-        }
-      : {
-          onClick: (evt) => {
-            evt.stopPropagation()
-            setClickedObject(d.data)
-            setPath(d.data.path)
-          },
-          onMouseOver: (evt) => {
-            evt.stopPropagation()
-            if (!isRoot) setHoveredObject(d.data as GitObject)
-            else setHoveredObject(null)
-          },
-          onMouseOut: () => setHoveredObject(null)
-        }
+          segments: ["view", "details", "general"]
+        }).navigate({
+          replace: false,
+          state: {
+            clickedObject: d.data
+          }
+        })
+      },
+      onMouseOver: (evt) => {
+        evt.stopPropagation()
+        console.log("hover", d.data.path, isRoot)
+        if (!isRoot) setHoveredObject(d.data as GitObject)
+        else setHoveredObject(null)
+      },
+      onMouseOut: () => {
+        return setHoveredObject(null)
+      }
+    }
   }
 
+  // TODO: Fix text positions updating in chrome
+  // eslint-disable-next-line react-hooks/purity
   const now = isChrome || isChromium || isEdgeChromium ? Date.now() : 0 // Necessary in chrome to update text positions
   const hasSearchResults = Object.values(searchResults).length > 0
   return (
@@ -142,10 +149,11 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       >
         {nodes.map((d, i) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
+          const eventHandlers = createGroupHandlers(d, i === 0)
           return (
             <g
               key={d.data.path}
-              className={clsx("transition duration-400", {
+              className={clsx("duration-400", {
                 "cursor-pointer": i === 0,
                 "cursor-zoom-in": i > 0 && isTree(d.data),
                 "hover:opacity-80": isBlob(d.data),
@@ -154,7 +162,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
                   (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
               })}
-              {...createGroupHandlers(d, i === 0)}
+              {...eventHandlers}
             >
               <Node key={d.data.path} d={d} />
               {labelsVisible && i !== 0 ? (
@@ -256,15 +264,10 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   return (
     <rect
       {...commonProps}
-      className={cn({
-        "stroke-inherit": isTree(d.data),
-        "fill-secondary-bg dark:fill-primary-bg-dark": isTree(d.data) && isCircularNode(d),
-
-        "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data) && isCircularNode(d),
-        "fill-secondary-bg dark:fill-secondary-bg-dark": isTree(d.data) && !isCircularNode(d),
-
+      className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent", {
+        "fill-tertiary-bg dark:fill-tertiary-bg-dark": isTree(d.data),
         "cursor-pointer": isBlob(d.data),
-        "transition-all duration-500 ease-in-out": transitionsEnabled
+        "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
       })}
     />
   )
@@ -393,15 +396,12 @@ function NodeText({
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
       {isTree(d.data) && isBubbleChart ? (
         <text
-          className={cn("pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold", {
-            "stroke-primary-bg dark:stroke-primary-bg-dark": isBubbleChart,
-            "stroke-secondary-bg dark:stroke-secondary-bg-dark": !isBubbleChart
-          })}
+          className={cn(
+            "stroke-tertiary-bg dark:stroke-tertiary-bg-dark pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold"
+          )}
           strokeLinecap="round"
         >
-          <textPath className="transition-all" {...textPathBaseProps}>
-            {children}
-          </textPath>
+          <textPath {...textPathBaseProps}>{children}</textPath>
         </text>
       ) : null}
       <text
@@ -486,7 +486,7 @@ function createPartitionedHiearchy(
             .paddingInner(treemapPaddingInner)
             .paddingOuter(treemapPaddingOuter)
             .paddingTop(treemapPaddingTop)
-        : partition<GitObject>().size([size.width, size.height]).padding(treemapPaddingOuter)
+        : partition<GitObject>().size([size.width, size.height])
     // .tile(treemapResquarify)
     // .paddingInner(treemapPaddingInner)
     // .paddingOuter(treemapPaddingOuter)

@@ -1,32 +1,28 @@
-import { useEffect, useMemo, useState } from "react"
-import type { GitBlobObject, GitObject , RepoData } from "~/shared/model"
-import { ClickedObjectContext } from "~/contexts/ClickedContext"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
+import type { GitBlobObject, GitObject, RepoData } from "~/shared/model"
 import { DataContext } from "../contexts/DataContext"
 import { MetricsContext } from "../contexts/MetricContext"
 import type { ChartType, HierarchyType, Options, OptionsContextType } from "../contexts/OptionsContext"
 import { getDefaultOptionsContextValue as getDefaultOptions, OptionsContext } from "../contexts/OptionsContext"
-import { PathContext } from "../contexts/PathContext"
 import { SearchContext } from "../contexts/SearchContext"
 import type { MetricsData, MetricType } from "../metrics/metrics"
 import { createMetricData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
-import type { CommitTab } from "~/contexts/CommitTabContext"
-import { CommitTabContext, getDefaultCommitTab } from "~/contexts/CommitTabContext"
 import { usePrefersLightMode } from "~/styling"
 
-interface ProvidersProps {
-  children: React.ReactNode
-  data: RepoData
-}
-
-export function Providers({ children, data }: ProvidersProps) {
-  const [options, setOptions] = useState<Options>(getDefaultOptions())
-  const [commitTab, setCommitTab] = useState<CommitTab | null>(null)
+export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
+  const [options, setOptions] = useState<Options>(() => {
+    const savedOptions = typeof document !== "undefined" ? localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY) : null
+    if (savedOptions) {
+      return {
+        ...getDefaultOptions(),
+        ...JSON.parse(savedOptions),
+        hasLoadedSavedOptions: true
+      }
+    }
+  })
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
-  const [path, setPath] = useState(data.repo.name)
-  const [clickedObject, setClickedObject] = useState<GitObject | null>(null)
-
   const prefersLight = usePrefersLightMode()
 
   const metricsData: MetricsData = useMemo(() => {
@@ -40,26 +36,6 @@ export function Providers({ children, data }: ProvidersProps) {
 
     return res
   }, [data, options?.dominantAuthorCutoff, prefersLight])
-
-  const commitTabValue = useMemo(
-    () => ({
-      ...getDefaultCommitTab(),
-      ...commitTab,
-      setStartDate: (newDate: number | null) => {
-        setCommitTab((prevValue) => ({
-          ...(prevValue ?? getDefaultCommitTab()),
-          startDate: newDate
-        }))
-      },
-      setEndDate: (newDate: number | null) => {
-        setCommitTab((prevValue) => ({
-          ...(prevValue ?? getDefaultCommitTab()),
-          endDate: newDate
-        }))
-      }
-    }),
-    [commitTab]
-  )
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -90,11 +66,6 @@ export function Providers({ children, data }: ProvidersProps) {
         setOptions((prevOptions) => ({
           ...prevOptions,
           hoveredBlob: blob
-        })),
-      setClickedObject: (object: GitObject | null) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          clickedObject: object
         })),
       setTransitionsEnabled: (enabled: boolean) =>
         setOptions((prevOptions) => ({
@@ -148,17 +119,6 @@ export function Providers({ children, data }: ProvidersProps) {
     }
   }, [options])
 
-  useEffect(() => {
-    const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
-    if (savedOptions) {
-      setOptions({
-        ...getDefaultOptions(),
-        ...JSON.parse(savedOptions),
-        hasLoadedSavedOptions: true
-      })
-    }
-  }, [])
-
   return (
     <DataContext.Provider value={data}>
       <MetricsContext.Provider value={metricsData}>
@@ -169,11 +129,7 @@ export function Providers({ children, data }: ProvidersProps) {
               setSearchResults
             }}
           >
-            <PathContext.Provider value={{ path, setPath }}>
-              <ClickedObjectContext.Provider value={{ clickedObject, setClickedObject }}>
-                <CommitTabContext.Provider value={commitTabValue}>{children}</CommitTabContext.Provider>
-              </ClickedObjectContext.Provider>
-            </PathContext.Provider>
+            {children}
           </SearchContext.Provider>
         </OptionsContext.Provider>
       </MetricsContext.Provider>

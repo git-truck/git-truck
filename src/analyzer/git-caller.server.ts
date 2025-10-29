@@ -1,9 +1,10 @@
 import { log } from "./log.server.ts"
-import { describeAsyncJob, runProcess, getBaseDirFromPath, getDirName } from "../shared/util.server.ts"
+import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "../shared/util.server.ts"
 import { promiseHelper, branchCompare, semverCompare } from "../shared/util.ts"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
+import { readdir } from "node:fs/promises"
 import type { AnalyzerData, GitRefs, Repository } from "../shared/model.ts"
 import { AnalyzerDataInterfaceVersion } from "../shared/model.ts"
 
@@ -23,21 +24,19 @@ export class GitCaller {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
-  private repo: string
+  private repositoryPath: string
   public branch: string
-  private repoPath: string
 
-  constructor(repo: string, branch: string, repoPath: string) {
-    this.repo = repo
+  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+    this.repositoryPath = repositoryPath
     this.branch = branch
-    this.repoPath = repoPath
   }
 
   static async isGitRepo(path: string): Promise<boolean> {
     const gitFolderPath = resolve(path, ".git")
     const hasGitFolder = existsSync(gitFolderPath)
     if (!hasGitFolder) return false
-    const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead(path))
+    const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead({ repositoryPath: path }))
     return Boolean(hasGitFolder && !findBranchHeadError)
   }
 
@@ -49,20 +48,26 @@ export class GitCaller {
 
   /**
    *
-   * @param repo The repo to find the branch head for
+   * @param repositoryPath The repository path to find the branch head for
    * @param branch The branch to find the head for (default: checkout branch)
    * @returns Promise<[branchHead: string, branchName: string]>
    */
-  static async findBranchHead(repo: string, branch?: string): Promise<[string, string]> {
+  static async findBranchHead({
+    repositoryPath,
+    branch
+  }: {
+    repositoryPath: string
+    branch?: string
+  }): Promise<[string, string]> {
     if (!branch) {
-      const [foundBranch, getBranchError] = await promiseHelper(GitCaller._getRepositoryHead(repo))
+      const [foundBranch, getBranchError] = await promiseHelper(GitCaller._getRepositoryHead(repositoryPath))
       if (getBranchError) {
         throw getBranchError
       }
       branch = foundBranch
     }
 
-    const gitFolder = join(repo, ".git")
+    const gitFolder = join(repositoryPath, ".git")
     if (!existsSync(gitFolder)) {
       throw Error("No git folder exists at " + gitFolder)
     }
@@ -73,13 +78,12 @@ export class GitCaller {
 
     return [branchHead, branch]
   }
-
   static getCachePath(repo: string, branch: string) {
     return resolve(os.tmpdir(), "git-truck", repo, `${branch}.json`)
   }
 
   async getRepositoryHead() {
-    return await GitCaller._getRepositoryHead(this.repo)
+    return await GitCaller._getRepositoryHead(this.repositoryPath)
   }
 
   async gitLogSpecificCommits(commits: string[]) {
@@ -91,17 +95,17 @@ export class GitCaller {
       ...commits
     ]
 
-    const result = (await runProcess(this.repoPath, "git", args)) as string
+    const result = (await runProcess(this.repositoryPath, "git", args)) as string
     return result.trim()
   }
 
   static async _getRepositoryHead(dir: string) {
-    const result = (await runProcess(dir, "git", ["rev-parse", "--abbrev-ref", "HEAD"])) as string
+    const result = (await fs.readFile(join(dir, ".git", "HEAD"), "utf-8")).trim().replace("ref: refs/heads/", "")
     return result.trim()
   }
 
   async lsTree(hash: string) {
-    return await GitCaller._lsTree(this.repoPath, hash)
+    return await GitCaller._lsTree(this.repositoryPath, hash)
   }
 
   static async _lsTree(repo: string, hash: string) {
@@ -110,36 +114,36 @@ export class GitCaller {
   }
 
   async revParse(ref: string) {
-    return await GitCaller._revParse(this.repoPath, ref)
+    return await GitCaller._revParse(this.repositoryPath, ref)
   }
 
   static async _revParse(dir: string, ref: string) {
     const result = (await runProcess(dir, "git", ["rev-list", "-n", "1", ref])) as string
     return result.trim()
   }
+  static async getRepoMetadata(repositoryPath: string): Promise<Repository | null> {
+    const repositoryName = getRepoNameFromPath(repositoryPath)
+    const parentDir = getBaseDirFromPath(repositoryName)
+    const lastChanged = await GitCaller.getLastChanged(repositoryPath)
 
-  static async getRepoMetadata(repoPath: string): Promise<Repository | null> {
-    const repoDir = getDirName(repoPath)
-    const parentDir = getBaseDirFromPath(repoDir)
-    const isRepo = await GitCaller.isGitRepo(repoPath)
-
-    if (!isRepo) {
+    if (!lastChanged) {
       return {
         status: "Error",
         // errorMessage: "Not a git repository",   // TODO: Implement browsing, requires new routing
         errorMessage: "Not a valid git repository",
-        name: repoDir,
-        path: repoPath,
-        parentDirPath: parentDir
+        repositoryName,
+        repositoryPath,
+        parentDirPath: parentDir,
+        lastChanged: 0
       }
     }
 
-    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repoPath))
+    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repositoryPath))
     const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
     const headsWithCaches = await Promise.all(
       Array.from(allHeads).map(async ([headName, head]) => {
         const [result] = await GitCaller.retrieveCachedResult({
-          repo: getDirName(repoPath),
+          repositoryPath: getRepoNameFromPath(repositoryPath),
           branch: headName,
           branchHead: head
         })
@@ -157,23 +161,26 @@ export class GitCaller {
         {} as { [branch: string]: boolean }
       )
 
-    const repoHead = await GitCaller._getRepositoryHead(repoPath)
+    const repoHead = await GitCaller._getRepositoryHead(repositoryPath)
 
     try {
-      const [findBranchHeadResult, error] = await promiseHelper(GitCaller.findBranchHead(repoPath))
+      const [findBranchHeadResult, error] = await promiseHelper(
+        GitCaller.findBranchHead({ repositoryPath: repositoryPath })
+      )
       if (error) {
         return {
           status: "Error",
           errorMessage: error.message,
-          name: repoDir,
-          path: repoPath,
-          parentDirPath: parentDir
+          repositoryName: repositoryName,
+          repositoryPath: repositoryPath,
+          parentDirPath: parentDir,
+          lastChanged
         }
       }
 
       const [branchHead, branch] = findBranchHeadResult
       const [data, reasons] = await GitCaller.retrieveCachedResult({
-        repo: repoDir,
+        repositoryPath: repositoryName,
         branch,
         branchHead
       })
@@ -184,12 +191,13 @@ export class GitCaller {
           isAnalyzed: false,
           data: null,
           reasons: reasons,
-          name: repoDir,
-          path: repoPath,
+          repositoryName: repositoryName,
+          repositoryPath: repositoryPath,
           parentDirPath: parentDir,
           currentHead: branch,
           refs,
-          analyzedHeads
+          analyzedHeads,
+          lastChanged
         }
       }
 
@@ -198,63 +206,82 @@ export class GitCaller {
         isAnalyzed: true,
         data: data,
         reasons: [],
-        name: repoDir,
-        path: repoPath,
+        repositoryName: repositoryName,
+        repositoryPath: repositoryPath,
         parentDirPath: parentDir,
         currentHead: repoHead,
         refs,
-        analyzedHeads
+        analyzedHeads,
+        lastChanged
       }
     } catch (e) {
       return {
         status: "Error",
         errorMessage: e instanceof Error ? e.message : "Unknown error",
-        name: repoDir,
-        path: repoPath,
-        parentDirPath: parentDir
+        repositoryName: repositoryName,
+        repositoryPath: repositoryPath,
+        parentDirPath: parentDir,
+        lastChanged
       }
     }
   }
 
-  static async scanDirectoryForRepositories(argPath: string): Promise<[Repository | null, Repository[]]> {
-    let userRepo: Repository | null = null
-    const [pathIsRepo] = await describeAsyncJob({
-      job: () => GitCaller.isGitRepo(argPath),
-      beforeMsg: "Checking if path is a git repo...",
-      afterMsg: "Done checking if path is a git repo",
-      errorMsg: "Error checking if path is a git repo"
-    })
+  static async readGitRepos(baseDir: string): Promise<
+    {
+      name: string
+      path: string
+      branch: string
+      parentDirPath: string
+      status: string
+      lastChanged: number
+    }[]
+  > {
+    const entries = await readdir(baseDir, { withFileTypes: true })
 
-    const baseDir = resolve(pathIsRepo ? getBaseDirFromPath(argPath) : argPath)
-
-    const entries = await fs.readdir(baseDir, { withFileTypes: true })
-    const dirs = entries.filter((entry) => entry.isDirectory()).map(({ name }) => name)
-
-    const [repoResults] = (await describeAsyncJob({
-      job: () =>
-        Promise.allSettled(
-          dirs.map(async (repo) => {
-            const result = await GitCaller.getRepoMetadata(join(baseDir, repo))
-            if (!result) throw Error("Not a git repo")
-            return result
+    // Get all directories that has a .git subdirectory and sort them by last changed date
+    console.time("Read repositories")
+    const gitRepositories = (
+      await Promise.all(
+        entries
+          .filter(
+            (entry) =>
+              entry.isDirectory() &&
+              existsSync(join(baseDir, entry.name)) &&
+              !entry.name.startsWith(".") &&
+              // TODO: Implement browsing, requires new routing
+              existsSync(join(baseDir, entry.name, ".git"))
+          )
+          .map(async ({ name }) => {
+            const path = join(baseDir, name)
+            return {
+              name,
+              path: path,
+              branch: await GitCaller._getRepositoryHead(path),
+              parentDirPath: baseDir,
+              status: "",
+              lastChanged: (await this.getLastChanged(path)) ?? 0
+            } as const
           })
-        ),
-      beforeMsg: "Scanning for repositories...",
-      afterMsg: "Done scanning for repositories",
-      errorMsg: "Error scanning for repositories"
-    })) as [PromiseSettledResult<Repository>[], null]
+      )
+    ).sort((a, b) => b.lastChanged - a.lastChanged)
+    // TODO:
+    console.timeEnd("Read repositories")
+    return gitRepositories
+  }
 
-    const onlyRepos = (
-      repoResults.filter((currentRepo) => {
-        if (currentRepo.status === "rejected") return false
-        if (pathIsRepo && currentRepo.value.name === getDirName(argPath)) {
-          userRepo = currentRepo.value
+  private static async getLastChanged(path: string): Promise<number | null> {
+    try {
+      const [logOutput, error] = await promiseHelper(runProcess(path, "git", ["log", "-1", "--pretty=%at"]))
+      if (!error && logOutput) {
+        const parsed = parseInt(logOutput as string, 10)
+        if (!isNaN(parsed)) {
+          return parsed
         }
-        return true
-      }) as PromiseFulfilledResult<Repository>[]
-    ).map((result) => result.value)
-
-    return [userRepo, onlyRepos]
+      }
+    } catch {
+      // Silently ignore errors, keep lastChanged as 0
+    }
+    return null
   }
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
@@ -309,7 +336,7 @@ export class GitCaller {
       '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
-    const result = (await runProcess(this.repoPath, "git", args)) as string
+    const result = (await runProcess(this.repositoryPath, "git", args)) as string
     return result.trim()
   }
 
@@ -325,21 +352,21 @@ export class GitCaller {
       '--format="<|%aN|><|%ct %at|><|%H|>"'
     ]
 
-    const result = (await runProcess(this.repoPath, "git", args, instance, index)) as string
+    const result = (await runProcess(this.repositoryPath, "git", args, instance, index)) as string
     return result.trim()
   }
 
   static async retrieveCachedResult({
-    repo,
+    repositoryPath,
     branch,
     branchHead
   }: {
-    repo: string
+    repositoryPath: string
     branch: string
     branchHead: string
   }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
     const reasons = []
-    const cachedDataPath = GitCaller.getCachePath(repo, branch)
+    const cachedDataPath = GitCaller.getCachePath(repositoryPath, branch)
     if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
 
     const cachedData = JSON.parse(await fs.readFile(cachedDataPath, "utf8")) as AnalyzerData
@@ -353,7 +380,7 @@ export class GitCaller {
     if (!branchHeadMatches) reasons.push(ANALYZER_CACHE_MISS_REASONS.DATA_VERSION_MISMATCH)
 
     // Check if the selected repository has changed
-    const repoMatches = repo === cachedData.repo
+    const repoMatches = repositoryPath === cachedData.repositoryPath
 
     const cacheConditions = {
       branchHeadMatches,
@@ -372,12 +399,16 @@ export class GitCaller {
   }
 
   public async commitCountSinceCommit(hash: string, branch: string) {
-    const result = (await runProcess(this.repoPath, "git", ["rev-list", "--count", `${hash}..${branch}`])) as number
+    const result = (await runProcess(this.repositoryPath, "git", [
+      "rev-list",
+      "--count",
+      `${hash}..${branch}`
+    ])) as number
     return result
   }
 
   async getRefs() {
-    return await GitCaller._getRefs(this.repo)
+    return await GitCaller._getRefs(this.repositoryPath)
   }
 
   static async _getRefs(repo: string) {
@@ -386,12 +417,12 @@ export class GitCaller {
   }
 
   private async catFile(hash: string) {
-    const result = await runProcess(this.repoPath, "git", ["cat-file", "-p", hash])
+    const result = await runProcess(this.repositoryPath, "git", ["cat-file", "-p", hash])
     return result as string
   }
 
   async findBranchHead() {
-    return await GitCaller.findBranchHead(this.repoPath, this.branch)
+    return await GitCaller.findBranchHead({ repositoryPath: this.repositoryPath, branch: this.branch })
   }
 
   async catFileCached(hash: string): Promise<string> {
@@ -408,27 +439,27 @@ export class GitCaller {
   }
 
   async getCommitCount() {
-    const result = await runProcess(this.repoPath, "git", ["rev-list", "--count", this.branch])
+    const result = await runProcess(this.repositoryPath, "git", ["rev-list", "--count", this.branch])
     return result as number
   }
 
   async getDefaultGitSettingValue(setting: string) {
-    const result = await runProcess(this.repoPath, "git", ["config", setting])
+    const result = await runProcess(this.repositoryPath, "git", ["config", setting])
     return result as string
   }
 
   async resetGitSetting(settingToReset: string, value: string) {
     if (!value) {
-      await runProcess(this.repoPath, "git", ["config", "--unset", settingToReset])
+      await runProcess(this.repositoryPath, "git", ["config", "--unset", settingToReset])
       log.debug(`Unset ${settingToReset}`)
     } else {
-      await runProcess(this.repoPath, "git", ["config", settingToReset, value])
+      await runProcess(this.repositoryPath, "git", ["config", settingToReset, value])
       log.debug(`Reset ${settingToReset} to ${value}`)
     }
   }
 
   async setGitSetting(setting: string, value: string) {
-    await runProcess(this.repoPath, "git", ["config", setting, value])
+    await runProcess(this.repositoryPath, "git", ["config", setting, value])
     log.debug(`Set ${setting} to ${value}`)
   }
 }

@@ -4,7 +4,7 @@ export type Repository = {
   /**
    * Relative path to the base directory that Git Truck was started in
    */
-  path: string
+  repositoryPath: string
   /**
    * Full path to the repository
    */
@@ -16,7 +16,7 @@ export type Repository = {
   /**
    * Directory name of the repository
    */
-  name: string
+  repositoryName: string
 } & (
   | {
       status: "Success"
@@ -26,11 +26,13 @@ export type Repository = {
       analyzedHeads: Record<string, boolean>
       data: AnalyzerData
       currentHead: string
+      lastChanged: number
     }
   | {
       name: string
       // fullPath: string // TODO: Implement browsing, requires new routing
       status: "Loading"
+      lastChanged: number
     }
   | {
       status: "Success"
@@ -40,10 +42,12 @@ export type Repository = {
       analyzedHeads: Record<string, boolean>
       data: null
       currentHead: string
+      lastChanged: number
     }
   | {
       status: "Error"
       errorMessage: string
+      lastChanged: number
     }
 )
 
@@ -89,6 +93,7 @@ export interface AnalyzerData {
   interfaceVersion: typeof AnalyzerDataInterfaceVersion
   hiddenFiles: string[]
   repo: string
+  repositoryPath: string
   branch: string
   commit: GitCommitObject
   authors: string[]
@@ -231,10 +236,19 @@ export interface DatabaseInfo {
   timerange: [number, number]
   colorSeed: string | null
   authorColors: Record<string, `#${string}`>
-  commitCountPerDay: { date: string; count: number }[]
+  commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
+  commitCountPerTimeIntervalUnit: string
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
+}
+
+export type LinkSegment = "view" | "browse" | "details" | "commits" | "general"
+export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general">
+export type LinkSearchParams = {
+  path: string
+  branch: string
+  objectPath: string
 }

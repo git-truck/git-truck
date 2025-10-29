@@ -28,8 +28,8 @@ export default class DB {
     await fs.rm(dir, { recursive: true, force: true })
   }
 
-  constructor(repo: string, branch: string) {
-    this.repoSanitized = repo.replace(/\W/g, "_") + "_"
+  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+    this.repoSanitized = repositoryPath.replace(/\W/g, "_").replace(/\//g, "_").replace(/\//g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
     this.connectionPromise = DB.init(dbPath)

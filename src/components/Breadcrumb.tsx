@@ -1,11 +1,9 @@
 import { mdiChevronRight, mdiHome } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
-import { useData } from "~/contexts/DataContext"
 import { usePath } from "~/contexts/PathContext"
 
 export function Breadcrumb() {
-  const { repo } = useData()
   const { path, setPath } = usePath()
   const paths = useMemo<[string, string][]>(() => {
     const parts = path === "" ? [] : path.split("/")
@@ -19,10 +17,10 @@ export function Breadcrumb() {
     }
 
     return segments
-  }, [path, repo.name])
+  }, [path])
 
   return (
-    <div className="text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto p-2">
+    <div className="text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto">
       {paths.map(([name, p], i) => {
         if (p === "" || i === paths.length - 1)
           if (p === "")
@@ -43,7 +41,7 @@ export function Breadcrumb() {
             <Fragment key={p}>
               <button
                 title={`Navigate to ${name}`}
-                className="card flex min-w-fit cursor-pointer flex-row gap-2 px-2 py-1 font-bold hover:opacity-70"
+                className="btn flex min-w-fit cursor-pointer flex-row gap-2 font-bold"
                 onClick={() => setPath(p)}
               >
                 {i === 0 ? <Icon path={mdiHome} size={1} /> : null}

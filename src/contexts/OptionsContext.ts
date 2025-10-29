@@ -53,7 +53,7 @@ export const OptionsContext = createContext<OptionsContextType | undefined>(unde
 export function useOptions() {
   const context = useContext(OptionsContext)
   if (!context) {
-    throw new Error("useOptions must be used within a SearchProvider")
+    throw new Error("useOptions must be used within an OptionsProvider")
   }
   return context
 }

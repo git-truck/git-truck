@@ -2,6 +2,7 @@ import type { SelectHTMLAttributes } from "react"
 import type { CompletedResult, GitRefs } from "~/shared/model"
 import { mdiSourceBranch } from "@mdi/js"
 import { Icon } from "~/components/Icon"
+import { cn } from "~/styling"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs
@@ -19,9 +20,9 @@ export function RevisionSelect({
   const groupsEntries = Object.entries(headGroups)
 
   return (
-    <div className="grid w-full grid-cols-[auto_1fr] place-items-center gap-2">
+    <div className={cn("input grid grid-cols-[auto_1fr] place-items-center", className)}>
       <Icon path={mdiSourceBranch} size={0.75} />
-      <select className={`input ${className}`} {...props}>
+      <select className={cn("w-full", className)} {...props}>
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
