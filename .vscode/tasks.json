@@ -3,9 +3,8 @@
   "tasks": [
     {
       "label": "Start dev server with bun on folder open",
-      "type": "process",
-      "command": "/home/node/.bun/bin/bun",
-      "args": ["--bun", "dev:bun"],
+      "type": "shell",
+      "command": "bun --bun dev:bun",
       "presentation": {
         "reveal": "always",
         "panel": "shared"

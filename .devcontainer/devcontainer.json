@@ -12,7 +12,7 @@
       ]
     }
   },
-  "onCreateCommand": "curl -fsSL https://bun.sh/install | bash",
+  "onCreateCommand": "curl -fsSL https://bun.sh/install | bash && source ~/.bashrc",
   "postCreateCommand": "bun install",
   "forwardPorts": [3000]
 }
