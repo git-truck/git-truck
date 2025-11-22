@@ -15,6 +15,7 @@ import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { currentRepositoryContext, useRepoContext } from "~/routes/view"
+import { useCreateLink } from "~/hooks"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -51,6 +52,9 @@ export default function General() {
   const data = useData()
   const { state } = useNavigation()
   const clickedObject = useLocation().state?.clickedObject as GitObject | null | undefined
+  const action = useCreateLink()({
+    segments: ["view"]
+  }).url
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
@@ -95,7 +99,7 @@ export default function General() {
               </button>
             </Form>
             {clickedObject.name.includes(".") ? (
-              <Form className="w-max" method="post" action={location.pathname}>
+              <Form className="w-max" method="post" action={action}>
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
                 <button
                   className="btn btn--outlined"
@@ -110,7 +114,7 @@ export default function General() {
             ) : null}
           </>
         ) : (
-          <Form method="post" action={location.pathname}>
+          <Form method="post" action={action}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <button
               className="btn btn--outlined"
@@ -196,7 +200,6 @@ function FileTypeEntry() {
   if (!clickedObject) {
     throw new Error("Clicked object is null")
   }
-  console.log("clickedObject", clickedObject)
   const colorForClickedObject = metricCache.colormap.get(clickedObject.path)
   if (!colorForClickedObject) {
     throw new Error(`Color for clicked object ${clickedObject.path} not found`)
