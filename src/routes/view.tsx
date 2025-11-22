@@ -185,8 +185,6 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   return null
 }
 
-const analyzeCache = new Map<string, RepoData>()
-
 async function analyze({ instance, path, branch }: { instance: ServerInstance; path: string; branch: string }) {
   const repo = path.split("/").pop()!
   const isRepo = await GitCaller.isGitRepo(path)
@@ -212,15 +210,6 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
 
   if (!repositoryMetadata) {
     throw Error("Error loading repo")
-  }
-
-  if (repositoryMetadata.status === "Success" && analyzeCache.has(repo + branch)) {
-    const cached = analyzeCache.get(repo + branch)
-    if (cached) {
-      log.debug("Using cached analysis data")
-      return cached
-    }
-    log.debug("Cache miss")
   }
 
   const reason = instance.prevInvokeReason
@@ -331,9 +320,6 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
-
-  analyzeCache.set(repo + branch, fullData)
-
   return fullData
 }
 
