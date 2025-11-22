@@ -26,9 +26,9 @@ export default class InstanceManager {
     return newInstance
   }
 
-  public static getInstance(path: string, branch: string) {
+  public static getInstance(repositoryPath: string, branch: string) {
     if (!this.instances) this.instances = new Map()
-    return this.instances.get(path)?.get(branch)
+    return this.instances.get(repositoryPath)?.get(branch)
   }
 
   public static async closeAllDBConnections() {

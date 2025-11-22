@@ -136,16 +136,18 @@ export function useCreateLink() {
   const currentSegments = location.pathname.split("/").filter((seg) => seg.length > 0) as LinkSegments
   const currentParams = Object.fromEntries(currentSearch.entries()) as LinkSearchParams
 
-  const composeLinkNavigation = ({
-    params = currentParams,
-    segments = currentSegments
-  }: {
-    params?: Partial<LinkSearchParams>
-    segments?: LinkSegments
-  } = {
-    params: currentParams,
-    segments: currentSegments
-  }) => {
+  const composeLinkNavigation = (
+    {
+      params = currentParams,
+      segments = currentSegments
+    }: {
+      params?: Partial<LinkSearchParams>
+      segments?: LinkSegments
+    } = {
+      params: currentParams,
+      segments: currentSegments
+    }
+  ) => {
     const url = getPathFromRepoAndHead(
       {
         ...currentParams,

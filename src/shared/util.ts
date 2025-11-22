@@ -283,7 +283,7 @@ export const formatMs = (ms: number) => {
 
 /**
  * This functions handles try / catch for you, so your code stays flat.
- * @param promise An async function
+ * @param promise The promise to handle.
  * @returns A tuple of the result and an error. If there is no error, the error will be null.
  */
 
@@ -315,4 +315,9 @@ export function resolveParentFolder(path: string) {
   if (index !== -1) return path.slice(0, index)
   if (index2 !== -1) return path.slice(0, index2)
   return path
+}
+
+export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T => {
+  console[trace ? "trace" : "log"](`🔎 ${label}`, args)
+  return args
 }

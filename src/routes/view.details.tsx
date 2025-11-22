@@ -10,7 +10,6 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   if (request.url.endsWith("details")) {
     throw redirect("general")
   }
-
 }
 
 export default function Details() {

@@ -3,11 +3,7 @@ import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
 import { parseArgs, describeAsyncJob, getLatestVersion } from "./shared/util.server.ts"
-import {
-  generateVersionComparisonLink,
-  semverCompare,
-  promiseHelper
-} from "./shared/util.ts"
+import { generateVersionComparisonLink, semverCompare, promiseHelper } from "./shared/util.ts"
 
 import { log, setLogLevel } from "./analyzer/log.server.ts"
 import InstanceManager from "./analyzer/InstanceManager.server.ts"

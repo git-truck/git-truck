@@ -10,7 +10,7 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import { getArgs, getLatestVersion, getRepoNameFromPath, openFile } from "~/shared/util.server"
+import { getArgs, getRepoNameFromPath, openFile } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { GlobalInfo } from "~/components/GlobalInfo"
@@ -32,7 +32,6 @@ import BarChart from "~/components/BarChart"
 import { ChartTooltip } from "~/components/ChartTooltip"
 import { ClientOnly, FullscreenButton } from "~/components/util"
 import { getPathFromRepoAndHead, invariant } from "~/shared/util"
-import pkg from "../../package.json" with { type: "json" }
 import type ServerInstance from "~/analyzer/ServerInstance.server"
 import { versionContext } from "~/root"
 
@@ -60,10 +59,6 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
 
   invariant(instance, `Instance for repo at path ${repositoryPath} and branch ${branch} not found`)
 
-  context.set(versionContext, {
-    installedVersion: pkg.version,
-    latestVersion: await getLatestVersion()
-  })
   context.set(currentRepositoryContext, {
     instance,
     repositoryPath,
@@ -77,11 +72,10 @@ export const middleware: Route.MiddlewareFunction[] = [viewMiddleware]
 
 export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const { instance, repositoryPath, branch, checkedOutBranch } = context.get(currentRepositoryContext)
-  const searchParams = new URL(request.url).searchParams
-
+  const urlSearchParams = new URL(request.url).searchParams
 
   // Clean up URL if branch is the same as the current head
-  if (searchParams.get("branch") && checkedOutBranch === branch) {
+  if (urlSearchParams.get("branch") && checkedOutBranch === branch) {
     throw redirect(getPathFromRepoAndHead({ path: repositoryPath }, ["view"]))
   }
 
@@ -272,7 +266,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
-      : await InstanceManager.getOrCreateMetadataDB().getLastRun(instance.repositoryName, instance.branch)
+      : await InstanceManager.getOrCreateMetadataDB().getLastRun({
+          repositoryPath: instance.repositoryPath,
+          branch: instance.branch
+        })
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
   const authorColors =
     prevRes && !shouldUpdate(reason, "authorColors")

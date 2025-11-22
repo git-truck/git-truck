@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { LoadingIndicator } from "../components/LoadingIndicator"
 import { ChevronButton } from "../components/ChevronButton"
 import { AuthorOptions } from "../components/AuthorOptions"
@@ -9,12 +9,12 @@ import { Providers } from "../components/Providers"
 import type { AnalyzerData, RepoData } from "../shared/model"
 import { Tooltip } from "../components/Tooltip"
 import { Icon } from "~/components/Icon"
-import { mdiCircle, mdiCog, mdiHelpCircle, mdiHome, mdiPlus, mdiSquare } from "@mdi/js"
+import { mdiCog, mdiHelpCircle, mdiPlus } from "@mdi/js"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 
 // Minimal mock AnalyzerData for RepoData
-const mockAnalyzerData = {
+const mockAnalyzerData: AnalyzerData = {
   cached: false,
   interfaceVersion: 16 as const,
   hiddenFiles: [],
@@ -39,14 +39,14 @@ const mockAnalyzerData = {
   currentVersion: "",
   lastRunEpoch: 0,
   commits: {}
-} satisfies AnalyzerData
+}
 
 // Minimal mock RepoData for context providers
 const mockRepoData: RepoData = {
   repo: {
+    repositoryName: "mock-repo",
     repositoryPath: "mock/path",
     parentDirPath: "mock",
-    repositoryName: "mock-repo",
     status: "Success",
     isAnalyzed: true,
     refs: { Branches: {}, Tags: {} },
@@ -54,7 +54,7 @@ const mockRepoData: RepoData = {
     analyzedHeads: {},
     data: mockAnalyzerData,
     currentHead: "main",
-    lastChanged: 1729363200
+    lastChanged: 0
   },
   databaseInfo: {
     dominantAuthors: {},
@@ -77,7 +77,7 @@ const mockRepoData: RepoData = {
     colorSeed: null,
     authorColors: {},
     commitCountPerTimeInterval: [],
-    commitCountPerTimeIntervalUnit: "day",
+    commitCountPerTimeIntervalUnit: "days" as const,
     selectedRange: [0, 0],
     analyzedRepos: [],
     contribSumPerFile: {},
@@ -98,7 +98,6 @@ export default function UI() {
     hash: "abc123",
     sizeInBytes: 42
   }
-
   return (
     <Providers data={mockRepoData}>
       <div className="mx-auto max-w-3xl space-y-8 p-2">
@@ -122,31 +121,24 @@ export default function UI() {
           <div className="card">
             <h2 className="card__title">Buttons</h2>
             <div className="flex flex-wrap gap-2">
-              <div className="grid [grid-template-columns:1fr_auto_auto] gap-2">
-                <button className="btn">Default</button>
-                <button className="btn btn--outlined">Default outlined</button>
-                <button className="btn btn--text">Default text</button>
-                <button className="btn btn--primary">Primary</button>
-                <button className="btn btn--primary btn--outlined">Primary Outlined</button>
-                <button className="btn btn--primary btn--text">Primary Text</button>
-                <button className="btn btn--danger">Danger</button>
-                <button className="btn btn--danger btn--outlined">Danger Outlined</button>
-                <button className="btn btn--danger btn--text">Danger Text</button>
-              </div>
+              <button className="btn">Default</button>
+              <button className="btn btn--text">Default text</button>
 
-              <button className="btn">
+              <button className="btn btn--primary">Primary</button>
+              <button className="btn btn--primary btn--outlined">Primary Outlined</button>
+              <button className="btn btn--primary btn--text">Primary Text</button>
+
+              <button className="btn btn--danger">Danger</button>
+              <button className="btn btn--danger btn--outlined">Danger Outlined</button>
+              <button className="btn btn--danger btn--text">Danger Text</button>
+
+              <button className="btn btn--icon">
                 <Icon path={mdiPlus} size="1.25em" />
               </button>
-              <button className="btn btn--primary">
-                <Icon path={mdiPlus} size="1.25em" />
-              </button>
-              <button className="btn btn--danger">
-                <Icon path={mdiPlus} size="1.25em" />
-              </button>
-              <button className="btn btn--primary">
+              <button className="btn btn--icon btn--primary">
                 <Icon path={mdiCog} size="1.25em" />
               </button>
-              <button className="btn btn--outlined">
+              <button className="btn btn--icon btn--outlined">
                 <Icon path={mdiHelpCircle} size="1.25em" />
               </button>
               <button className="btn btn--hover-swap">
@@ -154,8 +146,8 @@ export default function UI() {
                 <span className="hover-swap">🎉</span>
               </button>
               <ChevronButton open={false} />
-              <ChevronButton open />
-              <button className="btn">
+              <ChevronButton open={true} />
+              <button className="btn btn--icon">
                 <Icon path={mdiPlus} size="1.25em" />
                 <span className="badge">13</span>
               </button>
@@ -188,42 +180,29 @@ export default function UI() {
                 }}
                 disabled={false}
                 analyzedBranches={[]}
+                className="input"
               />
             </div>
           </div>
+          {/* LoadingIndicator Demo */}
+          <div className="card">
+            <h2 className="card__title">LoadingIndicator</h2>
+            <LoadingIndicator loadingText="Loading something..." showProgress={false} />
+          </div>
           {/* Git Truck Info Demo */}
           <div className="card">
-            <h2 className="card__title">GitTruckInfo</h2>
-            <div className="flex h-full flex-col justify-between">
-              <GitTruckInfo installedVersion="1.0.0" latestVersion="1.0.0" />
-              <GitTruckInfo installedVersion="1.0.0" latestVersion="1.0.1" />
-              <GitTruckInfo installedVersion="0.0.0-98822df" latestVersion="1.0.1" />
-            </div>
-          </div>
-          {/* LoadingIndicator Demo */}
-          <div className="card">
-            <h2 className="card__title">LoadingIndicator</h2>
-            <LoadingIndicator loadingText="Loading something..." />
-          </div>
-          {/* LoadingIndicator Demo */}
-          <div className="card">
-            <h2 className="card__title">LoadingIndicator</h2>
-            <LoadingIndicator loadingText="Loading something..." showProgress fetchProgress={false} />
+            <GitTruckInfo installedVersion="1.0.0" latestVersion="1.0.0" />
           </div>
           <div className="card">
-            <h2 className="card__title">LoadingIndicator</h2>
-            <LoadingIndicator loadingText="Loading something..." showProgress fetchProgress={false} />
+            <GitTruckInfo installedVersion="1.0.0" latestVersion="1.0.1" />
+          </div>
+          <div className="card">
+            <GitTruckInfo installedVersion="0.0.0-98822df" latestVersion="1.0.1" />
           </div>
           {/* AuthorOptions Demo (mock handler) */}
           <div className="card">
             <h2 className="card__title">AuthorOptions</h2>
             <AuthorOptions showUnionAuthorsModal={() => alert("Show union authors modal")} />
-          </div>
-          {/* Slider */}
-          <div className="card">
-            <h2 className="card__title">Slider (crashes page)</h2>
-
-            {/* {client ? <TimeSlider /> : <div />} */}
           </div>
           {/* IconRadioGroup Demo */}
           <div className="card">
@@ -233,21 +212,21 @@ export default function UI() {
               type DemoEnum = "A" | "B" | "C"
               const group: Record<DemoEnum, string> = { A: "Alpha", B: "Beta", C: "Gamma" }
               const iconMap: Record<DemoEnum, string> = {
-                A: mdiHome,
-                B: mdiCircle,
-                C: mdiSquare
+                A: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+                B: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z",
+                C: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
               }
               return <IconRadioGroup group={group} defaultValue="A" onChange={() => {}} iconMap={iconMap} />
             })()}
             {(() => {
               type DemoEnum = "A" | "B" | "C"
-              const group: Record<DemoEnum, string> = { A: "Alpha", B: "Beta", C: "Gamma" }
+              const enumObj: Record<DemoEnum, string> = { A: "Alpha", B: "Beta", C: "Gamma" }
               const iconMap: Record<DemoEnum, string> = {
-                A: mdiHome,
-                B: mdiCircle,
-                C: mdiSquare
+                A: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+                B: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z",
+                C: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
               }
-              return <IconRadioGroup large group={group} defaultValue="A" onChange={() => {}} iconMap={iconMap} />
+              return <IconRadioGroup large group={enumObj} defaultValue="A" onChange={() => {}} iconMap={iconMap} />
             })()}
           </div>
           {/* Breadcrumb Demo */}
@@ -264,9 +243,9 @@ export default function UI() {
             <h2 className="card__title">Tooltip (Demo)</h2>
             <div className="flex flex-col items-start gap-2 p-4">
               <span>Hover over the button to show tooltip:</span>
-              <div>
+              <div className="">
                 <button
-                  className="btn"
+                  className="btn btn--icon"
                   onMouseEnter={() => setTooltipHovered(true)}
                   onMouseLeave={() => setTooltipHovered(false)}
                 >

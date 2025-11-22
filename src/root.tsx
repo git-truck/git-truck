@@ -11,30 +11,16 @@ import {
   useRouteError
 } from "react-router"
 
-import "~/styles/vars.css"
-import { Code } from "./components/util"
-import "~/tailwind.css"
-import { cn } from "./styling"
 import "react-datepicker/dist/react-datepicker.css"
-import { ClearCacheForm } from "./routes/clear-cache"
-import { LoadingIndicator } from "./components/LoadingIndicator"
-import type { Route } from "./+types/root"
-import { getLatestVersion } from "./shared/util.server"
+import "~/styles/vars.css"
+import "~/tailwind.css"
 import pkg from "../package.json" with { type: "json" }
-
-export const versionContext = createContext<{
-  installedVersion: string
-  latestVersion: string | null
-}>()
-
-const rootMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
-  context.set(versionContext, {
-    installedVersion: pkg.version,
-    latestVersion: await getLatestVersion()
-  })
-}
-
-export const middleware: Route.MiddlewareFunction[] = [rootMiddleware]
+import type { Route } from "./+types/root"
+import { LoadingIndicator } from "./components/LoadingIndicator"
+import { Code } from "./components/util"
+import { ClearCacheForm } from "./routes/clear-cache"
+import { cn } from "./styling"
+import { getLatestVersion } from "./shared/util.server"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -47,6 +33,20 @@ export default function App() {
     </Shell>
   )
 }
+
+export const versionContext = createContext<{
+  installedVersion: string
+  latestVersion: string | null
+}>()
+
+const versionMiddleware: Route.MiddlewareFunction = async ({ context }) => {
+  context.set(versionContext, {
+    installedVersion: pkg.version,
+    latestVersion: await getLatestVersion()
+  })
+}
+
+export const middleware: Route.MiddlewareFunction[] = [versionMiddleware]
 
 function Shell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   // const prefersLightMode = usePrefersLightMode()

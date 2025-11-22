@@ -3,8 +3,13 @@ import os from "os"
 import { promises as fs } from "fs"
 import type { CompletedResult } from "../shared/model"
 
+type MetadataCompletion = {
+  hash: string
+  time: number
+}
+
 interface MetadataJson {
-  completions: Record<string, { hash: string; time: number }>
+  completions: Record<string, MetadataCompletion>
   authorcolors: Record<string, string>
 }
 
@@ -26,9 +31,18 @@ export default class MetadataDB {
     await fs.writeFile(this.path, asString, "utf8")
   }
 
-  public async setCompletion(repo: string, branch: string, hash: string) {
+  public async setCompletion(
+    { repositoryPath, branch }: { repositoryPath: string; branch: string },
+    /**
+     * The latest commit hash of the analyzed repository
+     */
+    hash: string
+  ) {
     const currentMetadata = await this.readMetadata()
-    currentMetadata.completions[`${repo}${this.separator}${branch}`] = { hash, time: Math.floor(Date.now() / 1000) }
+    currentMetadata.completions[this.getCompletionKey({ repositoryPath, branch })] = {
+      hash: hash,
+      time: Math.floor(Date.now() / 1000)
+    }
     await this.setMetadata(currentMetadata)
   }
 
@@ -44,11 +58,15 @@ export default class MetadataDB {
     return currentMetadata.authorcolors as Record<string, `#${string}`>
   }
 
-  public async getLastRun(repo: string, branch: string) {
+  public async getLastRun({
+    repositoryPath,
+    branch
+  }: {
+    repositoryPath: string
+    branch: string
+  }): Promise<MetadataCompletion | undefined> {
     const currentMetadata = await this.readMetadata()
-    return currentMetadata.completions[`${repo}${this.separator}${branch}`] as
-      | { hash: string; time: number }
-      | undefined
+    return currentMetadata.completions[this.getCompletionKey({ repositoryPath, branch })]
   }
 
   public async getCompletedRepos() {
@@ -59,5 +77,9 @@ export default class MetadataDB {
       completedResults.push({ repo, branch, time: val.time })
     }
     return completedResults
+  }
+
+  getCompletionKey({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+    return `${repositoryPath}${this.separator}${branch}`
   }
 }

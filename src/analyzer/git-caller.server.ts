@@ -100,8 +100,11 @@ export class GitCaller {
   }
 
   static async _getRepositoryHead(dir: string) {
-    const result = (await fs.readFile(join(dir, ".git", "HEAD"), "utf-8")).trim().replace("ref: refs/heads/", "")
-    return result.trim()
+    const [result, error] = await promiseHelper(fs.readFile(join(dir, ".git", "HEAD"), "utf-8"))
+    if (error) {
+      throw error
+    }
+    return result.trim().trim().replace("ref: refs/heads/", "")
   }
 
   async lsTree(hash: string) {
@@ -123,7 +126,7 @@ export class GitCaller {
   }
   static async getRepoMetadata(repositoryPath: string): Promise<Repository | null> {
     const repositoryName = getRepoNameFromPath(repositoryPath)
-    const parentDir = getBaseDirFromPath(repositoryName)
+    const parentDir = getBaseDirFromPath(repositoryPath)
     const lastChanged = await GitCaller.getLastChanged(repositoryPath)
 
     if (!lastChanged) {

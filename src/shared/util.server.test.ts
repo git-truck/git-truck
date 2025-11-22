@@ -1,30 +1,18 @@
 import { describe, expect, it } from "vitest"
 import path from "node:path"
-import {
-  getBaseDirFromPath,
-  getRepoNameFromPath,
-  getSiblingRepository,
-  parseArgs,
-  getArgsWithDefaults
-} from "./util.server"
+import { getBaseDirFromPath, getRepoNameFromPath, parseArgs, getArgsWithDefaults } from "./util.server"
 
 describe("shared util path helpers", () => {
   const repoPath = path.resolve("/tmp/my/base/repo")
 
   it("getBaseDirFromPath returns parent directory of repository path", () => {
     const base = getBaseDirFromPath(repoPath)
-    expect(base).toBe(path.resolve(repoPath, ".."))
+    expect(base).toBe("/tmp/my/base")
   })
 
   it("getRepoNameFromPath returns repository folder name", () => {
     const name = getRepoNameFromPath(repoPath)
-    expect(name).toBe(path.basename(path.resolve(repoPath)))
-  })
-
-  it("getSiblingRepository resolves sibling repo path", () => {
-    const sibling = getSiblingRepository(repoPath, "other-repo")
-    const expected = path.resolve(path.resolve(repoPath, ".."), "other-repo")
-    expect(sibling).toBe(expected)
+    expect(name).toBe("repo")
   })
 })
 

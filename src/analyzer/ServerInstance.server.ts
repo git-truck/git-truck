@@ -41,8 +41,8 @@ export default class ServerInstance {
     this.repositoryPath = repositoryPath
     this.repositoryName = getRepoNameFromPath(repositoryPath)
     this.branch = branch
-    this.gitCaller = new GitCaller({ repositoryPath: repositoryPath, branch })
-    this.db = new DB({ repositoryPath: repositoryPath, branch })
+    this.gitCaller = new GitCaller({ repositoryPath, branch })
+    this.db = new DB({ repositoryPath, branch })
   }
 
   public updateProgress(index: number) {
@@ -82,6 +82,7 @@ export default class ServerInstance {
       if (!match.groups) continue
 
       const groups = match.groups
+
       lsTreeEntries.push({
         type: groups["type"] as "blob" | "tree",
         hash: groups["hash"],
@@ -381,7 +382,10 @@ export default class ServerInstance {
     this.analyzationStatus = "Starting"
 
     let commitCount = await this.gitCaller.getCommitCount()
-    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun(this.repositoryName, this.branch)
+    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
+      repositoryPath: this.repositoryPath,
+      branch: this.branch
+    })
     if (!(await this.db.commitTableEmpty())) {
       if (priorRun) {
         const latestCommit = await this.db.getLatestCommitHash()
@@ -423,8 +427,7 @@ export default class ServerInstance {
     await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
 
     await InstanceManager.getOrCreateMetadataDB().setCompletion(
-      this.repositoryName,
-      this.branch,
+      { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
     this.analyzationStatus = "GeneratingChart"

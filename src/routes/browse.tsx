@@ -1,4 +1,4 @@
-import { Await, Form, Link, useFetcher, useLoaderData, useSearchParams } from "react-router"
+import { Await, Form, Link, redirect, useFetcher, useLoaderData, useSearchParams } from "react-router"
 import { Code } from "~/components/util"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import type { ReactNode } from "react"
@@ -29,9 +29,9 @@ const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
 
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
-  const queryPath = null
   const args = getArgsWithDefaults()
   const searchParams = new URL(request.url).searchParams
+  const queryPath = searchParams.get("path")
   const count = Number(searchParams.get("count") ?? DEFAULT_COUNT.toString())
   const offset = Number(searchParams.get("offset") ?? DEFAULT_OFFSET.toString())
   const sort = searchParams.get("sort")
@@ -43,11 +43,15 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
       log.warn(`Path exists, overwriting: ${queryPath}`)
       args.path = queryPath
     } else {
-      log.warn(`Path does not exists: ${queryPath}`)
+      log.warn(`Path does not exists: ${queryPath}, using default path: ${args.path}`)
     }
   }
 
   const baseDirIsRepo = existsSync(join(args.path, ".git"))
+
+  if (baseDirIsRepo) {
+    throw redirect(getPathFromRepoAndHead({ path: resolve(args.path) }, ["view"]))
+  }
 
   const baseDir = resolve(
     baseDirIsRepo ? getBaseDirFromPath(args.path) : args.path
@@ -410,7 +414,7 @@ function Pagination({ className, totalCount }: { className?: string; totalCount:
   const [searchParams, setSearchParams] = useSearchParams()
   const count = Number(searchParams.get("count") ?? DEFAULT_COUNT.toString())
   const offset = Number(searchParams.get("offset") ?? DEFAULT_OFFSET.toString())
-  const pages = Math.ceil(totalCount / count)
+  const pages = Math.max(Math.ceil(totalCount / count), 1)
   const currentPage = Math.floor(offset / count) + 1
 
   return (
