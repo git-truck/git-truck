@@ -1,11 +1,9 @@
 /// <reference types="vitest" />
 import { reactRouter } from "@react-router/dev/vite"
-import { reactRouterDevTools } from "react-router-devtools"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
-import reactRouterConfig from "./react-router.config.ts"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
@@ -39,14 +37,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-arm64"
     ]
   },
-  plugins: [
-    tailwindcss(),
-    reactRouterDevTools({
-      appDir: reactRouterConfig.appDirectory
-    }),
-    reactRouter(),
-    tsconfigPaths()
-  ],
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
 }))
