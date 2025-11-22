@@ -52,6 +52,12 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
   const searchParams = new URL(request.url).searchParams
   const args = await getArgs()
   const repositoryPath = resolve(searchParams.get("path") ?? args.path)
+
+  // Redirect to browse if not a git repo
+  if (!(await GitCaller.isGitRepo(repositoryPath))) {
+    throw redirect(getPathFromRepoAndHead({ path: repositoryPath }, ["browse"]))
+  }
+
   const checkedOutBranch = await GitCaller._getRepositoryHead(repositoryPath)
   const branch = searchParams.get("branch") ?? checkedOutBranch
 
