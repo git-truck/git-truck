@@ -29,7 +29,7 @@ import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { isDarkColor, isBlob, isTree } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, inspect } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -97,14 +97,16 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     return {
       onClick: (evt) => {
         evt.stopPropagation()
-        createLink({
-          params: {
-            objectPath: d.data.path,
-            isblob: isBlob(d.data)
-          },
-          segments: ["view", "details", "general"]
-        }).navigate({
-          replace: false,
+        inspect(
+          createLink({
+            params: {
+              objectPath: d.data.path,
+              isblob: isBlob(d.data)
+            },
+            segments: ["view", "details", "general"]
+          })
+        ).navigate({
+          // replace: false,
           state: {
             clickedObject: d.data
           }
@@ -112,7 +114,6 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       },
       onMouseOver: (evt) => {
         evt.stopPropagation()
-        console.log("hover", d.data.path, isRoot)
         if (!isRoot) setHoveredObject(d.data as GitObject)
         else setHoveredObject(null)
       },
