@@ -321,3 +321,5 @@ export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T
   console[trace ? "trace" : "log"](`🔎 ${label}`, args)
   return args
 }
+
+export const extname = (filename: string): string => filename.split(".").pop() || ""

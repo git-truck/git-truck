@@ -1,4 +1,4 @@
-import { dateFormatLong, invariant, last, resolveParentFolder } from "~/shared/util"
+import { dateFormatLong, extname, invariant, last, resolveParentFolder } from "~/shared/util"
 import { useId, useState, Suspense } from "react"
 import { Await, Form, useLoaderData, useLocation, useNavigation } from "react-router"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
@@ -14,7 +14,6 @@ import { usePath } from "~/contexts/PathContext"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { extname } from "path"
 import { currentRepositoryContext, useRepoContext } from "~/routes/view"
 
 export function HydrateFallback() {
