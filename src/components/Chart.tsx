@@ -479,9 +479,17 @@ function createPartitionedHiearchy(
 }
 
 function filterTree(node: HierarchyNode<GitObject>, filter: (child: HierarchyNode<GitObject>) => boolean) {
-  node.children = node.children?.filter((c) => filter(c))
-  for (const child of node.children ?? []) {
-    if ((child.children?.length ?? 0) > 0) filterTree(child, filter)
+  // Iterative approach to avoid stack overflow with large repos (35K+ files)
+  const stack: HierarchyNode<GitObject>[] = [node]
+
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    current.children = current.children?.filter((c) => filter(c))
+    for (const child of current.children ?? []) {
+      if ((child.children?.length ?? 0) > 0) {
+        stack.push(child)
+      }
+    }
   }
 }
 

@@ -91,7 +91,7 @@ const defaultOptions: Options = {
   commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
-  renderCutoff: 2,
+  renderCutoff: 1,
   showFilesWithoutChanges: true,
   dominantAuthorCutoff: 0,
   linkMetricAndSizeMetric: false
