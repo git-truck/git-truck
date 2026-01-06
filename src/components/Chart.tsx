@@ -518,12 +518,18 @@ function roundedRectPathFromRect(x: number, y: number, width: number, height: nu
 }
 
 function flatten(tree: GitTreeObject) {
+  // Iterative approach to avoid stack overflow with large repos (35K+ files)
   const flattened: GitBlobObject[] = []
-  for (const child of tree.children) {
-    if (child.type === "blob") {
-      flattened.push(child)
-    } else {
-      flattened.push(...flatten(child))
+  const stack: GitTreeObject[] = [tree]
+
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    for (const child of current.children) {
+      if (child.type === "blob") {
+        flattened.push(child)
+      } else {
+        stack.push(child)
+      }
     }
   }
   return flattened

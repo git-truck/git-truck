@@ -322,7 +322,10 @@ export default class ServerInstance {
       }
     }
 
-    finishedChains.push(...currentPathToRenameChain.values())
+    // Avoid spread operator to prevent stack overflow with large repos (35K+ files)
+    for (const chain of currentPathToRenameChain.values()) {
+      finishedChains.push(chain)
+    }
     return finishedChains
   }
 
