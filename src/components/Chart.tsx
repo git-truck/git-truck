@@ -1,7 +1,9 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, treemap, treemapResquarify } from "d3-hierarchy"
+import { zoom, zoomIdentity } from "d3-zoom"
+import { select } from "d3-selection"
 import type { MouseEventHandler } from "react"
-import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import { useDeferredValue, memo, useEffect, useMemo, useRef, useState, useCallback } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject } from "~/analyzer/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
@@ -40,11 +42,17 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, renderScale } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, renderScale, setRenderScale } =
+    useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
   const { showFilesWithoutChanges } = useOptions()
+
+  // Zoom refs - use direct DOM manipulation for 60fps smooth zoom
+  const svgRef = useRef<SVGSVGElement>(null)
+  const transformGroupRef = useRef<SVGGElement>(null)
+  const zoomBehaviorRef = useRef<ReturnType<typeof zoom<SVGSVGElement, unknown>> | null>(null)
 
   let numberOfDepthLevels: number | undefined = undefined
   switch (depthType) {
@@ -111,6 +119,83 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
+  // D3 zoom behavior for Cmd/Ctrl + scroll (smooth visual zoom)
+  // Uses direct DOM manipulation for 60fps - bypasses React entirely
+  useEffect(() => {
+    if (!svgRef.current || !transformGroupRef.current) return
+
+    const zoomBehavior = zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 10])
+      .filter((event) => {
+        // Only zoom on Cmd/Ctrl + wheel
+        if (event.type === "wheel") {
+          return event.metaKey || event.ctrlKey
+        }
+        // Allow drag for panning when zoomed
+        return event.type === "mousedown" && (event.metaKey || event.ctrlKey)
+      })
+      .on("zoom", (event) => {
+        // Direct DOM manipulation - no React re-render, smooth 60fps
+        const { k, x, y } = event.transform
+        transformGroupRef.current?.setAttribute("transform", `translate(${x},${y}) scale(${k})`)
+      })
+
+    zoomBehaviorRef.current = zoomBehavior
+    const svg = select(svgRef.current)
+    svg.call(zoomBehavior)
+
+    return () => {
+      svg.on(".zoom", null)
+      zoomBehaviorRef.current = null
+    }
+  }, [scaledSize])
+
+  // Zoom control handlers for UI buttons
+  const handleZoomIn = useCallback(() => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return
+    select(svgRef.current).transition().duration(200).call(zoomBehaviorRef.current.scaleBy, 1.5)
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return
+    select(svgRef.current).transition().duration(200).call(zoomBehaviorRef.current.scaleBy, 0.67)
+  }, [])
+
+  const handleZoomReset = useCallback(() => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return
+    select(svgRef.current).transition().duration(200).call(zoomBehaviorRef.current.transform, zoomIdentity)
+  }, [])
+
+  // Keyboard shortcuts for render scale: Shift++ (increase) and Shift+- (decrease)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!event.shiftKey) return
+
+      // Shift + = (plus) or Shift + + (numpad)
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault()
+        const newScale = Math.min(16, renderScale + 1)
+        if (newScale !== renderScale) setRenderScale(newScale)
+      }
+      // Shift + - (minus)
+      if (event.key === "-" || event.key === "_") {
+        event.preventDefault()
+        const newScale = Math.max(1, renderScale - 1)
+        if (newScale !== renderScale) setRenderScale(newScale)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [renderScale, setRenderScale])
+
+  // Reset zoom when path changes (navigating into folders)
+  useEffect(() => {
+    if (transformGroupRef.current) {
+      transformGroupRef.current.setAttribute("transform", "translate(0,0) scale(1)")
+    }
+  }, [path])
+
   const createGroupHandlers: (
     d: CircleOrRectHiearchyNode,
     isRoot: boolean
@@ -143,6 +228,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   return (
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
+        ref={svgRef}
         key={`svg|${scaledSize.width}|${scaledSize.height}`}
         className={clsx("grid h-full w-full place-items-center stroke-gray-300 dark:stroke-gray-700", {
           "cursor-zoom-out": path.includes("/")
@@ -157,31 +243,82 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
           else setPath(parentPath)
         }}
       >
-        {nodes.map((d, i) => {
-          return (
-            <g
-              key={d.data.path}
-              className={clsx("transition-opacity hover:opacity-60", {
-                "cursor-pointer": i === 0,
-                "cursor-zoom-in": i > 0 && isTree(d.data),
-                "animate-blink": clickedObject?.path === d.data.path
-              })}
-              {...createGroupHandlers(d, i === 0)}
-            >
-              {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
-                <>
-                  <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
-                  {labelsVisible && (
-                    <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`} d={d}>
-                      {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
-                    </NodeText>
-                  )}
-                </>
-              )}
-            </g>
-          )
-        })}
+        <g ref={transformGroupRef} transform="translate(0,0) scale(1)">
+          {nodes.map((d, i) => {
+            return (
+              <g
+                key={d.data.path}
+                className={clsx("transition-opacity hover:opacity-60", {
+                  "cursor-pointer": i === 0,
+                  "cursor-zoom-in": i > 0 && isTree(d.data),
+                  "animate-blink": clickedObject?.path === d.data.path
+                })}
+                {...createGroupHandlers(d, i === 0)}
+              >
+                {(numberOfDepthLevels === undefined || d.depth <= numberOfDepthLevels) && (
+                  <>
+                    <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
+                    {labelsVisible && (
+                      <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`} d={d}>
+                        {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                      </NodeText>
+                    )}
+                  </>
+                )}
+              </g>
+            )
+          })}
+        </g>
       </svg>
+
+      {/* Zoom Controls - Google Maps style */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1 rounded-lg bg-white/90 p-1 shadow-lg dark:bg-gray-800/90">
+        {/* Visual zoom controls */}
+        <button
+          onClick={handleZoomIn}
+          className="flex h-8 w-8 items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          title="Zoom in (Cmd/Ctrl + scroll)"
+        >
+          <span className="text-lg font-bold">+</span>
+        </button>
+        <button
+          onClick={handleZoomReset}
+          className="flex h-8 w-8 items-center justify-center rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-700"
+          title="Reset zoom"
+        >
+          ⟲
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="flex h-8 w-8 items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          title="Zoom out (Cmd/Ctrl + scroll)"
+        >
+          <span className="text-lg font-bold">−</span>
+        </button>
+
+        <div className="my-1 border-t border-gray-300 dark:border-gray-600" />
+
+        {/* Render scale controls */}
+        <button
+          onClick={() => setRenderScale(Math.min(16, renderScale + 1))}
+          disabled={renderScale >= 16}
+          className="flex h-8 w-8 items-center justify-center rounded text-xs hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+          title="Increase detail (Shift +)"
+        >
+          HD+
+        </button>
+        <div className="flex h-6 w-8 items-center justify-center text-xs font-medium" title="Render scale">
+          {renderScale}×
+        </div>
+        <button
+          onClick={() => setRenderScale(Math.max(1, renderScale - 1))}
+          disabled={renderScale <= 1}
+          className="flex h-8 w-8 items-center justify-center rounded text-xs hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+          title="Decrease detail (Shift -)"
+        >
+          HD−
+        </button>
+      </div>
     </div>
   )
 })

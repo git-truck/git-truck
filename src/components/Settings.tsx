@@ -136,7 +136,7 @@ export function Settings() {
         <input
           type="number"
           min={0}
-          defaultValue={renderCutoff}
+          value={renderCutoff}
           className="mr-1 w-12 place-self-end border-b-2"
           onChange={(x) => startTransition(() => setRenderCutoff(x.target.valueAsNumber))}
         />
@@ -153,7 +153,7 @@ export function Settings() {
           type="number"
           min={1}
           max={16}
-          defaultValue={renderScale}
+          value={renderScale}
           className="mr-1 w-12 place-self-end border-b-2"
           onChange={(x) => startTransition(() => setRenderScale(x.target.valueAsNumber))}
         />
