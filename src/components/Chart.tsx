@@ -99,9 +99,67 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     [size.width, size.height, renderScale]
   )
 
+  // Cache for precomputed layouts at each renderScale (1-16)
+  const layoutCacheRef = useRef<Map<number, ReturnType<typeof createPartitionedHiearchy>["descendants"]>>(new Map())
+  const [cacheReady, setCacheReady] = useState(false)
+  const [cachingProgress, setCachingProgress] = useState(0)
+
+  // Precompute all scale layouts when dependencies change
+  useEffect(() => {
+    if (size.width === 0 || size.height === 0) return
+
+    // Clear cache when dependencies change
+    layoutCacheRef.current.clear()
+    setCacheReady(false)
+    setCachingProgress(0)
+
+    // Precompute layouts for scales 1-16 asynchronously
+    const computeNextScale = (scale: number) => {
+      if (scale > 16) {
+        setCacheReady(true)
+        return
+      }
+
+      // Use requestIdleCallback or setTimeout to not block UI
+      const compute = () => {
+        const scaledSizeForScale = { width: size.width * scale, height: size.height * scale }
+        const layout = createPartitionedHiearchy(
+          databaseInfo,
+          filetree,
+          scaledSizeForScale,
+          chartType,
+          sizeMetric,
+          path,
+          renderCutoff
+        ).descendants()
+        layoutCacheRef.current.set(scale, layout)
+        setCachingProgress(scale)
+        computeNextScale(scale + 1)
+      }
+
+      // Use requestIdleCallback if available, otherwise setTimeout
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(compute, { timeout: 100 })
+      } else {
+        setTimeout(compute, 0)
+      }
+    }
+
+    computeNextScale(1)
+  }, [size.width, size.height, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
+
+  // Get nodes from cache or compute if not ready
   const nodes = useMemo(() => {
-    console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
+
+    // Try to get from cache first
+    const cached = layoutCacheRef.current.get(renderScale)
+    if (cached) {
+      return cached
+    }
+
+    // Fallback: compute on-demand if cache not ready
+    console.time("nodes-fallback")
     const res = createPartitionedHiearchy(
       databaseInfo,
       filetree,
@@ -111,9 +169,9 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       path,
       renderCutoff
     ).descendants()
-    console.timeEnd("nodes")
+    console.timeEnd("nodes-fallback")
     return res
-  }, [scaledSize, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
+  }, [scaledSize, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree, renderScale, cacheReady])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -127,12 +185,13 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     const zoomBehavior = zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 10])
       .filter((event) => {
-        // Only zoom on Cmd/Ctrl + wheel
+        // Only zoom on Cmd/Ctrl + wheel (to not interfere with page scroll)
         if (event.type === "wheel") {
           return event.metaKey || event.ctrlKey
         }
-        // Allow drag for panning when zoomed
-        return event.type === "mousedown" && (event.metaKey || event.ctrlKey)
+        // Allow drag for panning anytime (Google Maps style)
+        // Click events on folders still work because they use onClick, not mousedown
+        return event.type === "mousedown"
       })
       .on("zoom", (event) => {
         // Direct DOM manipulation - no React re-render, smooth 60fps
@@ -259,7 +318,11 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
                   <>
                     <Node key={d.data.path} d={d} isSearchMatch={Boolean(searchResults[d.data.path])} />
                     {labelsVisible && (
-                      <NodeText key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`} d={d}>
+                      <NodeText
+                        key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`}
+                        d={d}
+                        renderScale={renderScale}
+                      >
                         {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
                       </NodeText>
                     )}
@@ -301,18 +364,18 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         {/* Render scale controls */}
         <button
           onClick={() => setRenderScale(Math.min(16, renderScale + 1))}
-          disabled={renderScale >= 16}
+          disabled={renderScale >= 16 || (!cacheReady && !layoutCacheRef.current.has(renderScale + 1))}
           className="flex h-8 w-8 items-center justify-center rounded text-xs hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
           title="Increase detail (Shift +)"
         >
           HD+
         </button>
         <div className="flex h-6 w-8 items-center justify-center text-xs font-medium" title="Render scale">
-          {renderScale}×
+          {cacheReady ? `${renderScale}×` : <span className="animate-pulse text-gray-400">{cachingProgress}/16</span>}
         </div>
         <button
           onClick={() => setRenderScale(Math.max(1, renderScale - 1))}
-          disabled={renderScale <= 1}
+          disabled={renderScale <= 1 || (!cacheReady && !layoutCacheRef.current.has(renderScale - 1))}
           className="flex h-8 w-8 items-center justify-center rounded text-xs hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
           title="Decrease detail (Shift -)"
         >
@@ -472,11 +535,24 @@ function collapseText({
   return displayText
 }
 
-function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; children?: React.ReactNode }) {
+function NodeText({
+  d,
+  children = null,
+  renderScale = 1
+}: {
+  d: CircleOrRectHiearchyNode
+  children?: React.ReactNode
+  renderScale?: number
+}) {
   const [metricsData] = useMetrics()
   const { metricType } = useOptions()
   const prefersLightMode = usePrefersLightMode()
   const isBubbleChart = isCircularNode(d)
+
+  // Scale font size to compensate for viewBox scaling
+  // Base sizes: text-sm = 14px, text-xs = 12px
+  const baseFontSize = isTree(d.data) ? 14 : 12
+  const scaledFontSize = baseFontSize * renderScale
 
   if (children === null) return null
 
@@ -515,7 +591,8 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
       <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
       {isTree(d.data) && isBubbleChart ? (
         <text
-          className="pointer-events-none fill-none stroke-gray-100 stroke-[7px] font-mono text-sm font-bold dark:stroke-gray-800"
+          className="pointer-events-none fill-none stroke-gray-100 font-mono font-bold dark:stroke-gray-800"
+          style={{ fontSize: scaledFontSize, strokeWidth: 7 * renderScale }}
           strokeLinecap="round"
         >
           <textPath {...textPathBaseProps}>{children}</textPath>
@@ -525,9 +602,9 @@ function NodeText({ d, children = null }: { d: CircleOrRectHiearchyNode; childre
         <textPath
           {...textPathBaseProps}
           className={clsx("stroke-none font-mono", {
-            "text-sm font-bold": isTree(d.data),
-            "text-xs": !isTree(d.data)
+            "font-bold": isTree(d.data)
           })}
+          style={{ fontSize: scaledFontSize }}
         >
           {children}
         </textPath>
