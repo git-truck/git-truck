@@ -46,6 +46,7 @@ export type Options = {
   transitionsEnabled: boolean
   labelsVisible: boolean
   renderCutoff: number
+  renderScale: number
   showFilesWithoutChanges: boolean
   dominantAuthorCutoff: number
   linkMetricAndSizeMetric: boolean
@@ -63,6 +64,7 @@ export type OptionsContextType = Options & {
   setCommitSortingOrdersType: (commitSortingOrdersType: CommitSortingOrdersType) => void
   setCommitSearch: (commitSearch: string) => void
   setRenderCutoff: (renderCutoff: number) => void
+  setRenderScale: (renderScale: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
@@ -92,6 +94,7 @@ const defaultOptions: Options = {
   transitionsEnabled: true,
   labelsVisible: true,
   renderCutoff: 1,
+  renderScale: 4,
   showFilesWithoutChanges: true,
   dominantAuthorCutoff: 0,
   linkMetricAndSizeMetric: false

@@ -131,6 +131,11 @@ export function Providers({ children, data }: ProvidersProps) {
           ...(prevOptions ?? getDefaultOptionsContextValue()),
           renderCutoff: renderCutoff
         })),
+      setRenderScale: (renderScale: number) =>
+        setOptions((prevOptions) => ({
+          ...(prevOptions ?? getDefaultOptionsContextValue()),
+          renderScale: renderScale
+        })),
       setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
         setOptions((prevOptions) => ({
           ...(prevOptions ?? getDefaultOptionsContextValue()),

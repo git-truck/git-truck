@@ -9,6 +9,7 @@ import {
   mdiFileTree,
   mdiLabel,
   mdiLink,
+  mdiMagnify,
   mdiThemeLightDark,
   mdiTransition
 } from "@mdi/js"
@@ -41,6 +42,7 @@ export function Settings() {
     hierarchyType,
     transitionsEnabled,
     renderCutoff,
+    renderScale,
     showFilesWithoutChanges,
     linkMetricAndSizeMetric,
     setLinkMetricAndSizeMetric,
@@ -50,6 +52,7 @@ export function Settings() {
     setHierarchyType,
     setSizeMetricType,
     setRenderCutoff,
+    setRenderScale,
     setShowFilesWithoutChanges
   } = useOptions()
   const [theme, setTheme] = useTheme()
@@ -136,6 +139,23 @@ export function Settings() {
           defaultValue={renderCutoff}
           className="mr-1 w-12 place-self-end border-b-2"
           onChange={(x) => startTransition(() => setRenderCutoff(x.target.valueAsNumber))}
+        />
+      </label>
+      <label
+        className="label flex w-full items-center justify-start gap-2 text-sm"
+        title="Increase to show more detail in large repos (computes layout at virtual larger size)"
+      >
+        <span className="flex grow items-center gap-2">
+          <Icon className="ml-1.5" path={mdiMagnify} size="1.25em" />
+          Render scale {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
+        </span>
+        <input
+          type="number"
+          min={1}
+          max={16}
+          defaultValue={renderScale}
+          className="mr-1 w-12 place-self-end border-b-2"
+          onChange={(x) => startTransition(() => setRenderScale(x.target.valueAsNumber))}
         />
       </label>
     </>

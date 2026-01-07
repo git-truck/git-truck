@@ -40,7 +40,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { searchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
-  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, depthType, hierarchyType, labelsVisible, renderCutoff, renderScale } = useOptions()
   const { path } = usePath()
   const { clickedObject, setClickedObject } = useClickedObject()
   const { setPath } = usePath()
@@ -86,13 +86,18 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     showFilesWithoutChanges
   ])
 
+  const scaledSize = useMemo(
+    () => ({ width: size.width * renderScale, height: size.height * renderScale }),
+    [size.width, size.height, renderScale]
+  )
+
   const nodes = useMemo(() => {
     console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
     const res = createPartitionedHiearchy(
       databaseInfo,
       filetree,
-      size,
+      scaledSize,
       chartType,
       sizeMetric,
       path,
@@ -100,7 +105,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     ).descendants()
     console.timeEnd("nodes")
     return res
-  }, [size, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
+  }, [scaledSize, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -138,12 +143,12 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   return (
     <div className="relative grid place-items-center overflow-hidden" ref={ref}>
       <svg
-        key={`svg|${size.width}|${size.height}`}
+        key={`svg|${scaledSize.width}|${scaledSize.height}`}
         className={clsx("grid h-full w-full place-items-center stroke-gray-300 dark:stroke-gray-700", {
           "cursor-zoom-out": path.includes("/")
         })}
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${size.width} ${size.height}`}
+        viewBox={`0 0 ${scaledSize.width} ${scaledSize.height}`}
         onClick={() => {
           // Move up to parent
           const parentPath = path.split("/").slice(0, -1).join("/")
