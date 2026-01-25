@@ -1,6 +1,17 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/typescript-node",
   "name": "Bun",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/bun:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -14,5 +25,5 @@
   },
   "onCreateCommand": "curl -fsSL https://bun.sh/install | bash",
   "postCreateCommand": "source ~/.bashrc && bun install",
-  "forwardPorts": [3000]
+  "forwardPorts": [3000, 24678]
 }
