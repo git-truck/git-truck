@@ -57,7 +57,7 @@ export const LegendDot = ({
     form.append("authorname", author)
     form.append("authorcolor", color)
     submit(form, {
-      action: `/${getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: databaseInfo.branch })}`,
+      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: databaseInfo.branch }),
       method: "post"
     })
   }
