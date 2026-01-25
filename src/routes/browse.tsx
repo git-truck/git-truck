@@ -53,11 +53,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     throw redirect(getPathFromRepoAndHead({ path: resolve(args.path) }, ["view"]))
   }
 
-  const baseDir = resolve(
-    baseDirIsRepo ? getBaseDirFromPath(args.path) : args.path
-    // TODO: Implement browsing, requires new routing
-    // args.path
-  )
+  const baseDir = resolve(args.path)
 
   // Get all directories that has a .git subdirectory
   const foundRepositories = await GitCaller.readGitRepos(baseDir)
