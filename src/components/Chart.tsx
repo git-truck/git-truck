@@ -97,16 +97,12 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     return {
       onClick: (evt) => {
         evt.stopPropagation()
-        inspect(
-          createLink({
-            params: {
-              objectPath: d.data.path,
-              isblob: isBlob(d.data)
-            },
-            segments: ["view", "details", "general"]
-          })
-        ).navigate({
-          // replace: false,
+        createLink({
+          params: {
+            objectPath: d.data.path
+          },
+          segments: ["view", "details"]
+        }).navigate({
           state: {
             clickedObject: d.data
           }

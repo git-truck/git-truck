@@ -11,7 +11,6 @@ export function usePath(): {
     (newPath: string) =>
       setSearchParams((prev) => ({
         ...prev,
-        isblob: false,
         path: newPath
       })),
     [setSearchParams]
