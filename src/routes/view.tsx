@@ -79,8 +79,9 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const { instance, repositoryPath, branch, checkedOutBranch } = context.get(currentRepositoryContext)
   const searchParams = new URL(request.url).searchParams
 
+
   // Clean up URL if branch is the same as the current head
-  if (branch && checkedOutBranch === branch) {
+  if (searchParams.get("branch") && checkedOutBranch === branch) {
     throw redirect(getPathFromRepoAndHead({ path: repositoryPath }, ["view"]))
   }
 
