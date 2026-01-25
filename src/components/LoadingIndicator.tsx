@@ -3,6 +3,7 @@ import clsx from "clsx"
 import { useEffect, useMemo, type ReactNode } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import anitruck from "~/assets/truck.gif"
+import { useCreateLink } from "~/hooks"
 
 export type ProgressData = {
   progress: number
@@ -22,10 +23,15 @@ export function LoadingIndicator({
 }) {
   const location = useLocation()
   const fetcher = useFetcher<ProgressData>()
+  const createLink = useCreateLink()
   useEffect(() => {
     if (fetcher.state === "idle" && showProgress && fetchProgress) {
-      const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
-      fetcher.load(`/progress?repo=${repo}&branch=${branch}`)
+      // const [, repo, branch] = location.pathname.split("/") ?? ["", "", ""]
+      fetcher.load(
+        createLink({
+          segments: ["view", "progress"]
+        }).url
+      )
     }
   }, [fetchProgress, fetcher, fetcher.state, location.pathname, showProgress])
 

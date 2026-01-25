@@ -246,7 +246,7 @@ export interface DatabaseInfo {
 }
 
 export type LinkSegment = "view" | "browse" | "details" | "commits" | "general"
-export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general">
+export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general" | "progress">
 export type LinkSearchParams = {
   path: string
   branch: string
