@@ -152,7 +152,7 @@ export function useCreateLink() {
     )
     return {
       url,
-      navigate(options: NavigateOptions) {
+      navigate(options?: NavigateOptions) {
         navigate(url, options)
       }
     }
