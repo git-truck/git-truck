@@ -23,7 +23,7 @@ import type { Route } from "./+types/browse"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import { getPathFromRepoAndHead } from "~/shared/util"
-import { versionContext } from "./view"
+import { versionContext } from "~/root"
 
 const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0

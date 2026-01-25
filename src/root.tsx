@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  createContext,
   isRouteErrorResponse,
   useLocation,
   useRouteError
@@ -17,6 +18,23 @@ import { cn } from "./styling"
 import "react-datepicker/dist/react-datepicker.css"
 import { ClearCacheForm } from "./routes/clear-cache"
 import { LoadingIndicator } from "./components/LoadingIndicator"
+import type { Route } from "./+types/root"
+import { getLatestVersion } from "./shared/util.server"
+import pkg from "../package.json" with { type: "json" }
+
+export const versionContext = createContext<{
+  installedVersion: string
+  latestVersion: string | null
+}>()
+
+const rootMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
+  context.set(versionContext, {
+    installedVersion: pkg.version,
+    latestVersion: await getLatestVersion()
+  })
+}
+
+export const middleware: Route.MiddlewareFunction[] = [rootMiddleware]
 
 export const meta = () => {
   return [{ title: "Git Truck" }]

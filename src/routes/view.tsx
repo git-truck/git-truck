@@ -34,16 +34,12 @@ import { ClientOnly, FullscreenButton } from "~/components/util"
 import { getPathFromRepoAndHead, invariant } from "~/shared/util"
 import pkg from "../../package.json" with { type: "json" }
 import type ServerInstance from "~/analyzer/ServerInstance.server"
+import { versionContext } from "~/root"
 
 export const useRepoContext = () =>
   useOutletContext<{
     showUnionAuthorsModal: () => void
   }>()
-
-export const versionContext = createContext<{
-  installedVersion: string
-  latestVersion: string | null
-}>()
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -79,8 +75,9 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
 
 export const middleware: Route.MiddlewareFunction[] = [viewMiddleware]
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const { instance, repositoryPath, branch, checkedOutBranch } = context.get(currentRepositoryContext)
+  const searchParams = new URL(request.url).searchParams
 
   // Clean up URL if branch is the same as the current head
   if (branch && checkedOutBranch === branch) {
