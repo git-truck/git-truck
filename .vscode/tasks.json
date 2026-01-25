@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start dev server with bun on folder open",
+      "type": "process",
+      "command": "/home/node/.bun/bin/bun",
+      "args": ["--bun", "dev:bun"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "Install dependencies with bun",
+      "type": "process",
+      "command": "/home/node/.bun/bin/bun",
+      "args": ["install"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
