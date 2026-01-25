@@ -35,10 +35,6 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
       <button
         type="submit"
         disabled={isTransitioning}
-        onClick={(event) => {
-          event.preventDefault()
-          fetcher.submit(event.currentTarget.form)
-        }}
         className={cn("btn btn--danger", className)}
         title="Click here if you are experiencing issues"
       >
