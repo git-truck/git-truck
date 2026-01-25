@@ -5,13 +5,15 @@ import { useState } from "react"
 export function Popover({
   popoverTitle,
   positions = ["top", "bottom", "left", "right"],
-  trigger,
+  trigger: Trigger,
+  triggerClassName = "",
   children,
   ...props
 }: Omit<React.ComponentProps<typeof ReactPopower>, "content" | "isOpen"> & {
   popoverTitle?: string
   className?: string
   trigger: (props: { isOpen: boolean; onOpen: () => void; onClose: () => void; onClick: () => void }) => React.ReactNode
+  triggerClassName?: string
 }) {
   const [isOpen, setOpen] = useState(false)
 
@@ -40,7 +42,9 @@ export function Popover({
         </ArrowContainer>
       )}
     >
-      <div>{trigger({ isOpen, onOpen, onClose, onClick })}</div>
+      <div className={triggerClassName}>
+        <Trigger isOpen={isOpen} onOpen={onOpen} onClose={onClose} onClick={onClick} />
+      </div>
     </ReactPopower>
   )
 }
