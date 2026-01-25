@@ -75,9 +75,9 @@ function Shell({ children, className = "" }: { children: React.ReactNode; classN
         )}
       >
         {children}
+        <ScrollRestoration />
+        <Scripts />
       </body>
-      <ScrollRestoration />
-      <Scripts />
     </html>
   )
 }
@@ -97,7 +97,7 @@ export const ErrorBoundary = () => {
       <div className="app-container">
         <div />
         <div className="card my-2">
-          <h1 className="">Oh no, the Git Truck crashed!</h1>
+          <h1>Oh no, the Git Truck crashed!</h1>
           <p>See console for more infomation.</p>
           <Code>{errorMessage}</Code>
           <div>
