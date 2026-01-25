@@ -9,14 +9,10 @@ import { lastChangedGroupings } from "./lastChanged"
 import { CommitAmountTranslater } from "./mostCommits"
 import { ContribAmountTranslater } from "./mostContribs"
 import { setDominantAuthorColor } from "./topContributer"
-import {
-  interpolateCool,
-  scaleOrdinal,
-  scaleSequential,
-  schemeTableau10
-} from "d3"
+import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from "d3"
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
+import type { SizeMetricType } from "./sizeMetric"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
@@ -45,21 +41,20 @@ export function createMetricData(
   ]
 }
 
-export function getMetricDescription(metric: MetricType): string {
-  switch (metric) {
-    case "FILE_TYPE":
-      return "Files are colored based on their file extension, which is useful to get an overview of the codebase."
-    case "MOST_COMMITS":
-      return "Files are colored based on the number of commits in the selected time range."
-    case "LAST_CHANGED":
-      return "Files are colored based on how long ago they were changed."
-    case "TOP_CONTRIBUTOR":
-      return "Files are colored based on the top author for each file."
-    case "MOST_CONTRIBUTIONS":
-      return "Files are colored based on how many line changes (additions and deletions) have been made to it."
-    default:
-      throw new Error("Uknown metric type: " + metric)
-  }
+export const colorMetricDescriptions: Record<MetricType, string> = {
+  FILE_TYPE: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
+  MOST_COMMITS: "Files are colored based on the number of commits in the selected time range.",
+  LAST_CHANGED: "Files are colored based on how long ago they were changed.",
+  TOP_CONTRIBUTOR: "Files are colored based on the top author for each file.",
+  MOST_CONTRIBUTIONS: "Files are colored based on how many line changes (additions and deletions) have been made to it."
+}
+
+export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
+  FILE_SIZE: "Files are sized based on their file size in bytes.",
+  EQUAL_SIZE: "All files are sized equally.",
+  MOST_COMMITS: "Files are sized based on the number of commits in the selected time range.",
+  LAST_CHANGED: "Files are sized based on how long ago they were changed.",
+  MOST_CONTRIBS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
 }
 
 export function getMetricLegendType(metric: MetricType): LegendType {

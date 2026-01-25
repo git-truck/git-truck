@@ -2,7 +2,7 @@ import { useDeferredValue, useMemo, type ReactNode } from "react"
 import type { GitObject } from "~/shared/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
-import { getMetricDescription, getMetricLegendType } from "../../metrics/metrics"
+import { colorMetricDescriptions, getMetricLegendType } from "../../metrics/metrics"
 import { AuthorOptions } from "../AuthorOptions"
 import { GradientLegend } from "./GradiantLegend"
 import { PointLegend } from "./PointLegend"
@@ -48,9 +48,9 @@ export function Legend({
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       {/* <h2 className="card__title">Legend: {Metric[metricType]}</h2> */}
-      <p className="card-p mb-2">{getMetricDescription(metricType)}</p>
       {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
       {legend}
+      <p className="card-p">{colorMetricDescriptions[metricType]}</p>
     </div>
   )
 }

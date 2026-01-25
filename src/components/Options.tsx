@@ -2,7 +2,7 @@ import { memo } from "react"
 import type { ChartType } from "../contexts/OptionsContext"
 import { Chart, useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { getMetricDescription, Metric } from "../metrics/metrics"
+import { colorMetricDescriptions, Metric, sizeMetricDescriptions } from "../metrics/metrics"
 import { IconRadioGroup } from "./EnumSelect"
 
 import {
@@ -63,7 +63,6 @@ export const Options = memo(function Options() {
       <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
         <h2 className="card__title">Layout</h2>
         <IconRadioGroup
-          // large
           group={Chart}
           defaultValue={chartType}
           onChange={(chartType: ChartType) => setChartType(chartType)}
@@ -71,25 +70,24 @@ export const Options = memo(function Options() {
         />
       </div>
       <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
-        <h2 className="card__title">Size</h2>
+        <h2 className="card__title" title="Select the metric used to size the visualization">
+          Size
+        </h2>
         <IconRadioGroup
-          // large
+          titleMap={sizeMetricDescriptions}
           group={SizeMetric}
           defaultValue={sizeMetric}
           onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
           iconMap={sizeMetricIcons}
         />
+        <p className="card-p">{sizeMetricDescriptions[sizeMetric]}</p>
       </div>
       <div>
-        <h2 className="card__title">Color</h2>
+        <h2 className="card__title" title="Select the metric used to color the visualization">
+          Color
+        </h2>
         <IconRadioGroup
-          titleMap={Object.keys(Metric).reduce(
-            (acc, key) => {
-              acc[key as MetricType] = getMetricDescription(key as MetricType)
-              return acc
-            },
-            {} as Record<MetricType, string>
-          )}
+          titleMap={colorMetricDescriptions}
           group={Metric}
           defaultValue={metricType}
           onChange={(metric: MetricType) => {
