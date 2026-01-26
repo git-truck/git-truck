@@ -390,7 +390,7 @@ export default class ServerInstance {
       if (priorRun) {
         const latestCommit = await this.db.getLatestCommitHash()
         commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit, this.branch)
-        log.info(`Repo has been analyzed previously, only analyzing ${commitCount} commits`)
+        log.debug(`Repo has been analyzed previously, only analyzing ${commitCount} commits`)
       } else {
         log.warn("Incomplete database found. Clearing and running complete analysis.")
         await this.db.clearAllTables()
