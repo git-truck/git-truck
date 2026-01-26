@@ -4,14 +4,14 @@
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
-  "main": "./cli.js",
-  "bin": "./cli.js",
+  "main": "./cli.mjs",
+  "bin": "./cli.mjs",
   "files": [
     "LICENSE",
     "README.md",
     "build/",
     "public/",
-    "cli.js"
+    "cli.mjs"
   ],
   "type": "module",
   "scripts": {

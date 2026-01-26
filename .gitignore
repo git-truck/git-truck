@@ -11,6 +11,7 @@ coverage
 .eslintcache
 cli.js
 cli.cjs
+cli.mjs
 /test-results/
 /playwright-report/
 /playwright/.cache/
