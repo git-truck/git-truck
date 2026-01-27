@@ -2,10 +2,9 @@ import { useState } from "react"
 import { LegendDot } from "../util"
 import { ChevronButton } from "../ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
-import { cn } from "~/styling"
 import { useMetrics } from "~/contexts/MetricContext"
 
-const legendCutoff = 4
+const legendCutoff = 8
 
 export class PointInfo {
   public readonly color: `#${string}`
@@ -42,27 +41,17 @@ export function PointLegend() {
   const shownItems = items.slice(0, collapse ? legendCutoff : items.length)
 
   if (items.length === 0) return null
-  if (items.length <= legendCutoff + 1) {
-    return items.map((item) => <PointLegendEntry key={item[0]} label={item[0]} info={item[1]} />)
-  } else {
-    return (
-      <div className="relative grid grid-flow-row grid-cols-2 gap-2">
-        {shownItems.map(([label, info]) => (
-          <PointLegendEntry key={label} label={label} info={info} />
-        ))}
-        <div className="col-span-2">
-          {collapse ? (
-            <PointLegendOther items={items.slice(legendCutoff)} toggle={() => setCollapse(!collapse)} />
-          ) : null}
-        </div>
-        <ChevronButton
-          className={cn("absolute top-0 right-0")}
-          open={!collapse}
-          onClick={() => setCollapse(!collapse)}
-        />
-      </div>
-    )
-  }
+
+  return (
+    <div className="relative grid grid-cols-2 gap-2">
+      {shownItems.map(([label, info]) => (
+        <PointLegendEntry key={label} label={label} info={info} />
+      ))}
+      {items.length > legendCutoff ? (
+        <PointLegendOther items={items.slice(legendCutoff)} collapse={collapse} toggle={() => setCollapse(!collapse)} />
+      ) : null}
+    </div>
+  )
 }
 
 function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
@@ -83,24 +72,40 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
   )
 }
 
-interface LegendOtherProps {
+function PointLegendOther({
+  toggle,
+  items,
+  collapse
+}: {
   toggle: () => void
   items: [string, PointInfo][]
-}
-
-function PointLegendOther(props: LegendOtherProps) {
+  collapse: boolean
+}) {
   return (
-    <button className="group w-fit hover:opacity-70" onClick={props.toggle}>
-      <div className="relative mt-0.5 ml-3 flex items-center gap-2 text-sm leading-none">
-        {props.items.slice(0, 14).map(([label, info]) => (
-          <LegendDot
-            className="-ml-3 rotate-12 transition-transform duration-300 group-hover:-rotate-12"
-            key={label}
-            dotColor={info.color}
-          />
-        ))}
-        <span className="text-xs">+ {props.items.length} more</span>
-      </div>
-    </button>
+    <ChevronButton
+      size={0.75}
+      className="group col-span-full flex items-center gap-2 hover:opacity-80"
+      open={!collapse}
+      title={collapse ? "Show more" : "Show less"}
+      onClick={toggle}
+    >
+      {collapse ? (
+        <>
+          <div className="ml-3 flex gap-2">
+            {items.slice(0, 14).map(([label, info]) => (
+              <LegendDot
+                className="-ml-3 rotate-12 transition-transform duration-300 group-hover:-rotate-12"
+                key={label}
+                dotColor={info.color}
+              />
+            ))}
+          </div>
+          {/* <span className="text-xs">+{items.length} more</span> */}
+          <span className="text-xs">Show {items.length.toLocaleString()} more</span>
+        </>
+      ) : (
+        <span className="text-xs">Show less</span>
+      )}
+    </ChevronButton>
   )
 }
