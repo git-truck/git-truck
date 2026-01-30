@@ -1,19 +1,17 @@
-export const estimatedLetterWidthForTreeText = 9
-export const estimatedLetterWidthForBlobText = 7
-export const estimatedLetterHeightForTreeText = 14
+export const letterWidthForTreeText = 7.3
+export const letterWidthForBlobText = 7
+export const letterHeightForTreeText = 16
+export const letterHeightForBlobText = 16
 
-export const treemapPaddingInner = 1
+export const treemapPaddingInner = 2
 export const treemapPaddingOuter = 4
 export const treemapPaddingTop = 21
 export const treemapTreeBorderRadius = 4
 export const treemapBlobBorderRadius = 2
-export const treemapTreeTextOffsetX = treemapTreeBorderRadius + treemapPaddingInner
-export const treemapTreeTextOffsetY = 5
-export const treemapBlobTextOffsetX = 4
-export const treemapBlobTextOffsetY = 3
 
 export const bubblePadding = 10
-export const circleTreeTextOffsetY = estimatedLetterHeightForTreeText - 1
-export const circleBlobTextOffsetY = estimatedLetterHeightForTreeText
+export const clipPathPadding = 10
+export const circleTreeTextOffsetY = letterHeightForTreeText - 1
+export const circleBlobTextOffsetY = letterHeightForTreeText
 export const noEntryColor = "#c0c0c0"
 export const missingInMapColor = "#808080"

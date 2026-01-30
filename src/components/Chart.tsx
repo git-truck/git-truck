@@ -7,35 +7,32 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize, useCreateLink } from "~/hooks"
 import {
   bubblePadding,
-  estimatedLetterHeightForTreeText,
-  estimatedLetterWidthForTreeText,
+  letterHeightForTreeText,
+  letterWidthForTreeText,
   circleTreeTextOffsetY,
-  treemapBlobTextOffsetX,
-  treemapBlobTextOffsetY,
   treemapBlobBorderRadius,
   treemapPaddingTop,
-  treemapTreeTextOffsetX,
   circleBlobTextOffsetY,
-  treemapTreeTextOffsetY,
   missingInMapColor,
   noEntryColor,
   treemapPaddingInner,
   treemapPaddingOuter,
-  estimatedLetterWidthForBlobText,
-  treemapTreeBorderRadius
+  letterWidthForBlobText as letterWidthForBlobText,
+  treemapTreeBorderRadius,
+  letterHeightForBlobText,
+  clipPathPadding
 } from "../const"
 import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
 import { usePath } from "../contexts/PathContext"
-import { isDarkColor, isBlob, isTree, inspect } from "~/shared/util"
+import { isDarkColor, isBlob, isTree } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
-import { isChrome, isChromium, isEdgeChromium } from "react-device-detect"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -119,16 +116,14 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     }
   }
 
-  // TODO: Fix text positions updating in chrome
-  // eslint-disable-next-line react-hooks/purity
-  const now = isChrome || isChromium || isEdgeChromium ? Date.now() : 0 // Necessary in chrome to update text positions
   const hasSearchResults = Object.values(searchResults).length > 0
+
   return (
-    <div className="relative grid place-items-center overflow-hidden" ref={ref}>
+    <div className="relative grid place-items-center" ref={ref}>
       <svg
         key={`svg|${size.width}|${size.height}`}
         className={clsx(
-          "stroke-border dark:stroke-border-dark grid h-full w-full place-items-center dark:fill-gray-100",
+          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-sm dark:fill-gray-100",
           {
             "cursor-zoom-out": path.includes("/")
           }
@@ -161,14 +156,17 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
               })}
               {...eventHandlers}
             >
-              <Node key={d.data.path} d={d} />
-              {labelsVisible && i !== 0 ? (
+              <Node
+                // key={d.data.path}
+                d={d}
+              />
+              {labelsVisible ? (
                 <NodeText
-                  key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`}
+                  // key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`}
                   isSearchMatch={isSearchMatch}
                   d={d}
                 >
-                  {collapseText({ d, isRoot: i === 0, path, displayText: d.data.name, chartType })}
+                  {d.data.name}
                 </NodeText>
               ) : null}
             </g>
@@ -221,13 +219,14 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
-      strokeWidth: "1px",
       ...(isBlob(d.data)
         ? {
             fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
             stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
           }
-        : {})
+        : {
+            strokeWidth: "1px"
+          })
     }
 
     if (chartType === "BUBBLE_CHART") {
@@ -235,7 +234,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       props = {
         ...props,
         x: circleDatum.x - circleDatum.r,
-        y: circleDatum.y - circleDatum.r + estimatedLetterHeightForTreeText - 1,
+        y: circleDatum.y - circleDatum.r + letterHeightForTreeText - 1,
         width: circleDatum.r * 2,
         height: circleDatum.r * 2,
         rx: circleDatum.r,
@@ -246,10 +245,10 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
 
       props = {
         ...props,
-        x: 0.5 + datum.x0,
-        y: 0.5 + datum.y0,
-        width: datum.x1 - datum.x0 - 1,
-        height: datum.y1 - datum.y0 - 1,
+        x: datum.x0 + 1,
+        y: datum.y0 + 1,
+        width: datum.x1 - datum.x0 - 2,
+        height: datum.y1 - datum.y0 - 2,
         ...(isTree(d.data)
           ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
           : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
@@ -261,86 +260,13 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   return (
     <rect
       {...commonProps}
-      className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent", {
+      className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
         "fill-tertiary-bg dark:fill-tertiary-bg-dark": isTree(d.data),
         "cursor-pointer": isBlob(d.data),
         "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
       })}
     />
   )
-}
-
-function collapseText({
-  d,
-  isRoot,
-  path,
-  displayText,
-  chartType
-}: {
-  d: CircleOrRectHiearchyNode
-  isRoot: boolean
-  path: string
-  displayText: string
-  chartType: ChartType
-}): string | null {
-  const estimatedLetterWidth = isTree(d.data) ? estimatedLetterWidthForTreeText : estimatedLetterWidthForBlobText
-  let textIsTooLong: (text: string) => boolean
-  let textIsTooTall: (text: string) => boolean
-  if (chartType === "BUBBLE_CHART") {
-    const circleDatum = d as HierarchyCircularNode<GitObject>
-    textIsTooLong = (text: string) =>
-      circleDatum.r < 50 || circleDatum.r * Math.PI < text.length * estimatedLetterWidthForTreeText
-    textIsTooTall = () => false
-  } else {
-    const datum = d as HierarchyRectangularNode<GitObject>
-    textIsTooLong = (text: string) => datum.x1 - datum.x0 < text.length * estimatedLetterWidthForTreeText
-    textIsTooTall = () => {
-      const heightAvailable = datum.y1 - datum.y0 - (isBlob(d.data) ? treemapBlobTextOffsetY : treemapTreeTextOffsetY)
-      return heightAvailable < estimatedLetterHeightForTreeText
-    }
-  }
-
-  if (isRoot) {
-    const pathSteps = path.split("/")
-    const dispSteps = displayText.split("/")
-    let ps = 0
-    let ds = 0
-    while (ps < pathSteps.length && ds < dispSteps.length) {
-      if (pathSteps[ps] !== dispSteps[ds]) ps++
-      else {
-        ps++
-        ds++
-      }
-    }
-
-    displayText = dispSteps.slice(ds - 1).join("/")
-  }
-
-  if (textIsTooLong(displayText)) {
-    displayText = displayText.replace(/\/.+\//gm, "/.../")
-    // TODO: Fix NodeTexts in BubbleChart
-    if (textIsTooLong(displayText)) {
-      const availableLength =
-        (chartType === "BUBBLE_CHART"
-          ? (d as HierarchyCircularNode<GitObject>).r * Math.PI
-          : (d as HierarchyRectangularNode<GitObject>).x1 -
-            (d as HierarchyRectangularNode<GitObject>).x0 -
-            treemapTreeTextOffsetX) / estimatedLetterWidth
-      displayText = displayText.slice(0, availableLength)
-
-      // displayText = displayText.slice(0, Math.floor(displayText.length / 2))
-    }
-  }
-
-  if (textIsTooTall && textIsTooTall(displayText)) {
-    displayText = displayText.replace(/\/.+\//gm, "/.../")
-
-    if (textIsTooTall(displayText)) {
-      return null
-    }
-  }
-
-  return displayText
 }
 
 function NodeText({
@@ -358,70 +284,127 @@ function NodeText({
 
   if (children === null) return null
 
-  let textPathData: string
+  const colorValue = metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333"
+  const contrastResult = isDarkColor(colorValue)
 
-  if (isBubbleChart) {
-    const yOffset = isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY
-    const circleDatum = d as HierarchyCircularNode<GitObject>
-    textPathData = circlePathFromCircle(circleDatum.x, circleDatum.y + yOffset, circleDatum.r)
-  } else {
-    const datum = d as HierarchyRectangularNode<GitObject>
-    textPathData = roundedRectPathFromRect(
-      datum.x0 + (isTree(d.data) ? treemapTreeTextOffsetX : treemapBlobTextOffsetX),
-      datum.y0 + (isTree(d.data) ? treemapTreeTextOffsetY : treemapBlobTextOffsetY),
-      datum.x1 - datum.x0,
-      datum.y1 - datum.y0,
-      0
-    )
-  }
-
-  const textFillClass = isBlob(d.data)
-    ? isDarkColor(metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333")
-      ? "fill-primary-text-dark"
-      : "fill-primary-text"
-    : undefined
-
-  const textPathBaseProps = {
+  const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
     dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
     textAnchor: isBubbleChart ? "middle" : "start",
-    href: `#path-${d.data.path}`
+    href: `#path-${d.data.path}`,
+    className: "font-bold tracking-widest"
   } as const
+  const textClipPathRadius = isCircularNode(d) ? d.r * 2 - bubblePadding / 2 : 0
+
+  let textShouldBeCentered = false
+
+  if (isCircularNode(d)) {
+    // Hide curved text for small nodes
+    if (isBlob(d.data)) {
+      if (d.r * 2 - bubblePadding > d.data.name.length * letterWidthForBlobText) {
+        textShouldBeCentered = true
+      }
+
+      // For blobs in circular layout with straight text, check if text fits within blob height, as the rest is clipped
+      if (d.r * 2 - bubblePadding < letterHeightForBlobText) {
+        return null
+      }
+    } else if (
+      // For blobs with curved text and trees, check if arc length is enough to fit text
+      d.r < (isTree(d.data) ? letterHeightForTreeText : letterHeightForBlobText) * 2 ||
+      d.r * Math.PI * (2 / 3) < d.data.name.length * letterWidthForTreeText
+    ) {
+      return null
+    }
+  } else {
+    const rectNode = d as HierarchyRectangularNode<GitObject>
+    if (isBlob(d.data)) {
+      if (rectNode.y1 - rectNode.y0 - clipPathPadding < letterHeightForBlobText) {
+        // textShouldBeCentered = false
+        return null
+      }
+    }
+  }
 
   return (
-    <>
-      <path d={textPathData} id={`path-${d.data.path}`} className="hidden" />
-      {isTree(d.data) && isBubbleChart ? (
+    <g className="text-xs">
+      {/* Text path for circular tree labels */}
+      <defs>
+        <path
+          d={
+            isCircularNode(d)
+              ? circularPath(d.x, d.y + (isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY), d.r)
+              : undefined
+          }
+          id={`path-${d.data.path}`}
+        />
+        {/* // Clip path for blob text, so they don't exceed the blob boundaries */}
+        <clipPath id={`clip-path-${d.data.path}`}>
+          <rect
+            stroke="red"
+            fill="transparent"
+            {...(isCircularNode(d)
+              ? {
+                  x: d.x - d.r + clipPathPadding / 4,
+                  y: d.y - d.r + letterHeightForBlobText - 1 + clipPathPadding / 4,
+                  width: textClipPathRadius,
+                  height: d.r * 2 - clipPathPadding / 2,
+                  rx: d.r,
+                  ry: d.r
+                }
+              : {
+                  x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
+                  y: (d as HierarchyRectangularNode<GitObject>).y0 + clipPathPadding / 2,
+                  width:
+                    (d as HierarchyRectangularNode<GitObject>).x1 -
+                    (d as HierarchyRectangularNode<GitObject>).x0 -
+                    clipPathPadding,
+                  height:
+                    (d as HierarchyRectangularNode<GitObject>).y1 -
+                    (d as HierarchyRectangularNode<GitObject>).y0 -
+                    clipPathPadding,
+                  ...(isTree(d.data)
+                    ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
+                    : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
+                })}
+          />
+        </clipPath>
+      </defs>
+      {/* For circle packing layout, tree nodes get a text node that has a stroke */}
+      {isTree(d.data) && isCircularNode(d) ? (
         <text
-          className={cn(
-            "stroke-tertiary-bg dark:stroke-tertiary-bg-dark pointer-events-none fill-none stroke-[7px] font-mono text-sm font-bold"
-          )}
+          className={cn("stroke-tertiary-bg dark:stroke-tertiary-bg-dark pointer-events-none fill-none stroke-5")}
           strokeLinecap="round"
         >
-          <textPath {...textPathBaseProps}>{children}</textPath>
+          <textPath {...textPathProps}>{children}</textPath>
         </text>
       ) : null}
       <text
-        fill={textFillClass}
-        className={cn(textFillClass, "pointer-events-none stroke-none", {
-          "font-bold underline": isSearchMatch
+        textAnchor={textShouldBeCentered ? "middle" : undefined}
+        alignmentBaseline="hanging"
+        {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.path})` } : {})}
+        x={
+          isCircularNode(d)
+            ? isTree(d.data)
+              ? 0
+              : d.x - (textShouldBeCentered ? 0 : d.r - bubblePadding / 2)
+            : d.x0 + clipPathPadding / 2
+        }
+        y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightForBlobText / 2) : d.y0 + clipPathPadding / 2}
+        className={cn("pointer-events-none stroke-none transition-all", {
+          "font-bold underline": isSearchMatch,
+          "font-bold": isTree(d.data),
+          "fill-primary-text-dark": contrastResult.luminance < 0.5 && isBlob(d.data),
+          "fill-primary-text": contrastResult.luminance >= 0.5 && isBlob(d.data)
         })}
       >
-        <textPath
-          {...textPathBaseProps}
-          className={clsx("stroke-none font-mono", {
-            "text-sm font-bold": isTree(d.data),
-            "text-xs": !isTree(d.data)
-          })}
-        >
-          {children}
-        </textPath>
+        {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}
       </text>
-    </>
+    </g>
   )
 }
 
-function isCircularNode(d: CircleOrRectHiearchyNode) {
+function isCircularNode(d: CircleOrRectHiearchyNode): d is HierarchyCircularNode<GitObject> {
   return typeof (d as HierarchyCircularNode<GitObject>).r === "number"
 }
 
@@ -483,11 +466,7 @@ function createPartitionedHiearchy(
             .paddingInner(treemapPaddingInner)
             .paddingOuter(treemapPaddingOuter)
             .paddingTop(treemapPaddingTop)
-        : partition<GitObject>().size([size.width, size.height])
-    // .tile(treemapResquarify)
-    // .paddingInner(treemapPaddingInner)
-    // .paddingOuter(treemapPaddingOuter)
-    // .paddingTop(treemapPaddingTop)
+        : partition<GitObject>().size([size.width, size.height]).padding(treemapPaddingInner)
 
     const tmPartition = treeMapPartition(hiearchy)
 
@@ -500,7 +479,7 @@ function createPartitionedHiearchy(
   }
   if (chartType === "BUBBLE_CHART") {
     const bubbleChartPartition = pack<GitObject>()
-      .size([size.width, size.height - estimatedLetterHeightForTreeText])
+      .size([size.width, size.height - letterHeightForTreeText])
       .padding(bubblePadding)
     const bPartition = bubbleChartPartition(hiearchy)
     filterTree(bPartition, (child) => {
@@ -531,25 +510,11 @@ function filterTree(node: HierarchyNode<GitObject>, filter: (child: HierarchyNod
  * @param r radius of circle
  * @returns A string meant to be passed as the d attribute to a path element
  */
-function circlePathFromCircle(x: number, y: number, r: number) {
+function circularPath(x: number, y: number, r: number) {
   return `M${x},${y}
           m0,${r}
           a${r},${r} 0 1,1 0,${-r * 2}
           a${r},${r} 0 1,1 0,${r * 2}`
-}
-
-function roundedRectPathFromRect(x: number, y: number, width: number, height: number, radius: number) {
-  radius = Math.min(radius, Math.floor(width / 3), Math.floor(height / 3))
-  return `M${x + radius},${y}
-          h${width - radius * 2}
-          a${radius},${radius} 0 0 1 ${radius},${radius}
-          v${height - radius * 2}
-          a${radius},${radius} 0 0 1 ${-radius},${radius}
-          h${-width + radius * 2}
-          a${radius},${radius} 0 0 1 ${-radius},${-radius}
-          v${-height + radius * 2}
-          a${radius},${radius} 0 0 1 ${radius},${-radius}
-          z`
 }
 
 function flatten(tree: GitTreeObject) {

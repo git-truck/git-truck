@@ -1,6 +1,7 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
 import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry, LinkSegments } from "./model"
+import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatLong(epochTime?: number) {
   if (!epochTime) return "Invalid date"
@@ -127,21 +128,22 @@ function hexToRgb(hexString: `#${string}`): [number, number, number] {
   return rgb
 }
 
-export const isDarkColor = (color: `#${string}`): boolean => {
-  // Verify that the color is a hex color
-  if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-    throw new Error(`Invalid hex color: ${color}`)
-  }
+export const isDarkColor = (color: `#${string}`): { isDark: boolean; luminance: number } => {
   const cachedColor = brightnessCalculationCache.get(color)
   if (cachedColor !== undefined) {
     return cachedColor
   }
 
-  const brightness = weightedDistanceIn3D(color)
-  const isDark = brightness < 186
-  brightnessCalculationCache.set(color, isDark)
+  // Verify that the color is a hex color
+  if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
+    throw new Error(`Invalid hex color: ${color}`)
+  }
 
-  return isDark
+  const luminance = getLuminance(colorConvert.hex.rgb(color))
+  const isDark = luminance < 0.5
+  brightnessCalculationCache.set(color, { isDark, luminance })
+
+  return { isDark, luminance: luminance }
 }
 
 const colorCache = new Map<string, `#${string}`>()

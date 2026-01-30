@@ -1,4 +1,13 @@
-import { mdiFolder, mdiMenuRight } from "@mdi/js"
+import {
+  mdiAccount,
+  mdiAccountGroup,
+  mdiChevronRight,
+  mdiCircleSmall,
+  mdiFileOutline,
+  mdiPlusMinusVariant,
+  mdiPulse,
+  mdiSourceCommit
+} from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Fragment, useMemo, useRef } from "react"
 import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
@@ -6,10 +15,11 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import { useOptions } from "../contexts/OptionsContext"
 import type { MetricType } from "../metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob, numToFriendlyString } from "../shared/util"
-import { LegendDot } from "./util"
+import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, numToFriendlyString } from "../shared/util"
+
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
+import { missingInMapColor } from "~/const"
 
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
@@ -17,60 +27,65 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
   const { metricType, dominantAuthorCutoff } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
-  const color = useMemo(() => {
-    if (!hoveredObject) {
-      return null
-    }
-    const colormap = metricsData.get(metricType)?.colormap
-    const color = colormap?.get(hoveredObject.path) ?? "grey"
-    return color
-  }, [hoveredObject, metricsData, metricType])
+  const color = hoveredObject ? metricsData.get(metricType)?.colormap?.get(hoveredObject.path) : missingInMapColor
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
   const top = useMemo(() => y < window.innerHeight / 2, [y])
-  const xTransform = useMemo(() => (right ? `calc(1rem + ${x}px)` : `calc(-1rem + ${x}px - 100%)`), [right, x])
-  const yTransform = useMemo(() => (top ? `calc(1rem + ${y}px)` : `calc(-1rem + ${y}px - 100%)`), [top, y])
+  const xTransform = useMemo(() => (right ? `calc(1rem + ${x}px)` : `calc(-0.5rem + ${x}px - 100%)`), [right, x])
+  const yTransform = useMemo(() => (top ? `calc(1rem + ${y}px)` : `calc(-0.5rem + ${y}px - 100%)`), [top, y])
   const visible = hoveredObject !== null
 
   return (
     <div
       className={cn(
-        "secondary border-border-highlight dark:border-border-highlight-dark text-primary-text dark:text-primary-text-dark bg-tertiary-bg/50 dark:bg-tertiary-bg-dark/40 absolute top-0 left-0 z-50 flex w-max flex-row place-items-center gap-2 border [background-image:none] py-0 pr-2 pl-1 text-xs backdrop-blur will-change-transform",
+        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform",
         className,
         {
-          hidden: !visible
-        }
+          hidden: !visible,
+          "font-bold": isTree(hoveredObject)
+        },
+        isBlob(hoveredObject) && color
+          ? isDarkColor(color).luminance >= 0.5
+            ? "text-primary-text"
+            : "text-primary-text-dark"
+          : "dark:text-primary-text-dark text-primary-text"
       )}
       ref={tooltipRef}
       style={{
-        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none"
+        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none",
+        ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
       }}
     >
-      {hoveredObject?.type === "blob" ? (
+      {/* {hoveredObject?.type === "blob" ? (
         color ? (
           <LegendDot dotColor={color} />
         ) : null
       ) : (
-        <Icon className="ml-0.5" path={mdiFolder} size={0.75} />
-      )}
-      <span className="text-base-styles text-primary-text dark:text-primary-text-dark items-center text-base font-bold">
+        <Icon className="ml-0.5" path={mdiFolderOutline} size={0.75} />
+      )} */}
+      {/* Breadcrumb or filename */}
+      <span className="flex w-max place-items-center gap-1">
         {hoveredObject && isBlob(hoveredObject)
           ? hoveredObject?.name
           : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
               <Fragment key={`segment-${index}${segment}`}>
                 {segment}
-                {segments.length > 1 && index < segments.length - 1 ? <Icon path={mdiMenuRight} size={1} /> : null}
+                {segments.length > 1 && index < segments.length - 1 ? (
+                  <Icon path={mdiChevronRight} className="opacity-50" size={0.5} />
+                ) : null}
               </Fragment>
             ))}
       </span>
-      {hoveredObject?.type === "blob"
-        ? ColorMetricDependentInfo({
-            metric: metricType,
-            hoveredBlob: hoveredObject,
-            databaseInfo: databaseInfo,
-            dominantAuthorCutoff
-          })
-        : null}
+      {hoveredObject?.type === "blob" ? (
+        <span className="flex w-max gap-1">
+          <ColorMetricDependentInfo
+            metric={metricType}
+            hoveredBlob={hoveredObject}
+            databaseInfo={databaseInfo}
+            dominantAuthorCutoff={dominantAuthorCutoff}
+          />
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -81,37 +96,73 @@ function ColorMetricDependentInfo(props: {
   databaseInfo: DatabaseInfo
   dominantAuthorCutoff: number
 }) {
+  let icon = mdiCircleSmall
+  let content = null
   const slicedPath = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS": {
+      icon = mdiSourceCommit
       const noCommits = props.databaseInfo.commitCounts[slicedPath]
-      if (!noCommits) return "No activity"
-      return `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
+      if (!noCommits) {
+        content = "No activity in selected range"
+        break
+      }
+      content = `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
+      break
     }
     case "LAST_CHANGED": {
+      icon = mdiPulse
       const epoch = props.databaseInfo.lastChanged[slicedPath]
-      if (!epoch) return "No activity"
-      return dateFormatRelative(epoch)
+      if (!epoch) {
+        content = "No activity in selected range"
+        break
+      }
+      content = dateFormatRelative(epoch)
+      break
     }
     case "TOP_CONTRIBUTOR": {
+      icon = mdiAccount
       const dominant = props.databaseInfo.dominantAuthors[slicedPath]
       const contribSum = props.databaseInfo.contribSumPerFile[slicedPath]
-      if (!dominant) return "No activity"
-      if (!contribSum) return <>{dominant.author}</>
+      if (!dominant) {
+        content = "No activity in selected range"
+        break
+      }
+      if (!contribSum) {
+        content = `${icon}${dominant.author}`
+        break
+      }
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
       if (authorPercentage < props.dominantAuthorCutoff) {
-        // TODO show multiple authors if no dominant author
-        return <>Multiple dominant authors ({authorPercentage}%)</>
+        // TODO show how many authors if no dominant author
+        icon = mdiAccountGroup
+        content = "Multiple contributors"
+        break
       }
-      return `${dominant.author} ${authorPercentage}%`
+      content = `${dominant.author} ${authorPercentage}%`
+      break
     }
     case "MOST_CONTRIBUTIONS": {
+      icon = mdiPlusMinusVariant
       const contribs = props.databaseInfo.contribSumPerFile[slicedPath]
-      if (!contribs) return "No activity"
-      return `${numToFriendlyString(contribs)} line changes`
+      if (!contribs) {
+        content = "No activity in selected range"
+        break
+      }
+      content = `${numToFriendlyString(contribs)} lines`
+      break
     }
-    default: {
-      return null
+    case "FILE_TYPE": {
+      icon = mdiFileOutline
+      const extension = props.hoveredBlob?.name.substring(props.hoveredBlob.name.lastIndexOf(".")) ?? ""
+      content = extension
+      break
     }
   }
+  return (
+    <>
+      <Icon path={icon} color="currentColor" />
+      {content}
+    </>
+  )
 }
