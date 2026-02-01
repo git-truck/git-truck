@@ -1,9 +1,9 @@
 import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
-import type { CommitDTO, GitLogEntry, RawGitObject, RenameEntry, RenameInterval } from "../shared/model"
+import type { CommitDTO, GitLogEntry, GitObject, RawGitObject, RenameEntry, RenameInterval } from "../shared/model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { getTimeIntervals } from "../shared/util.ts"
+import { getTimeIntervals, isBlob } from "../shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {
@@ -43,6 +43,10 @@ export default class DB {
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
     return (await (await this.connectionPromise).runAndReadAll(query)).getRowObjects()
+  }
+
+  public async prepare(query: string) {
+    return (await this.connectionPromise).prepare(query)
   }
 
   public async run(query: string): Promise<void> {
@@ -108,9 +112,15 @@ export default class DB {
         timestampend UINTEGER
       );
       CREATE TABLE IF NOT EXISTS files (
-        path VARCHAR
+        path VARCHAR,
+        hash VARCHAR,
+        type VARCHAR
       );
     `)
+  }
+
+  public async getDbConnection(): Promise<DuckDBConnection> {
+    return await this.connectionPromise
   }
 
   public async clearAllTables() {
@@ -475,6 +485,8 @@ export default class DB {
     await this.usingTableAppender("files", async (appender) => {
       for (const file of files) {
         appender.appendVarchar(file.path)
+        appender.appendVarchar(file.hash)
+        appender.appendVarchar(file.type)
         appender.endRow()
       }
     })
@@ -485,6 +497,13 @@ export default class DB {
       FROM files;
     `)
     return res.map((row) => row["path"] as string)
+  }
+
+  public async getObject(objectPath: string): Promise<GitObject> {
+    const statement = await (await this.connectionPromise).prepare(`SELECT type FROM files WHERE path = ?`)
+
+    statement.bindVarchar(1, objectPath)
+    return (await statement.runAndReadAll()).getRowObjects()[0] as unknown as GitObject
   }
 
   public async commitTableEmpty() {
@@ -533,12 +552,14 @@ export default class DB {
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
 
-  public async getAuthorContribsForPath(path: string, isblob: boolean) {
+  public async getAuthorContribsForPath(objectPath: string) {
+    const isblob = isBlob(await this.getObject(objectPath))
     const res = await this.query(`
       SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
         isblob ? "=" : "GLOB"
-      } '${path}${isblob ? "" : "*"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
+      } '${objectPath}${isblob ? "" : "*"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
     `)
+
     return res.map((row) => {
       return { author: row["author"] as string, contribs: Number(row["contribsum"]) }
     })
