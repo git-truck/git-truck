@@ -1,4 +1,3 @@
- 
 import { execSync } from "child_process"
 
 const hasUncommittedChanges = execSync("git status --porcelain", { stdio: "pipe" })?.toString().trim().length > 0
@@ -37,5 +36,5 @@ main().catch((err) => {
 process.on("SIGTERM", cleanUp)
 
 function cleanUp() {
-  if (!hasUncommittedChanges) execSync(`git checkout HEAD -- package.json package-lock.json`, { stdio: "pipe" })
+  if (!hasUncommittedChanges) execSync(`git checkout HEAD -- package.json bun.lock`, { stdio: "pipe" })
 }
