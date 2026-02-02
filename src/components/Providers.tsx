@@ -14,12 +14,10 @@ import { usePrefersLightMode } from "~/styling"
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const [options, setOptions] = useState<Options>(() => {
     const savedOptions = typeof document !== "undefined" ? localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY) : null
-    if (savedOptions) {
-      return {
-        ...getDefaultOptions(),
-        ...JSON.parse(savedOptions),
-        hasLoadedSavedOptions: true
-      }
+    return {
+      ...getDefaultOptions(),
+      ...(savedOptions ? JSON.parse(savedOptions) : {}),
+      hasLoadedSavedOptions: !!savedOptions
     }
   })
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})

@@ -3,9 +3,10 @@ import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { noEntryColor } from "~/const"
+import { feature_flags } from "~/feature_flags"
 import type { LegendType } from "../components/legend/Legend"
 import { setExtensionColor } from "./fileExtension"
-import { lastChangedGroupings } from "./lastChanged"
+import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
 import { CommitAmountTranslater } from "./mostCommits"
 import { ContribAmountTranslater } from "./mostContribs"
 import { setDominantAuthorColor } from "./topContributer"
@@ -57,6 +58,14 @@ export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
   MOST_CONTRIBS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
 }
 
+export const sizeMetricLegendDescriptions: Record<SizeMetricType, string> = {
+  FILE_SIZE: "Larger node indicates larger file size.",
+  EQUAL_SIZE: "All files have the same size.",
+  MOST_COMMITS: "Larger node indicates more commits.",
+  LAST_CHANGED: "Larger node indicates more recent changes.",
+  MOST_CONTRIBS: "Larger node indicates more line changes."
+}
+
 export function getMetricLegendType(metric: MetricType): LegendType {
   switch (metric) {
     case "FILE_TYPE":
@@ -64,10 +73,9 @@ export function getMetricLegendType(metric: MetricType): LegendType {
       return "POINT"
     case "MOST_COMMITS":
     case "MOST_CONTRIBUTIONS":
-    case "LAST_CHANGED":
       return "GRADIENT"
-    // case "LAST_CHANGED":
-    //   return "SEGMENTS"
+    case "LAST_CHANGED":
+      return feature_flags.lastChangedAsGrad ? "GRADIENT" : "SEGMENTS"
     default:
       throw new Error("Uknown metric type: " + metric)
   }
@@ -115,7 +123,7 @@ function getMetricCalcs(
   const maxCommitCount = data.databaseInfo.maxCommitCount
   const minCommitCount = data.databaseInfo.minCommitCount
   const newestEpoch = data.databaseInfo.newestChangeDate
-  // TODO: remove, not used, as we use a gradient instead.
+  // TODO: remove when implementing new color scheme, not used, as we use a gradient instead.
   const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
   const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
   const maxContribCount = data.databaseInfo.maxMinContribCounts.max
@@ -153,29 +161,22 @@ function getMetricCalcs(
       (blob: GitBlobObject, cache: MetricCache) => {
         const domainedScale = scaleSequential(interpolateCool).domain([data.databaseInfo.oldestChangeDate, newestEpoch])
         if (!cache.legend) {
-          const groupings = [
-            { epoch: 31556926 * 4, text: ">4y" },
-            { epoch: 31556926 * 2, text: ">2y" },
-            { epoch: 31556926, text: ">1y" },
-            { epoch: 2629743, text: ">1m" },
-            { epoch: 604800, text: ">1w" },
-            { epoch: 86400, text: ">1d" },
-            { epoch: 0, text: dateFormatShort(newestEpoch * 1000) }
-          ].map((group, i, arr) => ({ ...group, color: rgbToHex(interpolateCool(i / arr.length)) as `#${string}` }))
-
-          cache.legend = {
-            // steps: getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
-            // textGenerator: (n) => groupings[n].text,
-            // colorGenerator: (n) => rgbToHex(scale(newestEpoch - groupings[n].epoch)),
-            // offsetStepCalc: (blob) =>
-            //   getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
-            minValue: data.databaseInfo.oldestChangeDate,
-            maxValue: newestEpoch,
-            minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
-            maxValueAltFormat: dateFormatShort(newestEpoch * 1000),
-            minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
-            maxColor: rgbToHex(domainedScale(newestEpoch))
-          } satisfies GradLegendData
+          cache.legend = feature_flags.lastChangedAsGrad
+            ? ({
+                minValue: data.databaseInfo.oldestChangeDate,
+                maxValue: newestEpoch,
+                minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
+                maxValueAltFormat: dateFormatShort(newestEpoch * 1000),
+                minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
+                maxColor: rgbToHex(domainedScale(newestEpoch))
+              } satisfies GradLegendData)
+            : ({
+                steps: getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
+                textGenerator: (n) => groupings[n].text,
+                colorGenerator: (n) => groupings[n].color,
+                offsetStepCalc: (blob) =>
+                  getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
+              } satisfies SegmentLegendData)
         }
         const existing = data.databaseInfo.lastChanged[blob.path]
         // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
@@ -236,10 +237,11 @@ function setupMetricsCacheRec(
 ) {
   for (const child of tree.children) {
     switch (child.type) {
-      case "tree":
+      case "tree": {
         setupMetricsCacheRec(child, metricCalcs, acc)
         break
-      case "blob":
+      }
+      case "blob": {
         for (const [metricType, metricFunc] of metricCalcs) {
           if (!acc.has(metricType))
             acc.set(metricType, {
@@ -255,6 +257,7 @@ function setupMetricsCacheRec(
           )
         }
         break
+      }
     }
   }
 }

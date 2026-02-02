@@ -1,0 +1,71 @@
+import { useState, startTransition, Fragment } from "react"
+import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import { noEntryColor } from "~/const"
+import { useOptions } from "~/contexts/OptionsContext"
+import { SliderRail, Handle, Track, LabeledTicks } from "./sliderUtils"
+import { cn } from "~/styling"
+
+export function PercentageSlider({ className = "" }: { className?: string }) {
+  const { dominantAuthorCutoff, setDominantAuthorCutoff } = useOptions()
+  const [displayPercentage, setDisplayPercentage] = useState(dominantAuthorCutoff)
+
+  const domain = [0, 100]
+  return (
+    <div className={cn("grid grid-cols-[calc(11*var(--spacing))_1fr] px-3", className)}>
+      <p title="Min percentage of changes a file's top author must account for to be colored.">{displayPercentage}%</p>
+
+      <div className="relative" title="Adjust the dominant author percentage cutoff">
+        <Slider
+          mode={1}
+          step={1}
+          domain={domain}
+          onChange={(e) => {
+            setDominantAuthorCutoff(e[0])
+            startTransition(() => {
+              setDisplayPercentage(e[0])
+            })
+          }}
+          onUpdate={(e) => {
+            startTransition(() => {
+              setDisplayPercentage(e[0])
+            })
+          }}
+          values={[displayPercentage]}
+        >
+          <Rail>{SliderRail}</Rail>
+          <Handles>
+            {({ handles, getHandleProps }) => (
+              <Fragment>
+                {handles.map((handle) => (
+                  <Handle
+
+                    key={handle.id}
+                    handle={handle}
+                    domain={domain}
+                    getHandleProps={getHandleProps}
+                  />
+                ))}
+              </Fragment>
+            )}
+          </Handles>
+          <Tracks right={false}>
+            {({ tracks, getTrackProps }) => (
+              <Fragment>
+                {tracks.map(({ id, ...props }) => (
+                  <Track {...props} backgroundColor={noEntryColor} key={id} getTrackProps={getTrackProps} />
+                ))}
+              </Fragment>
+            )}
+          </Tracks>
+          <LabeledTicks
+            valueMap={{
+              0: "Top author",
+              50: "Majority author",
+              100: "Single author"
+            }}
+          />
+        </Slider>
+      </div>
+    </div>
+  )
+}

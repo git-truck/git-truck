@@ -1,9 +1,10 @@
 import { useData } from "~/contexts/DataContext"
-import { Form, useLocation, useNavigation } from "react-router"
+import { Form, useNavigation } from "react-router"
 import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { memo, useId } from "react"
 import { Popover } from "./Popover"
+import { useCreateLink } from "~/hooks"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -12,10 +13,12 @@ function hiddenFileFormat(ignored: string) {
 }
 
 export const HiddenFiles = memo(function HiddenFiles() {
-  const location = useLocation()
   const navigationState = useNavigation()
   const { databaseInfo } = useData()
   const expandHiddenFilesButtonId = useId()
+  const action = useCreateLink()({
+    segments: ["view", "details", "general"]
+  }).url
 
   return (
     <Popover
@@ -37,7 +40,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
         {databaseInfo.hiddenFiles.length > 0 ? (
           databaseInfo.hiddenFiles.map((hidden) => (
             <div className="grid grid-cols-[auto_1fr] items-center gap-2" key={hidden} title={hidden}>
-              <Form className="w-4" method="post" action={location.pathname}>
+              <Form className="w-4" method="post" action={action}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <button
                   className="btn btn--hover-swap h-4"

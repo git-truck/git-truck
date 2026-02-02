@@ -147,7 +147,6 @@ export async function getLatestVersion() {
     latestVersion = result
   }
 
-  console.info("Returning cached latest version...")
   return latestVersion
 }
 

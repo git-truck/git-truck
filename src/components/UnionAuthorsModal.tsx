@@ -1,5 +1,5 @@
 import { useTransition, useState, useRef, useEffect, type JSX } from "react"
-import { useNavigation, useSubmit, useSearchParams } from "react-router"
+import { useNavigation, useSubmit, useSearchParams, Form } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import { getPathFromRepoAndHead } from "~/shared/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
@@ -68,7 +68,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
 
     submit(form, {
-      action: `/${getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead })}`,
+      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
       method: "post"
     })
     setSelectedAuthors([])
@@ -85,7 +85,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
     submit(form, {
-      action: `/${getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead })}`,
+      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
       method: "post"
     })
   }
@@ -156,29 +156,35 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
           ))}
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <button
-            className="btn"
-            title="Add selected authors to this group"
-            onClick={() => {
-              const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
-                if (i === aliasGroupIndex) {
-                  return [displayName, ...group, ...selectedAuthors]
-                }
-                return [displayName, ...group]
-              })
-              const form = new FormData()
-              form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
-
-              submit(form, {
-                action: `/${getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead })}`,
-                method: "post"
-              })
-              setSelectedAuthors([])
-            }}
-            disabled={disabled || selectedAuthors.length === 0}
+          <Form
+            action={getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead })}
+            method="post"
           >
-            Add selected
-          </button>
+            <input type="hidden" name="unionedAuthors" value={JSON.stringify(authorUnions)} />
+            <button
+              className="btn"
+              title="Add selected authors to this group"
+              // onClick={() => {
+              //   const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
+              //     if (i === aliasGroupIndex) {
+              //       return [displayName, ...group, ...selectedAuthors]
+              //     }
+              //     return [displayName, ...group]
+              //   })
+              //   const form = new FormData()
+              //   form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
+
+              //   submit(form, {
+              //     action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
+              //     method: "post"
+              //   })
+              //   setSelectedAuthors([])
+              // }}
+              disabled={disabled || selectedAuthors.length === 0}
+            >
+              Add selected
+            </button>
+          </Form>
           <button className="btn" onClick={() => ungroup(aliasGroupIndex)} title="Ungroup" disabled={disabled}>
             Ungroup
           </button>
@@ -193,7 +199,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
       aria-modal
       className="z-10 m-auto flex h-full w-full flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
     >
-      <div className="card m-auto grid h-full w-full max-w-(--breakpoint-2xl) grow grid-cols-[1fr_1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden shadow-sm">
+      <div className="card m-auto grid h-full w-full p-2 max-w-(--breakpoint-2xl) grow grid-cols-[1fr_1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden shadow-sm">
         <h2 className="text-2xl">Group authors</h2>
         <CloseButton absolute={false} className="justify-self-end" onClick={onClose} />
 

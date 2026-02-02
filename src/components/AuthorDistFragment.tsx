@@ -22,12 +22,9 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
         const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
         return (
           <Fragment key={author + contrib}>
-            <div
-              className="flex items-center gap-2 overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre"
-              title={author}
-            >
-              <LegendDot authorColorToChange={author} className="ml-1" dotColor={authorColors.get(author) ?? "grey"} />
-              <span className="overflow-hidden font-bold text-ellipsis whitespace-pre opacity-80">{author}</span>
+            <div className="flex items-center gap-1">
+              <LegendDot authorColorToChange={author} dotColor={authorColors.get(author) ?? "grey"} />
+              <span className="overflow-hidden text-sm font-bold text-ellipsis whitespace-pre">{author}</span>
             </div>
             <p className="text-right text-sm break-all">{contribPercentage}%</p>
           </Fragment>

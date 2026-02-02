@@ -12,10 +12,10 @@ import {
   mdiKnife,
   mdiPlusMinusVariant,
   mdiPodiumGold,
+  mdiPulse,
   mdiResize,
   mdiScaleBalance,
-  mdiSourceCommit,
-  mdiUpdate
+  mdiSourceCommit
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -35,7 +35,7 @@ export const Options = memo(function Options() {
 
   const visualizationIcons: Record<MetricType, string> = {
     FILE_TYPE: mdiFileCodeOutline,
-    LAST_CHANGED: mdiUpdate,
+    LAST_CHANGED: mdiPulse,
     MOST_COMMITS: mdiSourceCommit,
     TOP_CONTRIBUTOR: mdiPodiumGold,
     MOST_CONTRIBUTIONS: mdiPlusMinusVariant
@@ -45,7 +45,7 @@ export const Options = memo(function Options() {
     FILE_SIZE: mdiResize,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
-    LAST_CHANGED: mdiUpdate,
+    LAST_CHANGED: mdiPulse,
     MOST_CONTRIBS: mdiPlusMinusVariant
   }
 
@@ -57,11 +57,8 @@ export const Options = memo(function Options() {
 
   return (
     <>
-      <div className="absolute top-2 right-2">
-        <CollapsableSettings />
-      </div>
-      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
-        <h2 className="card__title">Layout</h2>
+      <div className="not-last:border-border not-last:border-b not-last:pb-2">
+        <h3 className="card__subtitle">Layout</h3>
         <IconRadioGroup
           group={Chart}
           defaultValue={chartType}
@@ -69,10 +66,10 @@ export const Options = memo(function Options() {
           iconMap={chartTypeIcons}
         />
       </div>
-      <div className="not-last:border-secondary-border not-last:border-b not-last:pb-2">
-        <h2 className="card__title" title="Select the metric used to size the visualization">
+      <div className="not-last:border-border not-last:border-b not-last:pb-2">
+        <h3 className="card__subtitle" title="Select the metric used to size the visualization">
           Size
-        </h2>
+        </h3>
         <IconRadioGroup
           titleMap={sizeMetricDescriptions}
           group={SizeMetric}
@@ -80,12 +77,11 @@ export const Options = memo(function Options() {
           onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
           iconMap={sizeMetricIcons}
         />
-        <p className="card-p">{sizeMetricDescriptions[sizeMetric]}</p>
       </div>
       <div>
-        <h2 className="card__title" title="Select the metric used to color the visualization">
+        <h3 className="card__subtitle" title="Select the metric used to color the visualization">
           Color
-        </h2>
+        </h3>
         <IconRadioGroup
           titleMap={colorMetricDescriptions}
           group={Metric}

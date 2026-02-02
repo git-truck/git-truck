@@ -1,4 +1,4 @@
-import languageMap from "language-map/languages.json"
+import languageMap from "language-map/languages.json" with { type: "json" }
 
 interface ColorResult {
   lang: string

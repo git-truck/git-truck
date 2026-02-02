@@ -6,14 +6,16 @@ import { cn } from "~/styling"
 export function ChevronButton({
   open,
   className = "",
+  size = 1,
   as: Component = "button",
   ...props
-}: { onClick?: () => void; open: boolean; as?: keyof JSX.IntrinsicElements } & HTMLAttributes<
+}: { onClick?: () => void; size?: number; open: boolean; as?: keyof JSX.IntrinsicElements } & HTMLAttributes<
   HTMLElement | SVGElement
 >) {
   return (
-    <Component className={`z-10 cursor-pointer ${className}`} {...props}>
-      <Icon path={mdiChevronDown} size={1} className={cn(`chevron transition-transform`, { "rotate-180": open })} />
+    <Component className={cn("cursor-pointer", className)} {...props}>
+      {props.children}
+      <Icon path={mdiChevronDown} size={size} className={cn("chevron transition-transform", { "rotate-180": open })} />
     </Component>
   )
 }

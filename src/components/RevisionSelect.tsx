@@ -20,7 +20,7 @@ export function RevisionSelect({
   const groupsEntries = Object.entries(headGroups)
 
   return (
-    <div className={cn("input grid grid-cols-[auto_1fr] place-items-center", className)}>
+    <div title="Change branch" className={cn("input grid grid-cols-[auto_1fr] place-items-center", className)}>
       <Icon path={mdiSourceBranch} size={0.75} />
       <select className={cn("w-full", className)} {...props}>
         {groupsEntries.map(([group, heads]) =>

@@ -12,15 +12,15 @@ import {
 } from "react-router"
 
 import "react-datepicker/dist/react-datepicker.css"
-import "~/styles/vars.css"
 import "~/tailwind.css"
 import pkg from "../package.json" with { type: "json" }
 import type { Route } from "./+types/root"
-import { LoadingIndicator } from "./components/LoadingIndicator"
 import { Code } from "./components/util"
 import { ClearCacheForm } from "./routes/clear-cache"
 import { cn } from "./styling"
 import { getLatestVersion } from "./shared/util.server"
+import truck from "./assets/truck.png"
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -28,9 +28,11 @@ export const meta = () => {
 
 export default function App() {
   return (
-    <Shell>
-      <Outlet />
-    </Shell>
+    <NuqsAdapter>
+      <Shell>
+        <Outlet />
+      </Shell>
+    </NuqsAdapter>
   )
 }
 
@@ -74,6 +76,9 @@ function Shell({ children, className = "" }: { children: React.ReactNode; classN
           className
         )}
       >
+        {/* TODO: Show breadcrumb and GT info on all pages */}
+        {/* Challenge: We want children to be able to render into both the top bar into the main content area */}
+        {/* <Breadcrumb /> */}
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -83,7 +88,7 @@ function Shell({ children, className = "" }: { children: React.ReactNode; classN
 }
 
 export const ErrorBoundary = () => {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const error = useRouteError()
 
   const errorMessage = isRouteErrorResponse(error)
@@ -93,26 +98,26 @@ export const ErrorBoundary = () => {
       : "An unknown error occurred"
 
   return (
-    <Shell className="bg-red-200">
+    <Shell>
       <div className="app-container">
         <div />
-        <div className="card my-2">
-          <h1>Oh no, the Git Truck crashed!</h1>
-          <p>See console for more infomation.</p>
-          <Code>{errorMessage}</Code>
-          <div>
-            <ClearCacheForm redirectPath={pathname} />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Link className="btn" to={pathname}>
-              Retry
-            </Link>
-            <Link className="btn btn--primary" to="..">
-              Go back
-            </Link>
+        <div className="grid h-full w-full place-items-center px-4 py-10">
+          <div className="flex max-w-2xl flex-col items-center gap-3 text-center">
+            <img src={truck} alt="Git Truck" className="w-full max-w-sm min-w-0" />
+            <div className="text-4xl leading-tight font-extrabold">Oh no, the Git Truck crashed!</div>
+            <p className="text-lg opacity-80">See console for more information.</p>
+            <Code>{errorMessage}</Code>
+            <ClearCacheForm redirectPath={pathname + search} />
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link className="btn" to={pathname + search}>
+                Retry
+              </Link>
+              <Link className="btn btn--primary" to="..">
+                Go back
+              </Link>
+            </div>
           </div>
         </div>
-        <LoadingIndicator />
       </div>
     </Shell>
   )

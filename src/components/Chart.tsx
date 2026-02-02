@@ -2,6 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { MouseEventHandler, JSX } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import { href, useLocation, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize, useCreateLink } from "~/hooks"
@@ -33,6 +34,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
+import { viewSerializer } from "~/routes/view"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -46,7 +48,15 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
   const { clickedObject } = useClickedObject()
   const { setPath } = usePath()
   const { showFilesWithoutChanges } = useOptions()
-  const createLink = useCreateLink()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const tabURL = useMemo<Parameters<typeof href>[0]>(() => {
+    const segments = location.pathname.split("/").filter(Boolean)
+    const detailsIdx = segments.indexOf("details")
+    const tab = detailsIdx >= 0 ? segments[detailsIdx + 1] : undefined
+    return tab === "commits" ? "/view/commits" : "/view/details"
+  }, [location.pathname])
 
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
@@ -94,12 +104,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     return {
       onClick: (evt) => {
         evt.stopPropagation()
-        createLink({
-          params: {
-            objectPath: d.data.path
-          },
-          segments: ["view", "details"]
-        }).navigate({
+        navigate(href(tabURL) + viewSerializer({ path: path, objectPath: d.data.path }),{
           state: {
             clickedObject: d.data
           }
@@ -123,7 +128,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       <svg
         key={`svg|${size.width}|${size.height}`}
         className={clsx(
-          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-sm dark:fill-gray-100",
+          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs dark:fill-gray-100",
           {
             "cursor-zoom-out": path.includes("/")
           }
@@ -245,10 +250,10 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
 
       props = {
         ...props,
-        x: datum.x0 + 1,
-        y: datum.y0 + 1,
-        width: datum.x1 - datum.x0 - 2,
-        height: datum.y1 - datum.y0 - 2,
+        x: datum.x0 + 0.5,
+        y: datum.y0 + 0.5,
+        width: datum.x1 - datum.x0 - 1,
+        height: datum.y1 - datum.y0 - 1,
         ...(isTree(d.data)
           ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
           : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
@@ -261,7 +266,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
     <rect
       {...commonProps}
       className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
-        "fill-tertiary-bg dark:fill-tertiary-bg-dark": isTree(d.data),
+        "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
         "cursor-pointer": isBlob(d.data),
         "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
       })}
@@ -327,7 +332,7 @@ function NodeText({
   }
 
   return (
-    <g className="text-xs">
+    <g>
       {/* Text path for circular tree labels */}
       <defs>
         <path
@@ -345,10 +350,10 @@ function NodeText({
             fill="transparent"
             {...(isCircularNode(d)
               ? {
-                  x: d.x - d.r + clipPathPadding / 4,
-                  y: d.y - d.r + letterHeightForBlobText - 1 + clipPathPadding / 4,
-                  width: textClipPathRadius,
-                  height: d.r * 2 - clipPathPadding / 2,
+                  x: d.x - d.r + clipPathPadding / 4 + 0.5,
+                  y: d.y - d.r + letterHeightForBlobText - 1 + clipPathPadding / 4 + 0.5,
+                  width: textClipPathRadius - 1,
+                  height: d.r * 2 - clipPathPadding / 2 - 1,
                   rx: d.r,
                   ry: d.r
                 }
@@ -373,7 +378,7 @@ function NodeText({
       {/* For circle packing layout, tree nodes get a text node that has a stroke */}
       {isTree(d.data) && isCircularNode(d) ? (
         <text
-          className={cn("stroke-tertiary-bg dark:stroke-tertiary-bg-dark pointer-events-none fill-none stroke-5")}
+          className={cn("stroke-primary-bg dark:stroke-primary-bg-dark pointer-events-none fill-none stroke-5")}
           strokeLinecap="round"
         >
           <textPath {...textPathProps}>{children}</textPath>

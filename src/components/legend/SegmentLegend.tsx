@@ -3,7 +3,6 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { LegendBarIndicator } from "../util"
 import { isBlob } from "~/shared/util"
 import { useOptions } from "~/contexts/OptionsContext"
-import { getMetricLegendType } from "~/metrics/metrics"
 import { cn } from "~/styling"
 import { Tick } from "../sliderUtils"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -19,12 +18,7 @@ export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | nu
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
 
-  const metricCache = metricsData.get(metricType)
-
-  if (metricCache === undefined) throw new Error("Metric cache is undefined")
-  if (getMetricLegendType(metricType) !== "SEGMENTS") {
-    throw new Error(`SegmentLegend expects metricType to be SEGMENTS, got ${metricType}`)
-  }
+  const metricCache = metricsData.get(metricType)!
   const { steps, textGenerator, colorGenerator, offsetStepCalc } = metricCache.legend as SegmentLegendData
   const width = 100 / steps
 
@@ -73,8 +67,10 @@ interface SegmentMetricProps {
 export function MetricSegment({ className = "", width, color, text, top }: SegmentMetricProps) {
   if (top)
     return (
-      <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-        <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
+      <div className="flex flex-col" style={{ width: `${width}%` }}>
+        <div className="h-5 truncate text-left" title={text}>
+          {text}
+        </div>
         <Tick className="ml-1" />
         <div className={cn("h-4", className)} style={{ backgroundColor: color }}></div>
         <Tick className="invisible" />
@@ -82,15 +78,12 @@ export function MetricSegment({ className = "", width, color, text, top }: Segme
     )
   else
     return (
-      <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-        {/* <div style={{ textAlign: "left", height: "32px" }}></div> */}
-        <div className="invisible" style={{ textAlign: "left", height: "20px" }}>
-          {text}
-        </div>
+      <div className="flex flex-col" style={{ width: `${width}%` }}>
+        <div className="invisible h-5 text-left">{text}</div>
         <Tick className="invisible" />
         <div className={cn("h-4", className)} style={{ backgroundColor: color }}></div>
         <Tick />
-        <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
+        <div className="h-5 truncate text-left">{text}</div>
       </div>
     )
 }
@@ -103,10 +96,10 @@ interface TopSegmentMetricProps {
 
 export function TopMetricSegment({ width, color, text }: TopSegmentMetricProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: `${width}%` }}>
-      <div style={{ textAlign: "left", height: "20px" }}>{text}</div>
+    <div className="flex flex-col" style={{ width: `${width}%` }}>
+      <div className="h-5 truncate text-left">{text}</div>
       <Tick />
-      <div style={{ backgroundColor: color, height: "20px" }}></div>
+      <div className="h-5" style={{ backgroundColor: color }}></div>
     </div>
   )
 }

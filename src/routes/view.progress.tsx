@@ -1,6 +1,6 @@
 import { sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
-import type { Route } from "./+types/progress"
+import type { Route } from "./+types/view.progress"
 import { currentRepositoryContext } from "~/routes/view"
 
 export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {

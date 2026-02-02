@@ -2,24 +2,23 @@ import { useDeferredValue, useMemo, type ReactNode } from "react"
 import type { GitObject } from "~/shared/model"
 import { useMetrics } from "../../contexts/MetricContext"
 import { useOptions } from "../../contexts/OptionsContext"
-import { colorMetricDescriptions, getMetricLegendType } from "../../metrics/metrics"
+import { colorMetricDescriptions, getMetricLegendType, sizeMetricLegendDescriptions } from "../../metrics/metrics"
 import { AuthorOptions } from "../AuthorOptions"
 import { GradientLegend } from "./GradiantLegend"
 import { PointLegend } from "./PointLegend"
 import { SegmentLegend } from "./SegmentLegend"
+import { PercentageSlider } from "../PercentageSlider"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
 export function Legend({
   hoveredObject,
-  className = "",
   showUnionAuthorsModal
 }: {
   hoveredObject: GitObject | null
   showUnionAuthorsModal: () => void
-  className?: string
 }) {
-  const { metricType } = useOptions()
+  const { sizeMetric, metricType } = useOptions()
   const [metricsData] = useMetrics()
   const deferredHoveredObject = useDeferredValue(hoveredObject)
 
@@ -46,11 +45,14 @@ export function Legend({
   if (legend === null) return null
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
-      {/* <h2 className="card__title">Legend: {Metric[metricType]}</h2> */}
-      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
+    <>
+      <h3 className="card__subtitle">Size legend</h3>
+      <p className="text-sm mb-2">{sizeMetricLegendDescriptions[sizeMetric]}</p>
+      <h3 className="card__subtitle">Color legend</h3>
+      <p className="text-sm mb-4">{colorMetricDescriptions[metricType]}</p>
+      {metricType === "TOP_CONTRIBUTOR" ? <PercentageSlider className="my-4" /> : null}
       {legend}
-      <p className="card-p">{colorMetricDescriptions[metricType]}</p>
-    </div>
+      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
+    </>
   )
 }

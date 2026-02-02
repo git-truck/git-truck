@@ -63,7 +63,7 @@ export const SearchCard = memo(function SearchCard() {
   const items = Object.values(searchResults)
   return (
     <form
-      className="w-sidepanel absolute top-0 bottom-0 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2 transition-[width,translate] not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:w-min not-focus-within:has-placeholder-shown:translate-x-0"
+      className="w-sidepanel absolute top-2 bottom-0 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2 transition-[width,translate] not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:w-min not-focus-within:has-placeholder-shown:translate-x-0"
       onSubmit={(event) => {
         event.preventDefault()
         setSearchText("")
@@ -96,7 +96,9 @@ export const SearchCard = memo(function SearchCard() {
             }
             if (event.key === "ArrowDown") {
               event.preventDefault()
-              focusResultAtIndex(0)
+              if (resultRefs.length > 0) {
+                focusResultAtIndex(0)
+              }
             }
           }}
           onFocus={() => {
@@ -139,13 +141,15 @@ export const SearchCard = memo(function SearchCard() {
                 const currentIndex = resultRefs.findIndex((ref) => ref.current === event.currentTarget)
                 if (event.key === "ArrowDown") {
                   event.preventDefault()
-                  const nextIndex = currentIndex + (1 % resultRefs.length)
+                  if (resultRefs.length === 0) return
+                  const nextIndex = (currentIndex + 1) % resultRefs.length
                   focusResultAtIndex(nextIndex)
                 }
                 if (event.key === "ArrowUp") {
                   event.preventDefault()
+                  if (resultRefs.length === 0) return
                   const prevIndex = currentIndex - 1
-                  if (prevIndex === -1) {
+                  if (prevIndex < 0) {
                     searchFieldRef.current?.focus()
                     searchFieldRef.current?.select()
                     return
@@ -170,18 +174,7 @@ export const SearchCard = memo(function SearchCard() {
                   size={0.75}
                   className="shrink-0"
                 />
-                // <Stack
-                //   size={0.75}
-                //   className="shrink-0"
-                //   color={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-                // >
-                //   <Icon path={mdiFile} size={0.75} className="shrink-0" />
-                //   {/* <Icon path={mdiCircle} size={0.5} className="" /> */}
-                // </Stack>
-                // <LegendDot
-                //   dotColor={metrics.get(options.metricType)?.colormap.get(result.path) ?? "grey"}
-                //   className="shrink-0"
-                // />
+
               )}
               <span className="text-secondary-text dark:hover:text-primary-text-dark hover:text-primary-text dark:text-secondary-text-dark truncate">
                 {object.path.split(getSeparator(object.path)).slice(1).join("/") ?? object.path}

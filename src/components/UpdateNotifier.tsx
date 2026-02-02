@@ -16,9 +16,9 @@ export function UpdateNotifier({
 
   return (
     <Popover
-      popoverTitle={isExperimental ? "Experimental version" : "Update available"}
+      popoverTitle={isExperimental ? "Experimental version" : `Update available`}
       trigger={({ onClick }) => {
-        const title = isExperimental ? "You are using an experimental version" : "Update available"
+        const title = isExperimental ? "You are using an experimental version" : `Version ${latestVersion} available`
         const iconPath = isExperimental ? mdiFlaskOutline : mdiArrowUpBoldCircleOutline
         const showIndicator = !isExperimental
 
@@ -26,9 +26,8 @@ export function UpdateNotifier({
           <button
             title={title}
             className={cn(
-              isExperimental
-                ? "btn text-primary-text-dark bg-purple-500"
-                : "btn relative self-center rounded-full p-1"
+              "aspect-square",
+              isExperimental ? "btn text-primary-text-dark bg-purple-500" : "btn relative self-center rounded-full p-1"
             )}
             onClick={onClick}
           >
@@ -43,7 +42,7 @@ export function UpdateNotifier({
       {isExperimental ? (
         <>
           <p>You are using an experimental build of Git Truck</p>
-          <p className="card-p">If you want to use the stable version, close the application and run: </p>
+          <p className="text-sm">If you want to use the stable version, close the application and run: </p>
         </>
       ) : (
         <>
@@ -63,9 +62,10 @@ export function UpdateNotifier({
               </a>
             ) : null}{" "}
           </p>
-          <p className="card-p">To update, run</p>
+          <p className="text-sm">To update, run</p>
         </>
       )}
+      {/* TODO: Detect runtime: global install, npx, bunx, etc. and suggest appropriate update command */}
       <Code inline>npm install -g git-truck@latest</Code>
     </Popover>
   )

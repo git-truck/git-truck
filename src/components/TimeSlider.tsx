@@ -1,20 +1,26 @@
 import { useSubmit, useNavigation, useSearchParams } from "react-router"
-import { useState, useTransition } from "react"
+import { useState, useTransition, type CSSProperties } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
+import {
+  dateFormatCalendarHeader,
+  dateFormatISO,
+  dateFormatShort,
+  getPathFromRepoAndHead} from "~/shared/util"
 import DatePicker from "react-datepicker"
 import { Handle, SliderRail, TicksByCount, Track } from "./sliderUtils"
 import { Popover } from "./Popover"
 import { cn } from "~/styling"
-import { Icon } from "./Icon"
-import { mdiDotsHorizontal } from "@mdi/js"
+import BarChart from "./BarChart"
 
-export default function TimeSlider() {
+export default function Timeline() {
   const [_, startTransition] = useTransition()
 
   const { databaseInfo } = useData()
-  const { newestChangeDate, oldestChangeDate, timerange, selectedRange } = databaseInfo
+  const { timerange, selectedRange } = databaseInfo
+  const newestChangeDate = timerange[1]
+  const oldestChangeDate = timerange[0]
+
   const submit = useSubmit()
   const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
 
@@ -38,17 +44,14 @@ export default function TimeSlider() {
   const selectedEndDate = range[1] * 1000
 
   return (
-    <>
+    <div className="group flex flex-col gap-2">
+      <BarChart />
       <Slider
         className="relative"
         mode={2}
         step={1}
         domain={timerange}
-        onUpdate={(e) =>
-          startTransition(() => {
-            setRange([...e] as [number, number])
-          })
-        }
+        onUpdate={(e) => setRange([...e] as [number, number])}
         onChange={(e) => {
           startTransition(() => {
             updateTimeseries(e)
@@ -60,35 +63,43 @@ export default function TimeSlider() {
         <Rail>{SliderRail}</Rail>
         <Handles>
           {({ handles, getHandleProps }) => (
-            <div>
+            <div className="">
               {handles.map((handle, i) => (
-                <Handle
-                  title="Drag to adjust interval, click to set specific date"
-                  key={handle.id}
-                  className={cn("w-auto", i === 0 ? "rounded-r-none" : "-translate-x-[calc(100%-12px)] rounded-l-none")}
-                  handle={handle}
-                  domain={timerange}
-                  getHandleProps={getHandleProps}
-                >
-                  <time
-                    className={cn("bottom-0 flex flex-row gap-0.5 text-xs text-nowrap", {
-                      "flex-row-reverse": i === 0
-                    })}
-                    dateTime={dateFormatISO(i === 0 ? selectedStartDate : selectedEndDate)}
-                    title={`Click or drag to set the ${i === 0 ? "start" : "end"} of time range`}
+                <>
+                  <div
+                    className={cn(
+                      "absolute left-(--left) w-max translate-y-[calc(50%)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100",
+                      {
+                        "left-(--left)": i === 0,
+                        "right-[calc(100%-var(--left))] -translate-x-full": i === 1
+                      }
+                    )}
+                    style={
+                      {
+                        "--left": `${handle.percent}%`
+                      } as CSSProperties
+                    }
                   >
-                    {dateFormatShort(i === 0 ? selectedStartDate : selectedEndDate)}
                     <Popover
+                      key={handle.id}
                       trigger={({ onClick }) => (
                         <button
-                          className="btn--text"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onClick()
-                          }}
-                          title="Open date picker"
+                          className={cn(
+                            "bg-blue-primary text-primary-text-dark cursor-pointer rounded-full p-1 break-keep shadow",
+                            {
+                              "rounded-tl-none": i === 0,
+                              "rounded-tr-none": i === 1
+                            }
+                          )}
+                          onClick={onClick}
                         >
-                          <Icon path={mdiDotsHorizontal} />
+                          <time
+                            className="w-max text-xs"
+                            dateTime={dateFormatISO(i === 0 ? selectedStartDate : selectedEndDate)}
+                            title={`Click or drag to set the ${i === 0 ? "start" : "end"} of time range`}
+                          >
+                            {dateFormatShort(i === 0 ? selectedStartDate : selectedEndDate)}
+                          </time>
                         </button>
                       )}
                     >
@@ -101,8 +112,17 @@ export default function TimeSlider() {
                         disabled={disabled}
                       />
                     </Popover>
-                  </time>
-                </Handle>
+                  </div>
+                  <Handle
+                    handleType="square"
+                    title="Drag to adjust interval, click to set specific date"
+                    key={handle.id}
+                    className={cn("")}
+                    handle={handle}
+                    domain={timerange}
+                    getHandleProps={getHandleProps}
+                  ></Handle>
+                </>
               ))}
             </div>
           )}
@@ -112,6 +132,7 @@ export default function TimeSlider() {
             <div>
               {tracks.map(({ id, source, target }) => (
                 <Track
+                  trackType="square"
                   backgroundColor="#7aa0c4"
                   key={id}
                   source={source}
@@ -129,7 +150,7 @@ export default function TimeSlider() {
         // align="left"
         tickToLabel={(t) => dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)}
       />
-    </>
+    </div>
   )
 }
 
@@ -149,7 +170,7 @@ function TimePicker({
   disabled: boolean
 }) {
   return (
-    <div>
+    <div className="z-30">
       <DatePicker
         renderCustomHeader={({
           date,

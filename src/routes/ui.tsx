@@ -12,6 +12,8 @@ import { Icon } from "~/components/Icon"
 import { mdiCog, mdiHelpCircle, mdiPlus } from "@mdi/js"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
+import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
+import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 
 // Minimal mock AnalyzerData for RepoData
 const mockAnalyzerData: AnalyzerData = {
@@ -86,6 +88,73 @@ const mockRepoData: RepoData = {
   }
 }
 
+function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "square" }) {
+  const domain: [number, number] = [0, 100]
+  const [range, setRange] = useState<[number, number]>([20, 80])
+
+  const handleRangeChange = (values: readonly number[]) => {
+    setRange([values[0], values[1]] as [number, number])
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">Selected window</p>
+        <p className="text-lg font-semibold">
+          {range[0]}% – {range[1]}%
+        </p>
+      </div>
+      <Slider
+        className="relative"
+        mode={2}
+        step={1}
+        domain={domain}
+        values={range}
+        onUpdate={handleRangeChange}
+        onChange={handleRangeChange}
+      >
+        <Rail>{SliderRail}</Rail>
+        <Handles>
+          {({ handles, getHandleProps }) => (
+            <div>
+              {handles.map((handle, index) => (
+                <Handle
+                  key={handle.id}
+                  handle={handle}
+                  domain={domain}
+                  getHandleProps={getHandleProps}
+                  handleType={handleType}
+                  title={`Drag to adjust the ${index === 0 ? "start" : "end"} threshold`}
+                />
+              ))}
+            </div>
+          )}
+        </Handles>
+        <Tracks left={false} right={false}>
+          {({ tracks, getTrackProps }) => (
+            <div>
+              {tracks.map(({ id, ...trackProps }) => (
+                <Track
+                  trackType={handleType}
+                  key={id}
+                  {...trackProps}
+                  getTrackProps={getTrackProps}
+                  backgroundColor="#7aa0c4"
+                />
+              ))}
+            </div>
+          )}
+        </Tracks>
+      </Slider>
+      <div className="flex justify-between text-sm font-medium">
+        <span>Start: {range[0]}%</span>
+        <span>End: {range[1]}%</span>
+      </div>
+      <TicksByCount count={5} below tickToLabel={(tick) => `${Math.round(tick * 100)}%`} />
+    </div>
+  )
+}
+
 export default function UI() {
   // Use state to simulate hover for tooltip demo
   const [tooltipHovered, setTooltipHovered] = useState(false)
@@ -106,7 +175,7 @@ export default function UI() {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="card">
             <h2 className="card__title">Default Card</h2>
-            <p className="card-p">This is a simple card with some text content.</p>
+            <p className="text-sm">This is a simple card with some text content.</p>
           </div>
           <div className="card">
             <div className="card__header">
@@ -114,7 +183,7 @@ export default function UI() {
               <h2 className="card__title">Card with Header</h2>
             </div>
             <div className="card__content">
-              <p className="card-p">Card with header, subtitle, and content.</p>
+              <p className="text-sm">Card with header, subtitle, and content.</p>
             </div>
           </div>
           {/* Button Variants */}
@@ -203,6 +272,19 @@ export default function UI() {
           <div className="card">
             <h2 className="card__title">AuthorOptions</h2>
             <AuthorOptions showUnionAuthorsModal={() => alert("Show union authors modal")} />
+          </div>
+          {/* Slider */}
+          <div className="card">
+            <h2 className="card__title">Slider, round handles</h2>
+            <p className="text-sm">
+              Demonstrates the same rail, handles, and tracks that power the in-app time range picker.
+            </p>
+            <RangeSliderDemo handleType="round" />
+          </div>
+          <div className="card">
+            <h2 className="card__title">Slider, qquare Handles</h2>
+            <p className="text-sm">Same range selector with the column-style handles used in tighter layouts.</p>
+            <RangeSliderDemo handleType="square" />
           </div>
           {/* IconRadioGroup Demo */}
           <div className="card">

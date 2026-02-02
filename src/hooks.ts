@@ -2,7 +2,7 @@ import type { Dispatch, RefObject, SetStateAction } from "react"
 import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
-import { getPathFromRepoAndHead, inspect, promiseHelper } from "./shared/util"
+import { getPathFromRepoAndHead, promiseHelper } from "./shared/util"
 import { useLocation, useNavigate, useSearchParams, type NavigateOptions } from "react-router"
 import type { LinkSearchParams, LinkSegments } from "./shared/model"
 

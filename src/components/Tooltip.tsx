@@ -20,11 +20,12 @@ import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, numToF
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 import { missingInMapColor } from "~/const"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
 
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { metricType, dominantAuthorCutoff } = useOptions()
+  const { sizeMetric, metricType, dominantAuthorCutoff } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const color = hoveredObject ? metricsData.get(metricType)?.colormap?.get(hoveredObject.path) : missingInMapColor
@@ -38,7 +39,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
   return (
     <div
       className={cn(
-        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform",
+        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform backface-hidden",
         className,
         {
           hidden: !visible,
@@ -52,7 +53,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
       )}
       ref={tooltipRef}
       style={{
-        transform: visible ? `translate(${xTransform}, ${yTransform})` : "none",
+        transform: visible ? `translateX(${xTransform}) translateY(${yTransform}) translateZ(0)` : "none",
         ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
       }}
     >
@@ -77,14 +78,19 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
             ))}
       </span>
       {hoveredObject?.type === "blob" ? (
-        <span className="flex w-max gap-1">
-          <ColorMetricDependentInfo
-            metric={metricType}
-            hoveredBlob={hoveredObject}
-            databaseInfo={databaseInfo}
-            dominantAuthorCutoff={dominantAuthorCutoff}
-          />
-        </span>
+        <div className="flex w-max flex-col gap-1">
+          <div className="flex gap-1">
+            <ColorMetricDependentInfo
+              metric={metricType}
+              hoveredBlob={hoveredObject}
+              databaseInfo={databaseInfo}
+              dominantAuthorCutoff={dominantAuthorCutoff}
+            />
+          </div>
+          <div className="flex gap-1">
+            <SizeMetricDependentInfo sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredBlob={hoveredObject} />
+          </div>
+        </div>
       ) : null}
     </div>
   )
@@ -156,6 +162,74 @@ function ColorMetricDependentInfo(props: {
       icon = mdiFileOutline
       const extension = props.hoveredBlob?.name.substring(props.hoveredBlob.name.lastIndexOf(".")) ?? ""
       content = extension
+      break
+    }
+  }
+  return (
+    <>
+      <Icon path={icon} color="currentColor" />
+      {content}
+    </>
+  )
+}
+
+function SizeMetricDependentInfo({
+  sizeMetric,
+  hoveredBlob,
+  databaseInfo
+}: {
+  sizeMetric: SizeMetricType
+  hoveredBlob: GitBlobObject | null
+  databaseInfo: DatabaseInfo
+}) {
+  let icon = mdiCircleSmall
+  let content = null
+  if (!hoveredBlob) {
+    return null
+  }
+  icon = mdiCircleSmall
+  switch (sizeMetric) {
+    case "FILE_SIZE": {
+      const fileSizeInBytes = hoveredBlob.sizeInBytes
+      if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
+        content = "Size unknown"
+      } else if (fileSizeInBytes < 1024) {
+        content = `${fileSizeInBytes} B`
+      } else if (fileSizeInBytes < 1024 * 1024) {
+        content = `${(fileSizeInBytes / 1024).toFixed(1)} KB`
+      } else {
+        content = `${(fileSizeInBytes / (1024 * 1024)).toFixed(1)} MB`
+      }
+      break
+    }
+    case "MOST_COMMITS": {
+      icon = mdiSourceCommit
+      const noCommits = databaseInfo.commitCounts[hoveredBlob.path]
+      if (!noCommits) {
+        content = "No activity in selected range"
+        break
+      }
+      content = `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
+      break
+    }
+    case "LAST_CHANGED": {
+      icon = mdiPulse
+      const epoch = databaseInfo.lastChanged[hoveredBlob.path]
+      if (!epoch) {
+        content = "No activity in selected range"
+        break
+      }
+      content = dateFormatRelative(epoch)
+      break
+    }
+    case "MOST_CONTRIBS": {
+      icon = mdiPlusMinusVariant
+      const contribs = databaseInfo.contribSumPerFile[hoveredBlob.path]
+      if (!contribs) {
+        content = "No activity in selected range"
+        break
+      }
+      content = `${numToFriendlyString(contribs)} lines`
       break
     }
   }

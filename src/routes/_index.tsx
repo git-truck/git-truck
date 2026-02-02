@@ -1,5 +1,5 @@
-import { redirect } from "react-router"
+import { href, redirect } from "react-router"
 
 export const loader = async () => {
-  throw redirect("browse")
+  throw redirect(href("/browse"))
 }

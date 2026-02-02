@@ -1,6 +1,6 @@
 import { CommitHistory } from "~/components/CommitHistory"
 import { invariant } from "~/shared/util"
-import type { Route } from "./+types/view.details.commits"
+import type { Route } from "./+types/view.commits"
 import { Suspense } from "react"
 import { Await, useLoaderData } from "react-router"
 import { currentRepositoryContext } from "./view"

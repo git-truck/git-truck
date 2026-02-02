@@ -1,6 +1,18 @@
-import { mdiMenu } from "@mdi/js"
+import { mdiClose, mdiMenu, mdiRestore } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, useLoaderData, Link, Outlet, useOutletContext, redirect, createContext } from "react-router"
+import {
+  Await,
+  useLoaderData,
+  Link,
+  Outlet,
+  useOutletContext,
+  redirect,
+  createContext,
+  Form,
+  useLocation,
+  href,
+  useNavigate
+} from "react-router"
 import clsx from "clsx"
 import { resolve } from "path"
 import randomstring from "randomstring"
@@ -10,17 +22,17 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import { getArgs, getRepoNameFromPath, openFile } from "~/shared/util.server"
+import { getArgs, getRepoNameFromPath } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
-import { GlobalInfo } from "~/components/GlobalInfo"
+import { AnalysisInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
-import TimeSlider from "~/components/TimeSlider"
+import Timeline from "~/components/TimeSlider"
 import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 
 import { cn } from "~/styling"
@@ -28,12 +40,17 @@ import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/view"
 import { RefreshButton } from "~/components/RefreshButton"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
-import BarChart from "~/components/BarChart"
 import { ChartTooltip } from "~/components/ChartTooltip"
-import { ClientOnly, FullscreenButton } from "~/components/util"
+import { ClientOnly, CloseButton, FullscreenButton } from "~/components/util"
 import { getPathFromRepoAndHead, invariant } from "~/shared/util"
 import type ServerInstance from "~/analyzer/ServerInstance.server"
 import { versionContext } from "~/root"
+import { CollapsibleHeader } from "~/components/CollapsibleHeader"
+import { createSerializer, parseAsString } from "nuqs/server"
+import { RevisionSelect } from "~/components/RevisionSelect"
+import { CollapsableSettings } from "~/components/Settings"
+import { usePath } from "~/contexts/PathContext"
+import { useQueryStates } from "nuqs"
 
 export const useRepoContext = () =>
   useOutletContext<{
@@ -48,14 +65,22 @@ export const currentRepositoryContext = createContext<{
   checkedOutBranch: string
 }>()
 
+export const viewSearchParamsConfig = {
+  path: parseAsString,
+  objectPath: parseAsString
+}
+
+export const viewSerializer = createSerializer(viewSearchParamsConfig)
+
 const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
+  const serialize = createSerializer(viewSearchParamsConfig)
   const searchParams = new URL(request.url).searchParams
   const args = await getArgs()
   const repositoryPath = resolve(searchParams.get("path") ?? args.path)
 
   // Redirect to browse if not a git repo
   if (!(await GitCaller.isGitRepo(repositoryPath))) {
-    throw redirect(getPathFromRepoAndHead({ path: repositoryPath }, ["browse"]))
+    throw redirect(href("/browse") + serialize({ path: repositoryPath }))
   }
 
   const checkedOutBranch = await GitCaller._getRepositoryHead(repositoryPath)
@@ -107,9 +132,6 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   const formData = await request.formData()
   const refresh = formData.get("refresh")
-  const unignore = formData.get("unignore")
-  const ignore = formData.get("ignore")
-  const fileToOpen = formData.get("open")
   const unionedAuthors = formData.get("unionedAuthors")
   const rerollColors = formData.get("rerollColors")
   const timeseries = formData.get("timeseries")
@@ -119,28 +141,6 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   instance.prevInvokeReason = "unknown"
   if (refresh) {
     instance.prevInvokeReason = "refresh"
-    return null
-  }
-
-  if (ignore && typeof ignore === "string") {
-    instance.prevInvokeReason = "ignore"
-    const hidden = await instance.db.getHiddenFiles()
-    hidden.push(ignore)
-    await instance.db.replaceHiddenFiles(hidden)
-
-    return null
-  }
-
-  if (unignore && typeof unignore === "string") {
-    instance.prevInvokeReason = "unignore"
-    const hidden = await instance.db.getHiddenFiles()
-    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignore))
-    return null
-  }
-
-  if (typeof fileToOpen === "string") {
-    instance.prevInvokeReason = "open"
-    openFile(instance.repositoryPath, fileToOpen)
     return null
   }
 
@@ -345,6 +345,16 @@ export default function Repo() {
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
 
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [{ path, objectPath }] = useQueryStates(viewSearchParamsConfig)
+
+  const home = href("/view/home") + viewSerializer({ ...(path ? { path } : {}) })
+
+  const clearCacheUrl = `/clear-cache?${new URLSearchParams({
+    redirect: location.pathname + location.search
+  }).toString()}`
+
   return (
     <Suspense
       fallback={
@@ -354,7 +364,7 @@ export default function Repo() {
             loadingText={
               <div className="flex flex-col items-center gap-2">
                 Stuck? Try clearing the cache:
-                <Link to="/clear-cache" className="btn btn--primary">
+                <Link to={clearCacheUrl} className="btn btn--primary">
                   Clear Cache
                 </Link>
               </div>
@@ -368,61 +378,102 @@ export default function Repo() {
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                `grid grid-cols-1 gap-2 p-2 transition-all [grid-template-areas:"main"_"left"] lg:h-screen lg:grid-cols-[0_1fr] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main"]`,
+                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"] lg:h-screen lg:grid-cols-[0_1fr] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main"]`,
                 {
-                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr_0]": leftExpanded
+                  "gap-2 lg:grid-cols-[var(--spacing-sidepanel)_1fr]": leftExpanded
                 }
               )}
             >
               <Activity mode={leftExpanded ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "flex flex-col items-stretch justify-start gap-2 [grid-area:left] lg:pr-0 lg:transition-transform",
-                    leftExpanded ? "overflow-y-auto" : "lg:-translate-x-sidepanel"
+                    "lg:pr-0 lg:transition-transform",
+                    leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
-                  <GlobalInfo className={leftExpanded ? "" : "hidden"} onMenuClick={toggleLeft} />
-                  <div
-                    className={cn("card relative", {
-                      // hidden: !leftExpanded
-                    })}
+                  <div className="bg-primary-bg dark:bg-primary-bg-dark relative sticky top-0 z-10 flex justify-between p-2">
+                    <GitTruckInfo
+                      className=""
+                      installedVersion={versionInfo.installedVersion}
+                      latestVersion={versionInfo.latestVersion}
+                    />
+                    <button className="btn" title="Hide left panel" onClick={toggleLeft}>
+                      <Icon path={mdiMenu} size="1.5em" />
+                    </button>
+                  </div>
+                  <CollapsibleHeader
+                    title={
+                      <>
+                        {objectPath ? (
+                          <>
+                            <span className="truncate" title={objectPath}>
+                              Details: <span className="[text-transform:none]">{objectPath.split("/").pop()}</span>
+                            </span>
+                            <Link className="btn" to={home}>
+                              <Icon path={mdiClose} />
+                            </Link>
+                          </>
+                        ) : (
+                          "Details"
+                        )}
+                      </>
+                    }
+                    contentClassName="pb-6"
+                  >
+                    <Outlet context={{ showUnionAuthorsModal }} />
+                  </CollapsibleHeader>
+                  <CollapsibleHeader
+                    title={
+                      <>
+                        Visualization options
+                        <CollapsableSettings />
+                      </>
+                    }
+                    contentClassName="pb-6"
                   >
                     <Options />
-                    <Legend
-                      className="justify-self-end"
-                      hoveredObject={hoveredObject}
-                      showUnionAuthorsModal={showUnionAuthorsModal}
-                    />
-                  </div>
-                  <Outlet context={{ showUnionAuthorsModal }} />
-
-                  <div className={cn("grow", {})} />
-                  <GitTruckInfo
-                    className={cn("sticky bottom-0", {
-                      // hidden: !leftExpanded
-                    })}
-                    installedVersion={versionInfo.installedVersion}
-                    latestVersion={versionInfo.latestVersion}
-                  />
+                  </CollapsibleHeader>
+                  {/* <div className="flex-1" /> */}
+                  <CollapsibleHeader title="Legend" contentClassName="pb-6">
+                    <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+                  </CollapsibleHeader>
                 </aside>
               </Activity>
               <main
                 className={cn(
-                  "relative grid h-full min-w-[100px] grid-rows-[auto_1fr] gap-2 overflow-y-hidden [grid-area:main] lg:transition-transform"
+                  "relative grid h-full min-w-25 grid-rows-[auto_1fr] gap-2 [grid-area:main] lg:transition-transform"
                 )}
               >
-                <header className="grid grid-flow-col items-center justify-between gap-2">
+                <header className="grid grid-flow-col items-center justify-between gap-2 p-2">
                   <div className="flex gap-2">
                     {!leftExpanded ? (
-                      <button title={"Show left panel"} onClick={toggleLeft} className="btn btn--text aspect-square">
+                      <button title="Show left panel" onClick={toggleLeft} className="btn btn--text aspect-square">
                         <Icon path={mdiMenu} size={1} />
                       </button>
                     ) : (
                       <div />
                     )}
+                    <AnalysisInfo />
+                  </div>
+                  <div className="flex gap-2">
                     <Breadcrumb />
                   </div>
                   <div className="flex gap-2">
+                    {data.repo.status === "Success" ? (
+                      <RevisionSelect
+                        className="max-w-3xs"
+                        title="Select branch"
+                        key={data.databaseInfo.branch}
+                        onChange={(e) =>
+                          navigate(getPathFromRepoAndHead({ path: data.repo.repositoryPath, branch: e.target.value }))
+                        }
+                        defaultValue={data.databaseInfo.branch}
+                        headGroups={data.repo.refs}
+                        analyzedBranches={data.databaseInfo.analyzedRepos.filter(
+                          (rep) => rep.repo === data.databaseInfo.repo
+                        )}
+                      />
+                    ) : null}
                     <SearchCard />
                     <RefreshButton />
                     <HiddenFiles />
@@ -430,28 +481,48 @@ export default function Repo() {
                   </div>
                 </header>
 
-                <>
-                  <div className="grid overflow-hidden">
-                    <Suspense
-                      fallback={
-                        <div className="grid h-screen place-items-center">
-                          <LoadingIndicator showProgress />
-                        </div>
-                      }
-                    >
-                      <Await resolve={dataPromise}>{() => <Chart setHoveredObject={setHoveredObject} />}</Await>
-                    </Suspense>
-                    <ClientOnly>
-                      {() => createPortal(<ChartTooltip hoveredObject={hoveredObject} />, document.body)}
-                    </ClientOnly>
-                  </div>
-
-                  <div className="card flex flex-col gap-1 px-2 text-center select-none">
+                <div className="grid">
+                  <ClientOnly>
+                    {() => (
+                      <>
+                        <Suspense
+                          fallback={
+                            <div className="grid h-screen place-items-center">
+                              <LoadingIndicator showProgress />
+                            </div>
+                          }
+                        >
+                          <Await resolve={dataPromise}>{() => <Chart setHoveredObject={setHoveredObject} />}</Await>
+                        </Suspense>
+                        {createPortal(<ChartTooltip hoveredObject={hoveredObject} />, document.body)}
+                      </>
+                    )}
+                  </ClientOnly>
+                </div>
+                <div className="card flex flex-col gap-1 px-2 text-center select-none">
+                  <div className="flex items-start justify-between gap-2">
                     <h2 className="card__title">Commits per {data.databaseInfo.commitCountPerTimeIntervalUnit}</h2>
-                    <BarChart />
-                    <TimeSlider />
+                    <Form
+                      className={cn({
+                        invisible:
+                          data.databaseInfo.timerange[0] === data.databaseInfo.selectedRange[0] &&
+                          data.databaseInfo.timerange[1] === data.databaseInfo.selectedRange[1]
+                      })}
+                      method="post"
+                    >
+                      <input
+                        type="hidden"
+                        name="timeseries"
+                        value={`${data.databaseInfo.timerange[0]}-${data.databaseInfo.timerange[1]}`}
+                      />
+                      <button className={cn("btn btn--text", {})}>
+                        <Icon path={mdiRestore} />
+                        Reset time interval
+                      </button>
+                    </Form>
                   </div>
-                </>
+                  <Timeline key={`${data.databaseInfo.selectedRange[0]}-${data.databaseInfo.selectedRange[1]}`} />
+                </div>
               </main>
             </div>
             <UnionAuthorsModal

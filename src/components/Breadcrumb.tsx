@@ -2,9 +2,18 @@ import { mdiChevronRight, mdiHome } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { usePath } from "~/contexts/PathContext"
+import { cn } from "~/styling"
+import { useQueryStates } from "nuqs"
+import { viewSearchParamsConfig } from "~/routes/view"
 
-export function Breadcrumb() {
-  const { path, setPath } = usePath()
+export function Breadcrumb({ className = "" }: { className?: string }) {
+  let { path, setPath } = usePath()
+  const [{ objectPath }] = useQueryStates(viewSearchParamsConfig)
+
+  if (objectPath) {
+    path = objectPath
+  }
+
   const paths = useMemo<[string, string][]>(() => {
     const parts = path === "" ? [] : path.split("/")
     const segments: [string, string][] = parts.map((part, index) => {
@@ -20,7 +29,12 @@ export function Breadcrumb() {
   }, [path])
 
   return (
-    <div className="text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto">
+    <div
+      className={cn(
+        "text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto",
+        className
+      )}
+    >
       {paths.map(([name, p], i) => {
         if (p === "" || i === paths.length - 1)
           if (p === "")

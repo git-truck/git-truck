@@ -59,6 +59,14 @@ export function dateFormatRelative(epochTime: number) {
   return "<1 hour ago"
 }
 
+export function numberFormat(num: number) {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    compactDisplay: "short",
+    maximumFractionDigits: 1
+  }).format(num)
+}
+
 export const last = <T>(arr: T[]) => arr.at(-1)
 
 export const allExceptLast = <T>(arr: T[]) => {
@@ -109,7 +117,7 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const brightnessCalculationCache = new Map<`#${string}`, boolean>()
+const brightnessCalculationCache = new Map<`#${string}`, {isDark: boolean, luminance: number}>()
 
 function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
@@ -325,3 +333,46 @@ export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T
 }
 
 export const extname = (filename: string): string => filename.split(".").pop() || ""
+
+export function expandIntervalToRange(timestamp: number, commitCountPerTimeIntervalUnit: string): [number, number] {
+  const start = new Date(timestamp * 1000)
+  start.setUTCHours(0, 0, 0, 0)
+
+  switch (commitCountPerTimeIntervalUnit) {
+    case "hour": {
+      start.setUTCHours(new Date(timestamp * 1000).getUTCHours(), 0, 0, 0)
+      const end = new Date(start)
+      end.setUTCHours(end.getUTCHours() + 1)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+    case "day": {
+      const end = new Date(start)
+      end.setUTCDate(end.getUTCDate() + 1)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+    case "week": {
+      const day = start.getUTCDay()
+      const diffToMonday = (day + 6) % 7
+      start.setUTCDate(start.getUTCDate() - diffToMonday)
+      const end = new Date(start)
+      end.setUTCDate(end.getUTCDate() + 7)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+    case "month": {
+      start.setUTCDate(1)
+      const end = new Date(start)
+      end.setUTCMonth(end.getUTCMonth() + 1)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+    case "year": {
+      start.setUTCMonth(0, 1)
+      const end = new Date(start)
+      end.setUTCFullYear(end.getUTCFullYear() + 1)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+    default: {
+      const end = new Date(timestamp * 1000)
+      return [Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)]
+    }
+  }
+}

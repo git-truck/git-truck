@@ -64,6 +64,7 @@ export const LegendDot = ({
 
   return (
     <Popover
+      triggerClassName="flex gap-1 items-center"
       popoverTitle="Choose color"
       positions={["left", "bottom", "top", "right"]}
       trigger={({ onClick }) => (
@@ -100,8 +101,8 @@ const Dot = ({
     <Component
       {...props}
       className={cn(
-        "aspect-square h-4 w-4 shadow-xs shadow-black transition-[border-radius]",
-        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-sm",
+        "aspect-square h-4 w-4 shadow-xs shadow-black transition-[border-radius] duration-[10s]",
+        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-xs",
         className
       )}
       style={{ backgroundColor: color }}

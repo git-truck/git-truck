@@ -14,7 +14,6 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
     color = "#f6bf00"
   }
 
-  // const lang = extensionInfo?.lang ?? extension
   const legend = cache.legend as PointLegendData
   if (color) {
     if (legend.has(extension)) {
