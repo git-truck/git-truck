@@ -18,7 +18,11 @@ import {
   mdiPalette,
   mdiImageSizeSelectSmall,
   mdiPuzzle,
-  mdiPlusMinusVariant
+  mdiPlusMinusVariant,
+  mdiDatabase,
+  mdiApi,
+  mdiTestTube,
+  mdiCloudOutline
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
@@ -28,7 +32,11 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   TOP_CONTRIBUTOR: "MOST_CONTRIBS",
   MOST_COMMITS: "MOST_COMMITS",
   LAST_CHANGED: "LAST_CHANGED",
-  MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
+  MOST_CONTRIBUTIONS: "MOST_CONTRIBS",
+  SEMANTIC_DATABASE: "FILE_SIZE",
+  SEMANTIC_API: "FILE_SIZE",
+  SEMANTIC_TESTING: "FILE_SIZE",
+  SEMANTIC_EXTERNAL_API: "FILE_SIZE"
 }
 
 export const Options = memo(function Options() {
@@ -40,7 +48,11 @@ export const Options = memo(function Options() {
     LAST_CHANGED: mdiUpdate,
     MOST_COMMITS: mdiSourceCommit,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
+    MOST_CONTRIBUTIONS: mdiPlusMinusVariant,
+    SEMANTIC_DATABASE: mdiDatabase,
+    SEMANTIC_API: mdiApi,
+    SEMANTIC_TESTING: mdiTestTube,
+    SEMANTIC_EXTERNAL_API: mdiCloudOutline
   }
 
   const sizeMetricIcons: Record<SizeMetricType, string> = {

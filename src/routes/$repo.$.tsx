@@ -74,6 +74,7 @@ export interface DatabaseInfo {
   contribSumPerFile: Record<string, number>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
+  semanticIntensities?: Record<string, Record<string, number>> // filepath -> domain -> intensity
 }
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -328,6 +329,28 @@ async function analyze(params: Params) {
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+  // Compute semantic domain intensities
+  log.time("semanticDomains")
+  let semanticIntensities: Record<string, Record<string, number>> | undefined
+  try {
+    const { collectFileContents } = await import("~/metrics/semanticMetric.server")
+    const { loadDomainConfig } = await import("~/metrics/semanticDomains/loader.server")
+    const { calculateAllIntensities } = await import("~/metrics/semanticDomains")
+
+    const fileContents = collectFileContents(path, rootTree)
+    const domains = loadDomainConfig(path)
+    const intensities = calculateAllIntensities(fileContents, domains)
+
+    // Convert Map to plain object for serialization
+    semanticIntensities = {}
+    for (const [filepath, domainScores] of intensities) {
+      semanticIntensities[filepath] = Object.fromEntries(domainScores)
+    }
+  } catch (err) {
+    console.warn("Failed to compute semantic domains:", err)
+  }
+  log.timeEnd("semanticDomains")
+
   const databaseInfo: DatabaseInfo = {
     dominantAuthors,
     commitCounts,
@@ -353,7 +376,8 @@ async function analyze(params: Params) {
     analyzedRepos,
     contribSumPerFile: contribCounts,
     maxMinContribCounts,
-    commitCount
+    commitCount,
+    semanticIntensities
   }
 
   const fullData = {

@@ -10,7 +10,9 @@ export default {
     modules: {
       path: true,
       crypto: true,
-      buffer: true
+      buffer: true,
+      fs: false,
+      "fs/promises": false
     }
   }
 }

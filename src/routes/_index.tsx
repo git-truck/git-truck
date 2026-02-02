@@ -16,11 +16,11 @@ import { getBaseDirFromPath, getDirName } from "~/analyzer/util.server"
 import Icon from "@mdi/react"
 import { mdiArrowUp, mdiDeleteForever, mdiFolder, mdiGit, mdiTruckAlert } from "@mdi/js"
 import InstanceManager from "~/analyzer/InstanceManager.server"
-import { existsSync } from "node:fs"
-import { readdir } from "node:fs/promises"
 import { log } from "~/analyzer/log.server"
 
 export const loader = async () => {
+  const { existsSync, readdir } = await import("~/routes-utils/_index.server")
+
   const queryPath = null
   const args = getArgsWithDefaults()
 

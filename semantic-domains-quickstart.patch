@@ -1,0 +1,117 @@
+diff --git a/src/metrics/metrics.ts b/src/metrics/metrics.ts
+index abc123..def456 100644
+--- a/src/metrics/metrics.ts
++++ b/src/metrics/metrics.ts
+@@ -13,6 +13,7 @@ import { noEntryColor } from "~/const"
+ import { createHash } from "node:crypto"
+ import { ContribAmountTranslater } from "./mostContribs"
++import { createSemanticMetric } from "./semanticMetric"
+
+ export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
+
+@@ -21,7 +22,10 @@ export const Metric = {
+   MOST_COMMITS: "Commits",
+   MOST_CONTRIBUTIONS: "Line changes",
+   TOP_CONTRIBUTOR: "Top contributor",
+-  LAST_CHANGED: "Last changed"
++  LAST_CHANGED: "Last changed",
++  SEMANTIC_DATABASE: "Database",
++  SEMANTIC_API: "API",
++  SEMANTIC_TESTING: "Testing"
+ }
+
+ export type MetricType = keyof typeof Metric
+@@ -51,6 +55,15 @@ export function getMetricDescription(metric: MetricType): string {
+       return "Shows the top author for each file. Adjust the minimum percentage of line changes, that the top author should have, for each file to be colored."
+     case "MOST_CONTRIBUTIONS":
+       return "How many line changes (additions and deletions) have been made to the file?"
++    case "SEMANTIC_DATABASE":
++      return "Files related to database models, queries, and ORM operations"
++    case "SEMANTIC_API":
++      return "API endpoints, route handlers, and HTTP controllers"
++    case "SEMANTIC_TESTING":
++      return "Test files, specs, and test utilities"
+     default:
+       throw new Error("Uknown metric type: " + metric)
+   }
+@@ -59,6 +72,9 @@ export function getMetricDescription(metric: MetricType): string {
+ export function getMetricLegendType(metric: MetricType): LegendType {
+   switch (metric) {
+     case "FILE_TYPE":
+     case "TOP_CONTRIBUTOR":
++    case "SEMANTIC_DATABASE":
++    case "SEMANTIC_API":
++    case "SEMANTIC_TESTING":
+       return "POINT"
+     case "MOST_COMMITS":
+     case "MOST_CONTRIBUTIONS":
+@@ -113,7 +129,19 @@ export function getMetricCalcs(
+   const maxContribCount = data.databaseInfo.maxMinContribCounts.max
+   const minContribCount = data.databaseInfo.maxMinContribCounts.min
+   const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
++
++  // Load semantic metrics
++  const semanticMetrics: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] = []
++  try {
++    const repoPath = data.repo.path
++    semanticMetrics.push(
++      ["SEMANTIC_DATABASE", createSemanticMetric(repoPath, "Database", data.databaseInfo.fileTree)],
++      ["SEMANTIC_API", createSemanticMetric(repoPath, "API", data.databaseInfo.fileTree)],
++      ["SEMANTIC_TESTING", createSemanticMetric(repoPath, "Testing", data.databaseInfo.fileTree)]
++    )
++  } catch (err) {
++    console.warn("Failed to load semantic metrics:", err)
++  }
+
+   return [
+     [
+@@ -184,7 +212,8 @@ export function getMetricCalcs(
+         }
+         contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
+       }
+-    ]
++    ],
++    ...semanticMetrics
+   ]
+ }
+
+diff --git a/src/components/Options.tsx b/src/components/Options.tsx
+index ghi789..jkl012 100644
+--- a/src/components/Options.tsx
++++ b/src/components/Options.tsx
+@@ -18,7 +18,10 @@ import {
+   mdiUpdate,
+   mdiSourceCommit,
+   mdiAccountCircle,
+-  mdiPlusMinusVariant
++  mdiPlusMinusVariant,
++  mdiDatabase,
++  mdiApi,
++  mdiTestTube
+ } from "@mdi/js"
+ import type { SizeMetricType } from "~/metrics/sizeMetric"
+ import { SizeMetric } from "~/metrics/sizeMetric"
+@@ -29,7 +32,10 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
+   TOP_CONTRIBUTOR: "MOST_CONTRIBS",
+   MOST_COMMITS: "MOST_COMMITS",
+   LAST_CHANGED: "MOST_COMMITS",
+-  MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
++  MOST_CONTRIBUTIONS: "MOST_CONTRIBS",
++  SEMANTIC_DATABASE: "FILE_SIZE",
++  SEMANTIC_API: "FILE_SIZE",
++  SEMANTIC_TESTING: "FILE_SIZE"
+ }
+
+ export const Options = memo(function Options() {
+@@ -40,7 +46,10 @@ export const Options = memo(function Options() {
+     LAST_CHANGED: mdiUpdate,
+     MOST_COMMITS: mdiSourceCommit,
+     TOP_CONTRIBUTOR: mdiAccountCircle,
+-    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
++    MOST_CONTRIBUTIONS: mdiPlusMinusVariant,
++    SEMANTIC_DATABASE: mdiDatabase,
++    SEMANTIC_API: mdiApi,
++    SEMANTIC_TESTING: mdiTestTube
+   }
+
+   const sizeMetricIcons: Record<SizeMetricType, string> = {
