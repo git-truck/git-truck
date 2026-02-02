@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import express from "express"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
