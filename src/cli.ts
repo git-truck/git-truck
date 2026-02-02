@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import express from "express"
+import path from "path"
+import { fileURLToPath, pathToFileURL } from "url"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
@@ -27,9 +29,11 @@ if (args.h || args.help) {
 
 console.log(`Git Truck version ${pkg.version}${await getUpdateMessage()}\n`)
 
-const BUILD_PATH = "./build/server/index.js"
-const BUILD_CLIENT_PATH = "build/client"
-const BUILD_ASSETS_PATH = "build/client/assets"
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const BUILD_PATH = path.join(__dirname, "build/server/index.js")
+const BUILD_CLIENT_PATH = path.join(__dirname, "build/client")
+const BUILD_ASSETS_PATH = path.join(__dirname, "build/client/assets")
+
 const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
 const PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
@@ -53,7 +57,7 @@ if (DEVELOPMENT) {
 } else {
   app.use("/assets", express.static(BUILD_ASSETS_PATH, { immutable: true, maxAge: "1y" }))
   app.use(express.static(BUILD_CLIENT_PATH, { maxAge: "1h" }))
-  app.use(await import(BUILD_PATH).then((mod) => mod.app))
+  app.use(await import(pathToFileURL(BUILD_PATH).href).then((mod) => mod.app))
 }
 
 const server = process.env.HOST ? app.listen(PORT, process.env.HOST, onListen) : app.listen(PORT, onListen)
