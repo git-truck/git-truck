@@ -1,5 +1,5 @@
-import { dateFormatLong, extname, inspect, invariant, last, resolveParentFolder } from "~/shared/util"
-import { useId, useState, Suspense } from "react"
+import { dateFormatLong, extname, invariant, last, resolveParentFolder } from "~/shared/util"
+import { useId, useState, Suspense, useEffect } from "react"
 import { Await, Form, useLoaderData, useLocation, useNavigation } from "react-router"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
@@ -16,6 +16,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { currentRepositoryContext, useRepoContext } from "~/routes/view"
 import { openFile } from "~/shared/util.server"
+import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -81,7 +82,12 @@ export default function General() {
   const { path, authorDistributionPromise } = useLoaderData<typeof loader>()
   const data = useData()
   const { state } = useNavigation()
-  const clickedObject = inspect(useLocation().state)?.clickedObject as GitObject | null | undefined
+  const clickedObject = useLocation().state?.clickedObject as GitObject | null | undefined
+  const setOpen = useSetOpenCollapsibleHeader()
+
+  useEffect(() => {
+    setOpen(!!clickedObject)
+  }, [clickedObject, setOpen])
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
@@ -115,7 +121,7 @@ export default function General() {
           </Suspense>
         </div>
       </div>
-      <div className="mt-2 flex gap-2">
+      <div className="mt-2 flex flex-wrap gap-2">
         {isBlob ? (
           <>
             <Form className="w-max" method="post">
