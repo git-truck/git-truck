@@ -26,7 +26,7 @@ export function AuthorDistFragment(props: AuthorDistFragProps) {
               <LegendDot authorColorToChange={author} dotColor={authorColors.get(author) ?? "grey"} />
               <span className="overflow-hidden text-sm font-bold text-ellipsis whitespace-pre">{author}</span>
             </div>
-            <p className="text-right text-sm break-all">{contribPercentage}%</p>
+            <span className="text-right text-sm break-all">{contribPercentage}%</span>
           </Fragment>
         )
       })}
