@@ -4,7 +4,10 @@
     {
       "label": "Start dev server with bun on folder open",
       "type": "process",
-      "command": "/home/node/.bun/bin/bun",
+      // For codespaces (since bun for some reason is not in the PATH)
+      // "command": "/home/node/.bun/bin/bun",
+      // For local development
+      "command": "bun",
       "args": ["--bun", "dev:bun"],
       "presentation": {
         "reveal": "always",
