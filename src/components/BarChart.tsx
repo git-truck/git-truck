@@ -58,7 +58,7 @@ const BarChart = () => {
       <svg ref={svgRef} width="100%" height={height} className="fill-transparent">
         {data.map((d, i) => {
           const barX = (xScale(d.date) ?? 0) + treemapPaddingInner
-          const barWidth = Math.max(1, xScale.bandwidth() - treemapPaddingInner)
+          const barWidth = Math.max(1, xScale.bandwidth() - treemapPaddingInner * 2)
           const barHeight = height - yScale(d.count)
           const barY = yScale(d.count)
           const isInRange = d.timestamp >= start && d.timestamp < end
