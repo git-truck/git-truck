@@ -8,7 +8,7 @@ export function usePath(): {
 } {
   const data = useData()
   const [searchParams, setSearchParams] = useSearchParams()
-  const path = useMemo(() => searchParams.get("path") ?? data.repo.repositoryPath, [searchParams])
+  const path = useMemo(() => searchParams.get("path") ?? data.repo.repositoryPath, [data.repo.repositoryPath, searchParams])
   const setPath = useCallback(
     (newPath: string) =>
       setSearchParams((prev) => ({

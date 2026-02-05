@@ -2,9 +2,11 @@ import type { Dispatch, RefObject, SetStateAction } from "react"
 import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
-import { getPathFromRepoAndHead, promiseHelper } from "./shared/util"
-import { useLocation, useNavigate, useSearchParams, type NavigateOptions } from "react-router"
-import type { LinkSearchParams, LinkSegments } from "./shared/model"
+import { getPathFromRepoAndHead, promiseHelper } from "~/shared/util"
+import { href, useLocation, useNavigate, useSearchParams, type NavigateOptions } from "react-router"
+import type { LinkSearchParams, LinkSegments } from "~/shared/model"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
+import { useQueryState } from "nuqs"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
@@ -65,25 +67,68 @@ export function useLocalStorage<T>(key: string, initialValue: T | undefined = un
 }
 
 export function useKey(
-  key: { key: string; ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean },
+  options: { key?: string; ctrlOrMeta?: boolean; shift?: boolean; alt?: boolean },
   callback: (event: KeyboardEvent) => void
 ) {
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
-      if (event.key === key.key) {
-        const ctrlMatch = key.ctrl === undefined || event.ctrlKey === key.ctrl
-        const shiftMatch = key.shift === undefined || event.shiftKey === key.shift
-        const altMatch = key.alt === undefined || event.altKey === key.alt
-        const metaMatch = key.meta === undefined || event.metaKey === key.meta
+      if (!options.key || event.key === options.key) {
+        const ctrlOrMetaMatch = options.ctrlOrMeta === undefined || event.ctrlKey === options.ctrlOrMeta || event.metaKey === options.ctrlOrMeta
+        const shiftMatch = options.shift === undefined || event.shiftKey === options.shift
+        const altMatch = options.alt === undefined || event.altKey === options.alt
 
-        if (ctrlMatch && shiftMatch && altMatch && metaMatch) {
+        if (ctrlOrMetaMatch && shiftMatch && altMatch) {
           callback(event)
         }
       }
     }
     window.addEventListener("keydown", listener)
     return () => window.removeEventListener("keydown", listener)
-  }, [key, callback])
+  }, [options, callback])
+}
+
+export function useKeyActive(options: {
+  key?: string
+  ctrlOrMeta?: boolean
+  shift?: boolean
+  alt?: boolean
+}) {
+  const [keyActive, setKeyActive] = useState(false)
+  useEffect(() => {
+    const downListener = (event: KeyboardEvent) => {
+      if (!options.key || event.key === options.key) {
+        const ctrlOrMetaMatch = options.ctrlOrMeta === undefined || event.ctrlKey === options.ctrlOrMeta || event.metaKey === options.ctrlOrMeta
+        const shiftMatch = options.shift === undefined || event.shiftKey === options.shift
+        const altMatch = options.alt === undefined || event.altKey === options.alt
+
+        if (ctrlOrMetaMatch && shiftMatch && altMatch) {
+          setKeyActive(true)
+        }
+      }
+    }
+    const upListener = (event: KeyboardEvent) => {
+      if (!options.key || event.key === options.key) {
+        const ctrlOrMetaMatch =
+          options.ctrlOrMeta === undefined ||
+          event.ctrlKey !== options.ctrlOrMeta ||
+          event.metaKey !== options.ctrlOrMeta
+        const shiftMatch = options.shift === undefined || event.shiftKey !== options.shift
+        const altMatch = options.alt === undefined || event.altKey !== options.alt
+
+        if (ctrlOrMetaMatch && shiftMatch && altMatch) {
+          setKeyActive(false)
+        }
+      }
+    }
+    window.addEventListener("keydown", downListener)
+    window.addEventListener("keyup", upListener)
+    return () => {
+      window.removeEventListener("keydown", downListener)
+      window.removeEventListener("keyup", upListener)
+    }
+  }, [options])
+
+  return keyActive
 }
 
 export function useMouse() {
@@ -128,6 +173,9 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
   return { isFullscreen, toggleFullscreen } as const
 }
 
+/**
+ * @deprecated Use react-router and nuqs instead
+ */
 export function useCreateLink() {
   const location = useLocation()
   const [currentSearch] = useSearchParams()
@@ -158,4 +206,9 @@ export function useCreateLink() {
     }
   }
   return composeLinkNavigation
+}
+
+export function useHomePath() {
+  const [path] = useQueryState("path", viewSearchParamsConfig.path)
+  return href("/view") + viewSerializer({ ...(path ? { path } : {}) })
 }

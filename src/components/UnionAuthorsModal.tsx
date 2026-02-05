@@ -1,17 +1,16 @@
 import { useTransition, useState, useRef, useEffect, type JSX } from "react"
-import { useNavigation, useSubmit, useSearchParams, Form } from "react-router"
+import { useNavigation, useSubmit, Form, href, useLocation } from "react-router"
 import { useData } from "~/contexts/DataContext"
-import { getPathFromRepoAndHead } from "~/shared/util"
 import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
 import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 import { createPortal } from "react-dom"
-import { useCreateLink, useKey } from "~/hooks"
+import { useKey } from "~/hooks"
+
 
 export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { repo, databaseInfo } = useData()
-  const [searchParams] = useSearchParams()
+  const { databaseInfo } = useData()
   const submit = useSubmit()
   const { authors } = databaseInfo
   const authorUnions = databaseInfo.authorUnions
@@ -20,8 +19,8 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
   const navigationData = useNavigation()
   const [, authorColors] = useMetrics()
   const [, startTransition] = useTransition()
+  const location = useLocation()
   const ref = useRef<HTMLDialogElement>(null)
-  const createLink = useCreateLink()
 
   useEffect(() => {
     if (!ref.current) {
@@ -47,7 +46,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
     submit(form, {
-      action: createLink({ segments: ["view"] }).url,
+      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -57,7 +56,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify([]))
 
     submit(form, {
-      action: createLink({ segments: ["view"] }).url,
+      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -68,7 +67,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
 
     submit(form, {
-      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
+      action: href("/view") + location.search,
       method: "post"
     })
     setSelectedAuthors([])
@@ -85,7 +84,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
     submit(form, {
-      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
+      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -157,29 +156,29 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <Form
-            action={getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead })}
+            action={href("/view") + location.search}
             method="post"
           >
             <input type="hidden" name="unionedAuthors" value={JSON.stringify(authorUnions)} />
             <button
               className="btn"
               title="Add selected authors to this group"
-              // onClick={() => {
-              //   const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
-              //     if (i === aliasGroupIndex) {
-              //       return [displayName, ...group, ...selectedAuthors]
-              //     }
-              //     return [displayName, ...group]
-              //   })
-              //   const form = new FormData()
-              //   form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
+              onClick={() => {
+                const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
+                  if (i === aliasGroupIndex) {
+                    return [displayName, ...group, ...selectedAuthors]
+                  }
+                  return [displayName, ...group]
+                })
+                const form = new FormData()
+                form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
-              //   submit(form, {
-              //     action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: repo.currentHead }),
-              //     method: "post"
-              //   })
-              //   setSelectedAuthors([])
-              // }}
+                submit(form, {
+                  action: href("/view") + location.search,
+                  method: "post"
+                })
+                setSelectedAuthors([])
+              }}
               disabled={disabled || selectedAuthors.length === 0}
             >
               Add selected

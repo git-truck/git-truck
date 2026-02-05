@@ -69,10 +69,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         positions={["left", "top", "bottom", "right"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <button
-            onClick={onClick}
-            className="cursor-pointer truncate overflow-hidden font-bold text-ellipsis opacity-80 hover:opacity-70"
-          >
+          <button onClick={onClick} className="cursor-pointer truncate font-bold opacity-80 hover:opacity-70">
             {props.value.message}
           </button>
         )}
@@ -128,13 +125,14 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   )
 }
 
+export const COMMIT_STEP = 10
+
 export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO[] | null; commitCount: number }) {
   const navigation = useNavigation()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const commitIncrement = 10
-  const commitShowCount = Number(searchParams.get("count") ?? String(commitIncrement))
+  const commitShowCount = Number(searchParams.get("count") ?? String(COMMIT_STEP))
   const { clickedObject } = useClickedObject()
 
   // function fetchCommits() {
@@ -158,7 +156,7 @@ export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO
   //   const data = fetcher.data as FullCommitDTO[] | null
   // }, [fetcher])
 
-  if (!clickedObject) return null
+  if (!clickedObject) throw new Error("Clicked object is null in CommitHistory")
 
   if (!commits) {
     return (
@@ -183,7 +181,7 @@ export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO
               onClick={() =>
                 setSearchParams(
                   (prev) => {
-                    prev.set("count", String(Number(prev.get("count") ?? String(commitIncrement)) + commitIncrement))
+                    prev.set("count", String(Number(prev.get("count") ?? String(COMMIT_STEP)) + COMMIT_STEP))
                     return prev
                   },
                   {

@@ -7,13 +7,7 @@ import { cn } from "~/styling"
 import { join, resolve } from "node:path"
 import { getArgsWithDefaults, getRepoNameFromPath } from "~/shared/util.server.ts"
 import { Icon } from "~/components/Icon"
-import {
-  mdiSortAscending,
-  mdiSortDescending,
-  mdiArrowRight,
-  mdiArrowLeft,
-  mdiSort
-} from "@mdi/js"
+import { mdiSortAscending, mdiSortDescending, mdiArrowRight, mdiArrowLeft, mdiSort } from "@mdi/js"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import { existsSync } from "node:fs"
 import { log } from "~/analyzer/log.server"
@@ -60,7 +54,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const baseDirIsRepo = existsSync(join(args.path, ".git"))
 
   if (baseDirIsRepo) {
-    throw redirect(href("/view/home") + serializer({ path: resolve(args.path) }))
+    throw redirect(href("/view") + serializer({ path: resolve(args.path) }))
   }
 
   const baseDir = resolve(args.path)
@@ -107,7 +101,7 @@ export default function Index() {
 
   const searchFieldRef = useRef<HTMLInputElement>(null)
 
-  useKey({ key: "f", ctrl: true }, (event) => {
+  useKey({ key: "f", ctrlOrMeta: true }, (event) => {
     event.preventDefault()
     searchFieldRef.current?.focus()
   })
@@ -316,7 +310,7 @@ function RepositoryEntry({
   return (
     <Fragment key={entry.path}>
       <Link
-        to={href(isFolder ? "/browse" : "/view/home") + serialize({ path: entry.path })}
+        to={href(isFolder ? "/browse" : "/view") + serialize({ path: entry.path })}
         prefetch="none"
         aria-disabled={!isFolder && status === "Error"}
         className={cn(

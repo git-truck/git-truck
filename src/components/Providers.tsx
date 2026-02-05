@@ -20,7 +20,10 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       hasLoadedSavedOptions: !!savedOptions
     }
   })
+  
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
+  const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
+
   const prefersLight = usePrefersLightMode()
 
   const metricsData: MetricsData = useMemo(() => {
@@ -124,6 +127,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
           <SearchContext.Provider
             value={{
               searchResults,
+              hasSearchResults,
               setSearchResults
             }}
           >

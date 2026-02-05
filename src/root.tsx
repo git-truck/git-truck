@@ -19,8 +19,8 @@ import { Code } from "./components/util"
 import { ClearCacheForm } from "./routes/clear-cache"
 import { cn } from "./styling"
 import { getLatestVersion } from "./shared/util.server"
-import truck from "./assets/truck.png"
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
+import { ErrorPage } from "./components/ErrorPage"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -99,26 +99,19 @@ export const ErrorBoundary = () => {
 
   return (
     <Shell>
-      <div className="app-container">
-        <div />
-        <div className="grid h-full w-full place-items-center px-4 py-10">
-          <div className="flex max-w-2xl flex-col items-center gap-3 text-center">
-            <img src={truck} alt="Git Truck" className="w-full max-w-sm min-w-0" />
-            <div className="text-4xl leading-tight font-extrabold">Oh no, the Git Truck crashed!</div>
-            <p className="text-lg opacity-80">See console for more information.</p>
-            <Code>{errorMessage}</Code>
-            <ClearCacheForm redirectPath={pathname + search} />
-            <div className="flex flex-wrap justify-center gap-2">
-              <Link className="btn" to={pathname + search}>
-                Retry
-              </Link>
-              <Link className="btn btn--primary" to="..">
-                Go back
-              </Link>
-            </div>
-          </div>
+      <ErrorPage message={"Oh no, the Git Truck crashed!"}>
+        <p className="text-lg opacity-80">See console for more information.</p>
+        <Code>{errorMessage}</Code>
+        <ClearCacheForm redirectPath={pathname + search} />
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link className="btn" to={pathname + search}>
+            Retry
+          </Link>
+          <Link className="btn btn--primary" to="..">
+            Go back
+          </Link>
         </div>
-      </div>
+      </ErrorPage>
     </Shell>
   )
 }

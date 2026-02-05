@@ -3,7 +3,7 @@ import { createContext, use, useState } from "react"
 import { ChevronButton } from "~/components/ChevronButton"
 import { cn } from "~/styling"
 
-const CollapsibleHeaderContext = createContext((open: boolean) => {})
+const CollapsibleHeaderContext = createContext((_open: boolean) => {})
 
 export function useSetOpenCollapsibleHeader() {
   return use(CollapsibleHeaderContext)
@@ -33,10 +33,10 @@ export function CollapsibleHeader({
       >
         <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
           <ChevronButton as="span" open={open} aria-hidden />
-          <h2 className="flex flex-1 items-center justify-between">{title}</h2>
+          <h2 className="flex flex-1 min-w-0 gap-2 items-center justify-between">{title}</h2>
         </summary>
 
-        <div className={cn("px-8 pb-6", contentClassName)}>{children}</div>
+        <div className={cn("pl-8 pr-1 pb-6", contentClassName)}>{children}</div>
       </details>
     </CollapsibleHeaderContext.Provider>
   )

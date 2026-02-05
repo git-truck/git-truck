@@ -41,7 +41,7 @@ export const SearchCard = memo(function SearchCard() {
 
   const resultRefs = Object.keys(searchResults).map(() => createRef<HTMLButtonElement>())
 
-  useKey({ key: "f", ctrl: true }, (event) => {
+  useKey({ key: "f", ctrlOrMeta: true }, (event) => {
     event.preventDefault()
     searchFieldRef.current?.focus()
   })
@@ -174,7 +174,6 @@ export const SearchCard = memo(function SearchCard() {
                   size={0.75}
                   className="shrink-0"
                 />
-
               )}
               <span className="text-secondary-text dark:hover:text-primary-text-dark hover:text-primary-text dark:text-secondary-text-dark truncate">
                 {object.path.split(getSeparator(object.path)).slice(1).join("/") ?? object.path}

@@ -19,7 +19,6 @@ import {
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-import { CollapsableSettings } from "./Settings"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
@@ -57,7 +56,7 @@ export const Options = memo(function Options() {
 
   return (
     <>
-      <div className="not-last:border-border not-last:border-b not-last:pb-2">
+      <div>
         <h3 className="card__subtitle">Layout</h3>
         <IconRadioGroup
           group={Chart}
@@ -66,7 +65,7 @@ export const Options = memo(function Options() {
           iconMap={chartTypeIcons}
         />
       </div>
-      <div className="not-last:border-border not-last:border-b not-last:pb-2">
+      <div>
         <h3 className="card__subtitle" title="Select the metric used to size the visualization">
           Size
         </h3>
@@ -74,7 +73,9 @@ export const Options = memo(function Options() {
           titleMap={sizeMetricDescriptions}
           group={SizeMetric}
           defaultValue={sizeMetric}
-          onChange={(sizeMetric: SizeMetricType) => setSizeMetricType(sizeMetric)}
+          onChange={(sizeMetric: SizeMetricType) => {
+            setSizeMetricType(sizeMetric)
+          }}
           iconMap={sizeMetricIcons}
         />
       </div>

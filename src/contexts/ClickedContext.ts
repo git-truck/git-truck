@@ -1,26 +1,19 @@
 import { useCallback } from "react"
 import type { GitObject } from "../shared/model"
-import { useLocation, useSearchParams } from "react-router"
+import { useLocation } from "react-router"
+import { useQueryState } from "nuqs"
+import { viewSearchParamsConfig } from "~/routes/view"
 
 export function useClickedObject() {
   const location = useLocation()
-  const clickedObject = (location.state?.clickedObject ?? null) as GitObject | null
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [objectPath, setObjectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
+  const clickedObject = objectPath ? (location.state?.clickedObject ?? null) as GitObject | null : null
 
   const setClickedObject = useCallback(
     (object: GitObject | null) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString())
-      if (!object) {
-        newSearchParams.delete("path")
-      } else {
-        newSearchParams.set("path", object.path)
-      }
-
-      setSearchParams(newSearchParams, {
-        state: { clickedObject: object }
-      })
+      setObjectPath(!object ? null : object.path)
     },
-    [setSearchParams, searchParams]
+    [setObjectPath]
   )
 
   return { clickedObject, setClickedObject }

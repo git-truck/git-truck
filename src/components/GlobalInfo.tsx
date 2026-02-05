@@ -14,12 +14,12 @@ export function AnalysisInfo({ className = "" }: { className?: string }) {
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="relative flex w-full items-center justify-between gap-2">
         <Popover
+        triggerOnHover
           popoverTitle="Analysis details"
           trigger={({ onClick }) => (
             <button
               className="text-primary-text dark:text-primary-text-dark hover:text-secondary-text dark:hover:text-secondary-text-dark grow cursor-pointer justify-start gap-2 truncate text-xl"
               onClick={onClick}
-              title="View analysis details"
             >
               {repo.repositoryName}
             </button>

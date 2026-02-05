@@ -6,6 +6,7 @@ export type SearchResults = Record<string, GitObject>
 
 type Search = {
   searchResults: SearchResults
+  hasSearchResults: boolean
   setSearchResults: Dispatch<SetStateAction<SearchResults>>
 }
 

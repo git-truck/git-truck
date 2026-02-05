@@ -41,16 +41,17 @@ import type { Route } from "./+types/view"
 import { RefreshButton } from "~/components/RefreshButton"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { ChartTooltip } from "~/components/ChartTooltip"
-import { ClientOnly, CloseButton, FullscreenButton } from "~/components/util"
+import { ClientOnly, FullscreenButton } from "~/components/util"
 import { getPathFromRepoAndHead, invariant } from "~/shared/util"
 import type ServerInstance from "~/analyzer/ServerInstance.server"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { createSerializer, parseAsString } from "nuqs/server"
+import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { CollapsableSettings } from "~/components/Settings"
-import { usePath } from "~/contexts/PathContext"
-import { useQueryStates } from "nuqs"
+import { useQueryState, type inferParserType } from "nuqs"
+import { useHomePath } from "~/hooks"
+import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 
 export const useRepoContext = () =>
   useOutletContext<{
@@ -67,10 +68,15 @@ export const currentRepositoryContext = createContext<{
 
 export const viewSearchParamsConfig = {
   path: parseAsString,
-  objectPath: parseAsString
+  objectPath: parseAsString,
+  zoomPath: parseAsString,
+  branch: parseAsString
 }
 
 export const viewSerializer = createSerializer(viewSearchParamsConfig)
+export const loadViewSearchParams = createLoader(viewSearchParamsConfig)
+
+type ViewSearchParams = inferParserType<typeof viewSearchParamsConfig>
 
 const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
   const serialize = createSerializer(viewSearchParamsConfig)
@@ -102,12 +108,30 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
 export const middleware: Route.MiddlewareFunction[] = [viewMiddleware]
 
 export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const { instance, repositoryPath, branch, checkedOutBranch } = context.get(currentRepositoryContext)
-  const urlSearchParams = new URL(request.url).searchParams
+  const { instance, repositoryPath, branch } = context.get(currentRepositoryContext)
 
-  // Clean up URL if branch is the same as the current head
-  if (urlSearchParams.get("branch") && checkedOutBranch === branch) {
-    throw redirect(getPathFromRepoAndHead({ path: repositoryPath }, ["view"]))
+  const viewSearchParams = loadViewSearchParams(request)
+  const { path, objectPath, branch: branchParam } = viewSearchParams
+  // const urlSearchParams = new URL(request.url).searchParams
+
+  let shouldRedirect = false
+  const params = (
+    [
+      ["path", { param: path, fallback: repositoryPath }],
+      ["branch", { param: branchParam, fallback: branch }]
+      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
+    ] as const
+  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
+    if (!param) {
+      shouldRedirect = true
+      return { ...params, [paramName]: fallback }
+    }
+    return params
+  }, viewSearchParams)
+
+  if (shouldRedirect) {
+    console.warn(`One parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
+    throw redirect(href("/view") + viewSerializer(params))
   }
 
   const versionInfo = context.get(versionContext)
@@ -347,14 +371,15 @@ export default function Repo() {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const [{ path, objectPath }] = useQueryStates(viewSearchParamsConfig)
+  const [objectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
 
-  const home = href("/view/home") + viewSerializer({ ...(path ? { path } : {}) })
+  const homePath = useHomePath()
 
   const clearCacheUrl = `/clear-cache?${new URLSearchParams({
     redirect: location.pathname + location.search
   }).toString()}`
 
+  const objectPathIsFile = objectPath?.split("/").pop()?.includes(".")
   return (
     <Suspense
       fallback={
@@ -387,11 +412,11 @@ export default function Repo() {
               <Activity mode={leftExpanded ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "lg:pr-0 lg:transition-transform",
+                    "*:not-first:m-2 lg:pr-0 lg:transition-transform",
                     leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
-                  <div className="bg-primary-bg dark:bg-primary-bg-dark relative sticky top-0 z-10 flex justify-between p-2">
+                  <div className="bg-primary-bg dark:bg-primary-bg-dark sticky top-0 z-10 flex justify-between p-2">
                     <GitTruckInfo
                       className=""
                       installedVersion={versionInfo.installedVersion}
@@ -402,14 +427,18 @@ export default function Repo() {
                     </button>
                   </div>
                   <CollapsibleHeader
+                    className="card"
                     title={
                       <>
                         {objectPath ? (
                           <>
                             <span className="truncate" title={objectPath}>
-                              Details: <span className="[text-transform:none]">{objectPath.split("/").pop()}</span>
+                              Details:{" "}
+                              <span className="normal-case">
+                                {objectPathIsFile ? objectPath.split("/").pop() : objectPath}
+                              </span>
                             </span>
-                            <Link className="btn" to={home}>
+                            <Link className="btn" to={homePath}>
                               <Icon path={mdiClose} />
                             </Link>
                           </>
@@ -423,28 +452,28 @@ export default function Repo() {
                     <Outlet context={{ showUnionAuthorsModal }} />
                   </CollapsibleHeader>
                   <CollapsibleHeader
+                    className="card"
                     title={
                       <>
                         Visualization options
                         <CollapsableSettings />
                       </>
                     }
-                    contentClassName="pb-6"
+                    contentClassName="pb-6 flex flex-col gap-2"
                   >
                     <Options />
                   </CollapsibleHeader>
-                  {/* <div className="flex-1" /> */}
-                  <CollapsibleHeader title="Legend" contentClassName="pb-6">
+                  <CollapsibleHeader className="card" title="Legend" contentClassName="pb-6">
                     <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
                   </CollapsibleHeader>
                 </aside>
               </Activity>
               <main
                 className={cn(
-                  "relative grid h-full min-w-25 grid-rows-[auto_1fr] gap-2 [grid-area:main] lg:transition-transform"
+                  "relative grid h-full min-w-25 grid-rows-[auto_1fr_auto] gap-2 [grid-area:main] lg:transition-transform"
                 )}
               >
-                <header className="grid grid-flow-col items-center justify-between gap-2 p-2">
+                <header className="from-primary-bg dark:from-primary-bg-dark to-primary-bg dark:to-primary-bg-dark top-0 right-0 left-0 z-10 grid grid-flow-col items-center justify-between gap-2 bg-linear-to-r via-transparent p-2">
                   <div className="flex gap-2">
                     {!leftExpanded ? (
                       <button title="Show left panel" onClick={toggleLeft} className="btn btn--text aspect-square">
@@ -453,11 +482,11 @@ export default function Repo() {
                     ) : (
                       <div />
                     )}
-                    <AnalysisInfo />
-                  </div>
-                  <div className="flex gap-2">
+                    {/* <AnalysisInfo /> */}
+                    <BrowseParentFolder />
                     <Breadcrumb />
                   </div>
+                  <div className="flex gap-2"></div>
                   <div className="flex gap-2">
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
@@ -499,9 +528,10 @@ export default function Repo() {
                     )}
                   </ClientOnly>
                 </div>
-                <div className="card flex flex-col gap-1 px-2 text-center select-none">
+                <div className="flex flex-col gap-1 px-2 text-center select-none">
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="card__title">Commits per {data.databaseInfo.commitCountPerTimeIntervalUnit}</h2>
+                    {/* TODO: Add presets, like "Last 24 hours, last 7 days, last 30 days, last years etc." */}
                     <Form
                       className={cn({
                         invisible:

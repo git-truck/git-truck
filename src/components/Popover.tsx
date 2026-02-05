@@ -6,12 +6,14 @@ export function Popover({
   popoverTitle,
   positions = ["top", "bottom", "left", "right"],
   trigger: Trigger,
+  triggerOnHover = false,
   triggerClassName = "",
   children,
   ...props
 }: Omit<React.ComponentProps<typeof ReactPopower>, "content" | "isOpen"> & {
   popoverTitle?: string
   className?: string
+  triggerOnHover?: boolean
   trigger: (props: { isOpen: boolean; onOpen: () => void; onClose: () => void; onClick: () => void }) => React.ReactNode
   triggerClassName?: string
 }) {
@@ -34,15 +36,15 @@ export function Popover({
           arrowColor="currentColor"
           arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-30"
         >
-          <div className="bg-tertiary-bg dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 shadow-2xl">
+          <div className="bg-secondary-bg starting:opacity-0 transition-opacity  opacity-100 dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 shadow-2xl">
             {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
-            <CloseButton onClick={onClose} />
+            {triggerOnHover ? null : <CloseButton onClick={onClose} />}
             <div className="text-secondary-text dark:text-secondary-text-dark flex flex-col gap-1">{children}</div>
           </div>
         </ArrowContainer>
       )}
     >
-      <div className={triggerClassName}>
+      <div className={triggerClassName} {...(triggerOnHover ? { onMouseEnter: onOpen, onMouseLeave: onClose } : {})}>
         <Trigger isOpen={isOpen} onOpen={onOpen} onClose={onClose} onClick={onClick} />
       </div>
     </ReactPopower>

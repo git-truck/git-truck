@@ -2,10 +2,10 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { MouseEventHandler, JSX } from "react"
 import { useDeferredValue, memo, useEffect, useMemo } from "react"
-import { href, useLocation, useNavigate } from "react-router"
+import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize, useCreateLink } from "~/hooks"
+import { useComponentSize, useKeyActive } from "~/hooks"
 import {
   bubblePadding,
   letterHeightForTreeText,
@@ -27,72 +27,86 @@ import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
-import { usePath } from "../contexts/PathContext"
-import { isDarkColor, isBlob, isTree } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
-import { viewSerializer } from "~/routes/view"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
+import { useQueryState, useQueryStates } from "nuqs"
+import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
+import { Icon } from "./Icon"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
 export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObject: (obj: GitObject | null) => void }) {
   const [ref, rawSize] = useComponentSize()
-  const { searchResults } = useSearch()
+  const { searchResults, hasSearchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
-  const { path } = usePath()
-  const { clickedObject } = useClickedObject()
-  const { setPath } = usePath()
+
+  const [params] = useQueryStates(viewSearchParamsConfig)
+  const [objectPath] = useQueryState("objectPath", { shallow: false })
+  const zoomKeyActive = useKeyActive({ ctrlOrMeta: true })
+  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+
+  const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
+    setZoomPathRaw((prev) => {
+      const value = typeof zoomPathUpdate === "function" ? zoomPathUpdate(prev) : zoomPathUpdate
+      return value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null
+    })
+
+  const { clickedObject, setClickedObject } = useClickedObject()
+
   const { showFilesWithoutChanges } = useOptions()
-  const location = useLocation()
   const navigate = useNavigate()
 
-  const tabURL = useMemo<Parameters<typeof href>[0]>(() => {
-    const segments = location.pathname.split("/").filter(Boolean)
-    const detailsIdx = segments.indexOf("details")
-    const tab = detailsIdx >= 0 ? segments[detailsIdx + 1] : undefined
-    return tab === "commits" ? "/view/commits" : "/view/details"
-  }, [location.pathname])
+  const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
 
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
     const ig = ignore()
     ig.add(databaseInfo.hiddenFiles)
-    const filtered = filterGitTree(databaseInfo.fileTree, databaseInfo.commitCounts, showFilesWithoutChanges, ig)
+    const filtered = filterGitTree(databaseInfo.fileTree, {
+      commitCounts: databaseInfo.commitCounts,
+      showFilesWithoutChanges,
+      ig,
+      searchResults,
+      hasSearchResults
+    })
     if (hierarchyType === "NESTED") return filtered
     return {
       ...filtered,
       children: flatten(filtered)
     } as GitTreeObject
   }, [
-    databaseInfo.fileTree,
-    hierarchyType,
     databaseInfo.hiddenFiles,
+    databaseInfo.fileTree,
     databaseInfo.commitCounts,
-    showFilesWithoutChanges
+    showFilesWithoutChanges,
+    searchResults,
+    hasSearchResults,
+    hierarchyType
   ])
 
   const nodes = useMemo(() => {
     console.time("nodes")
     if (size.width === 0 || size.height === 0) return []
 
-    const res = createPartitionedHiearchy(
+    const res = createPartitionedHiearchy({
       databaseInfo,
-      filetree,
+      tree: filetree,
       size,
       chartType,
-      sizeMetric,
-      path,
-      renderCutoff
-    ).descendants()
+      sizeMetricType: sizeMetric,
+      renderCutoff,
+      zoomPath: zoomPath ?? undefined
+    }).descendants()
     console.timeEnd("nodes")
     return res
-  }, [size, chartType, sizeMetric, path, renderCutoff, databaseInfo, filetree])
-
+  }, [size, chartType, sizeMetric, zoomPath, renderCutoff, databaseInfo, filetree])
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -104,7 +118,14 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     return {
       onClick: (evt) => {
         evt.stopPropagation()
-        navigate(href(tabURL) + viewSerializer({ path: path, objectPath: d.data.path }),{
+
+        // Zoom with Ctrl / Cmd click
+        if (evt.ctrlKey || evt.metaKey) {
+          setZoomPath((prev) => (prev === trimFilenameFromPath(d.data.path) ? null : d.data.path))
+          return
+        }
+
+        navigate(tabURL + viewSerializer({ ...params, objectPath: d.data.path }), {
           state: {
             clickedObject: d.data
           }
@@ -121,7 +142,15 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     }
   }
 
-  const hasSearchResults = Object.values(searchResults).length > 0
+  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
+  const zoomOut = () => {
+    if (!sep || !zoomPath) return
+    // Move up to parent
+    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
+
+    console.log("Zooming out to", parentPath)
+    setZoomPath(parentPath)
+  }
 
   return (
     <div className="relative grid place-items-center" ref={ref}>
@@ -130,19 +159,12 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
         className={clsx(
           "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs dark:fill-gray-100",
           {
-            "cursor-zoom-out": path.includes("/")
+            "cursor-zoom-out": zoomKeyActive && sep
           }
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => {
-          if (!path.includes("/")) return
-          // Move up to parent
-          const parentPath = path.split("/").slice(0, -1).join("/")
-          // Check if parent is root
-          if (parentPath === "") setPath("/")
-          else setPath(parentPath)
-        }}
+        onClick={() => zoomKeyActive && zoomOut()}
       >
         {nodes.map((d, i) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
@@ -150,15 +172,23 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
           return (
             <g
               key={d.data.path}
-              className={clsx("duration-400", {
-                "cursor-pointer": i === 0,
-                "cursor-zoom-in": i > 0 && isTree(d.data),
-                "hover:opacity-80": isBlob(d.data),
-                "opacity-30":
-                  (!isSearchMatch && hasSearchResults) ||
-                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
-                "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
-              })}
+              className={cn(
+                "duration-400",
+                {
+                  "hover:opacity-80": isBlob(d.data),
+                  "opacity-30":
+                    (!isSearchMatch && hasSearchResults) ||
+                    (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
+                  "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
+                },
+                zoomKeyActive
+                // If the currently zoomed path is the same as the basepath of the node, show zoom-out cursor
+                  ? zoomPath && zoomPath === trimFilenameFromPath(d.data.path)
+                    ? "cursor-zoom-out"
+                    // Otherwise, show zoom-in cursor
+                    : "cursor-zoom-in"
+                  : "cursor-pointer"
+              )}
               {...eventHandlers}
             >
               <Node
@@ -172,28 +202,60 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
                   d={d}
                 >
                   {d.data.name}
+                  {/* TOOD: After adding absolutePaths to objects, display the absolute path on the root tree */}
+                  {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
                 </NodeText>
               ) : null}
             </g>
           )
         })}
       </svg>
+      <div className={cn("absolute bottom-2 left-2 flex gap-2", {})}>
+        {objectPath ? (
+          <button className="btn" onClick={() => setClickedObject(null)}>
+            Clear selection
+          </button>
+        ) : null}
+        {zoomPath && zoomPath !== databaseInfo.repo ? (
+          <>
+            <button className="btn" onClick={() => setZoomPath(null)}>
+              <Icon path={mdiUndo} />
+              Reset zoom
+            </button>
+            <button className="btn" onClick={zoomOut}>
+              <Icon path={mdiMagnifyMinus} />
+              Zoom out
+            </button>
+          </>
+        ) : null}
+      </div>
     </div>
   )
 })
 
 function filterGitTree(
   tree: GitTreeObject,
-  commitCounts: Record<string, number>,
-  showFilesWithoutChanges: boolean,
-  ig: Ignore
+  {
+    commitCounts,
+    searchResults,
+    hasSearchResults,
+    showFilesWithoutChanges,
+    ig
+  }: {
+    commitCounts: Record<string, number>
+    searchResults: Record<string, GitObject>
+    hasSearchResults: boolean
+    showFilesWithoutChanges: boolean
+    ig: Ignore
+  }
 ): GitTreeObject {
   function filterNode(node: GitObject): GitObject | null {
     if (ig.ignores(node.path)) {
       return null
     }
     if (node.type === "blob") {
-      if (!showFilesWithoutChanges && !commitCounts[node.path]) return null
+      if ((hasSearchResults && !searchResults[node.path]) || (!showFilesWithoutChanges && !commitCounts[node.path]))
+        return null
       return node
     } else {
       // It's a tree
@@ -267,7 +329,6 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       {...commonProps}
       className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
         "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
-        "cursor-pointer": isBlob(d.data),
         "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
       })}
     />
@@ -413,25 +474,37 @@ function isCircularNode(d: CircleOrRectHiearchyNode): d is HierarchyCircularNode
   return typeof (d as HierarchyCircularNode<GitObject>).r === "number"
 }
 
-function createPartitionedHiearchy(
-  databaseInfo: DatabaseInfo,
-  tree: GitTreeObject,
-  size: { height: number; width: number },
-  chartType: ChartType,
-  sizeMetricType: SizeMetricType,
-  path: string,
+function createPartitionedHiearchy({
+  databaseInfo,
+  tree,
+  size,
+  chartType,
+  sizeMetricType,
+  renderCutoff,
+  zoomPath: objectPath
+}: {
+  databaseInfo: DatabaseInfo
+  tree: GitTreeObject
+  size: { height: number; width: number }
+  chartType: ChartType
+  sizeMetricType: SizeMetricType
   renderCutoff: number
-) {
+  zoomPath?: string
+}) {
   let currentTree = tree
-  const steps = path.substring(tree.name.length + 1).split("/")
-  for (let i = 0; i < steps.length; i++) {
-    for (const child of currentTree.children) {
-      if (child.type === "tree") {
-        const childSteps = child.name.split("/")
-        if (childSteps[0] === steps[i]) {
-          currentTree = child
-          i += childSteps.length - 1
-          break
+
+  // If objectPath is defined, navigate to the corresponding subtree. This allows for zooming into subtrees when clicking on them
+  if (objectPath) {
+    const steps = objectPath.substring(tree.name.length + 1).split("/")
+    for (let i = 0; i < steps.length; i++) {
+      for (const child of currentTree.children) {
+        if (child.type === "tree") {
+          const childSteps = child.name.split("/")
+          if (childSteps[0] === steps[i]) {
+            currentTree = child
+            i += childSteps.length - 1
+            break
+          }
         }
       }
     }
@@ -475,7 +548,7 @@ function createPartitionedHiearchy(
 
     const tmPartition = treeMapPartition(hiearchy)
 
-    filterTree(tmPartition, (child) => {
+    filterVisualization(tmPartition, (child) => {
       const cast = child as HierarchyRectangularNode<GitObject>
       return cast.x1 - cast.x0 >= cutOff && cast.y1 - cast.y0 >= cutOff
     })
@@ -487,7 +560,7 @@ function createPartitionedHiearchy(
       .size([size.width, size.height - letterHeightForTreeText])
       .padding(bubblePadding)
     const bPartition = bubbleChartPartition(hiearchy)
-    filterTree(bPartition, (child) => {
+    filterVisualization(bPartition, (child) => {
       const cast = child as HierarchyCircularNode<GitObject>
       return cast.r >= cutOff
     })
@@ -497,10 +570,12 @@ function createPartitionedHiearchy(
   }
 }
 
-function filterTree(node: HierarchyNode<GitObject>, filter: (child: HierarchyNode<GitObject>) => boolean) {
-  node.children = node.children?.filter((c) => filter(c))
+function filterVisualization(node: HierarchyNode<GitObject>, filter: (child: HierarchyNode<GitObject>) => boolean) {
+  if (node.children) {
+    node.children = node.children.filter((c) => filter(c))
+  }
   for (const child of node.children ?? []) {
-    if ((child.children?.length ?? 0) > 0) filterTree(child, filter)
+    if ((child.children?.length ?? 0) > 0) filterVisualization(child, filter)
   }
 }
 

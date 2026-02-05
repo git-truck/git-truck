@@ -13,7 +13,7 @@ import { Popover } from "./Popover"
 import { cn } from "~/styling"
 import BarChart from "./BarChart"
 
-export default function Timeline() {
+export default function Timeline({ className }: { className?: string }) {
   const [_, startTransition] = useTransition()
 
   const { databaseInfo } = useData()
@@ -44,7 +44,7 @@ export default function Timeline() {
   const selectedEndDate = range[1] * 1000
 
   return (
-    <div className="group flex flex-col gap-2">
+    <div className={cn("group flex flex-col gap-2", className)}>
       <BarChart />
       <Slider
         className="relative"
@@ -85,7 +85,7 @@ export default function Timeline() {
                       trigger={({ onClick }) => (
                         <button
                           className={cn(
-                            "bg-blue-primary text-primary-text-dark cursor-pointer rounded-full p-1 break-keep shadow",
+                            "bg-blue-primary text-primary-text-dark cursor-pointer rounded-lg px-1 break-keep shadow",
                             {
                               "rounded-tl-none": i === 0,
                               "rounded-tr-none": i === 1
@@ -146,7 +146,8 @@ export default function Timeline() {
         </Tracks>
       </Slider>
       <TicksByCount
-        count={5}
+      className="mb-2"
+        count={15}
         // align="left"
         tickToLabel={(t) => dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)}
       />

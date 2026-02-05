@@ -1,21 +1,27 @@
 import { mdiChevronRight, mdiHome } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
-import { usePath } from "~/contexts/PathContext"
 import { cn } from "~/styling"
-import { useQueryStates } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/view"
+import { useQueryState } from "nuqs"
+import { href, useNavigate } from "react-router"
+import { viewSerializer } from "~/routes/view"
+import { useDataNullable } from "~/contexts/DataContext"
+import { getSep } from "~/shared/util"
+import { AnalysisInfo } from "./GlobalInfo"
 
-export function Breadcrumb({ className = "" }: { className?: string }) {
-  let { path, setPath } = usePath()
-  const [{ objectPath }] = useQueryStates(viewSearchParamsConfig)
+export function Breadcrumb({ repoPath, className = "" }: { repoPath?: string; className?: string }) {
+  // TODO: Refactor breadcrumb to display a "browse parent folder" as well as a file picker
+  const [queryPath] = useQueryState("path")
+  const [zoomPath, setZoomPath] = useQueryState("zoomPath")
+  const data = useDataNullable()
 
-  if (objectPath) {
-    path = objectPath
-  }
+  const path = zoomPath ?? queryPath
+  const navigate = useNavigate()
 
   const paths = useMemo<[string, string][]>(() => {
-    const parts = path === "" ? [] : path.split("/")
+    if (!path) return []
+
+    const parts = path === "" ? [] : path.split(getSep(path))
     const segments: [string, string][] = parts.map((part, index) => {
       const fullPath = parts.slice(0, index + 1).join("/")
       return [part, fullPath]
@@ -36,6 +42,18 @@ export function Breadcrumb({ className = "" }: { className?: string }) {
       )}
     >
       {paths.map(([name, p], i) => {
+        // TODO: This wont work when switching to absolute paths for objectPath
+        const isHigherLevelThanRepo = repoPath && !p.includes(repoPath)
+        const onClick = () => {
+          if (isHigherLevelThanRepo) {
+            navigate(href("/browse") + viewSerializer({ path: p }))
+            return
+          }
+          if (!data) {
+            throw Error("Attempting to access data when none is loaded")
+          }
+          setZoomPath(p)
+        }
         if (p === "" || i === paths.length - 1)
           if (p === "")
             return (
@@ -53,14 +71,18 @@ export function Breadcrumb({ className = "" }: { className?: string }) {
         else
           return (
             <Fragment key={p}>
-              <button
-                title={`Navigate to ${name}`}
-                className="btn flex min-w-fit cursor-pointer flex-row gap-2 font-bold"
-                onClick={() => setPath(p)}
-              >
-                {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
-                {name}
-              </button>
+              {i === 0 ? (
+                <AnalysisInfo onClick={onClick} />
+              ) : (
+                <button
+                  title={`${isHigherLevelThanRepo ? "Browse" : "Zoom"} to ${name}`}
+                  className="btn flex min-w-fit cursor-pointer flex-row gap-2 font-bold"
+                  onClick={onClick}
+                >
+                  {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
+                  {name}
+                </button>
+              )}
               <Icon path={mdiChevronRight} size={1} className="min-w-fit" />
             </Fragment>
           )

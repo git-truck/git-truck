@@ -106,7 +106,7 @@
 }
 
 @utility card {
-  @apply tertiary text-secondary-text dark:text-secondary-text-dark relative flex w-auto flex-col gap-2 rounded-sm;
+  @apply secondary text-secondary-text dark:text-secondary-text-dark relative flex w-auto flex-col gap-2 p-2 rounded-sm;
 }
 
 @utility card__header {

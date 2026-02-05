@@ -1,12 +1,12 @@
 import { dateFormatLong, extname, invariant, last, resolveParentFolder } from "~/shared/util"
 import { useId, useState, Suspense, useEffect } from "react"
-import { Await, Form, useLoaderData, useLocation, useNavigation } from "react-router"
+import { Await, Form, useLoaderData, useLocation, useNavigation, Link } from "react-router"
 import { AuthorDistFragment } from "~/components/AuthorDistFragment"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useData } from "~/contexts/DataContext"
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import type { Route } from "./+types/view.details"
-import { mdiEyeOffOutline, mdiAccountMultiple, mdiOpenInNew } from "@mdi/js"
+import { mdiEyeOffOutline, mdiAccountMultiple, mdiOpenInNew, mdiSearchWeb } from "@mdi/js"
 import byteSize from "byte-size"
 import { Icon } from "~/components/Icon"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -14,9 +14,11 @@ import { usePath } from "~/contexts/PathContext"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { currentRepositoryContext, useRepoContext } from "~/routes/view"
+import { currentRepositoryContext, useRepoContext, viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { openFile } from "~/shared/util.server"
 import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
+import { RepoTabs } from "~/components/RepoTabs"
+import { useQueryStates } from "nuqs"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -76,14 +78,18 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   return null
 }
 
-export default function General() {
+export default function Details() {
   const { setPath } = usePath()
   const { showUnionAuthorsModal } = useRepoContext()
   const { path, authorDistributionPromise } = useLoaderData<typeof loader>()
   const data = useData()
   const { state } = useNavigation()
-  const clickedObject = useLocation().state?.clickedObject as GitObject | null | undefined
+  const location = useLocation()
+  const clickedObject = location.state?.clickedObject as GitObject | null | undefined
   const setOpen = useSetOpenCollapsibleHeader()
+
+  const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
+  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: path })
 
   useEffect(() => {
     setOpen(!!clickedObject)
@@ -99,6 +105,7 @@ export default function General() {
   const extension = last(clickedObject.name.split("."))
   return (
     <>
+      <RepoTabs />
       <div className="flex grow flex-col gap-2">
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           {isBlob ? <FileTypeEntry /> : null}
@@ -121,7 +128,15 @@ export default function General() {
           </Suspense>
         </div>
       </div>
+      <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
+        <Icon path={mdiAccountMultiple} />
+        Group authors
+      </button>
       <div className="mt-2 flex flex-wrap gap-2">
+        <Link className="btn" to={zoomLink}>
+          <Icon path={mdiSearchWeb} />
+          Zoom to this {isBlob ? "file" : "folder"}
+        </Link>
         {isBlob ? (
           <>
             <Form className="w-max" method="post">
@@ -162,10 +177,6 @@ export default function General() {
             </button>
           </Form>
         )}
-        <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
-          <Icon path={mdiAccountMultiple} />
-          Group authors
-        </button>
       </div>
     </>
   )
