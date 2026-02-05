@@ -84,6 +84,10 @@ export function getSeparator(path: string) {
   return "/"
 }
 
+/**
+ *
+ * @deprecated
+ */
 export const getPathFromRepoAndHead = (
   params: { path: string; branch?: string },
   segments: LinkSegments = ["view"]
@@ -117,7 +121,7 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const brightnessCalculationCache = new Map<`#${string}`, {isDark: boolean, luminance: number}>()
+const brightnessCalculationCache = new Map<`#${string}`, { isDark: boolean; luminance: number }>()
 
 function weightedDistanceIn3D(hex: `#${string}`) {
   const rgb = hexToRgb(hex)
@@ -268,18 +272,23 @@ export function analyzeRenamedFile(
   return newPath
 }
 
-export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject | undefined {
+/**
+ *
+ * @deprecated This is a very inefficient way to look up files
+ * TODO: Create a lookup table for object data that maps absolute paths to their details and use that instead of traversing the tree every time we want to look up a file.
+ */
+export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject | null {
   const dirs = path.split("/")
 
   if (dirs.length < 2) {
     // We have reached the end of the tree, look for the blob
     const [file] = dirs
     const result = tree.children.find((x) => x.name === file && x.type === "blob")
-    if (!result) return
+    if (!result) return null
     return result
   }
   const subtree = tree.children.find((x) => x.name === dirs[0])
-  if (!subtree || subtree.type === "blob") return
+  if (!subtree || subtree.type === "blob") return null
   return lookupFileInTree(subtree, dirs.slice(1).join("/"))
 }
 
@@ -334,6 +343,25 @@ export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T
 
 export const extname = (filename: string): string => filename.split(".").pop() || ""
 
+/**
+ *
+ * @deprecated This should be not be used, as it's buggy. Instead, we should use the type provided by Git
+ * TODO: Create a lookup table for object data that maps absolute paths to their details.
+ */
+export const trimFilenameFromPath = (path: string): string => {
+  // If given a directory path, just return it. If given a file path, remove the filename and return the directory path.
+
+  // If it ends with a separator, it's clearly a directory
+  const lastSlashIndex = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
+  if (lastSlashIndex === -1) return path
+  if (lastSlashIndex === path.length - 1) return path
+
+  // Heuristic: if the last segment contains a dot, treat it as a file; otherwise assume directory
+  const basename = path.slice(lastSlashIndex + 1)
+  if (basename === "." || basename === ".." || !basename.includes(".")) return path
+  return path.slice(0, lastSlashIndex)
+}
+
 export function expandIntervalToRange(timestamp: number, commitCountPerTimeIntervalUnit: string): [number, number] {
   const start = new Date(timestamp * 1000)
   start.setUTCHours(0, 0, 0, 0)
@@ -376,3 +404,5 @@ export function expandIntervalToRange(timestamp: number, commitCountPerTimeInter
     }
   }
 }
+
+export const getSep = (path: string) => (path.includes("/") ? "/" : "\\")
