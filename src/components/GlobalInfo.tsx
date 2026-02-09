@@ -5,7 +5,15 @@ import { useIsClient } from "~/hooks"
 import { Popover } from "./Popover"
 import { cn } from "~/styling"
 
-export function AnalysisInfo({ className = "" }: { className?: string }) {
+export function AnalysisInfo({
+  className = "",
+  title,
+  onClick
+}: {
+  className?: string
+  title?: string
+  onClick?: () => void
+}) {
   const client = useIsClient()
   const { databaseInfo, repo } = useData()
 
@@ -14,12 +22,16 @@ export function AnalysisInfo({ className = "" }: { className?: string }) {
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="relative flex w-full items-center justify-between gap-2">
         <Popover
-        triggerOnHover
+          /**
+           * Only trigger on hover if there is an onClick handler, otherwise trigger on click. This is because if there is no onClick handler, the popover will be the only way to access the details, so it should be accessible on hover. If there is an onClick handler, the popover should only be accessible on click to avoid interfering with the button's primary action.
+           */
+          triggerOnHover={!!onClick}
           popoverTitle="Analysis details"
-          trigger={({ onClick }) => (
+          trigger={({ onClick: onPopOverClick }) => (
             <button
+              title={title}
               className="text-primary-text dark:text-primary-text-dark hover:text-secondary-text dark:hover:text-secondary-text-dark grow cursor-pointer justify-start gap-2 truncate text-xl"
-              onClick={onClick}
+              onClick={onClick ? onClick : onPopOverClick}
             >
               {repo.repositoryName}
             </button>
