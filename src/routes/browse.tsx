@@ -39,7 +39,7 @@ const loadSearchParams = createLoader(browseSearchParamsConfig)
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const serializer = createSerializer(browseSearchParamsConfig)
   const args = getArgsWithDefaults()
-  const { path, count, offset, sort } = loadSearchParams(request, { strict: true })
+  const { path, count, offset, sort, search } = loadSearchParams(request, { strict: true })
 
   if (path) {
     log.info(`Path provided: ${path}`)
@@ -62,6 +62,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   // Get all directories that has a .git subdirectory
   const foundRepositories = await GitCaller.readGitRepos(baseDir)
   const repositories = foundRepositories
+    .filter((repo) => repo.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       if (sort === "asc") return a.name.localeCompare(b.name)
       if (sort === "desc") return b.name.localeCompare(a.name)
@@ -95,7 +96,7 @@ export default function Index() {
   const { versionInfo, repositories, baseDir, analyzedReposPromise, totalCount } = useLoaderData<typeof loader>()
   const location = useLocation()
   const [sortMethod, setSortMethod] = useQueryState("sort", browseSearchParamsConfig.sort)
-  const [_, setSearch] = useQueryState("search", browseSearchParamsConfig.search)
+  const [searchQuery, setSearch] = useQueryState("search", browseSearchParamsConfig.search)
 
   // const sortMethod = (searchParams.get("sort") as SortingMethod | null) ?? "lastChanged"
 
@@ -138,6 +139,7 @@ export default function Index() {
                 type="text"
                 className="input"
                 placeholder="Search repositories..."
+                defaultValue={searchQuery}
               />
             </div>
             <div className="hidden w-full gap-2">
