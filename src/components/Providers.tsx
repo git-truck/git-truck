@@ -20,7 +20,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       hasLoadedSavedOptions: !!savedOptions
     }
   })
-  
+
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
 
@@ -97,6 +97,11 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
         setOptions((prevOptions) => ({
           ...prevOptions,
           linkMetricAndSizeMetric: link
+        })),
+      setShowOnlySearchMatches: (showOnlySearchMatches: boolean) =>
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          showOnlySearchMatches: showOnlySearchMatches
         }))
     }),
     [options]

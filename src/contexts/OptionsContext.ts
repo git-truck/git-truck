@@ -32,6 +32,10 @@ export type Options = {
   showFilesWithoutChanges: boolean
   dominantAuthorCutoff: number
   linkMetricAndSizeMetric: boolean
+  /**
+   * When searching, hide files that do not match the search query
+   */
+  showOnlySearchMatches: boolean
 }
 
 export type OptionsContextType = Options & {
@@ -46,6 +50,7 @@ export type OptionsContextType = Options & {
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
+  setShowOnlySearchMatches: (showOnlySearchMatches: boolean) => void
 }
 
 export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
@@ -70,7 +75,8 @@ const defaultOptions: Options = {
   renderCutoff: 2,
   showFilesWithoutChanges: true,
   dominantAuthorCutoff: 0,
-  linkMetricAndSizeMetric: false
+  linkMetricAndSizeMetric: false,
+  showOnlySearchMatches: false
 }
 
 export const getDefaultOptionsContextValue = (): Options => defaultOptions

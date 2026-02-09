@@ -1,7 +1,7 @@
 import { CheckboxWithLabel } from "./util"
 import { useOptions } from "../contexts/OptionsContext"
 import { Icon } from "~/components/Icon"
-import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
+import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 import { relatedSizeMetric } from "./Options"
@@ -38,6 +38,7 @@ export function Settings() {
     renderCutoff,
     showFilesWithoutChanges,
     linkMetricAndSizeMetric,
+    showOnlySearchMatches,
     setLinkMetricAndSizeMetric,
     setTransitionsEnabled,
     labelsVisible,
@@ -45,7 +46,8 @@ export function Settings() {
     setHierarchyType,
     setSizeMetricType,
     setRenderCutoff,
-    setShowFilesWithoutChanges
+    setShowFilesWithoutChanges,
+    setShowOnlySearchMatches
   } = useOptions()
   const [isTransitioning, startTransition] = useTransition()
 
@@ -116,6 +118,15 @@ export function Settings() {
         <Icon className="ml-1.5" path={mdiThemeLightDark} size="1.25em" />
         Use dark theme
       </CheckboxWithLabel> */}
+      <CheckboxWithLabel
+        className="text-sm"
+        checked={showOnlySearchMatches}
+        onChange={(e) => setShowOnlySearchMatches(e.target.checked)}
+        title="When searching, hide files that do not match the search query"
+      >
+        <Icon className="ml-1.5" path={mdiFilter} size="1.25em" />
+        Show only search matches
+      </CheckboxWithLabel>
       <label
         className="label flex w-full items-center justify-start gap-2 text-sm"
         title="Increase this to improve render performance, decrease it to get higher level of detail"

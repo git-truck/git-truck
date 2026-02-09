@@ -60,7 +60,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
 
   const { clickedObject, setClickedObject } = useClickedObject()
 
-  const { showFilesWithoutChanges } = useOptions()
+  const { showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
   const navigate = useNavigate()
 
   const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
@@ -74,7 +74,8 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       showFilesWithoutChanges,
       ig,
       searchResults,
-      hasSearchResults
+      hasSearchResults,
+      showOnlySearchMatches
     })
     if (hierarchyType === "NESTED") return filtered
     return {
@@ -88,6 +89,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     showFilesWithoutChanges,
     searchResults,
     hasSearchResults,
+    showOnlySearchMatches,
     hierarchyType
   ])
 
@@ -240,12 +242,14 @@ function filterGitTree(
     searchResults,
     hasSearchResults,
     showFilesWithoutChanges,
+    showOnlySearchMatches,
     ig
   }: {
     commitCounts: Record<string, number>
     searchResults: Record<string, GitObject>
     hasSearchResults: boolean
     showFilesWithoutChanges: boolean
+    showOnlySearchMatches: boolean
     ig: Ignore
   }
 ): GitTreeObject {
@@ -254,8 +258,12 @@ function filterGitTree(
       return null
     }
     if (node.type === "blob") {
-      if ((hasSearchResults && !searchResults[node.path]) || (!showFilesWithoutChanges && !commitCounts[node.path]))
+      if (hasSearchResults && !searchResults[node.path] && showOnlySearchMatches) {
         return null
+      }
+      if (!showFilesWithoutChanges && !commitCounts[node.path]) {
+        return null
+      }
       return node
     } else {
       // It's a tree
