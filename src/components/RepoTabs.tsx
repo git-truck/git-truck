@@ -13,15 +13,15 @@ export function RepoTabs() {
       large
       group={
         {
-          "": "Details",
+          "/details": "Details",
           "/commits": "Commits"
         } as const
       }
       iconMap={{
-        "": mdiFolder,
+        "/details": mdiFolder,
         "/commits": mdiGit
       }}
-      defaultValue={isCommits ? "/commits" : ""}
+      defaultValue={isCommits ? "/commits" : "/details"}
       onChange={(v) => {
         navigate(href(`/view${v}`) + location.search, { state: location.state })
       }}
