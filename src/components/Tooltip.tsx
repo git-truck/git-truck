@@ -92,12 +92,10 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
           </div>
         </div>
       ) : null}
-      <span className="min-w-max opacity-90 text-xs">
-        Click for details
-      </span>
-      <span className="min-w-max opacity-90 text-xs">
-        Ctrl / Cmd click to zoom
-      </span>
+      <div className="flex flex-col gap-0.5">
+        <span className="min-w-max text-xs opacity-90">click for details</span>
+        <span className="min-w-max text-xs opacity-90">ctrl / cmd click to zoom</span>
+      </div>
     </div>
   )
 }
