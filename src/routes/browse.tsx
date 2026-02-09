@@ -118,7 +118,7 @@ export default function Index() {
       <main className="flex min-h-screen flex-col gap-4 p-4 lg:col-span-2 xl:col-span-1">
         <div className="card">
           <div className="flex flex-col gap-1">
-            <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex w-full items-center justify-between gap-2 px-2">
               <Breadcrumb />
 
               <Link

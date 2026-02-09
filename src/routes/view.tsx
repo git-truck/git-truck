@@ -484,7 +484,7 @@ export default function Repo() {
                     )}
                     {/* <AnalysisInfo /> */}
                     <BrowseParentFolder />
-                    <Breadcrumb />
+                    <Breadcrumb zoom />
                   </div>
                   <div className="flex gap-2"></div>
                   <div className="flex gap-2">

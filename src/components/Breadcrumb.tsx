@@ -1,4 +1,4 @@
-import { mdiChevronRight, mdiHome } from "@mdi/js"
+import { mdiChevronRight, mdiGit } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { cn } from "~/styling"
@@ -6,86 +6,127 @@ import { useQueryState } from "nuqs"
 import { href, useNavigate } from "react-router"
 import { viewSerializer } from "~/routes/view"
 import { useDataNullable } from "~/contexts/DataContext"
-import { getSep } from "~/shared/util"
+import { comparePaths, getSep } from "~/shared/util"
 import { AnalysisInfo } from "./GlobalInfo"
 
-export function Breadcrumb({ repoPath, className = "" }: { repoPath?: string; className?: string }) {
-  // TODO: Refactor breadcrumb to display a "browse parent folder" as well as a file picker
-  const [queryPath] = useQueryState("path")
+type Segment = {
+  type: "browse" | "zoom" | "filler"
+  segment: string
+  fullPath: string
+  isRepo: boolean
+}
+
+export function Breadcrumb({ className = "", zoom = false }: { className?: string; zoom?: boolean }) {
+  const [path] = useQueryState("path")
   const [zoomPath, setZoomPath] = useQueryState("zoomPath")
   const data = useDataNullable()
 
-  const path = zoomPath ?? queryPath
   const navigate = useNavigate()
 
-  const paths = useMemo<[string, string][]>(() => {
+  const segments = useMemo<Array<Segment>>(() => {
     if (!path) return []
 
-    const parts = path === "" ? [] : path.split(getSep(path))
-    const segments: [string, string][] = parts.map((part, index) => {
-      const fullPath = parts.slice(0, index + 1).join("/")
-      return [part, fullPath]
+    const pathSegments = path.split(getSep(path)).map((segment, index, repoPathSegments) => {
+      const fullPath = repoPathSegments.slice(0, index + 1).join("/")
+      return {
+        type: "browse",
+        segment,
+        fullPath,
+        isRepo: index === repoPathSegments.length - 1
+      } satisfies Segment
     })
+    const zoomSegments = [
+      {
+        type: "browse",
+        segment: data?.repo.parentDirName ?? "",
+        fullPath: data?.repo.parentDirPath ?? "",
+        isRepo: false
+      } as const,
+      {
+        type: "browse",
+        segment: data?.repo.repositoryName ?? "",
+        fullPath: data?.repo.repositoryPath ?? "",
+        isRepo: true
+      } as const,
+      ...(zoomPath?.split(getSep(zoomPath)) ?? []).slice(1).map((segment, index, zoomPathSegments) => {
+        const fullPath = zoomPathSegments.slice(0, index + 1).join("/")
+        return { type: "zoom", segment, fullPath, isRepo: index === 0 } satisfies Segment
+      })
+    ]
+    const segments = zoom ? zoomSegments : pathSegments
 
-    if (segments.length > 3) {
-      return [segments[0], ["...", ""], segments[segments.length - 2], segments[segments.length - 1]]
+    if (segments.length > 4) {
+      return [
+        segments[0],
+        segments[1],
+        { type: "filler", segment: "...", fullPath: "", isRepo: false } satisfies Segment,
+        segments[segments.length - 2],
+        segments[segments.length - 1]
+      ] satisfies Array<Segment>
     }
 
     return segments
-  }, [path])
+  }, [
+    data?.repo.parentDirName,
+    data?.repo.parentDirPath,
+    data?.repo.repositoryName,
+    data?.repo.repositoryPath,
+    path,
+    zoom,
+    zoomPath
+  ])
 
   return (
     <div
       className={cn(
-        "text-secondary-text dark:to-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto",
+        "text-secondary-text dark:text-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto",
         className
       )}
     >
-      {paths.map(([name, p], i) => {
-        // TODO: This wont work when switching to absolute paths for objectPath
-        const isHigherLevelThanRepo = repoPath && !p.includes(repoPath)
+      {segments.map(({ type, segment, fullPath }, i) => {
+        const isRepo = data && comparePaths(fullPath, data.repo.repositoryPath)
+        const title = isRepo
+          ? "Reset zoom to repository root"
+          : type === "browse"
+            ? `Browse ${segment} directory`
+            : `Zoom to ${segment} directory`
+        const isFirst = i === 0
+        const isLast = segments.length - 1 === i
+
         const onClick = () => {
-          if (isHigherLevelThanRepo) {
-            navigate(href("/browse") + viewSerializer({ path: p }))
+          if (type === "browse") {
+            navigate(href("/browse") + viewSerializer({ path: fullPath }))
             return
           }
           if (!data) {
             throw Error("Attempting to access data when none is loaded")
           }
-          setZoomPath(p)
+          setZoomPath(fullPath)
         }
-        if (p === "" || i === paths.length - 1)
-          if (p === "")
-            return (
-              <Fragment key={p}>
-                <span className="font-bold">{name}</span>
-                <Icon path={mdiChevronRight} size={1} />
-              </Fragment>
-            )
-          else
-            return (
-              <span className="font-bold" key={p}>
-                {name}
-              </span>
-            )
-        else
-          return (
-            <Fragment key={p}>
-              {i === 0 ? (
-                <AnalysisInfo onClick={onClick} />
-              ) : (
-                <button
-                  title={`${isHigherLevelThanRepo ? "Browse" : "Zoom"} to ${name}`}
-                  className="btn flex min-w-fit cursor-pointer flex-row gap-2 font-bold"
-                  onClick={onClick}
-                >
-                  {i === 0 ? <Icon path={mdiHome} size={1} /> : null}
-                  {name}
-                </button>
-              )}
-              <Icon path={mdiChevronRight} size={1} className="min-w-fit" />
-            </Fragment>
+
+        const content = (
+          <>
+            {isRepo ? <Icon path={mdiGit} /> : null}
+            {segment}
+          </>
+        )
+        const button =
+          isLast || type === "filler" ? (
+            <span className="flex items-center gap-1 font-bold" title={fullPath}>
+              {content}
+            </span>
+          ) : (
+            <button title={title} className="btn min-w-fit" onClick={onClick}>
+              {content}
+            </button>
           )
+
+        return (
+          <Fragment key={fullPath}>
+            {!isFirst ? <Icon path={mdiChevronRight} /> : null}
+            {isRepo ? <AnalysisInfo trigger={button} /> : button}
+          </Fragment>
+        )
       })}
     </div>
   )

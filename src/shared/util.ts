@@ -406,3 +406,9 @@ export function expandIntervalToRange(timestamp: number, commitCountPerTimeInter
 }
 
 export const getSep = (path: string) => (path.includes("/") ? "/" : "\\")
+
+export const comparePaths = (a: string, b: string): boolean => {
+  const sepA = getSep(a)
+  const sepB = getSep(b)
+  return a.split(sepA).join("/") === b.split(sepB).join("/")
+}
