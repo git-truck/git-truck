@@ -128,7 +128,7 @@ export default function Details() {
           </Suspense>
         </div>
       </div>
-      <button className="btn btn--outlined" onClick={showUnionAuthorsModal}>
+      <button className="btn" onClick={showUnionAuthorsModal}>
         <Icon path={mdiAccountMultiple} />
         Group authors
       </button>
@@ -141,7 +141,7 @@ export default function Details() {
           <>
             <Form className="w-max" method="post">
               <input type="hidden" name="ignore" value={clickedObject.path} />
-              <button className="btn btn--outlined" type="submit" disabled={state !== "idle"} title="Hide this file">
+              <button className="btn" type="submit" disabled={state !== "idle"} title="Hide this file">
                 <Icon path={mdiEyeOffOutline} />
                 Hide
               </button>
@@ -150,7 +150,7 @@ export default function Details() {
               <Form className="w-max" method="post">
                 <input type="hidden" name="ignore" value={`*.${extension}`} />
                 <button
-                  className="btn btn--outlined"
+                  className="btn"
                   type="submit"
                   disabled={state !== "idle"}
                   title={`Hide all files with .${extension} extension`}
@@ -165,7 +165,7 @@ export default function Details() {
           <Form method="post" action={location.pathname}>
             <input type="hidden" name="ignore" value={clickedObject.path} />
             <button
-              className="btn btn--outlined"
+              className="btn"
               type="submit"
               disabled={state !== "idle"}
               onClick={() => {
