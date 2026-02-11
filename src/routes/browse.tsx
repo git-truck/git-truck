@@ -425,6 +425,7 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
         <label className="flex items-center gap-2 whitespace-pre">
           Per page
           <select
+            defaultValue={count}
             className="input"
             onChange={(evt) =>
               setSearchParams({
@@ -434,7 +435,7 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
             }
           >
             {COUNT_OPTIONS.map((option) => (
-              <option key={option} value={option} selected={count === option}>
+              <option key={option} value={option}>
                 {option}
               </option>
             ))}
