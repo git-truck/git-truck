@@ -319,7 +319,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     fileTree: rootTree,
     fileCount,
     hiddenFiles,
-    lastRunInfo: lastRunInfo ?? ({} as { time: number; hash: string }),
+    lastRunInfo: lastRunInfo ?? { time: 0, hash: "" },
     repo: instance.repositoryName,
     branch,
     timerange,
