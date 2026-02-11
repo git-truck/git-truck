@@ -14,6 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: [latest]
+        bun-version: [latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -21,10 +22,10 @@ jobs:
       - name: Fetch main branch
         run: git fetch origin main:main -u
 
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - name: Use Bun ${{ matrix.bun-version }}
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ matrix.node }}
+          bun-version: ${{ matrix.bun-version }}
 
       - name: Get installed Playwright version
         id: playwright-version
@@ -40,20 +41,20 @@ jobs:
 
       - name: Install dependencies
         run: |
-          rm package-lock.json
-          npm install
+          rm bun.lock
+          bun install
 
       - name: Build Git Truck
-        run: npm run build
+        run: bun run build
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: bun test:e2e
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
