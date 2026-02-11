@@ -6,7 +6,7 @@
   "configurations": [
     {
       "name": "Debug Git Truck",
-      "program": "${workspaceFolder}/cli.js",
+      "program": "${workspaceFolder}/cli.mjs",
       "request": "launch",
       "args": ["--log", "debug", "--headless"],
       "skipFiles": ["<node_internals>/**"],
