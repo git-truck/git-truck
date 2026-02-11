@@ -344,10 +344,10 @@ export function rgbToHex(rgb: string): `#${string}` {
 }
 
 export function resolveParentFolder(path: string) {
-  const index = path.lastIndexOf("/")
-  const index2 = path.lastIndexOf("\\")
-  if (index !== -1) return path.slice(0, index)
-  if (index2 !== -1) return path.slice(0, index2)
+  const lastSlash = path.lastIndexOf("/")
+  const lastBackslash = path.lastIndexOf("\\")
+  const maxIndex = Math.max(lastSlash, lastBackslash)
+  if (maxIndex !== -1) return path.slice(0, maxIndex)
   return path
 }
 
