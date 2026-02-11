@@ -1,4 +1,4 @@
-import { mdiFolder, mdiGit } from "@mdi/js"
+import { mdiInformationOutline, mdiSourceCommit } from "@mdi/js"
 import { href, useLocation, useNavigate, useMatch } from "react-router"
 import { IconRadioGroup } from "~/components/EnumSelect"
 
@@ -18,8 +18,8 @@ export function RepoTabs() {
         } as const
       }
       iconMap={{
-        "/details": mdiFolder,
-        "/commits": mdiGit
+        "/details": mdiInformationOutline,
+        "/commits": mdiSourceCommit
       }}
       defaultValue={isCommits ? "/commits" : "/details"}
       onChange={(v) => {

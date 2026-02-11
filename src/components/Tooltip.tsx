@@ -6,6 +6,7 @@ import {
   mdiFileOutline,
   mdiPlusMinusVariant,
   mdiPulse,
+  mdiResize,
   mdiSourceCommit
 } from "@mdi/js"
 import { Icon } from "~/components/Icon"
@@ -194,6 +195,7 @@ function SizeMetricDependentInfo({
   icon = mdiCircleSmall
   switch (sizeMetric) {
     case "FILE_SIZE": {
+      icon = mdiResize
       const fileSizeInBytes = hoveredBlob.sizeInBytes
       if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
         content = "Size unknown"
