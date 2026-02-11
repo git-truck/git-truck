@@ -226,7 +226,7 @@ function SizeMetricDependentInfo({
       content = dateFormatRelative(epoch)
       break
     }
-    case "MOST_CONTRIBS": {
+    case "MOST_CONTRIBUTIONS": {
       icon = mdiPlusMinusVariant
       const contribs = databaseInfo.contribSumPerFile[hoveredBlob.path]
       if (!contribs) {

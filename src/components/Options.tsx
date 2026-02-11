@@ -22,10 +22,10 @@ import { SizeMetric } from "~/metrics/sizeMetric"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
-  TOP_CONTRIBUTOR: "MOST_CONTRIBS",
+  TOP_CONTRIBUTOR: "MOST_CONTRIBUTIONS",
   MOST_COMMITS: "MOST_COMMITS",
   LAST_CHANGED: "LAST_CHANGED",
-  MOST_CONTRIBUTIONS: "MOST_CONTRIBS"
+  MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS"
 }
 
 export const Options = memo(function Options() {
@@ -45,7 +45,7 @@ export const Options = memo(function Options() {
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
     LAST_CHANGED: mdiPulse,
-    MOST_CONTRIBS: mdiPlusMinusVariant
+    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
   }
 
   const chartTypeIcons: Record<ChartType, string> = {

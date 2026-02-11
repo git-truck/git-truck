@@ -55,7 +55,7 @@ export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
   EQUAL_SIZE: "All files are sized equally.",
   MOST_COMMITS: "Files are sized based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are sized based on how long ago they were changed.",
-  MOST_CONTRIBS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
+  MOST_CONTRIBUTIONS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
 }
 
 export const sizeMetricLegendDescriptions: Record<SizeMetricType, string> = {
@@ -63,7 +63,7 @@ export const sizeMetricLegendDescriptions: Record<SizeMetricType, string> = {
   EQUAL_SIZE: "All files have the same size.",
   MOST_COMMITS: "Larger node indicates more commits.",
   LAST_CHANGED: "Larger node indicates more recent changes.",
-  MOST_CONTRIBS: "Larger node indicates more line changes."
+  MOST_CONTRIBUTIONS: "Larger node indicates more line changes."
 }
 
 export function getMetricLegendType(metric: MetricType): LegendType {
