@@ -30,7 +30,7 @@ jobs:
           bun-version: ${{ matrix.bun-version }}
 
       - name: Install dependencies
-        run: rm bun.lock && bun install
+        run: bun install --optional
 
       - name: Run tests
         run: bun test src
