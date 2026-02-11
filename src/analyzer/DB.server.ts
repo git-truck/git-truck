@@ -565,7 +565,7 @@ export default class DB {
     })
   }
 
-  private getTimeStringFormat(timerange: [number, number]) {
+  private getTimeStringFormat(timerange: [number, number]): [string, "day" | "week" | "month" | "year"] {
     const durationDays = (timerange[1] - timerange[0]) / (60 * 60 * 24)
     if (durationDays < 150) return ["%a %-d %B %Y", "day"]
     if (durationDays < 1000) return ["Week %V %Y", "week"]
@@ -575,7 +575,7 @@ export default class DB {
 
   public async getCommitCountPerTime(
     timerange: [number, number]
-  ): Promise<[{ date: string; count: number; timestamp: number }[], string]> {
+  ): Promise<[{ date: string; count: number; timestamp: number }[], "day" | "week" | "month" | "year"]> {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
     const res = await this.query(`
       SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;

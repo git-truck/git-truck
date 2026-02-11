@@ -241,7 +241,7 @@ export interface DatabaseInfo {
   colorSeed: string | null
   authorColors: Record<string, `#${string}`>
   commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
-  commitCountPerTimeIntervalUnit: string
+  commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>

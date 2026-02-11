@@ -211,7 +211,11 @@ function getWeek(date: Date): number {
   return weekNo
 }
 
-export function getTimeIntervals(timeUnit: string, minTime: number, maxTime: number): [string, number][] {
+export function getTimeIntervals(
+  timeUnit: "day" | "week" | "month" | "year",
+  minTime: number,
+  maxTime: number
+): [string, number][] {
   const intervals: [string, number][] = []
 
   const startDate = new Date(minTime * 1000)
@@ -221,24 +225,35 @@ export function getTimeIntervals(timeUnit: string, minTime: number, maxTime: num
 
   while (currentDate <= endDate) {
     const currTime = currentDate.getTime() / 1000
-    if (timeUnit === "week") {
-      const weekNum = getWeek(currentDate)
-      intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime])
-      currentDate.setDate(currentDate.getDate() + 7)
-    } else if (timeUnit === "year") {
-      intervals.push([currentDate.getFullYear().toString(), currTime])
-      currentDate.setFullYear(currentDate.getFullYear() + 1)
-    } else if (timeUnit === "month") {
-      intervals.push([currentDate.toLocaleString("en-gb", { month: "long", year: "numeric" }), currTime])
-      currentDate.setMonth(currentDate.getMonth() + 1)
-    } else if (timeUnit === "day") {
-      intervals.push([
-        currentDate
-          .toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" })
-          .replace(",", ""),
-        currTime
-      ])
-      currentDate.setDate(currentDate.getDate() + 1)
+    switch (timeUnit) {
+      case "day": {
+        intervals.push([
+          currentDate
+            .toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" })
+            .replace(",", ""),
+          currTime
+        ])
+        currentDate.setDate(currentDate.getDate() + 1)
+        break
+      }
+      case "week": {
+        const weekNum = getWeek(currentDate)
+        intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime])
+        currentDate.setDate(currentDate.getDate() + 7)
+        break
+      }
+      case "year": {
+        intervals.push([currentDate.getFullYear().toString(), currTime])
+        currentDate.setFullYear(currentDate.getFullYear() + 1)
+        break
+      }
+      case "month": {
+        intervals.push([currentDate.toLocaleString("en-gb", { month: "long", year: "numeric" }), currTime])
+        currentDate.setMonth(currentDate.getMonth() + 1)
+        break
+      }
+      default:
+        throw new Error(`Unsupported time unit: ${timeUnit}`)
     }
   }
 
