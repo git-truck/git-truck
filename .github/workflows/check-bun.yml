@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        bun-version: [latest]
+        bun-version: ["1.3.9", latest]
         # See Bun releases at https://github.com/oven-sh/bun/releases
 
     steps:
@@ -33,19 +33,19 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run tests
-        run: bun test src
+        run: bun --bun test src
 
       - name: Build application
-        run: bun run build
+        run: bun --bun run build
 
       - name: Run typecheck
-        run: bun run typecheck
+        run: bun --bun run typecheck
 
       - name: Check linting
-        run: bun run lint
+        run: bun --bun run lint
 
       - name: Check formatting
-        run: bun run format:check
+        run: bun --bun run format:check
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
