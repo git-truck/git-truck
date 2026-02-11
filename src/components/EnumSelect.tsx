@@ -29,7 +29,7 @@ export function IconRadioGroup<const G extends Record<string, string>>({
       value={defaultValue}
       onChange={onChange}
       className={cn("flex flex-wrap gap-0", { "gap-2": large }, className)}
-      aria-label=""
+      aria-label="Select branch or revision"
     >
       {enumEntries.map(([key, value]) => (
         <Field key={key}>
