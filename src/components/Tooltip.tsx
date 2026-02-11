@@ -40,7 +40,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
   return (
     <div
       className={cn(
-        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform backface-hidden",
+        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform select-none backface-hidden",
         className,
         {
           hidden: !visible,
@@ -58,14 +58,6 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
         ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
       }}
     >
-      {/* {hoveredObject?.type === "blob" ? (
-        color ? (
-          <LegendDot dotColor={color} />
-        ) : null
-      ) : (
-        <Icon className="ml-0.5" path={mdiFolderOutline} size={0.75} />
-      )} */}
-      {/* Breadcrumb or filename */}
       <span className="flex w-max place-items-center gap-1">
         {hoveredObject && isBlob(hoveredObject)
           ? hoveredObject?.name
@@ -88,15 +80,17 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
               dominantAuthorCutoff={dominantAuthorCutoff}
             />
           </div>
-          <div className="flex gap-1">
-            <SizeMetricDependentInfo sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredBlob={hoveredObject} />
-          </div>
+          {metricType !== sizeMetric ? (
+            <div className="flex gap-1">
+              <SizeMetricDependentInfo
+                sizeMetric={sizeMetric}
+                databaseInfo={databaseInfo}
+                hoveredBlob={hoveredObject}
+              />
+            </div>
+          ) : null}
         </div>
       ) : null}
-      <div className="flex flex-col gap-0.5">
-        <span className="min-w-max text-xs opacity-90">click for details</span>
-        <span className="min-w-max text-xs opacity-90">ctrl / cmd click to zoom</span>
-      </div>
     </div>
   )
 }
