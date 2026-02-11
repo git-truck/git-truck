@@ -7,7 +7,7 @@ import { viewSearchParamsConfig } from "~/routes/view"
 export function useClickedObject() {
   const location = useLocation()
   const [objectPath, setObjectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
-  const clickedObject = objectPath ? (location.state?.clickedObject ?? null) as GitObject | null : null
+  const clickedObject = objectPath ? ((location.state?.clickedObject ?? null) as GitObject | null) : null
 
   const setClickedObject = useCallback(
     (object: GitObject | null) => {

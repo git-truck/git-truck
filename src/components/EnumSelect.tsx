@@ -35,14 +35,22 @@ export function IconRadioGroup<const G extends Record<string, string>>({
         <Field key={key}>
           <Radio value={key} className="group" title={titleMap ? titleMap[key] : value}>
             <div
-              className={clsx("group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 hover:opacity-100! focus-visible:opacity-100!", {
-                "group-data-checked:bg-blue-primary group-data-checked:fill-primary-text-dark group-data-checked:text-primary-text-dark group-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary h-auto flex-col place-items-center items-center rounded border border-transparent p-1":
-                  large,
-                "group-data-checked:btn--primary hover:not-group-data-checked:text-primary-text/70 dark:hover:not-group-data-checked:text-primary-text-dark/70 flex h-auto w-max items-center justify-between gap-2 rounded-lg border-transparent px-1 py-1 text-xs/none":
-                  !large
-              })}
+              className={clsx(
+                "group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 hover:opacity-100! focus-visible:opacity-100!",
+                {
+                  "group-data-checked:bg-blue-primary group-data-checked:fill-primary-text-dark group-data-checked:text-primary-text-dark group-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary h-auto flex-col place-items-center items-center rounded border border-transparent p-1":
+                    large,
+                  "group-data-checked:btn--primary hover:not-group-data-checked:text-primary-text/70 dark:hover:not-group-data-checked:text-primary-text-dark/70 flex h-auto w-max items-center justify-between gap-2 rounded-lg border-transparent px-1 py-1 text-xs/none":
+                    !large
+                }
+              )}
             >
-              <Icon className="opacity-100!" path={iconMap[key]} size={large ? "1.5rem" : "1rem"} color="currentColor" />
+              <Icon
+                className="opacity-100!"
+                path={iconMap[key]}
+                size={large ? "1.5rem" : "1rem"}
+                color="currentColor"
+              />
               <Label className="cursor-pointer font-normal opacity-100!">{value}</Label>
             </div>
           </Radio>

@@ -8,7 +8,6 @@ import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
 import { createPortal } from "react-dom"
 import { useKey } from "~/hooks"
 
-
 export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { databaseInfo } = useData()
   const submit = useSubmit()
@@ -155,10 +154,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
           ))}
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <Form
-            action={href("/view") + location.search}
-            method="post"
-          >
+          <Form action={href("/view") + location.search} method="post">
             <input type="hidden" name="unionedAuthors" value={JSON.stringify(authorUnions)} />
             <button
               className="btn"
@@ -198,7 +194,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
       aria-modal
       className="z-10 m-auto flex h-full w-full flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
     >
-      <div className="card m-auto grid h-full w-full p-2 max-w-(--breakpoint-2xl) grow grid-cols-[1fr_1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden shadow-sm">
+      <div className="card m-auto grid h-full w-full max-w-(--breakpoint-2xl) grow grid-cols-[1fr_1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden p-2 shadow-sm">
         <h2 className="text-2xl">Group authors</h2>
         <CloseButton absolute={false} className="justify-self-end" onClick={onClose} />
 

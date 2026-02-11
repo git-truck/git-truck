@@ -36,7 +36,7 @@ export function Popover({
           arrowColor="currentColor"
           arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-30"
         >
-          <div className="bg-secondary-bg starting:opacity-0 transition-opacity  opacity-100 dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 shadow-2xl">
+          <div className="bg-secondary-bg dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 opacity-100 shadow-2xl transition-opacity starting:opacity-0">
             {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
             {triggerOnHover ? null : <CloseButton onClick={onClose} />}
             <div className="text-secondary-text dark:text-secondary-text-dark flex flex-col gap-1">{children}</div>

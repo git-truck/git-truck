@@ -47,9 +47,9 @@ export function Legend({
   return (
     <>
       <h3 className="card__subtitle">Size legend</h3>
-      <p className="text-sm mb-2">{sizeMetricLegendDescriptions[sizeMetric]}</p>
+      <p className="mb-2 text-sm">{sizeMetricLegendDescriptions[sizeMetric]}</p>
       <h3 className="card__subtitle">Color legend</h3>
-      <p className="text-sm mb-4">{colorMetricDescriptions[metricType]}</p>
+      <p className="mb-4 text-sm">{colorMetricDescriptions[metricType]}</p>
       {metricType === "TOP_CONTRIBUTOR" ? <PercentageSlider className="my-4" /> : null}
       {legend}
       {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}

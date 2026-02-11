@@ -73,7 +73,10 @@ export function useKey(
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (!options.key || event.key === options.key) {
-        const ctrlOrMetaMatch = options.ctrlOrMeta === undefined || event.ctrlKey === options.ctrlOrMeta || event.metaKey === options.ctrlOrMeta
+        const ctrlOrMetaMatch =
+          options.ctrlOrMeta === undefined ||
+          event.ctrlKey === options.ctrlOrMeta ||
+          event.metaKey === options.ctrlOrMeta
         const shiftMatch = options.shift === undefined || event.shiftKey === options.shift
         const altMatch = options.alt === undefined || event.altKey === options.alt
 
@@ -87,17 +90,15 @@ export function useKey(
   }, [options, callback])
 }
 
-export function useKeyActive(options: {
-  key?: string
-  ctrlOrMeta?: boolean
-  shift?: boolean
-  alt?: boolean
-}) {
+export function useKeyActive(options: { key?: string; ctrlOrMeta?: boolean; shift?: boolean; alt?: boolean }) {
   const [keyActive, setKeyActive] = useState(false)
   useEffect(() => {
     const downListener = (event: KeyboardEvent) => {
       if (!options.key || event.key === options.key) {
-        const ctrlOrMetaMatch = options.ctrlOrMeta === undefined || event.ctrlKey === options.ctrlOrMeta || event.metaKey === options.ctrlOrMeta
+        const ctrlOrMetaMatch =
+          options.ctrlOrMeta === undefined ||
+          event.ctrlKey === options.ctrlOrMeta ||
+          event.metaKey === options.ctrlOrMeta
         const shiftMatch = options.shift === undefined || event.shiftKey === options.shift
         const altMatch = options.alt === undefined || event.altKey === options.alt
 

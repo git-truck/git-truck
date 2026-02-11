@@ -2,11 +2,7 @@ import { useSubmit, useNavigation, useSearchParams } from "react-router"
 import { useState, useTransition, type CSSProperties } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import {
-  dateFormatCalendarHeader,
-  dateFormatISO,
-  dateFormatShort,
-  getPathFromRepoAndHead} from "~/shared/util"
+import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
 import DatePicker from "react-datepicker"
 import { Handle, SliderRail, TicksByCount, Track } from "./sliderUtils"
 import { Popover } from "./Popover"
@@ -146,7 +142,7 @@ export default function Timeline({ className }: { className?: string }) {
         </Tracks>
       </Slider>
       <TicksByCount
-      className="mb-2"
+        className="mb-2"
         count={15}
         // align="left"
         tickToLabel={(t) => dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)}

@@ -37,13 +37,7 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
             {({ handles, getHandleProps }) => (
               <Fragment>
                 {handles.map((handle) => (
-                  <Handle
-
-                    key={handle.id}
-                    handle={handle}
-                    domain={domain}
-                    getHandleProps={getHandleProps}
-                  />
+                  <Handle key={handle.id} handle={handle} domain={domain} getHandleProps={getHandleProps} />
                 ))}
               </Fragment>
             )}
