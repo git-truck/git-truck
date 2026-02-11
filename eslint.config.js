@@ -92,7 +92,7 @@ export default [
       '!**/.client',
       'build/**',
       'node_modules/**',
-      'cli.js',
+      'cli.mjs',
       '.react-router/**',
       '.husky/**',
       'scripts/**'
