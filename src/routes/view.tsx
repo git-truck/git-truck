@@ -25,7 +25,6 @@ import { shouldUpdate } from "~/shared/RefreshPolicy"
 import { getArgs, getRepoNameFromPath } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
-import { AnalysisInfo } from "~/components/GlobalInfo"
 import { HiddenFiles } from "~/components/HiddenFiles"
 import { Legend } from "~/components/legend/Legend"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
@@ -111,15 +110,16 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const { instance, repositoryPath, branch } = context.get(currentRepositoryContext)
 
   const viewSearchParams = loadViewSearchParams(request)
-  const { path, objectPath, branch: branchParam } = viewSearchParams
+  const { path, objectPath, zoomPath, branch: branchParam } = viewSearchParams
   // const urlSearchParams = new URL(request.url).searchParams
 
   let shouldRedirect = false
   const params = (
     [
       ["path", { param: path, fallback: repositoryPath }],
-      ["branch", { param: branchParam, fallback: branch }]
+      ["branch", { param: branchParam, fallback: branch }],
       // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
+      ["zoomPath", { param: zoomPath, fallback: instance.repositoryName }]
     ] as const
   ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
     if (!param) {
@@ -521,7 +521,7 @@ export default function Repo() {
                             </div>
                           }
                         >
-                          <Await resolve={dataPromise}>{() => <Chart setHoveredObject={setHoveredObject} />}</Await>
+                          <Await resolve={dataPromise}>{() => <Chart hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />}</Await>
                         </Suspense>
                         {createPortal(<ChartTooltip hoveredObject={hoveredObject} />, document.body)}
                       </>

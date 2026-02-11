@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { MouseEventHandler, JSX } from "react"
-import { useDeferredValue, memo, useEffect, useMemo } from "react"
+import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } from "react"
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -34,29 +34,44 @@ import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useQueryState, useQueryStates } from "nuqs"
+import { useQueryStates } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "./Icon"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
-export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObject: (obj: GitObject | null) => void }) {
+export const Chart = memo(function Chart({
+  hoveredObject,
+  setHoveredObject
+}: {
+  hoveredObject: GitObject | null
+  setHoveredObject: (obj: GitObject | null) => void
+}) {
   const [ref, rawSize] = useComponentSize()
   const { searchResults, hasSearchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
 
-  const [params] = useQueryStates(viewSearchParamsConfig)
-  const [objectPath] = useQueryState("objectPath", { shallow: false })
-  const zoomKeyActive = useKeyActive({ ctrlOrMeta: true })
-  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+  const [params, setParams] = useQueryStates(viewSearchParamsConfig)
+  const { zoomPath, objectPath } = params
+
+  const zoomOutKeyActive = useKeyActive({ ctrlOrMeta: true })
+  const zoomInKeyActive = useKeyActive({ shift: true }) && zoomPath !== databaseInfo.repo
 
   const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
-    setZoomPathRaw((prev) => {
-      const value = typeof zoomPathUpdate === "function" ? zoomPathUpdate(prev) : zoomPathUpdate
-      return value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null
+    setParams((prev) => {
+      const value = typeof zoomPathUpdate === "function" ? zoomPathUpdate(prev.zoomPath) : zoomPathUpdate
+      return { ...prev, zoomPath: value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null }
     })
+
+  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
+  const zoomOneLevelOut = () => {
+    if (!sep || !zoomPath) return
+    // Move up to parent
+    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
+    setZoomPath(parentPath)
+  }
 
   const { clickedObject, setClickedObject } = useClickedObject()
 
@@ -121,12 +136,26 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
       onClick: (evt) => {
         evt.stopPropagation()
 
-        // Zoom with Ctrl / Cmd click
-        if (evt.ctrlKey || evt.metaKey) {
-          setZoomPath((prev) => (prev === trimFilenameFromPath(d.data.path) ? null : d.data.path))
+        const modifierKey = evt.ctrlKey || evt.metaKey
+        // Zoom in with shift + click
+        if (evt.shiftKey && !modifierKey) {
+          setZoomPath(d.data.path)
           return
         }
 
+        // Zoom out with modifier + click
+        if (modifierKey && !evt.shiftKey) {
+          zoomOneLevelOut()
+          return
+        }
+
+        // Deselect if clicking the same object
+        if (clickedObject?.path === d.data.path) {
+          navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+          return
+        }
+
+        // Else, navigate to object details
         navigate(tabURL + viewSerializer({ ...params, objectPath: d.data.path }), {
           state: {
             clickedObject: d.data
@@ -144,29 +173,35 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
     }
   }
 
-  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
-  const zoomOut = () => {
-    if (!sep || !zoomPath) return
-    // Move up to parent
-    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
-
-    console.log("Zooming out to", parentPath)
-    setZoomPath(parentPath)
-  }
+  const scrollDeltaRef = useRef(0)
 
   return (
     <div className="relative grid place-items-center" ref={ref}>
       <svg
-        key={`svg|${size.width}|${size.height}`}
         className={clsx(
-          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs dark:fill-gray-100",
-          {
-            "cursor-zoom-out": zoomKeyActive && sep
-          }
+          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs select-none dark:fill-gray-100"
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => zoomKeyActive && zoomOut()}
+        onClick={() => zoomOutKeyActive && zoomOneLevelOut()}
+        onWheel={(evt) => {
+          // Accumulate delta
+          scrollDeltaRef.current += evt.deltaY
+
+          const SCROLL_DELTA_THRESHOLD = 50
+
+          if (scrollDeltaRef.current <= -SCROLL_DELTA_THRESHOLD && hoveredObject) {
+            startTransition(() => {
+              setZoomPath(hoveredObject.path)
+            })
+            scrollDeltaRef.current = 0
+          } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {
+            startTransition(() => {
+              zoomOneLevelOut()
+            })
+            scrollDeltaRef.current = 0
+          }
+        }}
       >
         {nodes.map((d, i) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
@@ -183,13 +218,13 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
                     (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
                 },
-                zoomKeyActive
-                // If the currently zoomed path is the same as the basepath of the node, show zoom-out cursor
-                  ? zoomPath && zoomPath === trimFilenameFromPath(d.data.path)
-                    ? "cursor-zoom-out"
-                    // Otherwise, show zoom-in cursor
-                    : "cursor-zoom-in"
-                  : "cursor-pointer"
+                zoomInKeyActive && !zoomOutKeyActive
+                  ? "cursor-zoom-in"
+                  : zoomOutKeyActive && !zoomInKeyActive
+                    ? !zoomPath || zoomPath === databaseInfo.repo
+                      ? "cursor-not-allowed"
+                      : "cursor-zoom-out"
+                    : "cursor-pointer"
               )}
               {...eventHandlers}
             >
@@ -224,7 +259,7 @@ export const Chart = memo(function Chart({ setHoveredObject }: { setHoveredObjec
               <Icon path={mdiUndo} />
               Reset zoom
             </button>
-            <button className="btn" onClick={zoomOut}>
+            <button className="btn" onClick={zoomOneLevelOut}>
               <Icon path={mdiMagnifyMinus} />
               Zoom out
             </button>
@@ -534,7 +569,7 @@ function createPartitionedHiearchy({
           return (
             (databaseInfo.lastChanged[blob.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
           )
-        case "MOST_CONTRIBS":
+        case "MOST_CONTRIBUTIONS":
           return databaseInfo.contribSumPerFile[blob.path] ?? 1
       }
     })
