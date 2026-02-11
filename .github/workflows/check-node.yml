@@ -21,13 +21,13 @@ jobs:
         with:
           fetch-depth: "0"
 
-      - name: Use Node ${{ matrix.bun-version }}
+      - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: rm package-lock.json && npm install
+        run: npm install
 
       - name: Run unit tests
         run: npm run test:unit
