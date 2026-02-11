@@ -20,7 +20,7 @@ jobs:
         # See Bun releases at https://github.com/oven-sh/bun/releases
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           fetch-depth: "0"
 

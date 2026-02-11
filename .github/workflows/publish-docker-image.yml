@@ -1,28 +1,26 @@
 name: Publish Docker Image on DockerHub
 
 on:
-  workflow_dispatch: {}             
+  workflow_dispatch: {}
   release:
     types: [published]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: docker login
-      env:
-        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}        
-      run: |
-        docker login -u gittruck -p $DOCKER_PASSWORD
-    - name: Get Tag
-      run: echo "LATEST_RELEASE=$(curl https://api.github.com/repos/git-truck/git-truck/releases/latest -s | jq .name -r)" >> $GITHUB_ENV
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag gittruck/git-truck:$LATEST_RELEASE --tag gittruck/git-truck:latest
-    - name: Push the Docker image with the latest release tag
-      run: docker push gittruck/git-truck:$LATEST_RELEASE
-    - name: Push the Docker image with the 'latest' tag
-      run: docker push gittruck/git-truck:latest
+      - uses: actions/checkout@v6
+      - name: docker login
+        env:
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: |
+          docker login -u gittruck -p $DOCKER_PASSWORD
+      - name: Get Tag
+        run: echo "LATEST_RELEASE=$(curl https://api.github.com/repos/git-truck/git-truck/releases/latest -s | jq .name -r)" >> $GITHUB_ENV
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag gittruck/git-truck:$LATEST_RELEASE --tag gittruck/git-truck:latest
+      - name: Push the Docker image with the latest release tag
+        run: docker push gittruck/git-truck:$LATEST_RELEASE
+      - name: Push the Docker image with the 'latest' tag
+        run: docker push gittruck/git-truck:latest

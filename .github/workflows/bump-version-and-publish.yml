@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: "Checkout source code"
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v6"
         with:
           ref: ${{ github.ref }}
           token: ${{ secrets.TOKEN }}

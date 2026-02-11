@@ -18,7 +18,7 @@ jobs:
         bun-version: [latest]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Fetch main branch
         run: git fetch origin main:main -u
