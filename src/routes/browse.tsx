@@ -14,14 +14,13 @@ import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/browse"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { inspect } from "~/shared/util"
 import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
 import { createLoader, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs/server"
 import { createSerializer, parseAsNumberLiteral, useQueryState, useQueryStates } from "nuqs"
 
-const DEFAULT_COUNT = 25
+const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
 
 const COUNT_OPTIONS = [10, 25, 50, 100]
@@ -184,7 +183,7 @@ export default function Index() {
                 direction={sortMethod === "most-recent" ? "asc" : sortMethod === "least-recent" ? "desc" : undefined}
                 onClick={() => setSortMethod(sortMethod === "most-recent" ? "least-recent" : "most-recent")}
                 // icon={sortMethod === "most-recent" ? mdiSortClockDescendingOutline : mdiSortClockAscendingOutline}
-                title={`Click to sort by ${sortMethod === "least-recent" ? "most" : "least"} recent`}
+                title={`Sort by ${sortMethod === "least-recent" ? "most" : "least"} recent`}
               />
               {repositories.map((repo, i) => (
                 <Suspense
@@ -200,7 +199,7 @@ export default function Index() {
                           key={repo.path}
                           repo={repo}
                           status="Success"
-                          isAnalyzed={inspect(analyzedRepos).find((ar) => ar.repo === repo.name) !== undefined}
+                          isAnalyzed={analyzedRepos.find((ar) => ar.repo === repo.name) !== undefined}
                         />
                       ) : null
                     }
