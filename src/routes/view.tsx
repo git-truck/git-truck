@@ -130,7 +130,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }, viewSearchParams)
 
   if (shouldRedirect) {
-    console.warn(`One parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
+    log.warn(`One parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
     throw redirect(href("/view") + viewSerializer(params))
   }
 
@@ -521,7 +521,9 @@ export default function Repo() {
                             </div>
                           }
                         >
-                          <Await resolve={dataPromise}>{() => <Chart hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />}</Await>
+                          <Await resolve={dataPromise}>
+                            {() => <Chart hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />}
+                          </Await>
                         </Suspense>
                         {createPortal(<ChartTooltip hoveredObject={hoveredObject} />, document.body)}
                       </>
