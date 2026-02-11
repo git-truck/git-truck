@@ -18,7 +18,7 @@ import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 // Minimal mock AnalyzerData for RepoData
 const mockAnalyzerData: AnalyzerData = {
   cached: false,
-  interfaceVersion: 16 as const,
+  interfaceVersion: 17 as const,
   hiddenFiles: [],
   repo: "mock-repo",
   repositoryPath: "mock/path",
@@ -49,6 +49,7 @@ const mockRepoData: RepoData = {
     repositoryName: "mock-repo",
     repositoryPath: "mock/path",
     parentDirPath: "mock",
+    parentDirName: "mock",
     status: "Success",
     isAnalyzed: true,
     refs: { Branches: {}, Tags: {} },

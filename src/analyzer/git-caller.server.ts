@@ -137,6 +137,7 @@ export class GitCaller {
         repositoryName,
         repositoryPath,
         parentDirPath: parentDir,
+        parentDirName: getRepoNameFromPath(parentDir),
         lastChanged: 0
       }
     }
@@ -177,6 +178,7 @@ export class GitCaller {
           repositoryName: repositoryName,
           repositoryPath: repositoryPath,
           parentDirPath: parentDir,
+          parentDirName: getRepoNameFromPath(parentDir),
           lastChanged
         }
       }
@@ -197,6 +199,7 @@ export class GitCaller {
           repositoryName: repositoryName,
           repositoryPath: repositoryPath,
           parentDirPath: parentDir,
+          parentDirName: getRepoNameFromPath(parentDir),
           currentHead: branch,
           refs,
           analyzedHeads,
@@ -212,6 +215,7 @@ export class GitCaller {
         repositoryName: repositoryName,
         repositoryPath: repositoryPath,
         parentDirPath: parentDir,
+        parentDirName: getRepoNameFromPath(parentDir),
         currentHead: repoHead,
         refs,
         analyzedHeads,
@@ -224,6 +228,7 @@ export class GitCaller {
         repositoryName: repositoryName,
         repositoryPath: repositoryPath,
         parentDirPath: parentDir,
+        parentDirName: getRepoNameFromPath(parentDir),
         lastChanged
       }
     }

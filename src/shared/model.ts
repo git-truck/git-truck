@@ -14,6 +14,10 @@ export type Repository = {
    */
   parentDirPath: string
   /**
+   * Directory name of the parent directory of the repository
+   */
+  parentDirName: string
+  /**
    * Directory name of the repository
    */
   repositoryName: string
@@ -86,7 +90,7 @@ export interface ArgsOptions {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 16
+export const AnalyzerDataInterfaceVersion = 17
 
 export interface AnalyzerData {
   cached: boolean
