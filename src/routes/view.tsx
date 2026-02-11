@@ -144,15 +144,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
   const { instance } = context.get(currentRepositoryContext)
-  const args = await getArgs()
-
-  const searchParams = new URL(request.url).searchParams
-  const repositoryPath = resolve(searchParams.get("path") ?? args.path)
-  let branch = searchParams.get("branch")
-
-  if (!branch) {
-    branch = await GitCaller._getRepositoryHead(repositoryPath)
-  }
 
   const formData = await request.formData()
   const refresh = formData.get("refresh")
