@@ -29,14 +29,14 @@ const BarChart = () => {
     .range([height, 0])
 
   // Create a time scale for the x-axis labels
-  const timeScale = d3
-    .scaleTime()
-    .domain([new Date((data[0]?.timestamp || 0) * 1000), new Date((data[data.length - 1]?.timestamp || 0) * 1000)])
-    .range([0, width])
-    .nice()
+  // const timeScale = d3
+  //   .scaleTime()
+  //   .domain([new Date((data[0]?.timestamp || 0) * 1000), new Date((data[data.length - 1]?.timestamp || 0) * 1000)])
+  //   .range([0, width])
+  //   .nice()
 
   // Generate nice tick values based on data range
-  const ticks = timeScale.ticks(Math.min(8, Math.floor(width / 80)))
+  // const ticks = timeScale.ticks(Math.min(8, Math.floor(width / 80)))
 
   const [searchParams] = useSearchParams()
   const submit = useSubmit()

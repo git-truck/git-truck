@@ -1,5 +1,4 @@
-import { useCallback, useMemo } from "react"
-import { useSearchParams } from "react-router"
+import { useCallback } from "react"
 import { useData } from "./DataContext"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/view"

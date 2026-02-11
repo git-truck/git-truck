@@ -2,8 +2,6 @@ import { semverCompare } from "~/shared/util"
 import gitTruckLogo from "~/assets/truck.png"
 import gitTruckLogoGif from "~/assets/truck.gif"
 import { UpdateNotifier } from "./UpdateNotifier"
-import { mdiAlertOutline, mdiGithub } from "@mdi/js"
-import { Icon } from "~/components/Icon"
 import { useNavigation } from "react-router"
 import { cn } from "~/styling"
 

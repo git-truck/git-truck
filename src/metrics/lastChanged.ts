@@ -8,7 +8,7 @@ interface lastChangedGroup {
   text: string
 }
 
-export function lastChangedGroupings(newestEpoch: number, oldestChangeDate: number): lastChangedGroup[] {
+export function lastChangedGroupings(newestEpoch: number, _oldestChangeDate: number): lastChangedGroup[] {
   // const scale = scaleSequential(interpolateCool)
   // , [oldestChangeDate, newestEpoch])
 
