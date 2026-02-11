@@ -101,8 +101,8 @@ function ColorMetricDependentInfo(props: {
   databaseInfo: DatabaseInfo
   dominantAuthorCutoff: number
 }) {
-  let icon = mdiCircleSmall
-  let content = null
+  let icon: string
+  let content: string
   const slicedPath = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS": {
