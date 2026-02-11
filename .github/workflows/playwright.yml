@@ -30,7 +30,7 @@ jobs:
 
       - name: Get installed Playwright version
         id: playwright-version
-        run: node scripts/get-playwright-version.mjs
+        run: bun scripts/get-playwright-version.mjs
 
       - name: Cache Playwright binaries
         uses: actions/cache@v3
