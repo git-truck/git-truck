@@ -1,9 +1,17 @@
 import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
-import type { CommitDTO, GitLogEntry, GitObject, RawGitObject, RenameEntry, RenameInterval } from "../shared/model"
+import type {
+  AbstractGitObject,
+  CommitDTO,
+  GitLogEntry,
+  GitObject,
+  RawGitObject,
+  RenameEntry,
+  RenameInterval
+} from "../shared/model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { getTimeIntervals, isBlob } from "../shared/util.ts"
+import { getTimeIntervals } from "../shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {
@@ -499,11 +507,14 @@ export default class DB {
     return res.map((row) => row["path"] as string)
   }
 
-  public async getObject(objectPath: string): Promise<GitObject> {
+  public async getObjectType(objectPath: string): Promise<AbstractGitObject["type"] | null> {
     const statement = await (await this.connectionPromise).prepare(`SELECT type FROM files WHERE path = ?`)
 
     statement.bindVarchar(1, objectPath)
-    return (await statement.runAndReadAll()).getRowObjects()[0] as unknown as GitObject
+
+    const { type } = (await statement.runAndReadAll()).getRowObjectsJS()[0] as Pick<GitObject, "type">
+
+    return type
   }
 
   public async commitTableEmpty() {
@@ -553,7 +564,7 @@ export default class DB {
   }
 
   public async getAuthorContribsForPath(objectPath: string) {
-    const isblob = isBlob(await this.getObject(objectPath))
+    const isblob = (await this.getObjectType(objectPath)) === "blob"
     const res = await this.query(`
       SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
         isblob ? "=" : "GLOB"
