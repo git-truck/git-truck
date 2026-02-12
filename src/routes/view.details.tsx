@@ -109,7 +109,7 @@ export default function Details() {
       <div className="flex grow flex-col gap-2">
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           {isBlob ? <FileTypeEntry /> : null}
-          <CommitsEntry count={commitCount ?? 0} />
+          {isBlob ? <CommitsEntry count={commitCount ?? 0} /> : null}
           {isBlob ? (
             <>
               <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
