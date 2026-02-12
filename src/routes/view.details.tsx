@@ -235,28 +235,13 @@ function AuthorDistribution({ authorDistribution }: { authorDistribution: { auth
 
 function FileTypeEntry() {
   const { clickedObject } = useClickedObject()
-  const { metricType } = useOptions()
-  const [metricsData] = useMetrics()
 
-  const metricCache = metricsData.get(metricType)
-
-  if (metricCache === undefined) throw new Error("Metric cache is undefined")
-  if (!clickedObject) {
-    throw new Error("Clicked object is null")
-  }
-  const colorForClickedObject = metricCache.colormap.get(clickedObject.path)
-  if (!colorForClickedObject) {
-    throw new Error(`Color for clicked object ${clickedObject.path} not found`)
-  }
   return (
     <>
       <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Type
       </div>
-      <div className="flex gap-1 text-sm">
-        {/* <LegendDot dotColor={colorForClickedObject} /> */}
-        {extname(clickedObject.path)}
-      </div>
+      <div className="flex gap-1 text-sm">{clickedObject ? extname(clickedObject.path) : "N/A"}</div>
     </>
   )
 }
