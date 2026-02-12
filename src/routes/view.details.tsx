@@ -253,10 +253,10 @@ function FileTypeEntry() {
       <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
         Type
       </div>
-      <p className="flex gap-1 text-sm">
-        <LegendDot dotColor={colorForClickedObject} />
+      <div className="flex gap-1 text-sm">
+        {/* <LegendDot dotColor={colorForClickedObject} /> */}
         {extname(clickedObject.path)}
-      </p>
+      </div>
     </>
   )
 }
