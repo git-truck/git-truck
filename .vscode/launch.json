@@ -5,17 +5,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Git Truck",
-      "program": "${workspaceFolder}/cli.mjs",
+      "name": "Debug Git Truck Server Build",
+      "type": "node",
       "request": "launch",
-      "args": ["--log", "debug", "--headless"],
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node"
+      "preLaunchTask": "Build with bun",
+      "program": "${workspaceFolder}/cli.mjs",
+      "args": ["--log", "debug"],
+      "skipFiles": ["<node_internals>/**"]
     },
     {
+      "name": "Debug Git Truck Client in chrome",
+      "preLaunchTask": "Start dev server with bun on folder open",
       "type": "chrome",
       "request": "launch",
-      "name": "Launch visualization in chrome",
       "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}"
     }

@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start dev server with bun on folder open",
+      "label": "Start dev server with bun",
       "type": "process",
       // For codespaces (since bun for some reason is not in the PATH)
       // "command": "/home/node/.bun/bin/bun",
@@ -20,12 +20,19 @@
     {
       "label": "Install dependencies with bun",
       "type": "process",
-      "command": "/home/node/.bun/bin/bun",
+      "command": "bun",
       "args": ["install"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "Build with bun",
+      "type": "process",
+      "command": "bun",
+      "args": ["run", "build"],
+      "presentation": { "reveal": "always", "panel": "shared" }
     }
   ]
 }
