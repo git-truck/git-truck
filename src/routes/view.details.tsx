@@ -66,6 +66,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return null
   }
 
+  // TODO: Opening files no longer works, navigates to browse view instead
   if (typeof openPath === "string") {
     instance.prevInvokeReason = "open"
     openFile(instance.repositoryPath, openPath)
