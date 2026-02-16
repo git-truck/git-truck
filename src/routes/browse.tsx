@@ -240,6 +240,7 @@ export default function Index() {
             <label className="label" htmlFor="search">
               Search
             </label>
+            {/* TODO: Clear search query when search query param updates */}
             <input
               id="search"
               ref={searchFieldRef}
@@ -481,7 +482,7 @@ function RepositoryEntry({
   isAnalyzed: boolean
 }): ReactNode {
   const isFolder = false
-  const [searchParams] = useQueryStates(browseSearchParamsConfig)
+  const [{ search: _, ...searchParams }] = useQueryStates(browseSearchParamsConfig)
   const serialize = createSerializer(browseSearchParamsConfig)
   return (
     <Fragment key={entry.path}>
