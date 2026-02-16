@@ -3,15 +3,17 @@ import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/view.progress"
 import { currentRepositoryContext } from "~/routes/view"
 
+const POLLING_RATE = 500
+
 export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {
   const { instance } = context.get(currentRepositoryContext)
   let progressPercentage = calculateProgressPercentage(instance.progress, instance.totalCommitCount)
   let status = instance.analyzationStatus
   while (
     instance.prevProgress.str === status + progressPercentage ||
-    instance.prevProgress.timestamp + 1000 > Date.now()
+    instance.prevProgress.timestamp + POLLING_RATE > Date.now()
   ) {
-    await sleep(1000)
+    await sleep(POLLING_RATE)
     progressPercentage = calculateProgressPercentage(instance.progress, instance.totalCommitCount)
     status = instance.analyzationStatus
   }
