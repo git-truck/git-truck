@@ -357,7 +357,9 @@ export default function Index() {
             label="Name"
             isActive={sortMethod === "asc" || sortMethod === "desc"}
             direction={sortMethod === "desc" ? "desc" : sortMethod === "asc" ? "asc" : undefined}
-            onClick={() => setSearchParams((prev) => ({ ...prev, sort: sortMethod === "asc" ? "desc" : "asc" }))}
+            onClick={() =>
+              setSearchParams((prev) => ({ ...prev, offset: null, sort: sortMethod === "asc" ? "desc" : "asc" }))
+            }
             title="Sort by name"
           />
 
@@ -368,6 +370,7 @@ export default function Index() {
             onClick={() =>
               setSearchParams((prev) => ({
                 ...prev,
+                offset: null,
                 sort: sortMethod === "most-recent" ? "least-recent" : "most-recent"
               }))
             }
