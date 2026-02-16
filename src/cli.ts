@@ -65,6 +65,10 @@ const server = process.env.HOST ? app.listen(PORT, process.env.HOST, onListen) :
 process.once("SIGTERM", stopHandler)
 process.once("SIGINT", stopHandler)
 
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED:", err)
+})
+
 async function getUpdateMessage() {
   if (process.env.NODE_ENV === "development") {
     return " (development build)"

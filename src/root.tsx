@@ -6,7 +6,6 @@ import {
   Scripts,
   ScrollRestoration,
   createContext,
-  isRouteErrorResponse,
   useLocation,
   useRouteError
 } from "react-router"
@@ -91,17 +90,9 @@ export const ErrorBoundary = () => {
   const { pathname, search } = useLocation()
   const error = useRouteError()
 
-  const errorMessage = isRouteErrorResponse(error)
-    ? error.data.message
-    : error instanceof Error
-      ? error.message
-      : "An unknown error occurred"
-
   return (
     <Shell>
-      <ErrorPage message={"Oh no, the Git Truck crashed!"}>
-        <p className="text-lg opacity-80">See console for more information.</p>
-        <Code>{errorMessage}</Code>
+      <ErrorPage className="min-h-screen" message={"Oh no, the Git Truck crashed!"}>
         <ClearCacheForm redirectPath={pathname + search} />
         <div className="flex flex-wrap justify-center gap-2">
           <Link className="btn" to={pathname + search}>
@@ -112,6 +103,11 @@ export const ErrorBoundary = () => {
           </Link>
         </div>
       </ErrorPage>
+      <div className="mx-auto max-w-xl space-y-2">
+        <Code className="overflow-x-auto text-left whitespace-pre">
+          {error instanceof Error ? error.stack : "No stack trace available"}
+        </Code>
+      </div>
     </Shell>
   )
 }

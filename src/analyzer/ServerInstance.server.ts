@@ -13,7 +13,7 @@ import type {
   RepoData
 } from "../shared/model.ts"
 import { log } from "./log.server.ts"
-import { analyzeRenamedFile } from "../shared/util.ts"
+import { analyzeRenamedFile, promiseHelper } from "../shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 
@@ -398,12 +398,12 @@ export default class ServerInstance {
     }
 
     if (commitCount < 1) return
-    const quotePathDefaultValue = await this.gitCaller.getDefaultGitSettingValue("core.quotepath")
-    await this.gitCaller.setGitSetting("core.quotePath", "off")
-    const renamesDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renames")
-    await this.gitCaller.setGitSetting("diff.renames", "true")
-    const renameLimitDefaultValue = await this.gitCaller.getDefaultGitSettingValue("diff.renameLimit")
-    await this.gitCaller.setGitSetting("diff.renameLimit", "1000000")
+    const [quotePathDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("core.quotepath"))
+    await promiseHelper(this.gitCaller.setGitSetting("core.quotePath", "off"))
+    const [renamesDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("diff.renames"))
+    await promiseHelper(this.gitCaller.setGitSetting("diff.renames", "true"))
+    const [renameLimitDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("diff.renameLimit"))
+    await promiseHelper(this.gitCaller.setGitSetting("diff.renameLimit", "1000000"))
 
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
@@ -422,9 +422,15 @@ export default class ServerInstance {
 
     await this.db.createIndexes()
     await this.db.checkpoint()
-    await this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue)
-    await this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue)
-    await this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue)
+    if (quotePathDefaultValue) {
+      await promiseHelper(this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue))
+    }
+    if (renamesDefaultValue) {
+      await promiseHelper(this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue))
+    }
+    if (renameLimitDefaultValue) {
+      await promiseHelper(this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
+    }
 
     await InstanceManager.getOrCreateMetadataDB().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },

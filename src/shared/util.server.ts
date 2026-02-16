@@ -19,24 +19,42 @@ export function runProcess(
   index?: number
 ) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
-  return new Promise((resolve, reject) => {
-    try {
-      const prcs = spawn(command, args, { cwd: path.resolve(dir) })
-      const chunks: Uint8Array[] = []
-      const errorHandler = (buf: Error): void => reject(buf.toString().trim())
-      prcs.once("error", errorHandler)
-      prcs.stderr.once("data", errorHandler)
-      prcs.stdout.on("data", (buf) => {
-        chunks.push(buf)
-        if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
-      })
-      prcs.stdout.on("end", () => {
-        resolve(Buffer.concat(chunks).toString().trim())
-      })
-    } catch (e) {
-      log.error(e as Error)
-      reject(e)
-    }
+
+  // Capture original JS stack
+  const originalError = new Error("Command failed: " + command + " " + args.join(" "))
+
+  return new Promise<string>((resolve, reject) => {
+    const cwd = path.resolve(dir)
+    const prcs = spawn(command, args, { cwd })
+
+    const out: Buffer[] = []
+    const err: Buffer[] = []
+
+    prcs.on("error", (e) => {
+      originalError.message += `\nFailed to start process: ${e.message}`
+      reject(originalError)
+    })
+
+    prcs.stdout.on("data", (b) => {
+      out.push(b)
+      if (serverInstance && index !== undefined) serverInstance.updateProgress(index)
+    })
+
+    prcs.stderr.on("data", (b) => err.push(b))
+
+    prcs.on("close", (code) => {
+      const stdout = Buffer.concat(out).toString().trim()
+      const stderr = Buffer.concat(err).toString().trim()
+
+      if (code === 0) {
+        resolve(stdout)
+        return
+      }
+
+      originalError.message =
+        `Command failed: ${command} ${args.join(" ")}\n` + `cwd: ${cwd}\n\n${stderr || `Exited with code ${code}`}`
+      reject(originalError)
+    })
   })
 }
 

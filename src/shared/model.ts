@@ -179,6 +179,7 @@ export interface CommitDTO {
 export interface CompletedResult {
   repo: string
   branch: string
+  hash: string
   time: number
 }
 

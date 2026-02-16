@@ -3,6 +3,7 @@ import type { EntryContext } from "react-router"
 import { createReadableStreamFromReadable } from "@react-router/node"
 import { ServerRouter } from "react-router"
 import { renderToPipeableStream } from "react-dom/server"
+import { log } from "./analyzer/log.server"
 
 export const streamTimeout = 10_000_000
 
@@ -34,7 +35,7 @@ function handleBrowserRequest(
         reject(error)
       },
       onError(error: unknown) {
-        console.error(error)
+        log.error(error)
         responseStatusCode = 500
       }
     })

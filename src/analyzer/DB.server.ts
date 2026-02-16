@@ -512,7 +512,11 @@ export default class DB {
 
     statement.bindVarchar(1, objectPath)
 
-    const { type } = (await statement.runAndReadAll()).getRowObjectsJS()[0] as Pick<GitObject, "type">
+    const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<Pick<GitObject, "type">>
+
+    if (results.length === 0) return null
+
+    const { type } = results[0]
 
     return type
   }

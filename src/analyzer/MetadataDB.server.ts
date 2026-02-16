@@ -74,7 +74,7 @@ export default class MetadataDB {
     const currentMetadata = await this.readMetadata()
     for (const [key, val] of Object.entries(currentMetadata.completions)) {
       const [repo, branch] = key.split(this.separator)
-      completedResults.push({ repo, branch, time: val.time })
+      completedResults.push({ repo, branch, time: val.time, hash: val.hash })
     }
     return completedResults
   }
