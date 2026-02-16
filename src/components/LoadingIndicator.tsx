@@ -49,7 +49,7 @@ export function LoadingIndicator({
     <div className={clsx("grid h-full w-full place-items-center px-4", className)}>
       <div className="flex w-full max-w-[clamp(16rem,80vw,36rem)] flex-col gap-4 px-2 py-2">
         <img
-          src={progress > 0 && progress < 100 ? anitruck : truck}
+          src={!showProgress || (progress > 0 && progress < 100) ? anitruck : truck}
           alt="🚛"
           className="pixelated aspect-square w-full"
         />
