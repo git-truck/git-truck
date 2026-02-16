@@ -126,7 +126,7 @@
 }
 
 @utility btn {
-  @apply h-button tertiary inline-grid cursor-pointer grid-flow-col place-items-center items-center justify-center gap-2 rounded-md fill-current px-2 text-sm font-bold text-nowrap select-none not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale;
+  @apply h-button tertiary cursor-pointer flex place-items-center justify-center gap-2 rounded-md fill-current px-2 text-sm font-bold text-nowrap select-none not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale;
 
   &:not(.btn--primary):not(.btn--danger):not(.btn--outlined):not(.btn--text) {
     @apply border-border dark:border-border-dark hover:border-border-highlight dark:hover:border-border-highlight-dark border;
@@ -170,7 +170,7 @@
 }
 
 @utility input {
-  @apply tertiary **:tertiary focus-visible:ring-blue-primary dark:focus-visible:ring-blue-secondary text-secondary-text dark:text-secondary-text-dark has-[input]:focus-visible:ring-blue-primary dark:has-[input]:focus-within:ring-blue-secondary placeholder:text-secondary-text dark:placeholder:text-secondary-text-dark hover:border-border-highlight dark:hover:border-border-highlight-dark h-8 w-full grow rounded-sm border px-1 text-sm text-ellipsis outline-hidden transition-colors not-[select]:px-2 focus-visible:ring-2 *:focus-visible:ring-0 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50;
+  @apply tertiary **:tertiary focus-visible:ring-blue-primary dark:focus-visible:ring-blue-secondary text-secondary-text dark:text-secondary-text-dark has-[input]:focus-visible:ring-blue-primary dark:has-[input]:focus-within:ring-blue-secondary placeholder:text-secondary-text dark:placeholder:text-secondary-text-dark hover:border-border-highlight dark:hover:border-border-highlight-dark h-button w-full grow rounded-sm border px-1 text-sm text-ellipsis outline-hidden transition-colors not-[select]:px-2 focus-visible:ring-2 *:focus-visible:ring-0 enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50;
 
   & input {
     @apply focus-visible:ring-transparent;
@@ -182,7 +182,7 @@
 }
 
 @utility label {
-  @apply cursor-pointer font-bold select-none hover:opacity-70;
+  @apply cursor-pointer font-medium uppercase select-none tracking-widest text-sm opacity-70;
 }
 
 /* Button Variants */
