@@ -331,8 +331,18 @@ export default function Index() {
             </Link>
           </Form>
         </div>
+        <Breadcrumb className="px-2" />
         <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-2">
-          <Breadcrumb className="justify-self-start" />
+          <p className="text-sm">
+            {directories.length} {directories.length < totalCount ? `of ${totalCount}` : ""}{" "}
+            {(directories.length < totalCount && totalCount !== 1) || directories.length !== 1
+              ? hideDirs
+                ? "repositories"
+                : "directories"
+              : hideDirs
+                ? "repository"
+                : "directory"}
+          </p>
           <Pagination
             classNames={["justify-self-center text-sm", "justify-self-end text-sm"]}
             totalCount={totalCount}
