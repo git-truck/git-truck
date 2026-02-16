@@ -570,7 +570,7 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
     <>
       <div className={cn("flex items-center gap-2", classNames?.[0])}>
         <Link
-          className={cn("btn", {
+          className={cn("btn btn--primary", {
             invisible: offset - count < 0
           })}
           aria-disabled={offset - count < 0}
@@ -592,7 +592,7 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
           Page {currentPage} of {pages}
         </span>
         <Link
-          className={cn("btn", {
+          className={cn("btn btn--primary", {
             invisible: offset + count >= totalCount
           })}
           aria-disabled={offset + count >= totalCount}

@@ -117,7 +117,8 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
               {content}
             </span>
           ) : (
-            <button title={title} className="btn truncate" onClick={onClick}>
+            // TODO: This should be a link
+            <button title={title} className="btn btn--primary truncate" onClick={onClick}>
               {content}
             </button>
           )
