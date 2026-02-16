@@ -6,7 +6,7 @@ import { performance } from "node:perf_hooks"
 import { getLogLevel, log, LOG_LEVEL } from "../analyzer/log.server.ts"
 import type { ArgsOptions } from "./model"
 import ServerInstance from "../analyzer/ServerInstance.server.ts"
-import { formatMs, invariant, promiseHelper } from "./util.ts"
+import { formatMs, invariant, normalizePath, promiseHelper } from "./util.ts"
 import yargsParser from "yargs-parser"
 import { GitCaller } from "../analyzer/git-caller.server.ts"
 // use Node's path utilities for cross-platform behavior
@@ -179,3 +179,23 @@ export async function getArgs(): Promise<ArgsOptions> {
 
 export const getBaseDirFromPath = (repositoryPath: string) => path.resolve(path.dirname(repositoryPath))
 export const getRepoNameFromPath = (repositoryPath: string) => path.basename(path.resolve(repositoryPath))
+
+/**
+ * Normalize a path to always use forward slashes,
+ * optionally resolves relative segments, and removes trailing slash.
+ */
+export function normalizeAndResolvePath(
+  p: string,
+  { resolveSegments = true }: { resolveSegments?: boolean } = {}
+): string {
+  const normalized = resolveSegments ? path.resolve(p) : p
+
+  return normalizePath(normalized)
+}
+
+/**
+ * Join multiple path segments and normalize
+ */
+export function joinPaths(...segments: string[]): string {
+  return normalizeAndResolvePath(path.join(...segments), { resolveSegments: false })
+}

@@ -4,7 +4,6 @@ import { promiseHelper, branchCompare, semverCompare } from "../shared/util.ts"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync } from "node:fs"
-import { readdir } from "node:fs/promises"
 import type { AnalyzerData, GitRefs, Repository } from "../shared/model.ts"
 import { AnalyzerDataInterfaceVersion } from "../shared/model.ts"
 
@@ -234,62 +233,18 @@ export class GitCaller {
     }
   }
 
-  static async readGitRepos(baseDir: string): Promise<
-    {
-      name: string
-      path: string
-      branch: string
-      parentDirPath: string
-      status: string
-      lastChanged: number
-    }[]
-  > {
-    const entries = await readdir(baseDir, { withFileTypes: true })
-
-    // Get all directories that has a .git subdirectory and sort them by last changed date
-    console.time("Read repositories")
-    const gitRepositories = (
-      await Promise.all(
-        entries
-          .filter(
-            (entry) =>
-              entry.isDirectory() &&
-              existsSync(join(baseDir, entry.name)) &&
-              !entry.name.startsWith(".") &&
-              // TODO: Implement browsing, requires new routing
-              existsSync(join(baseDir, entry.name, ".git"))
-          )
-          .map(async ({ name }) => {
-            const path = join(baseDir, name)
-            return {
-              name,
-              path: path,
-              branch: await GitCaller._getRepositoryHead(path),
-              parentDirPath: baseDir,
-              status: "",
-              lastChanged: (await this.getLastChanged(path)) ?? 0
-            } as const
-          })
-      )
-    ).sort((a, b) => b.lastChanged - a.lastChanged)
-    // TODO:
-    console.timeEnd("Read repositories")
-    return gitRepositories
-  }
-
-  private static async getLastChanged(path: string): Promise<number | null> {
-    try {
-      const [logOutput, error] = await promiseHelper(runProcess(path, "git", ["log", "-1", "--pretty=%at"]))
-      if (!error && logOutput) {
-        const parsed = parseInt(logOutput as string, 10)
-        if (!isNaN(parsed)) {
-          return parsed
-        }
-      }
-    } catch {
-      // Silently ignore errors, keep lastChanged as 0
+  public static async getLastChanged(path: string): Promise<number | null> {
+    const [logOutput, error] = await promiseHelper(runProcess(path, "git", ["log", "-1", "--pretty=%at"]))
+    if (error || !logOutput) {
+      return null
     }
-    return null
+
+    const parsed = parseInt(logOutput as string, 10)
+    if (isNaN(parsed)) {
+      return null
+    }
+
+    return parsed
   }
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
@@ -406,20 +361,16 @@ export class GitCaller {
     this.useCache = useCache
   }
 
-  public async commitCountSinceCommit(hash: string, branch: string) {
-    const result = (await runProcess(this.repositoryPath, "git", [
-      "rev-list",
-      "--count",
-      `${hash}..${branch}`
-    ])) as number
-    return result
+  public async commitCountSinceCommit(hash: string, branch: string): Promise<number> {
+    const result = Number(await runProcess(this.repositoryPath, "git", ["rev-list", "--count", `${hash}..${branch}`]))
+    return isNaN(result) ? 0 : result
   }
 
-  async getRefs() {
+  async getRefs(): Promise<string> {
     return await GitCaller._getRefs(this.repositoryPath)
   }
 
-  static async _getRefs(repo: string) {
+  static async _getRefs(repo: string): Promise<string> {
     const result = await runProcess(repo, "git", ["show-ref"])
     return result as string
   }
@@ -446,9 +397,9 @@ export class GitCaller {
     return result
   }
 
-  async getCommitCount() {
+  async getCommitCount(): Promise<number> {
     const result = await runProcess(this.repositoryPath, "git", ["rev-list", "--count", this.branch])
-    return result as number
+    return Number(result)
   }
 
   async getDefaultGitSettingValue(setting: string) {

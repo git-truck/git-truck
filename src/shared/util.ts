@@ -371,6 +371,7 @@ export const trimFilenameFromPath = (path: string): string => {
   if (lastSlashIndex === path.length - 1) return path
 
   // Heuristic: if the last segment contains a dot, treat it as a file; otherwise assume directory
+  // TODO: This does not work for .e.g. .github folder
   const basename = path.slice(lastSlashIndex + 1)
   if (basename === "." || basename === ".." || !basename.includes(".")) return path
   return path.slice(0, lastSlashIndex)
@@ -425,4 +426,29 @@ export const comparePaths = (a: string, b: string): boolean => {
   const sepA = getSep(a)
   const sepB = getSep(b)
   return a.split(sepA).join("/") === b.split(sepB).join("/")
+}
+
+export function iconToURL(icon: string) {
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='" + icon + "'/></svg>"
+  )}")`
+}
+
+/**
+ * Normalize a path to always use forward slashes,
+ * optionally resolves relative segments, and removes trailing slash.
+ */
+export function normalizePath(p: string): string {
+  // Backslashes → forward slashes
+  p = p.replace(/\\/g, "/")
+
+  // Collapse multiple slashes
+  p = p.replace(/\/+/g, "/")
+
+  // Remove trailing slash unless it's just "/"
+  if (p.length > 1 && p.endsWith("/")) {
+    p = p.slice(0, -1)
+  }
+
+  return p
 }

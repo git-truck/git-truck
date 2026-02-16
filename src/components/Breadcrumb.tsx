@@ -1,13 +1,14 @@
-import { mdiChevronRight, mdiGit } from "@mdi/js"
+import { mdiChevronRight, mdiSourceRepository } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { cn } from "~/styling"
-import { useQueryState } from "nuqs"
+import { useQueryStates } from "nuqs"
 import { href, useNavigate } from "react-router"
-import { viewSerializer } from "~/routes/view"
+import { viewSearchParamsConfig } from "~/routes/view"
 import { useDataNullable } from "~/contexts/DataContext"
 import { comparePaths, getSep } from "~/shared/util"
 import { AnalysisInfo } from "./GlobalInfo"
+import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 
 type Segment = {
   type: "browse" | "zoom" | "filler"
@@ -17,8 +18,8 @@ type Segment = {
 }
 
 export function Breadcrumb({ className = "", zoom = false }: { className?: string; zoom?: boolean }) {
-  const [path] = useQueryState("path")
-  const [zoomPath, setZoomPath] = useQueryState("zoomPath")
+  const [browseParams] = useQueryStates(browseSearchParamsConfig)
+  const [{ path, zoomPath }, setSearchParams] = useQueryStates(viewSearchParamsConfig)
   const data = useDataNullable()
 
   const navigate = useNavigate()
@@ -30,7 +31,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       const fullPath = repoPathSegments.slice(0, index + 1).join("/")
       return {
         type: "browse",
-        segment,
+        segment: segment.length === 0 && index === 0 ? "/" : segment,
         fullPath,
         isRepo: index === repoPathSegments.length - 1
       } satisfies Segment
@@ -79,7 +80,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   return (
     <div
       className={cn(
-        "text-secondary-text dark:text-secondary-text-dark -m-2 flex items-center gap-1 overflow-x-auto",
+        "text-secondary-text dark:text-secondary-text-dark flex items-center gap-1 overflow-x-auto",
         className
       )}
     >
@@ -95,28 +96,28 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
 
         const onClick = () => {
           if (type === "browse") {
-            navigate(href("/browse") + viewSerializer({ path: fullPath }))
+            navigate(href("/browse") + browseSerializer({ ...browseParams, path: fullPath }))
             return
           }
           if (!data) {
             throw Error("Attempting to access data when none is loaded")
           }
-          setZoomPath(fullPath)
+          setSearchParams((prev) => ({ ...prev, zoomPath: fullPath }))
         }
 
         const content = (
           <>
-            {isRepo ? <Icon path={mdiGit} /> : null}
+            {isRepo ? <Icon path={mdiSourceRepository} /> : null}
             {segment}
           </>
         )
         const button =
           isLast || type === "filler" ? (
-            <span className="flex items-center gap-1 font-bold" title={fullPath}>
+            <span className="flex items-center gap-1 truncate font-bold" title={fullPath}>
               {content}
             </span>
           ) : (
-            <button title={title} className="btn min-w-fit" onClick={onClick}>
+            <button title={title} className="btn truncate" onClick={onClick}>
               {content}
             </button>
           )
