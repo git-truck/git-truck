@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
 import { cn } from "~/styling"
 import { join } from "node:path"
-import { getArgsWithDefaults, normalizeAndResolvePath } from "~/shared/util.server.ts"
+import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath } from "~/shared/util.server.ts"
 import { Icon } from "~/components/Icon"
 import {
   mdiSortAscending,
@@ -84,6 +84,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
         ...emptyResponse,
         error: "Path not found",
         parentDirectoryPath: path,
+        parentDirectoryName: getRepoNameFromPath(path),
         analyzedReposPromise: Promise.resolve([]),
         totalCount: 0
       }
@@ -107,6 +108,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     return {
       ...emptyResponse,
       parentDirectoryPath: parentDirectory,
+      parentDirectoryName: getRepoNameFromPath(parentDirectory),
       error: error.message.startsWith("EPERM")
         ? "Permission denied"
         : error.message.startsWith("EACCES")
@@ -202,14 +204,22 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     versionInfo: context.get(versionContext),
     directories,
     parentDirectoryPath: parentDirectory,
+    parentDirectoryName: getRepoNameFromPath(parentDirectory),
     analyzedReposPromise,
     totalCount: filteredEntries.length
   }
 }
 
 export default function Index() {
-  const { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount } =
-    useLoaderData<typeof loader>()
+  const {
+    error,
+    versionInfo,
+    directories,
+    parentDirectoryPath,
+    parentDirectoryName,
+    analyzedReposPromise,
+    totalCount
+  } = useLoaderData<typeof loader>()
   const location = useLocation()
   const navigation = useNavigation()
   const [{ "hide-dirs": hideDirs, sort: sortMethod, search: searchQuery }, setSearchParams] =
