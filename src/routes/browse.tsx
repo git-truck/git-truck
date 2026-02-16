@@ -545,6 +545,7 @@ function RepositoryEntry({
   )
 }
 
+// TODO: Pagination is bugged (due to being uncontrolled, same goes for search field)
 function Pagination({ classNames, totalCount }: { classNames?: [string, string]; totalCount: number }) {
   const [{ path, count, offset, ...rest }, setSearchParams] = useQueryStates(browseSearchParamsConfig, {
     shallow: false
