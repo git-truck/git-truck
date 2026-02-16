@@ -32,7 +32,6 @@ export function Handle({
 }) {
   return (
     <button
-      onClick={onClick}
       className={cn(
         "absolute z-10 flex size-5 -translate-x-1/2 -translate-y-1.5 place-content-center disabled:grayscale",
         {
@@ -51,6 +50,7 @@ export function Handle({
         left: `${handle.percent}%`
         // marginTop: "-6px"
       }}
+      onClick={onClick}
       {...getHandleProps(handle.id)}
     >
       <div

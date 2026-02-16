@@ -19,6 +19,7 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
           mode={1}
           step={1}
           domain={domain}
+          values={[displayPercentage]}
           onChange={(e) => {
             setDominantAuthorCutoff(e[0])
             startTransition(() => {
@@ -30,7 +31,6 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
               setDisplayPercentage(e[0])
             })
           }}
-          values={[displayPercentage]}
         >
           <Rail>{SliderRail}</Rail>
           <Handles>
@@ -46,7 +46,7 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
             {({ tracks, getTrackProps }) => (
               <Fragment>
                 {tracks.map(({ id, ...props }) => (
-                  <Track {...props} backgroundColor={noEntryColor} key={id} getTrackProps={getTrackProps} />
+                  <Track {...props} key={id} backgroundColor={noEntryColor} getTrackProps={getTrackProps} />
                 ))}
               </Fragment>
             )}

@@ -27,9 +27,9 @@ export function IconRadioGroup<const G extends Record<string, string>>({
   return (
     <RadioGroup
       value={defaultValue}
-      onChange={onChange}
       className={cn("flex flex-wrap gap-0", { "gap-2": large }, className)}
       aria-label="Select branch or revision"
+      onChange={onChange}
     >
       {enumEntries.map(([key, value]) => (
         <Field key={key}>

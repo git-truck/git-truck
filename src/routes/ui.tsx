@@ -136,8 +136,8 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
             <div>
               {tracks.map(({ id, ...trackProps }) => (
                 <Track
-                  trackType={handleType}
                   key={id}
+                  trackType={handleType}
                   {...trackProps}
                   getTrackProps={getTrackProps}
                   backgroundColor="#7aa0c4"
@@ -151,7 +151,7 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
         <span>Start: {range[0]}%</span>
         <span>End: {range[1]}%</span>
       </div>
-      <TicksByCount count={5} below tickToLabel={(tick) => `${Math.round(tick * 100)}%`} />
+      <TicksByCount below count={5} tickToLabel={(tick) => `${Math.round(tick * 100)}%`} />
     </div>
   )
 }
@@ -299,7 +299,7 @@ export default function UI() {
                 B: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z",
                 C: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
               }
-              return <IconRadioGroup group={group} defaultValue="A" onChange={() => {}} iconMap={iconMap} />
+              return <IconRadioGroup group={group} defaultValue="A" iconMap={iconMap} onChange={() => {}} />
             })()}
             {(() => {
               type DemoEnum = "A" | "B" | "C"
@@ -309,7 +309,7 @@ export default function UI() {
                 B: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z",
                 C: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
               }
-              return <IconRadioGroup large group={enumObj} defaultValue="A" onChange={() => {}} iconMap={iconMap} />
+              return <IconRadioGroup large group={enumObj} defaultValue="A" iconMap={iconMap} onChange={() => {}} />
             })()}
           </div>
           {/* Breadcrumb Demo */}

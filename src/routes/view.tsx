@@ -474,7 +474,7 @@ export default function Repo() {
                 <header className="from-primary-bg dark:from-primary-bg-dark to-primary-bg dark:to-primary-bg-dark top-0 right-0 left-0 z-10 grid grid-flow-col items-center justify-between gap-2 bg-linear-to-r via-transparent p-2">
                   <div className="flex gap-2">
                     {!leftExpanded ? (
-                      <button title="Show left panel" onClick={toggleLeft} className="btn btn--text aspect-square">
+                      <button title="Show left panel" className="btn btn--text aspect-square" onClick={toggleLeft}>
                         <Icon path={mdiMenu} size={1} />
                       </button>
                     ) : (
@@ -488,17 +488,17 @@ export default function Repo() {
                   <div className="flex gap-2">
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
+                        key={data.databaseInfo.branch}
                         className="max-w-3xs"
                         title="Select branch"
-                        key={data.databaseInfo.branch}
-                        onChange={(e) =>
-                          navigate(getPathFromRepoAndHead({ path: data.repo.repositoryPath, branch: e.target.value }))
-                        }
                         defaultValue={data.databaseInfo.branch}
                         headGroups={data.repo.refs}
                         analyzedBranches={data.databaseInfo.analyzedRepos.filter(
                           (rep) => rep.repo === data.databaseInfo.repo
                         )}
+                        onChange={(e) =>
+                          navigate(getPathFromRepoAndHead({ path: data.repo.repositoryPath, branch: e.target.value }))
+                        }
                       />
                     ) : null}
                     <SearchCard />

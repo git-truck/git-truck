@@ -61,8 +61,8 @@ export const Options = memo(function Options() {
         <IconRadioGroup
           group={Chart}
           defaultValue={chartType}
-          onChange={(chartType: ChartType) => setChartType(chartType)}
           iconMap={chartTypeIcons}
+          onChange={(chartType: ChartType) => setChartType(chartType)}
         />
       </div>
       <div>
@@ -73,10 +73,10 @@ export const Options = memo(function Options() {
           titleMap={sizeMetricDescriptions}
           group={SizeMetric}
           defaultValue={sizeMetric}
+          iconMap={sizeMetricIcons}
           onChange={(sizeMetric: SizeMetricType) => {
             setSizeMetricType(sizeMetric)
           }}
-          iconMap={sizeMetricIcons}
         />
       </div>
       <div>
@@ -87,6 +87,7 @@ export const Options = memo(function Options() {
           titleMap={colorMetricDescriptions}
           group={Metric}
           defaultValue={metricType}
+          iconMap={visualizationIcons}
           onChange={(metric: MetricType) => {
             setMetricType(metric)
             if (!linkMetricAndSizeMetric) {
@@ -97,7 +98,6 @@ export const Options = memo(function Options() {
               setSizeMetricType(relatedSizeMetricType)
             }
           }}
-          iconMap={visualizationIcons}
         />
       </div>
     </>

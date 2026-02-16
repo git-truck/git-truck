@@ -38,8 +38,8 @@ export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | nu
           {[...Array(steps)].map((_, i) => {
             return steps >= 4 ? (
               <MetricSegment
-                className={i === 0 ? "rounded-l-sm" : i === steps - 1 ? "rounded-r-sm" : ""}
                 key={i}
+                className={i === 0 ? "rounded-l-sm" : i === steps - 1 ? "rounded-r-sm" : ""}
                 width={width}
                 color={colorGenerator(i)}
                 text={textGenerator(i)}

@@ -39,6 +39,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
 
   return (
     <div
+      ref={tooltipRef}
       className={cn(
         "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform select-none backface-hidden",
         className,
@@ -52,7 +53,6 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
             : "text-primary-text-dark"
           : "dark:text-primary-text-dark text-primary-text"
       )}
-      ref={tooltipRef}
       style={{
         transform: visible ? `translateX(${xTransform}) translateY(${yTransform}) translateZ(0)` : "none",
         ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})

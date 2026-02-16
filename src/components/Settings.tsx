@@ -56,13 +56,13 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={Boolean(linkMetricAndSizeMetric)}
+        title="Enable to sync size metric with color metric"
         onChange={(e) => {
           setLinkMetricAndSizeMetric(e.target.checked)
           if (e.target.checked) {
             setSizeMetricType(relatedSizeMetric[metricType])
           }
         }}
-        title="Enable to sync size metric with color metric"
       >
         <Icon className="ml-1.5" path={mdiLink} size="1.25em" />
         <span>Link size and color option</span>
@@ -70,8 +70,8 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={transitionsEnabled}
-        onChange={(e) => setTransitionsEnabled(e.target.checked)}
         title="Disable to improve performance when zooming"
+        onChange={(e) => setTransitionsEnabled(e.target.checked)}
       >
         <Icon className="ml-1.5" path={mdiTransition} size="1.25em" />
         Transitions
@@ -79,8 +79,8 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={labelsVisible}
-        onChange={(e) => setLabelsVisible(e.target.checked)}
         title="Disable to improve performance"
+        onChange={(e) => setLabelsVisible(e.target.checked)}
       >
         <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
         Labels
@@ -88,8 +88,8 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={showFilesWithoutChanges}
-        onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
         title="Show files that have had no changes in the selected time range"
+        onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
       >
         <Icon className="ml-1.5" path={mdiClockEdit} size="1.25em" />
         Show files with no activity
@@ -97,11 +97,11 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={hierarchyType === "FLAT"}
+        title="Show all files on the same level, instead of as a file tree"
         onChange={() => {
           if (hierarchyType === "FLAT") setHierarchyType("NESTED")
           else setHierarchyType("FLAT")
         }}
-        title="Show all files on the same level, instead of as a file tree"
       >
         <Icon className="ml-1.5" path={mdiFileTree} size="1.25em" />
         Flatten file tree
@@ -121,8 +121,8 @@ export function Settings() {
       <CheckboxWithLabel
         className="text-sm"
         checked={showOnlySearchMatches}
-        onChange={(e) => setShowOnlySearchMatches(e.target.checked)}
         title="When searching, hide files that do not match the search query"
+        onChange={(e) => setShowOnlySearchMatches(e.target.checked)}
       >
         <Icon className="ml-1.5" path={mdiFilter} size="1.25em" />
         Show only search matches

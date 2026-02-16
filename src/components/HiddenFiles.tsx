@@ -39,7 +39,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
       <div className="flex flex-col gap-2">
         {databaseInfo.hiddenFiles.length > 0 ? (
           databaseInfo.hiddenFiles.map((hidden) => (
-            <div className="grid grid-cols-[auto_1fr] items-center gap-2" key={hidden} title={hidden}>
+            <div key={hidden} className="grid grid-cols-[auto_1fr] items-center gap-2" title={hidden}>
               <Form className="w-4" method="post" action={action}>
                 <input type="hidden" name="unignore" value={hidden} />
                 <button

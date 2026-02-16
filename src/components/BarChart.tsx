@@ -54,7 +54,7 @@ const BarChart = () => {
   }
 
   return (
-    <div className="flex flex-col justify-center" ref={ref}>
+    <div ref={ref} className="flex flex-col justify-center">
       <svg ref={svgRef} width="100%" height={height} className="fill-transparent">
         {data.map((d, i) => {
           const barX = (xScale(d.date) ?? 0) + treemapPaddingInner
@@ -80,6 +80,11 @@ const BarChart = () => {
               <rect
                 x={barX}
                 y={0}
+                width={barWidth}
+                height={height}
+                rx={treemapBlobBorderRadius}
+                ry={treemapBlobBorderRadius}
+                className="hover:stroke-blue-secondary stroke-transparent stroke-1 hover:fill-transparent"
                 onClick={() => {
                   const [intervalStart, intervalEnd] = expandIntervalToRange(
                     d.timestamp,
@@ -87,11 +92,6 @@ const BarChart = () => {
                   )
                   updateTimeseries([intervalStart, intervalEnd])
                 }}
-                width={barWidth}
-                height={height}
-                rx={treemapBlobBorderRadius}
-                ry={treemapBlobBorderRadius}
-                className="hover:stroke-blue-secondary stroke-transparent stroke-1 hover:fill-transparent"
               >
                 <title>{`${d.date}: ${d.count.toLocaleString()} commit${d.count !== 1 ? "s" : ""}`}</title>
               </rect>

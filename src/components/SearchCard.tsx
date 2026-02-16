@@ -78,8 +78,8 @@ export const SearchCard = memo(function SearchCard() {
         title="Search for a file or folder"
       >
         <input
-          className="peer w-full grow placeholder-shown:not-focus:w-0 placeholder-shown:not-focus:min-w-0"
           ref={searchFieldRef}
+          className="peer w-full grow placeholder-shown:not-focus:w-0 placeholder-shown:not-focus:min-w-0"
           id={id}
           type="search"
           placeholder="Search for a file or folder..."
@@ -137,6 +137,12 @@ export const SearchCard = memo(function SearchCard() {
         <div className="card bg-tertiary-bg/10 dark:bg-tertiary-bg-dark/50 w-sidepanel relative max-h-1/5 min-h-0 overflow-auto backdrop-blur-lg">
           {items.map((object, i) => (
             <button
+              ref={resultRefs[i]}
+              key={object.path}
+              className="flex cursor-pointer items-center justify-start gap-2 text-sm font-bold"
+              title={object.path}
+              type="reset"
+              value={object.path}
               onKeyDown={(event) => {
                 const currentIndex = resultRefs.findIndex((ref) => ref.current === event.currentTarget)
                 if (event.key === "ArrowDown") {
@@ -157,12 +163,6 @@ export const SearchCard = memo(function SearchCard() {
                   focusResultAtIndex(prevIndex)
                 }
               }}
-              ref={resultRefs[i]}
-              className="flex cursor-pointer items-center justify-start gap-2 text-sm font-bold"
-              key={object.path}
-              title={object.path}
-              type="reset"
-              value={object.path}
               onClick={() => onClickObject(object)}
             >
               {object.type === "tree" ? (

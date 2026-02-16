@@ -204,7 +204,7 @@ export const Chart = memo(function Chart({
   }
 
   return (
-    <div className="relative grid place-items-center" ref={ref}>
+    <div ref={ref} className="relative grid place-items-center">
       <svg
         className={clsx(
           "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs select-none dark:fill-gray-100"

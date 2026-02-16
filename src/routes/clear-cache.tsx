@@ -31,7 +31,7 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
   const isTransitioning = fetcher.state !== "idle"
 
   return (
-    <fetcher.Form action={formAction} method="post" key={fetcher.state}>
+    <fetcher.Form key={fetcher.state} action={formAction} method="post">
       <button
         type="submit"
         disabled={isTransitioning}

@@ -28,7 +28,6 @@ export function Popover({
       positions={positions}
       {...props}
       isOpen={isOpen}
-      onClickOutside={onClose}
       content={(popoverProps: PopoverState) => (
         <ArrowContainer
           {...popoverProps}
@@ -43,6 +42,7 @@ export function Popover({
           </div>
         </ArrowContainer>
       )}
+      onClickOutside={onClose}
     >
       <div className={triggerClassName} {...(triggerOnHover ? { onMouseEnter: onOpen, onMouseLeave: onClose } : {})}>
         <Trigger isOpen={isOpen} onOpen={onOpen} onClose={onClose} onClick={onClick} />

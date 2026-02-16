@@ -4,98 +4,118 @@
  * and should modify this configuration to best suit your team's needs.
  */
 
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import importPlugin from 'eslint-plugin-import';
-import globals from 'globals';
+import js from "@eslint/js"
+import tseslint from "typescript-eslint"
+import react from "eslint-plugin-react"
+import reactHooks from "eslint-plugin-react-hooks"
+import jsxA11y from "eslint-plugin-jsx-a11y"
+import importPlugin from "eslint-plugin-import"
+import globals from "globals"
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ["src/**/*.{js,jsx,ts,tsx}", "e2e/**/*.{js,jsx,ts,tsx}", "scripts/**/*.{js,ts}"],
     plugins: {
       react,
-      'react-hooks': reactHooks,
-      'jsx-a11y': jsxA11y,
-      import: importPlugin,
+      "react-hooks": reactHooks,
+      "jsx-a11y": jsxA11y,
+      import: importPlugin
     },
     languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
+      ecmaVersion: "latest",
+      sourceType: "module",
       parserOptions: {
         ecmaFeatures: {
-          jsx: true,
-        },
+          jsx: true
+        }
       },
       globals: {
         ...globals.browser,
-        ...globals.es2015,
-      },
+        ...globals.es2015
+      }
     },
     settings: {
       react: {
-        version: 'detect',
+        version: "detect"
       },
-      formComponents: ['Form'],
+      formComponents: ["Form"],
       linkComponents: [
-        { name: 'Link', linkAttribute: 'to' },
-        { name: 'NavLink', linkAttribute: 'to' },
+        { name: "Link", linkAttribute: "to" },
+        { name: "NavLink", linkAttribute: "to" }
       ],
-      'import/resolver': {
-        typescript: {},
-      },
+      "import/resolver": {
+        typescript: {}
+      }
     },
     rules: {
       ...react.configs.recommended.rules,
-      ...react.configs['jsx-runtime'].rules,
+      ...react.configs["jsx-runtime"].rules,
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
       ...importPlugin.configs.recommended.rules,
       ...importPlugin.configs.typescript.rules,
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-    },
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "react/jsx-sort-props": [
+        "warn",
+        {
+          callbacksLast: true,
+          shorthandFirst: true,
+          reservedFirst: true,
+          noSortAlphabetically: true,
+          ignoreCase: true
+        }
+      ]
+    }
   },
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["scripts/**/*.{js,mjs,ts}"],
     languageOptions: {
-      parser: tseslint.parser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node
+      }
+    }
+  },
+  {
+    files: ["src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "scripts/**/*.{ts}"],
+    languageOptions: {
+      parser: tseslint.parser
     },
     settings: {
-      'import/internal-regex': '^~/',
-      'import/resolver': {
+      "import/internal-regex": "^~/",
+      "import/resolver": {
         node: {
-          extensions: ['.ts', '.tsx'],
+          extensions: [".ts", ".tsx"]
         },
         typescript: {
-          alwaysTryTypes: true,
-        },
-      },
-    },
+          alwaysTryTypes: true
+        }
+      }
+    }
   },
   {
-    files: ['.eslintrc.cjs', 'scripts/*.{js,ts}'],
+    files: [".eslintrc.cjs", "scripts/*.{js,ts}"],
     languageOptions: {
       globals: {
-        ...globals.node,
-      },
-    },
+        ...globals.node
+      }
+    }
   },
   {
     ignores: [
-      '!**/.server',
-      '!**/.client',
-      'build/**',
-      'node_modules/**',
-      'cli.mjs',
-      '.react-router/**',
-      '.husky/**',
-      'scripts/**'
-    ],
-  },
-];
+      "!**/.server",
+      "!**/.client",
+      "build/**",
+      "coverage/**",
+      "node_modules/**",
+      "cli.mjs",
+      ".react-router/**",
+      ".husky/**"
+    ]
+  }
+]

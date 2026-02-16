@@ -251,9 +251,13 @@ export default function Index() {
             </label>
             {/* TODO: Clear search query when search query param updates */}
             <input
-              id="search"
               ref={searchFieldRef}
+              id="search"
               name="search"
+              type="search"
+              className="input"
+              placeholder={`Search ${hideDirs ? "repositories" : "directories"}...`}
+              defaultValue={searchQuery}
               onChange={(evt) => {
                 evt.stopPropagation()
                 if (!evt.target.checkValidity()) {
@@ -263,10 +267,6 @@ export default function Index() {
                   setSearchParams((prev) => ({ ...prev, search: evt.currentTarget.value }))
                 })
               }}
-              type="search"
-              className="input"
-              placeholder={`Search ${hideDirs ? "repositories" : "directories"}...`}
-              defaultValue={searchQuery}
             />
             <div />
             <label className="label" htmlFor="path">
@@ -356,16 +356,17 @@ export default function Index() {
             label="Name"
             isActive={sortMethod === "asc" || sortMethod === "desc"}
             direction={sortMethod === "desc" ? "desc" : sortMethod === "asc" ? "asc" : undefined}
+            title="Sort by name"
             onClick={() =>
               setSearchParams((prev) => ({ ...prev, offset: null, sort: sortMethod === "asc" ? "desc" : "asc" }))
             }
-            title="Sort by name"
           />
 
           <SortHeader
             label="Last Changed"
             isActive={sortMethod === "least-recent" || sortMethod === "most-recent"}
             direction={sortMethod === "most-recent" ? "asc" : sortMethod === "least-recent" ? "desc" : undefined}
+            title={`Sort by ${sortMethod === "least-recent" ? "most" : "least"} recent (slower than sorting by name)`}
             onClick={() =>
               setSearchParams((prev) => ({
                 ...prev,
@@ -373,7 +374,6 @@ export default function Index() {
                 sort: sortMethod === "most-recent" ? "least-recent" : "most-recent"
               }))
             }
-            title={`Sort by ${sortMethod === "least-recent" ? "most" : "least"} recent (slower than sorting by name)`}
           />
           {directories.map((repo, i) => (
             <Suspense
@@ -443,7 +443,6 @@ function SortHeader({
   return (
     <button
       type="button"
-      onClick={onClick}
       aria-pressed={isActive}
       title={title ?? `Sort by ${label}`}
       className={cn(
@@ -453,6 +452,7 @@ function SortHeader({
           "text-primary dark:text-primary": isActive
         }
       )}
+      onClick={onClick}
     >
       <span className="flex items-center gap-1 leading-none">
         <span className="leading-none">{label}</span>

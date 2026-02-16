@@ -8,8 +8,8 @@ export function FullscreenButton() {
   return (
     <button
       className={cn("btn aspect-square p-1", { "btn--primary": isFullscreen })}
-      onClick={toggleFullscreen}
       title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      onClick={toggleFullscreen}
     >
       <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
     </button>

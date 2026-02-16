@@ -94,8 +94,8 @@ function PointLegendOther({
           <div className="ml-3 flex gap-2">
             {items.slice(0, 14).map(([label, info]) => (
               <LegendDot
-                className="-ml-3 rotate-12 transition-transform duration-300 group-hover:-rotate-12"
                 key={label}
+                className="-ml-3 rotate-12 transition-transform duration-300 group-hover:-rotate-12"
                 dotColor={info.color}
               />
             ))}

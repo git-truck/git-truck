@@ -47,14 +47,14 @@ export default function Timeline({ className }: { className?: string }) {
         mode={2}
         step={1}
         domain={timerange}
+        values={range}
+        disabled={disabled}
         onUpdate={(e) => setRange([...e] as [number, number])}
         onChange={(e) => {
           startTransition(() => {
             updateTimeseries(e)
           })
         }}
-        values={range}
-        disabled={disabled}
       >
         <Rail>{SliderRail}</Rail>
         <Handles>
@@ -100,19 +100,19 @@ export default function Timeline({ className }: { className?: string }) {
                       )}
                     >
                       <TimePicker
+                        setsBeginning
                         range={range}
                         setRange={setRange}
                         timerange={timerange}
-                        setsBeginning
                         updateTimeseries={updateTimeseries}
                         disabled={disabled}
                       />
                     </Popover>
                   </div>
                   <Handle
+                    key={handle.id}
                     handleType="square"
                     title="Drag to adjust interval, click to set specific date"
-                    key={handle.id}
                     className={cn("")}
                     handle={handle}
                     domain={timerange}
@@ -128,9 +128,9 @@ export default function Timeline({ className }: { className?: string }) {
             <div>
               {tracks.map(({ id, source, target }) => (
                 <Track
+                  key={id}
                   trackType="square"
                   backgroundColor="#7aa0c4"
-                  key={id}
                   source={source}
                   target={target}
                   getTrackProps={getTrackProps}
@@ -171,6 +171,8 @@ function TimePicker({
   return (
     <div className="z-30">
       <DatePicker
+        inline
+        fixedHeight
         renderCustomHeader={({
           date,
           decreaseMonth,
@@ -180,18 +182,16 @@ function TimePicker({
         }) => {
           return (
             <div className="m-2 flex justify-between">
-              <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled}>
+              <button disabled={prevMonthButtonDisabled} onClick={decreaseMonth}>
                 {"<"}
               </button>
               <h2>{dateFormatCalendarHeader(date.getTime())}</h2>
-              <button onClick={increaseMonth} disabled={nextMonthButtonDisabled}>
+              <button disabled={nextMonthButtonDisabled} onClick={increaseMonth}>
                 {">"}
               </button>
             </div>
           )
         }}
-        inline
-        fixedHeight
         disabled={disabled}
         selected={new Date(range[setsBeginning ? 0 : 1] * 1000)}
         minDate={new Date(setsBeginning ? timerange[0] * 1000 : Math.max(timerange[0] * 1000, range[0] * 1000))}

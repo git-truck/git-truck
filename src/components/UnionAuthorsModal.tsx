@@ -111,8 +111,8 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
   )
   const ungroupedAuthorsEntries = ungroupedAuthorsFiltered.map((author) => (
     <CheckboxWithLabel
-      className="hover:opacity-70"
       key={author}
+      className="hover:opacity-70"
       checked={selectedAuthors.includes(author)}
       onChange={(e) => {
         const newSelectedAuthors = e.target?.checked
@@ -134,7 +134,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     const color = getColorFromDisplayName(displayName)
 
     return (
-      <div className="card group m-0 flex h-full flex-col p-2" key={aliasGroupIndex}>
+      <div key={aliasGroupIndex} className="card group m-0 flex h-full flex-col p-2">
         <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={color} />
           <b className="truncate" title={displayName}>
@@ -148,8 +148,8 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
             <AliasEntry
               key={alias}
               alias={alias}
-              onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
               disabled={disabled}
+              onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
             />
           ))}
         <div className="grow" />
@@ -159,6 +159,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
             <button
               className="btn"
               title="Add selected authors to this group"
+              disabled={disabled || selectedAuthors.length === 0}
               onClick={() => {
                 const newAuthorUnions = authorUnions.map(([displayName, ...group], i) => {
                   if (i === aliasGroupIndex) {
@@ -175,12 +176,11 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
                 })
                 setSelectedAuthors([])
               }}
-              disabled={disabled || selectedAuthors.length === 0}
             >
               Add selected
             </button>
           </Form>
-          <button className="btn" onClick={() => ungroup(aliasGroupIndex)} title="Ungroup" disabled={disabled}>
+          <button className="btn" title="Ungroup" disabled={disabled} onClick={() => ungroup(aliasGroupIndex)}>
             Ungroup
           </button>
         </div>
@@ -204,9 +204,9 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         <div className="flex justify-end gap-2">
           <button
             className="btn btn--primary justify-self-end"
-            onClick={groupSelectedAuthors}
             title="Group the selected authors"
             disabled={disabled || selectedAuthors.length === 0}
+            onClick={groupSelectedAuthors}
           >
             <Icon path={mdiAccountMultiple} size={1} />
             Create group
@@ -236,21 +236,21 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
               />
               <button
                 disabled={disabled || selectedAuthors.length === 0}
-                onClick={() => setSelectedAuthors([])}
                 className="btn btn--outlined w-max grow"
                 title="Clear selection"
+                onClick={() => setSelectedAuthors([])}
               >
                 Clear
               </button>
               <button
                 disabled={ungroupedAuthorsSorted.length === 0}
+                className="btn btn--outlined w-max grow"
+                title="Clear selection"
                 onClick={() =>
                   selectedAuthors.length === ungroupedAuthorsFiltered.length
                     ? setSelectedAuthors([])
                     : setSelectedAuthors((selected) => Array.from(new Set([...selected, ...ungroupedAuthorsFiltered])))
                 }
-                className="btn btn--outlined w-max grow"
-                title="Clear selection"
               >
                 {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
               </button>
@@ -299,8 +299,8 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
         key={alias}
         className="btn flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
         disabled={disabled}
-        onClick={onClick}
         title="Make display name for this grouping"
+        onClick={onClick}
       >
         <Icon path={mdiArrowUp} size={0.75} />
         <label title={alias} className="label truncate">

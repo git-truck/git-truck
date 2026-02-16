@@ -69,7 +69,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         positions={["left", "top", "bottom", "right"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <button onClick={onClick} className="cursor-pointer truncate font-bold opacity-80 hover:opacity-70">
+          <button className="cursor-pointer truncate font-bold opacity-80 hover:opacity-70" onClick={onClick}>
             {props.value.message}
           </button>
         )}
@@ -178,6 +178,7 @@ export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO
         {navigation.state === "idle" ? (
           commitShowCount < commitCount ? (
             <button
+              className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
               onClick={() =>
                 setSearchParams(
                   (prev) => {
@@ -189,7 +190,6 @@ export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO
                   }
                 )
               }
-              className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
             >
               Show more commits
             </button>
