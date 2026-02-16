@@ -57,6 +57,12 @@ const loadSearchParams = createLoader(browseSearchParamsConfig)
 export const browseSerializer = createSerializer(browseSearchParamsConfig)
 const args = getArgsWithDefaults()
 
+export const meta = ({ loaderData }: Route.MetaArgs) => [
+  {
+    title: `${loaderData.parentDirectoryName} - Git Truck`
+  }
+]
+
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
   log.info("Browse loader triggered")
   const {
@@ -211,15 +217,8 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 }
 
 export default function Index() {
-  const {
-    error,
-    versionInfo,
-    directories,
-    parentDirectoryPath,
-    parentDirectoryName,
-    analyzedReposPromise,
-    totalCount
-  } = useLoaderData<typeof loader>()
+  const { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount } =
+    useLoaderData<typeof loader>()
   const location = useLocation()
   const navigation = useNavigation()
   const [{ "hide-dirs": hideDirs, sort: sortMethod, search: searchQuery }, setSearchParams] =

@@ -106,6 +106,12 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
 
 export const middleware: Route.MiddlewareFunction[] = [viewMiddleware]
 
+export const meta = ({ loaderData }: Route.MetaArgs) => [
+  {
+    title: `${loaderData.repositoryName} - Git Truck`
+  }
+]
+
 export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const { instance, repositoryPath, branch } = context.get(currentRepositoryContext)
 
@@ -138,6 +144,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   return {
     dataPromise: analyze({ instance, path: repositoryPath, branch }),
+    repositoryName: getRepoNameFromPath(repositoryPath),
     versionInfo
   }
 }
