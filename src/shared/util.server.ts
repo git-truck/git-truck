@@ -156,7 +156,7 @@ let latestVersion: string | null = null
 
 export async function getLatestVersion() {
   if (!latestVersion) {
-    console.info("Fetching latest version from npm registry...")
+    log.info("Fetching latest version from npm registry...")
     const [result] = await promiseHelper(
       fetch("https://registry.npmjs.org/-/package/git-truck/dist-tags")
         .then((res) => res.json() as Promise<{ latest: string }>)
