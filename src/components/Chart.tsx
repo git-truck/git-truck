@@ -109,7 +109,9 @@ export const Chart = memo(function Chart({
   ])
 
   const nodes = useMemo(() => {
-    console.time("nodes")
+    if (process.env["NODE_ENV"] === "development") {
+      console.time("Create and pack hiearchy")
+    }
     if (size.width === 0 || size.height === 0) return []
 
     const res = createPartitionedHiearchy({
@@ -121,7 +123,9 @@ export const Chart = memo(function Chart({
       renderCutoff,
       zoomPath: zoomPath ?? undefined
     }).descendants()
-    console.timeEnd("nodes")
+    if (process.env["NODE_ENV"] === "development") {
+      console.timeEnd("Create and pack hiearchy")
+    }
     return res
   }, [size, chartType, sizeMetric, zoomPath, renderCutoff, databaseInfo, filetree])
   useEffect(() => {
