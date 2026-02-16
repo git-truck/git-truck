@@ -21,6 +21,9 @@ function Guide() {
       <p className="flex items-center gap-1">
         <Key title="Scroll">Scroll</Key> to zoom in and out
       </p>
+      <p className="flex items-center gap-1">
+        <Key title="Scroll">Double click</Key> to zoom in and out
+      </p>
 
       <p className="flex items-center gap-1">
         <Key title="Shift key">

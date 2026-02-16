@@ -1,6 +1,6 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
-import type { MouseEventHandler, JSX } from "react"
+import type { JSX, DOMAttributes } from "react"
 import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } from "react"
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
@@ -132,52 +132,76 @@ export const Chart = memo(function Chart({
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
-  const createGroupHandlers: (
-    d: CircleOrRectHiearchyNode,
-    isRoot: boolean
-  ) => Record<"onClick" | "onMouseOver" | "onMouseOut", MouseEventHandler<SVGGElement>> = (d, isRoot) => {
+  const scrollDeltaRef = useRef(0)
+  const clickTimer = useRef<number | null>(null)
+  const DOUBLE_CLICK_DELAY = 300
+
+  const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
+    const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
+      evt.stopPropagation()
+
+      const modifierKey = evt.ctrlKey || evt.metaKey
+      // Zoom in with shift + click
+      if (evt.shiftKey && !modifierKey && d) {
+        setZoomPath(d.data.path)
+        return
+      }
+
+      // Zoom out with modifier + click
+      if (modifierKey && !evt.shiftKey) {
+        zoomOneLevelOut()
+        return
+      }
+
+      // Deselect if clicking the same object
+      if (clickedObject && clickedObject?.path === d?.data.path) {
+        navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+        return
+      }
+
+      // Else, navigate to object details
+      navigate(tabURL + viewSerializer({ ...params, objectPath: d?.data.path }), {
+        state: {
+          clickedObject: d?.data
+        }
+      })
+    }
+    const onDoubleClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
+      if (zoomPath && zoomPath === d?.data.path) {
+        setZoomPath("")
+        return
+      }
+      setZoomPath(d?.data.path ?? null)
+    }
     return {
       onClick: (evt) => {
+        if (clickTimer.current) {
+          return
+        }
+        clickTimer.current = window.setTimeout(() => {
+          clickTimer.current = null
+
+          onClick(evt)
+        }, DOUBLE_CLICK_DELAY)
+      },
+      onDoubleClick(evt) {
         evt.stopPropagation()
 
-        const modifierKey = evt.ctrlKey || evt.metaKey
-        // Zoom in with shift + click
-        if (evt.shiftKey && !modifierKey) {
-          setZoomPath(d.data.path)
-          return
+        if (clickTimer.current) {
+          window.clearTimeout(clickTimer.current)
+          clickTimer.current = null
+          onDoubleClick(evt)
         }
-
-        // Zoom out with modifier + click
-        if (modifierKey && !evt.shiftKey) {
-          zoomOneLevelOut()
-          return
-        }
-
-        // Deselect if clicking the same object
-        if (clickedObject?.path === d.data.path) {
-          navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
-          return
-        }
-
-        // Else, navigate to object details
-        navigate(tabURL + viewSerializer({ ...params, objectPath: d.data.path }), {
-          state: {
-            clickedObject: d.data
-          }
-        })
       },
       onMouseOver: (evt) => {
         evt.stopPropagation()
-        if (!isRoot) setHoveredObject(d.data as GitObject)
-        else setHoveredObject(null)
+        if (d) setHoveredObject(d.data)
       },
       onMouseOut: () => {
         return setHoveredObject(null)
       }
     }
   }
-
-  const scrollDeltaRef = useRef(0)
 
   return (
     <div className="relative grid place-items-center" ref={ref}>
@@ -187,7 +211,12 @@ export const Chart = memo(function Chart({
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => zoomOutKeyActive && zoomOneLevelOut()}
+        // TODO: Deselect on click outside of nodes
+        // onClick={() => (zoomOutKeyActive ? zoomOneLevelOut() : clickedObject ? setClickedObject(null) : null)}
+        // {...createGroupHandlers(null)}
+        onDoubleClick={() => {
+          setZoomPath(null)
+        }}
         onWheel={(evt) => {
           // Accumulate delta
           scrollDeltaRef.current += evt.deltaY
@@ -207,9 +236,9 @@ export const Chart = memo(function Chart({
           }
         }}
       >
-        {nodes.map((d, i) => {
+        {nodes.map((d) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
-          const eventHandlers = createGroupHandlers(d, i === 0)
+          const eventHandlers = createGroupHandlers(d)
           return (
             <g
               key={d.data.path}
