@@ -1,40 +1,14 @@
-import { mdiAppleKeyboardCommand, mdiAppleKeyboardShift } from "@mdi/js"
-import { Icon } from "~/components/Icon"
-import { ClientOnly } from "~/components/util"
-
 export default function ViewIndex() {
   return (
     <div className="space-y-4 text-sm">
-      <p>Click on a file or folder to view details or commit history.</p>
-      <ClientOnly>{() => <Guide />}</ClientOnly>
-    </div>
-  )
-}
-
-function Guide() {
-  const isMac = navigator.platform.startsWith("Mac")
-  const modifierTitle = isMac ? "Command key" : "Control key"
-  const modifier = isMac ? <Icon path={mdiAppleKeyboardCommand} /> : "Ctrl"
-
-  return (
-    <div className="space-y-1">
-      <p className="flex items-center gap-1">
-        <Key title="Scroll">Scroll</Key> to zoom in and out
-      </p>
-      <p className="flex items-center gap-1">
-        <Key title="Scroll">Double click</Key> to zoom in and out
-      </p>
-
-      <p className="flex items-center gap-1">
-        <Key title="Shift key">
-          <Icon path={mdiAppleKeyboardShift} />
-        </Key>
-        + <Key title="Left click">click</Key> to zoom in
-      </p>
-
-      <p className="flex items-center gap-1">
-        <Key title={modifierTitle}>{modifier}</Key> + <Key title="Left click">click</Key> to zoom out
-      </p>
+      <div className="space-y-1">
+        <p className="flex items-center gap-1">
+          <Key title="Left click">Click</Key> to inspect
+        </p>
+        <p className="flex items-center gap-1">
+          <Key title="Double click">Double click</Key> or <Key title="Scroll">Scroll</Key> to zoom
+        </p>
+      </div>
     </div>
   )
 }
@@ -42,7 +16,7 @@ function Guide() {
 function Key({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <kbd
-      className="bg-primary-bg dark:bg-primary-bg-dark h-button flex w-max items-center rounded-sm border px-2"
+      className="bg-primary-bg dark:bg-primary-bg-dark h-button flex w-max min-w-max items-center rounded-sm border px-2"
       title={title}
     >
       {children}
