@@ -1,4 +1,4 @@
-import { mdiClose, mdiMenu, mdiRestore } from "@mdi/js"
+import { mdiMenu, mdiRestore } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import {
   Await,
@@ -49,7 +49,6 @@ import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { CollapsableSettings } from "~/components/Settings"
 import { useQueryState, type inferParserType } from "nuqs"
-import { useHomePath } from "~/hooks"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 
 export const useRepoContext = () =>
@@ -371,8 +370,6 @@ export default function Repo() {
   const navigate = useNavigate()
   const [objectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
 
-  const homePath = useHomePath()
-
   const clearCacheUrl = `/clear-cache?${new URLSearchParams({
     redirect: location.pathname + location.search
   }).toString()}`
@@ -436,9 +433,6 @@ export default function Repo() {
                                 {objectPathIsFile ? objectPath.split("/").pop() : objectPath}
                               </span>
                             </span>
-                            <Link className="btn" to={homePath}>
-                              <Icon path={mdiClose} />
-                            </Link>
                           </>
                         ) : (
                           "Details"

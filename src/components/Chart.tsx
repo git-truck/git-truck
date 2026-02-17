@@ -54,7 +54,7 @@ export const Chart = memo(function Chart({
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
 
   const [params, setParams] = useQueryStates(viewSearchParamsConfig)
-  const { zoomPath, objectPath } = params
+  const { zoomPath } = params
 
   const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
     setParams((prev) => {
@@ -196,8 +196,7 @@ export const Chart = memo(function Chart({
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
         // TODO: Deselect on click outside of nodes
-        // onClick={() => (zoomOutKeyActive ? zoomOneLevelOut() : clickedObject ? setClickedObject(null) : null)}
-        // {...createGroupHandlers(null)}
+        onClick={() => (clickedObject ? setClickedObject(null) : null)}
         onDoubleClick={() => {
           setZoomPath(null)
         }}
@@ -226,16 +225,15 @@ export const Chart = memo(function Chart({
           return (
             <g
               key={d.data.path}
-              className={cn(
-                "duration-400",
-                {
-                  "hover:opacity-80": isBlob(d.data),
-                  "opacity-30":
-                    (!isSearchMatch && hasSearchResults) ||
-                    (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
-                  "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
-                },
-              )}
+              className={cn("duration-400", {
+                "cursor-pointer": !clickedObject,
+                "hover:opacity-80": isBlob(d.data) && !clickedObject,
+                "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
+                  isTree(d.data) && !clickedObject,
+                "opacity-30":
+                  (!isSearchMatch && hasSearchResults) ||
+                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path)
+              })}
               {...eventHandlers}
             >
               <Node
@@ -257,12 +255,7 @@ export const Chart = memo(function Chart({
           )
         })}
       </svg>
-      <div className={cn("absolute bottom-2 left-2 flex gap-2", {})}>
-        {objectPath ? (
-          <button className="btn" onClick={() => setClickedObject(null)}>
-            Clear selection
-          </button>
-        ) : null}
+      <div className="absolute bottom-2 left-2 flex gap-2">
         {zoomPath && zoomPath !== databaseInfo.repo ? (
           <>
             <button className="btn" onClick={() => setZoomPath(null)}>
