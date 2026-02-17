@@ -1,5 +1,5 @@
 import { useSubmit, useNavigation, useSearchParams } from "react-router"
-import { useState, useTransition, type CSSProperties } from "react"
+import { Fragment, useState, useTransition, type CSSProperties } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
@@ -61,7 +61,7 @@ export default function Timeline({ className }: { className?: string }) {
           {({ handles, getHandleProps }) => (
             <div className="">
               {handles.map((handle, i) => (
-                <>
+                <Fragment key={handle.id}>
                   <div
                     className={cn(
                       "absolute left-(--left) w-max translate-y-[calc(50%)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100",
@@ -118,7 +118,7 @@ export default function Timeline({ className }: { className?: string }) {
                     domain={timerange}
                     getHandleProps={getHandleProps}
                   ></Handle>
-                </>
+                </Fragment>
               ))}
             </div>
           )}
