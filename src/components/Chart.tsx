@@ -236,16 +236,9 @@ export const Chart = memo(function Chart({
               })}
               {...eventHandlers}
             >
-              <Node
-                // key={d.data.path}
-                d={d}
-              />
+              <Node d={d} />
               {labelsVisible ? (
-                <NodeText
-                  // key={`text|${path}|${d.data.path}|${chartType}|${sizeMetric}|${now}`}
-                  isSearchMatch={isSearchMatch}
-                  d={d}
-                >
+                <NodeText isSearchMatch={isSearchMatch} d={d}>
                   {d.data.name}
                   {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
                   {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
