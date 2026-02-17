@@ -84,7 +84,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   if (shouldRedirect) {
     log.warn(`One required parameter is missing ${rawPath} redirecting to coumplete URL`)
-    throw redirect(href("/view") + browseSerializer(params))
+    throw redirect(href("/browse") + browseSerializer(params))
   }
 
   const path = rawPath ? normalizeAndResolvePath(rawPath, { resolveSegments: true }) : null
