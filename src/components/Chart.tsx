@@ -489,22 +489,26 @@ function NodeText({
               ? {
                   x: d.x - d.r + clipPathPadding / 4 + 0.5,
                   y: d.y - d.r + letterHeightForBlobText - 1 + clipPathPadding / 4 + 0.5,
-                  width: textClipPathRadius - 1,
-                  height: d.r * 2 - clipPathPadding / 2 - 1,
+                  width: Math.max(textClipPathRadius - 1, 0),
+                  height: Math.max(d.r * 2 - clipPathPadding / 2 - 1, 0),
                   rx: d.r,
                   ry: d.r
                 }
               : {
                   x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
                   y: (d as HierarchyRectangularNode<GitObject>).y0 + clipPathPadding / 2,
-                  width:
+                  width: Math.max(
                     (d as HierarchyRectangularNode<GitObject>).x1 -
-                    (d as HierarchyRectangularNode<GitObject>).x0 -
-                    clipPathPadding,
-                  height:
+                      (d as HierarchyRectangularNode<GitObject>).x0 -
+                      clipPathPadding,
+                    0
+                  ),
+                  height: Math.max(
                     (d as HierarchyRectangularNode<GitObject>).y1 -
-                    (d as HierarchyRectangularNode<GitObject>).y0 -
-                    clipPathPadding,
+                      (d as HierarchyRectangularNode<GitObject>).y0 -
+                      clipPathPadding,
+                    0
+                  ),
                   ...(isTree(d.data)
                     ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
                     : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
