@@ -90,24 +90,33 @@ export const ErrorBoundary = () => {
   const { pathname, search } = useLocation()
   const error = useRouteError()
 
+  const mainProcessClosed = error instanceof Error && error.message.startsWith("Failed to fetch")
+  const message = mainProcessClosed
+    ? "Git Truck is not running, please start it and try again."
+    : "Oh no, the Git Truck crashed!"
+
   return (
     <Shell>
-      <ErrorPage className="min-h-screen" message={"Oh no, the Git Truck crashed!"}>
-        <ClearCacheForm redirectPath={pathname + search} />
+      <ErrorPage noTruck className="min-h-screen" message={message}>
+        {!mainProcessClosed ? <ClearCacheForm redirectPath={pathname + search} /> : null}
         <div className="flex flex-wrap justify-center gap-2">
           <Link className="btn" to={pathname + search}>
             Retry
           </Link>
-          <Link className="btn btn--primary" to="..">
-            Go back
-          </Link>
+          {!mainProcessClosed ? (
+            <Link className="btn btn--primary" to="..">
+              Go back
+            </Link>
+          ) : null}
         </div>
       </ErrorPage>
-      <div className="mx-auto max-w-xl space-y-2">
-        <Code className="overflow-x-auto text-left whitespace-pre">
-          {error instanceof Error ? error.stack : "No stack trace available"}
-        </Code>
-      </div>
+      {!mainProcessClosed ? (
+        <div className="mx-auto max-w-xl space-y-2">
+          <Code className="overflow-x-auto text-left whitespace-pre">
+            {error instanceof Error ? error.stack : "No stack trace available"}
+          </Code>
+        </div>
+      ) : null}
     </Shell>
   )
 }
