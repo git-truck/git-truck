@@ -100,7 +100,7 @@ export default function Timeline({ className }: { className?: string }) {
                       )}
                     >
                       <TimePicker
-                        setsBeginning
+                        setsBeginning={i === 0}
                         range={range}
                         setRange={setRange}
                         timerange={timerange}
