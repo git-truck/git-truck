@@ -136,7 +136,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }, viewSearchParams)
 
   if (shouldRedirect) {
-    log.warn(`One parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
+    log.warn(`One required parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
     throw redirect(href("/view") + viewSerializer(params))
   }
 

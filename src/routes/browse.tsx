@@ -27,7 +27,7 @@ import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
 import { createLoader, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs/server"
-import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates } from "nuqs"
+import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates, type inferParserType } from "nuqs"
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
 
@@ -51,10 +51,13 @@ export const browseSearchParamsConfig = {
       }
     })
     .withDefault(""),
-  "hide-dirs": parseAsBoolean.withDefault(false)
+  "include-dirs": parseAsBoolean.withDefault(true).withOptions({ clearOnDefault: false })
 }
 const loadSearchParams = createLoader(browseSearchParamsConfig)
 export const browseSerializer = createSerializer(browseSearchParamsConfig)
+
+type BrowseSearchParams = inferParserType<typeof browseSearchParamsConfig>
+
 const args = getArgsWithDefaults()
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
@@ -64,15 +67,25 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
 ]
 
 export const loader = async ({ context, request }: Route.LoaderArgs) => {
-  log.info("Browse loader triggered")
-  const {
-    path: rawPath,
-    count,
-    offset,
-    sort,
-    search,
-    "hide-dirs": hideDirs
-  } = loadSearchParams(request, { strict: true })
+  const browseSearchParams = loadSearchParams(request, { strict: true })
+  const { path: rawPath, count, offset, sort, search, "include-dirs": includeDirs } = browseSearchParams
+
+  let shouldRedirect = false
+  const params = ([["path", { param: rawPath, fallback: args.path }]] as const).reduce<BrowseSearchParams>(
+    (params, [paramName, { param, fallback }]) => {
+      if (!param) {
+        shouldRedirect = true
+        return { ...params, [paramName]: fallback }
+      }
+      return params
+    },
+    browseSearchParams
+  )
+
+  if (shouldRedirect) {
+    log.warn(`One required parameter is missing ${rawPath} redirecting to coumplete URL`)
+    throw redirect(href("/view") + browseSerializer(params))
+  }
 
   const path = rawPath ? normalizeAndResolvePath(rawPath, { resolveSegments: true }) : null
 
@@ -132,7 +145,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
       directoryPath: join(parentDirectory, entry.name),
       hasGitDirectory: existsSync(join(parentDirectory, entry.name, ".git"))
     }))
-    .filter((repo) => repo.name.toLowerCase().includes(search.toLowerCase()) && (!hideDirs || repo.hasGitDirectory))
+    .filter((repo) => repo.name.toLowerCase().includes(search.toLowerCase()) && (includeDirs || repo.hasGitDirectory))
 
   const sortByLastChanged = sort === "least-recent" || sort === "most-recent"
 
@@ -221,7 +234,7 @@ export default function Index() {
     useLoaderData<typeof loader>()
   const location = useLocation()
   const navigation = useNavigation()
-  const [{ "hide-dirs": hideDirs, sort: sortMethod, search: searchQuery }, setSearchParams] =
+  const [{ "include-dirs": includeDirs, sort: sortMethod, search: searchQuery }, setSearchParams] =
     useQueryStates(browseSearchParamsConfig)
 
   const searchFieldRef = useRef<HTMLInputElement>(null)
@@ -256,7 +269,7 @@ export default function Index() {
               name="search"
               type="search"
               className="input"
-              placeholder={`Search ${hideDirs ? "repositories" : "directories"}...`}
+              placeholder={`Search ${includeDirs ? "directories" : "repositories"}...`}
               defaultValue={searchQuery}
               onChange={(evt) => {
                 evt.stopPropagation()
@@ -303,18 +316,22 @@ export default function Index() {
             ) : (
               <output />
             )}
-            <label htmlFor="hide-dirs" className="label w-max">
-              Exclude directories
+            <label htmlFor="include-dirs" className="label w-max">
+              Include directories
             </label>
             <div className="flex cursor-pointer items-center gap-2 select-none">
-              <label htmlFor="hide-dirs">
+              <label htmlFor="include-dirs">
                 <input
                   type="checkbox"
-                  id="hide-dirs"
+                  id="include-dirs"
                   value="true"
                   className="peer sr-only"
-                  name="hide-dirs"
-                  defaultChecked={hideDirs ?? undefined}
+                  name="include-dirs"
+                  defaultChecked={includeDirs ?? undefined}
+                  onChange={(evt) => {
+                    evt.stopPropagation()
+                    setSearchParams((prev) => ({ ...prev, "include-dirs": evt.target.checked }))
+                  }}
                 />
                 <Icon path={mdiCheckboxBlank} size={1} className="peer-checked:hidden" />
                 <Icon path={mdiCheckboxMarked} size={1} className="hidden peer-checked:block" />
@@ -335,12 +352,12 @@ export default function Index() {
           <p className="text-sm">
             {directories.length} {directories.length < totalCount ? `of ${totalCount}` : ""}{" "}
             {(directories.length < totalCount && totalCount !== 1) || directories.length !== 1
-              ? hideDirs
-                ? "repositories"
-                : "directories"
-              : hideDirs
-                ? "repository"
-                : "directory"}
+              ? includeDirs
+                ? "directories"
+                : "repositories"
+              : includeDirs
+                ? "directory"
+                : "repository"}
           </p>
           <Pagination
             classNames={["justify-self-center text-sm", "justify-self-end text-sm"]}
@@ -404,12 +421,12 @@ export default function Index() {
           <p className="text-sm">
             {directories.length} {directories.length < totalCount ? `of ${totalCount}` : ""}{" "}
             {(directories.length < totalCount && totalCount !== 1) || directories.length !== 1
-              ? hideDirs
-                ? "repositories"
-                : "directories"
-              : hideDirs
-                ? "repository"
-                : "directory"}
+              ? includeDirs
+                ? "directories"
+                : "repositories"
+              : includeDirs
+                ? "directory"
+                : "repository"}
           </p>
           <Pagination
             classNames={["justify-self-center text-sm", "justify-self-end text-sm"]}
