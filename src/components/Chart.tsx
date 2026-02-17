@@ -5,7 +5,7 @@ import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } f
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize, useKeyActive } from "~/hooks"
+import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
   letterHeightForTreeText,
@@ -55,9 +55,6 @@ export const Chart = memo(function Chart({
 
   const [params, setParams] = useQueryStates(viewSearchParamsConfig)
   const { zoomPath, objectPath } = params
-
-  const zoomOutKeyActive = useKeyActive({ ctrlOrMeta: true })
-  const zoomInKeyActive = useKeyActive({ shift: true }) && zoomPath !== databaseInfo.repo
 
   const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
     setParams((prev) => {
@@ -140,21 +137,8 @@ export const Chart = memo(function Chart({
     const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       evt.stopPropagation()
 
-      const modifierKey = evt.ctrlKey || evt.metaKey
-      // Zoom in with shift + click
-      if (evt.shiftKey && !modifierKey && d) {
-        setZoomPath(d.data.path)
-        return
-      }
-
-      // Zoom out with modifier + click
-      if (modifierKey && !evt.shiftKey) {
-        zoomOneLevelOut()
-        return
-      }
-
-      // Deselect if clicking the same object
-      if (clickedObject && clickedObject?.path === d?.data.path) {
+      // Deselect if an object is already clicked
+      if (clickedObject) {
         navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
         return
       }
@@ -251,13 +235,6 @@ export const Chart = memo(function Chart({
                     (clickedObject?.type === "blob" && clickedObject.path !== d.data.path),
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data)
                 },
-                zoomInKeyActive && !zoomOutKeyActive
-                  ? "cursor-zoom-in"
-                  : zoomOutKeyActive && !zoomInKeyActive
-                    ? !zoomPath || zoomPath === databaseInfo.repo
-                      ? "cursor-not-allowed"
-                      : "cursor-zoom-out"
-                    : "cursor-pointer"
               )}
               {...eventHandlers}
             >
