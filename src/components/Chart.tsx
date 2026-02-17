@@ -272,7 +272,7 @@ export const Chart = memo(function Chart({
                   d={d}
                 >
                   {d.data.name}
-                  {/* TOOD: After adding absolutePaths to objects, display the absolute path on the root tree */}
+                  {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
                   {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
                 </NodeText>
               ) : null}
