@@ -31,9 +31,13 @@ export class GitCaller {
     this.branch = branch
   }
 
-  static async isGitRepo(path: string): Promise<boolean> {
+  static hasGitDirectory(path: string): boolean {
     const gitFolderPath = resolve(path, ".git")
-    const hasGitFolder = existsSync(gitFolderPath)
+    return existsSync(gitFolderPath)
+  }
+
+  static async isValidGitRepo(path: string): Promise<boolean> {
+    const hasGitFolder = this.hasGitDirectory(path)
     if (!hasGitFolder) return false
     const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead({ repositoryPath: path }))
     return Boolean(hasGitFolder && !findBranchHeadError)
