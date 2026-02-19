@@ -10,11 +10,14 @@ on:
 
 jobs:
   check-node:
-    runs-on: ubuntu-latest
+    name: Check (node) on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: [latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v6
