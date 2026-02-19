@@ -1,84 +1,102 @@
-# [Development](#development)
+# Contributing to Git Truck
 
-After you've cloned the project locally (and fulfilled prerequisites), the first thing you need to do is install the development dependencies with `bun install`.
+Thank you for your interest in contributing! This document provides guidelines for developing on the project.
 
-This project is split up into two parts:
+For a high-level overview of the project architecture, tech stack, and key commands, please refer to [AGENTS.md](./AGENTS.md).
 
-- A CLI interface for launching the application
-- A fullstack application
+## Getting Started
 
-To run the fullstack application by itself, you can run `bun --bun dev`. This will startup the React Router Dev Server, which supports Hot Module Reloading, meaning app state is preserved between rebuilds. This is not how the end user uses the application and does not support arguments. To test your local version of the CLI, you should instead install it globally by running `bun install -g .` in the root of the repo. Now, when you run `git truck` in a git repository to test, it is symlinked and use your local development version.
-**Note:** When testing the production build, remember to build the project with `bun run build` when making changes, so your changes are reflected.
-
-<!-- TODO: Make sure it is possible to change log levels -->
-
-For changing the log levels ???
-
-## Commits
-
-Please provide the following prefixes in your commits, in order to trigger automatic version bumping:
-
-```yml
-patch-wording: "Fix,fix,Patch,patch"
-minor-wording: "Feat,feat,NewVersion"
-major-wording: "BREAKING CHANGE"
-```
-
-**Example commit messages:**
-
-| Major                                                        | Minor                                                        | Patch                                                        |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| `BREAKING CHANGE: Removed support for specifying option`     | `feat: Added new button`                                     | `fix: Button does not work correctly`                        |
-| This will bump the major version (e.g., from 1.0.0 to 2.0.0) | This will bump the minor version (e.g., from 1.0.0 to 1.1.0) | This will bump the patch version (e.g., from 1.0.0 to 1.0.1) |
-
-To enforce this automatically, you can use tools such as [Commitizen](https://github.com/commitizen/cz-cli).
-
-## Publish
-
-Production ready versions are automatically published when succesfully merging a pull request. This is taken care of by the [build and publish workflow](https://github.com/git-truck/git-truck/actions/workflows/bump-version-and-publish.yml)
-The version will automatically be bumped, according to the rules described in the [commits section](README.md#commits)
-
-This means that if any commits include the corresponding words, the version will be bumped accordingly.
-
-## Prerelease and Experimental releases
-
-To publish experimental releases, you need to be signed into NPM (using `npm login`) and have two-factor authentication setup for your account.
-
-Run the following command to publish an experimental release:
+1. **Prerequisites**: Ensure you have [Bun](https://bun.sh/) installed.
+2. **Clone the repository**:
 
 ```sh
-bun pub-exp -- <OTP>
+git clone https://github.com/git-truck/git-truck.git
+cd git-truck
 ```
 
-Where OTP is a One Time Password from your authenticator app.
+3. **Install dependencies**:
 
-To publish prerelease versions, run
+   ```sh
+   bun install
+   ```
+
+## Development Workflow
+
+### Running the Dev Server
+
+There are two primary ways to run the application during development:
+
+1. **Using Bun (Preferred)**:
+   Runs the CLI using the Bun runtime.
+
+   ```sh
+   bun dev:bun
+   ```
+
+2. **Using Node/TSX**:
+   Runs the CLI using `tsx` (via Node).
+
+   ```sh
+   bun dev
+   ```
+
+   To change log levels, you can use the `LOG_LEVEL` environment variable:
+
+   ```sh
+   LOG_LEVEL=debug bun dev
+   ```
+
+### Testing Globally
+
+You can also install the CLI globally to test it on other repositories:
 
 ```sh
-bun pub-pre
+npm i -g .
 ```
 
-## [Husky](#husky)
+### Building and Testing
 
-To enable husky, run `bunx husky install`.
+For a complete list of commands for building, testing, linting, and formatting, please refer to the **Key Commands** section in [AGENTS.md](./AGENTS.md).
 
-## [Clean up](#clean-up)
+## Commit Guidelines
 
-To clean up build artefacts, cached analyzations, etc., run:
+We follow **Conventional Commits** to automate versioning and changelogs. Please use the following prefixes:
+
+- `feat:` for new features (triggers minor version bump)
+- `fix:` for bug fixes (triggers patch version bump)
+- `chore:` for maintenance tasks
+- `BREAKING CHANGE:` (in footer or with `!`) for breaking changes (triggers major version bump)
+
+**Examples:**
+
+| Commit Message                          | Version Bump           |
+| :-------------------------------------- | :--------------------- |
+| `feat: add new visualization`           | Minor (1.0.0 -> 1.1.0) |
+| `fix: calculate truck factor correctly` | Patch (1.0.0 -> 1.0.1) |
+| `feat!: remove legacy API`              | Major (1.0.0 -> 2.0.0) |
+
+## Release Process
+
+Releases are automated via GitHub Actions on successful merges to `main`.
+
+### Experimental Releases
+
+To publish an experimental release (requires NPM authentication with 2FA):
 
 ```sh
-npm run clean
+bun pub-exp <OTP>
 ```
 
-## Benchmarking installation time
+### Prerelease
 
-A benchmark script for measuring the installation time is available. Use it by running
+To publish a prerelease version:
 
 ```sh
-bun ./scripts/benchmark.mjs [tag = experimental] [reps = 1]
-
+bun pub-pre <OTP>
 ```
 
-Tag is the published version you want to compare to the latest version, and reps is the number of times to run each benchmark, where an average will finally be reported. The script defaults to compare the experimental tag with latest using one repetition.
+## Additional Tools
 
-If running on a laptop, it is recommended to plug into power and quit any other applications that may be running in the background and disable battery saver, to get consistent results.
+- **Husky**: Enable Git hooks with `bunx husky install`.
+- **Clean**: Remove build artifacts with `bun clean`.
+- **Benchmark**: Measure installation/start time with `bun ./scripts/benchmark.mjs`.
