@@ -244,8 +244,9 @@ export default function Index() {
     useLoaderData<typeof loader>()
   const location = useLocation()
   const navigation = useNavigation()
-  const [{ "include-dirs": includeDirs, sort: sortMethod, search: searchQuery }, setSearchParams] =
+  const [{ "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
     useQueryStates(browseSearchParamsConfig)
+  const placeholderCount = Math.max(0, count - directories.length)
 
   const searchFieldRef = useRef<HTMLInputElement>(null)
 
@@ -425,6 +426,9 @@ export default function Index() {
               </Await>
             </Suspense>
           ))}
+          {Array.from({ length: placeholderCount }).map((_, index) => (
+            <DirectoryEntryPlaceholder key={`directory-placeholder-${index}`} />
+          ))}
         </DirectoryList>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center pl-2">
@@ -589,6 +593,23 @@ function DirectoryEntry({
           </span>
         </div>
       </Link>
+      <hr className="col-span-full opacity-50 last:hidden" />
+    </Fragment>
+  )
+}
+
+function DirectoryEntryPlaceholder(): ReactNode {
+  return (
+    <Fragment>
+      <div aria-hidden="true" className="col-span-2 rounded px-2 py-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="size-6 shrink-0" />
+            <span className="invisible text-base font-medium">Placeholder</span>
+          </div>
+          <span className="invisible text-sm">Placeholder</span>
+        </div>
+      </div>
       <hr className="col-span-full opacity-50 last:hidden" />
     </Fragment>
   )
