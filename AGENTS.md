@@ -38,7 +38,7 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 
 - **Task Execution**: Prefer using VS Code tasks (via `run_task`) for common operations like building, testing, or starting the server. Fall back to `bun` CLI commands in the terminal if no suitable task exists.
 - **Package Manager**: Use `bun` for all script execution and package management.
-- **Commit Messages**: Follow Conventional Commits (e.g., `feat:`, `fix:`, `chore:`) to ensure correct versioning.
+- **Commit Messages**: Capitalize the first letter of the commit message (sentence case), use the imperative mood, keep it under 50 characters, and avoid a trailing period, e.g. `Add...` or `Fix...`.
 - **Styling**: Use Tailwind CSS utility classes.
 - **Routing**: Follow React Router file-based routing and loaders/actions conventions in `src/routes/`.
 - **Database**: Interactions often involve DuckDB or direct git command execution.
