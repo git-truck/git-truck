@@ -1,11 +1,13 @@
 import type { Route } from "./+types/$path"
 import { GitCaller } from "~/analyzer/git-caller.server"
-import { redirect } from "react-router"
+import { href, redirect } from "react-router"
+import { loadViewSearchParams, viewSerializer } from "./view"
+import { browseSerializer } from "./browse"
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const searchParams = new URL(request.url).searchParams
-  const path = searchParams.get("path") || "."
-  const isGitRepo = await GitCaller.isGitRepo(path)
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const path = params.path ?? loadViewSearchParams(request).path ?? "."
 
-  throw redirect(`/${isGitRepo ? "view" : "browse"}?path=` + encodeURIComponent(path))
+  const isGitRepo = await GitCaller.isValidGitRepo(path)
+
+  throw redirect(isGitRepo ? href("/view") + viewSerializer({ path }) : href("/browse") + browseSerializer({ path }))
 }

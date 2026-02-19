@@ -14,7 +14,6 @@ import {
   useNavigate
 } from "react-router"
 import clsx from "clsx"
-import { resolve } from "path"
 import randomstring from "randomstring"
 import { Activity, Suspense, useReducer, useState } from "react"
 import { createPortal } from "react-dom"
@@ -22,7 +21,7 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import { getArgs, getRepoNameFromPath } from "~/shared/util.server"
+import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { HiddenFiles } from "~/components/HiddenFiles"
@@ -78,27 +77,54 @@ type ViewSearchParams = inferParserType<typeof viewSearchParamsConfig>
 
 const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
   const serialize = createSerializer(viewSearchParamsConfig)
-  const searchParams = new URL(request.url).searchParams
-  const args = await getArgs()
-  const repositoryPath = resolve(searchParams.get("path") ?? args.path)
+  const viewSearchParams = loadViewSearchParams(request)
+
+  const { path, zoomPath, branch } = viewSearchParams
+
+  if (!path) {
+    log.warn("No path provided, using default path from args")
+  }
+
+  const repositoryPath = normalizeAndResolvePath(path ?? getArgsWithDefaults().path)
 
   // Redirect to browse if not a git repo
-  if (!(await GitCaller.isGitRepo(repositoryPath))) {
-    throw redirect(href("/browse") + serialize({ path: repositoryPath }))
+  if (!(await GitCaller.isValidGitRepo(repositoryPath))) {
+    const url = href("/browse") + serialize({ path: repositoryPath })
+    log.info(`Path ${repositoryPath} is not a git repository, redirecting to ${url}`)
+    throw redirect(url)
   }
 
   const checkedOutBranch = await GitCaller._getRepositoryHead(repositoryPath)
-  const branch = searchParams.get("branch") ?? checkedOutBranch
 
-  const instance = InstanceManager.getOrCreateInstance({ repositoryPath, branch })
+  let shouldRedirect = false
+  const params = (
+    [
+      ["path", { param: path, fallback: repositoryPath }],
+      ["branch", { param: branch, fallback: checkedOutBranch }],
+      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
+      ["zoomPath", { param: zoomPath, fallback: getRepoNameFromPath(repositoryPath) }]
+    ] as const
+  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
+    if (!param) {
+      shouldRedirect = true
+      return { ...params, [paramName]: fallback }
+    }
+    return params
+  }, viewSearchParams)
 
-  invariant(instance, `Instance for repo at path ${repositoryPath} and branch ${branch} not found`)
+  if (shouldRedirect) {
+    log.warn(`At least one required parameter is missing ${path}, ${branch}, ${zoomPath}, redirecting to complete URL`)
+    throw redirect(href("/view") + viewSerializer(params))
+  }
+
+  const instance = InstanceManager.getOrCreateInstance({ repositoryPath, branch: branch ?? checkedOutBranch })
+  invariant(instance, `Instance for repo at path ${repositoryPath} and branch ${branch ?? checkedOutBranch} not found`)
 
   context.set(currentRepositoryContext, {
     instance,
     repositoryPath,
     repositoryName: getRepoNameFromPath(repositoryPath),
-    branch,
+    branch: branch ?? checkedOutBranch,
     checkedOutBranch
   })
 }
@@ -111,39 +137,13 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
   }
 ]
 
-export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const { instance, repositoryPath, branch } = context.get(currentRepositoryContext)
-
-  const viewSearchParams = loadViewSearchParams(request)
-  const { path, objectPath, zoomPath, branch: branchParam } = viewSearchParams
-  // const urlSearchParams = new URL(request.url).searchParams
-
-  let shouldRedirect = false
-  const params = (
-    [
-      ["path", { param: path, fallback: repositoryPath }],
-      ["branch", { param: branchParam, fallback: branch }],
-      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
-      ["zoomPath", { param: zoomPath, fallback: instance.repositoryName }]
-    ] as const
-  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
-    if (!param) {
-      shouldRedirect = true
-      return { ...params, [paramName]: fallback }
-    }
-    return params
-  }, viewSearchParams)
-
-  if (shouldRedirect) {
-    log.warn(`One required parameter is missing ${path} ${objectPath}, ${branchParam}, redirecting to complete URL`)
-    throw redirect(href("/view") + viewSerializer(params))
-  }
-
+export const loader = async ({ context }: Route.LoaderArgs) => {
+  const { instance, repositoryName, repositoryPath, branch } = context.get(currentRepositoryContext)
   const versionInfo = context.get(versionContext)
 
   return {
     dataPromise: analyze({ instance, path: repositoryPath, branch }),
-    repositoryName: getRepoNameFromPath(repositoryPath),
+    repositoryName,
     versionInfo
   }
 }
@@ -208,7 +208,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
 async function analyze({ instance, path, branch }: { instance: ServerInstance; path: string; branch: string }) {
   const repo = path.split("/").pop()!
-  const isRepo = await GitCaller.isGitRepo(path)
+  const isRepo = await GitCaller.isValidGitRepo(path)
   if (!isRepo) throw new Error(`No repo found at ${path}`)
   const isValidRevision = await GitCaller.isValidRevision(branch, path)
   if (!isValidRevision) {

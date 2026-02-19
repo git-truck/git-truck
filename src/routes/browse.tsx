@@ -30,6 +30,7 @@ import { createLoader, parseAsInteger, parseAsString, parseAsStringLiteral } fro
 import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates, type inferParserType } from "nuqs"
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
+import { viewSerializer } from "~/routes/view"
 
 const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
@@ -58,8 +59,6 @@ export const browseSerializer = createSerializer(browseSearchParamsConfig)
 
 type BrowseSearchParams = inferParserType<typeof browseSearchParamsConfig>
 
-const args = getArgsWithDefaults()
-
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
     title: `${loaderData.parentDirectoryName} - Git Truck`
@@ -71,23 +70,23 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const { path: rawPath, count, offset, sort, search, "include-dirs": includeDirs } = browseSearchParams
 
   let shouldRedirect = false
-  const params = ([["path", { param: rawPath, fallback: args.path }]] as const).reduce<BrowseSearchParams>(
-    (params, [paramName, { param, fallback }]) => {
-      if (!param) {
-        shouldRedirect = true
-        return { ...params, [paramName]: fallback }
-      }
-      return params
-    },
-    browseSearchParams
-  )
+  const params = (
+    [["path", { param: rawPath, fallback: getArgsWithDefaults().path }]] as const
+  ).reduce<BrowseSearchParams>((params, [paramName, { param, fallback }]) => {
+    if (!param) {
+      shouldRedirect = true
+      return { ...params, [paramName]: fallback }
+    }
+    return params
+  }, browseSearchParams)
+
+  // Ensured by redirect above
+  const parentDirectory = normalizeAndResolvePath(rawPath!)
 
   if (shouldRedirect) {
-    log.warn(`One required parameter is missing ${rawPath} redirecting to coumplete URL`)
+    log.warn(`One required parameter is missing ${rawPath} redirecting to complete URL`)
     throw redirect(href("/browse") + browseSerializer(params))
   }
-
-  const path = rawPath ? normalizeAndResolvePath(rawPath, { resolveSegments: true }) : null
 
   const emptyResponse = {
     versionInfo: context.get(versionContext),
@@ -96,29 +95,26 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     totalCount: 0
   }
 
-  if (path) {
-    if (!existsSync(path)) {
-      log.warn(`Path not found: ${path}`)
-      return {
-        ...emptyResponse,
-        error: "Path not found",
-        parentDirectoryPath: path,
-        parentDirectoryName: getRepoNameFromPath(path),
-        analyzedReposPromise: Promise.resolve([]),
-        totalCount: 0
-      }
+  // If path is provided, normalize it
+  if (!existsSync(parentDirectory)) {
+    log.warn(`Path not found: ${parentDirectory}`)
+    return {
+      ...emptyResponse,
+      error: "Path not found",
+      parentDirectoryPath: parentDirectory,
+      parentDirectoryName: getRepoNameFromPath(parentDirectory),
+      analyzedReposPromise: Promise.resolve([]),
+      totalCount: 0
     }
-    args.path = path
   }
 
-  const parentDirectoryIsRepository = existsSync(join(args.path, ".git"))
+  const pathIsValidRepository = await GitCaller.isValidGitRepo(parentDirectory)
 
-  if (parentDirectoryIsRepository) {
-    log.info("Parent directory is a repository, redirecting to view")
-    throw redirect(href("/view") + browseSerializer({ path: args.path }))
+  if (pathIsValidRepository) {
+    const url = href("/view") + viewSerializer({ path: parentDirectory })
+    log.info(`Path ${parentDirectory} is a repository, redirecting to ${url}`)
+    throw redirect(url)
   }
-
-  const parentDirectory = args.path
 
   // Get all directories that has a .git subdirectory and sort them by last changed date
   log.time("Read directories")
@@ -133,19 +129,33 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
         : error.message.startsWith("EACCES")
           ? "Access denied"
           : error.message.startsWith("ENOTDIR")
-            ? "Not a directory"
-            : error.message || "Failed to read directory entries"
+            ? "Not a folder"
+            : error.message || "Failed to read folder"
     }
   }
   const rawEntries = dirEntries.filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
 
   const filteredEntries = rawEntries
-    .map((entry) => ({
-      name: entry.name,
-      directoryPath: join(parentDirectory, entry.name),
-      hasGitDirectory: existsSync(join(parentDirectory, entry.name, ".git"))
-    }))
-    .filter((repo) => repo.name.toLowerCase().includes(search.toLowerCase()) && (includeDirs || repo.hasGitDirectory))
+    .map((entry) => {
+      const entryDirectoryPath = join(parentDirectory, entry.name)
+
+      return {
+        name: entry.name,
+        directoryPath: entryDirectoryPath,
+        hasGitDirectory: GitCaller.hasGitDirectory(entryDirectoryPath)
+      }
+    })
+    .filter(
+      (directory) =>
+        directory.name.toLowerCase().includes(search.toLowerCase()) && (includeDirs || directory.hasGitDirectory)
+    )
+
+  // If the current page offset is beyond the available entries, clamp to the last valid page
+  const maxOffset = Math.max(0, count * (Math.ceil(filteredEntries.length / count) - 1))
+  if (offset > maxOffset) {
+    const clampedParams = { ...browseSearchParams, offset: maxOffset }
+    throw redirect(href("/browse") + browseSerializer(clampedParams))
+  }
 
   const sortByLastChanged = sort === "least-recent" || sort === "most-recent"
 
@@ -353,10 +363,10 @@ export default function Index() {
             {directories.length} {directories.length < totalCount ? `of ${totalCount}` : ""}{" "}
             {(directories.length < totalCount && totalCount !== 1) || directories.length !== 1
               ? includeDirs
-                ? "directories"
+                ? "folders"
                 : "repositories"
               : includeDirs
-                ? "directory"
+                ? "folder"
                 : "repository"}
           </p>
           <Pagination
@@ -364,7 +374,7 @@ export default function Index() {
             totalCount={totalCount}
           />
         </div>
-        <RepositoryList
+        <DirectoryList
           className={cn({
             "opacity-80": navigation.state !== "idle"
           })}
@@ -395,14 +405,14 @@ export default function Index() {
           {directories.map((repo, i) => (
             <Suspense
               key={directories[i].path}
-              fallback={<RepositoryEntry repo={{ ...repo, status: "Loading" }} status="Loading" isAnalyzed={false} />}
+              fallback={<DirectoryEntry entry={{ ...repo, status: "Loading" }} status="Loading" isAnalyzed={false} />}
             >
               <Await resolve={analyzedReposPromise}>
                 {(analyzedRepos) =>
                   repo !== null ? (
-                    <RepositoryEntry
+                    <DirectoryEntry
                       key={repo.path}
-                      repo={repo}
+                      entry={repo}
                       status="Success"
                       isAnalyzed={
                         repo.type === "repository"
@@ -415,17 +425,17 @@ export default function Index() {
               </Await>
             </Suspense>
           ))}
-        </RepositoryList>
+        </DirectoryList>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center pl-2">
           <p className="text-sm">
             {directories.length} {directories.length < totalCount ? `of ${totalCount}` : ""}{" "}
             {(directories.length < totalCount && totalCount !== 1) || directories.length !== 1
               ? includeDirs
-                ? "directories"
+                ? "folders"
                 : "repositories"
               : includeDirs
-                ? "directory"
+                ? "folder"
                 : "repository"}
           </p>
           <Pagination
@@ -479,7 +489,7 @@ function SortHeader({
   )
 }
 
-function RepositoryList({ children, className }: { children: ReactNode[]; className?: string }) {
+function DirectoryList({ children, className }: { children: ReactNode[]; className?: string }) {
   return children.length === 0 ? (
     <>
       <p>
@@ -511,12 +521,12 @@ function RepositoryList({ children, className }: { children: ReactNode[]; classN
   )
 }
 
-function RepositoryEntry({
-  repo: entry,
+function DirectoryEntry({
+  entry,
   status,
   isAnalyzed
 }: {
-  repo: Awaited<ReturnType<typeof loader>>["directories"][0]
+  entry: Awaited<ReturnType<typeof loader>>["directories"][0]
   status: "Success" | "Loading" | "Error"
   isAnalyzed: boolean
 }): ReactNode {

@@ -1,12 +1,13 @@
-import { Link } from "react-router"
-import { ErrorPage } from "~/components/ErrorPage"
+import type { Route } from "./+types/$"
+import { GitCaller } from "~/analyzer/git-caller.server"
+import { href, redirect } from "react-router"
+import { loadViewSearchParams, viewSerializer } from "./view"
+import { browseSerializer } from "./browse"
+import { normalizeAndResolvePath } from "~/shared/util.server"
 
-export default function NotFound() {
-  return (
-    <ErrorPage message="404 - Page Not Found">
-      <Link className="btn btn--primary mt-4" to="/">
-        Go back home
-      </Link>
-    </ErrorPage>
-  )
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const path = normalizeAndResolvePath(params["*"] ?? loadViewSearchParams(request).path ?? ".")
+  const isGitRepo = await GitCaller.isValidGitRepo(path)
+
+  throw redirect(isGitRepo ? href("/view") + viewSerializer({ path }) : href("/browse") + browseSerializer({ path }))
 }

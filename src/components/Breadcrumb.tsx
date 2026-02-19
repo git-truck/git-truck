@@ -24,18 +24,21 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
 
   const navigate = useNavigate()
 
-  const segments = useMemo<Array<Segment>>(() => {
+  const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
 
-    const pathSegments = path.split(getSep(path)).map((segment, index, repoPathSegments) => {
-      const fullPath = repoPathSegments.slice(0, index + 1).join("/")
-      return {
-        type: "browse",
-        segment: segment.length === 0 && index === 0 ? "/" : segment,
-        fullPath,
-        isRepo: index === repoPathSegments.length - 1
-      } satisfies Segment
-    })
+    const pathSegments = path
+      .split(getSep(path))
+      .map((segment, i, segments) => {
+        const fullPath = segments.slice(0, i + 1).join("/")
+        return {
+          type: "browse",
+          segment: segment.length === 0 && i === 0 ? "/" : segment,
+          fullPath: i === 0 ? fullPath + getSep(path) : fullPath,
+          isRepo: i === segments.length - 1
+        } satisfies Segment
+      })
+      .filter((segment) => segment.segment.length > 0)
     const zoomSegments = [
       {
         type: "browse",
@@ -49,8 +52,8 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         fullPath: data?.repo.repositoryPath ?? "",
         isRepo: true
       } as const,
-      ...(zoomPath?.split(getSep(zoomPath)) ?? []).slice(1).map((segment, index, zoomPathSegments) => {
-        const fullPath = zoomPathSegments.slice(0, index + 1).join("/")
+      ...(zoomPath?.split(getSep(zoomPath)) ?? []).slice(1).map((segment, index, segments) => {
+        const fullPath = segments.slice(0, index + 1).join("/")
         return { type: "zoom", segment, fullPath, isRepo: index === 0 } satisfies Segment
       })
     ]
@@ -84,7 +87,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         className
       )}
     >
-      {segments.map(({ type, segment, fullPath }, i) => {
+      {breadcrumbSegments.map(({ type, segment, fullPath }, i) => {
         const isRepo = data && comparePaths(fullPath, data.repo.repositoryPath)
         const title = isRepo
           ? "Reset zoom to repository root"
@@ -92,7 +95,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             ? `Browse ${segment} directory`
             : `Zoom to ${segment} directory`
         const isFirst = i === 0
-        const isLast = segments.length - 1 === i
+        const isLast = breadcrumbSegments.length - 1 === i
 
         const onClick = () => {
           if (type === "browse") {
