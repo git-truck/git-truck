@@ -420,7 +420,7 @@ export function expandIntervalToRange(timestamp: number, commitCountPerTimeInter
   }
 }
 
-export const getSep = (path: string) => (path.includes("/") ? "/" : "\\")
+export const getSep = (path: string) => (path.includes("\\") ? "\\" : "/")
 
 export const comparePaths = (a: string, b: string): boolean => {
   const sepA = getSep(a)
@@ -446,8 +446,16 @@ export function normalizePath(p: string): string {
   p = p.replace(/\/+/g, "/")
 
   // Remove trailing slash unless it's just "/"
-  if (p.length > 1 && p.endsWith("/")) {
-    p = p.slice(0, -1)
+  if (p.length <= 1 || !p.endsWith("/")) {
+    return p
+  }
+
+  const trimmed = p.slice(0, -1)
+  const numSegments = p.split("/").length
+
+  // or
+  if (numSegments > 2) {
+    return trimmed
   }
 
   return p
