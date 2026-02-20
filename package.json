@@ -119,6 +119,7 @@
     "react-use-size": "^5.0.1",
     "tailwindcss": "^4.1.18",
     "tsdown": "^0.16.8",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
     "uniqolor": "^1.1.1",
