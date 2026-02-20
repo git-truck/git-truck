@@ -367,7 +367,7 @@ export default function Index() {
         </div>
         <DirectoryList
           className={cn({
-            "opacity-80": navigation.state !== "idle"
+            "opacity-50": navigation.state !== "idle"
           })}
         >
           <SortHeader
