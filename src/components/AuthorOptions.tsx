@@ -1,11 +1,10 @@
 import { mdiAccountMultiple, mdiDiceMultipleOutline } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Form, useNavigation } from "react-router"
-import { useCreateLink } from "~/hooks"
+import { Form, href, useNavigation } from "react-router"
 
 export function AuthorOptions({ showUnionAuthorsModal }: { showUnionAuthorsModal: () => void }) {
   const transitionState = useNavigation()
-  const { url: action } = useCreateLink()()
+  const action = href("/view")
 
   return (
     <>

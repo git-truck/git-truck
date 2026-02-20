@@ -1,10 +1,9 @@
 import { useData } from "~/contexts/DataContext"
-import { Form, useNavigation } from "react-router"
+import { Form, href, useNavigation } from "react-router"
 import { mdiEyeOff, mdiEye } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { memo, useId } from "react"
 import { Popover } from "./Popover"
-import { useCreateLink } from "~/hooks"
 
 function hiddenFileFormat(ignored: string) {
   if (!ignored.includes("/")) return ignored
@@ -16,9 +15,7 @@ export const HiddenFiles = memo(function HiddenFiles() {
   const navigationState = useNavigation()
   const { databaseInfo } = useData()
   const expandHiddenFilesButtonId = useId()
-  const action = useCreateLink()({
-    segments: ["view", "details", "general"]
-  }).url
+  const action = href("/view/details")
 
   return (
     <Popover

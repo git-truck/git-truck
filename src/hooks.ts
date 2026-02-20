@@ -2,9 +2,8 @@ import type { Dispatch, RefObject, SetStateAction } from "react"
 import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
-import { getPathFromRepoAndHead, promiseHelper } from "~/shared/util"
-import { href, useLocation, useNavigate, useSearchParams, type NavigateOptions } from "react-router"
-import type { LinkSearchParams, LinkSegments } from "~/shared/model"
+import { promiseHelper } from "~/shared/util"
+import { href } from "react-router"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { useQueryState } from "nuqs"
 
@@ -172,41 +171,6 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
   }
 
   return { isFullscreen, toggleFullscreen } as const
-}
-
-/**
- * @deprecated Use react-router and nuqs instead
- */
-export function useCreateLink() {
-  const location = useLocation()
-  const [currentSearch] = useSearchParams()
-  const navigate = useNavigate()
-
-  const currentSegments = location.pathname.split("/").filter((seg) => seg.length > 0) as LinkSegments
-  const currentParams = Object.fromEntries(currentSearch.entries()) as LinkSearchParams
-
-  const composeLinkNavigation = ({
-    params = currentParams,
-    segments = currentSegments
-  }: {
-    params?: Partial<LinkSearchParams>
-    segments?: LinkSegments
-  } = {}) => {
-    const url = getPathFromRepoAndHead(
-      {
-        ...currentParams,
-        ...params
-      } as LinkSearchParams,
-      segments
-    )
-    return {
-      url,
-      navigate(options?: NavigateOptions) {
-        navigate(url, options)
-      }
-    }
-  }
-  return composeLinkNavigation
 }
 
 export function useHomePath() {

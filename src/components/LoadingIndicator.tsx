@@ -1,10 +1,9 @@
-import { useFetcher, useLocation } from "react-router"
+import { href, useFetcher, useLocation } from "react-router"
 import clsx from "clsx"
 import { useEffect, useMemo, type ReactNode } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import truck from "~/assets/truck.png"
 import anitruck from "~/assets/truck.gif"
-import { useCreateLink } from "~/hooks"
 import { cn } from "~/styling"
 
 export type ProgressData = {
@@ -25,12 +24,11 @@ export function LoadingIndicator({
 }) {
   const location = useLocation()
   const fetcher = useFetcher<ProgressData>()
-  const createLink = useCreateLink()
   useEffect(() => {
     if (fetcher.state === "idle" && showProgress && fetchProgress) {
-      fetcher.load(createLink({ segments: ["view", "progress"] }).url)
+      fetcher.load(href("/view/progress"))
     }
-  }, [createLink, fetchProgress, fetcher, fetcher.state, location.pathname, showProgress])
+  }, [fetchProgress, fetcher, fetcher.state, location.pathname, showProgress])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!fetcher.data) return ["Loading truck...", 0]
