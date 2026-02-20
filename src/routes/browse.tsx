@@ -273,6 +273,9 @@ export default function Index() {
       </aside>
       <main className="card">
         <div className="flex flex-col gap-2">
+          <p className="text-secondary-text dark:text-secondary-text-dark py-3 text-center text-sm">
+            Welcome to Git Truck! Select a repository to visualize.
+          </p>
           <Form className="sticky top-2 grid grid-flow-col grid-cols-[1fr_1fr_1fr] grid-rows-[auto_auto_auto] gap-2 p-2">
             <SearchField
               key={path}
