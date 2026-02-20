@@ -175,9 +175,10 @@ export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
 }
 
 export function getArgsWithDefaults(): ArgsOptions {
+  const cwd = process.cwd()
   const args = parseArgs()
   const tempArgs = {
-    path: ".",
+    path: cwd,
     ...args
   }
 

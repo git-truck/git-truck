@@ -49,7 +49,7 @@ describe("getArgsWithDefaults", () => {
       // simulate invocation with no extra args
       process.argv = [process.argv[0], process.argv[1]]
       const args = getArgsWithDefaults()
-      expect(args.path).toBe(".")
+      expect(args.path).toBe(process.cwd())
     } finally {
       process.argv = originalArgv
     }
