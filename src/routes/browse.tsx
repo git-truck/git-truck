@@ -80,13 +80,13 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     return params
   }, browseSearchParams)
 
-  // Ensured by redirect above
-  const parentDirectory = normalizeAndResolvePath(rawPath!)
-
   if (shouldRedirect) {
     log.warn(`One required parameter is missing ${rawPath} redirecting to complete URL`)
     throw redirect(href("/browse") + browseSerializer(params))
   }
+
+  // Ensured by redirect above
+  const parentDirectory = normalizeAndResolvePath(rawPath!)
 
   const emptyResponse = {
     versionInfo: context.get(versionContext),
