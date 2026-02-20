@@ -1,4 +1,4 @@
-import { Await, Form, Link, redirect, href, useLoaderData, useLocation, useNavigation, useSubmit } from "react-router"
+import { Await, Form, Link, redirect, href, useLoaderData, useLocation, useNavigation } from "react-router"
 import { Code } from "~/components/util"
 import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
@@ -244,7 +244,7 @@ export default function Index() {
     useLoaderData<typeof loader>()
   const location = useLocation()
   const navigation = useNavigation()
-  const [{ "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
+  const [{ path, "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
     useQueryStates(browseSearchParamsConfig)
   const placeholderCount = Math.max(0, count - directories.length)
 
@@ -255,7 +255,14 @@ export default function Index() {
     searchFieldRef.current?.focus()
   })
 
-  const submit = useSubmit()
+  const updatePathIfChanged = (rawValue: string) => {
+    const normalized = normalizePath(rawValue)
+    // If the normalized path is the same as the current path, do nothing to avoid unnecessary reloads
+    if (normalized !== parentDirectoryPath) {
+      setSearchParams((prev) => ({ ...prev, path: normalized, offset: 0 }))
+    }
+    return normalized
+  }
 
   return (
     <div className="mx-auto grid max-w-(--breakpoint-2xl) gap-2 p-2 lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)]">
@@ -266,33 +273,14 @@ export default function Index() {
       </aside>
       <main className="card">
         <div className="flex flex-col gap-2">
-          <Form
-            className="grid grid-flow-col grid-cols-[1fr_1fr_1fr] grid-rows-[auto_auto_auto] gap-2 p-2"
-            onChange={(evt) => submit(evt.currentTarget)}
-          >
-            <label className="label" htmlFor="search">
-              Search
-            </label>
-            {/* TODO: Clear search query when search query param updates */}
-            <input
+          <Form className="sticky top-2 grid grid-flow-col grid-cols-[1fr_1fr_1fr] grid-rows-[auto_auto_auto] gap-2 p-2">
+            <SearchField
+              key={path}
               ref={searchFieldRef}
-              id="search"
-              name="search"
-              type="search"
-              className="input"
-              placeholder={`Search ${includeDirs ? "directories" : "repositories"}...`}
-              defaultValue={searchQuery}
-              onChange={(evt) => {
-                evt.stopPropagation()
-                if (!evt.target.checkValidity()) {
-                  return
-                }
-                startTransition(() => {
-                  setSearchParams((prev) => ({ ...prev, search: evt.currentTarget.value }))
-                })
-              }}
+              searchQuery={searchQuery}
+              includeDirs={includeDirs}
+              onSearch={(value) => setSearchParams((prev) => ({ ...prev, search: value, offset: 0 }))}
             />
-            <div />
             <label className="label" htmlFor="path">
               Path
             </label>
@@ -306,8 +294,7 @@ export default function Index() {
               className="input"
               onBlur={(evt) => {
                 if (evt.currentTarget.value !== parentDirectoryPath) {
-                  evt.currentTarget.value = normalizePath(evt.currentTarget.value)
-                  submit(evt.currentTarget.form!)
+                  evt.currentTarget.value = updatePathIfChanged(evt.currentTarget.value)
                 }
               }}
               onChange={(evt) => {
@@ -315,8 +302,8 @@ export default function Index() {
               }}
               onKeyDown={(evt) => {
                 if (evt.key === "Enter") {
-                  evt.currentTarget.value = normalizePath(evt.currentTarget.value)
-                  submit(evt.currentTarget.form!)
+                  evt.preventDefault()
+                  evt.currentTarget.value = updatePathIfChanged(evt.currentTarget.value)
                 }
               }}
             />
@@ -338,10 +325,10 @@ export default function Index() {
                   value="true"
                   className="peer sr-only"
                   name="include-dirs"
-                  defaultChecked={includeDirs ?? undefined}
+                  checked={includeDirs ?? false}
                   onChange={(evt) => {
                     evt.stopPropagation()
-                    setSearchParams((prev) => ({ ...prev, "include-dirs": evt.target.checked }))
+                    setSearchParams((prev) => ({ ...prev, "include-dirs": evt.target.checked, offset: 0 }))
                   }}
                 />
                 <Icon path={mdiCheckboxBlank} size={1} className="peer-checked:hidden" />
@@ -535,7 +522,7 @@ function DirectoryEntry({
   isAnalyzed: boolean
 }): ReactNode {
   const isFolder = false
-  const [{ search: _, ...searchParams }] = useQueryStates(browseSearchParamsConfig)
+  const [{ search: _search, offset: _offset, ...searchParams }] = useQueryStates(browseSearchParamsConfig)
   const serialize = createSerializer(browseSearchParamsConfig)
   return (
     <Fragment key={entry.path}>
@@ -675,13 +662,14 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
         <label className="flex items-center gap-2 whitespace-pre">
           Per page
           <select
-            defaultValue={count}
+            value={count}
             className="input"
             onChange={(evt) =>
-              setSearchParams({
+              setSearchParams((prev) => ({
+                ...prev,
                 count: Number(evt.target.value),
                 offset: 0 // Reset to first page when changing count
-              })
+              }))
             }
           >
             {COUNT_OPTIONS.map((option) => (
@@ -692,6 +680,46 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
           </select>
         </label>
       </div>
+    </>
+  )
+}
+
+function SearchField({
+  searchQuery,
+  includeDirs,
+  onSearch,
+  ref
+}: {
+  searchQuery: string | null
+  includeDirs: boolean | null
+  onSearch: (value: string) => void
+  ref: React.RefObject<HTMLInputElement | null>
+}) {
+  return (
+    <>
+      <label className="label" htmlFor="search">
+        Search
+      </label>
+      <input
+        ref={ref}
+        id="search"
+        name="search"
+        type="search"
+        className="input"
+        placeholder={`Search ${includeDirs ? "directories" : "repositories"}...`}
+        defaultValue={searchQuery ?? ""}
+        onChange={(evt) => {
+          evt.stopPropagation()
+          if (!evt.target.checkValidity()) {
+            return
+          }
+          const nextValue = evt.currentTarget.value
+          startTransition(() => {
+            onSearch(nextValue)
+          })
+        }}
+      />
+      <div />
     </>
   )
 }

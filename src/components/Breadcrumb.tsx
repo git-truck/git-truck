@@ -99,7 +99,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
 
         const onClick = () => {
           if (type === "browse") {
-            navigate(href("/browse") + browseSerializer({ ...browseParams, path: fullPath }))
+            navigate(href("/browse") + browseSerializer({ ...browseParams, path: fullPath, search: null }))
             return
           }
           if (!data) {
