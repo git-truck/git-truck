@@ -3,12 +3,14 @@ import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "../shared/u
 import { promiseHelper, branchCompare, semverCompare } from "../shared/util.ts"
 
 import { resolve, join } from "node:path"
-import { promises as fs, existsSync } from "node:fs"
+import { promises as fs, existsSync, readFileSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "../shared/model.ts"
 import { AnalyzerDataInterfaceVersion } from "../shared/model.ts"
 
 import os from "node:os"
 import ServerInstance from "./ServerInstance.server.ts"
+import { inflateSync } from "node:zlib"
+import { readFile } from "node:fs/promises"
 
 const ANALYZER_CACHE_MISS_REASONS = {
   OTHER_REPO: "The cache was not created for this repo",
@@ -236,19 +238,57 @@ export class GitCaller {
       }
     }
   }
+  public static async getLastChanged(repoPath: string): Promise<number | null> {
+    // Fast path: read HEAD file
+    const head = await GitCaller.readFileSafe(join(repoPath, ".git", "HEAD"))
+    if (!head) return null
 
-  public static async getLastChanged(path: string): Promise<number | null> {
-    const [logOutput, error] = await promiseHelper(runProcess(path, "git", ["log", "-1", "--pretty=%at"]))
-    if (error || !logOutput) {
-      return null
+    const ref: string = head.trim()
+
+    // Detached HEAD? Already a hash
+    if (!ref.startsWith("ref:")) {
+      const timestamp = GitCaller.readCommitTimestamp(repoPath, ref)
+      if (timestamp !== null) return timestamp
+    } else {
+      // Normal branch
+      const refPath = join(repoPath, ".git", ref.slice(5).trim())
+      const hash = await GitCaller.readFileSafe(refPath)
+      if (hash) {
+        const timestamp = GitCaller.readCommitTimestamp(repoPath, hash.trim())
+        if (timestamp !== null) return timestamp
+      }
     }
 
-    const parsed = parseInt(logOutput as string, 10)
-    if (isNaN(parsed)) {
+    // Fallback: spawn Git
+    const [output] = await promiseHelper(runProcess(repoPath, "git", ["log", "-1", "--pretty=%at"]))
+    if (!output) return null
+
+    const parsed = parseInt(output.trim())
+    return isNaN(parsed) ? null : parsed
+  }
+
+  /** Safely read a file, used with promiseHelper */
+  private static async readFileSafe(path: string): Promise<string | null> {
+    const [result] = await promiseHelper(readFile(path, "utf-8"))
+    return result
+  }
+
+  /** Reads a loose commit object and returns its author timestamp */
+  private static readCommitTimestamp(repoPath: string, hash: string): number | null {
+    try {
+      const objectPath = join(repoPath, ".git", "objects", hash.slice(0, 2), hash.slice(2))
+      if (!existsSync(objectPath)) return null
+
+      const compressed: Buffer = readFileSync(objectPath)
+      const content: string = inflateSync(compressed).toString("utf-8")
+
+      const match: RegExpMatchArray | null = content.match(/^author .*? (\d+) [+-]\d{4}$/m)
+      if (!match) return null
+
+      return Number(match[1])
+    } catch {
       return null
     }
-
-    return parsed
   }
 
   static parseRefs(refsAsMultilineString: string): GitRefs {
