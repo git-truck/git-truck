@@ -76,10 +76,9 @@ export const loadViewSearchParams = createLoader(viewSearchParamsConfig)
 type ViewSearchParams = inferParserType<typeof viewSearchParamsConfig>
 
 const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) => {
-  const serialize = createSerializer(viewSearchParamsConfig)
   const viewSearchParams = loadViewSearchParams(request)
 
-  const { path, zoomPath, branch } = viewSearchParams
+  const { path, branch } = viewSearchParams
 
   if (!path) {
     log.warn(`No path provided in url ${request.url}, using default path from args`)
@@ -87,35 +86,7 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
 
   const repositoryPath = normalizeAndResolvePath(path ?? getArgsWithDefaults().path)
 
-  // Redirect to browse if not a git repo
-  if (!(await GitCaller.isValidGitRepo(repositoryPath))) {
-    const url = href("/browse") + serialize({ path: repositoryPath })
-    log.info(`Path ${repositoryPath} is not a git repository, redirecting to ${url}`)
-    throw redirect(url)
-  }
-
   const checkedOutBranch = await GitCaller._getRepositoryHead(repositoryPath)
-
-  let shouldRedirect = false
-  const params = (
-    [
-      ["path", { param: path, fallback: repositoryPath }],
-      ["branch", { param: branch, fallback: checkedOutBranch }],
-      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
-      ["zoomPath", { param: zoomPath, fallback: getRepoNameFromPath(repositoryPath) }]
-    ] as const
-  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
-    if (!param) {
-      shouldRedirect = true
-      return { ...params, [paramName]: fallback }
-    }
-    return params
-  }, viewSearchParams)
-
-  if (shouldRedirect) {
-    log.warn(`At least one required parameter is missing ${path}, ${branch}, ${zoomPath}, redirecting to complete URL`)
-    throw redirect(href("/view") + viewSerializer(params))
-  }
 
   const instance = InstanceManager.getOrCreateInstance({ repositoryPath, branch: branch ?? checkedOutBranch })
   invariant(instance, `Instance for repo at path ${repositoryPath} and branch ${branch ?? checkedOutBranch} not found`)
@@ -137,12 +108,45 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
   }
 ]
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
-  const { instance, repositoryName, repositoryPath, branch } = context.get(currentRepositoryContext)
+export const loader = async ({ request, context }: Route.LoaderArgs) => {
+  const { instance, repositoryName, repositoryPath, branch: defaultBranch } = context.get(currentRepositoryContext)
   const versionInfo = context.get(versionContext)
 
+  const viewSearchParams = loadViewSearchParams(request)
+
+  const { path, zoomPath, branch } = viewSearchParams
+
+  // Redirect to browse if not a git repo
+  if (!(await GitCaller.isValidGitRepo(repositoryPath))) {
+    const url = href("/browse") + viewSerializer({ path: repositoryPath })
+    log.warn(`Path ${repositoryPath} is not a git repository, redirecting to ${url}`)
+    throw redirect(url)
+  }
+
+  let shouldRedirect = false
+  const params = (
+    [
+      ["path", { param: path, fallback: repositoryPath }],
+      ["branch", { param: branch, fallback: defaultBranch }],
+      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
+      ["zoomPath", { param: zoomPath, fallback: getRepoNameFromPath(repositoryPath) }]
+    ] as const
+  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
+    if (!param) {
+      shouldRedirect = true
+      return { ...params, [paramName]: fallback }
+    }
+    return params
+  }, viewSearchParams)
+
+  if (shouldRedirect) {
+    const redirectUrl = href("/view") + viewSerializer(params)
+    log.warn(`At least one required parameter is missing, redirecting to ${redirectUrl}`)
+    throw redirect(redirectUrl)
+  }
+
   return {
-    dataPromise: analyze({ instance, path: repositoryPath, branch }),
+    dataPromise: analyze({ instance, path: repositoryPath, branch: branch! }),
     repositoryName,
     versionInfo
   }
