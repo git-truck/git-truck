@@ -22,6 +22,7 @@ export function RepoTabs() {
         "/commits": mdiSourceCommit
       }}
       defaultValue={isCommits ? "/commits" : "/details"}
+      ariaLabel="Select details tab"
       onChange={(v) => {
         navigate(href(`/view${v}`) + location.search, { state: location.state })
       }}
