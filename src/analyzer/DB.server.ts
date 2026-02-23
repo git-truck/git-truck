@@ -514,11 +514,7 @@ export default class DB {
 
     const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<Pick<GitObject, "type">>
 
-    if (results.length === 0) return null
-
-    const { type } = results[0]
-
-    return type
+    return results[0]?.type ?? null
   }
 
   public async commitTableEmpty() {
