@@ -1,10 +1,12 @@
-import { href, useFetcher, useLocation } from "react-router"
+import { href, useFetcher } from "react-router"
 import clsx from "clsx"
 import { useEffect, useMemo, type ReactNode } from "react"
 import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
 import truck from "~/assets/truck.png"
 import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
+import { viewSerializer } from "~/routes/view"
+import { useQueryState } from "nuqs"
 
 export type ProgressData = {
   progress: number
@@ -22,13 +24,14 @@ export function LoadingIndicator({
   fetchProgress?: boolean
   className?: string
 }) {
-  const location = useLocation()
+  const [path] = useQueryState("path")
+
   const fetcher = useFetcher<ProgressData>()
   useEffect(() => {
     if (fetcher.state === "idle" && showProgress && fetchProgress) {
-      fetcher.load(href("/view/progress"))
+      fetcher.load(href("/view/progress") + viewSerializer({ path }))
     }
-  }, [fetchProgress, fetcher, fetcher.state, location.pathname, showProgress])
+  }, [fetchProgress, fetcher, fetcher.state, path, showProgress])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!fetcher.data) return ["Loading truck...", 0]
