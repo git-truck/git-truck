@@ -528,11 +528,15 @@ function DirectoryEntry({
 }): ReactNode {
   const isFolder = false
   const [{ search: _search, offset: _offset, ...searchParams }] = useQueryStates(browseSearchParamsConfig)
-  const serialize = createSerializer(browseSearchParamsConfig)
+
   return (
     <Fragment key={entry.path}>
       <Link
-        to={href(entry.type === "directory" ? "/browse" : "/view") + serialize({ ...searchParams, path: entry.path })}
+        to={
+          entry.type === "directory"
+            ? href("/browse") + browseSerializer({ ...searchParams, path: entry.path })
+            : href("/view") + viewSerializer({ path: entry.path })
+        }
         prefetch="none"
         aria-disabled={!isFolder && status === "Error"}
         className={cn(
