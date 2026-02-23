@@ -134,7 +134,7 @@ function ColorMetricDependentInfo(props: {
         break
       }
       if (!contribSum) {
-        content = `${icon}${dominant.author}`
+        content = dominant.author
         break
       }
       const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
@@ -181,12 +181,12 @@ function SizeMetricDependentInfo({
   hoveredBlob: GitBlobObject | null
   databaseInfo: DatabaseInfo
 }) {
-  let icon = mdiCircleSmall
+  let icon: string = mdiCircleSmall
   let content = null
   if (!hoveredBlob) {
     return null
   }
-  icon = mdiCircleSmall
+
   switch (sizeMetric) {
     case "FILE_SIZE": {
       icon = mdiResize
