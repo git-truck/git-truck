@@ -49,7 +49,7 @@ function setIntialLogLevel() {
   return null
 }
 
-let logLevel = setIntialLogLevel()
+let logLevel: LOG_LEVEL | null = setIntialLogLevel()
 
 export const getLogLevel = () => logLevel
 

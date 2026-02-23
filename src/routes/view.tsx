@@ -82,7 +82,7 @@ const viewMiddleware: Route.MiddlewareFunction = async ({ request, context }) =>
   const { path, zoomPath, branch } = viewSearchParams
 
   if (!path) {
-    log.warn("No path provided, using default path from args")
+    log.warn(`No path provided in url ${request.url}, using default path from args`)
   }
 
   const repositoryPath = normalizeAndResolvePath(path ?? getArgsWithDefaults().path)

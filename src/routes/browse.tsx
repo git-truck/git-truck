@@ -81,8 +81,9 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   }, browseSearchParams)
 
   if (shouldRedirect) {
-    log.warn(`One required parameter is missing ${rawPath} redirecting to complete URL`)
-    throw redirect(href("/browse") + browseSerializer(params))
+    const redirectUrl = href("/browse") + browseSerializer(params)
+    log.warn(`One required parameter is missing, redirecting to ${redirectUrl}`)
+    throw redirect(redirectUrl)
   }
 
   // Ensured by redirect above
