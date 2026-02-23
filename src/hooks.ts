@@ -87,8 +87,8 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
     if (!document.fullscreenElement) {
       const element = getElement()
       if (element instanceof Element) {
-        void promiseHelper(document.documentElement.requestFullscreen())
-      } else {
+        void promiseHelper(element.requestFullscreen())
+      } else if (element.current) {
         void promiseHelper(element.current.requestFullscreen())
       }
     } else {
