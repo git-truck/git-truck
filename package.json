@@ -23,6 +23,7 @@
     "pretest:e2e": "npm run build",
     "pretest:e2e:headed": "npm run build",
     "build": "cross-env NODE_ENV=production npm run build-vite && npm run build-cli",
+    "build:dev": "cross-env NODE_ENV=development npm run build-vite && npm run build-cli",
     "build-cli": "cross-env NODE_ENV=production tsdown",
     "build-vite": "react-router build",
     "dev": "cross-env NODE_ENV=development ./src/cli.ts",
