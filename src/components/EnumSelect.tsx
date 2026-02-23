@@ -35,7 +35,7 @@ export function IconRadioGroup<const G extends Record<string, string>>({
     >
       {enumEntries.map(([key, value]) => (
         <Field key={key}>
-          <Radio value={key} className="group" title={titleMap && titleMap[key] !== undefined ? titleMap[key] : value}>
+          <Radio value={key} className="group" title={titleMap?.[key] ?? value}>
             <div
               className={clsx(
                 "group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 hover:opacity-100! focus-visible:opacity-100!",
