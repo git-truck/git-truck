@@ -11,6 +11,7 @@ type IconRadioGroupProps<G extends Record<string, string>> = {
   onChange: (metric: keyof G) => void
   large?: boolean
   iconMap: Record<keyof G, string>
+  ariaLabel: string
 }
 
 export function IconRadioGroup<const G extends Record<string, string>>({
@@ -20,7 +21,8 @@ export function IconRadioGroup<const G extends Record<string, string>>({
   className,
   onChange,
   large,
-  iconMap
+  iconMap,
+  ariaLabel = "Select option"
 }: IconRadioGroupProps<G>) {
   const enumEntries = Object.entries(group) as [Extract<keyof G, string>, string][]
 
@@ -28,12 +30,12 @@ export function IconRadioGroup<const G extends Record<string, string>>({
     <RadioGroup
       value={defaultValue}
       className={cn("flex flex-wrap gap-0", { "gap-2": large }, className)}
-      aria-label="Select branch or revision"
+      aria-label={ariaLabel}
       onChange={onChange}
     >
       {enumEntries.map(([key, value]) => (
         <Field key={key}>
-          <Radio value={key} className="group" title={titleMap ? titleMap[key] : value}>
+          <Radio value={key} className="group" title={titleMap && titleMap[key] !== undefined ? titleMap[key] : value}>
             <div
               className={clsx(
                 "group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 hover:opacity-100! focus-visible:opacity-100!",

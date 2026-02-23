@@ -62,6 +62,7 @@ export const Options = memo(function Options() {
           group={Chart}
           defaultValue={chartType}
           iconMap={chartTypeIcons}
+          ariaLabel="Select layout"
           onChange={(chartType: ChartType) => setChartType(chartType)}
         />
       </div>
@@ -74,6 +75,7 @@ export const Options = memo(function Options() {
           group={SizeMetric}
           defaultValue={sizeMetric}
           iconMap={sizeMetricIcons}
+          ariaLabel="Select size metric"
           onChange={(sizeMetric: SizeMetricType) => {
             setSizeMetricType(sizeMetric)
           }}
@@ -88,6 +90,7 @@ export const Options = memo(function Options() {
           group={Metric}
           defaultValue={metricType}
           iconMap={visualizationIcons}
+          ariaLabel="Select color metric"
           onChange={(metric: MetricType) => {
             setMetricType(metric)
             if (!linkMetricAndSizeMetric) {
