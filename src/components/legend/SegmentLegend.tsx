@@ -64,7 +64,7 @@ interface SegmentMetricProps {
   top: boolean
 }
 
-export function MetricSegment({ className = "", width, color, text, top }: SegmentMetricProps) {
+function MetricSegment({ className = "", width, color, text, top }: SegmentMetricProps) {
   if (top)
     return (
       <div className="flex flex-col" style={{ width: `${width}%` }}>
@@ -94,7 +94,7 @@ interface TopSegmentMetricProps {
   text: string
 }
 
-export function TopMetricSegment({ width, color, text }: TopSegmentMetricProps) {
+function TopMetricSegment({ width, color, text }: TopSegmentMetricProps) {
   return (
     <div className="flex flex-col" style={{ width: `${width}%` }}>
       <div className="h-5 truncate text-left">{text}</div>

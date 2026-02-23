@@ -8,7 +8,6 @@ import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize } from "~/hooks"
 import {
   bubblePadding,
-  letterHeightForTreeText,
   letterWidthForTreeText,
   circleTreeTextOffsetY,
   treemapBlobBorderRadius,
@@ -20,7 +19,7 @@ import {
   treemapPaddingOuter,
   letterWidthForBlobText as letterWidthForBlobText,
   treemapTreeBorderRadius,
-  letterHeightForBlobText,
+  letterHeightText,
   clipPathPadding
 } from "../const"
 import { useData } from "../contexts/DataContext"
@@ -340,7 +339,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       props = {
         ...props,
         x: circleDatum.x - circleDatum.r,
-        y: circleDatum.y - circleDatum.r + letterHeightForTreeText - 1,
+        y: circleDatum.y - circleDatum.r + letterHeightText - 1,
         width: circleDatum.r * 2,
         height: circleDatum.r * 2,
         rx: circleDatum.r,
@@ -411,12 +410,12 @@ function NodeText({
       }
 
       // For blobs in circular layout with straight text, check if text fits within blob height, as the rest is clipped
-      if (d.r * 2 - bubblePadding < letterHeightForBlobText) {
+      if (d.r * 2 - bubblePadding < letterHeightText) {
         return null
       }
     } else if (
       // For blobs with curved text and trees, check if arc length is enough to fit text
-      d.r < (isTree(d.data) ? letterHeightForTreeText : letterHeightForBlobText) * 2 ||
+      d.r < (isTree(d.data) ? letterHeightText : letterHeightText) * 2 ||
       d.r * Math.PI * (2 / 3) < d.data.name.length * letterWidthForTreeText
     ) {
       return null
@@ -424,7 +423,7 @@ function NodeText({
   } else {
     const rectNode = d as HierarchyRectangularNode<GitObject>
     if (isBlob(d.data)) {
-      if (rectNode.y1 - rectNode.y0 - clipPathPadding < letterHeightForBlobText) {
+      if (rectNode.y1 - rectNode.y0 - clipPathPadding < letterHeightText) {
         // textShouldBeCentered = false
         return null
       }
@@ -451,7 +450,7 @@ function NodeText({
             {...(isCircularNode(d)
               ? {
                   x: d.x - d.r + clipPathPadding / 4 + 0.5,
-                  y: d.y - d.r + letterHeightForBlobText - 1 + clipPathPadding / 4 + 0.5,
+                  y: d.y - d.r + letterHeightText - 1 + clipPathPadding / 4 + 0.5,
                   width: Math.max(textClipPathRadius - 1, 0),
                   height: Math.max(d.r * 2 - clipPathPadding / 2 - 1, 0),
                   rx: d.r,
@@ -499,7 +498,7 @@ function NodeText({
               : d.x - (textShouldBeCentered ? 0 : d.r - bubblePadding / 2)
             : d.x0 + clipPathPadding / 2
         }
-        y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightForBlobText / 2) : d.y0 + clipPathPadding / 2}
+        y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
           "font-bold": isTree(d.data),
@@ -600,7 +599,7 @@ function createPartitionedHiearchy({
   }
   if (chartType === "BUBBLE_CHART") {
     const bubbleChartPartition = pack<GitObject>()
-      .size([size.width, size.height - letterHeightForTreeText])
+      .size([size.width, size.height - letterHeightText])
       .padding(bubblePadding)
     const bPartition = bubbleChartPartition(hiearchy)
     filterVisualization(bPartition, (child) => {

@@ -56,7 +56,7 @@ export function runProcess(
   })
 }
 
-export function generateTruckFrames(length: number) {
+function generateTruckFrames(length: number) {
   const frames = []
   for (let i = 0; i < length; i++) {
     const prefix = " ".repeat(length - i - 1)
@@ -66,7 +66,7 @@ export function generateTruckFrames(length: number) {
   return frames
 }
 
-export function createTruckSpinner() {
+function createTruckSpinner() {
   return getLogLevel() === null ? createSpinner("", { interval: 1000 / 20, frames: generateTruckFrames(20) }) : null
 }
 
@@ -197,11 +197,4 @@ export const getRepoNameFromPath = (repositoryPath: string) => {
 export function normalizeAndResolvePath(p: string): string {
   const resolved = path.resolve(p)
   return normalizePath(resolved)
-}
-
-/**
- * Join multiple path segments and normalize
- */
-export function joinPaths(...segments: string[]): string {
-  return normalizePath(path.join(...segments))
 }

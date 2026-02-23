@@ -1,4 +1,4 @@
-export type DataItem =
+type DataItem =
   | "cache"
   | "rename"
   | "dominantAuthor"

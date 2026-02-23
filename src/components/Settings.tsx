@@ -30,7 +30,7 @@ export function CollapsableSettings({ className = "" }: { className?: string }) 
   )
 }
 
-export function Settings() {
+function Settings() {
   const {
     metricType,
     hierarchyType,

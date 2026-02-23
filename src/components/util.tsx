@@ -181,52 +181,6 @@ export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offs
   )
 }
 
-export function Tab({
-  title,
-  active,
-  className = "",
-  onClick
-}: {
-  title: string
-  className?: string
-  active: boolean
-  onClick?: () => void
-}) {
-  return (
-    <button
-      className={clsx("btn btn--outlined roundend-t-lg w-full", className, {
-        "rounded-b-none border-x-0 border-t-transparent border-r-transparent border-l-transparent": !active,
-        "rounded-b-none border-b-0 border-b-transparent": active
-      })}
-      onClick={() => onClick?.()}
-    >
-      {title}
-    </button>
-  )
-}
-
-type Tab<T> = { id: T extends string ? T : never; title: string; content: ReactNode }
-
-export function Tabs<T>({ tabs, onChange }: { tabs: Tab<T>[]; onChange?: (tab: Tab<T>) => void }) {
-  const [currentTab, setCurrentTab] = useState(tabs[0].id)
-
-  const setTab = (tab: Tab<T>) => {
-    setCurrentTab(tab.id)
-    onChange?.(tab)
-  }
-
-  return (
-    <>
-      <div className="flex">
-        {tabs.map((tab) => (
-          <Tab key={tab.id} title={tab.title} active={currentTab === tab.id} onClick={() => setTab(tab)} />
-        ))}
-      </div>
-      <div className="mt-2">{tabs.find((tab) => tab.id === currentTab)?.content}</div>
-    </>
-  )
-}
-
 export function ClientOnly({ children, fallback = null }: { children: () => ReactNode; fallback?: ReactNode }) {
   const isClient = useIsClient()
 

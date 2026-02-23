@@ -86,7 +86,7 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-export function generateAuthorColors(
+function generateAuthorColors(
   authors: string[],
   colorSeed: string | null,
   predefinedAuthorColors: Record<string, `#${string}`>,
@@ -221,7 +221,7 @@ function getMetricCalcs(
   ]
 }
 
-export function setupMetricsCache(
+function setupMetricsCache(
   tree: GitTreeObject,
   metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
 ) {

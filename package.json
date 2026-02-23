@@ -41,13 +41,14 @@
     "prepublishOnly": "npm run clean && npm run build",
     "format:write": "prettier --log-level warn --write src scripts e2e",
     "lint:fix": "eslint --fix --cache",
-    "check:write": "npm run format:write && npm run lint:fix",
-    "check": "npm run format:check && npm run lint",
+    "check:write": "npm run knip:write && npm run lint:fix && npm run format:write",
+    "check": "npm run knip && npm run lint && npm run format:check",
     "format:check": "prettier --check src scripts e2e",
     "lint": "eslint --cache",
     "prepare": "node .husky/install.mjs",
     "update-deps": "npx npm-check-updates -i",
-    "knip": "knip"
+    "knip": "knip",
+    "knip:write": "knip --fix"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
@@ -81,21 +82,16 @@
     "@react-router/node": "^7.13.0",
     "@tailwindcss/vite": "^4.1.18",
     "@types/byte-size": "^8.1.2",
-    "@types/color-convert": "^2.0.4",
     "@types/d3": "^7.4.3",
     "@types/d3-hierarchy": "^3.1.7",
     "@types/express": "^5.0.6",
-    "@types/express-serve-static-core": "^5.1.1",
     "@types/node": "^24.10.13",
     "@types/randomstring": "^1.3.0",
     "@types/react": "^19.2.14",
-    "@types/react-detect-offline": "^2.4.6",
     "@types/react-dom": "^19.2.3",
     "@types/semver": "^7.7.1",
     "@types/sha1": "^1.1.5",
     "@types/yargs-parser": "^21.0.3",
-    "@typescript-eslint/eslint-plugin": "^8.55.0",
-    "@typescript-eslint/parser": "^8.55.0",
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
@@ -109,6 +105,7 @@
     "get-port": "^7.1.0",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
+    "isbot": "^5.1.35",
     "knip": "^5.83.1",
     "language-map": "^1.5.0",
     "lint-staged": "^16.2.7",
@@ -126,7 +123,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
-    "uniqolor": "^1.1.1",
     "vite": "npm:rolldown-vite@7.3.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.18"
@@ -156,13 +152,15 @@
   },
   "lint-staged": {
     "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
+      "knip --fix",
       "eslint --cache --fix",
       "prettier --write"
     ]
   },
   "knip": {
     "entry": [
-      "src/cli.ts",
+      "src/server/app.ts",
+      "src/routes/**/*.tsx",
       "scripts/**/*.{ts,js}"
     ]
   },

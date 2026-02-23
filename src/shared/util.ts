@@ -58,20 +58,7 @@ export function dateFormatRelative(epochTime: number) {
   return "<1 hour ago"
 }
 
-export function numberFormat(num: number) {
-  return new Intl.NumberFormat("en-US", {
-    notation: "compact",
-    compactDisplay: "short",
-    maximumFractionDigits: 1
-  }).format(num)
-}
-
 export const last = <T>(arr: T[]) => arr.at(-1)
-
-export const allExceptLast = <T>(arr: T[]) => {
-  if (arr.length <= 1) return []
-  return arr.slice(0, arr.length - 1)
-}
 
 export const allExceptFirst = <T>(arr: T[]) => {
   if (arr.length <= 1) return []
@@ -286,26 +273,6 @@ export function analyzeRenamedFile(
   return newPath
 }
 
-/**
- *
- * @deprecated This is a very inefficient way to look up files
- * TODO: Create a lookup table for object data that maps absolute paths to their details and use that instead of traversing the tree every time we want to look up a file.
- */
-export function lookupFileInTree(tree: GitTreeObject, path: string): GitObject | null {
-  const dirs = path.split("/")
-
-  if (dirs.length < 2) {
-    // We have reached the end of the tree, look for the blob
-    const [file] = dirs
-    const result = tree.children.find((x) => x.name === file && x.type === "blob")
-    if (!result) return null
-    return result
-  }
-  const subtree = tree.children.find((x) => x.name === dirs[0])
-  if (!subtree || subtree.type === "blob") return null
-  return lookupFileInTree(subtree, dirs.slice(1).join("/"))
-}
-
 export const formatMs = (ms: number) => {
   if (ms < 1000) {
     return `${Math.round(ms)}ms`
@@ -350,6 +317,9 @@ export function resolveParentFolder(path: string) {
   return path
 }
 
+/**
+ * Identity function with a logging sideeffect used for quickly inspecting values without changing code behaviour
+ * @public */
 export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T => {
   console[trace ? "trace" : "log"](`🔎 ${label}`, args)
   return args

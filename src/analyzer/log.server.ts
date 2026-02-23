@@ -19,7 +19,7 @@ const LOG_LEVEL_LABEL = {
   DEBUG: "DBG"
 } as const
 
-export type LOG_LEVEL_LABEL = (typeof LOG_LEVEL_LABEL)[keyof typeof LOG_LEVEL_LABEL]
+type LOG_LEVEL_LABEL = (typeof LOG_LEVEL_LABEL)[keyof typeof LOG_LEVEL_LABEL]
 
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
 
@@ -61,7 +61,7 @@ export function setLogLevel(level: string) {
   logLevel = newLevel
 }
 
-export function error(...messages: unknown[]) {
+function error(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.ERROR) {
     process.stderr.write(prefix(ERROR))
@@ -69,7 +69,7 @@ export function error(...messages: unknown[]) {
   }
 }
 
-export function warn(...messages: unknown[]) {
+function warn(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.WARN) {
     process.stderr.write(prefix(WARN))
@@ -77,7 +77,7 @@ export function warn(...messages: unknown[]) {
   }
 }
 
-export function info(...messages: unknown[]) {
+function info(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.INFO) {
     process.stderr.write(prefix(INFO))
@@ -85,14 +85,14 @@ export function info(...messages: unknown[]) {
   }
 }
 
-export function time(label: string) {
+function time(label: string) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.INFO) {
     console.time(label)
   }
 }
 
-export function timeEnd(label: string) {
+function timeEnd(label: string) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.INFO) {
     process.stderr.write(prefix(INFO))
@@ -100,7 +100,7 @@ export function timeEnd(label: string) {
   }
 }
 
-export function debug(...messages: unknown[]) {
+function debug(...messages: unknown[]) {
   if (logLevel === null) return
   if (logLevel >= LOG_LEVEL.DEBUG) {
     process.stderr.write(prefix(DEBUG))

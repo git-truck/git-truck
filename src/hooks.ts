@@ -1,11 +1,8 @@
-import type { Dispatch, RefObject, SetStateAction } from "react"
-import { useState, useEffect, useMemo, useCallback, useSyncExternalStore } from "react"
+import type { RefObject } from "react"
+import { useState, useEffect, useMemo, useSyncExternalStore } from "react"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 import { promiseHelper } from "~/shared/util"
-import { href } from "react-router"
-import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useQueryState } from "nuqs"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
@@ -38,33 +35,6 @@ export function useMediaQuery(query: string) {
   )
 }
 
-export function useLocalStorage<T>(key: string, initialValue: T | undefined = undefined) {
-  const [storedValue, setStoredValue] = useState<T | undefined>(() => {
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
-    } catch (error) {
-      console.error(error)
-      return initialValue
-    }
-  })
-
-  const setValue: Dispatch<SetStateAction<T | undefined>> = useCallback(
-    (value) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value
-        setStoredValue(valueToStore)
-        window.localStorage.setItem(key, JSON.stringify(valueToStore))
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    [key, storedValue]
-  )
-
-  return [storedValue, setValue] as const
-}
-
 export function useKey(
   options: { key?: string; ctrlOrMeta?: boolean; shift?: boolean; alt?: boolean },
   callback: (event: KeyboardEvent) => void
@@ -87,48 +57,6 @@ export function useKey(
     window.addEventListener("keydown", listener)
     return () => window.removeEventListener("keydown", listener)
   }, [options, callback])
-}
-
-export function useKeyActive(options: { key?: string; ctrlOrMeta?: boolean; shift?: boolean; alt?: boolean }) {
-  const [keyActive, setKeyActive] = useState(false)
-  useEffect(() => {
-    const downListener = (event: KeyboardEvent) => {
-      if (!options.key || event.key === options.key) {
-        const ctrlOrMetaMatch =
-          options.ctrlOrMeta === undefined ||
-          event.ctrlKey === options.ctrlOrMeta ||
-          event.metaKey === options.ctrlOrMeta
-        const shiftMatch = options.shift === undefined || event.shiftKey === options.shift
-        const altMatch = options.alt === undefined || event.altKey === options.alt
-
-        if (ctrlOrMetaMatch && shiftMatch && altMatch) {
-          setKeyActive(true)
-        }
-      }
-    }
-    const upListener = (event: KeyboardEvent) => {
-      if (!options.key || event.key === options.key) {
-        const ctrlOrMetaMatch =
-          options.ctrlOrMeta === undefined ||
-          event.ctrlKey !== options.ctrlOrMeta ||
-          event.metaKey !== options.ctrlOrMeta
-        const shiftMatch = options.shift === undefined || event.shiftKey !== options.shift
-        const altMatch = options.alt === undefined || event.altKey !== options.alt
-
-        if (ctrlOrMetaMatch && shiftMatch && altMatch) {
-          setKeyActive(false)
-        }
-      }
-    }
-    window.addEventListener("keydown", downListener)
-    window.addEventListener("keyup", upListener)
-    return () => {
-      window.removeEventListener("keydown", downListener)
-      window.removeEventListener("keyup", upListener)
-    }
-  }, [options])
-
-  return keyActive
 }
 
 export function useMouse() {
@@ -171,9 +99,4 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
   }
 
   return { isFullscreen, toggleFullscreen } as const
-}
-
-export function useHomePath() {
-  const [path] = useQueryState("path", viewSearchParamsConfig.path)
-  return href("/view") + viewSerializer({ ...(path ? { path } : {}) })
 }

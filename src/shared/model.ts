@@ -62,17 +62,6 @@ export interface AbstractGitObject {
   hash: string
 }
 
-export interface TruckUserConfig {
-  log?: string
-  branch?: string
-  out?: string
-  path?: string
-  unionedAuthors?: string[][]
-  hiddenFiles?: string[]
-  invalidateCache?: boolean
-  colorSeed?: string
-}
-
 export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
 export type RawGitObject = {
   hash: string
@@ -138,16 +127,12 @@ export interface GitCommitObject extends AbstractGitObject {
   fileCount?: number
 }
 
-export type GitCommitObjectLight = Omit<GitCommitObject, "tree"> & {
-  tree: string
-}
-
 export interface Person {
   name: string
   email: string
 }
 
-export type PersonWithTime = Person & {
+type PersonWithTime = Person & {
   timestamp: number
   timezone: string
 }
@@ -160,13 +145,6 @@ export interface FileChange {
   insertions: number
   deletions: number
   mode: ModeType
-}
-
-export interface DBFileChange {
-  commithash: string
-  insertions: number
-  deletions: number
-  filepath: string
 }
 
 export interface CommitDTO {
@@ -250,10 +228,4 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
-export type LinkSegment = "view" | "browse" | "details" | "commits" | "general"
 export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general" | "progress">
-export type LinkSearchParams = {
-  path: string
-  branch: string
-  objectPath: string
-}
