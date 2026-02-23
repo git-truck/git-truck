@@ -254,6 +254,7 @@ export default function Index() {
   useKey({ key: "f", ctrlOrMeta: true }, (event) => {
     event.preventDefault()
     searchFieldRef.current?.focus()
+    searchFieldRef.current?.select()
   })
 
   const updatePathIfChanged = (rawValue: string) => {
