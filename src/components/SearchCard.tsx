@@ -145,6 +145,12 @@ export const SearchCard = memo(function SearchCard() {
               value={object.path}
               onKeyDown={(event) => {
                 const currentIndex = resultRefs.findIndex((ref) => ref.current === event.currentTarget)
+
+                if (event.key === "Escape") {
+                  searchFieldRef.current?.focus()
+                  searchFieldRef.current?.select()
+                }
+
                 if (event.key === "ArrowDown") {
                   event.preventDefault()
                   if (resultRefs.length === 0) return

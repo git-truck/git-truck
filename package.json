@@ -152,7 +152,6 @@
   },
   "lint-staged": {
     "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
-      "knip --fix",
       "eslint --cache --fix",
       "prettier --write"
     ]
