@@ -1,15 +1,7 @@
-import { useState, useTransition, type HTMLAttributes, type ReactNode, type JSX } from "react"
+import { useState, type HTMLAttributes, type ReactNode, type JSX } from "react"
 import { Icon } from "~/components/Icon"
-import {
-  mdiCheckboxOutline,
-  mdiCheckboxBlankOutline,
-  mdiClose,
-  mdiCircle,
-  mdiFullscreen,
-  mdiFullscreenExit
-} from "@mdi/js"
+import { mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
-import anitruck from "~/assets/truck.gif"
 import { Popover } from "./Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
@@ -27,7 +19,7 @@ export const CloseButton = ({
   <button
     className={clsx(
       className,
-      "btn btn--text inline-grid bg-transparent text-lg leading-none hover:opacity-80", // Explicitly set background to transparent
+      "btn btn--text inline-grid bg-transparent text-lg leading-none hover:text-blue-500", // Explicitly set background to transparent
       {
         "absolute top-2 right-2 z-10": absolute
       }
@@ -35,7 +27,7 @@ export const CloseButton = ({
     title="Close"
     {...props}
   >
-    <Icon path={mdiClose} size={1} />
+    <Icon path={mdiClose} size={1.25} />
   </button>
 )
 
@@ -127,40 +119,6 @@ export const Code = ({
     {...props}
   />
 )
-
-export function CheckboxWithLabel({
-  children,
-  checked,
-  onChange,
-  className = "",
-  checkedIcon = mdiCheckboxOutline,
-  uncheckedIcon = mdiCheckboxBlankOutline,
-  ...props
-}: {
-  children: React.ReactNode
-  checked: boolean
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  checkedIcon?: string
-  uncheckedIcon?: string
-} & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
-  const [isTransitioning, startTransition] = useTransition()
-
-  return (
-    <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
-      <span className="flex grow items-center gap-2">
-        {children}
-        {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
-      </span>
-      <Icon className="place-self-end" path={checked ? checkedIcon : uncheckedIcon} size={1} />
-      <input
-        type="checkbox"
-        defaultChecked={checked}
-        className="hidden"
-        onChange={(e) => startTransition(() => onChange(e))}
-      />
-    </label>
-  )
-}
 
 export const LegendBarIndicator = ({ visible, offset }: { visible: boolean; offset: number }) => {
   return (
