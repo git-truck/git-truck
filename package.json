@@ -103,7 +103,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "express": "^5.2.1",
     "get-port": "^7.1.0",
-    "globals": "^16.5.0",
+    "globals": "^17.3.0",
     "husky": "^9.1.7",
     "isbot": "^5.1.35",
     "knip": "^5.83.1",
