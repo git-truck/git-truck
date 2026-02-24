@@ -449,12 +449,7 @@ export default function Repo() {
                   </CollapsibleHeader>
                   <CollapsibleHeader
                     className="card"
-                    title={
-                      <>
-                        Visualization options
-                        <CollapsableSettings />
-                      </>
-                    }
+                    title={<>Visualization options</>}
                     contentClassName="pb-6 flex flex-col gap-2"
                   >
                     <Options />
@@ -503,6 +498,7 @@ export default function Repo() {
                     <RefreshButton />
                     <HiddenFiles />
                     <FullscreenButton />
+                    <CollapsableSettings />
                   </div>
                 </header>
 
