@@ -272,7 +272,7 @@ export default function UI() {
           {/* AuthorOptions Demo (mock handler) */}
           <div className="card">
             <h2 className="card__title">AuthorOptions</h2>
-            <AuthorOptions showUnionAuthorsModal={() => alert("Show union authors modal")} />
+            <AuthorOptions />
           </div>
           {/* Slider */}
           <div className="card">

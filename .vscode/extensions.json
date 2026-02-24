@@ -3,6 +3,7 @@
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
     "ms-playwright.playwright",
-    "dbaeumer.vscode-eslint"
+    "dbaeumer.vscode-eslint",
+    "yoavbls.pretty-ts-errors"
   ]
 }

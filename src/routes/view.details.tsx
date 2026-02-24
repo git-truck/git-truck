@@ -11,11 +11,12 @@ import byteSize from "byte-size"
 import { Icon } from "~/components/Icon"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { usePath } from "~/contexts/PathContext"
-import { currentRepositoryContext, useRepoContext, viewSearchParamsConfig, viewSerializer } from "~/routes/view"
+import { currentRepositoryContext, viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { openFile } from "~/shared/util.server"
 import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
 import { RepoTabs } from "~/components/RepoTabs"
 import { useQueryStates } from "nuqs"
+import { useModal } from "~/components/modals/ModalManager"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -78,7 +79,6 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
 export default function Details() {
   const { setPath } = usePath()
-  const { showUnionAuthorsModal } = useRepoContext()
   const { path, authorDistributionPromise } = useLoaderData<typeof loader>()
   const data = useData()
   const { state } = useNavigation()
@@ -88,6 +88,7 @@ export default function Details() {
 
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
   const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: path })
+  const { openModal } = useModal("group-authors")
 
   useEffect(() => {
     setOpen(!!clickedObject)
@@ -126,7 +127,7 @@ export default function Details() {
           </Suspense>
         </div>
       </div>
-      <button className="btn" onClick={showUnionAuthorsModal}>
+      <button className="btn" onClick={() => openModal()}>
         <Icon path={mdiAccountMultiple} />
         Group authors
       </button>

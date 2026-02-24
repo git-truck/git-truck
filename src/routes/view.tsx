@@ -5,7 +5,6 @@ import {
   useLoaderData,
   Link,
   Outlet,
-  useOutletContext,
   redirect,
   createContext,
   Form,
@@ -31,8 +30,6 @@ import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import Timeline from "~/components/TimeSlider"
-import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
-
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/view"
@@ -50,11 +47,7 @@ import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { useQueryState, type inferParserType } from "nuqs"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
-
-export const useRepoContext = () =>
-  useOutletContext<{
-    showUnionAuthorsModal: () => void
-  }>()
+import { ModalManager } from "~/components/modals/ModalManager"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -367,10 +360,7 @@ export default function Repo() {
 
   const toggleLeft = () => dispatch("toggleLeft")
 
-  const [unionAuthorsModalOpen, setUnionAuthorsModalOpen] = useState(false)
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
-  const showUnionAuthorsModal = (): void => setUnionAuthorsModalOpen(true)
-
   const location = useLocation()
   const navigate = useNavigate()
   const [objectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
@@ -446,7 +436,7 @@ export default function Repo() {
                     }
                     contentClassName="pb-6"
                   >
-                    <Outlet context={{ showUnionAuthorsModal }} />
+                    <Outlet />
                   </CollapsibleHeader>
                   <CollapsibleHeader
                     className="card"
@@ -456,7 +446,7 @@ export default function Repo() {
                     <Options />
                   </CollapsibleHeader>
                   <CollapsibleHeader className="card" title="Legend" contentClassName="pb-6">
-                    <Legend hoveredObject={hoveredObject} showUnionAuthorsModal={showUnionAuthorsModal} />
+                    <Legend hoveredObject={hoveredObject} />
                   </CollapsibleHeader>
                 </aside>
               </Activity>
@@ -550,12 +540,7 @@ export default function Repo() {
                 </div>
               </main>
             </div>
-            <UnionAuthorsModal
-              open={unionAuthorsModalOpen}
-              onClose={() => {
-                setUnionAuthorsModalOpen(false)
-              }}
-            />
+            <ModalManager />
           </Providers>
         )}
       </Await>

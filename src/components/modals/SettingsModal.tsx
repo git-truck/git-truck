@@ -1,0 +1,126 @@
+import { CheckboxWithLabel } from "./utils/CheckboxWithLabel"
+import { useOptions } from "../../contexts/OptionsContext"
+import { Icon } from "~/components/Icon"
+import { mdiClockEdit, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
+import { useTransition } from "react"
+import anitruck from "~/assets/truck.gif"
+import { relatedSizeMetric } from "../Options"
+
+export function SettingsModal() {
+  const {
+    metricType,
+    hierarchyType,
+    transitionsEnabled,
+    renderCutoff,
+    showFilesWithoutChanges,
+    linkMetricAndSizeMetric,
+    showOnlySearchMatches,
+    setLinkMetricAndSizeMetric,
+    setTransitionsEnabled,
+    labelsVisible,
+    setLabelsVisible,
+    setHierarchyType,
+    setSizeMetricType,
+    setRenderCutoff,
+    setShowFilesWithoutChanges,
+    setShowOnlySearchMatches
+  } = useOptions()
+  const [isTransitioning, startTransition] = useTransition()
+
+  return (
+    <>
+      <div className="flex min-w-120 flex-col items-start justify-center gap-4 p-2 pl-0">
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={Boolean(linkMetricAndSizeMetric)}
+          title="Enable to sync size metric with color metric"
+          onChange={(e) => {
+            setLinkMetricAndSizeMetric(e.target.checked)
+            if (e.target.checked) {
+              setSizeMetricType(relatedSizeMetric[metricType])
+            }
+          }}
+        >
+          <Icon className="ml-1.5" path={mdiLink} size="1.25em" />
+          <span>Link size and color option</span>
+        </CheckboxWithLabel>
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={transitionsEnabled}
+          title="Disable to improve performance when zooming"
+          onChange={(e) => setTransitionsEnabled(e.target.checked)}
+        >
+          <Icon className="ml-1.5" path={mdiTransition} size="1.25em" />
+          Transitions
+        </CheckboxWithLabel>
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={labelsVisible}
+          title="Disable to improve performance"
+          onChange={(e) => setLabelsVisible(e.target.checked)}
+        >
+          <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
+          Labels
+        </CheckboxWithLabel>
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={showFilesWithoutChanges}
+          title="Show files that have had no changes in the selected time range"
+          onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
+        >
+          <Icon className="ml-1.5" path={mdiClockEdit} size="1.25em" />
+          Show files with no activity
+        </CheckboxWithLabel>
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={hierarchyType === "FLAT"}
+          title="Show all files on the same level, instead of as a file tree"
+          onChange={() => {
+            if (hierarchyType === "FLAT") setHierarchyType("NESTED")
+            else setHierarchyType("FLAT")
+          }}
+        >
+          <Icon className="ml-1.5" path={mdiFileTree} size="1.25em" />
+          Flatten file tree
+        </CheckboxWithLabel>
+        {/* <CheckboxWithLabel
+        className="text-sm"
+        checked={theme === "DARK"}
+        onChange={() => {
+          if (theme === "DARK") setTheme("LIGHT")
+          else setTheme("DARK")
+        }}
+        title="Use a dark theme instead of light"
+      >
+        <Icon className="ml-1.5" path={mdiThemeLightDark} size="1.25em" />
+        Use dark theme
+      </CheckboxWithLabel> */}
+        <CheckboxWithLabel
+          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          checked={showOnlySearchMatches}
+          title="When searching, hide files that do not match the search query"
+          onChange={(e) => setShowOnlySearchMatches(e.target.checked)}
+        >
+          <Icon className="ml-1.5" path={mdiFilter} size="1.25em" />
+          Show only search matches
+        </CheckboxWithLabel>
+        <label
+          className="label group flex w-full items-center justify-start gap-2 text-sm hover:text-blue-500 hover:opacity-100"
+          title="Increase this to improve render performance, decrease it to get higher level of detail"
+        >
+          <span className="group flex grow items-center gap-2">
+            <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
+            Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
+          </span>
+          <input
+            type="number"
+            min={0}
+            defaultValue={renderCutoff}
+            className="mr-1 w-12 place-self-end border-b-2"
+            onChange={(x) => startTransition(() => setRenderCutoff(x.target.valueAsNumber))}
+          />
+        </label>
+      </div>
+    </>
+  )
+}

@@ -11,13 +11,7 @@ import { PercentageSlider } from "../PercentageSlider"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
-export function Legend({
-  hoveredObject,
-  showUnionAuthorsModal
-}: {
-  hoveredObject: GitObject | null
-  showUnionAuthorsModal: () => void
-}) {
+export function Legend({ hoveredObject }: { hoveredObject: GitObject | null }) {
   const { sizeMetric, metricType } = useOptions()
   const [metricsData] = useMetrics()
   const deferredHoveredObject = useDeferredValue(hoveredObject)
@@ -52,7 +46,7 @@ export function Legend({
       <p className="mb-4 text-sm">{colorMetricDescriptions[metricType]}</p>
       {metricType === "TOP_CONTRIBUTOR" ? <PercentageSlider className="my-4" /> : null}
       {legend}
-      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions showUnionAuthorsModal={showUnionAuthorsModal} /> : null}
+      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions /> : null}
     </>
   )
 }

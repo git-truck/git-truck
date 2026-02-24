@@ -1,14 +1,13 @@
-import { useTransition, useState, useRef, useEffect, type JSX } from "react"
+import { useTransition, useState, type JSX } from "react"
 import { useNavigation, useSubmit, Form, href, useLocation } from "react-router"
 import { useData } from "~/contexts/DataContext"
-import { CloseButton, LegendDot, CheckboxWithLabel } from "~/components/util"
+import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
-import { mdiArrowUp, mdiAccountMultiple } from "@mdi/js"
-import { createPortal } from "react-dom"
-import { useKey } from "~/hooks"
+import { mdiArrowUp, mdiAccountMultiplePlus, mdiAccountMultipleMinus } from "@mdi/js"
+import { LegendDot } from "~/components/util"
 
-export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function UnionAuthorsModal() {
   const { databaseInfo } = useData()
   const submit = useSubmit()
   const { authors } = databaseInfo
@@ -19,19 +18,6 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
   const [, authorColors] = useMetrics()
   const [, startTransition] = useTransition()
   const location = useLocation()
-  const ref = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    if (!ref.current) {
-      return
-    }
-
-    if (open) {
-      ref.current.showModal()
-      return
-    }
-    ref.current.close()
-  }, [open])
 
   const flattedUnionedAuthors = authorUnions
     .reduce((acc, union) => {
@@ -44,6 +30,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
+    // TODO: This closes the modal currently
     submit(form, {
       action: href("/view") + location.search,
       method: "post"
@@ -54,6 +41,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([]))
 
+    // TODO: This closes the modal currently
     submit(form, {
       action: href("/view") + location.search,
       method: "post"
@@ -61,10 +49,11 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
   }
 
   function groupSelectedAuthors() {
-    if (selectedAuthors.length === 0) return
+    if (selectedAuthors.length < 2) return
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
 
+    // TODO: This closes the modal currently
     submit(form, {
       action: href("/view") + location.search,
       method: "post"
@@ -82,6 +71,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
+    // TODO: This closes the modal currently
     submit(form, {
       action: href("/view") + location.search,
       method: "post"
@@ -95,16 +85,7 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     .slice(0)
     .sort(stringSorter)
 
-  useKey({ key: "Escape" }, onClose)
-
   const getColorFromDisplayName = (displayName: string) => authorColors.get(displayName) ?? "#333"
-
-  if (!open) return null
-
-  const ungroupedAuthorsMessage =
-    ungroupedAuthorsSorted.length === 0
-      ? "All detected authors have been grouped"
-      : "Select the authors that you know are the same person"
 
   const ungroupedAuthorsFiltered = ungroupedAuthorsSorted.filter((author) =>
     author.toLowerCase().includes(filter.toLowerCase())
@@ -188,30 +169,24 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
     )
   })
 
-  return createPortal(
-    <dialog
-      ref={ref}
-      aria-modal
-      className="z-10 m-auto flex h-full w-full flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
-    >
-      <div className="card m-auto grid h-full w-full max-w-(--breakpoint-2xl) grow grid-cols-[1fr_1fr] grid-rows-[max-content_max-content_max-content_1fr_max-content] gap-2 overflow-hidden p-2 shadow-sm">
-        <h2 className="text-2xl">Group authors</h2>
-        <CloseButton absolute={false} className="justify-self-end" onClick={onClose} />
-
-        <h3 className="text-center text-lg font-bold">Ungrouped authors ({ungroupedAuthorsSorted.length})</h3>
-        <h3 className="text-center text-lg font-bold">Grouped authors</h3>
-
+  return (
+    <div className="m-auto grid h-full max-h-200 w-full max-w-(--breakpoint-2xl) grid-cols-[1fr_1fr] grid-rows-[max-content_1fr] gap-2 overflow-hidden bg-gray-100 p-4">
+      <div className="flex justify-between">
+        <h3 className="grow text-center text-lg font-bold">Ungrouped Authors ({ungroupedAuthorsSorted.length})</h3>
         <div className="flex justify-end gap-2">
           <button
             className="btn btn--primary justify-self-end"
             title="Group the selected authors"
-            disabled={disabled || selectedAuthors.length === 0}
+            disabled={disabled || selectedAuthors.length < 2}
             onClick={groupSelectedAuthors}
           >
-            <Icon path={mdiAccountMultiple} size={1} />
+            <Icon path={mdiAccountMultiplePlus} size={1} />
             Create group
           </button>
         </div>
+      </div>
+      <div className="flex justify-between">
+        <h3 className="grow text-center text-lg font-bold">Author Groups ({groupedAuthorsEntries.length})</h3>
         <div className="flex justify-end gap-4">
           <button
             className="btn btn--danger"
@@ -220,41 +195,44 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
               if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
             }}
           >
+            <Icon path={mdiAccountMultipleMinus} size={1} />
             Ungroup all
           </button>
         </div>
+      </div>
 
-        <div className="overflow-y-auto">
-          <div className="flex h-min min-h-0 flex-col gap-2 rounded-md bg-white p-4 pt-2 shadow-sm dark:bg-gray-700">
-            <div className="sticky top-0 flex gap-2 bg-inherit pt-2">
-              <input
-                className="input min-w-0"
-                type="search"
-                placeholder="Filter..."
-                disabled={ungroupedAuthorsSorted.length === 0}
-                onChange={(e) => startTransition(() => setFilter(e.target.value))}
-              />
-              <button
-                disabled={disabled || selectedAuthors.length === 0}
-                className="btn btn--outlined w-max grow"
-                title="Clear selection"
-                onClick={() => setSelectedAuthors([])}
-              >
-                Clear
-              </button>
-              <button
-                disabled={ungroupedAuthorsSorted.length === 0}
-                className="btn btn--outlined w-max grow"
-                title="Clear selection"
-                onClick={() =>
-                  selectedAuthors.length === ungroupedAuthorsFiltered.length
-                    ? setSelectedAuthors([])
-                    : setSelectedAuthors((selected) => Array.from(new Set([...selected, ...ungroupedAuthorsFiltered])))
-                }
-              >
-                {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
-              </button>
-            </div>
+      <div className="max-h-full overflow-y-scroll">
+        <div className="h-fill flex min-h-0 flex-col rounded-md dark:bg-gray-700">
+          <div className="sticky top-0 z-10 flex gap-2 bg-gray-100 p-2 dark:bg-gray-700">
+            <input
+              className="input min-w-0"
+              type="search"
+              placeholder="Filter..."
+              disabled={ungroupedAuthorsSorted.length === 0}
+              onChange={(e) => startTransition(() => setFilter(e.target.value))}
+            />
+            <button
+              disabled={disabled || selectedAuthors.length === 0}
+              className="btn btn--outlined w-max grow"
+              title="Clear selection"
+              onClick={() => setSelectedAuthors([])}
+            >
+              Clear
+            </button>
+            <button
+              disabled={ungroupedAuthorsSorted.length === 0}
+              className="btn btn--outlined w-max grow"
+              title="Clear selection"
+              onClick={() =>
+                selectedAuthors.length === ungroupedAuthorsFiltered.length
+                  ? setSelectedAuthors([])
+                  : setSelectedAuthors((selected) => Array.from(new Set([...selected, ...ungroupedAuthorsFiltered])))
+              }
+            >
+              {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
+            </button>
+          </div>
+          <div className="min-h-fill max-h-full overflow-y-auto p-2">
             {ungroupedAuthorsEntries.length > 0 ? (
               ungroupedAuthorsEntries
             ) : (
@@ -264,25 +242,18 @@ export function UnionAuthorsModal({ open, onClose }: { open: boolean; onClose: (
             )}
           </div>
         </div>
-        <div className="overflow-y-auto">
-          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow-sm lg:grid-cols-2 xl:grid-cols-3 dark:bg-gray-700">
-            {authorUnions.length > 0 ? (
-              groupedAuthorsEntries
-            ) : (
-              <p className="place-self-center">No authors have been grouped yet</p>
-            )}
-          </div>
-        </div>
+      </div>
 
-        <div className="col-span-2 mr-6 grid w-full grid-cols-2 gap-4">
-          <p>{ungroupedAuthorsMessage}</p>
-          <button className="btn btn--primary justify-self-end" onClick={onClose}>
-            Done
-          </button>
+      <div className="min-h-0 overflow-y-auto">
+        <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow-sm lg:grid-cols-2 xl:grid-cols-3 dark:bg-gray-700">
+          {authorUnions.length > 0 ? (
+            groupedAuthorsEntries
+          ) : (
+            <p className="place-self-center">No authors have been grouped yet</p>
+          )}
         </div>
       </div>
-    </dialog>,
-    document.body
+    </div>
   )
 
   function AliasEntry({
