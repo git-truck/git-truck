@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState, useTransition, useId, createRef } from "react"
+import { memo, useMemo, useRef, useState, useTransition, useId, createRef, useEffect } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
@@ -38,6 +38,10 @@ export const SearchCard = memo(function SearchCard() {
   const searchResultsArray = useMemo(() => Object.values(searchResults), [searchResults])
   const id = useId()
   const { databaseInfo } = useData()
+
+  useEffect(() => {
+    setSearchResults(searchText.length > 0 ? findSearchResults(databaseInfo.fileTree, searchText) : {})
+  }, [searchText, setSearchResults, databaseInfo.fileTree])
 
   const options = useOptions()
   const [metrics] = useMetrics()
