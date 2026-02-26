@@ -11,6 +11,8 @@ import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiFile } from "@mdi/j
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useKey } from "~/hooks"
+import { useQueryState } from "nuqs"
+import { viewSearchParamsConfig } from "~/routes/view"
 
 function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, GitObject> = {}
@@ -28,6 +30,7 @@ function findSearchResults(tree: GitTreeObject, searchString: string): SearchRes
 
 export const SearchCard = memo(function SearchCard() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
+  const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
   const [isTransitioning, startTransition] = useTransition()
   const [searchText, setSearchText] = useState("")
   const { clickedObject, setClickedObject } = useClickedObject()
@@ -61,6 +64,8 @@ export const SearchCard = memo(function SearchCard() {
   }
 
   const items = Object.values(searchResults)
+  const zoomedFolderName = zoomPath ? zoomPath.split(getSeparator(zoomPath)).at(-1) : databaseInfo.repo
+  const helpText = `Search within ${zoomedFolderName}`
   return (
     <form
       className="w-sidepanel absolute top-2 bottom-0 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2 transition-[width,translate] not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:w-min not-focus-within:has-placeholder-shown:translate-x-0"
@@ -75,14 +80,14 @@ export const SearchCard = memo(function SearchCard() {
       </button>
       <label
         className="input min-h-button h-button max-h-button relative flex w-full min-w-0 cursor-pointer flex-row-reverse items-center gap-2 overflow-hidden not-focus-within:has-placeholder-shown:grow-0 not-focus-within:has-placeholder-shown:gap-0"
-        title="Search for a file or folder"
+        title={helpText}
       >
         <input
           ref={searchFieldRef}
           className="peer w-full grow placeholder-shown:not-focus:w-0 placeholder-shown:not-focus:min-w-0"
           id={id}
           type="search"
-          placeholder="Search for a file or folder..."
+          placeholder={helpText}
           value={searchText}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
