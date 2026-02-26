@@ -53,16 +53,6 @@ export const SearchCard = memo(function SearchCard() {
     searchFieldRef.current?.focus()
   })
 
-  function onClickObject(object: GitObject) {
-    setClickedObject(object)
-    // if (object.type === "tree") {
-    //   setPath(object.path)
-    // } else {
-    //   const sep = getSeparator(object.path)
-    //   setPath(allExceptLast(object.path.split(sep)).join(sep))
-    // }
-  }
-
   function focusResultAtIndex(nextIndex: number) {
     resultRefs[nextIndex].current?.focus()
   }
@@ -80,7 +70,7 @@ export const SearchCard = memo(function SearchCard() {
       }}
     >
       <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline" type="submit">
-        <Icon path={mdiClose} size="1em" className="" />
+        <Icon path={mdiClose} size="1em" />
       </button>
       <label
         className="input min-h-button h-button max-h-button relative flex w-full min-w-0 cursor-pointer flex-row-reverse items-center gap-2 overflow-hidden not-focus-within:has-placeholder-shown:grow-0 not-focus-within:has-placeholder-shown:gap-0"
@@ -178,7 +168,7 @@ export const SearchCard = memo(function SearchCard() {
                   focusResultAtIndex(prevIndex)
                 }
               }}
-              onClick={() => onClickObject(object)}
+              onClick={() => setClickedObject(object)}
             >
               {object.type === "tree" ? (
                 <Icon path={object.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
