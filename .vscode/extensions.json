@@ -4,6 +4,7 @@
     "bradlc.vscode-tailwindcss",
     "ms-playwright.playwright",
     "dbaeumer.vscode-eslint",
-    "yoavbls.pretty-ts-errors"
+    "yoavbls.pretty-ts-errors",
+    "wayou.vscode-todo-highlight"
   ]
 }
