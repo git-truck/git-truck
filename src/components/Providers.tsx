@@ -10,6 +10,8 @@ import { createMetricData } from "../metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { usePrefersLightMode } from "~/styling"
+import { findSubTree } from "~/shared/util"
+import { useQueryState } from "nuqs"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const [options, setOptions] = useState<Options>(() => {
@@ -26,9 +28,16 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
 
   const prefersLight = usePrefersLightMode()
 
+  const [zoomPath] = useQueryState("zoomPath")
+
+  const databaseInfo = useMemo(
+    () => ({ ...data.databaseInfo, fileTree: findSubTree(data.databaseInfo.fileTree, zoomPath ?? undefined) }),
+    [data.databaseInfo, zoomPath]
+  )
+
   const metricsData: MetricsData = useMemo(() => {
     const res = createMetricData(
-      data,
+      { ...data, databaseInfo },
       data.databaseInfo.colorSeed,
       data.databaseInfo.authorColors,
       options?.dominantAuthorCutoff ?? 70,
@@ -36,7 +45,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
     )
 
     return res
-  }, [data, options?.dominantAuthorCutoff, prefersLight])
+  }, [data, databaseInfo, options?.dominantAuthorCutoff, prefersLight])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -126,7 +135,12 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
   }, [options])
 
   return (
-    <DataContext.Provider value={data}>
+    <DataContext.Provider
+      value={{
+        ...data,
+        databaseInfo: databaseInfo
+      }}
+    >
       <MetricsContext.Provider value={metricsData}>
         <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider

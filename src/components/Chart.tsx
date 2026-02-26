@@ -533,8 +533,7 @@ function createPartitionedHiearchy({
   renderCutoff: number
   zoomPath?: string
 }) {
-  const currentTree = findSubTree(tree, zoomPath)
-  const hiearchy = hierarchy<GitObject>(currentTree)
+  const hiearchy = hierarchy<GitObject>(tree)
     .sum((d) => {
       const blob = d as GitBlobObject
       switch (sizeMetricType) {

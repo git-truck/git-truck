@@ -434,20 +434,31 @@ export function normalizePath(p: string): string {
 export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
   if (!path) return tree
 
-  let currentTree: GitTreeObject = tree
-  // If objectPath is defined, navigate to the corresponding subtree. This allows for zooming into subtrees when clicking on them
+  const hasRootPrefix = path === tree.name || path.startsWith(`${tree.name}/`)
+  if (!hasRootPrefix) return tree
 
-  const steps = path.substring(tree.name.length + 1).split("/")
+  const relativePath = path.length === tree.name.length ? "" : path.substring(tree.name.length + 1)
+  if (!relativePath) return tree
+
+  let currentTree: GitTreeObject = tree
+  const steps = relativePath.split("/")
   for (let i = 0; i < steps.length; i++) {
+    let foundStep = false
     for (const child of currentTree.children) {
       if (child.type === "tree") {
         const childSteps = child.name.split("/")
         if (childSteps[0] === steps[i]) {
           currentTree = child
           i += childSteps.length - 1
+          foundStep = true
           break
         }
       }
+    }
+    // If a step is not found, abort and return root tree
+    if (!foundStep) {
+      console.warn(`Could not find step ${steps[i]} in subtree ${currentTree.name}`)
+      return tree
     }
   }
 
