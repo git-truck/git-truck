@@ -72,7 +72,7 @@ export const SearchCard = memo(function SearchCard() {
   const helpText = `Search within ${zoomedFolderName}`
   return (
     <form
-      className="w-sidepanel absolute top-2 bottom-0 left-1/2 z-10 flex -translate-x-1/2 flex-col gap-2 transition-[width,translate] not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:w-min not-focus-within:has-placeholder-shown:translate-x-0"
+      className="w-sidepanel not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute right-0 z-10 flex flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
       onSubmit={(event) => {
         event.preventDefault()
         setSearchText("")
@@ -143,7 +143,7 @@ export const SearchCard = memo(function SearchCard() {
         ) : null}
       </label>
       {searchResultsArray.length > 0 ? (
-        <div className="card bg-tertiary-bg/10 dark:bg-tertiary-bg-dark/50 w-sidepanel relative max-h-1/5 min-h-0 overflow-auto backdrop-blur-lg">
+        <div className="card bg-tertiary-bg/10 dark:bg-tertiary-bg-dark/50 w-sidepanel max-h-sidepanel relative min-h-0 overflow-auto backdrop-blur-lg">
           {items.map((object, i) => (
             <button
               ref={resultRefs[i]}
