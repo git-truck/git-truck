@@ -9,6 +9,7 @@ export function AuthorOptions() {
 
   const { openModal } = useModal("group-authors")
 
+  // TODO: This is only used once, and is duplicated in detailscard. Extract as button-components?
   return (
     <div className="mt-2 grid w-full grid-cols-[1fr_1fr] gap-2">
       <button className="btn" onClick={() => openModal()}>
