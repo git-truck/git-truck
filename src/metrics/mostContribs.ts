@@ -1,8 +1,9 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { MetricCache } from "./metrics"
 import { SpectrumTranslater } from "./metricUtils"
-import { hslToHex } from "../shared/util"
+import { hslToHex, rgbToHex } from "../shared/util"
 import { noEntryColor } from "~/const"
+import { interpolateCividis, interpolateCool, interpolateInferno, interpolateTurbo, scaleSequential } from "d3"
 
 export class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
@@ -14,7 +15,10 @@ export class ContribAmountTranslater {
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(118, 50, this.translater.inverseTranslate(value))
+    // return hslToHex(118, 50, this.translater.inverseTranslate(value))
+
+    const scale = scaleSequential(interpolateCool)
+    return rgbToHex(scale(this.translater.inverseTranslate(value - 1) / 100) as `#${string}`)
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {
