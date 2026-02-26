@@ -1,10 +1,11 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { Metric, MetricCache } from "~/metrics/metrics"
 import { SpectrumTranslater } from "~/metrics/metricUtils"
-import { hslToHex, formatLargeNumber } from "~/shared/util"
+import { formatLargeNumber, rgbToHex } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
+import { scaleSequential, interpolateCool } from "d3"
 
 export const LinesChangedMetric: Metric = {
   icon: mdiPlusMinusVariant,
@@ -49,7 +50,10 @@ class ContribAmountTranslater {
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(118, 50, this.translater.inverseTranslate(value))
+    // return hslToHex(118, 50, this.translater.inverseTranslate(value))
+
+    const scale = scaleSequential(interpolateCool)
+    return rgbToHex(scale(this.translater.inverseTranslate(value - 1) / 100) as `#${string}`)
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {
