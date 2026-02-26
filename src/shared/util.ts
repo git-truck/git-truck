@@ -430,3 +430,26 @@ export function normalizePath(p: string): string {
 
   return p
 }
+
+export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
+  if (!path) return tree
+
+  let currentTree: GitTreeObject = tree
+  // If objectPath is defined, navigate to the corresponding subtree. This allows for zooming into subtrees when clicking on them
+
+  const steps = path.substring(tree.name.length + 1).split("/")
+  for (let i = 0; i < steps.length; i++) {
+    for (const child of currentTree.children) {
+      if (child.type === "tree") {
+        const childSteps = child.name.split("/")
+        if (childSteps[0] === steps[i]) {
+          currentTree = child
+          i += childSteps.length - 1
+          break
+        }
+      }
+    }
+  }
+
+  return currentTree
+}
