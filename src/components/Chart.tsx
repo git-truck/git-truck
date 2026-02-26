@@ -26,7 +26,7 @@ import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
-import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, trimFilenameFromPath, findSubTree } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -523,7 +523,7 @@ function createPartitionedHiearchy({
   chartType,
   sizeMetricType,
   renderCutoff,
-  zoomPath: objectPath
+  zoomPath
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
@@ -533,28 +533,8 @@ function createPartitionedHiearchy({
   renderCutoff: number
   zoomPath?: string
 }) {
-  let currentTree = tree
-
-  // If objectPath is defined, navigate to the corresponding subtree. This allows for zooming into subtrees when clicking on them
-  if (objectPath) {
-    const steps = objectPath.substring(tree.name.length + 1).split("/")
-    for (let i = 0; i < steps.length; i++) {
-      for (const child of currentTree.children) {
-        if (child.type === "tree") {
-          const childSteps = child.name.split("/")
-          if (childSteps[0] === steps[i]) {
-            currentTree = child
-            i += childSteps.length - 1
-            break
-          }
-        }
-      }
-    }
-  }
-
-  const castedTree = currentTree as GitObject
-
-  const hiearchy = hierarchy(castedTree)
+  const currentTree = findSubTree(tree, zoomPath)
+  const hiearchy = hierarchy<GitObject>(currentTree)
     .sum((d) => {
       const blob = d as GitBlobObject
       switch (sizeMetricType) {
