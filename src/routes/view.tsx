@@ -470,6 +470,9 @@ export default function Repo() {
                   </div>
                   <div className="flex gap-2"></div>
                   <div className="flex gap-2">
+                    <div className="relative">
+                      <SearchCard />
+                    </div>
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
                         key={data.databaseInfo.branch}
@@ -484,8 +487,9 @@ export default function Repo() {
                           navigate(getPathFromRepoAndHead({ path: data.repo.repositoryPath, branch: e.target.value }))
                         }
                       />
-                    ) : null}
-                    <SearchCard />
+                    ) : (
+                      <div />
+                    )}
                     <RefreshButton />
                     <HiddenFiles />
                     <SettingsButton />
