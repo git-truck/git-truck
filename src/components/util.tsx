@@ -17,7 +17,7 @@ import { useSubmit, useSearchParams } from "react-router"
 import { getPathFromRepoAndHead } from "~/shared/util"
 import { cn } from "~/styling"
 import { useOptions, type ChartType } from "~/contexts/OptionsContext"
-import { useIsClient, useFullscreen } from "~/hooks"
+import { useIsClient } from "~/hooks"
 
 export const CloseButton = ({
   className = "",
@@ -186,16 +186,4 @@ export function ClientOnly({ children, fallback = null }: { children: () => Reac
 
   if (!isClient) return fallback
   return children()
-}
-export function FullscreenButton() {
-  const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)
-  return (
-    <button
-      className={cn("btn aspect-square p-1", { "btn--primary": isFullscreen })}
-      title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-      onClick={toggleFullscreen}
-    >
-      <Icon path={isFullscreen ? mdiFullscreenExit : mdiFullscreen} size={1} />
-    </button>
-  )
 }

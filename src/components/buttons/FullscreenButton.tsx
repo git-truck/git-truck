@@ -1,7 +1,7 @@
 import { mdiFullscreenExit, mdiFullscreen } from "@mdi/js"
-import { Icon } from "~/components/Icon"
 import { useFullscreen } from "~/hooks"
 import { cn } from "~/styling"
+import { Icon } from "~/components/Icon"
 
 export function FullscreenButton() {
   const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)

@@ -36,17 +36,18 @@ import { UnionAuthorsModal } from "~/components/UnionAuthorsModal"
 import { cn } from "~/styling"
 import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/view"
-import { RefreshButton } from "~/components/RefreshButton"
+import { RefreshButton } from "~/components/buttons/RefreshButton"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { ChartTooltip } from "~/components/ChartTooltip"
-import { ClientOnly, FullscreenButton } from "~/components/util"
+import { ClientOnly } from "~/components/util"
+import { FullscreenButton } from "~/components/buttons/FullscreenButton"
 import { getPathFromRepoAndHead, invariant } from "~/shared/util"
 import type ServerInstance from "~/analyzer/ServerInstance.server"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
-import { CollapsableSettings } from "~/components/Settings"
+import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { useQueryState, type inferParserType } from "nuqs"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 
@@ -497,8 +498,8 @@ export default function Repo() {
                     <SearchCard />
                     <RefreshButton />
                     <HiddenFiles />
+                    <SettingsButton />
                     <FullscreenButton />
-                    <CollapsableSettings />
                   </div>
                 </header>
 
