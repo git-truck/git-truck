@@ -226,6 +226,7 @@ export interface DatabaseInfo {
   contribSumPerFile: Record<string, number>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
+  selectedFileCommitTimestamps: number[]
 }
 
 export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general" | "progress">

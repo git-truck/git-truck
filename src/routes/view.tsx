@@ -108,7 +108,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   const viewSearchParams = loadViewSearchParams(request)
 
-  const { path, zoomPath, branch } = viewSearchParams
+  const { path, zoomPath, branch, objectPath } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (!(await GitCaller.isValidGitRepo(repositoryPath))) {
@@ -140,7 +140,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }
 
   return {
-    dataPromise: analyze({ instance, path: repositoryPath, branch: branch! }),
+    dataPromise: analyze({ instance, path: repositoryPath, branch: branch!, objectPath: objectPath ?? null }),
     repositoryName,
     versionInfo
   }
@@ -204,7 +204,7 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   return null
 }
 
-async function analyze({ instance, path, branch }: { instance: ServerInstance; path: string; branch: string }) {
+async function analyze({ instance, path, branch, objectPath }: { instance: ServerInstance; path: string; branch: string; objectPath: string | null }) {
   const repo = path.split("/").pop()!
   const isRepo = await GitCaller.isValidGitRepo(path)
   if (!isRepo) throw new Error(`No repo found at ${path}`)
@@ -309,6 +309,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+  const selectedFileCommitTimestamps = objectPath
+    ? await instance.db.getCommitTimestampsForPath(objectPath)
+    : []
+
   const databaseInfo: DatabaseInfo = {
     dominantAuthors,
     commitCounts,
@@ -335,7 +339,8 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     analyzedRepos,
     contribSumPerFile: contribCounts,
     maxMinContribCounts,
-    commitCount
+    commitCount,
+    selectedFileCommitTimestamps
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
