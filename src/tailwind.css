@@ -182,7 +182,7 @@
 }
 
 @utility label {
-  @apply cursor-pointer text-sm font-medium tracking-widest uppercase opacity-70 select-none;
+  @apply cursor-pointer text-sm font-medium select-none;
 }
 
 /* Button Variants */
