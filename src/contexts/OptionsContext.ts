@@ -28,7 +28,7 @@ export type Options = {
   sizeMetric: SizeMetricType
   transitionsEnabled: boolean
   labelsVisible: boolean
-  renderCutoff: number
+  renderCutOff: number
   showFilesWithoutChanges: boolean
   dominantAuthorCutoff: number
   linkMetricAndSizeMetric: boolean
@@ -72,7 +72,7 @@ const defaultOptions: Options = {
   commitSearch: "",
   transitionsEnabled: true,
   labelsVisible: true,
-  renderCutoff: 2,
+  renderCutOff: 2,
   showFilesWithoutChanges: true,
   dominantAuthorCutoff: 0,
   linkMetricAndSizeMetric: false,
