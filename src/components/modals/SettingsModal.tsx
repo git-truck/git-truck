@@ -2,7 +2,7 @@ import { CheckboxWithLabel } from "./utils/CheckboxWithLabel"
 import { useOptions } from "../../contexts/OptionsContext"
 import { Icon } from "~/components/Icon"
 import { mdiClockEdit, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 import { relatedSizeMetric } from "../Options"
 
@@ -11,7 +11,7 @@ export function SettingsModal() {
     metricType,
     hierarchyType,
     transitionsEnabled,
-    renderCutoff,
+    renderCutOff,
     showFilesWithoutChanges,
     linkMetricAndSizeMetric,
     showOnlySearchMatches,
@@ -25,7 +25,6 @@ export function SettingsModal() {
     setShowFilesWithoutChanges,
     setShowOnlySearchMatches
   } = useOptions()
-  const [isTransitioning, startTransition] = useTransition()
 
   return (
     <>
@@ -104,23 +103,39 @@ export function SettingsModal() {
           <Icon className="ml-1.5" path={mdiFilter} size="1.25em" />
           Show only search matches
         </CheckboxWithLabel>
-        <label
-          className="label group flex w-full items-center justify-start gap-2 text-sm hover:text-blue-500 hover:opacity-100"
-          title="Increase this to improve render performance, decrease it to get higher level of detail"
-        >
-          <span className="group flex grow items-center gap-2">
-            <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
-            Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
-          </span>
-          <input
-            type="number"
-            min={0}
-            defaultValue={renderCutoff}
-            className="mr-1 w-12 place-self-end border-b-2"
-            onChange={(x) => startTransition(() => setRenderCutoff(x.target.valueAsNumber))}
-          />
-        </label>
+        <RenderCutOff renderCutOff={renderCutOff} setRenderCutoff={setRenderCutoff} />
       </div>
     </>
+  )
+}
+function RenderCutOff({
+  renderCutOff,
+  setRenderCutoff
+}: {
+  renderCutOff: number
+  setRenderCutoff: (renderCutoff: number) => void
+}) {
+  const [value, setValue] = useState(renderCutOff)
+  const [isTransitioning, startTransition] = useTransition()
+  return (
+    <label
+      className="label group flex w-full items-center justify-start gap-2 text-sm hover:text-blue-500 hover:opacity-100"
+      title="Increase to improve render performance, decrease it to get higher level of detail"
+    >
+      <span className="group flex grow items-center gap-2">
+        <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
+        Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
+      </span>
+      <input
+        type="number"
+        min={0}
+        value={value}
+        className="mr-1 w-12 place-self-end border-b-2"
+        onChange={(x) => {
+          setValue(x.target.valueAsNumber)
+          startTransition(() => setRenderCutoff(x.target.valueAsNumber))
+        }}
+      />
+    </label>
   )
 }

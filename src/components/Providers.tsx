@@ -90,7 +90,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       setRenderCutoff: (renderCutoff: number) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
-          renderCutoff: renderCutoff
+          renderCutOff: renderCutoff
         })),
       setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
         setOptions((prevOptions) => ({

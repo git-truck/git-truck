@@ -50,7 +50,7 @@ export const Chart = memo(function Chart({
   const { searchResults, hasSearchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
-  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutoff } = useOptions()
+  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
 
   const [params, setParams] = useQueryStates(viewSearchParamsConfig)
   const { zoomPath } = params
@@ -116,13 +116,13 @@ export const Chart = memo(function Chart({
       size,
       chartType,
       sizeMetricType: sizeMetric,
-      renderCutoff
+      renderCutOff
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
       console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size, chartType, sizeMetric, renderCutoff, databaseInfo, filetree])
+  }, [size, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -521,14 +521,14 @@ function createPartitionedHiearchy({
   size,
   chartType,
   sizeMetricType,
-  renderCutoff
+  renderCutOff
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
   size: { height: number; width: number }
   chartType: ChartType
   sizeMetricType: SizeMetricType
-  renderCutoff: number
+  renderCutOff: number
 }) {
   const hiearchy = hierarchy<GitObject>(tree)
     .sum((d) => {
@@ -550,7 +550,7 @@ function createPartitionedHiearchy({
     })
     .sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
 
-  const cutOff = Number.isNaN(renderCutoff) ? 2 : renderCutoff
+  const cutOff = Number.isNaN(renderCutOff) ? 2 : renderCutOff
 
   if (chartType === "TREE_MAP" || chartType === "PARTITION") {
     const treeMapPartition =
