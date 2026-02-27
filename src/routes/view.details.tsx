@@ -6,7 +6,7 @@ import { ChevronButton } from "~/components/ChevronButton"
 import { useData } from "~/contexts/DataContext"
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import type { Route } from "./+types/view.details"
-import { mdiEyeOffOutline, mdiAccountMultiple, mdiOpenInNew, mdiSearchWeb } from "@mdi/js"
+import { mdiEyeOffOutline, mdiMagnify, mdiOpenInNew } from "@mdi/js"
 import byteSize from "byte-size"
 import { Icon } from "~/components/Icon"
 import { useClickedObject } from "~/contexts/ClickedContext"
@@ -129,7 +129,7 @@ export default function Details() {
       <GroupAuthorsButton />
       <div className="mt-2 flex flex-wrap gap-2">
         <Link className="btn" to={zoomLink}>
-          <Icon path={mdiSearchWeb} />
+          <Icon path={mdiMagnify} />
           Zoom to this {isBlob ? "file" : "folder"}
         </Link>
         {isBlob ? (

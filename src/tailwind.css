@@ -135,8 +135,8 @@
   & > svg {
     @apply inline-block h-4 w-4;
   }
-  & > * {
-    @apply hover:opacity-70;
+  &:hover > * {
+    @apply opacity-70;
   }
 }
 
