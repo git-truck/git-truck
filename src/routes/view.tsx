@@ -48,6 +48,7 @@ import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { useQueryState, type inferParserType } from "nuqs"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 import { ModalManager } from "~/components/modals/ModalManager"
+import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -492,6 +493,7 @@ export default function Repo() {
                     )}
                     <RefreshButton />
                     <HiddenFiles />
+                    <GroupAuthorsButton compact />
                     <SettingsButton />
                     <FullscreenButton />
                   </div>

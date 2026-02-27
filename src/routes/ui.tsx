@@ -1,7 +1,6 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { LoadingIndicator } from "../components/LoadingIndicator"
 import { ChevronButton } from "../components/ChevronButton"
-import { AuthorOptions } from "../components/AuthorOptions"
 import { IconRadioGroup } from "../components/EnumSelect"
 import { Breadcrumb } from "../components/Breadcrumb"
 import { SearchCard } from "../components/SearchCard"
@@ -268,11 +267,6 @@ export default function UI() {
           </div>
           <div className="card">
             <GitTruckInfo installedVersion="0.0.0-98822df" latestVersion="1.0.1" />
-          </div>
-          {/* AuthorOptions Demo (mock handler) */}
-          <div className="card">
-            <h2 className="card__title">AuthorOptions</h2>
-            <AuthorOptions />
           </div>
           {/* Slider */}
           <div className="card">
