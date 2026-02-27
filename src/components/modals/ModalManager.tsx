@@ -30,6 +30,8 @@ export function ModalManager() {
   const onClose = () => setModal(null)
 
   useEffect(() => {
+    document.body.style.setProperty("overflow", modalKey ? "hidden" : null)
+
     if (!dialogRef.current) {
       return
     }
