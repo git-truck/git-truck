@@ -1,13 +1,14 @@
 import { useDeferredValue, useMemo, type ReactNode } from "react"
 import type { GitObject } from "~/shared/model"
-import { useMetrics } from "../../contexts/MetricContext"
-import { useOptions } from "../../contexts/OptionsContext"
-import { colorMetricDescriptions, getMetricLegendType, sizeMetricLegendDescriptions } from "../../metrics/metrics"
-import { AuthorOptions } from "../AuthorOptions"
-import { GradientLegend } from "./GradiantLegend"
-import { PointLegend } from "./PointLegend"
-import { SegmentLegend } from "./SegmentLegend"
-import { PercentageSlider } from "../PercentageSlider"
+import { useMetrics } from "~/contexts/MetricContext"
+import { useOptions } from "~/contexts/OptionsContext"
+import { colorMetricDescriptions, getMetricLegendType, sizeMetricLegendDescriptions } from "~/metrics/metrics"
+import { ShuffleColorsButton } from "~/components/buttons/ShuffleColorsButton"
+import { GradientLegend } from "~/components/legend/GradiantLegend"
+import { PointLegend } from "~/components/legend/PointLegend"
+import { SegmentLegend } from "~/components/legend/SegmentLegend"
+import { PercentageSlider } from "~/components/PercentageSlider"
+import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 
@@ -46,7 +47,12 @@ export function Legend({ hoveredObject }: { hoveredObject: GitObject | null }) {
       <p className="mb-4 text-sm">{colorMetricDescriptions[metricType]}</p>
       {metricType === "TOP_CONTRIBUTOR" ? <PercentageSlider className="my-4" /> : null}
       {legend}
-      {metricType === "TOP_CONTRIBUTOR" ? <AuthorOptions /> : null}
+      {metricType === "TOP_CONTRIBUTOR" ? (
+        <div className="mt-2 grid w-full grid-cols-[1fr_1fr] gap-2">
+          <GroupAuthorsButton />
+          <ShuffleColorsButton />
+        </div>
+      ) : null}
     </>
   )
 }

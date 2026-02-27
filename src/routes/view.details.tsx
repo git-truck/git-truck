@@ -16,7 +16,7 @@ import { openFile } from "~/shared/util.server"
 import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
 import { RepoTabs } from "~/components/RepoTabs"
 import { useQueryStates } from "nuqs"
-import { useModal } from "~/components/modals/ModalManager"
+import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -88,7 +88,6 @@ export default function Details() {
 
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
   const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: path })
-  const { openModal } = useModal("group-authors")
 
   useEffect(() => {
     setOpen(!!clickedObject)
@@ -127,10 +126,7 @@ export default function Details() {
           </Suspense>
         </div>
       </div>
-      <button className="btn" onClick={() => openModal()}>
-        <Icon path={mdiAccountMultiple} />
-        Group authors
-      </button>
+      <GroupAuthorsButton />
       <div className="mt-2 flex flex-wrap gap-2">
         <Link className="btn" to={zoomLink}>
           <Icon path={mdiSearchWeb} />
