@@ -7,7 +7,7 @@ import { Icon } from "~/components/Icon"
 import { mdiArrowUp, mdiAccountMultiplePlus, mdiAccountMultipleMinus } from "@mdi/js"
 import { LegendDot } from "~/components/util"
 
-export function UnionAuthorsModal() {
+export function GroupAuthorsModal() {
   const { databaseInfo } = useData()
   const submit = useSubmit()
   const { authors } = databaseInfo

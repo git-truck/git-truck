@@ -1,13 +1,13 @@
 import { parseAsStringLiteral, useQueryState } from "nuqs"
 import { useEffect, useRef, type ReactNode } from "react"
-import { UnionAuthorsModal } from "./GroupAuthorsModal"
+import { GroupAuthorsModal } from "./GroupAuthorsModal"
 import { SettingsModal } from "../modals/SettingsModal"
 import { CloseButton } from "../util"
 import { mdiAccountMultipleCheck, mdiCog } from "@mdi/js"
 import { Icon } from "../Icon"
 
 const modals = {
-  "group-authors": { content: <UnionAuthorsModal />, title: "Group Authors", icon: mdiAccountMultipleCheck },
+  "group-authors": { content: <GroupAuthorsModal />, title: "Group Authors", icon: mdiAccountMultipleCheck },
   "app-settings": { content: <SettingsModal />, title: "Settings", icon: mdiCog }
 } as const satisfies Record<string, { content: ReactNode; title: string; icon: string }>
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
