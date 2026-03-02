@@ -1,6 +1,6 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry, LinkSegments } from "./model"
+import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "./model"
 import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatLong(epochTime?: number) {
@@ -68,21 +68,6 @@ export const allExceptFirst = <T>(arr: T[]) => {
 export function getSeparator(path: string) {
   if (path.includes("\\")) return "\\"
   return "/"
-}
-
-/**
- *
- * @deprecated
- */
-export const getPathFromRepoAndHead = (
-  params: { path: string; branch?: string },
-  segments: LinkSegments = ["view"]
-) => {
-  const searchParams = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value) searchParams.set(key, value)
-  })
-  return `/${segments.map(encodeURIComponent).join("/")}?${searchParams.toString()}`
 }
 
 export const branchCompare = (a: string, b: string): number => {

@@ -37,7 +37,7 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { ChartTooltip } from "~/components/ChartTooltip"
 import { ClientOnly } from "~/components/util"
 import { FullscreenButton } from "~/components/buttons/FullscreenButton"
-import { getPathFromRepoAndHead, invariant } from "~/shared/util"
+import { invariant } from "~/shared/util"
 import type ServerInstance from "~/analyzer/ServerInstance.server"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
@@ -135,7 +135,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }, viewSearchParams)
 
   if (shouldRedirect) {
-    const redirectUrl = href("/view") + viewSerializer(params)
+    const redirectUrl = viewSerializer(new URL(request.url), params)
     log.warn(`At least one required parameter is missing, redirecting to ${redirectUrl}`)
     throw redirect(redirectUrl)
   }
@@ -511,7 +511,9 @@ export default function Repo() {
                           (rep) => rep.repo === data.databaseInfo.repo
                         )}
                         onChange={(e) =>
-                          navigate(getPathFromRepoAndHead({ path: data.repo.repositoryPath, branch: e.target.value }))
+                          navigate(
+                            href("/view") + viewSerializer({ path: data.repo.repositoryPath, branch: e.target.value })
+                          )
                         }
                       />
                     ) : (
