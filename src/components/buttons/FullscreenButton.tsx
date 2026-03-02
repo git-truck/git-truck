@@ -7,7 +7,7 @@ export function FullscreenButton() {
   const { isFullscreen, toggleFullscreen } = useFullscreen(() => document.documentElement)
   return (
     <button
-      className={cn("btn aspect-square p-1", { "btn--primary": isFullscreen })}
+      className={cn("btn btn--icon", { "btn--primary": isFullscreen })}
       title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
       onClick={toggleFullscreen}
     >
