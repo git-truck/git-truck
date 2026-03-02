@@ -4,10 +4,10 @@ import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort } from "~/shared/util"
 import DatePicker from "react-datepicker"
-import { Handle, SliderRail, TicksByCount, Track } from "./sliderUtils"
-import { Popover } from "./Popover"
+import { Handle, SliderRail, TicksByCount, Track } from "~/components/sliderUtils"
+import { Popover } from "~/components/Popover"
 import { cn } from "~/styling"
-import BarChart from "./BarChart"
+import BarChart from "~/components/BarChart"
 import { useViewSubmit } from "~/hooks"
 
 export default function Timeline({ className }: { className?: string }) {

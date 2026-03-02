@@ -7,7 +7,7 @@ import { href, Link } from "react-router"
 import { viewSearchParamsConfig } from "~/routes/view"
 import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
-import { AnalysisInfo } from "./GlobalInfo"
+import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 
 type Segment = {

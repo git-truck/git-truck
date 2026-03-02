@@ -1,9 +1,9 @@
 import { memo } from "react"
-import type { ChartType } from "../contexts/OptionsContext"
-import { Chart, useOptions } from "../contexts/OptionsContext"
-import type { MetricType } from "../metrics/metrics"
-import { colorMetricDescriptions, Metric, sizeMetricDescriptions } from "../metrics/metrics"
-import { IconRadioGroup } from "./EnumSelect"
+import type { ChartType } from "~/contexts/OptionsContext"
+import { Chart, useOptions } from "~/contexts/OptionsContext"
+import type { MetricType } from "~/metrics/metrics"
+import { colorMetricDescriptions, Metric, sizeMetricDescriptions } from "~/metrics/metrics"
+import { IconRadioGroup } from "~/components/EnumSelect"
 
 import {
   mdiChartBubble,

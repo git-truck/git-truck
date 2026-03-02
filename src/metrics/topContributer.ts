@@ -1,7 +1,7 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { MetricCache } from "./metrics"
+import type { MetricCache } from "~/metrics/metrics"
 import { noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(

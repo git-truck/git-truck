@@ -2,7 +2,7 @@ import { useState, startTransition, Fragment } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { noEntryColor } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
-import { SliderRail, Handle, Track, LabeledTicks } from "./sliderUtils"
+import { SliderRail, Handle, Track, LabeledTicks } from "~/components/sliderUtils"
 import { cn } from "~/styling"
 
 export function PercentageSlider({ className = "" }: { className?: string }) {

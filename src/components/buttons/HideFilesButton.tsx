@@ -1,6 +1,6 @@
 import { mdiEyeOff } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useModal } from "../modals/ModalManager"
+import { useModal } from "~/components/modals/ModalManager"
 
 export function HideFilesButton() {
   const { openModal } = useModal("ignore-files")

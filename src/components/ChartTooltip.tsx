@@ -1,5 +1,5 @@
 import { useOptions } from "~/contexts/OptionsContext"
-import { Tooltip } from "./Tooltip"
+import { Tooltip } from "~/components/Tooltip"
 import type { GitObject } from "~/shared/model"
 
 export function ChartTooltip({ hoveredObject }: { hoveredObject: GitObject | null }) {

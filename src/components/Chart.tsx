@@ -21,11 +21,11 @@ import {
   treemapTreeBorderRadius,
   letterHeightText,
   clipPathPadding
-} from "../const"
-import { useData } from "../contexts/DataContext"
-import { useMetrics } from "../contexts/MetricContext"
-import type { ChartType } from "../contexts/OptionsContext"
-import { useOptions } from "../contexts/OptionsContext"
+} from "~/const"
+import { useData } from "~/contexts/DataContext"
+import { useMetrics } from "~/contexts/MetricContext"
+import type { ChartType } from "~/contexts/OptionsContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
@@ -35,7 +35,7 @@ import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { useQueryStates } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
-import { Icon } from "./Icon"
+import { Icon } from "~/components/Icon"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 

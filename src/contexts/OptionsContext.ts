@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react"
-import type { MetricType } from "../metrics/metrics"
-import { Metric } from "../metrics/metrics"
+import type { MetricType } from "~/metrics/metrics"
+import { Metric } from "~/metrics/metrics"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 

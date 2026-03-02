@@ -1,5 +1,5 @@
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { LegendBarIndicator } from "../util"
+import { LegendBarIndicator } from "~/components/util"
 import { useMemo } from "react"
 import { getLightness, numToFriendlyString } from "~/shared/util"
 import { noEntryColor } from "~/const"

@@ -1,6 +1,6 @@
 import { mdiAccountMultiple } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useModal } from "../modals/ModalManager"
+import { useModal } from "~/components/modals/ModalManager"
 import { cn } from "~/styling"
 
 export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {

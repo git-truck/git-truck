@@ -1,8 +1,8 @@
 import { dateTimeFormatShort } from "~/shared/util"
-import { useData } from "../contexts/DataContext"
-import { Code } from "./util"
+import { useData } from "~/contexts/DataContext"
+import { Code } from "~/components/util"
 import { useIsClient } from "~/hooks"
-import { Popover } from "./Popover"
+import { Popover } from "~/components/Popover"
 import { cn } from "~/styling"
 
 export function AnalysisInfo({ className = "", trigger: trigger }: { className?: string; trigger: React.ReactNode }) {

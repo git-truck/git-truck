@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import type { GitObject } from "../shared/model"
+import type { GitObject } from "~/shared/model"
 import { href, useLocation, useMatch, useNavigate } from "react-router"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"

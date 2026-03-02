@@ -7,11 +7,11 @@ import type {
   RawGitObject,
   RenameEntry,
   RenameInterval
-} from "../shared/model"
+} from "~/shared/model"
 import os from "os"
 import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
-import { getTimeIntervals } from "../shared/util.ts"
+import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 
 export default class DB {
