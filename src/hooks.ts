@@ -1,5 +1,6 @@
 import type { RefObject } from "react"
 import { useState, useEffect, useMemo, useSyncExternalStore } from "react"
+import { href, useLocation, useSubmit } from "react-router"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 import { promiseHelper } from "~/shared/util"
@@ -99,4 +100,22 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
   }
 
   return { isFullscreen, toggleFullscreen } as const
+}
+
+export function useViewAction() {
+  const location = useLocation()
+  return href("/view") + location.search
+}
+
+export function useViewSubmit() {
+  const submit = useSubmit()
+  const location = useLocation()
+
+  type Target = Parameters<typeof submit>[0]
+
+  type Options = Parameters<typeof submit>[1] & { action?: never }
+
+  return (target: Target, options?: Options) => {
+    submit(target, { ...options, action: href("/view") + location.search })
+  }
 }
