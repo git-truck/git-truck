@@ -148,6 +148,10 @@
   }
 }
 
+@utility btn--icon {
+  @apply aspect-square p-0;
+}
+
 @utility btn--hover-swap {
   @apply grid grid-cols-1 grid-rows-1 place-items-center;
 
