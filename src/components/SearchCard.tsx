@@ -119,11 +119,7 @@ export const SearchCard = memo(function SearchCard() {
             })
           }}
         />
-        <Icon
-          path={mdiMagnify}
-          size="1em"
-          className="hidden min-w-max peer-placeholder-shown:inline peer-focus:hidden"
-        />
+        <Icon path={mdiMagnify} className="hidden min-w-max peer-placeholder-shown:inline peer-focus:hidden" />
         <span className="sr-only">Search</span>
         {isTransitioning || searchText.length > 0 ? (
           <p className="text-secondary-text dark:text-secondary-text-dark absolute right-8 ml-2 text-sm select-none">
