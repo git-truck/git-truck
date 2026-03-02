@@ -12,11 +12,11 @@ import { Icon } from "~/components/Icon"
 import { useClickedObject } from "~/contexts/ClickedContext"
 import { usePath } from "~/contexts/PathContext"
 import { currentRepositoryContext, viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { openFile } from "~/shared/util.server"
 import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
 import { RepoTabs } from "~/components/RepoTabs"
 import { useQueryStates } from "nuqs"
 import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
+import { useViewAction } from "~/hooks"
 
 export function HydrateFallback() {
   return <div>Loading...</div>
@@ -43,46 +43,13 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }
 }
 
-export const action = async ({ request, context }: Route.ActionArgs) => {
-  const { instance } = context.get(currentRepositoryContext)
-
-  const formData = await request.formData()
-  const ignorePath = formData.get("ignore") as string | null
-  const unignorePath = formData.get("unignore") as string | null
-  const openPath = formData.get("open") as string | null
-
-  if (ignorePath && typeof ignorePath === "string") {
-    instance.prevInvokeReason = "ignore"
-    const hidden = await instance.db.getHiddenFiles()
-    hidden.push(ignorePath)
-    await instance.db.replaceHiddenFiles(hidden)
-
-    return null
-  }
-
-  if (unignorePath && typeof unignorePath === "string") {
-    instance.prevInvokeReason = "unignore"
-    const hidden = await instance.db.getHiddenFiles()
-    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignorePath))
-    return null
-  }
-
-  // TODO: Opening files no longer works, navigates to browse view instead
-  if (typeof openPath === "string") {
-    instance.prevInvokeReason = "open"
-    openFile(instance.repositoryPath, openPath)
-    return null
-  }
-
-  return null
-}
-
 export default function Details() {
   const { setPath } = usePath()
   const { path, authorDistributionPromise } = useLoaderData<typeof loader>()
   const data = useData()
   const { state } = useNavigation()
   const location = useLocation()
+  const viewAction = useViewAction()
   const clickedObject = location.state?.clickedObject as GitObject | null | undefined
   const setOpen = useSetOpenCollapsibleHeader()
 
@@ -101,6 +68,7 @@ export default function Details() {
   const isBlob = clickedObject.type === "blob"
 
   const extension = last(clickedObject.name.split("."))
+
   return (
     <>
       <RepoTabs />
@@ -135,18 +103,17 @@ export default function Details() {
         {isBlob ? (
           <>
             <Form className="w-max" method="post">
-              <input type="hidden" name="ignore" value={clickedObject.path} />
-              <button className="btn" type="submit" disabled={state !== "idle"} title="Hide this file">
+              <input type="hidden" name="hide" value={clickedObject.path} />
+              <button className="btn" disabled={state !== "idle"} title="Hide this file">
                 <Icon path={mdiEyeOffOutline} />
                 Hide
               </button>
             </Form>
             {clickedObject.name.includes(".") ? (
               <Form className="w-max" method="post">
-                <input type="hidden" name="ignore" value={`*.${extension}`} />
+                <input type="hidden" name="hide" value={`*.${extension}`} />
                 <button
                   className="btn"
-                  type="submit"
                   disabled={state !== "idle"}
                   title={`Hide all files with .${extension} extension`}
                 >
@@ -157,11 +124,10 @@ export default function Details() {
             ) : null}
           </>
         ) : (
-          <Form method="post" action={location.pathname}>
-            <input type="hidden" name="ignore" value={clickedObject.path} />
+          <Form method="post" action={viewAction}>
+            <input type="hidden" name="hide" value={clickedObject.path} />
             <button
               className="btn"
-              type="submit"
               disabled={state !== "idle"}
               onClick={() => {
                 setPath(resolveParentFolder(path))
@@ -266,7 +232,10 @@ function LastchangedEntry(props: { epoch: number | undefined }) {
 function PathEntry(props: { path: string }) {
   const { state } = useNavigation()
   const { clickedObject } = useClickedObject()
+  const viewAction = useViewAction()
+
   if (!clickedObject) return null
+
   return (
     <>
       <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
@@ -276,7 +245,7 @@ function PathEntry(props: { path: string }) {
         <p className="truncate" title={props.path}>
           {props.path}
         </p>
-        <Form method="post" action={location.pathname}>
+        <Form method="post" action={viewAction}>
           <input type="hidden" name="open" value={clickedObject.path} />
           <button
             className="btn--icon"

@@ -1,13 +1,14 @@
-import { useSubmit, useNavigation, useSearchParams } from "react-router"
+import { useNavigation } from "react-router"
 import { Fragment, useState, useTransition, type CSSProperties } from "react"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort, getPathFromRepoAndHead } from "~/shared/util"
+import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort } from "~/shared/util"
 import DatePicker from "react-datepicker"
 import { Handle, SliderRail, TicksByCount, Track } from "./sliderUtils"
 import { Popover } from "./Popover"
 import { cn } from "~/styling"
 import BarChart from "./BarChart"
+import { useViewSubmit } from "~/hooks"
 
 export default function Timeline({ className }: { className?: string }) {
   const [_, startTransition] = useTransition()
@@ -17,21 +18,16 @@ export default function Timeline({ className }: { className?: string }) {
   const newestChangeDate = timerange[1]
   const oldestChangeDate = timerange[0]
 
-  const submit = useSubmit()
+  const submit = useViewSubmit()
   const [range, setRange] = useState(selectedRange[0] === 0 ? timerange : selectedRange)
 
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
-  const [searchParams] = useSearchParams()
 
   function updateTimeseries(e: readonly number[]) {
     const form = new FormData()
     form.append("timeseries", `${e[0]}-${e[1]}`)
     submit(form, {
-      action: getPathFromRepoAndHead({
-        path: searchParams.get("path")!,
-        branch: databaseInfo.branch
-      }),
       method: "post"
     })
   }

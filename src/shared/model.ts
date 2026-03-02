@@ -227,5 +227,3 @@ export interface DatabaseInfo {
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
 }
-
-export type LinkSegments = Array<"view" | "browse" | "details" | "commits" | "general" | "progress">

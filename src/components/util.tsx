@@ -5,11 +5,9 @@ import clsx from "clsx"
 import { Popover } from "./Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
-import { useSubmit, useSearchParams } from "react-router"
-import { getPathFromRepoAndHead } from "~/shared/util"
 import { cn } from "~/styling"
 import { useOptions, type ChartType } from "~/contexts/OptionsContext"
-import { useIsClient } from "~/hooks"
+import { useIsClient, useViewSubmit } from "~/hooks"
 
 export const CloseButton = ({
   className = "",
@@ -39,8 +37,7 @@ export const LegendDot = ({
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
   const { chartType } = useOptions()
-  const submit = useSubmit()
-  const [searchParams] = useSearchParams()
+  const submit = useViewSubmit()
 
   if (!authorColorToChange) return <Dot className={className} chartType={chartType} color={color} />
 
@@ -49,7 +46,6 @@ export const LegendDot = ({
     form.append("authorname", author)
     form.append("authorcolor", color)
     submit(form, {
-      action: getPathFromRepoAndHead({ path: searchParams.get("path")!, branch: databaseInfo.branch }),
       method: "post"
     })
   }
