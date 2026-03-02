@@ -126,7 +126,7 @@
 }
 
 @utility btn {
-  @apply h-button tertiary flex cursor-pointer place-items-center justify-center gap-2 rounded-md fill-current px-2 text-sm font-bold text-nowrap select-none not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale hover:*:opacity-70;
+  @apply h-button tertiary flex cursor-pointer place-items-center justify-center gap-2 rounded-md fill-current px-2 text-sm font-bold text-nowrap select-none hover:*:opacity-70 not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale;
 
   &:not(.btn--primary):not(.btn--danger):not(.btn--outlined):not(.btn--text) {
     @apply border-border dark:border-border-dark hover:border-border-highlight dark:hover:border-border-highlight-dark border;
