@@ -1,10 +1,10 @@
-import { CheckboxWithLabel } from "./utils/CheckboxWithLabel"
-import { useOptions } from "../../contexts/OptionsContext"
+import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
+import { getDefaultOptionsContextValue, useOptions } from "~/contexts/OptionsContext"
 import { Icon } from "~/components/Icon"
 import { mdiClockEdit, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useState, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
-import { relatedSizeMetric } from "../Options"
+import { relatedSizeMetric } from "~/components/Options"
 
 export function SettingsModal() {
   const {
@@ -132,8 +132,11 @@ function RenderCutOff({
         value={value}
         className="mr-1 w-12 place-self-end border-b-2"
         onChange={(x) => {
-          setValue(x.target.valueAsNumber)
-          startTransition(() => setRenderCutoff(x.target.valueAsNumber))
+          const v = Number.isNaN(x.target.valueAsNumber)
+            ? getDefaultOptionsContextValue().renderCutOff
+            : x.target.valueAsNumber
+          setValue(v)
+          startTransition(() => setRenderCutoff(v))
         }}
       />
     </label>
