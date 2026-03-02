@@ -124,7 +124,7 @@ function RenderCutOff({
     >
       <span className="group flex grow items-center gap-2">
         <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
-        Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="..." className="h-5" /> : ""}
+        Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="" aria-hidden="true" className="h-5" /> : ""}
       </span>
       <input
         type="number"
