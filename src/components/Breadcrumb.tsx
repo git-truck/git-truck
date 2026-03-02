@@ -6,7 +6,7 @@ import { useQueryStates } from "nuqs"
 import { href, Link } from "react-router"
 import { viewSearchParamsConfig } from "~/routes/view"
 import { useDataNullable } from "~/contexts/DataContext"
-import { getSep, inspect } from "~/shared/util"
+import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "./GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 
@@ -59,9 +59,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           // Ignore repository root, as it is added manually above
           return []
         }
-        const fullPath = inspect(segments)
-          .slice(0, index + 1)
-          .join("/")
+        const fullPath = segments.slice(0, index + 1).join("/")
         return { type: "zoom", segment, fullPath, showAnalysisInfo: false } satisfies Segment
       })
     ]
