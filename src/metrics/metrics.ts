@@ -4,16 +4,16 @@ import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
-import type { LegendType } from "../components/legend/Legend"
-import { setExtensionColor } from "./fileExtension"
-import { getLastChangedIndex, lastChangedGroupings } from "./lastChanged"
-import { CommitAmountTranslater } from "./mostCommits"
-import { ContribAmountTranslater } from "./mostContribs"
-import { setDominantAuthorColor } from "./topContributer"
+import type { LegendType } from "~/components/legend/Legend"
+import { setExtensionColor } from "~/metrics/fileExtension"
+import { getLastChangedIndex, lastChangedGroupings } from "~/metrics/lastChanged"
+import { CommitAmountTranslater } from "~/metrics/mostCommits"
+import { ContribAmountTranslater } from "~/metrics/mostContribs"
+import { setDominantAuthorColor } from "~/metrics/topContributer"
 import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from "d3"
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
-import type { SizeMetricType } from "./sizeMetric"
+import type { SizeMetricType } from "~/metrics/sizeMetric"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 

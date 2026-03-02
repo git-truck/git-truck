@@ -1,7 +1,7 @@
 import { semverCompare } from "~/shared/util"
 import gitTruckLogo from "~/assets/truck.png"
 import gitTruckLogoGif from "~/assets/truck.gif"
-import { UpdateNotifier } from "./UpdateNotifier"
+import { UpdateNotifier } from "~/components/UpdateNotifier"
 import { useNavigation } from "react-router"
 import { cn } from "~/styling"
 

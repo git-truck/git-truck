@@ -11,14 +11,14 @@ import type {
   RenameInterval,
   FullCommitDTO,
   RepoData
-} from "../shared/model.ts"
-import { log } from "./log.server.ts"
-import { analyzeRenamedFile, promiseHelper } from "../shared/util.ts"
-import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants.ts"
+} from "~/shared/model.ts"
+import { log } from "~/analyzer/log.server.ts"
+import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 
-import type { InvocationReason } from "../shared/RefreshPolicy.ts"
-import InstanceManager from "./InstanceManager.server.ts"
+import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
+import InstanceManager from "~/analyzer/InstanceManager.server.ts"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
 export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"

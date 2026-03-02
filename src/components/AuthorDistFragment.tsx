@@ -1,6 +1,6 @@
 import { Fragment } from "react"
 import { useMetrics } from "~/contexts/MetricContext"
-import { LegendDot } from "./util"
+import { LegendDot } from "~/components/util"
 
 interface AuthorDistFragProps {
   items: { author: string; contribs: number }[]

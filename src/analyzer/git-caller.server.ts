@@ -1,14 +1,14 @@
-import { log } from "./log.server.ts"
-import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "../shared/util.server.ts"
-import { promiseHelper, branchCompare, semverCompare } from "../shared/util.ts"
+import { log } from "~/analyzer/log.server.ts"
+import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "~/shared/util.server.ts"
+import { promiseHelper, branchCompare, semverCompare } from "~/shared/util.ts"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync, readFileSync } from "node:fs"
-import type { AnalyzerData, GitRefs, Repository } from "../shared/model.ts"
-import { AnalyzerDataInterfaceVersion } from "../shared/model.ts"
+import type { AnalyzerData, GitRefs, Repository } from "~/shared/model.ts"
+import { AnalyzerDataInterfaceVersion } from "~/shared/model.ts"
 
 import os from "node:os"
-import ServerInstance from "./ServerInstance.server.ts"
+import ServerInstance from "~/analyzer/ServerInstance.server.ts"
 import { inflateSync } from "node:zlib"
 import { readFile } from "node:fs/promises"
 

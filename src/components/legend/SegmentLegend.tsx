@@ -1,10 +1,10 @@
 import type { GitBlobObject, GitObject } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { LegendBarIndicator } from "../util"
+import { LegendBarIndicator } from "~/components/util"
 import { isBlob } from "~/shared/util"
 import { useOptions } from "~/contexts/OptionsContext"
 import { cn } from "~/styling"
-import { Tick } from "../sliderUtils"
+import { Tick } from "~/components/sliderUtils"
 import { useMetrics } from "~/contexts/MetricContext"
 
 export type SegmentLegendData = {

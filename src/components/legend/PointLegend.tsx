@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { LegendDot } from "../util"
-import { ChevronButton } from "../ChevronButton"
+import { LegendDot } from "~/components/util"
+import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
 

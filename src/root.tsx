@@ -14,12 +14,12 @@ import "react-datepicker/dist/react-datepicker.css"
 import "~/tailwind.css"
 import pkg from "../package.json" with { type: "json" }
 import type { Route } from "./+types/root"
-import { Code } from "./components/util"
-import { ClearCacheForm } from "./routes/clear-cache"
-import { cn } from "./styling"
-import { getLatestVersion } from "./shared/util.server"
+import { Code } from "~/components/util"
+import { ClearCacheForm } from "~/routes/clear-cache"
+import { cn } from "~/styling"
+import { getLatestVersion } from "~/shared/util.server"
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
-import { ErrorPage } from "./components/ErrorPage"
+import { ErrorPage } from "~/components/ErrorPage"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]

@@ -3,9 +3,9 @@ import { Fragment } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import { useLocation, useNavigation, useSearchParams } from "react-router"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { LegendDot } from "./util"
+import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
-import { Popover } from "./Popover"
+import { Popover } from "~/components/Popover"
 
 type SortCommitsMethods = "date" | "author"
 

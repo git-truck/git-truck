@@ -1,7 +1,7 @@
 import { resolve } from "path"
 import os from "os"
 import { promises as fs } from "fs"
-import type { CompletedResult } from "../shared/model"
+import type { CompletedResult } from "~/shared/model"
 
 type MetadataCompletion = {
   hash: string

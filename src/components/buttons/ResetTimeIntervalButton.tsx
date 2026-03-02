@@ -1,7 +1,7 @@
 import { mdiRestore } from "@mdi/js"
 import { Form } from "react-router"
 import { cn } from "~/styling"
-import { Icon } from "../Icon"
+import { Icon } from "~/components/Icon"
 import { useData } from "~/contexts/DataContext"
 import { useViewAction } from "~/hooks"
 

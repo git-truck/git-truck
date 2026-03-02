@@ -1,6 +1,6 @@
 import type { GitBlobObject } from "~/shared/model"
-import { getColorFromExtension } from "./metricUtils"
-import type { MetricCache } from "./metrics"
+import { getColorFromExtension } from "~/metrics/metricUtils"
+import type { MetricCache } from "~/metrics/metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import { noEntryColor } from "~/const"

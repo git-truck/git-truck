@@ -1,8 +1,8 @@
 import { mdiFlaskOutline, mdiArrowUpBoldCircleOutline } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { generateVersionComparisonLink } from "~/shared/util"
-import { Code } from "./util"
-import { Popover } from "./Popover"
+import { Code } from "~/components/util"
+import { Popover } from "~/components/Popover"
 import { cn } from "~/styling"
 
 export function UpdateNotifier({

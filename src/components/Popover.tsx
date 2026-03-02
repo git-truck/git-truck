@@ -1,5 +1,5 @@
 import { ArrowContainer, Popover as ReactPopower, type PopoverState } from "react-tiny-popover"
-import { CloseButton } from "./util"
+import { CloseButton } from "~/components/util"
 import { useState } from "react"
 
 export function Popover({
