@@ -135,9 +135,10 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }, viewSearchParams)
 
   if (shouldRedirect) {
-    const redirectUrl = viewSerializer(new URL(request.url), params)
+    const redirectUrl = new URL(request.url)
+    redirectUrl.search = viewSerializer(params)
     log.warn(`At least one required parameter is missing, redirecting to ${redirectUrl}`)
-    throw redirect(redirectUrl)
+    throw redirect(redirectUrl.toString())
   }
 
   return {
