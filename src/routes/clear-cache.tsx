@@ -1,12 +1,13 @@
 import { mdiDeleteForever } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Link, redirect, useFetcher, useLoaderData, useLocation } from "react-router"
+import { href, Link, redirect, useFetcher, useLoaderData, useLocation } from "react-router"
 import DB from "~/analyzer/DB.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/clear-cache"
 import { cn } from "~/styling"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { versionContext } from "~/root"
+import { parseAsString, useQueryState } from "nuqs"
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   return { versionInfo: context.get(versionContext) }
@@ -14,6 +15,9 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const redirectPath = new URL(request.url).searchParams.get("redirect") as string | null
+  if (!redirectPath) {
+    throw new Error("Missing redirect path")
+  }
   await InstanceManager.closeAllDBConnections()
   await DB.clearCache()
   throw redirect(redirectPath ?? "/")
@@ -21,19 +25,20 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
 export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?: string; className?: string } = {}) {
   const location = useLocation()
-  const fetcher = useFetcher({
-    key: "clear-cache-form"
-  })
 
-  const formAction = `/clear-cache?${new URLSearchParams({
-    redirect: redirectPath ?? location.pathname + location.search
-  }).toString()}`
+  const formAction =
+    href("/clear-cache") +
+    "?" +
+    new URLSearchParams({
+      redirect: redirectPath ?? location.pathname + location.search
+    }).toString()
+
+  const fetcher = useFetcher()
   const isTransitioning = fetcher.state !== "idle"
 
   return (
-    <fetcher.Form key={fetcher.state} action={formAction} method="post">
+    <fetcher.Form action={formAction} method="post">
       <button
-        type="submit"
         disabled={isTransitioning}
         className={cn("btn btn--danger", className)}
         title="Click here if you are experiencing issues"
@@ -47,6 +52,7 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
 
 export default function ClearCache() {
   const { versionInfo } = useLoaderData<typeof loader>()
+  const [redirect] = useQueryState("redirect", parseAsString.withDefault("/"))
 
   return (
     <>
@@ -64,14 +70,14 @@ export default function ClearCache() {
             <Icon path={mdiDeleteForever} className="inline-block h-12" />
             <div>
               <span className="font-bold">Warning: </span>
-              <span>Merged authors and hidden files will be reset.</span>
+              <span>Grouped authors and Hidden files will be reset.</span>
             </div>
           </div>
           <div className="flex justify-end gap-2">
             <Link to="/" className="btn btn--text">
               Go back
             </Link>
-            <ClearCacheForm redirectPath="/" />
+            <ClearCacheForm redirectPath={redirect} />
           </div>
         </div>
       </div>
