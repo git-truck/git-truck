@@ -15,7 +15,7 @@ const modals = {
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
 type ModalKey = (typeof MODAL_KEYS)[number] | null
 
-const modalSearchParamConfig = parseAsStringLiteral(MODAL_KEYS)
+const modalSearchParamConfig = parseAsStringLiteral(MODAL_KEYS).withOptions({ shallow: false })
 
 export function useModal(modalKey: ModalKey | null = null) {
   const [modal, setModal] = useQueryState("modal", modalSearchParamConfig)
@@ -29,23 +29,28 @@ export function ModalManager() {
   const [modalKey, setModal] = useQueryState("modal", modalSearchParamConfig)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  const onClose = () => setModal(null)
+  const onClose = () => {
+    return setModal(null)
+  }
 
   useEffect(() => {
-    document.body.style.setProperty("overflow", modalKey ? "hidden" : null)
-
-    if (!dialogRef.current) {
-      return
-    }
-
     const dialog = dialogRef.current
 
-    if (modalKey) {
-      dialogRef.current.showModal()
+    if (!dialog) {
       return
     }
-    dialog.close()
-    return () => dialog.close()
+
+    if (modalKey) {
+      document.body.style.setProperty("overflow", "hidden")
+      dialog.showModal()
+    } else {
+      document.body.style.setProperty("overflow", null)
+      dialog.close()
+    }
+
+    return () => {
+      document.body.style.setProperty("overflow", null)
+    }
   }, [modalKey])
 
   if (!modalKey) {
@@ -62,10 +67,10 @@ export function ModalManager() {
       // reason: closedby is a valid attribute on <dialog> elements, but React doesn't know about it
       // eslint-disable-next-line react/no-unknown-property
       closedby="any"
-      className="z-10 m-auto flex flex-col items-start justify-stretch bg-transparent text-inherit backdrop:bg-gray-500/75 backdrop:p-0"
+      className="z-10 m-auto flex flex-col bg-transparent text-inherit backdrop:bg-gray-500/75"
       onClose={onClose}
     >
-      <div className="card m-auto h-full w-full max-w-(--breakpoint-2xl) gap-2 overflow-hidden rounded-xl bg-gray-100 p-4 shadow-sm">
+      <div className="card flex min-h-0 max-w-(--breakpoint-2xl) gap-2 rounded-xl p-4 shadow-sm">
         <div className="flex justify-between gap-2">
           <div className="flex flex-row items-center gap-2">
             <Icon path={modal.icon} size="1.75em" />
