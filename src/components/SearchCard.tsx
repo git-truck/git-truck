@@ -68,7 +68,7 @@ export const SearchCard = memo(function SearchCard() {
         event.currentTarget.querySelector("input")?.blur()
       }}
     >
-      <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline" type="submit">
+      <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline">
         <Icon path={mdiClose} size="1em" />
       </button>
       <label
