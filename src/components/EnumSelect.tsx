@@ -22,7 +22,7 @@ export function IconRadioGroup<const G extends Record<string, string>>({
   onChange,
   large,
   iconMap,
-  ariaLabel = "Select option"
+  ariaLabel
 }: IconRadioGroupProps<G>) {
   const enumEntries = Object.entries(group) as [Extract<keyof G, string>, string][]
 
