@@ -405,8 +405,7 @@ export function iconToURL(icon: string) {
 }
 
 /**
- * Normalize a path to always use forward slashes,
- * optionally resolves relative segments, and removes trailing slash.
+ * Normalize a path to always use forward slashes and removes trailing slash.
  */
 export function normalizePath(p: string): string {
   // Backslashes → forward slashes
@@ -437,16 +436,22 @@ export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
   const hasRootPrefix = path === tree.name || path.startsWith(`${tree.name}/`)
   if (!hasRootPrefix) return tree
 
-  const relativePath = path.length === tree.name.length ? "" : path.substring(tree.name.length + 1)
+  let relativePath = path.length === tree.name.length ? "" : path.substring(tree.name.length + 1)
   if (!relativePath) return tree
 
+  relativePath = normalizePath(relativePath)
+
   let currentTree: GitTreeObject = tree
-  const steps = relativePath.split("/")
+  const separator = getSep(relativePath)
+  const steps = relativePath.split(separator)
+
   for (let i = 0; i < steps.length; i++) {
     let foundStep = false
+
     for (const child of currentTree.children) {
       if (child.type === "tree") {
-        const childSteps = child.name.split("/")
+        const childSteps = child.name.split(separator)
+
         if (childSteps[0] === steps[i]) {
           currentTree = child
           i += childSteps.length - 1
@@ -455,6 +460,7 @@ export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
         }
       }
     }
+
     // If a step is not found, abort and return root tree
     if (!foundStep) {
       console.warn(`Could not find step ${steps[i]} in subtree ${currentTree.name}`)
