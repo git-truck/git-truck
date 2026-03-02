@@ -1,11 +1,10 @@
 import { useRef, useDeferredValue } from "react"
 import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
-import { useComponentSize } from "~/hooks"
+import { useComponentSize, useViewSubmit } from "~/hooks"
 import { treemapBlobBorderRadius, treemapPaddingInner } from "~/const"
 import { cn } from "~/styling"
-import { expandIntervalToRange, getPathFromRepoAndHead } from "~/shared/util"
-import { useSearchParams, useSubmit } from "react-router"
+import { expandIntervalToRange } from "~/shared/util"
 
 const BarChart = () => {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -38,17 +37,12 @@ const BarChart = () => {
   // Generate nice tick values based on data range
   // const ticks = timeScale.ticks(Math.min(8, Math.floor(width / 80)))
 
-  const [searchParams] = useSearchParams()
-  const submit = useSubmit()
+  const submit = useViewSubmit()
 
   function updateTimeseries(e: readonly number[]) {
     const form = new FormData()
     form.append("timeseries", `${e[0]}-${e[1]}`)
     submit(form, {
-      action: getPathFromRepoAndHead({
-        path: searchParams.get("path")!,
-        branch: databaseInfo.branch
-      }),
       method: "post"
     })
   }
