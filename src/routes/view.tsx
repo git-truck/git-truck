@@ -1,4 +1,4 @@
-import { mdiMenu, mdiRestore } from "@mdi/js"
+import { mdiMenu } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import {
   Await,
@@ -423,14 +423,14 @@ export default function Repo() {
               className={cn(
                 `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"] lg:h-screen lg:grid-cols-[0_1fr] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main"]`,
                 {
-                  "gap-2 lg:grid-cols-[var(--spacing-sidepanel)_1fr]": leftExpanded
+                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr]": leftExpanded
                 }
               )}
             >
               <Activity mode={leftExpanded ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "*:not-first:m-2 lg:pr-0 lg:transition-transform",
+                    "*:not-first:m-2 lg:transition-transform",
                     leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
@@ -480,19 +480,16 @@ export default function Repo() {
               </Activity>
               <main
                 className={cn(
-                  "relative grid h-full min-h-screen min-w-25 grid-rows-[auto_1fr_auto] gap-2 [grid-area:main] lg:transition-transform"
+                  "relative grid h-full min-h-screen min-w-25 grid-rows-[auto_1fr_auto] gap-2 p-2 [grid-area:main] lg:transition-transform"
                 )}
               >
-                <header className="from-primary-bg dark:from-primary-bg-dark to-primary-bg dark:to-primary-bg-dark top-0 right-0 left-0 z-10 grid grid-flow-col items-center justify-between gap-2 bg-linear-to-r via-transparent p-2">
+                <header className="grid grid-flow-col items-center justify-between gap-2">
                   <div className="flex gap-2">
                     {!leftExpanded ? (
                       <button title="Show left panel" className="btn btn--text aspect-square" onClick={toggleLeft}>
                         <Icon path={mdiMenu} size={1} />
                       </button>
-                    ) : (
-                      <div />
-                    )}
-                    {/* <AnalysisInfo /> */}
+                    ) : null}
                     <BrowseParentFolder />
                     <Breadcrumb zoom />
                   </div>
@@ -548,7 +545,7 @@ export default function Repo() {
                     )}
                   </ClientOnly>
                 </div>
-                <div className="flex flex-col gap-1 px-2 text-center select-none">
+                <div className="flex flex-col text-center select-none">
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="card__title">Commits per {data.databaseInfo.commitCountPerTimeIntervalUnit}</h2>
                     {/* TODO: Add presets, like "Last 24 hours, last 7 days, last 30 days, last years etc." */}
