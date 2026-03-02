@@ -26,7 +26,7 @@ import { useData } from "../contexts/DataContext"
 import { useMetrics } from "../contexts/MetricContext"
 import type { ChartType } from "../contexts/OptionsContext"
 import { useOptions } from "../contexts/OptionsContext"
-import { isDarkColor, isBlob, isTree, trimFilenameFromPath, findSubTree } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -116,14 +116,13 @@ export const Chart = memo(function Chart({
       size,
       chartType,
       sizeMetricType: sizeMetric,
-      renderCutoff,
-      zoomPath: zoomPath ?? undefined
+      renderCutoff
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
       console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size, chartType, sizeMetric, zoomPath, renderCutoff, databaseInfo, filetree])
+  }, [size, chartType, sizeMetric, renderCutoff, databaseInfo, filetree])
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -522,8 +521,7 @@ function createPartitionedHiearchy({
   size,
   chartType,
   sizeMetricType,
-  renderCutoff,
-  zoomPath
+  renderCutoff
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
@@ -531,7 +529,6 @@ function createPartitionedHiearchy({
   chartType: ChartType
   sizeMetricType: SizeMetricType
   renderCutoff: number
-  zoomPath?: string
 }) {
   const hiearchy = hierarchy<GitObject>(tree)
     .sum((d) => {
