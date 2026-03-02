@@ -6,7 +6,7 @@ export function HideFilesButton() {
   const { openModal } = useModal("ignore-files")
 
   return (
-    <button className="btn btn--icon" title="Hidden files" onClick={() => openModal()}>
+    <button className="btn btn--icon" title="Hidden files" aria-label="Hidden files" onClick={() => openModal()}>
       <Icon path={mdiEyeOff} />
     </button>
   )

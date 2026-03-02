@@ -10,7 +10,7 @@ import { CloseButton } from "~/components/util"
 const modals = {
   "app-settings": { content: <SettingsModal />, title: "Settings", icon: mdiCog },
   "group-authors": { content: <GroupAuthorsModal />, title: "Group Authors", icon: mdiAccountMultiple },
-  "ignore-files": { content: <HideFilesModal />, title: "Ignore files", icon: mdiEyeOff }
+  "ignore-files": { content: <HideFilesModal />, title: "Hide files", icon: mdiEyeOff }
 } as const satisfies Record<string, { content: ReactNode; title: string; icon: string }>
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
 type ModalKey = (typeof MODAL_KEYS)[number] | null
