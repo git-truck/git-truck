@@ -7,7 +7,6 @@ import {
   Outlet,
   redirect,
   createContext,
-  Form,
   useLocation,
   href,
   useNavigate
@@ -49,6 +48,7 @@ import { useQueryState, type inferParserType } from "nuqs"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
+import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -549,24 +549,7 @@ export default function Repo() {
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="card__title">Commits per {data.databaseInfo.commitCountPerTimeIntervalUnit}</h2>
                     {/* TODO: Add presets, like "Last 24 hours, last 7 days, last 30 days, last years etc." */}
-                    <Form
-                      className={cn({
-                        invisible:
-                          data.databaseInfo.timerange[0] === data.databaseInfo.selectedRange[0] &&
-                          data.databaseInfo.timerange[1] === data.databaseInfo.selectedRange[1]
-                      })}
-                      method="post"
-                    >
-                      <input
-                        type="hidden"
-                        name="timeseries"
-                        value={`${data.databaseInfo.timerange[0]}-${data.databaseInfo.timerange[1]}`}
-                      />
-                      <button className={cn("btn btn--text", {})}>
-                        <Icon path={mdiRestore} />
-                        Reset time interval
-                      </button>
-                    </Form>
+                    <ResetTimeIntervalButton />
                   </div>
                   <Timeline key={`${data.databaseInfo.selectedRange[0]}-${data.databaseInfo.selectedRange[1]}`} />
                 </div>
