@@ -1,15 +1,16 @@
 import { mdiDiceMultipleOutline } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Form, href, useNavigation } from "react-router"
+import { Form, useNavigation } from "react-router"
+import { useViewAction } from "~/hooks"
 
 export function ShuffleColorsButton() {
   const transitionState = useNavigation()
-  const action = href("/view")
+  const viewAction = useViewAction()
 
   return (
-    <Form method="post" action={action}>
+    <Form method="post" action={viewAction}>
       <input type="hidden" name="rerollColors" value="" />
-      <button className="btn w-full" type="submit" disabled={transitionState.state !== "idle"}>
+      <button className="btn w-full" disabled={transitionState.state !== "idle"}>
         <Icon path={mdiDiceMultipleOutline} />
         Shuffle colors
       </button>
