@@ -452,7 +452,7 @@ export default function Repo() {
               </Activity>
               <main
                 className={cn(
-                  "relative grid h-full min-w-25 grid-rows-[auto_1fr_auto] gap-2 [grid-area:main] lg:transition-transform"
+                  "relative grid h-full min-h-screen min-w-25 grid-rows-[auto_1fr_auto] gap-2 [grid-area:main] lg:transition-transform"
                 )}
               >
                 <header className="from-primary-bg dark:from-primary-bg-dark to-primary-bg dark:to-primary-bg-dark top-0 right-0 left-0 z-10 grid grid-flow-col items-center justify-between gap-2 bg-linear-to-r via-transparent p-2">
@@ -476,7 +476,7 @@ export default function Repo() {
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
                         key={data.databaseInfo.branch}
-                        className="max-w-3xs"
+                        className="max-w-32"
                         title="Select branch"
                         defaultValue={data.databaseInfo.branch}
                         headGroups={data.repo.refs}
