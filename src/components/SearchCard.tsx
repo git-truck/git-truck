@@ -12,7 +12,6 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useKey } from "~/hooks"
 import { useQueryState } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/view"
 
 function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, GitObject> = {}
@@ -30,7 +29,7 @@ function findSearchResults(tree: GitTreeObject, searchString: string): SearchRes
 
 export const SearchCard = memo(function SearchCard() {
   const searchFieldRef = useRef<HTMLInputElement>(null)
-  const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
+  const [zoomPath] = useQueryState("zoomPath")
   const [isTransitioning, startTransition] = useTransition()
   const [searchText, setSearchText] = useState("")
   const { clickedObject, setClickedObject } = useClickedObject()
