@@ -1,15 +1,16 @@
 import { useTransition, useState, type JSX } from "react"
-import { useNavigation, useSubmit, Form, href, useLocation } from "react-router"
+import { useNavigation, Form } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
 import { mdiArrowUp, mdiAccountMultiplePlus, mdiAccountMultipleMinus } from "@mdi/js"
 import { LegendDot } from "~/components/util"
+import { useViewAction, useViewSubmit } from "~/hooks"
 
 export function GroupAuthorsModal() {
   const { databaseInfo } = useData()
-  const submit = useSubmit()
+  const submit = useViewSubmit()
   const { authors } = databaseInfo
   const authorUnions = databaseInfo.authorUnions
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([])
@@ -17,7 +18,7 @@ export function GroupAuthorsModal() {
   const navigationData = useNavigation()
   const [, authorColors] = useMetrics()
   const [, startTransition] = useTransition()
-  const location = useLocation()
+  const viewAction = useViewAction()
 
   const flattedUnionedAuthors = authorUnions
     .reduce((acc, union) => {
@@ -30,9 +31,7 @@ export function GroupAuthorsModal() {
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
-    // TODO: This closes the modal currently
     submit(form, {
-      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -41,9 +40,7 @@ export function GroupAuthorsModal() {
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([]))
 
-    // TODO: This closes the modal currently
     submit(form, {
-      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -53,9 +50,7 @@ export function GroupAuthorsModal() {
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify([...authorUnions, selectedAuthors]))
 
-    // TODO: This closes the modal currently
     submit(form, {
-      action: href("/view") + location.search,
       method: "post"
     })
     setSelectedAuthors([])
@@ -71,9 +66,7 @@ export function GroupAuthorsModal() {
     const form = new FormData()
     form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
-    // TODO: This closes the modal currently
     submit(form, {
-      action: href("/view") + location.search,
       method: "post"
     })
   }
@@ -90,24 +83,27 @@ export function GroupAuthorsModal() {
   const ungroupedAuthorsFiltered = ungroupedAuthorsSorted.filter((author) =>
     author.toLowerCase().includes(filter.toLowerCase())
   )
-  const ungroupedAuthorsEntries = ungroupedAuthorsFiltered.map((author) => (
-    <CheckboxWithLabel
-      key={author}
-      className="hover:opacity-70"
-      checked={selectedAuthors.includes(author)}
-      onChange={(e) => {
-        const newSelectedAuthors = e.target?.checked
-          ? [...selectedAuthors, author]
-          : selectedAuthors.filter((a) => a !== author)
-        setSelectedAuthors(newSelectedAuthors)
-      }}
-    >
-      <div className="inline-flex flex-row place-items-center gap-2">
-        <LegendDot dotColor={getColorFromDisplayName(author)} />
-        {author}
-      </div>
-    </CheckboxWithLabel>
-  ))
+  const ungroupedAuthorsEntries = ungroupedAuthorsFiltered.map((author) => {
+    const isAuthorSelected = selectedAuthors.includes(author)
+    return (
+      <CheckboxWithLabel
+        key={author + isAuthorSelected}
+        className="hover:opacity-70"
+        checked={isAuthorSelected}
+        onChange={(e) => {
+          const newSelectedAuthors = e.target?.checked
+            ? [...selectedAuthors, author]
+            : selectedAuthors.filter((a) => a !== author)
+          setSelectedAuthors(newSelectedAuthors)
+        }}
+      >
+        <div className="inline-flex flex-row place-items-center gap-2">
+          <LegendDot dotColor={getColorFromDisplayName(author)} />
+          {author}
+        </div>
+      </CheckboxWithLabel>
+    )
+  })
 
   const groupedAuthorsEntries = authorUnions.map((aliasGroup, aliasGroupIndex) => {
     const displayName = aliasGroup[0]
@@ -115,7 +111,10 @@ export function GroupAuthorsModal() {
     const color = getColorFromDisplayName(displayName)
 
     return (
-      <div key={aliasGroupIndex} className="card group m-0 flex h-full flex-col p-2">
+      <div
+        key={aliasGroupIndex}
+        className="card bg-tertiary-bg dark:bg-tertiary-bg-dark group m-0 flex h-full flex-col p-2"
+      >
         <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={color} />
           <b className="truncate" title={displayName}>
@@ -135,7 +134,7 @@ export function GroupAuthorsModal() {
           ))}
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <Form action={href("/view") + location.search} method="post">
+          <Form method="post" action={viewAction}>
             <input type="hidden" name="unionedAuthors" value={JSON.stringify(authorUnions)} />
             <button
               className="btn"
@@ -152,7 +151,6 @@ export function GroupAuthorsModal() {
                 form.append("unionedAuthors", JSON.stringify(newAuthorUnions))
 
                 submit(form, {
-                  action: href("/view") + location.search,
                   method: "post"
                 })
                 setSelectedAuthors([])
@@ -170,40 +168,15 @@ export function GroupAuthorsModal() {
   })
 
   return (
-    <div className="m-auto grid h-full max-h-200 w-full max-w-(--breakpoint-2xl) grid-cols-[1fr_1fr] grid-rows-[max-content_1fr] gap-2 overflow-hidden bg-gray-100 p-4">
-      <div className="flex justify-between">
-        <h3 className="grow text-center text-lg font-bold">Ungrouped Authors ({ungroupedAuthorsSorted.length})</h3>
-        <div className="flex justify-end gap-2">
-          <button
-            className="btn btn--primary justify-self-end"
-            title="Group the selected authors"
-            disabled={disabled || selectedAuthors.length < 2}
-            onClick={groupSelectedAuthors}
-          >
-            <Icon path={mdiAccountMultiplePlus} size={1} />
-            Create group
-          </button>
-        </div>
-      </div>
-      <div className="flex justify-between">
-        <h3 className="grow text-center text-lg font-bold">Author Groups ({groupedAuthorsEntries.length})</h3>
-        <div className="flex justify-end gap-4">
-          <button
-            className="btn btn--danger"
-            disabled={disabled || authorUnions.length === 0}
-            onClick={() => {
-              if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
-            }}
-          >
-            <Icon path={mdiAccountMultipleMinus} size={1} />
-            Ungroup all
-          </button>
-        </div>
+    <div className="flex min-h-0 w-auto max-w-(--breakpoint-lg) min-w-0 flex-col gap-2 p-4">
+      <div className="grid grid-cols-[1fr_1fr] gap-2">
+        <h3 className="text-center text-lg font-bold">Ungrouped Authors ({ungroupedAuthorsSorted.length})</h3>
+        <h3 className="text-center text-lg font-bold">Author Groups ({groupedAuthorsEntries.length})</h3>
       </div>
 
-      <div className="max-h-full overflow-y-scroll">
-        <div className="h-fill flex min-h-0 flex-col rounded-md dark:bg-gray-700">
-          <div className="sticky top-0 z-10 flex gap-2 bg-gray-100 p-2 dark:bg-gray-700">
+      <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr] gap-2">
+        <div className="flex min-h-0 flex-col rounded-md">
+          <div className="flex gap-2 p-2">
             <input
               className="input min-w-0"
               type="search"
@@ -232,26 +205,51 @@ export function GroupAuthorsModal() {
               {selectedAuthors.length === ungroupedAuthorsFiltered.length ? "Deselect all" : "Select all"}
             </button>
           </div>
-          <div className="min-h-fill max-h-full overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {ungroupedAuthorsEntries.length > 0 ? (
               ungroupedAuthorsEntries
             ) : (
-              <p className="place-self-center">
+              <p className="place-self-center text-sm">
                 {filter.length > 0 ? "No authors found" : "All authors have been grouped"}
               </p>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="min-h-0 overflow-y-auto">
-        <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md bg-white p-4 shadow-sm lg:grid-cols-2 xl:grid-cols-3 dark:bg-gray-700">
-          {authorUnions.length > 0 ? (
-            groupedAuthorsEntries
-          ) : (
-            <p className="place-self-center">No authors have been grouped yet</p>
-          )}
+        <div className="min-h-0 overflow-y-auto">
+          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-2 xl:grid-cols-3">
+            {authorUnions.length > 0 ? (
+              groupedAuthorsEntries
+            ) : (
+              <p className="col-span-2 text-center text-sm">No authors have been grouped yet</p>
+            )}
+          </div>
         </div>
+      </div>
+      <div className="grid grid-cols-[1fr_1fr] gap-2">
+        <button
+          className="btn btn--primary mx-auto w-fit"
+          title={
+            disabled || selectedAuthors.length < 2
+              ? "Select at least 2 authors to group them"
+              : "Group the selected authors"
+          }
+          disabled={disabled || selectedAuthors.length < 2}
+          onClick={groupSelectedAuthors}
+        >
+          <Icon path={mdiAccountMultiplePlus} size={1} />
+          Create group
+        </button>
+        <button
+          className="btn btn--danger mx-auto w-fit"
+          disabled={disabled || authorUnions.length === 0}
+          onClick={() => {
+            if (confirm("Are you sure you want to ungroup all grouped authors?")) ungroupAll()
+          }}
+        >
+          <Icon path={mdiAccountMultipleMinus} size={1} />
+          Ungroup all
+        </button>
       </div>
     </div>
   )
