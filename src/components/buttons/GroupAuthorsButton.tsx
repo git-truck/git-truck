@@ -1,12 +1,15 @@
 import { mdiAccountMultiple } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useModal } from "../modals/ModalManager"
+import { cn } from "~/styling"
 
 export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
   const { openModal } = useModal("group-authors")
   return (
     <button
-      className="btn hover:text-primary-text dark:hover:text-primary-text-dark relative flex cursor-pointer justify-between gap-2"
+      className={cn("btn", {
+        "btn--icon": compact
+      })}
       title="Group authors"
       onClick={() => openModal()}
     >

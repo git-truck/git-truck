@@ -9,7 +9,7 @@ export function RefreshButton() {
   return (
     <Form method="post" action={navigation.location?.pathname}>
       <input type="hidden" name="refresh" value="true" />
-      <button type="submit" className="btn" disabled={isRefreshing} title="Refresh analysis">
+      <button className="btn btn--icon" disabled={isRefreshing} title="Refresh analysis">
         <Icon path={mdiRefresh} size="1.25em" className={cn({ "animate-spin": isRefreshing })} />
       </button>
     </Form>
