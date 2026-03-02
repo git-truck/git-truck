@@ -3,10 +3,10 @@ import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { cn } from "~/styling"
 import { useQueryStates } from "nuqs"
-import { href, useNavigate } from "react-router"
+import { href, Link } from "react-router"
 import { viewSearchParamsConfig } from "~/routes/view"
 import { useDataNullable } from "~/contexts/DataContext"
-import { comparePaths, getSep } from "~/shared/util"
+import { getSep, inspect } from "~/shared/util"
 import { AnalysisInfo } from "./GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 
@@ -14,15 +14,14 @@ type Segment = {
   type: "browse" | "zoom" | "filler"
   segment: string
   fullPath: string
-  isRepo: boolean
+  showAnalysisInfo: boolean
 }
 
 export function Breadcrumb({ className = "", zoom = false }: { className?: string; zoom?: boolean }) {
   const [browseParams] = useQueryStates(browseSearchParamsConfig)
-  const [{ path, zoomPath }, setSearchParams] = useQueryStates(viewSearchParamsConfig)
+  const [viewParams, setViewParams] = useQueryStates(viewSearchParamsConfig)
+  const { path, zoomPath } = viewParams
   const data = useDataNullable()
-
-  const navigate = useNavigate()
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
@@ -35,26 +34,35 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           type: "browse",
           segment: segment.length === 0 && i === 0 ? "/" : segment,
           fullPath: i === 0 ? fullPath + getSep(path) : fullPath,
-          isRepo: i === segments.length - 1
+          showAnalysisInfo: false
         } satisfies Segment
       })
       .filter((segment) => segment.segment.length > 0)
+
     const zoomSegments = [
+      // Parent folder
       {
         type: "browse",
         segment: data?.repo.parentDirName ?? "",
         fullPath: data?.repo.parentDirPath ?? "",
-        isRepo: false
+        showAnalysisInfo: false
       } as const,
+      // Repository root
       {
-        type: "browse",
+        type: "zoom",
         segment: data?.repo.repositoryName ?? "",
-        fullPath: data?.repo.repositoryPath ?? "",
-        isRepo: true
+        fullPath: data?.repo.repositoryName ?? "",
+        showAnalysisInfo: true
       } as const,
-      ...(zoomPath?.split(getSep(zoomPath)) ?? []).slice(1).map((segment, index, segments) => {
-        const fullPath = segments.slice(0, index + 1).join("/")
-        return { type: "zoom", segment, fullPath, isRepo: index === 0 } satisfies Segment
+      ...(zoomPath?.split(getSep(zoomPath)) ?? []).flatMap((segment, index, segments) => {
+        if (segment === data?.repo.repositoryName) {
+          // Ignore repository root, as it is added manually above
+          return []
+        }
+        const fullPath = inspect(segments)
+          .slice(0, index + 1)
+          .join("/")
+        return { type: "zoom", segment, fullPath, showAnalysisInfo: false } satisfies Segment
       })
     ]
     const segments = zoom ? zoomSegments : pathSegments
@@ -63,22 +71,14 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       return [
         segments[0],
         segments[1],
-        { type: "filler", segment: "...", fullPath: "", isRepo: false } satisfies Segment,
+        { type: "filler", segment: "...", fullPath: "", showAnalysisInfo: false } satisfies Segment,
         segments[segments.length - 2],
         segments[segments.length - 1]
       ] satisfies Array<Segment>
     }
 
     return segments
-  }, [
-    data?.repo.parentDirName,
-    data?.repo.parentDirPath,
-    data?.repo.repositoryName,
-    data?.repo.repositoryPath,
-    path,
-    zoom,
-    zoomPath
-  ])
+  }, [data?.repo, path, zoom, zoomPath])
 
   return (
     <div
@@ -87,8 +87,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         className
       )}
     >
-      {breadcrumbSegments.map(({ type, segment, fullPath }, i) => {
-        const isRepo = data && comparePaths(fullPath, data.repo.repositoryPath)
+      {breadcrumbSegments.map(({ type, segment, fullPath, showAnalysisInfo: isRepo }, i) => {
         const title = isRepo
           ? "Reset zoom to repository root"
           : type === "browse"
@@ -96,17 +95,6 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             : `Zoom to ${segment} directory`
         const isFirst = i === 0
         const isLast = breadcrumbSegments.length - 1 === i
-
-        const onClick = () => {
-          if (type === "browse") {
-            navigate(href("/browse") + browseSerializer({ ...browseParams, path: fullPath, search: null }))
-            return
-          }
-          if (!data) {
-            throw Error("Attempting to access data when none is loaded")
-          }
-          setSearchParams((prev) => ({ ...prev, zoomPath: fullPath }))
-        }
 
         const content = (
           <>
@@ -119,9 +107,25 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             <span className="flex items-center gap-1 truncate font-bold" title={fullPath}>
               {content}
             </span>
+          ) : type === "browse" ? (
+            <Link
+              to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
+              title={title}
+              className="btn btn--primary truncate"
+            >
+              {content}
+            </Link>
           ) : (
-            // TODO: This should be a link
-            <button title={title} className="btn btn--primary truncate" onClick={onClick}>
+            <button
+              title={title}
+              className="btn btn--primary truncate"
+              onClick={() => {
+                if (!data) {
+                  throw Error("Attempting to access data when none is loaded")
+                }
+                setViewParams((prev) => ({ ...prev, zoomPath: fullPath }))
+              }}
+            >
               {content}
             </button>
           )
