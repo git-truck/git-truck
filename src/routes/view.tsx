@@ -20,10 +20,10 @@ import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath } from "~/shared/util.server"
+import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath, openFile } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
-import { HiddenFiles } from "~/components/HiddenFiles"
+import { HideFilesButton } from "~/components/buttons/HideFilesButton"
 import { Legend } from "~/components/legend/Legend"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { Options } from "~/components/Options"
@@ -148,7 +148,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 }
 
 export const action = async ({ request, context }: Route.ActionArgs) => {
-  const { instance } = context.get(currentRepositoryContext)
+  const { instance, repositoryPath } = context.get(currentRepositoryContext)
 
   const formData = await request.formData()
   const refresh = formData.get("refresh")
@@ -157,10 +157,36 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   const timeseries = formData.get("timeseries")
   const authorname = formData.get("authorname")
   const authorcolor = formData.get("authorcolor")
+  const ignorePath = formData.get("hide") as string | null
+  const unignorePath = formData.get("show") as string | null
+  const openPath = formData.get("open") as string | null
 
   instance.prevInvokeReason = "unknown"
   if (refresh) {
     instance.prevInvokeReason = "refresh"
+    return null
+  }
+
+  if (ignorePath && typeof ignorePath === "string") {
+    log.info("Ignoring path: " + ignorePath)
+    instance.prevInvokeReason = "hide"
+    const hidden = await instance.db.getHiddenFiles()
+    hidden.push(ignorePath)
+    await instance.db.replaceHiddenFiles(hidden)
+
+    return null
+  }
+
+  if (unignorePath && typeof unignorePath === "string") {
+    instance.prevInvokeReason = "show"
+    const hidden = await instance.db.getHiddenFiles()
+    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignorePath))
+    return null
+  }
+
+  if (typeof openPath === "string") {
+    instance.prevInvokeReason = "open"
+    openFile(repositoryPath, openPath)
     return null
   }
 
@@ -492,7 +518,7 @@ export default function Repo() {
                       <div />
                     )}
                     <RefreshButton />
-                    <HiddenFiles />
+                    <HideFilesButton />
                     <GroupAuthorsButton compact />
                     <SettingsButton />
                     <FullscreenButton />

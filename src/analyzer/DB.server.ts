@@ -121,9 +121,13 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR,
-        hash VARCHAR,
-        type VARCHAR
       );
+
+      -- Migrations
+      CREATE SEQUENCE IF NOT EXISTS hiddenfiles_id_sequence START 1;
+      ALTER TABLE hiddenfiles ADD COLUMN IF NOT EXISTS id INTEGER DEFAULT nextval('hiddenfiles_id_sequence');
+      ALTER TABLE files ADD COLUMN IF NOT EXISTS hash VARCHAR;
+      ALTER TABLE files ADD COLUMN IF NOT EXISTS type VARCHAR;
     `)
   }
 
@@ -307,7 +311,7 @@ export default class DB {
 
   public async getHiddenFiles() {
     const res = await this.query(`
-      SELECT path FROM hiddenfiles ORDER BY path ASC;
+      SELECT path, id FROM hiddenfiles ORDER BY id DESC;
     `)
     return res.map((row) => row["path"] as string)
   }
@@ -315,14 +319,19 @@ export default class DB {
   public async replaceHiddenFiles(hiddenFiles: string[]) {
     await this.run(`
       DELETE FROM hiddenfiles;
+      DROP SEQUENCE IF EXISTS hiddenfiles_id_sequence;
+      CREATE SEQUENCE hiddenfiles_id_sequence START 1;
     `)
 
-    await this.usingTableAppender("hiddenfiles", async (appender) => {
-      for (const path of hiddenFiles) {
-        appender.appendVarchar(path)
-        appender.endRow()
-      }
-    })
+    if (hiddenFiles.length === 0) return
+
+    // Build INSERT statement with explicit nextval calls for id column
+    const values = hiddenFiles
+      .map((path) => `(nextval('hiddenfiles_id_sequence'), '${path.replace(/'/g, "''")}')`)
+      .join(", ")
+    await this.run(`
+      INSERT INTO hiddenfiles (id, path) VALUES ${values};
+    `)
   }
 
   public async getCommits(path: string, count: number) {
