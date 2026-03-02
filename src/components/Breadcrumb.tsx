@@ -39,30 +39,32 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       })
       .filter((segment) => segment.segment.length > 0)
 
-    const zoomSegments = [
-      // Parent folder
-      {
-        type: "browse",
-        segment: data?.repo.parentDirName ?? "",
-        fullPath: data?.repo.parentDirPath ?? "",
-        showAnalysisInfo: false
-      } as const,
-      // Repository root
-      {
-        type: "zoom",
-        segment: data?.repo.repositoryName ?? "",
-        fullPath: data?.repo.repositoryName ?? "",
-        showAnalysisInfo: true
-      } as const,
-      ...(zoomPath?.split(getSep(zoomPath)) ?? []).flatMap((segment, index, segments) => {
-        if (segment === data?.repo.repositoryName) {
-          // Ignore repository root, as it is added manually above
-          return []
-        }
-        const fullPath = segments.slice(0, index + 1).join("/")
-        return { type: "zoom", segment, fullPath, showAnalysisInfo: false } satisfies Segment
-      })
-    ]
+    const zoomSegments = !data
+      ? []
+      : [
+          // Parent folder
+          {
+            type: "browse",
+            segment: data.repo.parentDirName ?? "",
+            fullPath: data.repo.parentDirPath ?? "",
+            showAnalysisInfo: false
+          } as const,
+          // Repository root
+          {
+            type: "zoom",
+            segment: data.repo.repositoryName ?? "",
+            fullPath: data.repo.repositoryName ?? "",
+            showAnalysisInfo: true
+          } as const,
+          ...(zoomPath?.split(getSep(zoomPath)) ?? []).flatMap((segment, index, segments) => {
+            if (segment === data?.repo.repositoryName) {
+              // Ignore repository root, as it is added manually above
+              return []
+            }
+            const fullPath = segments.slice(0, index + 1).join("/")
+            return { type: "zoom", segment, fullPath, showAnalysisInfo: false } satisfies Segment
+          })
+        ]
     const segments = zoom ? zoomSegments : pathSegments
 
     if (segments.length > 4) {
@@ -76,7 +78,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
     }
 
     return segments
-  }, [data?.repo, path, zoom, zoomPath])
+  }, [data, path, zoom, zoomPath])
 
   return (
     <div
