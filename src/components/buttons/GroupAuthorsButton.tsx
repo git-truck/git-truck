@@ -11,6 +11,7 @@ export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
         "btn--icon": compact
       })}
       title="Group authors"
+      aria-label="Group authors"
       onClick={() => openModal()}
     >
       <Icon path={mdiAccountMultiple} />

@@ -12,7 +12,7 @@ export function RefreshButton() {
   return (
     <Form method="post" action={viewAction} className="contents">
       <input type="hidden" name="refresh" value="true" />
-      <button className="btn btn--icon" disabled={isRefreshing} title="Refresh analysis">
+      <button className="btn btn--icon" disabled={isRefreshing} title="Refresh analysis" aria-label="Refresh analysis">
         <Icon path={mdiRefresh} size="1.25em" className={cn({ "animate-spin": isRefreshing })} />
       </button>
     </Form>
