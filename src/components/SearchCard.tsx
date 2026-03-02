@@ -47,6 +47,16 @@ export const SearchCard = memo(function SearchCard() {
 
   const resultRefs = Object.keys(searchResults).map(() => createRef<HTMLButtonElement>())
 
+  useEffect(() => {
+    startTransition(() => {
+      if (searchText.trim() === "") {
+        setSearchResults({})
+      } else {
+        setSearchResults(findSearchResults(databaseInfo.fileTree, searchText))
+      }
+    })
+  }, [searchText, databaseInfo.fileTree, setSearchResults])
+
   useKey({ key: "f", ctrlOrMeta: true }, (event) => {
     event.preventDefault()
     searchFieldRef.current?.focus()
@@ -111,12 +121,7 @@ export const SearchCard = memo(function SearchCard() {
             }
           }}
           onChange={(event) => {
-            const value = event.target.value
-            setSearchText(value)
-            startTransition(() => {
-              if (value.trim() === "") setSearchResults({})
-              setSearchResults(findSearchResults(databaseInfo.fileTree, value))
-            })
+            setSearchText(event.target.value)
           }}
         />
         <Icon path={mdiMagnify} className="hidden min-w-max peer-placeholder-shown:inline peer-focus:hidden" />
