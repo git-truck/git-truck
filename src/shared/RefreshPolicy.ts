@@ -23,8 +23,8 @@ type DataItem =
 
 export type InvocationReason =
   | "refresh"
-  | "unignore"
-  | "ignore"
+  | "show"
+  | "hide"
   | "open"
   | "unionedAuthors"
   | "rerollColors"
@@ -59,7 +59,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "commitCountPerDay",
     "loadRepoData"
   ],
-  unignore: [
+  show: [
     "cache",
     "commitCount",
     "dominantAuthor",
@@ -73,7 +73,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "authors",
     "hiddenfiles"
   ],
-  ignore: [
+  hide: [
     "cache",
     "commitCount",
     "maxMinCommitCount",
