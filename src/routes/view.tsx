@@ -171,17 +171,14 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   if (ignorePath && typeof ignorePath === "string") {
     log.info("Ignoring path: " + ignorePath)
     instance.prevInvokeReason = "hide"
-    const hidden = await instance.db.getHiddenFiles()
-    hidden.push(ignorePath)
-    await instance.db.replaceHiddenFiles(hidden)
+    await instance.db.addHiddenFile(ignorePath)
 
     return null
   }
 
   if (unignorePath && typeof unignorePath === "string") {
     instance.prevInvokeReason = "show"
-    const hidden = await instance.db.getHiddenFiles()
-    await instance.db.replaceHiddenFiles(hidden.filter((path) => path !== unignorePath))
+    await instance.db.removeHiddenFile(unignorePath)
     return null
   }
 

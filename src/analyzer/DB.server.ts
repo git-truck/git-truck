@@ -316,22 +316,26 @@ export default class DB {
     return res.map((row) => row["path"] as string)
   }
 
-  public async replaceHiddenFiles(hiddenFiles: string[]) {
-    await this.run(`
-      DELETE FROM hiddenfiles;
-      DROP SEQUENCE IF EXISTS hiddenfiles_id_sequence;
-      CREATE SEQUENCE hiddenfiles_id_sequence START 1;
+  public async addHiddenFile(path: string) {
+    const statement = await this.prepare(`
+      INSERT INTO hiddenfiles (id, path)
+      SELECT nextval('hiddenfiles_id_sequence'), ?
+      WHERE NOT EXISTS (
+        SELECT 1 FROM hiddenfiles WHERE path = ?
+      );
     `)
+    statement.bindVarchar(1, path)
+    statement.bindVarchar(2, path)
+    await statement.run()
+  }
 
-    if (hiddenFiles.length === 0) return
-
-    // Build INSERT statement with explicit nextval calls for id column
-    const values = hiddenFiles
-      .map((path) => `(nextval('hiddenfiles_id_sequence'), '${path.replace(/'/g, "''")}')`)
-      .join(", ")
-    await this.run(`
-      INSERT INTO hiddenfiles (id, path) VALUES ${values};
+  public async removeHiddenFile(path: string) {
+    const statement = await this.prepare(`
+      DELETE FROM hiddenfiles
+      WHERE path = ?;
     `)
+    statement.bindVarchar(1, path)
+    await statement.run()
   }
 
   public async getCommits(path: string, count: number) {

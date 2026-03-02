@@ -27,7 +27,7 @@ export function HideFilesModal() {
   // Merge optimistic and actual hidden files, checking against actual data to avoid duplicates
   const displayedHiddenFiles = [...databaseInfo.hiddenFiles]
   if (optimisticHide && !databaseInfo.hiddenFiles.includes(optimisticHide)) {
-    displayedHiddenFiles.unshift(optimisticHide) // Add to beginning since list is DESC order
+    displayedHiddenFiles.unshift(optimisticHide)
   }
   const filteredHiddenFiles = displayedHiddenFiles.filter((path) => path !== optimisticUnhide)
 
