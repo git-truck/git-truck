@@ -28,7 +28,7 @@ export function SettingsModal() {
 
   return (
     <>
-      <div className="flex min-w-120 flex-col items-start justify-center gap-4 p-2 pl-0">
+      <div className="flex min-h-0 max-w-max flex-col items-start justify-center gap-3 overflow-y-auto p-2 pl-0">
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
           checked={Boolean(linkMetricAndSizeMetric)}
