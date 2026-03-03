@@ -20,7 +20,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
   await InstanceManager.closeAllDBConnections()
   await DB.clearCache()
-  throw redirect(redirectPath ?? "/")
+  throw redirect(redirectPath)
 }
 
 export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?: string; className?: string } = {}) {
