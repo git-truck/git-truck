@@ -477,7 +477,7 @@ export default function Repo() {
                   >
                     <Options />
                   </CollapsibleHeader>
-                  <CollapsibleHeader className="card" title="Legend" contentClassName="pb-6">
+                  <CollapsibleHeader className="card group" title="Legend" contentClassName="pb-6">
                     <Legend hoveredObject={hoveredObject} />
                   </CollapsibleHeader>
                 </aside>
