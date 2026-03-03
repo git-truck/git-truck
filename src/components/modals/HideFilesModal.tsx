@@ -6,6 +6,7 @@ import { Code } from "~/components/util"
 import { useRef } from "react"
 import { getSep } from "~/shared/util"
 import { useViewAction } from "~/hooks"
+import { cn } from "~/styling"
 
 export function HideFilesModal() {
   const navigationState = useNavigation()
@@ -69,9 +70,21 @@ export function HideFilesModal() {
         </label>
         <button className="btn btn--primary whitespace-nowrap">Hide</button>
       </Form>
-      <h3 className="text-tertiary-text dark:text-tertiary-text-dark text-sm font-bold tracking-wide uppercase">
-        Hidden files/patterns
-      </h3>
+      <div className="flex w-full items-center justify-between">
+        <h3 className="text-tertiary-text dark:text-tertiary-text-dark text-sm font-bold tracking-wide uppercase">
+          Hidden files/patterns
+        </h3>
+        <Form
+          action={viewAction}
+          method="post"
+          className={cn({
+            hidden: databaseInfo.hiddenFiles.length === 0
+          })}
+        >
+          <input type="hidden" name="unhideAll" value="true" />
+          <button className="btn btn--danger btn--text">Reset</button>
+        </Form>
+      </div>
       <div className="flex max-h-96 min-h-0 w-full flex-col gap-2 overflow-y-auto">
         {filteredHiddenFiles.length > 0 ? (
           filteredHiddenFiles.map((hidden) => {
