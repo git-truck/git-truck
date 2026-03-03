@@ -84,7 +84,7 @@ export function HideFilesModal() {
                 style={{ opacity: isOptimistic ? 0.6 : isPendingRemoval ? 0.4 : 1 }}
                 title={hidden}
               >
-                <Form className="w-4" method="post">
+                <Form action={viewAction} className="w-4" method="post">
                   <input type="hidden" name="show" value={hidden} />
                   <button
                     className="btn btn--text btn--hover-swap h-4"
