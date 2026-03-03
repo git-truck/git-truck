@@ -338,6 +338,12 @@ export default class DB {
     await statement.run()
   }
 
+  public async clearHiddenFiles() {
+    await this.run(`
+      DELETE FROM hiddenfiles;
+    `)
+  }
+
   public async getCommits(path: string, count: number) {
     const res = await this.query(`
       SELECT distinct commithash, author, committertime, authortime, message, body

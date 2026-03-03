@@ -158,8 +158,9 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
   const timeseries = formData.get("timeseries")
   const authorname = formData.get("authorname")
   const authorcolor = formData.get("authorcolor")
-  const ignorePath = formData.get("hide") as string | null
-  const unignorePath = formData.get("show") as string | null
+  const hidePath = formData.get("hide") as string | null
+  const unhidePath = formData.get("show") as string | null
+  const unhideAll = formData.get("unhideAll") as string | null
   const openPath = formData.get("open") as string | null
 
   instance.prevInvokeReason = "unknown"
@@ -168,17 +169,23 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return null
   }
 
-  if (ignorePath && typeof ignorePath === "string") {
-    log.info("Ignoring path: " + ignorePath)
+  if (hidePath && typeof hidePath === "string") {
+    log.info("Ignoring path: " + hidePath)
     instance.prevInvokeReason = "hide"
-    await instance.db.addHiddenFile(ignorePath)
+    await instance.db.addHiddenFile(hidePath)
 
     return null
   }
 
-  if (unignorePath && typeof unignorePath === "string") {
+  if (unhidePath && typeof unhidePath === "string") {
     instance.prevInvokeReason = "show"
-    await instance.db.removeHiddenFile(unignorePath)
+    await instance.db.removeHiddenFile(unhidePath)
+    return null
+  }
+
+  if (unhideAll && typeof unhideAll === "string") {
+    instance.prevInvokeReason = "hide"
+    await instance.db.clearHiddenFiles()
     return null
   }
 
