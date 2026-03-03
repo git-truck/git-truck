@@ -5,7 +5,7 @@ import { useModal } from "~/components/modals/ModalManager"
 export function SettingsButton() {
   const { openModal } = useModal("app-settings")
   return (
-    <button className="btn btn--icon" title="Visualization settings" onClick={() => openModal()}>
+    <button className="btn btn--icon" title="Settings" aria-label="Settings" onClick={() => openModal()}>
       <Icon path={mdiCog} />
     </button>
   )
