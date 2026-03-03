@@ -42,10 +42,14 @@ export function ModalManager() {
 
     if (modalKey) {
       document.body.style.setProperty("overflow", "hidden")
-      dialog.showModal()
+      if (!dialog.open) {
+        dialog.showModal()
+      }
     } else {
       document.body.style.setProperty("overflow", null)
-      dialog.close()
+      if (dialog.open) {
+        dialog.close()
+      }
     }
 
     return () => {
