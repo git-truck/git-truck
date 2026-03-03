@@ -87,10 +87,10 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
           ...prevOptions,
           labelsVisible: visible
         })),
-      setRenderCutoff: (renderCutoff: number) =>
+      setRenderCutOff: (renderCutOff: number) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
-          renderCutOff: renderCutoff
+          renderCutOff
         })),
       setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
         setOptions((prevOptions) => ({
