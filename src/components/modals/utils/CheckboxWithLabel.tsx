@@ -30,7 +30,8 @@ export function CheckboxWithLabel({
       <div className="flex flex-1 items-center gap-2">{children}</div>
       <img
         src={anitruck}
-        alt="..."
+        alt=""
+        aria-hidden="true"
         className={cn("h-5", {
           "opacity-0": !isTransitioning
         })}
