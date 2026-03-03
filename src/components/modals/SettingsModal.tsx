@@ -11,7 +11,6 @@ export function SettingsModal() {
     metricType,
     hierarchyType,
     transitionsEnabled,
-    renderCutOff,
     showFilesWithoutChanges,
     linkMetricAndSizeMetric,
     showOnlySearchMatches,
@@ -21,7 +20,6 @@ export function SettingsModal() {
     setLabelsVisible,
     setHierarchyType,
     setSizeMetricType,
-    setRenderCutoff,
     setShowFilesWithoutChanges,
     setShowOnlySearchMatches
   } = useOptions()
@@ -103,18 +101,13 @@ export function SettingsModal() {
           <Icon className="ml-1.5" path={mdiFilter} size="1.25em" />
           Show only search matches
         </CheckboxWithLabel>
-        <RenderCutOff renderCutOff={renderCutOff} setRenderCutoff={setRenderCutoff} />
+        <RenderCutOff />
       </div>
     </>
   )
 }
-function RenderCutOff({
-  renderCutOff,
-  setRenderCutoff
-}: {
-  renderCutOff: number
-  setRenderCutoff: (renderCutoff: number) => void
-}) {
+function RenderCutOff() {
+  const { renderCutOff, setRenderCutOff } = useOptions()
   const [value, setValue] = useState(renderCutOff)
   const [isTransitioning, startTransition] = useTransition()
   return (
@@ -136,7 +129,7 @@ function RenderCutOff({
             ? getDefaultOptionsContextValue().renderCutOff
             : x.target.valueAsNumber
           setValue(v)
-          startTransition(() => setRenderCutoff(v))
+          startTransition(() => setRenderCutOff(v))
         }}
       />
     </label>
