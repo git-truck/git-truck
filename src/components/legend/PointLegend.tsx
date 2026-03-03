@@ -3,6 +3,10 @@ import { LegendDot } from "~/components/util"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
+import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
+import { useSelectedCategory, useSelectedCategories } from "~/state/stores/selection"
+import { cn } from "~/styling"
+import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 
 const legendCutoff = 8
 
@@ -43,7 +47,7 @@ export function PointLegend() {
   if (items.length === 0) return null
 
   return (
-    <div className="relative grid grid-cols-2 gap-2">
+    <div className="flex flex-col gap-2">
       {shownItems.map(([label, info]) => (
         <PointLegendEntry key={label} label={label} info={info} />
       ))}
@@ -58,16 +62,44 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
   const { metricType } = useOptions()
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
 
+  const selectedCategories = useSelectedCategories()
+  const { selected, select, deselect } = useSelectedCategory(label)
+
+  const isOnlySelectedCategory = selected && selectedCategories.length === 1
+  const noSelectedCategories = selectedCategories.length === 0
+
   return (
-    <div key={label} className="relative flex items-center gap-1 text-sm leading-none">
-      {isAuthorRelatedLegend ? (
-        <LegendDot dotColor={info.color} authorColorToChange={label} />
-      ) : (
-        <LegendDot dotColor={info.color} />
-      )}
-      <span className="truncate font-bold" title={label}>
-        {label}
-      </span>
+    <div key={label} className="relative flex gap-1 text-sm leading-none">
+      <CheckboxWithLabel
+        key={String(selected)}
+        checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
+        intermediate={noSelectedCategories}
+        checked={selected}
+        onChange={(evt) => (evt.target.checked ? select() : deselect())}
+      >
+        {isAuthorRelatedLegend ? (
+          <LegendDot dotColor={info.color} authorColorToChange={label} />
+        ) : (
+          <LegendDot dotColor={info.color} />
+        )}
+        <span
+          className={cn("truncate", {
+            "font-bold": selected || noSelectedCategories,
+            "text-blue-primary": selected
+          })}
+          title={
+            noSelectedCategories
+              ? `Highlight ${label} exclusively`
+              : isOnlySelectedCategory
+                ? "Highlight all categories"
+                : selected
+                  ? `Remove ${label} from filter`
+                  : `Add ${label} to filter`
+          }
+        >
+          {label}
+        </span>
+      </CheckboxWithLabel>
     </div>
   )
 }
