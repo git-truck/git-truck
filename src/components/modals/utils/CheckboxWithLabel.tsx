@@ -1,4 +1,4 @@
-import { mdiCheckboxOutline, mdiCheckboxBlankOutline } from "@mdi/js"
+import { mdiCheckboxBlankOutline, mdiCheckboxMarked } from "@mdi/js"
 import { useState, useTransition } from "react"
 import { Icon } from "~/components/Icon"
 import anitruck from "~/assets/truck.gif"
@@ -9,7 +9,7 @@ export function CheckboxWithLabel({
   checked,
   onChange,
   className = "",
-  checkedIcon = mdiCheckboxOutline,
+  checkedIcon = mdiCheckboxMarked,
   uncheckedIcon = mdiCheckboxBlankOutline,
   ...props
 }: {
@@ -23,11 +23,24 @@ export function CheckboxWithLabel({
   const [isTransitioning, startTransition] = useTransition()
 
   return (
-    <label
-      className={`label group flex w-full items-center justify-start gap-2 hover:text-blue-500 ${className}`}
-      {...props}
-    >
-      <div className="flex flex-1 items-center gap-2">{children}</div>
+    <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
+      <input
+        type="checkbox"
+        checked={value}
+        className="peer hidden"
+        onChange={(e) => {
+          setValue(e.target.checked)
+          startTransition(() => onChange(e))
+        }}
+      />
+      <Icon
+        className="text-tertiary-text dark:text-tertiary-text-dark peer-checked:text-blue-primary place-self-end"
+        path={value ? checkedIcon : uncheckedIcon}
+        size={1}
+      />
+      <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark flex flex-1 items-center gap-2">
+        {children}
+      </div>
       <img
         src={anitruck}
         alt=""
@@ -35,16 +48,6 @@ export function CheckboxWithLabel({
         className={cn("h-5", {
           "opacity-0": !isTransitioning
         })}
-      />
-      <Icon className="place-self-end group-hover:text-blue-500" path={value ? checkedIcon : uncheckedIcon} size={1} />
-      <input
-        type="checkbox"
-        checked={value}
-        className="hidden"
-        onChange={(e) => {
-          setValue(e.target.checked)
-          startTransition(() => onChange(e))
-        }}
       />
     </label>
   )
