@@ -33,9 +33,10 @@ import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useQueryStates } from "nuqs"
+import { useQueryState, useQueryStates } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
+import { useSelectedCategories } from "~/state/stores/selection"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -52,14 +53,13 @@ export const Chart = memo(function Chart({
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
 
-  const [params, setParams] = useQueryStates(viewSearchParamsConfig)
-  const { zoomPath } = params
+  const [params] = useQueryStates(viewSearchParamsConfig)
 
-  const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
-    setParams((prev) => {
-      const value = typeof zoomPathUpdate === "function" ? zoomPathUpdate(prev.zoomPath) : zoomPathUpdate
-      return { ...prev, zoomPath: value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null }
-    })
+  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+
+  const setZoomPath = (value: string | null) => {
+    return setZoomPathRaw(value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null)
+  }
 
   const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
   const zoomOneLevelOut = () => {
@@ -318,15 +318,33 @@ function filterGitTree(
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
+  const data = useData()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
+
+  const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1) ?? ""
+  const topContributor = data.databaseInfo.dominantAuthors[d.data.path]?.author ?? null
+
+  const isCategoricalMetric = metricType === "FILE_TYPE" || metricType === "TOP_CONTRIBUTOR"
+
+  const category = metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+
+  const selectedCategories = useSelectedCategories()
+  const isSelected =
+    selectedCategories.length === 0 || (category ? selectedCategories.includes(metricType + category) : false)
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       ...(isBlob(d.data)
         ? {
-            fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
-            stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+            fill:
+              isSelected || !isCategoricalMetric
+                ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor)
+                : missingInMapColor,
+            stroke:
+              isSelected || !isCategoricalMetric
+                ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor)
+                : missingInMapColor
           }
         : {
             strokeWidth: "1px"
@@ -359,7 +377,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, metricsData, metricType, chartType])
+  }, [d, isSelected, isCategoricalMetric, metricsData, metricType, chartType])
 
   return (
     <rect
