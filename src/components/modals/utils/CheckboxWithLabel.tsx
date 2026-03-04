@@ -1,4 +1,4 @@
-import { mdiCheckboxBlankOutline, mdiCheckboxMarked } from "@mdi/js"
+import { mdiCheckboxBlankOutline, mdiCheckboxIntermediate, mdiCheckboxMarked } from "@mdi/js"
 import { useState, useTransition } from "react"
 import { Icon } from "~/components/Icon"
 import anitruck from "~/assets/truck.gif"
@@ -7,6 +7,7 @@ import { cn } from "~/styling"
 export function CheckboxWithLabel({
   children,
   checked,
+  intermediate,
   onChange,
   className = "",
   checkedIcon = mdiCheckboxMarked,
@@ -15,6 +16,7 @@ export function CheckboxWithLabel({
 }: {
   children: React.ReactNode
   checked: boolean
+  intermediate?: boolean
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   checkedIcon?: string
   uncheckedIcon?: string
@@ -34,8 +36,11 @@ export function CheckboxWithLabel({
         }}
       />
       <Icon
-        className="text-tertiary-text dark:text-tertiary-text-dark peer-checked:text-blue-primary place-self-end"
-        path={value ? checkedIcon : uncheckedIcon}
+        className={cn(
+          "peer-checked:text-blue-primary place-self-end",
+          intermediate ? "text-blue-primary" : "text-tertiary-text dark:text-tertiary-text-dark"
+        )}
+        path={intermediate ? mdiCheckboxIntermediate : value ? checkedIcon : uncheckedIcon}
         size={1}
       />
       <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark flex flex-1 items-center gap-2">
