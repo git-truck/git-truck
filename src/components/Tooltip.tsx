@@ -103,11 +103,11 @@ function ColorMetricDependentInfo(props: {
 }) {
   let icon: string
   let content: string
-  const slicedPath = props.hoveredBlob?.path ?? ""
+  const path = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS": {
       icon = mdiSourceCommit
-      const noCommits = props.databaseInfo.commitCounts[slicedPath]
+      const noCommits = props.databaseInfo.commitCounts[path]
       if (!noCommits) {
         content = "No activity in selected range"
         break
@@ -117,7 +117,7 @@ function ColorMetricDependentInfo(props: {
     }
     case "LAST_CHANGED": {
       icon = mdiPulse
-      const epoch = props.databaseInfo.lastChanged[slicedPath]
+      const epoch = props.databaseInfo.lastChanged[path]
       if (!epoch) {
         content = "No activity in selected range"
         break
@@ -127,8 +127,8 @@ function ColorMetricDependentInfo(props: {
     }
     case "TOP_CONTRIBUTOR": {
       icon = mdiAccount
-      const dominant = props.databaseInfo.dominantAuthors[slicedPath]
-      const contribSum = props.databaseInfo.contribSumPerFile[slicedPath]
+      const dominant = props.databaseInfo.dominantAuthors[path]
+      const contribSum = props.databaseInfo.contribSumPerFile[path]
       if (!dominant) {
         content = "No activity in selected range"
         break
@@ -149,7 +149,7 @@ function ColorMetricDependentInfo(props: {
     }
     case "MOST_CONTRIBUTIONS": {
       icon = mdiPlusMinusVariant
-      const contribs = props.databaseInfo.contribSumPerFile[slicedPath]
+      const contribs = props.databaseInfo.contribSumPerFile[path]
       if (!contribs) {
         content = "No activity in selected range"
         break
