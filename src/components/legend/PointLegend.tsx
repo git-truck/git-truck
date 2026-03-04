@@ -6,7 +6,6 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useSelectedCategory, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
-import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 
 const legendCutoff = 8
 
@@ -47,13 +46,19 @@ export function PointLegend() {
   if (items.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-2">
-      {shownItems.map(([label, info]) => (
-        <PointLegendEntry key={label} label={label} info={info} />
-      ))}
-      {items.length > legendCutoff ? (
-        <PointLegendOther items={items.slice(legendCutoff)} collapse={collapse} toggle={() => setCollapse(!collapse)} />
-      ) : null}
+    <div className="-ml-8 flex gap-1">
+      <div className="flex flex-1 flex-col gap-2">
+        {shownItems.map(([label, info]) => (
+          <PointLegendEntry key={label} label={label} info={info} />
+        ))}
+        {items.length > legendCutoff ? (
+          <PointLegendOther
+            items={items.slice(legendCutoff)}
+            collapse={collapse}
+            toggle={() => setCollapse(!collapse)}
+          />
+        ) : null}
+      </div>
     </div>
   )
 }
