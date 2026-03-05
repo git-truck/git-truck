@@ -1,4 +1,7 @@
 name: Publish Pull Requests
+permissions:
+  contents: read
+  issues: write
 on:
   pull_request:
   push:
