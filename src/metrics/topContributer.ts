@@ -27,7 +27,7 @@ export function setDominantAuthorColor(
   const color = authorColors[dominantAuthor.author] ?? noEntryColor
 
   // TODO: Calculate weight by number of files with multiple authors
-  legend.set("Multiple authors", new PointInfo(noEntryColor, Infinity))
+  legend.set("Multiple contributors", new PointInfo(noEntryColor, Infinity))
   cache.colormap.set(blob.path, color)
 
   if (legend.has(dominantAuthor.author)) {
