@@ -10,5 +10,9 @@ export const feature_flags = {
   /**
    * Enable straight text for blobs in circular layout.
    */
-  straightTextForBlobsInCircularLayout: true
+  straightTextForBlobsInCircularLayout: true,
+  /**
+   * Enable legend selection summary
+   */
+  show_legend_highlight: false
 }
