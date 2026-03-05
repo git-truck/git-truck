@@ -10,6 +10,7 @@ export function CheckboxWithLabel({
   intermediate,
   onChange,
   className = "",
+  checkBoxClassName = "",
   checkedIcon = mdiCheckboxMarked,
   uncheckedIcon = mdiCheckboxBlankOutline,
   ...props
@@ -17,6 +18,7 @@ export function CheckboxWithLabel({
   children: React.ReactNode
   checked: boolean
   intermediate?: boolean
+  checkBoxClassName?: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   checkedIcon?: string
   uncheckedIcon?: string
@@ -38,7 +40,8 @@ export function CheckboxWithLabel({
       <Icon
         className={cn(
           "peer-checked:text-blue-primary place-self-end",
-          intermediate ? "text-blue-primary" : "text-tertiary-text dark:text-tertiary-text-dark"
+          intermediate ? "text-blue-primary" : "text-tertiary-text dark:text-tertiary-text-dark",
+          checkBoxClassName
         )}
         path={intermediate ? mdiCheckboxIntermediate : value ? checkedIcon : uncheckedIcon}
         size={1}
