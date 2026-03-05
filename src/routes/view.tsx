@@ -49,6 +49,7 @@ import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -497,7 +498,9 @@ export default function Repo() {
                     <BrowseParentFolder />
                     <Breadcrumb zoom />
                   </div>
-                  <div className="flex gap-2"></div>
+                  <div className="flex gap-2">
+                    <ClickedObjectButton />
+                  </div>
                   <div className="flex gap-2">
                     <div className="relative">
                       <SearchCard />
