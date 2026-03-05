@@ -136,8 +136,9 @@ export const Chart = memo(function Chart({
     const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       evt.stopPropagation()
 
-      // Deselect if an object is already clicked
-      if (clickedObject) {
+      // If clicking the same object, deselect
+
+      if (clickedObject && d && clickedObject.path === d.data.path) {
         navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
         return
       }
