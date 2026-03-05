@@ -30,6 +30,7 @@ import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
+import { getColorFromExtension } from "~/metrics/metricUtils"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
@@ -226,8 +227,10 @@ export const Chart = memo(function Chart({
           const isSearchMatch = Boolean(searchResults[d.data.path])
           const eventHandlers = createGroupHandlers(d)
 
-          const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1) ?? ""
-          let topContributor = "Multiple contributors"
+          const rawExtension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
+          const extensionInfo = rawExtension ? getColorFromExtension(rawExtension) : null
+          const extension = extensionInfo?.color ? rawExtension : "Other"
+          let topContributor = "Multiple authors"
           const dominant = databaseInfo.dominantAuthors[d.data.path]
           const contribSum = databaseInfo.contribSumPerFile[d.data.path]
 
