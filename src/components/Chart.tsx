@@ -347,16 +347,14 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   const { chartType, metricType, transitionsEnabled } = useOptions()
 
   const commonProps = useMemo(() => {
-    let props: JSX.IntrinsicElements["rect"] = {
-      ...(isBlob(d.data)
-        ? {
-            fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
-            stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
-          }
-        : {
-            // strokeWidth: "1px"
-          })
-    }
+    let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
+      ? {
+          fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
+          stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+        }
+      : {
+          // strokeWidth: "1px"
+        }
 
     if (chartType === "BUBBLE_CHART") {
       const circleDatum = d as HierarchyCircularNode<GitObject>
