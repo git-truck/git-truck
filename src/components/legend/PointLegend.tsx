@@ -6,6 +6,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useSelectedCategory, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
+import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 
 const legendCutoff = 8
 
@@ -28,6 +29,7 @@ export type PointLegendData = Map<string, PointInfo>
 export function PointLegend() {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
+  const selectedCategories = useSelectedCategories()
 
   const metricCache = metricsData.get(metricType)
 
@@ -59,6 +61,7 @@ export function PointLegend() {
           />
         ) : null}
       </div>
+      {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
     </div>
   )
 }
