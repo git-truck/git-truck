@@ -199,7 +199,6 @@ export const Chart = memo(function Chart({
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        // TODO: Deselect on click outside of nodes
         onClick={() => (clickedObject ? setClickedObject(null) : null)}
         onDoubleClick={() => {
           setZoomPath(null)
@@ -237,11 +236,16 @@ export const Chart = memo(function Chart({
             topContributor = dominant.author
           }
 
-          const isCategoricalMetric = metricType === "FILE_TYPE" || metricType === "TOP_CONTRIBUTOR"
-
           const category =
             metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
           const isSelected = category ? isCategorySelected(category) : false
+
+          const shouldColor = clickedObject
+            ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
+              (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/")) // or we are a not a child of a clicked tree object
+            : isSelected
+
+          const shouldNotColor = !shouldColor
 
           return (
             <g
@@ -251,10 +255,7 @@ export const Chart = memo(function Chart({
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
-                "opacity-30 grayscale hover:opacity-100 hover:grayscale-0":
-                  (!isSearchMatch && hasSearchResults) ||
-                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path) ||
-                  (!isSelected && isCategoricalMetric)
+                "opacity-30 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
               {...eventHandlers}
             >
