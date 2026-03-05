@@ -1,4 +1,4 @@
-import { useState, type HTMLAttributes, type ReactNode, type JSX } from "react"
+import { useState, type HTMLAttributes, type ReactNode } from "react"
 import { Icon } from "~/components/Icon"
 import { mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
@@ -6,7 +6,7 @@ import { Popover } from "~/components/Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
-import { useOptions, type ChartType } from "~/contexts/OptionsContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import { useIsClient, useViewSubmit } from "~/hooks"
 
 export const CloseButton = ({
@@ -69,16 +69,7 @@ export const LegendDot = ({
   )
 }
 
-const Dot = ({
-  color,
-  className = "",
-  ...props
-}: {
-  color: string
-  as?: keyof JSX.IntrinsicElements
-  className?: string
-  onClick?: () => void
-}) => {
+const Dot = ({ color, className = "", ...props }: { color: string; className?: string; onClick?: () => void }) => {
   const { chartType } = useOptions()
 
   const Component = props.onClick ? "button" : "div"
