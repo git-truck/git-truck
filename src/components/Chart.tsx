@@ -36,7 +36,7 @@ import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { useQueryState, useQueryStates } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useSelectedCategories } from "~/state/stores/selection"
+import { useIsCategorySelected as useIsCategorySelected } from "~/state/stores/selection"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -52,6 +52,7 @@ export const Chart = memo(function Chart({
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
+  const isCategorySelected = useIsCategorySelected()
 
   const [params] = useQueryStates(viewSearchParamsConfig)
 
@@ -71,7 +72,7 @@ export const Chart = memo(function Chart({
 
   const { clickedObject, setClickedObject } = useClickedObject()
 
-  const { showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
+  const { dominantAuthorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
   const navigate = useNavigate()
 
   const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
@@ -220,6 +221,23 @@ export const Chart = memo(function Chart({
         {nodes.map((d) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
           const eventHandlers = createGroupHandlers(d)
+
+          const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1) ?? ""
+          let topContributor = "Multiple contributors"
+          const dominant = databaseInfo.dominantAuthors[d.data.path]
+          const contribSum = databaseInfo.contribSumPerFile[d.data.path]
+
+          const authorPercentage = dominant ? Math.round((dominant.contribcount / contribSum) * 100) : null
+          if (authorPercentage !== null && authorPercentage >= dominantAuthorCutoff) {
+            topContributor = dominant.author
+          }
+
+          const isCategoricalMetric = metricType === "FILE_TYPE" || metricType === "TOP_CONTRIBUTOR"
+
+          const category =
+            metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+          const isSelected = category ? isCategorySelected(category) : false
+
           return (
             <g
               key={d.data.path}
@@ -228,9 +246,10 @@ export const Chart = memo(function Chart({
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
-                "opacity-30":
+                "opacity-30 grayscale hover:opacity-100 hover:grayscale-0":
                   (!isSearchMatch && hasSearchResults) ||
-                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path)
+                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path) ||
+                  (!isSelected && isCategoricalMetric)
               })}
               {...eventHandlers}
             >
@@ -318,36 +337,18 @@ function filterGitTree(
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
-  const data = useData()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
-
-  const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1) ?? ""
-  const topContributor = data.databaseInfo.dominantAuthors[d.data.path]?.author ?? null
-
-  const isCategoricalMetric = metricType === "FILE_TYPE" || metricType === "TOP_CONTRIBUTOR"
-
-  const category = metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
-
-  const selectedCategories = useSelectedCategories()
-  const isSelected =
-    selectedCategories.length === 0 || (category ? selectedCategories.includes(metricType + category) : false)
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = {
       ...(isBlob(d.data)
         ? {
-            fill:
-              isSelected || !isCategoricalMetric
-                ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor)
-                : missingInMapColor,
-            stroke:
-              isSelected || !isCategoricalMetric
-                ? (metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor)
-                : missingInMapColor
+            fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
+            stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
           }
         : {
-            strokeWidth: "1px"
+            // strokeWidth: "1px"
           })
     }
 
@@ -377,7 +378,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, isSelected, isCategoricalMetric, metricsData, metricType, chartType])
+  }, [d, metricsData, metricType, chartType])
 
   return (
     <rect
