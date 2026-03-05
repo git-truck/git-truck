@@ -36,10 +36,9 @@ export const LegendDot = ({
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
-  const { chartType } = useOptions()
   const submit = useViewSubmit()
 
-  if (!authorColorToChange) return <Dot className={className} chartType={chartType} color={color} />
+  if (!authorColorToChange) return <Dot className={className} color={color} />
 
   function updateColor(author: string, color: string) {
     const form = new FormData()
@@ -55,9 +54,7 @@ export const LegendDot = ({
       triggerClassName="flex gap-1 items-center"
       popoverTitle="Choose color"
       positions={["left", "bottom", "top", "right"]}
-      trigger={({ onClick }) => (
-        <Dot className={cn("cursor-pointer", className)} chartType={chartType} color={dotColor} onClick={onClick} />
-      )}
+      trigger={({ onClick }) => <Dot className={cn("cursor-pointer", className)} color={dotColor} onClick={onClick} />}
     >
       <HexColorPicker color={color} onChange={setColor} />
       <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
@@ -74,16 +71,16 @@ export const LegendDot = ({
 
 const Dot = ({
   color,
-  chartType,
   className = "",
   ...props
 }: {
   color: string
   as?: keyof JSX.IntrinsicElements
   className?: string
-  chartType: ChartType
   onClick?: () => void
 }) => {
+  const { chartType } = useOptions()
+
   const Component = props.onClick ? "button" : "div"
   return (
     <Component
