@@ -250,8 +250,7 @@ export const Chart = memo(function Chart({
           return (
             <g
               key={d.data.path}
-              className={cn("duration-400", {
-                "cursor-pointer": !clickedObject,
+              className={cn("cursor-pointer duration-400", {
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
