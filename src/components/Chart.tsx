@@ -5,7 +5,7 @@ import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } f
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize } from "~/hooks"
+import { useComponentSize, useKey } from "~/hooks"
 import {
   bubblePadding,
   letterWidthForTreeText,
@@ -74,7 +74,11 @@ export const Chart = memo(function Chart({
 
   const { dominantAuthorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
   const navigate = useNavigate()
-
+  useKey({ key: "Escape" }, () => {
+    if (clickedObject) {
+      navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+    }
+  })
   const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
 
   const filetree = useMemo(() => {
