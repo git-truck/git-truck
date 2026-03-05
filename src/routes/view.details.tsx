@@ -102,7 +102,7 @@ export default function Details() {
         </Link>
         {isBlob ? (
           <>
-            <Form className="w-max" method="post">
+            <Form className="w-max" method="post" action={viewAction}>
               <input type="hidden" name="hide" value={clickedObject.path} />
               <button className="btn" disabled={state !== "idle"} title="Hide this file">
                 <Icon path={mdiEyeOffOutline} />
@@ -110,7 +110,7 @@ export default function Details() {
               </button>
             </Form>
             {clickedObject.name.includes(".") ? (
-              <Form className="w-max" method="post">
+              <Form className="w-max" method="post" action={viewAction}>
                 <input type="hidden" name="hide" value={`*.${extension}`} />
                 <button
                   className="btn"
