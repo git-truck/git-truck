@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
+import babel from "vite-plugin-babel"
 
 export default defineConfig(({ isSsrBuild }) => ({
   build: {
@@ -39,7 +40,15 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-arm64"
     ]
   },
-  plugins: [tailwindcss(), reactRouterDevTools(), reactRouter(), tsconfigPaths()],
+  plugins: [
+    tailwindcss(),
+    reactRouterDevTools(),
+    reactRouter(),
+    babel({
+      plugins: [["babel-plugin-react-compiler", { target: "19" }]]
+    }),
+    tsconfigPaths()
+  ],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
 }))

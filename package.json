@@ -93,6 +93,7 @@
     "@types/semver": "^7.7.1",
     "@types/sha1": "^1.1.5",
     "@types/yargs-parser": "^21.0.3",
+    "babel-plugin-react-compiler": "^1.0.0",
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
@@ -124,6 +125,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
     "vite": "npm:rolldown-vite@7.3.1",
+    "vite-plugin-babel": "^1.5.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.18"
   },
