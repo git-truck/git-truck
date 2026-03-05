@@ -119,7 +119,7 @@
     "react-router-devtools": "^6.2.0",
     "react-use-size": "^5.0.1",
     "tailwindcss": "^4.1.18",
-    "tsdown": "^0.16.8",
+    "tsdown": "^0.21.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
