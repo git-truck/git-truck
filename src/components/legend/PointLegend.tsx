@@ -4,9 +4,10 @@ import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
-import { useSelectedCategory, useSelectedCategories } from "~/state/stores/selection"
+import { useSelectedCategory, useSelectedCategories, useIsCategorySelected } from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
+import { feature_flags } from "~/feature_flags"
 
 const legendCutoff = 8
 
@@ -30,6 +31,7 @@ export function PointLegend() {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const selectedCategories = useSelectedCategories()
+  const isCategorySelected = useIsCategorySelected()
 
   const metricCache = metricsData.get(metricType)
 
@@ -48,20 +50,37 @@ export function PointLegend() {
   if (items.length === 0) return null
 
   return (
-    <div className="-ml-8 flex gap-1">
-      <div className="flex flex-1 flex-col gap-2">
-        {shownItems.map(([label, info]) => (
-          <PointLegendEntry key={label} label={label} info={info} />
-        ))}
-        {items.length > legendCutoff ? (
-          <PointLegendOther
-            items={items.slice(legendCutoff)}
-            collapse={collapse}
-            toggle={() => setCollapse(!collapse)}
-          />
-        ) : null}
+    <div className="-ml-8 flex flex-col gap-1">
+      <div
+        className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2", {
+          hidden: !feature_flags.show_legend_highlight
+        })}
+      >
+        {shownItems
+          .filter(([label]) => isCategorySelected(label))
+          .map(([label, info]) => (
+            <div key={label} title={label} className="flex max-w-[25ch] items-center gap-1 truncate text-sm">
+              <LegendDot dotColor={info.color} />
+              {label}
+            </div>
+          ))}
+        <span>...and {items.length - legendCutoff} more</span>
       </div>
-      {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
+      <div className="flex justify-between gap-1">
+        <div className="flex flex-1 flex-col gap-2">
+          {shownItems.map(([label, info]) => (
+            <PointLegendEntry key={label} label={label} info={info} />
+          ))}
+          {items.length > legendCutoff ? (
+            <PointLegendOther
+              items={items.slice(legendCutoff)}
+              collapse={collapse}
+              toggle={() => setCollapse(!collapse)}
+            />
+          ) : null}
+        </div>
+        {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
+      </div>
     </div>
   )
 }
