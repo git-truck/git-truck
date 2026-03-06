@@ -165,6 +165,7 @@ export default function UI() {
     name: "demo.txt",
     path: "src/demo.txt",
     hash: "abc123",
+    extension: "txt",
     sizeInBytes: 42
   }
   return (
