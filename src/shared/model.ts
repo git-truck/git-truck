@@ -104,6 +104,7 @@ export interface GitBlobObject extends AbstractGitObject {
   type: "blob"
   name: string
   path: string
+  extension: string
   sizeInBytes: number
 }
 
