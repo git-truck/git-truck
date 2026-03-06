@@ -248,7 +248,7 @@ export const Chart = memo(function Chart({
               (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/")) // or we are a not a child of a clicked tree object
             : isSelected
 
-          const shouldNotColor = !shouldColor
+          const shouldNotColor = (hasSearchResults && !isSearchMatch) || !shouldColor
 
           return (
             <g
