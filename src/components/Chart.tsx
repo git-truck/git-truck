@@ -240,8 +240,8 @@ export const Chart = memo(function Chart({
           }
 
           const category =
-            metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
-          const isSelected = category ? isCategorySelected(category) : false
+            metricType === "FILE_TYPE" ? rawExtension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+          const isSelected = category ? isCategorySelected(category) : true
 
           const shouldColor = clickedObject
             ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
