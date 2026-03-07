@@ -14,5 +14,9 @@ export const feature_flags = {
   /**
    * Enable legend selection summary
    */
-  show_legend_highlight: false
+  show_legend_highlight: false,
+  /**
+   * Group all non-code filetype extension under "Other" category
+   */
+  group_noncode_filetypes_in_other: true
 }

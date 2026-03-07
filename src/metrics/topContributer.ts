@@ -14,20 +14,30 @@ export function setDominantAuthorColor(
 ) {
   const dominantAuthor = dominantAuthorPerFile[blob.path]
   const contribSum = contribSumPerFile[blob.path]
+  const legend = cache.legend as PointLegendData
+
+  // helper to bump multiple-contributors count
+  const bumpMultiple = () => {
+    if (legend.has("Multiple contributors")) {
+      legend.get("Multiple contributors")?.add(1)
+    } else {
+      legend.set("Multiple contributors", new PointInfo(noEntryColor, 1))
+    }
+    cache.colormap.set(blob.path, noEntryColor)
+  }
+
   if (!dominantAuthor || !contribSum) {
+    bumpMultiple()
     return
   }
-  const legend = cache.legend as PointLegendData
 
   const authorPercentage = (dominantAuthor.contribcount / contribSum) * 100
   if (authorPercentage < dominantAuthorCutoff) {
-    cache.colormap.set(blob.path, noEntryColor)
+    bumpMultiple()
     return
   }
-  const color = authorColors[dominantAuthor.author] ?? noEntryColor
 
-  // TODO: Calculate weight by number of files with multiple authors
-  legend.set("Multiple contributors", new PointInfo(noEntryColor, Infinity))
+  const color = authorColors[dominantAuthor.author] ?? noEntryColor
   cache.colormap.set(blob.path, color)
 
   if (legend.has(dominantAuthor.author)) {

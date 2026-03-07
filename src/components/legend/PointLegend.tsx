@@ -14,6 +14,7 @@ const legendCutoff = 8
 export class PointInfo {
   public readonly color: `#${string}`
   public weight: number
+  public children?: Map<string, PointInfo>
 
   constructor(color: `#${string}`, weight: number) {
     this.color = color
@@ -22,6 +23,14 @@ export class PointInfo {
 
   add(value: number) {
     this.weight += value
+  }
+
+  addChild(extension: string, child: PointInfo) {
+    if (!this.children) this.children = new Map()
+    if (this.children.has(extension)) {
+      this.children.get(extension)?.add(child.weight)
+      return
+    } else this.children.set(extension, child)
   }
 }
 
@@ -51,6 +60,7 @@ export function PointLegend() {
 
   return (
     <div className="-ml-8 flex flex-col gap-1">
+      {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
       <div
         className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2", {
           hidden: !feature_flags.show_legend_highlight
@@ -79,7 +89,6 @@ export function PointLegend() {
             />
           ) : null}
         </div>
-        {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
       </div>
     </div>
   )
@@ -90,19 +99,27 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
 
   const selectedCategories = useSelectedCategories()
-  const { selected, select, deselect } = useSelectedCategory(label)
+  const { selected, select, deselect } = useSelectedCategory()
 
-  const isOnlySelectedCategory = selected && selectedCategories.length === 1
+  const isOnlySelectedCategory = selected(label) && selectedCategories.length === 1
   const noSelectedCategories = selectedCategories.length === 0
 
   return (
     <div key={label} className="relative flex gap-1 text-sm leading-none">
       <CheckboxWithLabel
-        key={String(selected)}
+        key={String(selected(label))}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
         intermediate={noSelectedCategories}
-        checked={selected}
-        onChange={(evt) => (evt.target.checked ? select() : deselect())}
+        checked={selected(label)}
+        onChange={(evt) => {
+          if (evt.target.checked) {
+            select(label)
+            info.children?.forEach((_, childLabel) => select(childLabel))
+          } else {
+            deselect(label)
+            info.children?.forEach((_, childLabel) => deselect(childLabel))
+          }
+        }}
       >
         {isAuthorRelatedLegend ? (
           <LegendDot dotColor={info.color} authorColorToChange={label} />
@@ -119,7 +136,7 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
               ? `Highlight ${label} exclusively`
               : isOnlySelectedCategory
                 ? "Highlight all categories"
-                : selected
+                : selected(label)
                   ? `Remove ${label} from filter`
                   : `Add ${label} to filter`
           }
