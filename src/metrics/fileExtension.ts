@@ -33,7 +33,6 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
       if (legend.get("Other")?.children?.has(blob.extension)) {
         legend.get("Other")?.children?.get(blob.extension)?.add(1)
       } else {
-        console.warn(`Created extension ${blob.extension}, categorizing under "Other"`)
         legend.get("Other")?.addChild(blob.extension, new PointInfo(noEntryColor, 1))
       }
       legend.get("Other")?.add(1)
