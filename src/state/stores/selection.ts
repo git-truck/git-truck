@@ -1,0 +1,60 @@
+import { create } from "zustand"
+import { useOptions } from "~/contexts/OptionsContext"
+
+type SelectionState = {
+  selectedCategories: Array<string>
+  setSelectedCategories: (categories: Iterable<string>) => void
+  selectCategory: (label: string) => void
+  deselectCategory: (label: string) => void
+  resetSelection: () => void
+}
+
+const useSelectionStore = create<SelectionState>()((set) => ({
+  selectedCategories: [],
+  setSelectedCategories: (categories: Iterable<string>) => set({ selectedCategories: Array.from(categories) }),
+  selectCategory: (label: string) =>
+    set((state) => {
+      const newSet = new Set(state.selectedCategories)
+      newSet.add(label)
+      return { selectedCategories: Array.from(newSet) }
+    }),
+  deselectCategory: (label: string) =>
+    set((state) => {
+      const newSet = new Set(state.selectedCategories)
+      newSet.delete(label)
+      return { selectedCategories: Array.from(newSet) }
+    }),
+  resetSelection: () => set({ selectedCategories: [] })
+}))
+
+export const useSelectedCategories = () => {
+  const { metricType } = useOptions()
+  return useSelectionStore((state) => state.selectedCategories).filter((c) => c.startsWith(metricType + ":"))
+}
+
+export const useSelectedCategory = () => {
+  const { metricType } = useOptions()
+  const selectedCategories = useSelectionStore((state) => state.selectedCategories)
+
+  const selected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
+  const select = (category: string) => useSelectionStore.getState().selectCategory(`${metricType}:${category}`)
+  const deselect = (category: string) => useSelectionStore.getState().deselectCategory(`${metricType}:${category}`)
+  return {
+    selected,
+    select,
+    deselect
+  }
+}
+
+export const useResetSelection = () => useSelectionStore((state) => state.resetSelection)
+
+export const useIsCategorySelected = () => {
+  const { metricType } = useOptions()
+
+  const selectedCategories = useSelectionStore((s) => s.selectedCategories).filter((c) =>
+    c.startsWith(metricType + ":")
+  )
+
+  return (category: string) =>
+    selectedCategories.includes(`${metricType}:${category}`) || selectedCategories.length === 0
+}

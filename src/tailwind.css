@@ -190,7 +190,7 @@
 @utility btn--primary {
   @apply text-primary-text-dark bg-blue-primary rounded;
 
-  &.btn-text {
+  &.btn--text {
     @apply text-blue-primary dark:text-blue-primary border-transparent bg-transparent;
   }
   &.btn--outlined {

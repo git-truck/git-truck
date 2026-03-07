@@ -132,6 +132,7 @@ export default class ServerInstance {
             hash: child.hash,
             path: newPath,
             name: newName,
+            extension: newName.substring(newName.lastIndexOf(".") + 1),
             sizeInBytes: child.size as number
           }
           currTree.children.push(blob)

@@ -1,4 +1,4 @@
-import { useState, type HTMLAttributes, type ReactNode, type JSX } from "react"
+import { useState, type HTMLAttributes, type ReactNode } from "react"
 import { Icon } from "~/components/Icon"
 import { mdiClose, mdiCircle } from "@mdi/js"
 import clsx from "clsx"
@@ -6,7 +6,7 @@ import { Popover } from "~/components/Popover"
 import { HexColorPicker } from "react-colorful"
 import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
-import { useOptions, type ChartType } from "~/contexts/OptionsContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import { useIsClient, useViewSubmit } from "~/hooks"
 
 export const CloseButton = ({
@@ -36,10 +36,9 @@ export const LegendDot = ({
 }: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
-  const { chartType } = useOptions()
   const submit = useViewSubmit()
 
-  if (!authorColorToChange) return <Dot className={className} chartType={chartType} color={color} />
+  if (!authorColorToChange) return <Dot className={className} color={color} />
 
   function updateColor(author: string, color: string) {
     const form = new FormData()
@@ -55,9 +54,7 @@ export const LegendDot = ({
       triggerClassName="flex gap-1 items-center"
       popoverTitle="Choose color"
       positions={["left", "bottom", "top", "right"]}
-      trigger={({ onClick }) => (
-        <Dot className={cn("cursor-pointer", className)} chartType={chartType} color={dotColor} onClick={onClick} />
-      )}
+      trigger={({ onClick }) => <Dot className={cn("cursor-pointer", className)} color={dotColor} onClick={onClick} />}
     >
       <HexColorPicker color={color} onChange={setColor} />
       <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
@@ -72,18 +69,9 @@ export const LegendDot = ({
   )
 }
 
-const Dot = ({
-  color,
-  chartType,
-  className = "",
-  ...props
-}: {
-  color: string
-  as?: keyof JSX.IntrinsicElements
-  className?: string
-  chartType: ChartType
-  onClick?: () => void
-}) => {
+const Dot = ({ color, className = "", ...props }: { color: string; className?: string; onClick?: () => void }) => {
+  const { chartType } = useOptions()
+
   const Component = props.onClick ? "button" : "div"
   return (
     <Component

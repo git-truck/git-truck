@@ -280,7 +280,7 @@ export default function Index() {
           </p>
           <Form className="sticky top-2 grid grid-flow-col grid-cols-[1fr_1fr_1fr] grid-rows-[auto_auto_auto] gap-2 p-2">
             <SearchField
-              key={path}
+              key={"search-input" + path}
               ref={searchFieldRef}
               searchQuery={searchQuery}
               includeDirs={includeDirs}
@@ -290,7 +290,7 @@ export default function Index() {
               Path
             </label>
             <input
-              key={parentDirectoryPath}
+              key={"path-input" + parentDirectoryPath}
               name="path"
               id="path"
               defaultValue={parentDirectoryPath}
@@ -530,7 +530,7 @@ function DirectoryEntry({
   const [{ search: _search, offset: _offset, ...searchParams }] = useQueryStates(browseSearchParamsConfig)
 
   return (
-    <Fragment key={entry.path}>
+    <Fragment>
       <Link
         to={
           entry.type === "directory"

@@ -137,7 +137,8 @@ function getMetricCalcs(
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
         }
-        setExtensionColor(blob, cache)
+        //TODO: Extend to glob patterns for removing files from calculations
+        if (!data.databaseInfo.hiddenFiles.includes(blob.name)) setExtensionColor(blob, cache)
       }
     ],
     [

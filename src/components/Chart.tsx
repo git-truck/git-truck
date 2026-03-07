@@ -5,7 +5,7 @@ import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } f
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useClickedObject } from "~/contexts/ClickedContext"
-import { useComponentSize } from "~/hooks"
+import { useComponentSize, useKey } from "~/hooks"
 import {
   bubblePadding,
   letterWidthForTreeText,
@@ -30,12 +30,14 @@ import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
+import { getColorFromExtension } from "~/metrics/metricUtils"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useQueryStates } from "nuqs"
+import { useQueryState, useQueryStates } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
+import { useIsCategorySelected as useIsCategorySelected } from "~/state/stores/selection"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -51,15 +53,15 @@ export const Chart = memo(function Chart({
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
+  const isCategorySelected = useIsCategorySelected()
 
-  const [params, setParams] = useQueryStates(viewSearchParamsConfig)
-  const { zoomPath } = params
+  const [params] = useQueryStates(viewSearchParamsConfig)
 
-  const setZoomPath = (zoomPathUpdate: string | null | ((prev: string | null) => string | null)) =>
-    setParams((prev) => {
-      const value = typeof zoomPathUpdate === "function" ? zoomPathUpdate(prev.zoomPath) : zoomPathUpdate
-      return { ...prev, zoomPath: value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null }
-    })
+  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+
+  const setZoomPath = (value: string | null) => {
+    return setZoomPathRaw(value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null)
+  }
 
   const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
   const zoomOneLevelOut = () => {
@@ -71,9 +73,13 @@ export const Chart = memo(function Chart({
 
   const { clickedObject, setClickedObject } = useClickedObject()
 
-  const { showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
+  const { dominantAuthorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
   const navigate = useNavigate()
-
+  useKey({ key: "Escape" }, () => {
+    if (clickedObject) {
+      navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+    }
+  })
   const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
 
   const filetree = useMemo(() => {
@@ -135,8 +141,9 @@ export const Chart = memo(function Chart({
     const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       evt.stopPropagation()
 
-      // Deselect if an object is already clicked
-      if (clickedObject) {
+      // If clicking the same object, deselect
+
+      if (clickedObject && d && clickedObject.path === d.data.path) {
         navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
         return
       }
@@ -193,7 +200,6 @@ export const Chart = memo(function Chart({
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        // TODO: Deselect on click outside of nodes
         onClick={() => (clickedObject ? setClickedObject(null) : null)}
         onDoubleClick={() => {
           setZoomPath(null)
@@ -220,17 +226,36 @@ export const Chart = memo(function Chart({
         {nodes.map((d) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
           const eventHandlers = createGroupHandlers(d)
+
+          const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
+          let topContributor = "Multiple contributors"
+          const dominant = databaseInfo.dominantAuthors[d.data.path]
+          const contribSum = databaseInfo.contribSumPerFile[d.data.path]
+
+          const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
+          if (authorPercentage !== null && authorPercentage >= dominantAuthorCutoff) {
+            topContributor = dominant.author
+          }
+
+          const category =
+            metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+          const isSelected = category ? d.data.type !== "tree" && isCategorySelected(category) : true
+
+          const shouldColor = clickedObject
+            ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
+              (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/")) // or we are a not a child of a clicked tree object
+            : isSelected
+
+          const shouldNotColor = (hasSearchResults && !isSearchMatch) || !shouldColor
+
           return (
             <g
               key={d.data.path}
-              className={cn("duration-400", {
-                "cursor-pointer": !clickedObject,
+              className={cn("cursor-pointer duration-400", {
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
-                "opacity-30":
-                  (!isSearchMatch && hasSearchResults) ||
-                  (clickedObject?.type === "blob" && clickedObject.path !== d.data.path)
+                "opacity-30 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
               {...eventHandlers}
             >
@@ -322,16 +347,14 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   const { chartType, metricType, transitionsEnabled } = useOptions()
 
   const commonProps = useMemo(() => {
-    let props: JSX.IntrinsicElements["rect"] = {
-      ...(isBlob(d.data)
-        ? {
-            fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
-            stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
-          }
-        : {
-            strokeWidth: "1px"
-          })
-    }
+    let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
+      ? {
+          fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
+          stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+        }
+      : {
+          // strokeWidth: "1px"
+        }
 
     if (chartType === "BUBBLE_CHART") {
       const circleDatum = d as HierarchyCircularNode<GitObject>
