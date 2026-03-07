@@ -228,18 +228,18 @@ export const Chart = memo(function Chart({
           const eventHandlers = createGroupHandlers(d)
 
           const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
-          let topContributor = "Multiple authors"
+          let topContributor = "Multiple contributors"
           const dominant = databaseInfo.dominantAuthors[d.data.path]
           const contribSum = databaseInfo.contribSumPerFile[d.data.path]
 
-          const authorPercentage = dominant ? Math.round((dominant.contribcount / contribSum) * 100) : null
+          const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
           if (authorPercentage !== null && authorPercentage >= dominantAuthorCutoff) {
             topContributor = dominant.author
           }
 
           const category =
             metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
-          const isSelected = category ? isCategorySelected(category) : true
+          const isSelected = category ? d.data.type !== "tree" && isCategorySelected(category) : true
 
           const shouldColor = clickedObject
             ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
