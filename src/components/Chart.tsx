@@ -227,9 +227,7 @@ export const Chart = memo(function Chart({
           const isSearchMatch = Boolean(searchResults[d.data.path])
           const eventHandlers = createGroupHandlers(d)
 
-          const rawExtension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
-          const extensionInfo = rawExtension ? getColorFromExtension(rawExtension) : null
-          const extension = extensionInfo?.color ? rawExtension : "Other"
+          const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
           let topContributor = "Multiple authors"
           const dominant = databaseInfo.dominantAuthors[d.data.path]
           const contribSum = databaseInfo.contribSumPerFile[d.data.path]
@@ -240,7 +238,7 @@ export const Chart = memo(function Chart({
           }
 
           const category =
-            metricType === "FILE_TYPE" ? rawExtension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+            metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
           const isSelected = category ? isCategorySelected(category) : true
 
           const shouldColor = clickedObject

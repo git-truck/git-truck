@@ -32,20 +32,17 @@ export const useSelectedCategories = () => {
   return useSelectionStore((state) => state.selectedCategories).filter((c) => c.startsWith(metricType + ":"))
 }
 
-export const useSelectedCategory = (category: string) => {
+export const useSelectedCategory = () => {
   const { metricType } = useOptions()
   const selectedCategories = useSelectionStore((state) => state.selectedCategories)
-  const count = selectedCategories.filter((c) => c === `${metricType}:${category}`).length
 
-  const selected = selectedCategories.includes(`${metricType}:${category}`)
-  const select = useSelectionStore((state) => state.selectCategory)
-  const deselect = useSelectionStore((state) => state.deselectCategory)
-
+  const selected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
+  const select = (category: string) => useSelectionStore.getState().selectCategory(`${metricType}:${category}`)
+  const deselect = (category: string) => useSelectionStore.getState().deselectCategory(`${metricType}:${category}`)
   return {
-    count,
     selected,
-    select: () => select(`${metricType}:${category}`),
-    deselect: () => deselect(`${metricType}:${category}`)
+    select,
+    deselect
   }
 }
 
