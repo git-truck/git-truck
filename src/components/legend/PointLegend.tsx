@@ -8,6 +8,7 @@ import { useSelectedCategory, useSelectedCategories, useIsCategorySelected } fro
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 import { feature_flags } from "~/feature_flags"
+import { missingInMapColor } from "~/const"
 
 const legendCutoff = 8
 
@@ -56,6 +57,8 @@ export function PointLegend() {
 
   const shownItems = items.slice(0, collapse ? legendCutoff : items.length)
 
+  const totalWeight = items.filter(([, info]) => info.weight < Infinity).reduce((sum, [, info]) => sum + info.weight, 0)
+
   if (items.length === 0) return null
 
   return (
@@ -79,7 +82,7 @@ export function PointLegend() {
       <div className="flex justify-between gap-1">
         <div className="flex flex-1 flex-col gap-2">
           {shownItems.map(([label, info]) => (
-            <PointLegendEntry key={label} label={label} info={info} />
+            <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
           ))}
           {items.length > legendCutoff ? (
             <PointLegendOther
@@ -94,7 +97,7 @@ export function PointLegend() {
   )
 }
 
-function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
+function PointLegendEntry({ label, info, totalWeight }: { label: string; info: PointInfo; totalWeight: number }) {
   const { metricType } = useOptions()
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
 
@@ -104,8 +107,9 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
   const isOnlySelectedCategory = selected(label) && selectedCategories.length === 1
   const noSelectedCategories = selectedCategories.length === 0
 
+  const dotColor = selected(label) || noSelectedCategories ? info.color : missingInMapColor
   return (
-    <div key={label} className="relative flex gap-1 text-sm leading-none">
+    <div key={label} className="width-full justify-content relative flex gap-1 align-middle text-sm leading-none">
       <CheckboxWithLabel
         key={String(selected(label))}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -122,14 +126,16 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
         }}
       >
         {isAuthorRelatedLegend ? (
-          <LegendDot dotColor={info.color} authorColorToChange={label} />
+          <LegendDot key={dotColor} dotColor={dotColor} authorColorToChange={label} />
         ) : (
-          <LegendDot dotColor={info.color} />
+          <LegendDot key={dotColor} dotColor={dotColor} />
         )}
         <span
           className={cn("truncate", {
-            "font-bold": selected || noSelectedCategories,
-            "text-blue-primary": selected
+            "font-bold": true,
+            "text-blue-primary": selected(label),
+            italic: label === "Other" || label === "Multiple contributors",
+            underline: label === "Other" || label === "Multiple contributors"
           })}
           title={
             noSelectedCategories
@@ -144,6 +150,12 @@ function PointLegendEntry({ label, info }: { label: string; info: PointInfo }) {
           {label}
         </span>
       </CheckboxWithLabel>
+      <div className="text-muted-foreground align-center center flex flex-row gap-5 text-right text-xs">
+        <span className="self-center">{info.weight}</span>
+        {totalWeight > 0 && (
+          <span className="min-w-12 self-center">({((info.weight / totalWeight) * 100).toFixed(1)}%)</span>
+        )}
+      </div>
     </div>
   )
 }
