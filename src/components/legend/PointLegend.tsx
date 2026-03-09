@@ -8,18 +8,21 @@ import { useSelectedCategory, useSelectedCategories, useIsCategorySelected } fro
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 import { feature_flags } from "~/feature_flags"
-import { missingInMapColor } from "~/const"
+import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
+import { Icon } from "~/components/Icon"
+import { mdiClose, mdiMagnify } from "@mdi/js"
 
 const legendCutoff = 8
 
 export class PointInfo {
   public readonly color: `#${string}`
   public weight: number
-  public children?: Map<string, PointInfo>
+  public children: Map<string, PointInfo>
 
   constructor(color: `#${string}`, weight: number) {
     this.color = color
     this.weight = weight
+    this.children = new Map()
   }
 
   add(value: number) {
@@ -27,7 +30,6 @@ export class PointInfo {
   }
 
   addChild(extension: string, child: PointInfo) {
-    if (!this.children) this.children = new Map()
     if (this.children.has(extension)) {
       this.children.get(extension)?.add(child.weight)
       return
@@ -48,6 +50,7 @@ export function PointLegend() {
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 
   const [collapse, setCollapse] = useState<boolean>(true)
+  const [unselectedSearch, setUnselectedSearch] = useState("")
 
   const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
@@ -55,21 +58,36 @@ export function PointLegend() {
     return 0
   })
 
-  const shownItems = items.slice(0, collapse ? legendCutoff : items.length)
+  const totalWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
 
-  const totalWeight = items.filter(([, info]) => info.weight < Infinity).reduce((sum, [, info]) => sum + info.weight, 0)
+  const noSelectedCategories = selectedCategories.length === 0
+
+  // When true, selected items are always shown even if they don't match the search query.
+  // When false, the search filters both selected and unselected items.
+  const ALWAYS_SHOW_SELECTED = false
+
+  const isSearchActive = unselectedSearch.length > 0
+  const matchesSearch = (label: string) => label.toLowerCase().includes(unselectedSearch.toLowerCase())
+
+  const filteredItems = isSearchActive
+    ? items.filter(([label]) => {
+        if (ALWAYS_SHOW_SELECTED && isCategorySelected(label)) return true
+        return matchesSearch(label)
+      })
+    : items
+
+  const shownItems = filteredItems.slice(0, collapse ? legendCutoff : filteredItems.length)
 
   if (items.length === 0) return null
 
   return (
     <div className="-ml-8 flex flex-col gap-1">
-      {selectedCategories.length > 0 ? <ResetSelectionButton /> : null}
       <div
         className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2", {
           hidden: !feature_flags.show_legend_highlight
         })}
       >
-        {shownItems
+        {items
           .filter(([label]) => isCategorySelected(label))
           .map(([label, info]) => (
             <div key={label} title={label} className="flex max-w-[25ch] items-center gap-1 truncate text-sm">
@@ -77,16 +95,29 @@ export function PointLegend() {
               {label}
             </div>
           ))}
-        <span>...and {items.length - legendCutoff} more</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {feature_flags.point_legend_dist_bar_and_search && (
+          <PointLegendDistBar items={items} totalWeight={totalWeight} />
+        )}
+        <div className="flex w-full justify-between gap-2">
+          <ResetSelectionButton disabled={selectedCategories.length === 0} />
+          <div className="align-center flex flex-row gap-5 text-right">
+            {feature_flags.point_legend_dist_bar_and_search &&
+              searchCategoriesButton(unselectedSearch, setUnselectedSearch)}
+            <p className="self-center text-sm font-bold"># Files</p>
+            {totalWeight > 0 && <p className="min-w-12 self-center text-sm font-bold">% Files</p>}
+          </div>
+        </div>
       </div>
       <div className="flex justify-between gap-1">
         <div className="flex flex-1 flex-col gap-2">
           {shownItems.map(([label, info]) => (
             <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
           ))}
-          {items.length > legendCutoff ? (
+          {filteredItems.length > legendCutoff ? (
             <PointLegendOther
-              items={items.slice(legendCutoff)}
+              items={filteredItems.slice(legendCutoff)}
               collapse={collapse}
               toggle={() => setCollapse(!collapse)}
             />
@@ -97,7 +128,17 @@ export function PointLegend() {
   )
 }
 
-function PointLegendEntry({ label, info, totalWeight }: { label: string; info: PointInfo; totalWeight: number }) {
+function PointLegendEntry({
+  label,
+  info,
+  totalWeight,
+  action
+}: {
+  label: string
+  info: PointInfo
+  totalWeight: number
+  action?: "select" | "deselect"
+}) {
   const { metricType } = useOptions()
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
 
@@ -107,21 +148,34 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   const isOnlySelectedCategory = selected(label) && selectedCategories.length === 1
   const noSelectedCategories = selectedCategories.length === 0
 
-  const dotColor = selected(label) || noSelectedCategories ? info.color : missingInMapColor
+  // When action is provided (split mode), derive state from it; otherwise use selection state
+  const isSelected = action ? action === "deselect" : selected(label)
+  const dotColor = info.color
+
   return (
     <div key={label} className="width-full justify-content relative flex gap-1 align-middle text-sm leading-none">
       <CheckboxWithLabel
-        key={String(selected(label))}
+        key={String(isSelected)}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
-        intermediate={noSelectedCategories}
-        checked={selected(label)}
+        intermediate={action ? action === "select" : noSelectedCategories}
+        checked={isSelected}
         onChange={(evt) => {
-          if (evt.target.checked) {
-            select(label)
-            info.children?.forEach((_, childLabel) => select(childLabel))
+          if (action) {
+            if (action === "select") {
+              select(label)
+              info.children.forEach((_, childLabel) => select(childLabel))
+            } else {
+              deselect(label)
+              info.children.forEach((_, childLabel) => deselect(childLabel))
+            }
           } else {
-            deselect(label)
-            info.children?.forEach((_, childLabel) => deselect(childLabel))
+            if (evt.target.checked) {
+              select(label)
+              info.children.forEach((_, childLabel) => select(childLabel))
+            } else {
+              deselect(label)
+              info.children.forEach((_, childLabel) => deselect(childLabel))
+            }
           }
         }}
       >
@@ -133,18 +187,21 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         <span
           className={cn("truncate", {
             "font-bold": true,
-            "text-blue-primary": selected(label),
-            italic: label === "Other" || label === "Multiple contributors",
-            underline: label === "Other" || label === "Multiple contributors"
+            "text-blue-primary": isSelected,
+            "italic underline": label === "Other" || label === "Multiple contributors"
           })}
           title={
-            noSelectedCategories
-              ? `Highlight ${label} exclusively`
-              : isOnlySelectedCategory
-                ? "Highlight all categories"
-                : selected(label)
-                  ? `Remove ${label} from filter`
-                  : `Add ${label} to filter`
+            action
+              ? isSelected
+                ? `Remove ${label} from filter`
+                : `Add ${label} to filter`
+              : noSelectedCategories
+                ? `Highlight ${label} exclusively`
+                : isOnlySelectedCategory
+                  ? "Highlight all categories"
+                  : selected(label)
+                    ? `Remove ${label} from filter`
+                    : `Add ${label} to filter`
           }
         >
           {label}
@@ -195,5 +252,34 @@ function PointLegendOther({
         <span className="text-xs">Show less</span>
       )}
     </ChevronButton>
+  )
+}
+
+function searchCategoriesButton(selectedSearch: string, setSelectedSearch: (value: string) => void) {
+  return (
+    <form
+      className="not-focus-within:has-placeholder-shown:w-button pointer-events-none right-0 z-10 flex w-full flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
+      onSubmit={(event) => {
+        event.preventDefault()
+        //setSearchText("")
+      }}
+    >
+      <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline">
+        <Icon path={mdiClose} size="1em" />
+      </button>
+      <label
+        className="input min-h-button h-button max-h-button relative flex w-full min-w-0 cursor-pointer flex-row-reverse items-center gap-2 overflow-hidden not-focus-within:has-placeholder-shown:grow-0 not-focus-within:has-placeholder-shown:gap-0"
+        title={"Search within selected"}
+      >
+        <input
+          type="text"
+          placeholder="Search selected…"
+          value={selectedSearch}
+          className="peer w-full grow placeholder-shown:not-focus:w-0 placeholder-shown:not-focus:min-w-0"
+          onChange={(e) => setSelectedSearch(e.target.value)}
+        />
+        <Icon path={mdiMagnify} className="hidden min-w-max peer-placeholder-shown:inline peer-focus:hidden" />
+      </label>
+    </form>
   )
 }
