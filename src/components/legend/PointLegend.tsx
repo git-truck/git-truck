@@ -97,16 +97,17 @@ export function PointLegend() {
           ))}
       </div>
       <div className="flex flex-col gap-2">
-        {feature_flags.point_legend_dist_bar_and_search && (
+        {feature_flags.point_legend_dist_bar_and_search ? (
           <PointLegendDistBar items={items} totalWeight={totalWeight} />
-        )}
+        ) : null}
         <div className="flex w-full justify-between gap-2">
           <ResetSelectionButton disabled={selectedCategories.length === 0} />
           <div className="align-center flex flex-row gap-5 text-right">
-            {feature_flags.point_legend_dist_bar_and_search &&
-              searchCategoriesButton(unselectedSearch, setUnselectedSearch)}
+            {feature_flags.point_legend_dist_bar_and_search ? (
+              <SearchCategoriesButton selectedSearch={selectedSearch} setSelectedSearch={setSelectedSearch} />
+            ) : null}
             <p className="self-center text-sm font-bold"># Files</p>
-            {totalWeight > 0 && <p className="min-w-12 self-center text-sm font-bold">% Files</p>}
+            {totalWeight > 0 ? <p className="min-w-12 self-center text-sm font-bold">% Files</p> : null}
           </div>
         </div>
       </div>
