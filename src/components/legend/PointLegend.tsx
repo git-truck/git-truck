@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { LegendDot } from "~/components/util"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -18,6 +18,7 @@ import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { Icon } from "~/components/Icon"
 import { mdiClose, mdiMagnify } from "@mdi/js"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
+import { useKey } from "~/hooks"
 
 const legendCutoff = 8
 
@@ -234,14 +235,13 @@ function SearchCategoriesButton({
   selectedSearch: string
   setSelectedSearch: (value: string) => void
 }) {
+  const ref = useRef<HTMLInputElement>(null)
+  useKey({ key: "Escape" }, () => {
+    ref.current?.blur()
+    setSelectedSearch("")
+  })
   return (
-    <form
-      className="not-focus-within:has-placeholder-shown:w-button pointer-events-none right-0 z-10 flex w-full flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
-      onSubmit={(event) => {
-        event.preventDefault()
-        //setSearchText("")
-      }}
-    >
+    <div className="not-focus-within:has-placeholder-shown:w-button pointer-events-none right-0 z-10 flex w-full flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0">
       <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline">
         <Icon path={mdiClose} size="1em" />
       </button>
@@ -250,6 +250,7 @@ function SearchCategoriesButton({
         title={"Search within selected"}
       >
         <input
+          ref={ref}
           type="text"
           placeholder="Search selected…"
           value={selectedSearch}
@@ -258,6 +259,6 @@ function SearchCategoriesButton({
         />
         <Icon path={mdiMagnify} className="hidden min-w-max peer-placeholder-shown:inline peer-focus:hidden" />
       </label>
-    </form>
+    </div>
   )
 }
