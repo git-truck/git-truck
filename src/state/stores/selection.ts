@@ -6,10 +6,12 @@ type SelectionState = {
   setSelectedCategories: (categories: Iterable<string>) => void
   selectCategory: (label: string) => void
   deselectCategory: (label: string) => void
+  selectCategories: (labels: Iterable<string>) => void
+  deselectCategories: (labels: Iterable<string>) => void
   resetSelection: () => void
 }
 
-const useSelectionStore = create<SelectionState>()((set) => ({
+export const useSelectionStore = create<SelectionState>()((set) => ({
   selectedCategories: [],
   setSelectedCategories: (categories: Iterable<string>) => set({ selectedCategories: Array.from(categories) }),
   selectCategory: (label: string) =>
@@ -22,6 +24,22 @@ const useSelectionStore = create<SelectionState>()((set) => ({
     set((state) => {
       const newSet = new Set(state.selectedCategories)
       newSet.delete(label)
+      return { selectedCategories: Array.from(newSet) }
+    }),
+  selectCategories: (labels: Iterable<string>) =>
+    set((state) => {
+      const newSet = new Set(state.selectedCategories)
+      for (const label of labels) {
+        newSet.add(label)
+      }
+      return { selectedCategories: Array.from(newSet) }
+    }),
+  deselectCategories: (labels: Iterable<string>) =>
+    set((state) => {
+      const newSet = new Set(state.selectedCategories)
+      for (const label of labels) {
+        newSet.delete(label)
+      }
       return { selectedCategories: Array.from(newSet) }
     }),
   resetSelection: () => set({ selectedCategories: [] })
@@ -37,7 +55,9 @@ export const useSelectedCategory = () => {
   const selectedCategories = useSelectionStore((state) => state.selectedCategories)
 
   const selected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
-  const select = (category: string) => useSelectionStore.getState().selectCategory(`${metricType}:${category}`)
+  const select = (category: string) => {
+    return useSelectionStore.getState().selectCategory(`${metricType}:${category}`)
+  }
   const deselect = (category: string) => useSelectionStore.getState().deselectCategory(`${metricType}:${category}`)
   return {
     selected,

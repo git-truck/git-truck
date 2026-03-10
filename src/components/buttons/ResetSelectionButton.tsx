@@ -1,8 +1,11 @@
-import { useResetSelection } from "~/state/stores/selection"
+import { useResetSelection, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
 
-export function ResetSelectionButton({ disabled }: { disabled: boolean }) {
+export function ResetSelectionButton() {
+  const selectedCategories = useSelectedCategories()
   const resetSelection = useResetSelection()
+
+  const disabled = selectedCategories.length === 0
 
   return (
     <button
