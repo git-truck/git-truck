@@ -9,6 +9,7 @@ import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
+import { PullButton } from "~/components/buttons/PullButton"
 
 type Segment = {
   type: "browse" | "zoom" | "filler"
@@ -134,6 +135,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           <Fragment key={fullPath}>
             {!isFirst ? <Icon path={mdiChevronRight} /> : null}
             {isRepo ? <AnalysisInfo trigger={button} /> : button}
+            {isRepo ? <PullButton /> : null}
           </Fragment>
         )
       })}
