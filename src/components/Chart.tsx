@@ -2,9 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { JSX, DOMAttributes } from "react"
 import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } from "react"
-import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
-import { useClickedObject } from "~/contexts/ClickedContext"
 import { useComponentSize, useKey } from "~/hooks"
 import {
   bubblePadding,
@@ -33,11 +31,11 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
-import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useQueryState, useQueryStates } from "nuqs"
+import { useQueryState } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useIsCategorySelected as useIsCategorySelected } from "~/state/stores/selection"
+import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -55,8 +53,6 @@ export const Chart = memo(function Chart({
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
   const isCategorySelected = useIsCategorySelected()
 
-  const [params] = useQueryStates(viewSearchParamsConfig)
-
   const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
 
   const setZoomPath = (value: string | null) => {
@@ -71,16 +67,16 @@ export const Chart = memo(function Chart({
     setZoomPath(parentPath)
   }
 
-  const { clickedObject, setClickedObject } = useClickedObject()
+  const setClickedObject = useSetClickedObject()
+  const clickedObject = useClickedObject()
 
   const { dominantAuthorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
-  const navigate = useNavigate()
+
   useKey({ key: "Escape" }, () => {
     if (clickedObject) {
-      navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+      setClickedObject(null)
     }
   })
-  const tabURL = useMatch(href("/view/commits")) ? "/view/commits" : "/view/details"
 
   const filetree = useMemo(() => {
     // TODO: make filtering faster, e.g. by not having to refetch everything every time
@@ -139,21 +135,15 @@ export const Chart = memo(function Chart({
 
   const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
     const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
-      evt.stopPropagation()
-
       // If clicking the same object, deselect
 
       if (clickedObject && d && clickedObject.path === d.data.path) {
-        navigate(href("/view") + viewSerializer({ ...params, objectPath: null }), { state: { clickedObject: null } })
+        setClickedObject(null)
         return
       }
 
       // Else, navigate to object details
-      navigate(tabURL + viewSerializer({ ...params, objectPath: d?.data.path }), {
-        state: {
-          clickedObject: d?.data
-        }
-      })
+      setClickedObject(d ? d.data : null)
     }
     const onDoubleClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       if (zoomPath && zoomPath === d?.data.path) {
@@ -164,6 +154,8 @@ export const Chart = memo(function Chart({
     }
     return {
       onClick: (evt) => {
+        evt.stopPropagation()
+
         if (clickTimer.current) {
           return
         }

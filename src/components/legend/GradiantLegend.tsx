@@ -1,4 +1,4 @@
-import { useClickedObject } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
 import { useMemo } from "react"
 import { getLightness, numToFriendlyString } from "~/shared/util"
@@ -33,7 +33,7 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
   const { minValue, maxValue, minColor, maxColor } = metricCache.legend as GradLegendData
 
-  const { clickedObject } = useClickedObject()
+  const clickedObject = useClickedObject()
 
   const path = clickedObject?.path ?? hoveredObject?.path ?? null
   const color = path ? metricCache.colormap.get(path) : null
