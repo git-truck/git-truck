@@ -176,10 +176,14 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         </span>
       </CheckboxWithLabel>
       <div className="text-muted-foreground align-center center flex flex-row gap-5 text-right text-xs">
-        <span className="self-center">{info.weight}</span>
-        {totalWeight > 0 && (
-          <span className="min-w-12 self-center">({((info.weight / totalWeight) * 100).toFixed(1)}%)</span>
-        )}
+        <span className="self-center">{info.weight.toLocaleString()}</span>
+        <span className="min-w-12 self-center">
+          {((info.weight / totalWeight) * 100).toLocaleString(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })}
+          %
+        </span>
       </div>
     </div>
   )
