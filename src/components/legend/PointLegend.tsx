@@ -150,7 +150,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   return (
     <div key={label} className="width-full justify-content relative flex gap-1 align-middle text-sm leading-none">
       <CheckboxWithLabel
-        key={String(isSelected)}
+        key={String(labelIsSelected)}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
         intermediate={noSelectedCategories}
         checked={labelIsSelected}
@@ -170,7 +170,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         <span
           className={cn("truncate", {
             "font-bold": true,
-            "text-blue-primary": isSelected,
+            "text-blue-primary": labelIsSelected,
             "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
           })}
           title={
@@ -178,7 +178,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
               ? `Highlight ${label} exclusively`
               : isOnlySelectedCategory
                 ? "Highlight all categories"
-                : isSelected(label)
+                : labelIsSelected
                   ? `Remove ${label} from filter`
                   : `Add ${label} to filter`
           }
