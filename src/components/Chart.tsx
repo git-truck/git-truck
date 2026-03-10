@@ -20,7 +20,8 @@ import {
   letterWidthForBlobText as letterWidthForBlobText,
   treemapTreeBorderRadius,
   letterHeightText,
-  clipPathPadding
+  clipPathPadding,
+  MULTIPLE_CONTRIBUTORS
 } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -30,7 +31,6 @@ import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
-import { getColorFromExtension } from "~/metrics/metricUtils"
 import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
@@ -228,7 +228,7 @@ export const Chart = memo(function Chart({
           const eventHandlers = createGroupHandlers(d)
 
           const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
-          let topContributor = "Multiple contributors"
+          let topContributor: string = MULTIPLE_CONTRIBUTORS
           const dominant = databaseInfo.dominantAuthors[d.data.path]
           const contribSum = databaseInfo.contribSumPerFile[d.data.path]
 
