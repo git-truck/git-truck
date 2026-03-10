@@ -1,5 +1,5 @@
 import type { GitBlobObject, GitObject } from "~/shared/model"
-import { useClickedObject } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
 import { isBlob } from "~/shared/util"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -24,7 +24,7 @@ export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | nu
 
   let arrowVisible = false
   let arrowOffset = 0
-  const clickedObject = useClickedObject().clickedObject ?? hoveredObject ?? null
+  const clickedObject = useClickedObject() ?? hoveredObject ?? null
 
   if (isBlob(clickedObject)) {
     arrowVisible = true
