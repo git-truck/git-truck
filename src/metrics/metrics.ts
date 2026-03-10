@@ -137,8 +137,8 @@ function getMetricCalcs(
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
         }
-        //TODO: Extend to glob patterns for removing files from calculations
-        if (!data.databaseInfo.hiddenFiles.includes(blob.name)) setExtensionColor(blob, cache)
+        //TODO: Ensure that the legend distribution is updated when hiding files, currently if a file type is hidden, it will still be counted in author distribution
+        setExtensionColor(blob, cache)
       }
     ],
     [
