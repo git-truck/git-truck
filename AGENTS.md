@@ -27,7 +27,7 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 ## Key Commands
 
 - **Install Dependencies**: `bun install`
-- **Start Dev Server**: `bun dev:bun` (preferred) or `bun dev`
+- **Start Dev Server**: `bun dev` or `bun dev:bun`
 - **Build**: `bun run build`
 - **Run Unit Tests**: `bun test:unit`
 - **Run E2E Tests**: `bun test:e2e`

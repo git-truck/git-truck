@@ -9,10 +9,10 @@ For a high-level overview of the project architecture, tech stack, and key comma
 1. **Prerequisites**: Ensure you have [Bun](https://bun.sh/) installed.
 2. **Clone the repository**:
 
-```sh
-git clone https://github.com/git-truck/git-truck.git
-cd git-truck
-```
+   ```sh
+   git clone https://github.com/git-truck/git-truck.git
+   cd git-truck
+   ```
 
 3. **Install dependencies**:
 
@@ -30,28 +30,28 @@ There are two primary ways to run the application during development:
    Runs the CLI using the Bun runtime.
 
    ```sh
-   bun dev:bun
+   bun dev
    ```
 
 2. **Using Node/TSX**:
    Runs the CLI using `tsx` (via Node).
 
    ```sh
-   bun dev
-   ```
-
-   To change log levels, you can use the `LOG_LEVEL` environment variable:
-
-   ```sh
-   LOG_LEVEL=debug bun dev
+   node --run dev:node
    ```
 
 ### Testing Globally
 
-You can also install the CLI globally to test it on other repositories:
+After building the project, you can install it globally to test it on other repositories:
 
 ```sh
-npm i -g .
+npm install -g .
+```
+
+When done testing, you can run
+
+```sh
+npm uninstall -g git-truck
 ```
 
 ### Building and Testing
