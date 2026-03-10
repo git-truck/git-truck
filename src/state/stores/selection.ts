@@ -11,7 +11,7 @@ type SelectionState = {
   resetSelection: () => void
 }
 
-export const useSelectionStore = create<SelectionState>()((set) => ({
+const useSelectionStore = create<SelectionState>()((set) => ({
   selectedCategories: [],
   setSelectedCategories: (categories: Iterable<string>) => set({ selectedCategories: Array.from(categories) }),
   selectCategory: (label: string) =>
@@ -52,18 +52,33 @@ export const useSelectedCategories = () => {
 
 export const useSelectedCategory = () => {
   const { metricType } = useOptions()
-  const selectedCategories = useSelectionStore((state) => state.selectedCategories)
 
-  const selected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
-  const select = (category: string) => {
-    return useSelectionStore.getState().selectCategory(`${metricType}:${category}`)
-  }
-  const deselect = (category: string) => useSelectionStore.getState().deselectCategory(`${metricType}:${category}`)
+  const selectCategory = useSelectionStore((s) => s.selectCategory)
+  const deselectCategory = useSelectionStore((s) => s.deselectCategory)
+  const selectedCategories = useSelectionStore((s) => s.selectedCategories).filter((c) =>
+    c.startsWith(metricType + ":")
+  )
+
+  const isSelected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
+  const select = (category: string) => selectCategory(`${metricType}:${category}`)
+  const deselect = (category: string) => deselectCategory(`${metricType}:${category}`)
   return {
-    selected,
+    isSelected,
     select,
     deselect
   }
+}
+
+export const useSelectCategories = () => {
+  const { metricType } = useOptions()
+  const selectCategories = useSelectionStore((s) => s.selectCategories)
+  return (categories: Iterable<string>) => selectCategories(Array.from(categories, (c) => `${metricType}:${c}`))
+}
+
+export const useDeselectCategories = () => {
+  const { metricType } = useOptions()
+  const deselectCategories = useSelectionStore((s) => s.deselectCategories)
+  return (categories: Iterable<string>) => deselectCategories(Array.from(categories, (c) => `${metricType}:${c}`))
 }
 
 export const useResetSelection = () => useSelectionStore((state) => state.resetSelection)

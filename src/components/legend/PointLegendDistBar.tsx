@@ -4,7 +4,7 @@ import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selec
 import { cn } from "~/styling"
 
 export function PointLegendDistBar({ items, totalWeight }: { items: [string, PointInfo][]; totalWeight: number }) {
-  const { selected, select, deselect } = useSelectedCategory()
+  const { isSelected: selected, select, deselect } = useSelectedCategory()
   //If percentage is below this cutoff, it will be grouped into "Rest" segment. This is to avoid having too many thin segments that are hard to interact with. The cutoff is a tradeoff between accuracy and usability.
   const CUTOFF = 2
 
