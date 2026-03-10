@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { LegendDot } from "~/components/util"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -9,7 +9,8 @@ import {
   useSelectedCategories,
   useIsCategorySelected,
   useSelectCategories,
-  useDeselectCategories
+  useDeselectCategories,
+  useResetSelection
 } from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
@@ -19,6 +20,7 @@ import { Icon } from "~/components/Icon"
 import { mdiClose, mdiMagnify } from "@mdi/js"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useKey } from "~/hooks"
+import { useQueryState } from "nuqs"
 
 const legendCutoff = 8
 
@@ -51,6 +53,12 @@ export function PointLegend() {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const isCategorySelected = useIsCategorySelected()
+  const [path] = useQueryState("path")
+  const resetSelection = useResetSelection()
+
+  useEffect(() => {
+    resetSelection()
+  }, [path, resetSelection])
 
   const metricCache = metricsData.get(metricType)
 
