@@ -1,11 +1,10 @@
 name: Playwright Tests
 
-# TODO: Fix this workflow #
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   e2e-test:
