@@ -14,3 +14,5 @@ export const circleTreeTextOffsetY = letterHeightText - 1
 export const circleBlobTextOffsetY = letterHeightText + 0
 export const noEntryColor = "#c0c0c0"
 export const missingInMapColor = "#808080"
+
+export const MULTIPLE_CONTRIBUTORS = "Multiple contributors" as const

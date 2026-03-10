@@ -2,7 +2,7 @@ import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "~/metrics/metrics"
-import { noEntryColor } from "~/const"
+import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 
 export function setDominantAuthorColor(
   authorColors: Record<string, `#${string}`>,
@@ -18,10 +18,10 @@ export function setDominantAuthorColor(
 
   // helper to bump multiple-contributors count
   const bumpMultiple = () => {
-    if (legend.has("Multiple contributors")) {
-      legend.get("Multiple contributors")?.add(1)
+    if (legend.has(MULTIPLE_CONTRIBUTORS)) {
+      legend.get(MULTIPLE_CONTRIBUTORS)?.add(1)
     } else {
-      legend.set("Multiple contributors", new PointInfo(noEntryColor, 1))
+      legend.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
     }
     cache.colormap.set(blob.path, noEntryColor)
   }

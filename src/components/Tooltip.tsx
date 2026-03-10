@@ -20,7 +20,7 @@ import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, numToF
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
-import { missingInMapColor } from "~/const"
+import { missingInMapColor, MULTIPLE_CONTRIBUTORS } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
@@ -141,7 +141,7 @@ function ColorMetricDependentInfo(props: {
       if (authorPercentage < props.dominantAuthorCutoff) {
         // TODO show how many authors if no dominant author
         icon = mdiAccountGroup
-        content = "Multiple contributors"
+        content = MULTIPLE_CONTRIBUTORS
         break
       }
       content = `${dominant.author} ${authorPercentage}%`

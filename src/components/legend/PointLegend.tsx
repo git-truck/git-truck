@@ -16,6 +16,7 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { Icon } from "~/components/Icon"
 import { mdiClose, mdiMagnify } from "@mdi/js"
+import { MULTIPLE_CONTRIBUTORS } from "~/const"
 
 const legendCutoff = 8
 
@@ -175,7 +176,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           className={cn("truncate", {
             "font-bold": true,
             "text-blue-primary": isSelected,
-            "italic underline": label === "Other" || label === "Multiple contributors"
+            "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
           })}
           title={
             noSelectedCategories
