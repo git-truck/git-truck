@@ -97,8 +97,8 @@ export function PointLegend() {
           <ResetSelectionButton />
           <div className="align-center flex flex-row gap-5 text-right">
             <SearchCategoriesButton selectedSearch={selectedSearch} setSelectedSearch={setSelectedSearch} />
-            <p className="self-center text-sm font-bold"># Files</p>
-            {totalWeight > 0 ? <p className="min-w-12 self-center text-sm font-bold">% Files</p> : null}
+            <p className="w-12 self-center text-sm font-bold"># Files</p>
+            <p className="w-12 self-center text-sm font-bold">% Files</p>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
       </CheckboxWithLabel>
       <div className="text-muted-foreground align-center center flex flex-row gap-5 text-right text-xs">
         <span className="self-center">{info.weight.toLocaleString()}</span>
-        <span className="min-w-12 self-center">
+        <span className="w-12 self-center">
           {((info.weight / totalWeight) * 100).toLocaleString(undefined, {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1
