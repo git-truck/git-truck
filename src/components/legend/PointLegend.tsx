@@ -66,20 +66,9 @@ export function PointLegend() {
 
   const totalWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
 
-  // TODO: Decide on this behavior. Always showing selected items even if they don't match the search query allows users to keep their context and see their selected items, but it can be confusing if they don't understand why some items are shown when they don't match the search. On the other hand, filtering selected items can make it easier to find specific items, but it can also make users lose their context and not see their selected items. We could also consider adding a toggle to allow users to choose their preferred behavior.
-  // When true, selected items are always shown even if they don't match the search query.
-  // When false, the search filters both selected and unselected items.
-  const ALWAYS_SHOW_SELECTED = true
-
-  const isSearchActive = selectedSearch.length > 0
   const matchesSearch = (label: string) => label.toLowerCase().includes(selectedSearch.toLowerCase())
 
-  const filteredItems = isSearchActive
-    ? items.filter(([label]) => {
-        if (ALWAYS_SHOW_SELECTED && isCategorySelected(label)) return true
-        return matchesSearch(label)
-      })
-    : items
+  const filteredItems = selectedSearch.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
 
   const shownItems = filteredItems.slice(0, collapse ? legendCutoff : filteredItems.length)
 
