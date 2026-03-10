@@ -57,7 +57,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
   }
 
   return (
-    <div className="mt-2 flex h-3 w-full overflow-hidden rounded-4xl ring-4 ring-gray-300 dark:ring-gray-900">
+    <div className="ring-primary-bg dark:ring-primary-bg-dark mt-2 flex h-3 w-full overflow-hidden rounded-4xl ring-4">
       {segments.map((seg) => {
         const isSel = selected(seg.label) || (seg.label === "Rest" && restLabels.some((label) => selected(label)))
         return (
