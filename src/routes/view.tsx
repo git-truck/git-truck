@@ -1,16 +1,6 @@
 import { mdiMenu } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import {
-  Await,
-  useLoaderData,
-  Link,
-  Outlet,
-  redirect,
-  createContext,
-  useLocation,
-  href,
-  useNavigate
-} from "react-router"
+import { Await, useLoaderData, Link, redirect, createContext, useLocation, href, useNavigate } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, Suspense, useReducer, useState } from "react"
@@ -50,6 +40,7 @@ import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
+import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -449,28 +440,7 @@ export default function Repo() {
                       <Icon path={mdiMenu} size="1.5em" />
                     </button>
                   </div>
-                  <CollapsibleHeader
-                    className="card"
-                    title={
-                      <>
-                        {objectPath ? (
-                          <>
-                            <span className="truncate" title={objectPath}>
-                              Details:{" "}
-                              <span className="normal-case">
-                                {objectPathIsFile ? objectPath.split("/").pop() : objectPath}
-                              </span>
-                            </span>
-                          </>
-                        ) : (
-                          "Details"
-                        )}
-                      </>
-                    }
-                    contentClassName="pb-6"
-                  >
-                    <Outlet />
-                  </CollapsibleHeader>
+                  <InspectPanel />
                   <CollapsibleHeader
                     className="card"
                     title={<>Visualization options</>}
