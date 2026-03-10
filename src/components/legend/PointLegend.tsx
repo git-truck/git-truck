@@ -8,7 +8,8 @@ import {
   useSelectedCategory,
   useSelectedCategories,
   useIsCategorySelected,
-  useSelectionStore
+  useSelectCategories,
+  useDeselectCategories
 } from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
@@ -139,17 +140,15 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
 
   const selectedCategories = useSelectedCategories()
 
-  const { selectCategories, deselectCategories } = useSelectionStore(({ selectCategories, deselectCategories }) => ({
-    selectCategories,
-    deselectCategories
-  }))
+  const selectCategories = useSelectCategories()
+  const deselectCategories = useDeselectCategories()
 
-  const { selected } = useSelectedCategory()
+  const { isSelected } = useSelectedCategory()
 
-  const isOnlySelectedCategory = selected(label) && selectedCategories.length === 1
+  const isOnlySelectedCategory = isSelected(label) && selectedCategories.length === 1
   const noSelectedCategories = selectedCategories.length === 0
 
-  const isSelected = selected(label)
+  const labelIsSelected = isSelected(label)
   const dotColor = info.color
 
   return (
@@ -158,7 +157,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         key={String(isSelected)}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
         intermediate={noSelectedCategories}
-        checked={isSelected}
+        checked={labelIsSelected}
         onChange={(evt) => {
           if (evt.target.checked) {
             selectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
@@ -183,7 +182,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
               ? `Highlight ${label} exclusively`
               : isOnlySelectedCategory
                 ? "Highlight all categories"
-                : selected(label)
+                : isSelected(label)
                   ? `Remove ${label} from filter`
                   : `Add ${label} to filter`
           }
