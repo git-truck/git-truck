@@ -1,8 +1,8 @@
 import type { FileChange, FullCommitDTO } from "~/shared/model"
-import { Fragment } from "react"
+import { Fragment, useState } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
-import { useLocation, useNavigation, useSearchParams } from "react-router"
-import { useClickedObject } from "~/contexts/ClickedContext"
+import { useNavigation } from "react-router"
+import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "~/components/Popover"
@@ -127,34 +127,25 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
 
 export const COMMIT_STEP = 10
 
-export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO[] | null; commitCount: number }) {
+export function CommitHistory({
+  commits,
+  commitCount,
+  onCountChange
+}: {
+  commits: FullCommitDTO[] | null
+  commitCount: number
+  onCountChange?: (count: number) => void
+}) {
   const navigation = useNavigation()
-  const location = useLocation()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [commitShowCount, setCommitShowCount] = useState(COMMIT_STEP)
+  const clickedObject = useClickedObject()
 
-  const commitShowCount = Number(searchParams.get("count") ?? String(COMMIT_STEP))
-  const { clickedObject } = useClickedObject()
-
-  // function fetchCommits() {
-  //   if (!clickedObject) return
-  //   setCommitShowCount((prev) => prev + commitIncrement)
-  //   const searchParams = new URLSearchParams()
-  //   // searchParams.set("branch", analyzerData.databaseInfo.branch)
-  //   // searchParams.set("repo", analyzerData.databaseInfo.repo)
-  //   searchParams.set("path", clickedObject.path)
-  //   searchParams.set("count", commitShowCount + commitIncrement + "")
-  //   navigate(`./commits?${searchParams.toString()}`)
-  // }
-
-  // useEffect(() => {
-  //   setCommitShowCount(0)
-  //   fetchCommits()
-  // }, [clickedObject])
-
-  // useEffect(() => {
-  //   if (fetcher.state !== "idle") return
-  //   const data = fetcher.data as FullCommitDTO[] | null
-  // }, [fetcher])
+  // Reset to initial page size whenever a different node is selected.
+  const [prevPath, setPrevPath] = useState(clickedObject?.path)
+  if (clickedObject?.path !== prevPath) {
+    setPrevPath(clickedObject?.path)
+    setCommitShowCount(COMMIT_STEP)
+  }
 
   if (!clickedObject) throw new Error("Clicked object is null in CommitHistory")
 
@@ -179,17 +170,11 @@ export function CommitHistory({ commits, commitCount }: { commits: FullCommitDTO
           commitShowCount < commitCount ? (
             <button
               className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
-              onClick={() =>
-                setSearchParams(
-                  (prev) => {
-                    prev.set("count", String(Number(prev.get("count") ?? String(COMMIT_STEP)) + COMMIT_STEP))
-                    return prev
-                  },
-                  {
-                    state: location.state
-                  }
-                )
-              }
+              onClick={() => {
+                const newCount = commitShowCount + COMMIT_STEP
+                setCommitShowCount(newCount)
+                onCountChange?.(newCount)
+              }}
             >
               Show more commits
             </button>
