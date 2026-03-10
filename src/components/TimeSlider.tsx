@@ -1,6 +1,6 @@
 import { useNavigation } from "react-router"
 import { Fragment, useState, useTransition, type CSSProperties } from "react"
-import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import { Slider, Rail, Handles, Tracks, type RailProps } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort } from "~/shared/util"
 import DatePicker from "react-datepicker"
@@ -52,7 +52,7 @@ export default function Timeline({ className }: { className?: string }) {
           })
         }}
       >
-        <Rail>{SliderRail}</Rail>
+        <Rail>{(props) => <SliderRail {...props} />}</Rail>
         <Handles>
           {({ handles, getHandleProps }) => (
             <div className="">
