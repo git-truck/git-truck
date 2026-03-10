@@ -18,9 +18,5 @@ export const feature_flags = {
   /**
    * Group all non-code filetype extension under "Other" category
    */
-  group_noncode_filetypes_in_other: true,
-  /**
-   * Enable distribution bar and search in point legend
-   */
-  point_legend_dist_bar_and_search: false
+  group_noncode_filetypes_in_other: true
 }
