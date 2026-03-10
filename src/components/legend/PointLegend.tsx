@@ -4,7 +4,12 @@ import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
-import { useSelectedCategory, useSelectedCategories, useIsCategorySelected } from "~/state/stores/selection"
+import {
+  useSelectedCategory,
+  useSelectedCategories,
+  useIsCategorySelected,
+  useSelectionStore
+} from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { ResetSelectionButton } from "~/components/buttons/ResetSelectionButton"
 import { feature_flags } from "~/feature_flags"
@@ -42,7 +47,6 @@ export type PointLegendData = Map<string, PointInfo>
 export function PointLegend() {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
-  const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
 
   const metricCache = metricsData.get(metricType)
@@ -50,7 +54,7 @@ export function PointLegend() {
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 
   const [collapse, setCollapse] = useState<boolean>(true)
-  const [unselectedSearch, setUnselectedSearch] = useState("")
+  const [selectedSearch, setSelectedSearch] = useState("")
 
   const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
@@ -60,14 +64,13 @@ export function PointLegend() {
 
   const totalWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
 
-  const noSelectedCategories = selectedCategories.length === 0
-
+  // TODO: Decide on this behavior. Always showing selected items even if they don't match the search query allows users to keep their context and see their selected items, but it can be confusing if they don't understand why some items are shown when they don't match the search. On the other hand, filtering selected items can make it easier to find specific items, but it can also make users lose their context and not see their selected items. We could also consider adding a toggle to allow users to choose their preferred behavior.
   // When true, selected items are always shown even if they don't match the search query.
   // When false, the search filters both selected and unselected items.
-  const ALWAYS_SHOW_SELECTED = false
+  const ALWAYS_SHOW_SELECTED = true
 
-  const isSearchActive = unselectedSearch.length > 0
-  const matchesSearch = (label: string) => label.toLowerCase().includes(unselectedSearch.toLowerCase())
+  const isSearchActive = selectedSearch.length > 0
+  const matchesSearch = (label: string) => label.toLowerCase().includes(selectedSearch.toLowerCase())
 
   const filteredItems = isSearchActive
     ? items.filter(([label]) => {
@@ -101,7 +104,7 @@ export function PointLegend() {
           <PointLegendDistBar items={items} totalWeight={totalWeight} />
         ) : null}
         <div className="flex w-full justify-between gap-2">
-          <ResetSelectionButton disabled={selectedCategories.length === 0} />
+          <ResetSelectionButton />
           <div className="align-center flex flex-row gap-5 text-right">
             {feature_flags.point_legend_dist_bar_and_search ? (
               <SearchCategoriesButton selectedSearch={selectedSearch} setSelectedSearch={setSelectedSearch} />
@@ -129,28 +132,23 @@ export function PointLegend() {
   )
 }
 
-function PointLegendEntry({
-  label,
-  info,
-  totalWeight,
-  action
-}: {
-  label: string
-  info: PointInfo
-  totalWeight: number
-  action?: "select" | "deselect"
-}) {
+function PointLegendEntry({ label, info, totalWeight }: { label: string; info: PointInfo; totalWeight: number }) {
   const { metricType } = useOptions()
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
 
   const selectedCategories = useSelectedCategories()
-  const { selected, select, deselect } = useSelectedCategory()
+
+  const { selectCategories, deselectCategories } = useSelectionStore(({ selectCategories, deselectCategories }) => ({
+    selectCategories,
+    deselectCategories
+  }))
+
+  const { selected } = useSelectedCategory()
 
   const isOnlySelectedCategory = selected(label) && selectedCategories.length === 1
   const noSelectedCategories = selectedCategories.length === 0
 
-  // When action is provided (split mode), derive state from it; otherwise use selection state
-  const isSelected = action ? action === "deselect" : selected(label)
+  const isSelected = selected(label)
   const dotColor = info.color
 
   return (
@@ -158,25 +156,13 @@ function PointLegendEntry({
       <CheckboxWithLabel
         key={String(isSelected)}
         checkBoxClassName="opacity-0 group-hover:opacity-100 transition-opacity"
-        intermediate={action ? action === "select" : noSelectedCategories}
+        intermediate={noSelectedCategories}
         checked={isSelected}
         onChange={(evt) => {
-          if (action) {
-            if (action === "select") {
-              select(label)
-              info.children.forEach((_, childLabel) => select(childLabel))
-            } else {
-              deselect(label)
-              info.children.forEach((_, childLabel) => deselect(childLabel))
-            }
+          if (evt.target.checked) {
+            selectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
           } else {
-            if (evt.target.checked) {
-              select(label)
-              info.children.forEach((_, childLabel) => select(childLabel))
-            } else {
-              deselect(label)
-              info.children.forEach((_, childLabel) => deselect(childLabel))
-            }
+            deselectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
           }
         }}
       >
@@ -192,17 +178,13 @@ function PointLegendEntry({
             "italic underline": label === "Other" || label === "Multiple contributors"
           })}
           title={
-            action
-              ? isSelected
-                ? `Remove ${label} from filter`
-                : `Add ${label} to filter`
-              : noSelectedCategories
-                ? `Highlight ${label} exclusively`
-                : isOnlySelectedCategory
-                  ? "Highlight all categories"
-                  : selected(label)
-                    ? `Remove ${label} from filter`
-                    : `Add ${label} to filter`
+            noSelectedCategories
+              ? `Highlight ${label} exclusively`
+              : isOnlySelectedCategory
+                ? "Highlight all categories"
+                : selected(label)
+                  ? `Remove ${label} from filter`
+                  : `Add ${label} to filter`
           }
         >
           {label}
@@ -256,7 +238,13 @@ function PointLegendOther({
   )
 }
 
-function searchCategoriesButton(selectedSearch: string, setSelectedSearch: (value: string) => void) {
+function SearchCategoriesButton({
+  selectedSearch,
+  setSelectedSearch
+}: {
+  selectedSearch: string
+  setSelectedSearch: (value: string) => void
+}) {
   return (
     <form
       className="not-focus-within:has-placeholder-shown:w-button pointer-events-none right-0 z-10 flex w-full flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
