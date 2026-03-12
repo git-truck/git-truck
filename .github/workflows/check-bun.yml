@@ -27,15 +27,10 @@ jobs:
         with:
           fetch-depth: "0"
 
-      - name: Use Bun ${{ matrix.bun-version }}
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
         with:
           bun-version: ${{ matrix.bun-version }}
-
-      - name: Install dependencies
-        # TODO: This currently errors, tepmporary fix
-        # run: bun install --frozen-lockfile
-        run: rm bun.lock && bun install
 
       - name: Run tests
         run: bun --bun test src

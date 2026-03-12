@@ -45,7 +45,6 @@
     "check": "npm run knip && npm run lint && npm run format:check",
     "format:check": "prettier --check src scripts e2e",
     "lint": "eslint --cache",
-    "prepare": "node .husky/install.mjs",
     "update-deps": "npx npm-check-updates -i",
     "knip": "knip",
     "knip:write": "knip --fix"
@@ -109,7 +108,6 @@
     "isbot": "^5.1.35",
     "knip": "^5.83.1",
     "language-map": "^1.5.0",
-    "lint-staged": "^16.2.7",
     "npm-check-updates": "^19.3.2",
     "open": "^11.0.0",
     "prettier": "^3.8.1",
@@ -149,12 +147,6 @@
     "endOfLine": "lf",
     "plugins": [
       "prettier-plugin-tailwindcss"
-    ]
-  },
-  "lint-staged": {
-    "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
-      "eslint --cache --fix",
-      "prettier --write"
     ]
   },
   "knip": {

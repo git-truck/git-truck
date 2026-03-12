@@ -1,0 +1,23 @@
+name: Setup Bun and install dependencies
+description: Set up Bun and install dependencies with the repository's current CI workaround.
+
+inputs:
+  bun-version:
+    description: Bun version to install.
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        rm bun.lock
+        bun install
+        git restore bun.lock
