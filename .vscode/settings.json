@@ -5,9 +5,10 @@
   "css.lint.unknownAtRules": "ignore",
   "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "typescript.tsdk": "node_modules/typescript/lib",
   "files.autoSaveWhenNoErrors": true,
   "javascript.preferences.importModuleSpecifier": "non-relative",
-  "typescript.preferences.importModuleSpecifier": "non-relative"
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": true
 }

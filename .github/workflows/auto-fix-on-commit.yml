@@ -1,0 +1,48 @@
+name: Auto fix
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  autofix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
+
+      - name: Auto fix lint
+        id: lint_fix
+        continue-on-error: true
+        run: bun --bun run lint:fix
+
+      - name: Report remaining lint issues
+        if: steps.lint_fix.outcome == 'failure'
+        run: echo "Lint auto-fix reported remaining issues. Continuing so any applied fixes can still be committed."
+
+      - name: Auto format
+        run: bun --bun run format:write
+
+      - name: Commit and push changes
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: auto-fix formatting and lint"
+            git push
+          else
+            echo "No changes to commit"
+          fi
