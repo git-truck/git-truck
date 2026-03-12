@@ -32,7 +32,7 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
             })
           }}
         >
-          <Rail>{SliderRail}</Rail>
+          <Rail>{(props) => <SliderRail {...props} />}</Rail>
           <Handles>
             {({ handles, getHandleProps }) => (
               <Fragment>
