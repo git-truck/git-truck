@@ -27,11 +27,15 @@ function cleanUp() {
     execSync("npm un -g git-truck", { stdio: "ignore" })
     execSync("npm cache clean --force", { stdio: "ignore" })
     execSync(`npx rimraf ${npxCacheDir}`, { stdio: "ignore" })
-  } catch {}
+  } catch {
+    // ignore
+  }
   try {
     execSync("bun remove -g git-truck", { stdio: "ignore" })
     execSync("bun pm cache rm", { stdio: "ignore" })
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 
 const reps = Number(args[1]) || 1
