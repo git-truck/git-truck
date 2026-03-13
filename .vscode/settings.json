@@ -1,6 +1,6 @@
 {
   "editor.formatOnSave": true,
-  "githubIssues.issueBranchTitle": "${user}/${issueNumber}-${sanitizedIssueTitle}",
+  "githubIssues.issueBranchTitle": "${user}/${issueNumber}",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "css.lint.unknownAtRules": "ignore",
   "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
