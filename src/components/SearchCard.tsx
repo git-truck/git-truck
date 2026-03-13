@@ -175,7 +175,7 @@ export const SearchCard = memo(function SearchCard() {
                 <Icon path={object.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
               ) : (
                 <Icon
-                  color={metrics.get(options.metricType)?.colormap.get(object.path) ?? "grey"}
+                  color={metrics.get(options.metricType)?.categoriesMap.get(object.path)?.[0].color ?? "grey"}
                   path={mdiFile}
                   size={0.75}
                   className="shrink-0"

@@ -1,8 +1,9 @@
 import languageMap from "language-map/languages.json" with { type: "json" }
+import type { HexColor } from "~/shared/model"
 
 interface ColorResult {
   lang: string
-  color: `#${string}` | null
+  color: HexColor | null
 }
 
 const extensionToColor = new Map<string, ColorResult>()
@@ -24,7 +25,7 @@ for (const [lang, { color, extensions }] of Object.entries(
     const extWithoutDot = ext.startsWith(".") ? ext.slice(1) : ext
     extensionToColor.set(extWithoutDot, {
       lang,
-      color: color as `#${string}` | null
+      color: color as HexColor | null
     })
   }
 }

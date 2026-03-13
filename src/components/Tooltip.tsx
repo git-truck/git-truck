@@ -1,37 +1,30 @@
-import {
-  mdiAccount,
-  mdiAccountGroup,
-  mdiChevronRight,
-  mdiCircleSmall,
-  mdiFileOutline,
-  mdiPlusMinusVariant,
-  mdiPulse,
-  mdiSourceCommit
-} from "@mdi/js"
+import { mdiChevronRight, mdiCircleSmall, mdiPlusMinusVariant, mdiPulse, mdiSourceCommit } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Fragment, useMemo, useRef } from "react"
 import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import type { MetricType } from "~/metrics/metrics"
-import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, numToFriendlyString } from "~/shared/util"
-
+import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, formatLargeNumber } from "~/shared/util"
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
-import { missingInMapColor, MULTIPLE_CONTRIBUTORS } from "~/const"
+import { missingInMapColor } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { useHoveredObject } from "~/state/stores/hovered-object"
+import { Metrics } from "~/metrics/metrics"
 
 export function Tooltip({ className = "" }: { className?: string }) {
   const hoveredObject = useHoveredObject()
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { chartType, sizeMetric, metricType, topContributorCutoff } = useOptions()
+  const { chartType, sizeMetric, metricType } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
-  const color = hoveredObject ? metricsData.get(metricType)?.colormap?.get(hoveredObject.path) : missingInMapColor
+  const colors = hoveredObject
+    ? metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path)
+    : [missingInMapColor]
+  const color = Array.isArray(colors) && colors.length === 1 ? colors[0] : missingInMapColor
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
   const top = useMemo(() => y < window.innerHeight / 2, [y])
@@ -76,21 +69,10 @@ export function Tooltip({ className = "" }: { className?: string }) {
       </span>
       {hoveredObject?.type === "blob" ? (
         <div className="flex w-max flex-col gap-1">
-          <div className="flex gap-1">
-            <ColorMetricDependentInfo
-              metric={metricType}
-              hoveredObject={hoveredObject}
-              databaseInfo={databaseInfo}
-              topContributorCutoff={topContributorCutoff}
-            />
-          </div>
+          <div className="flex gap-1">{hoveredObject ? <MetricContent hoveredObject={hoveredObject} /> : null}</div>
           {metricType !== sizeMetric ? (
             <div className="flex gap-1">
-              <SizeMetricDependentInfo
-                sizeMetric={sizeMetric}
-                databaseInfo={databaseInfo}
-                hoveredObject={hoveredObject}
-              />
+              <SizeMetricContent sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredObject={hoveredObject} />
             </div>
           ) : null}
         </div>
@@ -99,83 +81,18 @@ export function Tooltip({ className = "" }: { className?: string }) {
   )
 }
 
-function ColorMetricDependentInfo(props: {
-  metric: MetricType
-  hoveredObject: GitBlobObject | null
-  databaseInfo: DatabaseInfo
-  topContributorCutoff: number
-}) {
-  let icon: string
-  let content: string
-  const path = props.hoveredObject?.path ?? ""
-  switch (props.metric) {
-    case "MOST_COMMITS": {
-      icon = mdiSourceCommit
-      const noCommits = props.databaseInfo.commitCounts[path]
-      if (!noCommits) {
-        content = "No activity in selected range"
-        break
-      }
-      content = `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
-      break
-    }
-    case "LAST_CHANGED": {
-      icon = mdiPulse
-      const epoch = props.databaseInfo.lastChanged[path]
-      if (!epoch) {
-        content = "No activity in selected range"
-        break
-      }
-      content = dateFormatRelative(epoch)
-      break
-    }
-    case "TOP_CONTRIBUTOR": {
-      icon = mdiAccount
-      const dominant = props.databaseInfo.topContributors[path]
-      const contribSum = props.databaseInfo.contribSumPerFile[path]
-      if (!dominant) {
-        content = "No activity in selected range"
-        break
-      }
-      if (!contribSum) {
-        content = dominant.contributor
-        break
-      }
-      const contributorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
-      if (contributorPercentage < props.topContributorCutoff) {
-        // TODO show how many contributors if no top contributor
-        icon = mdiAccountGroup
-        content = MULTIPLE_CONTRIBUTORS
-        break
-      }
-      content = `${dominant.contributor} ${contributorPercentage}%`
-      break
-    }
-    case "MOST_CONTRIBUTIONS": {
-      icon = mdiPlusMinusVariant
-      const contribs = props.databaseInfo.contribSumPerFile[path]
-      if (!contribs) {
-        content = "No activity in selected range"
-        break
-      }
-      content = `${numToFriendlyString(contribs)} lines`
-      break
-    }
-    case "FILE_TYPE": {
-      icon = mdiFileOutline
-      const extension = props.hoveredObject?.name.substring(props.hoveredObject.name.lastIndexOf(".")) ?? ""
-      content = extension
-      break
-    }
-    case "FILE_SIZE": {
-      icon = FileSizeMetric.icon
-      if (!props.hoveredObject) {
-        content = "Size unknown"
-      } else {
-        content = FileSizeMetric.getTooltipContent(props.hoveredObject, props.databaseInfo)
-      }
-    }
-  }
+function MetricContent({ hoveredObject }: { hoveredObject: GitBlobObject }) {
+  const { databaseInfo } = useData()
+  const { metricType, topContributorCutoff } = useOptions()
+  const [, contributorColors] = useMetrics()
+
+  const metric = Metrics[metricType]
+  const icon = metric.icon
+  const content = metric.getTooltipContent(hoveredObject, databaseInfo, {
+    topContributorCutoff: topContributorCutoff,
+    contributorColors: Object.fromEntries(contributorColors.entries()) as Record<string, `#${string}`>
+  })
+
   return (
     <>
       <Icon path={icon} color="currentColor" />
@@ -184,7 +101,7 @@ function ColorMetricDependentInfo(props: {
   )
 }
 
-function SizeMetricDependentInfo({
+function SizeMetricContent({
   sizeMetric,
   hoveredObject: hoveredBlob,
   databaseInfo
@@ -221,7 +138,7 @@ function SizeMetricDependentInfo({
         content = "No activity in selected range"
         break
       }
-      content = `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
+      content = `${formatLargeNumber(noCommits)} commit${noCommits > 1 ? "s" : ""}`
       break
     }
     case "LAST_CHANGED": {
@@ -241,7 +158,7 @@ function SizeMetricDependentInfo({
         content = "No activity in selected range"
         break
       }
-      content = `${numToFriendlyString(contribs)} lines`
+      content = `${formatLargeNumber(contribs)} lines`
       break
     }
   }

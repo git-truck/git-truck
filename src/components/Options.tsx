@@ -1,23 +1,22 @@
-import { memo } from "react"
 import type { ChartType } from "~/contexts/OptionsContext"
 import { Chart, useOptions } from "~/contexts/OptionsContext"
 import type { MetricType } from "~/metrics/metrics"
-import { colorMetricDescriptions, Metric, sizeMetricDescriptions } from "~/metrics/metrics"
+import { Metrics, sizeMetricDescriptions } from "~/metrics/metrics"
 import { IconDropdownGroup } from "~/components/EnumSelect"
-import {
-  mdiChartBubble,
-  mdiChartTree,
-  mdiFileCodeOutline,
-  mdiKnife,
-  mdiPlusMinusVariant,
-  mdiPodiumGold,
-  mdiPulse,
-  mdiScaleBalance,
-  mdiSourceCommit
-} from "@mdi/js"
+import { mdiScaleBalance } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
+import { CommitsMetric } from "~/metrics/mostCommits"
+import { LastChangedMetric } from "~/metrics/lastChanged"
+import { LinesChangedMetric } from "~/metrics/linesChanged"
+import { pickKey as pickKey } from "~/shared/utils/object"
+import { Layouts } from "~/layouts/layouts"
+import { FileSizeMetric } from "~/metrics/fileSize"
+import { CommitsMetric } from "~/metrics/mostCommits"
+import { LinesChangedMetric } from "~/metrics/linesChanged"
+import { mdiScaleBalance } from "@mdi/js"
+import { LastChangedMetric } from "~/metrics/lastChanged"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
@@ -28,32 +27,36 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS"
 }
 
-export const Options = memo(function Options() {
+const colorMetricIcons = pickKey(Metrics, "icon")
+const colorMetricDescriptions = pickKey(Metrics, "description")
+
+const sizeMetricIcons: Record<SizeMetricType, string> = pickKey(
+  {
+    FILE_SIZE: FileSizeMetric,
+    EQUAL_SIZE: { icon: mdiScaleBalance },
+    MOST_COMMITS: CommitsMetric,
+    LAST_CHANGED: LastChangedMetric,
+    MOST_CONTRIBUTIONS: LinesChangedMetric
+  },
+  "icon"
+)
+
+const layoutTypeIcons: Record<ChartType, string> = pickKey(Layouts, "icon")
+
+const sizeMetricIcons = pickKey(
+  {
+    FILE_SIZE: FileSizeMetric,
+    MOST_COMMITS: CommitsMetric,
+    MOST_CONTRIBUTIONS: LinesChangedMetric,
+    EQUAL_SIZE: { icon: mdiScaleBalance },
+    LAST_CHANGED: LastChangedMetric
+  },
+  "icon"
+)
+
+export function Options() {
   const { metricType, chartType, sizeMetric, linkMetricAndSizeMetric, setMetricType, setChartType, setSizeMetricType } =
     useOptions()
-
-  const colorMetricIcons: Record<MetricType, string> = {
-    FILE_TYPE: mdiFileCodeOutline,
-    FILE_SIZE: FileSizeMetric.icon,
-    LAST_CHANGED: mdiPulse,
-    MOST_COMMITS: mdiSourceCommit,
-    TOP_CONTRIBUTOR: mdiPodiumGold,
-    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
-  }
-
-  const sizeMetricIcons: Record<SizeMetricType, string> = {
-    FILE_SIZE: FileSizeMetric.icon,
-    EQUAL_SIZE: mdiScaleBalance,
-    MOST_COMMITS: mdiSourceCommit,
-    LAST_CHANGED: mdiPulse,
-    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
-  }
-
-  const chartTypeIcons: Record<ChartType, string> = {
-    BUBBLE_CHART: mdiChartBubble,
-    TREE_MAP: mdiChartTree,
-    PARTITION: mdiKnife
-  }
 
   return (
     <>
@@ -64,7 +67,7 @@ export const Options = memo(function Options() {
           <IconDropdownGroup
             group={Chart}
             defaultValue={chartType}
-            iconMap={chartTypeIcons}
+            iconMap={layoutTypeIcons}
             ariaLabel="Select layout"
             onChange={(chartType: ChartType) => setChartType(chartType)}
           />
@@ -96,7 +99,12 @@ export const Options = memo(function Options() {
         <div className="ml-auto min-w-45">
           <IconDropdownGroup
             titleMap={colorMetricDescriptions}
-            group={Metric}
+            group={
+              Object.fromEntries(Object.entries(Metrics).map(([key, metric]) => [key, metric.name])) as Record<
+                MetricType,
+                string
+              >
+            }
             defaultValue={metricType}
             iconMap={colorMetricIcons}
             ariaLabel="Select color metric"
@@ -115,4 +123,4 @@ export const Options = memo(function Options() {
       </div>
     </>
   )
-})
+}

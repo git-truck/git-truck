@@ -251,7 +251,7 @@ export async function promiseHelper<T>(promise: Promise<T>): Promise<[null, Erro
   }
 }
 
-export const numToFriendlyString = (num: number): string => {
+export const formatLargeNumber = (num: number): string => {
   if (num >= 1_000_000) {
     return `${(num / 1_000_000).toFixed(1)}M`
   } else if (num >= 1_000) {

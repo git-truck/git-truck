@@ -16,3 +16,4 @@ export const noEntryColor = "#c0c0c0"
 export const missingInMapColor = "#808080"
 
 export const MULTIPLE_CONTRIBUTORS = "Multiple contributors" as const
+export const UNKNOWN_CATEGORY = "Unknown" as const

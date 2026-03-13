@@ -1,6 +1,6 @@
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
-import { numToFriendlyString } from "~/shared/util"
+import { formatLargeNumber } from "~/shared/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useData } from "~/contexts/DataContext"
@@ -81,15 +81,15 @@ export function GradientLegend() {
       <div className="relative mt-0 mb-2 flex h-5">
         <Tick className="absolute -top-6 left-1" />
         <span className="absolute -top-10 left-1 text-xs" title={minValue.toLocaleString()}>
-          {numToFriendlyString(minValue)}
+          {formatLargeNumber(minValue)}
         </span>
         <Tick className="absolute left-1/2 -translate-x-1/2" />
         <span className="absolute top-2 left-1/2 -translate-x-1/2 text-xs" title={midValue.toLocaleString()}>
-          {numToFriendlyString(midValue)}
+          {formatLargeNumber(midValue)}
         </span>
         <Tick className="absolute -top-6 right-1" />
         <span className="absolute -top-10 right-1 text-xs" title={maxValue.toLocaleString()}>
-          {numToFriendlyString(maxValue)}
+          {formatLargeNumber(maxValue)}
         </span>
       </div>
     </div>

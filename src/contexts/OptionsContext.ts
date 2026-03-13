@@ -1,16 +1,8 @@
 import { createContext, useContext } from "react"
-import type { MetricType } from "~/metrics/metrics"
-import { Metric } from "~/metrics/metrics"
+import { Metrics, type MetricType } from "~/metrics/metrics"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-
-export const Chart = {
-  BUBBLE_CHART: "Bubble chart",
-  TREE_MAP: "Tree map",
-  PARTITION: "Partition"
-} as const
-
-export type ChartType = keyof typeof Chart
+import { LayoutGroups, type LayoutType } from "~/layouts/layouts"
 
 export const Hierarchy = {
   NESTED: "Nested",
@@ -22,7 +14,7 @@ export type HierarchyType = keyof typeof Hierarchy
 export type Options = {
   hasLoadedSavedOptions: boolean
   metricType: MetricType
-  chartType: ChartType
+  chartType: LayoutType
   hierarchyType: HierarchyType
   commitSearch: string
   sizeMetric: SizeMetricType
@@ -40,7 +32,7 @@ export type Options = {
 
 export type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
-  setChartType: (chartType: ChartType) => void
+  setChartType: (chartType: LayoutType) => void
   setSizeMetricType: (sizeMetricType: SizeMetricType) => void
   setTransitionsEnabled: (transitionsEnabled: boolean) => void
   setLabelsVisible: (labelsVisible: boolean) => void
@@ -65,8 +57,8 @@ export function useOptions() {
 
 const defaultOptions: Options = {
   hasLoadedSavedOptions: false,
-  metricType: Object.keys(Metric)[0] as MetricType,
-  chartType: Object.keys(Chart)[0] as ChartType,
+  metricType: Object.keys(Metrics)[0] as MetricType,
+  chartType: Object.keys(LayoutGroups)[0] as LayoutType,
   hierarchyType: Object.keys(Hierarchy)[0] as HierarchyType,
   sizeMetric: Object.keys(SizeMetric)[0] as SizeMetricType,
   commitSearch: "",

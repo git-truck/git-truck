@@ -1,7 +1,7 @@
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { isBlob, isRepositoryRoot } from "~/shared/util"
-import Metrics from "~/components/inspection/Metrics"
+import { InspectionMetrics } from "~/components/inspection/InspectionMetrics"
 
 export function InspectPanel() {
   const clickedObject = useClickedObject()
@@ -36,7 +36,7 @@ export function InspectPanel() {
       }
       contentClassName="pb-6"
     >
-      {clickedObject ? <Metrics /> : <InspectIndex />}
+      {clickedObject ? <InspectionMetrics /> : <InspectIndex />}
     </CollapsibleHeader>
   )
 }
