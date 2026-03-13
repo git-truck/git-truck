@@ -1,8 +1,60 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
-import type { MetricCache } from "~/metrics/metrics"
-import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
+import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
+import { MULTIPLE_CONTRIBUTORS, noEntryColor, UNKNOWN_CATEGORY } from "~/const"
+import { mdiPodiumGold } from "@mdi/js"
+
+export const TopContributorMetric: CategoricalMetric = {
+  name: "Top contributor",
+  description: "Files are colored based on the top contributor for each file.",
+  icon: mdiPodiumGold,
+  getTooltipContent(obj, dbi, { topContributorCutoff }) {
+    const top = dbi.topContributors[obj.path]
+
+    const contribSum = dbi.contribSumPerFile[obj.path]
+    if (!top) {
+      return "No activity in selected range"
+    }
+    if (!contribSum) {
+      return top.contributor
+    }
+    const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
+    if (contributorPercentage < topContributorCutoff) {
+      // TODO show how many contributors if no top contributor
+      return MULTIPLE_CONTRIBUTORS
+    }
+    return `${top.contributor} ${contributorPercentage}%`
+  },
+  getCategories(obj, dbi, { topContributorCutoff }) {
+    const top = dbi.topContributors[obj.path]
+    if (!top) {
+      return ["No contributors"]
+    }
+    const contribSum = dbi.contribSumPerFile[obj.path]
+    if (!contribSum) {
+      return [top.contributor]
+    }
+    const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
+    if (contributorPercentage < topContributorCutoff) {
+      return [MULTIPLE_CONTRIBUTORS]
+    }
+    return [top.contributor]
+  },
+  metricFunctionFactory(data, { contributorColors, topContributorCutoff }) {
+    return (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
+      setTopContributorColor(
+        contributorColors,
+        blob,
+        cache,
+        data.databaseInfo.topContributors,
+        topContributorCutoff,
+        data.databaseInfo.contribSumPerFile
+      )
+    }
+  }
+}
 
 export function setTopContributorColor(
   contributorColors: Record<string, `#${string}`>,
@@ -12,7 +64,7 @@ export function setTopContributorColor(
   topContributorCutoff: number,
   contribSumPerFile: Record<string, number>
 ) {
-  const dominantAuthor = topContributorPerFile[blob.path]
+  const topContributor = topContributorPerFile[blob.path]
   const contribSum = contribSumPerFile[blob.path]
   const legend = cache.legend as PointLegendData
 
@@ -23,26 +75,26 @@ export function setTopContributorColor(
     } else {
       legend.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
     }
-    cache.colormap.set(blob.path, noEntryColor)
+    cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
   }
 
-  if (!dominantAuthor || !contribSum) {
+  if (!topContributor || !contribSum) {
     bumpMultiple()
     return
   }
 
-  const authorPercentage = (dominantAuthor.contribcount / contribSum) * 100
-  if (authorPercentage < topContributorCutoff) {
+  const contributorPercentage = (topContributor.contribcount / contribSum) * 100
+  if (contributorPercentage < topContributorCutoff) {
     bumpMultiple()
     return
   }
 
-  const color = contributorColors[dominantAuthor.contributor] ?? noEntryColor
-  cache.colormap.set(blob.path, color)
+  const color = contributorColors[topContributor.contributor] ?? noEntryColor
+  cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
 
-  if (legend.has(dominantAuthor.contributor)) {
-    legend.get(dominantAuthor.contributor)?.add(1)
+  if (legend.has(topContributor.contributor)) {
+    legend.get(topContributor.contributor)?.add(1)
     return
   }
-  legend.set(dominantAuthor.contributor, new PointInfo(color, 1))
+  legend.set(topContributor.contributor, new PointInfo(color, 1))
 }

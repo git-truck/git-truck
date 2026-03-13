@@ -17,7 +17,7 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
-import { Metric } from "~/metrics/metrics"
+import { Metrics } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 
 const legendCutoff = 8
@@ -104,7 +104,7 @@ export function PointLegend() {
       <div className="mt-2 grid grid-cols-[min-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-4 gap-y-1">
         <div className="contents text-xs font-bold">
           <div />
-          <p>{Metric[metricType]}</p>
+          <p>{Metrics[metricType].name}</p>
           <p className="text-right"># Files</p>
           <p className="text-right">% Files</p>
           <div />

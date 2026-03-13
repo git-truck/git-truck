@@ -1,10 +1,32 @@
 import type { GitBlobObject } from "~/shared/model"
 import { getColorFromExtension } from "~/metrics/metricUtils"
-import type { MetricCache } from "~/metrics/metrics"
+import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
+import { mdiFileOutline } from "@mdi/js"
+import { isBlob } from "~/shared/util"
+
+export const TypeMetric: CategoricalMetric = {
+  name: "File type",
+  description: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
+  icon: mdiFileOutline,
+  getTooltipContent(obj, dbi, options) {
+    return this.getCategories(obj, dbi, options)
+  },
+  getCategories(obj) {
+    return isBlob(obj) ? [obj.extension] : []
+  },
+  metricFunctionFactory() {
+    return (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) {
+        cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
+      }
+      setExtensionColor(blob, cache)
+    }
+  }
+}
 
 export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extensionInfo = getColorFromExtension(blob.extension)
@@ -25,7 +47,7 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
       } else {
         legend.set(blob.extension, new PointInfo(color, 1))
       }
-      cache.colormap.set(blob.path, color)
+      cache.categoriesMap.set(blob.path, [{ category: blob.extension, color }])
     } else {
       if (!legend.has("Other")) {
         legend.set("Other", new PointInfo(noEntryColor, 0))
@@ -36,7 +58,7 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
         legend.get("Other")?.addChild(blob.extension, new PointInfo(noEntryColor, 1))
       }
       legend.get("Other")?.add(1)
-      cache.colormap.set(blob.path, noEntryColor)
+      cache.categoriesMap.set(blob.path, [{ category: "Other", color: noEntryColor }])
     }
     //Add uncolored (e.g. png, gif) as normal categories
   } else {
@@ -45,6 +67,6 @@ export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
     } else {
       legend.set(blob.extension, new PointInfo(color ? color : noEntryColor, 1))
     }
-    cache.colormap.set(blob.path, color ? color : noEntryColor)
+    cache.categoriesMap.set(blob.path, [{ category: blob.extension, color: color ? color : noEntryColor }])
   }
 }

@@ -9,7 +9,6 @@ import type { MetricsData, MetricType } from "~/metrics/metrics"
 import { createMetricData } from "~/metrics/metrics"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
-import { usePrefersLightMode } from "~/styling"
 import { findSubTree } from "~/shared/util"
 import { useQueryState } from "nuqs"
 
@@ -26,8 +25,6 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
 
-  const prefersLight = usePrefersLightMode()
-
   const [zoomPath] = useQueryState("zoomPath")
 
   const databaseInfo = useMemo(
@@ -40,20 +37,19 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       { ...data, databaseInfo },
       data.databaseInfo.colorSeed,
       data.databaseInfo.contributorColors,
-      options?.topContributorCutoff ?? 70,
-      prefersLight
+      options?.topContributorCutoff ?? 70
     )
 
     return res
-  }, [data, databaseInfo, options?.topContributorCutoff, prefersLight])
+  }, [data, databaseInfo, options?.topContributorCutoff])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
       ...options,
-      setMetricType: (metricType: MetricType) =>
+      setMetricType: (metric: MetricType) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
-          metricType
+          metricType: metric
         })),
       setChartType: (chartType: ChartType) =>
         setOptions((prevOptions) => ({

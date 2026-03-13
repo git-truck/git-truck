@@ -1,7 +1,68 @@
-import { dateFormatShort, rgbToHex } from "~/shared/util"
-import { interpolateCool } from "d3"
+import { dateFormatRelative, dateFormatShort, rgbToHex } from "~/shared/util"
+import { interpolateCool, scaleSequential } from "d3"
 import { feature_flags } from "~/feature_flags"
+import type { Metric, MetricCache } from "~/metrics/metrics"
+import { mdiPulse } from "@mdi/js"
+import type { GitBlobObject } from "~/shared/model"
+import type { GradLegendData } from "~/components/legend/GradiantLegend"
+import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
+import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
 
+export const LastChangedMetric: Metric = {
+  name: "Last changed",
+  description: "Files are colored based on how long ago they were changed.",
+  icon: mdiPulse,
+  getTooltipContent(obj, dbi) {
+    const epoch = dbi.lastChanged[obj.path]
+    if (!epoch) {
+      return "No activity in selected range"
+    }
+    return dateFormatRelative(epoch)
+  },
+  metricFunctionFactory(data) {
+    const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
+
+    return (blob: GitBlobObject, cache: MetricCache) => {
+      const domainedScale = scaleSequential(interpolateCool).domain([
+        data.databaseInfo.oldestChangeDate,
+        data.databaseInfo.newestChangeDate
+      ])
+      if (!cache.legend) {
+        cache.legend = feature_flags.lastChangedAsGrad
+          ? ({
+              minValue: data.databaseInfo.oldestChangeDate,
+              maxValue: data.databaseInfo.newestChangeDate,
+              minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
+              maxValueAltFormat: dateFormatShort(data.databaseInfo.newestChangeDate * 1000),
+              minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
+              maxColor: rgbToHex(domainedScale(data.databaseInfo.newestChangeDate))
+            } satisfies GradLegendData)
+          : ({
+              steps:
+                getLastChangedIndex(groupings, data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate) +
+                1,
+              textGenerator: (n) => groupings[n].text,
+              colorGenerator: (n) => groupings[n].color,
+              offsetStepCalc: (blob) =>
+                getLastChangedIndex(
+                  groupings,
+                  data.databaseInfo.newestChangeDate,
+                  data.databaseInfo.lastChanged[blob.path] ?? 0
+                ) ?? -1
+            } satisfies SegmentLegendData)
+      }
+
+      const existing = data.databaseInfo.lastChanged[blob.path]
+      // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
+      const color = rgbToHex(domainedScale(existing ?? 0))
+      if (!color) {
+        cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+        return
+      }
+      cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color }])
+    }
+  }
+}
 interface lastChangedGroup {
   epoch: number
   color: `#${string}`
