@@ -29,3 +29,7 @@ updates:
           - "vite-*"
           - "@vitejs/*"
           - "vitest"
+      tailwindcss:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
