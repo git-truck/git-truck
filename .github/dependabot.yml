@@ -23,3 +23,9 @@ updates:
           - "react-router-devtools"
           - "@react-router/*"
           - "isbot"
+      vite:
+        patterns:
+          - "vite"
+          - "vite-*"
+          - "@vitejs/*"
+          - "vitest"
