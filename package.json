@@ -140,6 +140,7 @@
     "treeshake": true,
     "clean": false,
     "deps": {
+      "onlyBundle": false,
       "neverBundle": [
         "vite",
         "lightningcss"
