@@ -1,6 +1,6 @@
 {
   "name": "git-truck",
-  "version": "3.2.1",
+  "version": "3.3.2",
   "private": false,
   "description": "Visualizing a Git repository",
   "license": "MIT",
@@ -45,7 +45,6 @@
     "check": "npm run knip && npm run lint && npm run format:check",
     "format:check": "prettier --check src scripts e2e",
     "lint": "eslint --cache",
-    "prepare": "node .husky/install.mjs",
     "update-deps": "npx npm-check-updates -i",
     "knip": "knip",
     "knip:write": "knip --fix"
@@ -73,11 +72,12 @@
     "semver": "^7.7.4",
     "sha1": "^1.1.1",
     "tailwind-merge": "^3.4.0",
-    "yargs-parser": "^22.0.0"
+    "yargs-parser": "^22.0.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.3",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
     "@react-router/dev": "^7.13.0",
     "@react-router/fs-routes": "^7.13.0",
@@ -97,7 +97,7 @@
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
-    "eslint": "^10.0.2",
+    "eslint": "^10.0.3",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
@@ -109,7 +109,6 @@
     "isbot": "^5.1.35",
     "knip": "^5.83.1",
     "language-map": "^1.5.0",
-    "lint-staged": "^16.2.7",
     "npm-check-updates": "^19.3.2",
     "open": "^11.0.0",
     "prettier": "^3.8.1",
@@ -149,12 +148,6 @@
     "endOfLine": "lf",
     "plugins": [
       "prettier-plugin-tailwindcss"
-    ]
-  },
-  "lint-staged": {
-    "{src,scripts}/**/*.{ts,tsx,js,mjs}": [
-      "eslint --cache --fix",
-      "prettier --write"
     ]
   },
   "knip": {
