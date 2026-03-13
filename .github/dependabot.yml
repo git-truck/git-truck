@@ -22,3 +22,4 @@ updates:
           - "react-router"
           - "react-router-devtools"
           - "@react-router/*"
+          - "isbot"
