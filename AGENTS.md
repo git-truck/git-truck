@@ -43,6 +43,7 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 - **Routing**: Follow React Router file-based routing and loaders/actions conventions in `src/routes/`.
 - **Database**: Interactions often involve DuckDB or direct git command execution.
 - **Imports**: Use the path alias `~/` for imports from the `src/` directory instead of relative imports (e.g., `import { foo } from "~/components/Bar"` instead of `import { foo } from "../../../components/Bar"`).
+- **TypeScript**: Avoid using the `any` type. Use `unknown` if the type is truly not known, or create a proper interface/type definition.
 
 ## Testing
 

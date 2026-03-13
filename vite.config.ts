@@ -1,10 +1,8 @@
 /// <reference types="vitest" />
 import { reactRouterDevTools } from "react-router-devtools"
 import { reactRouter } from "@react-router/dev/vite"
-// import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
 import pkg from "./package.json"
 
 export default defineConfig(({ isSsrBuild }) => ({
@@ -19,6 +17,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     }
   },
   ssr: {
+    noExternal: true,
     external: [
       "@duckdb/node-api",
       "@duckdb/node-bindings-linux-arm64",
@@ -27,6 +26,9 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-x64",
       "@duckdb/node-bindings-darwin-arm64"
     ]
+  },
+  resolve: {
+    tsconfigPaths: true
   },
   optimizeDeps: {
     entries: [],
@@ -39,7 +41,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       "@duckdb/node-bindings-darwin-arm64"
     ]
   },
-  plugins: [tailwindcss(), reactRouterDevTools(), reactRouter(), tsconfigPaths()],
+  plugins: [tailwindcss(), reactRouterDevTools(), reactRouter()],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
 }))
