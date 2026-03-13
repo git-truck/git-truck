@@ -68,13 +68,19 @@ jobs:
 
             async function findBotComment(issueNumber) {
               if (!issueNumber) return null;
-              const comments = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-              });
-              return comments.data.find((comment) =>
-                comment.body.includes(botCommentIdentifier)
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  per_page: 100,
+                }
+              );
+              return comments.find(
+                (comment) =>
+                  comment.user?.type === 'Bot' &&
+                  comment.body?.includes(botCommentIdentifier)
               );
             }
 
