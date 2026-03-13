@@ -8,5 +8,5 @@ export function useMetrics() {
   if (!context) {
     throw new Error("useMetrics must be used within a MetricsContext")
   }
-  return context
+  return [context.caches, context.authorColorMap] as const
 }
