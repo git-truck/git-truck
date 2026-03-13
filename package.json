@@ -52,7 +52,6 @@
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
-    "@eslint/compat": "^2.0.3",
     "@headlessui/react": "^2.2.9",
     "@mdi/js": "^7.4.47",
     "@react-router/express": "^7.13.0",
@@ -77,6 +76,7 @@
     "yargs-parser": "^22.0.0"
   },
   "devDependencies": {
+    "@eslint/compat": "^2.0.3",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",
     "@react-router/dev": "^7.13.0",

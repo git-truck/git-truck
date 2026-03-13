@@ -18,3 +18,4 @@ cli.mjs
 .react-router/
 *.tsbuildinfo
 .DS_Store
+package-lock.json
