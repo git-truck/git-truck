@@ -130,10 +130,13 @@
     "outDir": ".",
     "treeshake": true,
     "clean": false,
-    "external": [
-      "vite",
-      "lightningcss"
-    ],
+    "deps": {
+      "onlyBundle": false,
+      "neverBundle": [
+        "vite",
+        "lightningcss"
+      ]
+    },
     "cjs-interop": true,
     "env": {
       "NODE_ENV": "production"
