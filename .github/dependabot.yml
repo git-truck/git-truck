@@ -10,6 +10,13 @@ updates:
     schedule:
       interval: "monthly"
     groups:
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "globals"
       react-router:
         patterns:
           - "react-router"
