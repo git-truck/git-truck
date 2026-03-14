@@ -93,7 +93,7 @@
     "@types/semver": "^7.7.1",
     "@types/sha1": "^1.1.5",
     "@types/yargs-parser": "^21.0.3",
-    "@typescript/native-preview": "^7.0.0-dev.20260313.1",
+    "@typescript/native-preview": "7.0.0-dev.20260313.1",
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
