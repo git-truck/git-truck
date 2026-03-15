@@ -6,12 +6,14 @@ import {
   mdiResize,
   mdiSourceCommit,
   mdiFolderOutline,
-  mdiFileMultipleOutline
+  mdiFileMultipleOutline,
+  mdiEyeOffOutline,
+  mdiMagnify
 } from "@mdi/js"
 import byteSize from "byte-size"
-import { useQueryState } from "nuqs"
+import { useQueryState, useQueryStates } from "nuqs"
 import { useEffect, useState } from "react"
-import { useFetcher, href } from "react-router"
+import { useFetcher, href, Form, Link, useNavigation, useLocation } from "react-router"
 import { ContributorsInspection as ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 import { Icon } from "~/components/Icon"
@@ -19,12 +21,14 @@ import { missingInMapColor } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { viewSerializer } from "~/routes/view"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import type { loader } from "~/routes/view.api.contributor-distribution"
-import { dateFormatRelative, last } from "~/shared/util"
-import { useClickedObject } from "~/state/stores/clicked-object"
+import { dateFormatRelative, last, resolveParentFolder } from "~/shared/util"
+import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import type { MetricType } from "~/metrics/metrics"
+import { useViewAction } from "~/hooks"
+import { usePath } from "~/contexts/PathContext"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -34,6 +38,8 @@ export default function Metrics() {
   const data = useData()
   const [metricsData] = useMetrics()
   const { metricType, setMetricType } = useOptions()
+
+  const isBlob = clickedObject?.type === "blob"
 
   const expandablePanels: Record<string, React.ComponentType> = {
     TOP_CONTRIBUTOR: ContributorsInspection,
@@ -48,7 +54,7 @@ export default function Metrics() {
     if (!clickedObject) {
       return
     }
-    fetcher.load(href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path }))
+    fetcher.load(href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject.path, path }))
     return () => {
       fetcher.reset()
     }
@@ -56,7 +62,9 @@ export default function Metrics() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clickedObject?.path])
 
-  const isBlob = clickedObject?.type === "blob"
+  if (!clickedObject) {
+    return <p className="p-4">No file or folder selected</p>
+  }
 
   type NodeWithChildren = {
     type: string
@@ -93,7 +101,7 @@ export default function Metrics() {
       icon: isBlob ? mdiResize : mdiFileMultipleOutline,
       data: isBlob
         ? clickedObject
-          ? byteSize(clickedObject?.sizeInBytes ?? 0).value + " " + byteSize(clickedObject?.sizeInBytes ?? 0).unit
+          ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
           : "unknown"
         : clickedObject
           ? countFilesRecursive(clickedObject).toLocaleString()
@@ -108,7 +116,7 @@ export default function Metrics() {
         ? isBlob
           ? data.databaseInfo.commitCounts[clickedObject.path]
           : Object.entries(data.databaseInfo.commitCounts)
-              .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+              .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
               .reduce((sum, [_, count]) => sum + count, 0)
               .toLocaleString()
         : "unknown",
@@ -136,7 +144,7 @@ export default function Metrics() {
         ? isBlob
           ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
           : Object.entries(data.databaseInfo.contribSumPerFile)
-              .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+              .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
               .reduce((sum, [_, count]) => sum + count, 0)
               .toLocaleString()
         : "unknown",
@@ -155,7 +163,7 @@ export default function Metrics() {
           : (dateFormatRelative(
               Math.max(
                 ...Object.entries(data.databaseInfo.lastChanged)
-                  .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+                  .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
                   .map(([_, epoch]) => epoch)
               )
             ) ?? "unknown")
@@ -188,6 +196,7 @@ export default function Metrics() {
           {ExpandedPanel ? <ExpandedPanel /> : <p>This metric has no inspection currently</p>}
         </div>
       ) : null}
+      <InteractionButtons />
     </>
   )
 }
@@ -222,5 +231,59 @@ function MetricButton({
         <p className="truncate text-[10px] font-normal italic">{metric.name}</p>
       </div>
     </button>
+  )
+}
+
+function InteractionButtons() {
+  const clickedObject = useClickedObject()
+  const setClickedObject = useSetClickedObject()
+  const viewAction = useViewAction()
+  const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
+  const { state } = useNavigation()
+  const location = useLocation()
+  const zoomLink = location + viewSerializer({ ...viewSearchParams, zoomPath: clickedObject?.path })
+  const extension = clickedObject ? last(clickedObject.name.split(".")) : undefined
+  const isBlob = clickedObject?.type === "blob"
+  const { setPath } = usePath()
+
+  if (!clickedObject) {
+    return null
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap justify-end gap-2">
+      <Link className="btn" to={zoomLink}>
+        <Icon path={mdiMagnify} />
+        Zoom to {isBlob ? "file" : "folder"}
+      </Link>
+      <Form
+        className="w-max"
+        method="post"
+        action={viewAction}
+        onSubmit={() => {
+          if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
+          setClickedObject(null)
+        }}
+      >
+        <input type="hidden" name="hide" value={clickedObject.path} />
+        <button className="btn" disabled={state !== "idle"} title="Hide this file">
+          <Icon path={mdiEyeOffOutline} />
+          Hide
+        </button>
+      </Form>
+      {isBlob ? (
+        <>
+          {clickedObject.name.includes(".") ? (
+            <Form className="w-max" method="post" action={viewAction} onSubmit={() => setClickedObject(null)}>
+              <input type="hidden" name="hide" value={`*.${extension}`} />
+              <button className="btn" disabled={state !== "idle"} title={`Hide all files with .${extension} extension`}>
+                <Icon path={mdiEyeOffOutline} />
+                <span>Hide *.{extension}</span>
+              </button>
+            </Form>
+          ) : null}
+        </>
+      ) : null}
+    </div>
   )
 }
