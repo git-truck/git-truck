@@ -1,19 +1,16 @@
-import { dateFormatLong, extname, invariant, last, resolveParentFolder } from "~/shared/util"
-import { useId, useState, Suspense, useEffect } from "react"
-import { Await, Form, useLoaderData, useLocation, useNavigation, Link } from "react-router"
-import { AuthorDistFragment } from "~/components/AuthorDistFragment"
+import { dateFormatLong, extname, last, resolveParentFolder } from "~/shared/util"
+import { useId, useState, useEffect } from "react"
+import { Form, useLocation, useNavigation, Link } from "react-router"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useData } from "~/contexts/DataContext"
-import type { GitObject, GitTreeObject } from "~/shared/model"
-import type { Route } from "./+types/view.details"
+import type { GitTreeObject } from "~/shared/model"
 import { mdiEyeOffOutline, mdiMagnify, mdiOpenInNew } from "@mdi/js"
 import byteSize from "byte-size"
 import { Icon } from "~/components/Icon"
-import { useClickedObject } from "~/contexts/ClickedContext"
+import { useClickedObject } from "~/state/stores/clicked-object"
 import { usePath } from "~/contexts/PathContext"
-import { currentRepositoryContext, viewSearchParamsConfig, viewSerializer } from "~/routes/view"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
-import { RepoTabs } from "~/components/RepoTabs"
 import { useQueryStates } from "nuqs"
 import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
 import { useViewAction } from "~/hooks"
@@ -22,39 +19,16 @@ export function HydrateFallback() {
   return <div>Loading...</div>
 }
 
-const authorCutoff = 2
-
-function hasContributions(authors?: { author: string; contribs: number }[] | null) {
-  if (!authors) return false
-  for (const { contribs } of authors) {
-    if (contribs > 0) return true
-  }
-  return false
-}
-export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const url = new URL(request.url)
-  const objectPath = url.searchParams.get("objectPath")
-  const { instance } = context.get(currentRepositoryContext)
-  invariant(objectPath, "path is required")
-
-  return {
-    path: objectPath,
-    authorDistributionPromise: instance.db.getAuthorContribsForPath(objectPath)
-  }
-}
-
 export default function Details() {
+  const clickedObject = useClickedObject()
   const { setPath } = usePath()
-  const { path, authorDistributionPromise } = useLoaderData<typeof loader>()
   const data = useData()
   const { state } = useNavigation()
   const location = useLocation()
   const viewAction = useViewAction()
-  const clickedObject = location.state?.clickedObject as GitObject | null | undefined
   const setOpen = useSetOpenCollapsibleHeader()
 
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
-  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: path })
 
   useEffect(() => {
     setOpen(!!clickedObject)
@@ -64,14 +38,15 @@ export default function Details() {
     return <p className="p-4">No file or folder selected</p>
   }
 
-  const commitCount = data.databaseInfo.commitCounts[path]
+  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: clickedObject.path })
+
+  const commitCount = data.databaseInfo.commitCounts[clickedObject.path]
   const isBlob = clickedObject.type === "blob"
 
   const extension = last(clickedObject.name.split("."))
 
   return (
     <>
-      <RepoTabs />
       <div className="flex grow flex-col gap-2">
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           {isBlob ? <FileTypeEntry /> : null}
@@ -79,19 +54,12 @@ export default function Details() {
           {isBlob ? (
             <>
               <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
-              <LastchangedEntry epoch={data.databaseInfo.lastChanged[path]} />
+              <LastchangedEntry epoch={data.databaseInfo.lastChanged[clickedObject.path]} />
             </>
           ) : (
             <FileAndSubfolderCountEntries clickedTree={clickedObject} />
           )}
           <PathEntry path={clickedObject.path} />
-        </div>
-        <div className="card">
-          <Suspense fallback={<p>Loading authors...</p>}>
-            <Await resolve={authorDistributionPromise}>
-              {(authorDistribution) => <AuthorDistribution authorDistribution={authorDistribution} />}
-            </Await>
-          </Suspense>
         </div>
       </div>
       <GroupAuthorsButton />
@@ -130,7 +98,7 @@ export default function Details() {
               className="btn"
               disabled={state !== "idle"}
               onClick={() => {
-                setPath(resolveParentFolder(path))
+                setPath(resolveParentFolder(clickedObject.path))
               }}
             >
               <Icon path={mdiEyeOffOutline} />
@@ -143,59 +111,8 @@ export default function Details() {
   )
 }
 
-function AuthorDistribution({ authorDistribution }: { authorDistribution: { author: string; contribs: number }[] }) {
-  const authorDistributionExpandId = useId()
-  const [collapsed, setCollapsed] = useState<boolean>(true)
-
-  const authorsAreCutoff = (authorDistribution?.length ?? 0) > authorCutoff + 1
-  const contribSum = !authorDistribution ? 0 : authorDistribution.reduce((acc, curr) => acc + curr.contribs, 0)
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div
-        className={`flex justify-between ${authorsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
-      >
-        <label className="label grow" htmlFor={authorDistributionExpandId}>
-          <h3 className="font-bold">Author distribution</h3>
-        </label>
-        {authorsAreCutoff ? (
-          <ChevronButton id={authorDistributionExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
-        ) : null}
-      </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-center gap-1">
-        {authorsAreCutoff ? (
-          <>
-            <AuthorDistFragment show items={authorDistribution.slice(0, authorCutoff)} contribSum={contribSum} />
-            <AuthorDistFragment
-              show={!collapsed}
-              items={authorDistribution.slice(authorCutoff)}
-              contribSum={contribSum}
-            />
-            {collapsed ? (
-              <button
-                className="cursor-pointer text-left text-xs opacity-70 hover:opacity-100"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                + {(authorDistribution?.slice(authorCutoff) ?? []).length} more
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {(authorDistribution ?? []).length > 0 && hasContributions(authorDistribution) ? (
-              <AuthorDistFragment show items={authorDistribution ?? []} contribSum={contribSum} />
-            ) : (
-              <p>No authors found</p>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function FileTypeEntry() {
-  const { clickedObject } = useClickedObject()
+  const clickedObject = useClickedObject()
 
   return (
     <>
@@ -231,7 +148,7 @@ function LastchangedEntry(props: { epoch: number | undefined }) {
 
 function PathEntry(props: { path: string }) {
   const { state } = useNavigation()
-  const { clickedObject } = useClickedObject()
+  const clickedObject = useClickedObject()
   const viewAction = useViewAction()
 
   if (!clickedObject) return null
