@@ -7,10 +7,9 @@
     "lib": ["DOM", "DOM.Iterable", "ES2024"],
     "types": ["vite/client"],
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./src/*"] },
     "esModuleInterop": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   }
 }
