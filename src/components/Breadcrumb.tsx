@@ -9,6 +9,7 @@ import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
+import { useSetClickedObject } from "~/state/stores/clicked-object"
 
 type Segment = {
   type: "browse" | "zoom" | "filler"
@@ -20,6 +21,7 @@ type Segment = {
 export function Breadcrumb({ className = "", zoom = false }: { className?: string; zoom?: boolean }) {
   const [browseParams] = useQueryStates(browseSearchParamsConfig)
   const [viewParams, setViewParams] = useQueryStates(viewSearchParamsConfig)
+  const setClickedObject = useSetClickedObject()
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
 
@@ -112,6 +114,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
               className="btn btn--primary truncate"
+              onClick={() => setClickedObject(null)}
             >
               {content}
             </Link>
