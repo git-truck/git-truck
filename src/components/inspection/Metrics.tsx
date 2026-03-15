@@ -66,6 +66,14 @@ export default function Metrics() {
     return <p className="p-4">No file or folder selected</p>
   }
 
+  if (
+    Object.entries(data.databaseInfo.commitCounts).filter(
+      ([path]) => clickedObject.path && path.startsWith(clickedObject.path)
+    ).length === 0
+  ) {
+    return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
+  }
+
   type NodeWithChildren = {
     type: string
     children?: NodeWithChildren[]
