@@ -40,12 +40,11 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       { ...data, databaseInfo },
       data.databaseInfo.colorSeed,
       data.databaseInfo.authorColors,
-      options?.dominantAuthorCutoff ?? 70,
-      prefersLight
+      options?.dominantAuthorCutoff ?? 70
     )
 
     return res
-  }, [data, databaseInfo, options?.dominantAuthorCutoff, prefersLight])
+  }, [data, databaseInfo, options?.dominantAuthorCutoff])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({

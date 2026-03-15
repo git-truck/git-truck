@@ -17,6 +17,7 @@ type DataItem =
   | "commitCountPerDay"
   | "loadRepoData"
   | "contribSumPerFile"
+  | "contributorsForPath"
   | "maxMinContribCounts"
   | "commitCount"
   | "analyzedRepos"
@@ -44,6 +45,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "dominantAuthor",
     "commitCounts",
     "contribSumPerFile",
+    "contributorsForPath",
     "lastChanged",
     "authorCounts",
     "maxMinCommitCount",
@@ -65,6 +67,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "dominantAuthor",
     "commitCounts",
     "contribSumPerFile",
+    "contributorsForPath",
     "lastChanged",
     "authorCounts",
     "maxMinCommitCount",
@@ -92,6 +95,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "dominantAuthor",
     "commitCounts",
     "contribSumPerFile",
+    "contributorsForPath",
     "lastChanged",
     "authorCounts",
     "maxMinCommitCount",
@@ -106,6 +110,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "dominantAuthor",
     "commitCounts",
     "contribSumPerFile",
+    "contributorsForPath",
     "lastChanged",
     "authorCounts",
     "maxMinCommitCount",
@@ -123,6 +128,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "dominantAuthor",
     "commitCounts",
     "contribSumPerFile",
+    "contributorsForPath",
     "lastChanged",
     "authorCounts",
     "maxMinCommitCount",

@@ -244,7 +244,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const isValidRevision = await GitCaller.isValidRevision(branch, path)
   if (!isValidRevision) {
     throw new Error(
-      `Invalid revision of repo ${repo}: ${branch}\nIf ${branch} is a remote branch, make sure it is pulled locally`
+      `Invalid revision of repo ${repo}: ${branch}. If ${branch} is a remote branch, make sure it is pulled locally`
     )
   }
 
@@ -330,6 +330,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
       ? prevRes.contribSumPerFile
       : await instance.db.getContribSumPerFile()
+  const contributorsForPath =
+    prevRes && !shouldUpdate(reason, "contributorsForPath")
+      ? prevRes.contributorsForPath
+      : await instance.db.getContributorsForPath()
   const maxMinContribCounts =
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
@@ -367,6 +371,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     commitCountPerTimeIntervalUnit,
     analyzedRepos,
     contribSumPerFile: contribCounts,
+    contributorsForPath: contributorsForPath,
     maxMinContribCounts,
     commitCount
   }

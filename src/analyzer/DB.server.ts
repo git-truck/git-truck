@@ -448,6 +448,28 @@ export default class DB {
     }, {})
   }
 
+  public async getContributorsForPath(): Promise<Record<string, { contributor: string; contribcount: number }[]>> {
+    const res = await this.query(`
+      SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount
+      FROM filechanges_commits_renamed_cached
+      GROUP BY filepath, author
+    `)
+
+    const result: Record<string, { contributor: string; contribcount: number }[]> = {}
+    res.forEach((row) => {
+      const filepath = row["filepath"] as string
+      if (!result[filepath]) {
+        result[filepath] = []
+      }
+      result[filepath].push({
+        contributor: row["author"] as string,
+        contribcount: Number(row["total_contribcount"])
+      })
+    })
+
+    return result
+  }
+
   public async getDominantAuthorPerFile() {
     const res = await this.query(`
       WITH RankedAuthors AS (

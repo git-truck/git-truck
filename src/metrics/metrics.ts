@@ -1,19 +1,20 @@
-import type { GitBlobObject, GitTreeObject, RepoData } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, RepoData, DatabaseInfo, GitObject } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
-import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
+import { PointInfo, type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
 import type { LegendType } from "~/components/legend/Legend"
-import { setExtensionColor } from "~/metrics/fileExtension"
-import { getLastChangedIndex, lastChangedGroupings } from "~/metrics/lastChanged"
+import { FileExtensionMetric, setExtensionColor } from "~/metrics/fileExtension"
+import { getLastChangedIndex, lastChangedGroupings, LastChangedMetric } from "~/metrics/lastChanged"
 import { CommitAmountTranslater } from "~/metrics/mostCommits"
-import { ContribAmountTranslater } from "~/metrics/mostContribs"
+import { ContribAmountTranslater } from "~/metrics/linesChanged"
 import { setDominantAuthorColor } from "~/metrics/topContributer"
 import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from "d3"
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { ContributorsMetric } from "./contributors"
 
 export type MetricsData = {
   caches: Map<MetricType, MetricCache>
@@ -21,11 +22,12 @@ export type MetricsData = {
 }
 
 export const Metric = {
+  LAST_CHANGED: "Last changed",
   FILE_TYPE: "File type",
   MOST_COMMITS: "Commits",
   MOST_CONTRIBUTIONS: "Line changes",
   TOP_CONTRIBUTOR: "Top contributor",
-  LAST_CHANGED: "Last changed"
+  CONTRIBUTORS: ContributorsMetric.name
 }
 
 export type MetricType = keyof typeof Metric
@@ -34,10 +36,9 @@ export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
   predefinedAuthorColors: Record<string, `#${string}`>,
-  dominantAuthorCutoff: number,
-  prefersLight: boolean
+  dominantAuthorCutoff: number
 ): MetricsData {
-  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors, prefersLight)
+  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors)
 
   return {
     caches: setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
@@ -50,7 +51,9 @@ export const colorMetricDescriptions: Record<MetricType, string> = {
   MOST_COMMITS: "Files are colored based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are colored based on how long ago they were changed.",
   TOP_CONTRIBUTOR: "Files are colored based on the top author for each file.",
-  MOST_CONTRIBUTIONS: "Files are colored based on how many line changes (additions and deletions) have been made to it."
+  MOST_CONTRIBUTIONS:
+    "Files are colored based on how many line changes (additions and deletions) have been made to it.",
+  CONTRIBUTORS: "Files are colored based on which contributors have contributed to it."
 }
 
 export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
@@ -79,27 +82,24 @@ export function getMetricLegendType(metric: MetricType): LegendType {
       return "GRADIENT"
     case "LAST_CHANGED":
       return feature_flags.lastChangedAsGrad ? "GRADIENT" : "SEGMENTS"
-    default:
-      throw new Error("Uknown metric type: " + metric)
+    case "CONTRIBUTORS":
+      return "POINT"
   }
 }
 
 export interface MetricCache {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
-  colormap: Map<string, `#${string}`>
+  colormap: Map<string, Array<`#${string}`>>
 }
 
-function generateAuthorColors(
+export function generateAuthorColors(
   authors: string[],
   colorSeed: string | null,
-  predefinedAuthorColors: Record<string, `#${string}`>,
-  prefersLight: boolean
+  predefinedAuthorColors: Record<string, `#${string}`>
 ): Record<string, `#${string}`> {
   const authorColorMap: Record<string, `#${string}`> = {}
   // const colorsForLightTheme = schemeCategory10
-  const colorsForLightTheme = schemeTableau10
-  const colorsForDarkTheme = schemeTableau10
-  const colors = scaleOrdinal(prefersLight ? colorsForLightTheme : colorsForDarkTheme).range()
+  const colors = scaleOrdinal(schemeTableau10).range()
 
   const sortedAuthors = authors.slice().sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
 
@@ -180,10 +180,10 @@ function getMetricCalcs(
       // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
       const color = rgbToHex(domainedScale(existing ?? 0))
       if (!color) {
-        cache.colormap.set(blob.path, noEntryColor)
+        cache.colormap.set(blob.path, [noEntryColor])
         return
       }
-      cache.colormap.set(blob.path, color)
+      cache.colormap.set(blob.path, [color])
     },
 
     TOP_CONTRIBUTOR: (blob: GitBlobObject, cache: MetricCache) => {
@@ -210,7 +210,8 @@ function getMetricCalcs(
         } satisfies GradLegendData
       }
       contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
-    }
+    },
+    CONTRIBUTORS: ContributorsMetric.metricFunction(data)
   }
 }
 
@@ -242,13 +243,13 @@ function setupMetricsCacheRec(
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, Array<`#${string}`>>()
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, Array<`#${string}`>>()
             }
           )
         }
@@ -256,4 +257,15 @@ function setupMetricsCacheRec(
       }
     }
   }
+}
+
+export type Metric = {
+  name: string
+  // description: string;
+  icon: string
+  getTooltipContent: (obj: GitObject, dbi: DatabaseInfo) => string
+  getCategories: (obj: GitObject, dbi: DatabaseInfo) => string
+  metricFunction: (data: RepoData) => (blob: GitBlobObject, cache: MetricCache) => void
+  // compute: (obj: GitObject) => number | string;
+  // categorize: (obj: GitObject) => string;
 }

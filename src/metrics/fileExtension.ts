@@ -1,10 +1,29 @@
 import type { GitBlobObject } from "~/shared/model"
 import { getColorFromExtension } from "~/metrics/metricUtils"
-import type { MetricCache } from "~/metrics/metrics"
+import type { Metric, MetricCache } from "~/metrics/metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo } from "~/components/legend/PointLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
+import { mdiFileOutline } from "@mdi/js"
+import { isBlob } from "~/shared/util"
+
+export const FileExtensionMetric: Metric = {
+  name: "File Extension",
+  // description
+  icon: mdiFileOutline,
+  getTooltipContent(obj, dbi) {
+    return this.getCategories(obj, dbi)
+  },
+  getCategories(obj) {
+    return isBlob(obj) ? obj.extension : ""
+  }
+}
+
+// export function FileExtensionMetricServer() {
+//   const db = InstanceManager.getInstance("C:/Users/jonas/git/git-truck", "main")
+//   console.log(db?.gitCaller.getCommitCount())
+// }
 
 export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extensionInfo = getColorFromExtension(blob.extension)
