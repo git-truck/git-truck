@@ -1,6 +1,6 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
-import type { JSX, DOMAttributes } from "react"
+import { type JSX, type DOMAttributes, useId } from "react"
 import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } from "react"
 import { href, useMatch, useNavigate } from "react-router"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
@@ -343,14 +343,17 @@ function filterGitTree(
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
+  const gradientId = useId()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
+
+  const colors = metricsData.get(metricType)?.colormap.get(d.data.path)
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
-          stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+          fill: colors ? (colors.length > 1 ? `url('#${gradientId}')` : colors[0]) : missingInMapColor,
+          stroke: colors ? colors[0] : noEntryColor
         }
       : {
           // strokeWidth: "1px"
@@ -385,13 +388,41 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   }, [d, metricsData, metricType, chartType])
 
   return (
-    <rect
-      {...commonProps}
-      className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
-        "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
-        "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
-      })}
-    />
+    <>
+      {colors && colors.length > 1 ? (
+        <defs>
+          {/* <radialGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          {colors.map((color, i) => (
+            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+          ))}
+        </radialGradient> */}
+          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          {colors.map((color, i) => (
+            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+          ))}
+        </linearGradient> */}
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            {colors.map((color, i) => (
+              <>
+              {/* Stripes */}
+                {i > 0 ? <stop key={i} offset={`${(i / (colors.length - 2)) * 100}%`} stopColor={color} /> : null}
+                <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+                {i < colors.length - 1 ? (
+                  <stop key={i} offset={`${(i / colors.length) * 100}%`} stopColor={color} />
+                ) : null}
+              </>
+            ))}
+          </linearGradient>
+        </defs>
+      ) : null}
+      <rect
+        {...commonProps}
+        className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
+          "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
+          "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
+        })}
+      />
+    </>
   )
 }
 
@@ -411,7 +442,9 @@ function NodeText({
   if (children === null) return null
 
   const colorValue = metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333"
-  const contrastResult = isDarkColor(colorValue)
+  // const contrastResult = isDarkColor(colorValue)
+  // TODO: what to do for gradients?
+  const contrastResult = isDarkColor("#ffffff")
 
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,

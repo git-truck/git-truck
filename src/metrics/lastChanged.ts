@@ -1,6 +1,20 @@
-import { dateFormatShort, rgbToHex } from "~/shared/util"
+import { dateFormatRelative, dateFormatShort, rgbToHex } from "~/shared/util"
 import { interpolateCool } from "d3"
 import { feature_flags } from "~/feature_flags"
+import type { Metric } from "./metrics"
+import { mdiPulse } from "@mdi/js"
+
+export const LastChangedMetric: Metric = {
+  name: "Last Changed",
+  icon: mdiPulse,
+  getTooltipContent(obj, dbi) {
+    const epoch = dbi.lastChanged[obj.path]
+    if (!epoch) {
+      return "No activity in selected range"
+    }
+    return dateFormatRelative(epoch)
+  }
+}
 
 interface lastChangedGroup {
   epoch: number

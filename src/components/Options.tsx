@@ -6,6 +6,7 @@ import { colorMetricDescriptions, Metric, sizeMetricDescriptions } from "~/metri
 import { IconRadioGroup } from "~/components/EnumSelect"
 
 import {
+  mdiAccountMultiple,
   mdiChartBubble,
   mdiChartTree,
   mdiFileCodeOutline,
@@ -25,7 +26,8 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   TOP_CONTRIBUTOR: "MOST_CONTRIBUTIONS",
   MOST_COMMITS: "MOST_COMMITS",
   LAST_CHANGED: "LAST_CHANGED",
-  MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS"
+  MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS",
+  CONTRIBUTORS: "EQUAL_SIZE"
 }
 
 export const Options = memo(function Options() {
@@ -37,7 +39,8 @@ export const Options = memo(function Options() {
     LAST_CHANGED: mdiPulse,
     MOST_COMMITS: mdiSourceCommit,
     TOP_CONTRIBUTOR: mdiPodiumGold,
-    MOST_CONTRIBUTIONS: mdiPlusMinusVariant
+    MOST_CONTRIBUTIONS: mdiPlusMinusVariant,
+    CONTRIBUTORS: mdiAccountMultiple
   }
 
   const sizeMetricIcons: Record<SizeMetricType, string> = {

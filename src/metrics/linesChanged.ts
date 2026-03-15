@@ -4,6 +4,11 @@ import { SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex } from "~/shared/util"
 import { noEntryColor } from "~/const"
 
+export const LinesChangedMetric = {
+  name: "Lines Changed",
+  description: "Total number of lines changed (added + deleted) in the selected time range."
+}
+
 export class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
   readonly min_lightness = 40

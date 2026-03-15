@@ -15,13 +15,16 @@ import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import type { MetricType } from "~/metrics/metrics"
+import {
+  // Metrics,
+  type MetricType } from "~/metrics/metrics"
 import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, numToFriendlyString } from "~/shared/util"
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 import { missingInMapColor, MULTIPLE_CONTRIBUTORS } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { ContributorsMetric } from "~/metrics/contributors";
 
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
@@ -48,7 +51,9 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
           "font-bold": isTree(hoveredObject)
         },
         isBlob(hoveredObject) && color
-          ? isDarkColor(color).luminance >= 0.5
+        // TODO: what to do for gradients?
+          // ? isDarkColor(color).luminance >= 0.5
+          ? isDarkColor("#ffffff").luminance >= 0.5
             ? "text-primary-text"
             : "text-primary-text-dark"
           : "dark:text-primary-text-dark text-primary-text"
@@ -101,8 +106,12 @@ function ColorMetricDependentInfo(props: {
   databaseInfo: DatabaseInfo
   dominantAuthorCutoff: number
 }) {
-  let icon: string
-  let content: string
+  let icon: string = mdiCircleSmall
+  let content = null
+  // const metric = Metrics[props.metric]
+  // const icon = metric.icon
+  // const content = props.hoveredBlob ? metric.getTooltipContent(props.hoveredBlob, props.databaseInfo) : null
+
   const path = props.hoveredBlob?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS": {
@@ -115,16 +124,7 @@ function ColorMetricDependentInfo(props: {
       content = `${numToFriendlyString(noCommits)} commit${noCommits > 1 ? "s" : ""}`
       break
     }
-    case "LAST_CHANGED": {
-      icon = mdiPulse
-      const epoch = props.databaseInfo.lastChanged[path]
-      if (!epoch) {
-        content = "No activity in selected range"
-        break
-      }
-      content = dateFormatRelative(epoch)
-      break
-    }
+
     case "TOP_CONTRIBUTOR": {
       icon = mdiAccount
       const dominant = props.databaseInfo.dominantAuthors[path]
@@ -157,13 +157,16 @@ function ColorMetricDependentInfo(props: {
       content = `${numToFriendlyString(contribs)} lines`
       break
     }
-    case "FILE_TYPE": {
-      icon = mdiFileOutline
-      const extension = props.hoveredBlob?.name.substring(props.hoveredBlob.name.lastIndexOf(".")) ?? ""
-      content = extension
-      break
+    case "CONTRIBUTORS": {
+      icon = ContributorsMetric.icon
+      if (!props.hoveredBlob) {
+        content = "No activity in selected range"
+        break
+      }
+      content = ContributorsMetric.getTooltipContent(props.hoveredBlob, props.databaseInfo)
     }
   }
+
   return (
     <>
       <Icon path={icon} color="currentColor" />

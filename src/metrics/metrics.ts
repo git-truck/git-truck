@@ -1,28 +1,33 @@
-import type { GitBlobObject, GitTreeObject, RepoData } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, RepoData, DatabaseInfo, GitObject } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
-import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
+import { PointInfo, type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
 import type { LegendType } from "~/components/legend/Legend"
-import { setExtensionColor } from "~/metrics/fileExtension"
-import { getLastChangedIndex, lastChangedGroupings } from "~/metrics/lastChanged"
+import { FileExtensionMetric, setExtensionColor } from "~/metrics/fileExtension"
+import { getLastChangedIndex, lastChangedGroupings, LastChangedMetric } from "~/metrics/lastChanged"
 import { CommitAmountTranslater } from "~/metrics/mostCommits"
-import { ContribAmountTranslater } from "~/metrics/mostContribs"
+import { ContribAmountTranslater } from "~/metrics/linesChanged"
 import { setDominantAuthorColor } from "~/metrics/topContributer"
 import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from "d3"
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { ContributorsMetric } from "./contributors"
 
-export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
+export type MetricsData = {
+  caches: Map<MetricType, MetricCache>
+  authorColorMap: Map<string, string>
+}
 
 export const Metric = {
+  LAST_CHANGED: "Last changed",
   FILE_TYPE: "File type",
   MOST_COMMITS: "Commits",
   MOST_CONTRIBUTIONS: "Line changes",
   TOP_CONTRIBUTOR: "Top contributor",
-  LAST_CHANGED: "Last changed"
+  CONTRIBUTORS: ContributorsMetric.name
 }
 
 export type MetricType = keyof typeof Metric
@@ -31,15 +36,14 @@ export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
   predefinedAuthorColors: Record<string, `#${string}`>,
-  dominantAuthorCutoff: number,
-  prefersLight: boolean
+  dominantAuthorCutoff: number
 ): MetricsData {
-  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors, prefersLight)
+  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors)
 
-  return [
-    setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
-    new Map(Object.entries(authorColors))
-  ]
+  return {
+    caches: setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
+    authorColorMap: new Map(Object.entries(authorColors))
+  }
 }
 
 export const colorMetricDescriptions: Record<MetricType, string> = {
@@ -47,7 +51,9 @@ export const colorMetricDescriptions: Record<MetricType, string> = {
   MOST_COMMITS: "Files are colored based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are colored based on how long ago they were changed.",
   TOP_CONTRIBUTOR: "Files are colored based on the top author for each file.",
-  MOST_CONTRIBUTIONS: "Files are colored based on how many line changes (additions and deletions) have been made to it."
+  MOST_CONTRIBUTIONS:
+    "Files are colored based on how many line changes (additions and deletions) have been made to it.",
+  CONTRIBUTORS: "Files are colored based on which contributors have contributed to it."
 }
 
 export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
@@ -76,27 +82,24 @@ export function getMetricLegendType(metric: MetricType): LegendType {
       return "GRADIENT"
     case "LAST_CHANGED":
       return feature_flags.lastChangedAsGrad ? "GRADIENT" : "SEGMENTS"
-    default:
-      throw new Error("Uknown metric type: " + metric)
+    case "CONTRIBUTORS":
+      return "POINT"
   }
 }
 
 export interface MetricCache {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
-  colormap: Map<string, `#${string}`>
+  colormap: Map<string, Array<`#${string}`>>
 }
 
-function generateAuthorColors(
+export function generateAuthorColors(
   authors: string[],
   colorSeed: string | null,
-  predefinedAuthorColors: Record<string, `#${string}`>,
-  prefersLight: boolean
+  predefinedAuthorColors: Record<string, `#${string}`>
 ): Record<string, `#${string}`> {
   const authorColorMap: Record<string, `#${string}`> = {}
   // const colorsForLightTheme = schemeCategory10
-  const colorsForLightTheme = schemeTableau10
-  const colorsForDarkTheme = schemeTableau10
-  const colors = scaleOrdinal(prefersLight ? colorsForLightTheme : colorsForDarkTheme).range()
+  const colors = scaleOrdinal(schemeTableau10).range()
 
   const sortedAuthors = authors.slice().sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
 
@@ -119,7 +122,7 @@ function getMetricCalcs(
   data: RepoData,
   authorColors: Record<string, `#${string}`>,
   dominantAuthorCutoff: number
-): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
+): Record<MetricType, MetricFunction> {
   const maxCommitCount = data.databaseInfo.maxCommitCount
   const minCommitCount = data.databaseInfo.minCommitCount
   const newestEpoch = data.databaseInfo.newestChangeDate
@@ -130,110 +133,102 @@ function getMetricCalcs(
   const minContribCount = data.databaseInfo.maxMinContribCounts.min
   const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
-  return [
-    [
-      "FILE_TYPE",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) {
-          cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
-        }
-        //TODO: Ensure that the legend distribution is updated when hiding files, currently if a file type is hidden, it will still be counted in author distribution
-        setExtensionColor(blob, cache)
+  return {
+    FILE_TYPE: (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) {
+        cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
       }
-    ],
-    [
-      "MOST_COMMITS",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) {
-          cache.legend = {
-            minValue: minCommitCount,
-            maxValue: maxCommitCount,
-            minValueAltFormat: undefined,
-            maxValueAltFormat: undefined,
-            minColor: commitmapper.getColor(minCommitCount),
-            maxColor: commitmapper.getColor(maxCommitCount)
-          } satisfies GradLegendData
-        }
-        commitmapper.setColor(blob, cache, data.databaseInfo.commitCounts)
+      //TODO: Ensure that the legend distribution is updated when hiding files, currently if a file type is hidden, it will still be counted in author distribution
+      setExtensionColor(blob, cache)
+    },
+
+    MOST_COMMITS: (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) {
+        cache.legend = {
+          minValue: minCommitCount,
+          maxValue: maxCommitCount,
+          minValueAltFormat: undefined,
+          maxValueAltFormat: undefined,
+          minColor: commitmapper.getColor(minCommitCount),
+          maxColor: commitmapper.getColor(maxCommitCount)
+        } satisfies GradLegendData
       }
-    ],
-    [
-      "LAST_CHANGED",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        const domainedScale = scaleSequential(interpolateCool).domain([data.databaseInfo.oldestChangeDate, newestEpoch])
-        if (!cache.legend) {
-          cache.legend = feature_flags.lastChangedAsGrad
-            ? ({
-                minValue: data.databaseInfo.oldestChangeDate,
-                maxValue: newestEpoch,
-                minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
-                maxValueAltFormat: dateFormatShort(newestEpoch * 1000),
-                minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
-                maxColor: rgbToHex(domainedScale(newestEpoch))
-              } satisfies GradLegendData)
-            : ({
-                steps: getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
-                textGenerator: (n) => groupings[n].text,
-                colorGenerator: (n) => groupings[n].color,
-                offsetStepCalc: (blob) =>
-                  getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
-              } satisfies SegmentLegendData)
-        }
-        const existing = data.databaseInfo.lastChanged[blob.path]
-        // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
-        const color = rgbToHex(domainedScale(existing ?? 0))
-        if (!color) {
-          cache.colormap.set(blob.path, noEntryColor)
-          return
-        }
-        cache.colormap.set(blob.path, color)
+      commitmapper.setColor(blob, cache, data.databaseInfo.commitCounts)
+    },
+
+    LAST_CHANGED: (blob: GitBlobObject, cache: MetricCache) => {
+      const domainedScale = scaleSequential(interpolateCool).domain([data.databaseInfo.oldestChangeDate, newestEpoch])
+      if (!cache.legend) {
+        cache.legend = feature_flags.lastChangedAsGrad
+          ? ({
+              minValue: data.databaseInfo.oldestChangeDate,
+              maxValue: newestEpoch,
+              minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
+              maxValueAltFormat: dateFormatShort(newestEpoch * 1000),
+              minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
+              maxColor: rgbToHex(domainedScale(newestEpoch))
+            } satisfies GradLegendData)
+          : ({
+              steps: getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.oldestChangeDate) + 1,
+              textGenerator: (n) => groupings[n].text,
+              colorGenerator: (n) => groupings[n].color,
+              offsetStepCalc: (blob) =>
+                getLastChangedIndex(groupings, newestEpoch, data.databaseInfo.lastChanged[blob.path] ?? 0) ?? -1
+            } satisfies SegmentLegendData)
       }
-    ],
-    [
-      "TOP_CONTRIBUTOR",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
-        setDominantAuthorColor(
-          authorColors,
-          blob,
-          cache,
-          data.databaseInfo.dominantAuthors,
-          dominantAuthorCutoff,
-          data.databaseInfo.contribSumPerFile
-        )
+      const existing = data.databaseInfo.lastChanged[blob.path]
+      // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
+      const color = rgbToHex(domainedScale(existing ?? 0))
+      if (!color) {
+        cache.colormap.set(blob.path, [noEntryColor])
+        return
       }
-    ],
-    [
-      "MOST_CONTRIBUTIONS",
-      (blob: GitBlobObject, cache: MetricCache) => {
-        if (!cache.legend) {
-          cache.legend = {
-            minValue: minContribCount,
-            maxValue: maxContribCount,
-            minValueAltFormat: undefined,
-            maxValueAltFormat: undefined,
-            minColor: contribmapper.getColor(minContribCount),
-            maxColor: contribmapper.getColor(maxContribCount)
-          } satisfies GradLegendData
-        }
-        contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
+      cache.colormap.set(blob.path, [color])
+    },
+
+    TOP_CONTRIBUTOR: (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
+      setDominantAuthorColor(
+        authorColors,
+        blob,
+        cache,
+        data.databaseInfo.dominantAuthors,
+        dominantAuthorCutoff,
+        data.databaseInfo.contribSumPerFile
+      )
+    },
+
+    MOST_CONTRIBUTIONS: (blob: GitBlobObject, cache: MetricCache) => {
+      if (!cache.legend) {
+        cache.legend = {
+          minValue: minContribCount,
+          maxValue: maxContribCount,
+          minValueAltFormat: undefined,
+          maxValueAltFormat: undefined,
+          minColor: contribmapper.getColor(minContribCount),
+          maxColor: contribmapper.getColor(maxContribCount)
+        } satisfies GradLegendData
       }
-    ]
-  ]
+      contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
+    },
+    CONTRIBUTORS: ContributorsMetric.metricFunction(data)
+  }
 }
 
 function setupMetricsCache(
   tree: GitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][]
+  metricCalcs: Record<MetricType, (blob: GitBlobObject, cache: MetricCache) => void>
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
   setupMetricsCacheRec(tree, metricCalcs, metricCache)
   return metricCache
 }
 
+type MetricFunction = (blob: GitBlobObject, cache: MetricCache) => void
+
 function setupMetricsCacheRec(
   tree: GitTreeObject,
-  metricCalcs: [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][],
+  metricCalcs: Record<MetricType, MetricFunction>,
   acc: Map<MetricType, MetricCache>
 ) {
   for (const child of tree.children) {
@@ -243,17 +238,18 @@ function setupMetricsCacheRec(
         break
       }
       case "blob": {
-        for (const [metricType, metricFunc] of metricCalcs) {
+        const entries = Object.entries(metricCalcs) as [MetricType, MetricFunction][]
+        for (const [metricType, metricFunc] of entries) {
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, Array<`#${string}`>>()
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, Array<`#${string}`>>()
             }
           )
         }
@@ -261,4 +257,15 @@ function setupMetricsCacheRec(
       }
     }
   }
+}
+
+export type Metric = {
+  name: string
+  // description: string;
+  icon: string
+  getTooltipContent: (obj: GitObject, dbi: DatabaseInfo) => string
+  getCategories: (obj: GitObject, dbi: DatabaseInfo) => string
+  metricFunction: (data: RepoData) => (blob: GitBlobObject, cache: MetricCache) => void
+  // compute: (obj: GitObject) => number | string;
+  // categorize: (obj: GitObject) => string;
 }
