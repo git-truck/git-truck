@@ -1,216 +1,226 @@
-import { dateFormatLong, extname, last, resolveParentFolder } from "~/shared/util"
-import { useId, useState, useEffect } from "react"
-import { Form, useLocation, useNavigation, Link } from "react-router"
-import { ChevronButton } from "~/components/ChevronButton"
-import { useData } from "~/contexts/DataContext"
-import type { GitTreeObject } from "~/shared/model"
-import { mdiEyeOffOutline, mdiMagnify, mdiOpenInNew } from "@mdi/js"
+import {
+  mdiAccountGroup,
+  mdiFileOutline,
+  mdiPlusMinusVariant,
+  mdiPulse,
+  mdiResize,
+  mdiSourceCommit,
+  mdiFolderOutline,
+  mdiFileMultipleOutline
+} from "@mdi/js"
 import byteSize from "byte-size"
+import { useQueryState } from "nuqs"
+import { useEffect, useState } from "react"
+import { useFetcher, href } from "react-router"
+import { EntityAuthors } from "~/components/inspection/EntityAuthors"
+import { EntityCommits } from "~/components/inspection/EntityCommits"
 import { Icon } from "~/components/Icon"
+import { missingInMapColor } from "~/const"
+import { useData } from "~/contexts/DataContext"
+import { useMetrics } from "~/contexts/MetricContext"
+import { useOptions } from "~/contexts/OptionsContext"
+import { viewSerializer } from "~/routes/view"
+import type { loader } from "~/routes/view.api.contributor-distribution"
+import { dateFormatRelative, last } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
-import { usePath } from "~/contexts/PathContext"
-import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import { useSetOpenCollapsibleHeader } from "~/components/CollapsibleHeader"
-import { useQueryStates } from "nuqs"
-import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
-import { useViewAction } from "~/hooks"
+import { cn } from "~/styling"
+import type { MetricType } from "~/metrics/metrics"
 
-export function HydrateFallback() {
-  return <div>Loading...</div>
-}
-
-export default function Details() {
+export default function Metrics() {
+  const fetcher = useFetcher<typeof loader>()
+  const [expandedPanelMetric, setExpandedPanelMetric] = useState<string | null>(null)
+  const [path] = useQueryState("path")
   const clickedObject = useClickedObject()
-  const { setPath } = usePath()
   const data = useData()
-  const { state } = useNavigation()
-  const location = useLocation()
-  const viewAction = useViewAction()
-  const setOpen = useSetOpenCollapsibleHeader()
+  const [metricsData] = useMetrics()
+  const { metricType, setMetricType } = useOptions()
 
-  const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
-
-  useEffect(() => {
-    setOpen(!!clickedObject)
-  }, [clickedObject, setOpen])
-
-  if (!clickedObject) {
-    return <p className="p-4">No file or folder selected</p>
+  const expandablePanels: Record<string, React.ComponentType> = {
+    TOP_CONTRIBUTOR: EntityAuthors,
+    MOST_COMMITS: EntityCommits
   }
 
-  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: clickedObject.path })
+  useEffect(() => {
+    setExpandedPanelMetric(metricType ? metricType : null)
+  }, [clickedObject?.path, metricType])
 
-  const commitCount = data.databaseInfo.commitCounts[clickedObject.path]
-  const isBlob = clickedObject.type === "blob"
+  useEffect(() => {
+    if (!clickedObject) {
+      return
+    }
+    fetcher.load(href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path }))
+    return () => {
+      fetcher.reset()
+    }
+    // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clickedObject?.path])
 
-  const extension = last(clickedObject.name.split("."))
+  const isBlob = clickedObject?.type === "blob"
+
+  type NodeWithChildren = {
+    type: string
+    children?: NodeWithChildren[]
+  }
+
+  const countFilesRecursive = (node: NodeWithChildren): number => {
+    if (node.type !== "tree") {
+      return 1
+    }
+
+    return (node.children ?? []).reduce((sum, child): number => {
+      if (child.type !== "tree") {
+        return sum + 1
+      }
+
+      return sum + countFilesRecursive(child)
+    }, 0)
+  }
+
+  //TODO: Metrics should be resolvable from a single source of truth instead of calculating it here and in the metric calculation
+  const Metrics = [
+    {
+      name: "FILE_TYPE",
+      description: "extension",
+      icon: isBlob ? mdiFileOutline : mdiFolderOutline,
+      data: isBlob ? "." + last(clickedObject.name.split(".")) : "/",
+      color: clickedObject ? metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path) : missingInMapColor
+    },
+    //TODO: FileSize should ideally also be a continous color-metric option to create consistency.
+    {
+      name: isBlob ? "FILE_SIZE" : "FILES",
+      description: isBlob ? "File Size" : "Nested Files",
+      icon: isBlob ? mdiResize : mdiFileMultipleOutline,
+      data: isBlob
+        ? clickedObject
+          ? byteSize(clickedObject?.sizeInBytes ?? 0).value + " " + byteSize(clickedObject?.sizeInBytes ?? 0).unit
+          : "unknown"
+        : clickedObject
+          ? countFilesRecursive(clickedObject).toLocaleString()
+          : "unknown",
+      color: missingInMapColor
+    },
+    {
+      name: "MOST_COMMITS",
+      description: "# commits",
+      icon: mdiSourceCommit,
+      data: clickedObject
+        ? isBlob
+          ? data.databaseInfo.commitCounts[clickedObject.path]
+          : Object.entries(data.databaseInfo.commitCounts)
+              .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+              .reduce((sum, [_, count]) => sum + count, 0)
+              .toLocaleString()
+        : "unknown",
+      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
+      color: clickedObject ? metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path) : missingInMapColor
+    },
+    {
+      name: "TOP_CONTRIBUTOR",
+      description: "most line-contributing contributor",
+      icon: mdiAccountGroup,
+      data: clickedObject
+        ? isBlob
+          ? data.databaseInfo.dominantAuthors[clickedObject.path].author
+          : fetcher.data
+            ? fetcher.data.authorDistribution[0]?.author
+            : "loading..."
+        : "unknown",
+      color: clickedObject ? metricsData.get("TOP_CONTRIBUTOR")?.colormap?.get(clickedObject.path) : missingInMapColor
+    },
+    {
+      name: "MOST_CONTRIBUTIONS",
+      description: "# Line changes",
+      icon: mdiPlusMinusVariant,
+      data: clickedObject
+        ? isBlob
+          ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
+          : Object.entries(data.databaseInfo.contribSumPerFile)
+              .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+              .reduce((sum, [_, count]) => sum + count, 0)
+              .toLocaleString()
+        : "unknown",
+      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
+      color: clickedObject
+        ? metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
+        : missingInMapColor
+    },
+    {
+      name: "LAST_CHANGED",
+      description: "last changed timestamp",
+      icon: mdiPulse,
+      data: clickedObject
+        ? isBlob
+          ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
+          : (dateFormatRelative(
+              Math.max(
+                ...Object.entries(data.databaseInfo.lastChanged)
+                  .filter(([path]) => clickedObject?.path && path.startsWith(clickedObject.path))
+                  .map(([_, epoch]) => epoch)
+              )
+            ) ?? "unknown")
+        : "unknown",
+      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
+      color: clickedObject ? metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path) : missingInMapColor
+    }
+  ]
+
+  const ExpandedPanel = expandedPanelMetric ? expandablePanels[expandedPanelMetric] : undefined
 
   return (
     <>
-      <div className="flex grow flex-col gap-2">
-        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-          {isBlob ? <FileTypeEntry /> : null}
-          {isBlob ? <CommitsEntry count={commitCount ?? 0} /> : null}
-          {isBlob ? (
-            <>
-              <SizeEntry size={clickedObject.sizeInBytes} isBinary={false} />
-              <LastchangedEntry epoch={data.databaseInfo.lastChanged[clickedObject.path]} />
-            </>
-          ) : (
-            <FileAndSubfolderCountEntries clickedTree={clickedObject} />
-          )}
-          <PathEntry path={clickedObject.path} />
+      <div className="grid grid-cols-2 gap-2">
+        {Metrics.map((metric) => (
+          <MetricButton
+            key={metric.name}
+            metric={metric}
+            metricType={metricType}
+            isExpanded={metric.name === expandedPanelMetric}
+            onClick={() => {
+              setMetricType(metric.name as MetricType)
+              setExpandedPanelMetric((prev) => (prev === metric.name ? null : metric.name))
+            }}
+          />
+        ))}
+      </div>
+      {expandedPanelMetric ? (
+        <div className="border-primary mt-3 rounded-md border p-2">
+          {ExpandedPanel ? <ExpandedPanel /> : <p>This metric has no inspection currently</p>}
         </div>
-      </div>
-      <GroupAuthorsButton />
-      <div className="mt-2 flex flex-wrap gap-2">
-        <Link className="btn" to={zoomLink}>
-          <Icon path={mdiMagnify} />
-          Zoom to this {isBlob ? "file" : "folder"}
-        </Link>
-        {isBlob ? (
-          <>
-            <Form className="w-max" method="post" action={viewAction}>
-              <input type="hidden" name="hide" value={clickedObject.path} />
-              <button className="btn" disabled={state !== "idle"} title="Hide this file">
-                <Icon path={mdiEyeOffOutline} />
-                Hide
-              </button>
-            </Form>
-            {clickedObject.name.includes(".") ? (
-              <Form className="w-max" method="post" action={viewAction}>
-                <input type="hidden" name="hide" value={`*.${extension}`} />
-                <button
-                  className="btn"
-                  disabled={state !== "idle"}
-                  title={`Hide all files with .${extension} extension`}
-                >
-                  <Icon path={mdiEyeOffOutline} />
-                  <span>Hide *.{extension}</span>
-                </button>
-              </Form>
-            ) : null}
-          </>
-        ) : (
-          <Form method="post" action={viewAction}>
-            <input type="hidden" name="hide" value={clickedObject.path} />
-            <button
-              className="btn"
-              disabled={state !== "idle"}
-              onClick={() => {
-                setPath(resolveParentFolder(clickedObject.path))
-              }}
-            >
-              <Icon path={mdiEyeOffOutline} />
-              Hide this folder
-            </button>
-          </Form>
-        )}
-      </div>
+      ) : null}
     </>
   )
 }
 
-function FileTypeEntry() {
-  const clickedObject = useClickedObject()
-
+function MetricButton({
+  metric,
+  metricType,
+  isExpanded = false,
+  onClick
+}: {
+  metric: { name: string; description: string; icon: string; data: string | number; color?: string }
+  metricType?: string
+  isExpanded?: boolean
+  onClick?: () => void
+}) {
   return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Type
+    <button
+      type="button"
+      className={cn("btn flex h-full w-full flex-row items-center justify-between gap-5 px-2 py-1", {
+        "ring-primary ring-2": isExpanded
+      })}
+      style={{
+        ...(metric.color && metric.name == metricType
+          ? { backgroundColor: `hsl(from ${metric.color} h s l / 0.7)` }
+          : {})
+      }}
+      onClick={onClick}
+    >
+      <Icon path={metric.icon} size={0.75} />
+      <div className="flex flex-col overflow-hidden text-right">
+        <p className="w-full truncate text-sm font-bold">{metric.data}</p>
+        <p className="truncate text-[10px] font-normal italic">{metric.name}</p>
       </div>
-      <div className="flex gap-1 text-sm">{clickedObject ? extname(clickedObject.path) : "N/A"}</div>
-    </>
-  )
-}
-
-function CommitsEntry(props: { count: number | undefined }) {
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Commits
-      </div>
-      <p className="text-sm break-all">{props.count ?? "unknown"}</p>
-    </>
-  )
-}
-
-function LastchangedEntry(props: { epoch: number | undefined }) {
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Last changed
-      </div>
-      <p className="text-sm break-all">{props.epoch ? dateFormatLong(props.epoch) : "unknown"}</p>
-    </>
-  )
-}
-
-function PathEntry(props: { path: string }) {
-  const { state } = useNavigation()
-  const clickedObject = useClickedObject()
-  const viewAction = useViewAction()
-
-  if (!clickedObject) return null
-
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Located at
-      </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-between gap-2 text-sm break-all">
-        <p className="truncate" title={props.path}>
-          {props.path}
-        </p>
-        <Form method="post" action={viewAction}>
-          <input type="hidden" name="open" value={clickedObject.path} />
-          <button
-            className="btn--icon"
-            disabled={state !== "idle"}
-            title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
-          >
-            <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
-          </button>
-        </Form>
-      </div>
-    </>
-  )
-}
-
-function SizeEntry(props: { size: number; isBinary?: boolean }) {
-  const size = byteSize(props.size ?? 0)
-  return (
-    <>
-      <div className="flex items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Size</div>
-      <p className="text-sm break-all">
-        {size.value} {size.unit}{" "}
-        <span className="opacity-50">
-          {props.isBinary ? (
-            <>
-              <br />
-              (binary file)
-            </>
-          ) : null}
-        </span>
-      </p>
-    </>
-  )
-}
-
-function FileAndSubfolderCountEntries(props: { clickedTree: GitTreeObject }) {
-  const folderCount = props.clickedTree.children.filter((child) => child.type === "tree").length
-  const fileCount = props.clickedTree.children.length - folderCount
-
-  return (
-    <>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Files
-      </div>
-      <p className="text-sm break-all">{fileCount}</p>
-      <div className="flex grow items-center overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
-        Folders
-      </div>
-      <p className="text-sm break-all">{folderCount}</p>
-    </>
+    </button>
   )
 }
