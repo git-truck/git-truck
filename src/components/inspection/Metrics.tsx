@@ -66,6 +66,14 @@ export default function Metrics() {
     return <p className="p-4">No file or folder selected</p>
   }
 
+  if (
+    Object.entries(data.databaseInfo.commitCounts).filter(
+      ([path]) => clickedObject.path && path.startsWith(clickedObject.path)
+    ).length === 0
+  ) {
+    return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
+  }
+
   type NodeWithChildren = {
     type: string
     children?: NodeWithChildren[]
@@ -85,6 +93,8 @@ export default function Metrics() {
     }, 0)
   }
 
+  const formatCount = (value: number | undefined) => value?.toLocaleString() ?? "0"
+
   //TODO: Metrics should be resolvable from a single source of truth instead of calculating it here and in the metric calculation
   const Metrics = [
     {
@@ -100,26 +110,20 @@ export default function Metrics() {
       description: isBlob ? "File Size" : "Nested Files",
       icon: isBlob ? mdiResize : mdiFileMultipleOutline,
       data: isBlob
-        ? clickedObject
-          ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
-          : "unknown"
-        : clickedObject
-          ? countFilesRecursive(clickedObject).toLocaleString()
-          : "unknown",
+        ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
+        : (countFilesRecursive(clickedObject).toLocaleString() ?? "unknown"),
       color: missingInMapColor
     },
     {
       name: "MOST_COMMITS",
       description: "# commits",
       icon: mdiSourceCommit,
-      data: clickedObject
-        ? isBlob
-          ? data.databaseInfo.commitCounts[clickedObject.path]
-          : Object.entries(data.databaseInfo.commitCounts)
-              .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
-              .reduce((sum, [_, count]) => sum + count, 0)
-              .toLocaleString()
-        : "unknown",
+      data: isBlob
+        ? formatCount(data.databaseInfo.commitCounts[clickedObject.path])
+        : Object.entries(data.databaseInfo.commitCounts)
+            .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
+            .reduce((sum, [_, count]) => sum + count, 0)
+            .toLocaleString(),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: clickedObject ? metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path) : missingInMapColor
     },
@@ -140,14 +144,12 @@ export default function Metrics() {
       name: "MOST_CONTRIBUTIONS",
       description: "# Line changes",
       icon: mdiPlusMinusVariant,
-      data: clickedObject
-        ? isBlob
-          ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
-          : Object.entries(data.databaseInfo.contribSumPerFile)
-              .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
-              .reduce((sum, [_, count]) => sum + count, 0)
-              .toLocaleString()
-        : "unknown",
+      data: isBlob
+        ? formatCount(data.databaseInfo.contribSumPerFile[clickedObject.path])
+        : Object.entries(data.databaseInfo.contribSumPerFile)
+            .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
+            .reduce((sum, [_, count]) => sum + count, 0)
+            .toLocaleString(),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: clickedObject
         ? metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
@@ -157,17 +159,15 @@ export default function Metrics() {
       name: "LAST_CHANGED",
       description: "last changed timestamp",
       icon: mdiPulse,
-      data: clickedObject
-        ? isBlob
-          ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
-          : (dateFormatRelative(
-              Math.max(
-                ...Object.entries(data.databaseInfo.lastChanged)
-                  .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
-                  .map(([_, epoch]) => epoch)
-              )
-            ) ?? "unknown")
-        : "unknown",
+      data: isBlob
+        ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
+        : (dateFormatRelative(
+            Math.max(
+              ...Object.entries(data.databaseInfo.lastChanged)
+                .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
+                .map(([_, epoch]) => epoch)
+            )
+          ) ?? "unknown"),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: clickedObject ? metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path) : missingInMapColor
     }
