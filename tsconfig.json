@@ -6,7 +6,6 @@
     "module": "ESNext",
     "lib": ["ES2024"],
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./src/*"] },
     "checkJs": true,
