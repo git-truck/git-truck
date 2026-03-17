@@ -42,3 +42,13 @@ You can read more about the features in the [feature overview](https://git-truck
 🤷 Git provider agnostic - works with any git repository
 
 😊 No tracking, no ads, no cloud, no servers, no subscription
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=git-truck%2Fgit-truck&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&legend=top-left" />
+ </picture>
+</a>
