@@ -12,7 +12,9 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
   const domain = [0, 100]
   return (
     <div className={cn("grid grid-cols-[calc(11*var(--spacing))_1fr] px-3", className)}>
-      <p title="Min percentage of changes a file's top contributor must account for to be colored.">{displayPercentage}%</p>
+      <p title="Min percentage of changes a file's top contributor must account for to be colored.">
+        {displayPercentage}%
+      </p>
 
       <div className="relative" title="Adjust the top contributor percentage cutoff">
         <Slider
