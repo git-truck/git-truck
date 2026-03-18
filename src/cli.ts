@@ -96,6 +96,12 @@ async function getUpdateMessage() {
     return " (latest)"
   }
 
+  const isExperimental = pkg.version.startsWith("0.0.0")
+
+  if (isExperimental) {
+    return " (experimental build)"
+  }
+
   return ` [!] Update available: ${latestVersion}
 
 To update, run:
