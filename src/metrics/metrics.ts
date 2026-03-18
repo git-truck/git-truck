@@ -9,7 +9,7 @@ import { setExtensionColor } from "~/metrics/fileExtension"
 import { getLastChangedIndex, lastChangedGroupings } from "~/metrics/lastChanged"
 import { CommitAmountTranslater } from "~/metrics/mostCommits"
 import { ContribAmountTranslater } from "~/metrics/mostContribs"
-import { setDominantAuthorColor } from "~/metrics/topContributer"
+import { setTopContributorColor } from "~/metrics/topContributer"
 import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from "d3"
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
@@ -30,15 +30,20 @@ export type MetricType = keyof typeof Metric
 export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
-  predefinedAuthorColors: Record<string, `#${string}`>,
-  dominantAuthorCutoff: number,
+  predefinedContributorColors: Record<string, `#${string}`>,
+  topContributorCutoff: number,
   prefersLight: boolean
 ): MetricsData {
-  const authorColors = generateAuthorColors(data.databaseInfo.authors, colorSeed, predefinedAuthorColors, prefersLight)
+  const contributorColors = generateContributorColors(
+    data.databaseInfo.contributors,
+    colorSeed,
+    predefinedContributorColors,
+    prefersLight
+  )
 
   return [
-    setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, authorColors, dominantAuthorCutoff)),
-    new Map(Object.entries(authorColors))
+    setupMetricsCache(data.databaseInfo.fileTree, getMetricCalcs(data, contributorColors, topContributorCutoff)),
+    new Map(Object.entries(contributorColors))
   ]
 }
 
@@ -46,7 +51,7 @@ export const colorMetricDescriptions: Record<MetricType, string> = {
   FILE_TYPE: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
   MOST_COMMITS: "Files are colored based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are colored based on how long ago they were changed.",
-  TOP_CONTRIBUTOR: "Files are colored based on the top author for each file.",
+  TOP_CONTRIBUTOR: "Files are colored based on the top contributor for each file.",
   MOST_CONTRIBUTIONS: "Files are colored based on how many line changes (additions and deletions) have been made to it."
 }
 
@@ -86,39 +91,37 @@ export interface MetricCache {
   colormap: Map<string, `#${string}`>
 }
 
-function generateAuthorColors(
-  authors: string[],
+function generateContributorColors(
+  contributors: string[],
   colorSeed: string | null,
-  predefinedAuthorColors: Record<string, `#${string}`>,
+  predefinedContributorColors: Record<string, `#${string}`>,
   prefersLight: boolean
 ): Record<string, `#${string}`> {
-  const authorColorMap: Record<string, `#${string}`> = {}
+  const contributorColorMap: Record<string, `#${string}`> = {}
   // const colorsForLightTheme = schemeCategory10
   const colorsForLightTheme = schemeTableau10
   const colorsForDarkTheme = schemeTableau10
   const colors = scaleOrdinal(prefersLight ? colorsForLightTheme : colorsForDarkTheme).range()
 
-  const sortedAuthors = authors.slice().sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
+  const sortedContributors = contributors.slice().sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
 
-  for (let i = 0; i < sortedAuthors.length; i++) {
-    const author = sortedAuthors[i]
-    const existing = predefinedAuthorColors[author]
+  for (let i = 0; i < sortedContributors.length; i++) {
+    const contributor = sortedContributors[i]
+    const existing = predefinedContributorColors[contributor]
     if (existing) {
-      authorColorMap[author] = existing
+      contributorColorMap[contributor] = existing
       continue
     }
-    // const hashed = sha1(author + seed)
-    // const color = uniqolor(hashed).color as `#${string}`
     const color = colors[i % colors.length] as `#${string}`
-    authorColorMap[author] = color
+    contributorColorMap[contributor] = color
   }
-  return authorColorMap
+  return contributorColorMap
 }
 
 function getMetricCalcs(
   data: RepoData,
-  authorColors: Record<string, `#${string}`>,
-  dominantAuthorCutoff: number
+  contributorColors: Record<string, `#${string}`>,
+  dominantContributorCutoff: number
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.databaseInfo.maxCommitCount
   const minCommitCount = data.databaseInfo.minCommitCount
@@ -137,7 +140,7 @@ function getMetricCalcs(
         if (!cache.legend) {
           cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
         }
-        //TODO: Ensure that the legend distribution is updated when hiding files, currently if a file type is hidden, it will still be counted in author distribution
+        // TODO: Ensure that the legend distribution is updated when hiding files, currently if a file type is hidden, it will still be counted in contributor distribution
         setExtensionColor(blob, cache)
       }
     ],
@@ -193,12 +196,12 @@ function getMetricCalcs(
       "TOP_CONTRIBUTOR",
       (blob: GitBlobObject, cache: MetricCache) => {
         if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
-        setDominantAuthorColor(
-          authorColors,
+        setTopContributorColor(
+          contributorColors,
           blob,
           cache,
-          data.databaseInfo.dominantAuthors,
-          dominantAuthorCutoff,
+          data.databaseInfo.topContributors,
+          dominantContributorCutoff,
           data.databaseInfo.contribSumPerFile
         )
       }

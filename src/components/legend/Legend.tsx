@@ -8,7 +8,7 @@ import { GradientLegend } from "~/components/legend/GradiantLegend"
 import { PointLegend } from "~/components/legend/PointLegend"
 import { SegmentLegend } from "~/components/legend/SegmentLegend"
 import { PercentageSlider } from "~/components/PercentageSlider"
-import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
+import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 
 export type LegendType = "POINT" | "GRADIENT" | "SEGMENTS"
 

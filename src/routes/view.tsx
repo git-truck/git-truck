@@ -34,10 +34,10 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
-import { useQueryState, type inferParserType } from "nuqs"
+import { type inferParserType } from "nuqs"
 import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 import { ModalManager } from "~/components/modals/ModalManager"
-import { GroupAuthorsButton } from "~/components/buttons/GroupAuthorsButton"
+import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
@@ -145,11 +145,11 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   const formData = await request.formData()
   const refresh = formData.get("refresh")
-  const unionedAuthors = formData.get("unionedAuthors")
+  const groupedContributors = formData.get("groupedContributors")
   const rerollColors = formData.get("rerollColors")
   const timeseries = formData.get("timeseries")
-  const authorname = formData.get("authorname")
-  const authorcolor = formData.get("authorcolor")
+  const contributorName = formData.get("contributorName")
+  const contributorColor = formData.get("contributorColor")
   const hidePath = formData.get("hide") as string | null
   const unhidePath = formData.get("show") as string | null
   const unhideAll = formData.get("unhideAll") as string | null
@@ -187,10 +187,10 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return null
   }
 
-  if (typeof unionedAuthors === "string") {
-    instance.prevInvokeReason = "unionedAuthors"
-    const json = JSON.parse(unionedAuthors) as string[][]
-    await instance.db.replaceAuthorUnions(json)
+  if (typeof groupedContributors === "string") {
+    instance.prevInvokeReason = "groupedContributors"
+    const json = JSON.parse(groupedContributors) as string[][]
+    await instance.db.replaceContributorGroups(json)
     return null
   }
 
@@ -219,9 +219,9 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
     return null
   }
 
-  if (typeof authorname === "string") {
-    instance.prevInvokeReason = "authorcolor"
-    await InstanceManager.getOrCreateMetadataDB().addAuthorColor(authorname, authorcolor as string)
+  if (typeof contributorName === "string") {
+    instance.prevInvokeReason = "contributorColor"
+    await InstanceManager.getOrCreateMetadataDB().addContributorColor(contributorName, contributorColor as string)
     return null
   }
 
@@ -277,16 +277,18 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
   log.timeEnd("updateCache")
   log.time("dbQueries")
-  const dominantAuthors =
-    prevRes && !shouldUpdate(reason, "dominantAuthor")
-      ? prevRes.dominantAuthors
-      : await instance.db.getDominantAuthorPerFile()
+  const topContributors =
+    prevRes && !shouldUpdate(reason, "topContributor")
+      ? prevRes.topContributors
+      : await instance.db.getTopContributorPerFile()
   const commitCounts =
     prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
   const lastChanged =
     prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
   const authorCounts =
-    prevRes && !shouldUpdate(reason, "authorCounts") ? prevRes.authorCounts : await instance.db.getAuthorCountPerFile()
+    prevRes && !shouldUpdate(reason, "contributorCounts")
+      ? prevRes.contributorCounts
+      : await instance.db.getAuthorCountPerFile()
   const { maxCommitCount, minCommitCount } =
     prevRes && !shouldUpdate(reason, "maxMinCommitCount")
       ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
@@ -295,9 +297,12 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
       ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
       : await instance.db.getNewestAndOldestChangeDates()
-  const authors = prevRes && !shouldUpdate(reason, "authors") ? prevRes.authors : await instance.db.getAuthors()
+  const authors =
+    prevRes && !shouldUpdate(reason, "contributors") ? prevRes.contributors : await instance.db.getAuthors()
   const authorUnions =
-    prevRes && !shouldUpdate(reason, "authorunions") ? prevRes.authorUnions : await instance.db.getAuthorUnions()
+    prevRes && !shouldUpdate(reason, "groupedContributors")
+      ? prevRes.contributorGroups
+      : await instance.db.getAuthorUnions()
   const { rootTree, fileCount } = filetree
   const hiddenFiles =
     prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
@@ -309,10 +314,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
           branch: instance.branch
         })
   const colorSeed = prevRes && !shouldUpdate(reason, "colorSeed") ? prevRes.colorSeed : await instance.db.getColorSeed()
-  const authorColors =
-    prevRes && !shouldUpdate(reason, "authorColors")
-      ? prevRes.authorColors
-      : await InstanceManager.getOrCreateMetadataDB().getAuthorColors()
+  const contributorColors =
+    prevRes && !shouldUpdate(reason, "contributorColors")
+      ? prevRes.contributorColors
+      : await InstanceManager.getOrCreateMetadataDB().getContributorColors()
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
@@ -334,16 +339,16 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   log.timeEnd("dbQueries")
 
   const databaseInfo: DatabaseInfo = {
-    dominantAuthors,
+    topContributors,
     commitCounts,
     lastChanged,
-    authorCounts,
+    contributorCounts: authorCounts,
     maxCommitCount,
     minCommitCount,
     newestChangeDate,
     oldestChangeDate,
-    authors,
-    authorUnions,
+    contributors: authors,
+    contributorGroups: authorUnions,
     fileTree: rootTree,
     fileCount,
     hiddenFiles,
@@ -353,7 +358,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     timerange,
     colorSeed,
     selectedRange,
-    authorColors,
+    contributorColors: contributorColors,
     commitCountPerTimeInterval,
     commitCountPerTimeIntervalUnit,
     analyzedRepos,
@@ -387,13 +392,11 @@ export default function Repo() {
   const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
-  const [objectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
 
   const clearCacheUrl = `/clear-cache?${new URLSearchParams({
     redirect: location.pathname + location.search
   }).toString()}`
 
-  const objectPathIsFile = objectPath?.split("/").pop()?.includes(".")
   return (
     <Suspense
       fallback={

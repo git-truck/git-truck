@@ -30,7 +30,7 @@ export type Options = {
   labelsVisible: boolean
   renderCutOff: number
   showFilesWithoutChanges: boolean
-  dominantAuthorCutoff: number
+  topContributorCutoff: number
   linkMetricAndSizeMetric: boolean
   /**
    * When searching, hide files that do not match the search query
@@ -48,7 +48,7 @@ export type OptionsContextType = Options & {
   setCommitSearch: (commitSearch: string) => void
   setRenderCutOff: (renderCutoff: number) => void
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
-  setDominantAuthorCutoff: (dominantAuthorCutoff: number) => void
+  setTopContributorCutoff: (topContributorCutoff: number) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
   setShowOnlySearchMatches: (showOnlySearchMatches: boolean) => void
 }
@@ -74,7 +74,7 @@ const defaultOptions: Options = {
   labelsVisible: true,
   renderCutOff: 2,
   showFilesWithoutChanges: true,
-  dominantAuthorCutoff: 0,
+  topContributorCutoff: 0,
   linkMetricAndSizeMetric: false,
   showOnlySearchMatches: false
 }

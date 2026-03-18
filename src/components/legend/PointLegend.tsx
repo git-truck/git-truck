@@ -161,7 +161,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         }}
       >
         {isAuthorRelatedLegend ? (
-          <LegendDot key={dotColor} dotColor={dotColor} authorColorToChange={label} />
+          <LegendDot key={dotColor} dotColor={dotColor} contributorColorToChange={label} />
         ) : (
           <LegendDot key={dotColor} dotColor={dotColor} />
         )}

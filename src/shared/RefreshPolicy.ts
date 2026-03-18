@@ -1,19 +1,19 @@
 type DataItem =
   | "cache"
   | "rename"
-  | "dominantAuthor"
+  | "topContributor"
   | "commitCounts"
   | "lastChanged"
-  | "authorCounts"
+  | "contributorCounts"
   | "maxMinCommitCount"
   | "newestOldestChangeDate"
-  | "authors"
-  | "authorunions"
+  | "contributors"
+  | "groupedContributors"
   | "filetree"
   | "hiddenfiles"
   | "lastRunInfo"
   | "colorSeed"
-  | "authorColors"
+  | "contributorColors"
   | "commitCountPerDay"
   | "loadRepoData"
   | "contribSumPerFile"
@@ -26,11 +26,11 @@ export type InvocationReason =
   | "show"
   | "hide"
   | "open"
-  | "unionedAuthors"
+  | "groupedContributors"
   | "rerollColors"
   | "timeseriesstart"
   | "timeseriesend"
-  | "authorcolor"
+  | "contributorColor"
   | "unknown"
   | "none"
 
@@ -41,36 +41,36 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "analyzedRepos",
     "commitCount",
     "rename",
-    "dominantAuthor",
+    "topContributor",
     "commitCounts",
     "contribSumPerFile",
     "lastChanged",
-    "authorCounts",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors",
-    "authorunions",
+    "contributors",
+    "groupedContributors",
     "filetree",
     "hiddenfiles",
     "lastRunInfo",
     "colorSeed",
-    "authorColors",
+    "contributorColors",
     "commitCountPerDay",
     "loadRepoData"
   ],
   show: [
     "cache",
     "commitCount",
-    "dominantAuthor",
+    "topContributor",
     "commitCounts",
     "contribSumPerFile",
     "lastChanged",
-    "authorCounts",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors",
+    "contributors",
     "hiddenfiles"
   ],
   hide: [
@@ -79,62 +79,62 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors",
+    "contributors",
     "hiddenfiles"
   ],
   open: [],
-  unionedAuthors: ["cache", "dominantAuthor", "authorCounts", "authors", "authorunions"],
+  groupedContributors: ["cache", "topContributor", "contributorCounts", "contributors", "groupedContributors"],
   rerollColors: ["colorSeed"],
   timeseriesstart: [
     "cache",
     "commitCount",
     "rename",
-    "dominantAuthor",
+    "topContributor",
     "commitCounts",
     "contribSumPerFile",
     "lastChanged",
-    "authorCounts",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors"
+    "contributors"
   ],
   timeseriesend: [
     "cache",
     "commitCount",
     "rename",
-    "dominantAuthor",
+    "topContributor",
     "commitCounts",
     "contribSumPerFile",
     "lastChanged",
-    "authorCounts",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors",
+    "contributors",
     "filetree"
   ],
-  authorcolor: ["authorColors"],
+  contributorColor: ["contributorColors"],
   unknown: [
     "cache",
     "analyzedRepos",
     "commitCount",
     "rename",
-    "dominantAuthor",
+    "topContributor",
     "commitCounts",
     "contribSumPerFile",
     "lastChanged",
-    "authorCounts",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
     "newestOldestChangeDate",
-    "authors",
-    "authorunions",
+    "contributors",
+    "groupedContributors",
     "filetree",
     "hiddenfiles",
     "lastRunInfo",
     "colorSeed",
-    "authorColors",
+    "contributorColors",
     "commitCountPerDay",
     "loadRepoData"
   ],

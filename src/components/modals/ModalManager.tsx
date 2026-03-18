@@ -2,14 +2,14 @@ import { mdiAccountMultiple, mdiCog, mdiEyeOff } from "@mdi/js"
 import { parseAsStringLiteral, useQueryState } from "nuqs"
 import { useEffect, useRef, type ReactNode } from "react"
 import { Icon } from "~/components/Icon"
-import { GroupAuthorsModal } from "~/components/modals/GroupAuthorsModal"
+import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
 import { HideFilesModal } from "~/components/modals/HideFilesModal"
 import { SettingsModal } from "~/components/modals/SettingsModal"
 import { CloseButton } from "~/components/util"
 
 const modals = {
   "app-settings": { content: <SettingsModal />, title: "Settings", icon: mdiCog },
-  "group-authors": { content: <GroupAuthorsModal />, title: "Group Authors", icon: mdiAccountMultiple },
+  "group-contributors": { content: <GroupContributorsModal />, title: "Group Contributors", icon: mdiAccountMultiple },
   "ignore-files": { content: <HideFilesModal />, title: "Hide files", icon: mdiEyeOff }
 } as const satisfies Record<string, { content: ReactNode; title: string; icon: string }>
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
