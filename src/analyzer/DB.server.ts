@@ -13,7 +13,7 @@ import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
-import { log } from "./log.server"
+import { log } from "~/analyzer/log.server"
 
 export default class DB {
   private connectionPromise: Promise<DuckDBConnection>
@@ -780,7 +780,7 @@ export default class DB {
     DELETE FROM metadata WHERE field = 'colorseed';
       INSERT INTO metadata (field, value, value2) VALUES ('colorseed', null, '${seed}');
       `)
-    console.log("inserted seed", seed)
+    log.debug("inserted seed", seed)
   }
 
   public async getColorSeed() {
@@ -788,7 +788,7 @@ export default class DB {
       SELECT value2 FROM metadata WHERE field = 'colorseed';
     `)
     if (res.length < 1) return null
-    console.log("retrieved seed", res[0]["value2"])
+    log.debug("retrieved seed", res[0]["value2"])
     return res[0]["value2"] as string
   }
 
