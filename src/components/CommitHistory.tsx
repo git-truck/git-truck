@@ -17,12 +17,12 @@ interface CommitDistFragProps {
 }
 
 function CommitDistFragment(props: CommitDistFragProps) {
-  const [, authorColors] = useMetrics()
+  const [, contributorColors] = useMetrics()
 
   return props.items.map((value) => (
     <CommitListEntry
       key={value.hash + "--itemContentAccordion"}
-      authorColor={authorColors.get(value.author) ?? "grey"}
+      authorColor={contributorColors.get(value.author) ?? "grey"}
       value={value}
     />
   ))
@@ -64,7 +64,7 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   return (
     <div title={`By: ${props.value.author}`} className="flex items-center gap-2 overflow-hidden text-ellipsis">
-      <LegendDot className="ml-1" dotColor={props.authorColor} authorColorToChange={props.value.author} />
+      <LegendDot className="ml-1" dotColor={props.authorColor} contributorColorToChange={props.value.author} />
       <Popover
         positions={["left", "top", "bottom", "right"]}
         popoverTitle="Commit Details"

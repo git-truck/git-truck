@@ -10,6 +10,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   return {
     path: objectPath,
-    authorDistribution: await instance.db.getAuthorContribsForPath(objectPath)
+    contributorDistribution: await instance.db.getContributorDistributionForPath(objectPath)
   }
 }

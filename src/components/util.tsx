@@ -32,18 +32,18 @@ export const CloseButton = ({
 export const LegendDot = ({
   className = "",
   dotColor,
-  authorColorToChange = undefined
-}: { dotColor: string; authorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
+  contributorColorToChange = undefined
+}: { dotColor: string; contributorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
   const submit = useViewSubmit()
 
-  if (!authorColorToChange) return <Dot className={className} color={color} />
+  if (!contributorColorToChange) return <Dot className={className} color={color} />
 
-  function updateColor(author: string, color: string) {
+  function updateColor(contributor: string, color: string) {
     const form = new FormData()
-    form.append("authorname", author)
-    form.append("authorcolor", color)
+    form.append("contributorName", contributor)
+    form.append("contributorColor", color)
     submit(form, {
       method: "post"
     })
@@ -57,11 +57,11 @@ export const LegendDot = ({
       trigger={({ onClick }) => <Dot className={cn("cursor-pointer", className)} color={dotColor} onClick={onClick} />}
     >
       <HexColorPicker color={color} onChange={setColor} />
-      <button className="btn" onClick={() => updateColor(authorColorToChange, color)}>
+      <button className="btn" onClick={() => updateColor(contributorColorToChange, color)}>
         Set color
       </button>
-      {databaseInfo.authorColors[authorColorToChange] ? (
-        <button className="btn" onClick={() => updateColor(authorColorToChange, "")}>
+      {databaseInfo.contributorColors[contributorColorToChange] ? (
+        <button className="btn" onClick={() => updateColor(contributorColorToChange, "")}>
           Use default color
         </button>
       ) : null}

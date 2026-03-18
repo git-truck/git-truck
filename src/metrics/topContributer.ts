@@ -4,15 +4,15 @@ import { PointInfo } from "~/components/legend/PointLegend"
 import type { MetricCache } from "~/metrics/metrics"
 import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 
-export function setDominantAuthorColor(
-  authorColors: Record<string, `#${string}`>,
+export function setTopContributorColor(
+  contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  dominantAuthorPerFile: Record<string, { author: string; contribcount: number }>,
-  dominantAuthorCutoff: number,
+  topContributorPerFile: Record<string, { contributor: string; contribcount: number }>,
+  topContributorCutoff: number,
   contribSumPerFile: Record<string, number>
 ) {
-  const dominantAuthor = dominantAuthorPerFile[blob.path]
+  const dominantAuthor = topContributorPerFile[blob.path]
   const contribSum = contribSumPerFile[blob.path]
   const legend = cache.legend as PointLegendData
 
@@ -32,17 +32,17 @@ export function setDominantAuthorColor(
   }
 
   const authorPercentage = (dominantAuthor.contribcount / contribSum) * 100
-  if (authorPercentage < dominantAuthorCutoff) {
+  if (authorPercentage < topContributorCutoff) {
     bumpMultiple()
     return
   }
 
-  const color = authorColors[dominantAuthor.author] ?? noEntryColor
+  const color = contributorColors[dominantAuthor.contributor] ?? noEntryColor
   cache.colormap.set(blob.path, color)
 
-  if (legend.has(dominantAuthor.author)) {
-    legend.get(dominantAuthor.author)?.add(1)
+  if (legend.has(dominantAuthor.contributor)) {
+    legend.get(dominantAuthor.contributor)?.add(1)
     return
   }
-  legend.set(dominantAuthor.author, new PointInfo(color, 1))
+  legend.set(dominantAuthor.contributor, new PointInfo(color, 1))
 }

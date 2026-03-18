@@ -98,7 +98,7 @@ function ContributorDistribution({
             {(contributorDistribution ?? []).length > 0 && hasContributions(contributorDistribution) ? (
               <ContributorDistFragment show items={contributorDistribution ?? []} contribSum={contribSum} />
             ) : (
-              <p>No authors found</p>
+              <p>No contributors found</p>
             )}
           </>
         )}

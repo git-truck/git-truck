@@ -89,8 +89,7 @@ export interface AnalyzerData {
   repositoryPath: string
   branch: string
   commit: GitCommitObject
-  authors: string[]
-  authorsUnion: string[]
+  contributors: string[]
   currentVersion: string
   lastRunEpoch: number
   commits: Record<string, GitLogEntry>
@@ -201,16 +200,16 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
-  dominantAuthors: Record<string, { author: string; contribcount: number }>
+  topContributors: Record<string, { contributor: string; contribcount: number }>
   commitCounts: Record<string, number>
   lastChanged: Record<string, number>
-  authorCounts: Record<string, number>
+  contributorCounts: Record<string, number>
   maxCommitCount: number
   minCommitCount: number
   newestChangeDate: number
   oldestChangeDate: number
-  authors: string[]
-  authorUnions: string[][]
+  contributors: string[]
+  contributorGroups: string[][]
   fileTree: GitTreeObject
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }
@@ -219,7 +218,7 @@ export interface DatabaseInfo {
   branch: string
   timerange: [number, number]
   colorSeed: string | null
-  authorColors: Record<string, `#${string}`>
+  contributorColors: Record<string, `#${string}`>
   commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
   commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
   selectedRange: [number, number]

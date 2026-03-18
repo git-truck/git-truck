@@ -26,7 +26,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { sizeMetric, metricType, dominantAuthorCutoff } = useOptions()
+  const { sizeMetric, metricType, topContributorCutoff } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const color = hoveredObject ? metricsData.get(metricType)?.colormap?.get(hoveredObject.path) : missingInMapColor
@@ -77,7 +77,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
               metric={metricType}
               hoveredBlob={hoveredObject}
               databaseInfo={databaseInfo}
-              dominantAuthorCutoff={dominantAuthorCutoff}
+              topContributorCutoff={topContributorCutoff}
             />
           </div>
           {metricType !== sizeMetric ? (
@@ -99,7 +99,7 @@ function ColorMetricDependentInfo(props: {
   metric: MetricType
   hoveredBlob: GitBlobObject | null
   databaseInfo: DatabaseInfo
-  dominantAuthorCutoff: number
+  topContributorCutoff: number
 }) {
   let icon: string
   let content: string
@@ -127,24 +127,24 @@ function ColorMetricDependentInfo(props: {
     }
     case "TOP_CONTRIBUTOR": {
       icon = mdiAccount
-      const dominant = props.databaseInfo.dominantAuthors[path]
+      const dominant = props.databaseInfo.topContributors[path]
       const contribSum = props.databaseInfo.contribSumPerFile[path]
       if (!dominant) {
         content = "No activity in selected range"
         break
       }
       if (!contribSum) {
-        content = dominant.author
+        content = dominant.contributor
         break
       }
-      const authorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
-      if (authorPercentage < props.dominantAuthorCutoff) {
-        // TODO show how many authors if no dominant author
+      const contributorPercentage = Math.round((dominant.contribcount / contribSum) * 100)
+      if (contributorPercentage < props.topContributorCutoff) {
+        // TODO show how many contributors if no top contributor
         icon = mdiAccountGroup
         content = MULTIPLE_CONTRIBUTORS
         break
       }
-      content = `${dominant.author} ${authorPercentage}%`
+      content = `${dominant.contributor} ${contributorPercentage}%`
       break
     }
     case "MOST_CONTRIBUTIONS": {

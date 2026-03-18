@@ -46,14 +46,14 @@ export default class MetadataDB {
     await this.setMetadata(currentMetadata)
   }
 
-  public async addAuthorColor(author: string, color: string) {
+  public async addContributorColor(contributor: string, color: string) {
     const currentMetadata = await this.readMetadata()
-    if (color === "") delete currentMetadata.authorcolors[author]
-    else currentMetadata.authorcolors[author] = color
+    if (color === "") delete currentMetadata.authorcolors[contributor]
+    else currentMetadata.authorcolors[contributor] = color
     await this.setMetadata(currentMetadata)
   }
 
-  public async getAuthorColors() {
+  public async getContributorColors() {
     const currentMetadata = await this.readMetadata()
     return currentMetadata.authorcolors as Record<string, `#${string}`>
   }

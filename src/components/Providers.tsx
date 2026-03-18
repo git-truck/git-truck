@@ -39,13 +39,13 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
     const res = createMetricData(
       { ...data, databaseInfo },
       data.databaseInfo.colorSeed,
-      data.databaseInfo.authorColors,
-      options?.dominantAuthorCutoff ?? 70,
+      data.databaseInfo.contributorColors,
+      options?.topContributorCutoff ?? 70,
       prefersLight
     )
 
     return res
-  }, [data, databaseInfo, options?.dominantAuthorCutoff, prefersLight])
+  }, [data, databaseInfo, options?.topContributorCutoff, prefersLight])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -97,10 +97,10 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
           ...prevOptions,
           showFilesWithoutChanges: showFilesWithoutChanges
         })),
-      setDominantAuthorCutoff: (dominantAuthorCutoff: number) =>
+      setTopContributorCutoff: (topContributorCutoff: number) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
-          dominantAuthorCutoff: dominantAuthorCutoff
+          topContributorCutoff
         })),
       setLinkMetricAndSizeMetric: (link: boolean) =>
         setOptions((prevOptions) => ({

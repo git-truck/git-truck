@@ -70,7 +70,7 @@ export const Chart = memo(function Chart({
   const setClickedObject = useSetClickedObject()
   const clickedObject = useClickedObject()
 
-  const { dominantAuthorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
+  const { topContributorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
 
   useKey({ key: "Escape" }, () => {
     if (clickedObject) {
@@ -133,6 +133,7 @@ export const Chart = memo(function Chart({
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
 
+  // TODO: This is very inefficient, as it forces all nodes to rerender each time. Instead, Nodes should manage their own handlers or, use delegate events on svg root
   const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
     const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       // If clicking the same object, deselect
@@ -221,12 +222,12 @@ export const Chart = memo(function Chart({
 
           const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
           let topContributor: string = MULTIPLE_CONTRIBUTORS
-          const dominant = databaseInfo.dominantAuthors[d.data.path]
+          const dominant = databaseInfo.topContributors[d.data.path]
           const contribSum = databaseInfo.contribSumPerFile[d.data.path]
 
           const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
-          if (authorPercentage !== null && authorPercentage >= dominantAuthorCutoff) {
-            topContributor = dominant.author
+          if (authorPercentage !== null && authorPercentage >= topContributorCutoff) {
+            topContributor = dominant.contributor
           }
 
           const category =

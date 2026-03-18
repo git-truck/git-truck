@@ -222,7 +222,7 @@ export default class DB {
     await DB.initViews(await this.connectionPromise, start, end)
   }
 
-  public async replaceAuthorUnions(unions: string[][]) {
+  public async replaceContributorGroups(unions: string[][]) {
     await this.run(`
       DELETE FROM authorunions;
     `)
@@ -448,7 +448,7 @@ export default class DB {
     }, {})
   }
 
-  public async getDominantAuthorPerFile() {
+  public async getTopContributorPerFile() {
     const res = await this.query(`
       WITH RankedAuthors AS (
         SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount,
@@ -461,13 +461,13 @@ export default class DB {
       WHERE rank = 1;
     `)
 
-    const result: Record<string, { author: string; contribcount: number }> = {}
+    const result: Record<string, { contributor: string; contribcount: number }> = {}
     res.forEach((row) => {
-      const author = row["author"]
-      if (typeof author !== "string") {
-        throw new Error("Error when getting dominant author per file: Author is not a string")
+      const contributor = row["author"]
+      if (typeof contributor !== "string") {
+        throw new Error("Error when getting top contributor per file: Contributor is not a string")
       }
-      result[row["filepath"] as string] = { author: author, contribcount: Number(row["total_contribcount"]) }
+      result[row["filepath"] as string] = { contributor: contributor, contribcount: Number(row["total_contribcount"]) }
     })
 
     return result
@@ -582,7 +582,7 @@ export default class DB {
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
 
-  public async getAuthorContribsForPath(objectPath: string) {
+  public async getContributorDistributionForPath(objectPath: string) {
     const isblob = (await this.getObjectType(objectPath)) === "blob"
     const res = await this.query(`
       SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
@@ -591,7 +591,7 @@ export default class DB {
     `)
 
     return res.map((row) => {
-      return { author: row["author"] as string, contribs: Number(row["contribsum"]) }
+      return { contributor: row["author"] as string, contribs: Number(row["contribsum"]) }
     })
   }
 
