@@ -394,13 +394,43 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   }, [d, metricsData, metricType, chartType])
 
   return (
-    <rect
-      {...commonProps}
-      className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
-        "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
-        "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
-      })}
-    />
+    <>
+      {multipleColors ? (
+        <defs>
+          {/* <radialGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          {colors.map((color, i) => (
+            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+          ))}
+        </radialGradient> */}
+          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          {colors.map((color, i) => (
+            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+          ))}
+        </linearGradient> */}
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            {colors.map((color, i) => (
+              <>
+                {/* Stripes */}
+                {i > 0 ? (
+                  <stop key={`prev-${i}`} offset={`${(i / (colors.length - 2)) * 100}%`} stopColor={color} />
+                ) : null}
+                <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+                {i < colors.length - 1 ? (
+                  <stop key={`next${i}`} offset={`${(i / colors.length) * 100}%`} stopColor={color} />
+                ) : null}
+              </>
+            ))}
+          </linearGradient>
+        </defs>
+      ) : null}
+      <rect
+        {...commonProps}
+        className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
+          "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
+          "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
+        })}
+      />
+    </>
   )
 }
 
