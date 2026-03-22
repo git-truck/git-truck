@@ -121,13 +121,14 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR,
+        hash VARCHAR,
+        type VARCHAR,
+        sizeInBytes UINTEGER
       );
 
       -- Migrations
       CREATE SEQUENCE IF NOT EXISTS hiddenfiles_id_sequence START 1;
       ALTER TABLE hiddenfiles ADD COLUMN IF NOT EXISTS id INTEGER DEFAULT nextval('hiddenfiles_id_sequence');
-      ALTER TABLE files ADD COLUMN IF NOT EXISTS hash VARCHAR;
-      ALTER TABLE files ADD COLUMN IF NOT EXISTS type VARCHAR;
     `)
   }
 
@@ -514,6 +515,7 @@ export default class DB {
         appender.appendVarchar(file.path)
         appender.appendVarchar(file.hash)
         appender.appendVarchar(file.type)
+        appender.appendUInteger(file.size ?? 0)
         appender.endRow()
       }
     })
@@ -580,6 +582,26 @@ export default class DB {
       SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(distinct commithash) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC);
     `)
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
+  }
+
+  public async getMaxAndMinFileSize() {
+    const res = await this.query(`
+      SELECT MAX(sizeInBytes) as max_size, MIN(sizeInBytes) as min_size FROM files WHERE type = 'blob';
+    `)
+    return { maxFileSize: Number(res[0]["max_size"]), minFileSize: Number(res[0]["min_size"]) }
+  }
+
+  public async getFileSizePerFile(): Promise<Record<string, number>> {
+    const res = await this.query(`
+      SELECT path, sizeInBytes FROM files WHERE type = 'blob';
+    `)
+
+    const result: Record<string, number> = {}
+    res.forEach((row) => {
+      result[row["path"] as string] = Number(row["sizeInBytes"])
+    })
+
+    return result
   }
 
   public async getContributorDistributionForPath(objectPath: string) {

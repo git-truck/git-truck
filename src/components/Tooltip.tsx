@@ -22,6 +22,7 @@ import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 import { missingInMapColor, MULTIPLE_CONTRIBUTORS } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { FileSizeMetric } from "~/metrics/fileSize"
 
 export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
   const { x, y } = useMouse()
@@ -162,6 +163,14 @@ function ColorMetricDependentInfo(props: {
       const extension = props.hoveredBlob?.name.substring(props.hoveredBlob.name.lastIndexOf(".")) ?? ""
       content = extension
       break
+    }
+    case "FILE_SIZE": {
+      icon = FileSizeMetric.icon
+      if (!props.hoveredBlob) {
+        content = "Size unknown"
+      } else {
+        content = FileSizeMetric.getTooltipContent(props.hoveredBlob, props.databaseInfo)
+      }
     }
   }
   return (

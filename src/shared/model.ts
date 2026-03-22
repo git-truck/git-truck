@@ -27,8 +27,6 @@ export type Repository = {
       isAnalyzed: true
       refs: GitRefs
       reasons: ANALYZER_CACHE_MISS_REASONS[]
-      analyzedHeads: Record<string, boolean>
-      data: AnalyzerData
       currentHead: string
       lastChanged: number
     }
@@ -43,8 +41,6 @@ export type Repository = {
       isAnalyzed: false
       refs: GitRefs
       reasons: ANALYZER_CACHE_MISS_REASONS[]
-      analyzedHeads: Record<string, boolean>
-      data: null
       currentHead: string
       lastChanged: number
     }
@@ -79,7 +75,7 @@ export interface ArgsOptions {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 17
+export const AnalyzerDataInterfaceVersion = 18
 
 export interface AnalyzerData {
   cached: boolean
@@ -202,12 +198,15 @@ export interface RepoData {
 export interface DatabaseInfo {
   topContributors: Record<string, { contributor: string; contribcount: number }>
   commitCounts: Record<string, number>
+  fileSizes: Record<string, number>
   lastChanged: Record<string, number>
   contributorCounts: Record<string, number>
   maxCommitCount: number
   minCommitCount: number
   newestChangeDate: number
   oldestChangeDate: number
+  maxFileSize: number
+  minFileSize: number
   contributors: string[]
   contributorGroups: string[][]
   fileTree: GitTreeObject
@@ -227,3 +226,6 @@ export interface DatabaseInfo {
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
 }
+
+
+export type HexColor = `#${string}`
