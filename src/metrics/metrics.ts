@@ -1,4 +1,4 @@
-import type { GitBlobObject, GitTreeObject, RepoData } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, HexColor, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -14,11 +14,13 @@ import { interpolateCool, scaleOrdinal, scaleSequential, schemeTableau10 } from 
 import { dateFormatShort, rgbToHex } from "~/shared/util"
 import sha1 from "sha1"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
+import { FileSizeMetric } from "~/metrics/fileSize"
 
 export type MetricsData = [Map<MetricType, MetricCache>, Map<string, string>]
 
 export const Metric = {
   FILE_TYPE: "File type",
+  FILE_SIZE: "File size",
   MOST_COMMITS: "Commits",
   MOST_CONTRIBUTIONS: "Line changes",
   TOP_CONTRIBUTOR: "Top contributor",
@@ -30,7 +32,7 @@ export type MetricType = keyof typeof Metric
 export function createMetricData(
   data: RepoData,
   colorSeed: string | null,
-  predefinedContributorColors: Record<string, `#${string}`>,
+  predefinedContributorColors: Record<string, HexColor>,
   topContributorCutoff: number,
   prefersLight: boolean
 ): MetricsData {
@@ -49,6 +51,7 @@ export function createMetricData(
 
 export const colorMetricDescriptions: Record<MetricType, string> = {
   FILE_TYPE: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
+  FILE_SIZE: "Files are colored based on their file size in bytes.",
   MOST_COMMITS: "Files are colored based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are colored based on how long ago they were changed.",
   TOP_CONTRIBUTOR: "Files are colored based on the top contributor for each file.",
@@ -81,23 +84,23 @@ export function getMetricLegendType(metric: MetricType): LegendType {
       return "GRADIENT"
     case "LAST_CHANGED":
       return feature_flags.lastChangedAsGrad ? "GRADIENT" : "SEGMENTS"
-    default:
-      throw new Error("Uknown metric type: " + metric)
+    case "FILE_SIZE":
+      return feature_flags.fileSizeAsGrad ? "GRADIENT" : "SEGMENTS"
   }
 }
 
 export interface MetricCache {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
-  colormap: Map<string, `#${string}`>
+  colormap: Map<string, HexColor>
 }
 
 function generateContributorColors(
   contributors: string[],
   colorSeed: string | null,
-  predefinedContributorColors: Record<string, `#${string}`>,
+  predefinedContributorColors: Record<string, HexColor>,
   prefersLight: boolean
-): Record<string, `#${string}`> {
-  const contributorColorMap: Record<string, `#${string}`> = {}
+): Record<string, HexColor> {
+  const contributorColorMap: Record<string, HexColor> = {}
   // const colorsForLightTheme = schemeCategory10
   const colorsForLightTheme = schemeTableau10
   const colorsForDarkTheme = schemeTableau10
@@ -112,7 +115,7 @@ function generateContributorColors(
       contributorColorMap[contributor] = existing
       continue
     }
-    const color = colors[i % colors.length] as `#${string}`
+    const color = colors[i % colors.length] as HexColor
     contributorColorMap[contributor] = color
   }
   return contributorColorMap
@@ -120,7 +123,7 @@ function generateContributorColors(
 
 function getMetricCalcs(
   data: RepoData,
-  contributorColors: Record<string, `#${string}`>,
+  contributorColors: Record<string, HexColor>,
   dominantContributorCutoff: number
 ): [metricType: MetricType, func: (blob: GitBlobObject, cache: MetricCache) => void][] {
   const maxCommitCount = data.databaseInfo.maxCommitCount
@@ -128,8 +131,9 @@ function getMetricCalcs(
   const newestEpoch = data.databaseInfo.newestChangeDate
   // TODO: remove when implementing new color scheme, not used, as we use a gradient instead.
   const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
-  const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
   const maxContribCount = data.databaseInfo.maxMinContribCounts.max
+  const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
+
   const minContribCount = data.databaseInfo.maxMinContribCounts.min
   const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
@@ -221,7 +225,8 @@ function getMetricCalcs(
         }
         contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
       }
-    ]
+    ],
+    ["FILE_SIZE", FileSizeMetric.metricFunctionCreator(data.databaseInfo)]
   ]
 }
 
@@ -250,13 +255,13 @@ function setupMetricsCacheRec(
           if (!acc.has(metricType))
             acc.set(metricType, {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, HexColor>()
             })
           metricFunc(
             child,
             acc.get(metricType) ?? {
               legend: undefined,
-              colormap: new Map<string, `#${string}`>()
+              colormap: new Map<string, HexColor>()
             }
           )
         }

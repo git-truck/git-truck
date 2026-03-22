@@ -8,6 +8,10 @@ export const feature_flags = {
    */
   lastChangedAsGrad: false,
   /**
+   * Enable last changed metric to be shown as a gradient legend instead of segments.
+   */
+  fileSizeAsGrad: false,
+  /**
    * Enable straight text for blobs in circular layout.
    */
   straightTextForBlobsInCircularLayout: true,

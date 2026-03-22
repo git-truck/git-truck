@@ -1,6 +1,6 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "./model"
+import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "~/shared/model"
 import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatLong(epochTime?: number) {

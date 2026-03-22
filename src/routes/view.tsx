@@ -283,6 +283,9 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await instance.db.getTopContributorPerFile()
   const commitCounts =
     prevRes && !shouldUpdate(reason, "commitCounts") ? prevRes.commitCounts : await instance.db.getCommitCountPerFile()
+  const fileSizes =
+    prevRes && !shouldUpdate(reason, "fileSizes") ? prevRes.fileSizes : await instance.db.getFileSizePerFile()
+
   const lastChanged =
     prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
   const authorCounts =
@@ -297,6 +300,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     prevRes && !shouldUpdate(reason, "newestOldestChangeDate")
       ? { newestChangeDate: prevRes.newestChangeDate, oldestChangeDate: prevRes.oldestChangeDate }
       : await instance.db.getNewestAndOldestChangeDates()
+  const { minFileSize, maxFileSize } =
+    prevRes && !shouldUpdate(reason, "maxMinFileSize")
+      ? { minFileSize: prevRes.minFileSize, maxFileSize: prevRes.maxFileSize }
+      : await instance.db.getMaxAndMinFileSize()
   const authors =
     prevRes && !shouldUpdate(reason, "contributors") ? prevRes.contributors : await instance.db.getAuthors()
   const authorUnions =
@@ -341,12 +348,15 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const databaseInfo: DatabaseInfo = {
     topContributors,
     commitCounts,
+    fileSizes,
     lastChanged,
     contributorCounts: authorCounts,
     maxCommitCount,
     minCommitCount,
     newestChangeDate,
     oldestChangeDate,
+    minFileSize,
+    maxFileSize,
     contributors: authors,
     contributorGroups: authorUnions,
     fileTree: rootTree,

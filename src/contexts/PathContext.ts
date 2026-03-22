@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { useData } from "./DataContext"
+import { useData } from "~/contexts/DataContext"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/view"
 

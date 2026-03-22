@@ -1,5 +1,5 @@
-import DB from "./DB.server.ts"
-import { GitCaller } from "./git-caller.server.ts"
+import DB from "~/analyzer/DB.server.ts"
+import { GitCaller } from "~/analyzer/git-caller.server.ts"
 import type {
   GitBlobObject,
   GitTreeObject,

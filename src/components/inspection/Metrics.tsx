@@ -12,7 +12,7 @@ import {
 } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState, useQueryStates } from "nuqs"
-import { useEffect, useState } from "react"
+import { useEffect, type ReactNode } from "react"
 import { useFetcher, href, Form, Link, useNavigation, useLocation } from "react-router"
 import { ContributorsInspection as ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
@@ -26,13 +26,13 @@ import type { loader } from "~/routes/view.api.contributor-distribution"
 import { dateFormatRelative, last, resolveParentFolder } from "~/shared/util"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
-import type { MetricType } from "~/metrics/metrics"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
+import type { GitObject, HexColor } from "~/shared/model"
+import type { MetricType } from "~/metrics/metrics"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
-  const [expandedPanelMetric, setExpandedPanelMetric] = useState<string | null>(null)
   const [path] = useQueryState("path")
   const clickedObject = useClickedObject()
   const data = useData()
@@ -45,10 +45,6 @@ export default function Metrics() {
     TOP_CONTRIBUTOR: ContributorsInspection,
     MOST_COMMITS: CommitsInspection
   }
-
-  useEffect(() => {
-    setExpandedPanelMetric(metricType ? metricType : null)
-  }, [clickedObject?.path, metricType])
 
   useEffect(() => {
     if (!clickedObject) {
@@ -74,19 +70,14 @@ export default function Metrics() {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
-  type NodeWithChildren = {
-    type: string
-    children?: NodeWithChildren[]
-  }
-
-  const countFilesRecursive = (node: NodeWithChildren): number => {
+  const countFilesRecursive = (node: GitObject): number => {
     if (node.type !== "tree") {
-      return 1
+      return node.sizeInBytes
     }
 
     return (node.children ?? []).reduce((sum, child): number => {
       if (child.type !== "tree") {
-        return sum + 1
+        return sum + child.sizeInBytes
       }
 
       return sum + countFilesRecursive(child)
@@ -95,18 +86,22 @@ export default function Metrics() {
 
   const formatCount = (value: number | undefined) => value?.toLocaleString() ?? "0"
 
-  //TODO: Metrics should be resolvable from a single source of truth instead of calculating it here and in the metric calculation
-  const Metrics = [
+  const metrics: Record<
+    MetricType,
     {
-      name: "FILE_TYPE",
+      description: string
+      icon: string
+      data: ReactNode
+      color?: HexColor
+    }
+  > = {
+    FILE_TYPE: {
       description: "extension",
       icon: isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isBlob ? "." + last(clickedObject.name.split(".")) : "/",
       color: clickedObject ? metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path) : missingInMapColor
     },
-    //TODO: FileSize should ideally also be a continous color-metric option to create consistency.
-    {
-      name: isBlob ? "FILE_SIZE" : "FILES",
+    FILE_SIZE: {
       description: isBlob ? "File Size" : "Nested Files",
       icon: isBlob ? mdiResize : mdiFileMultipleOutline,
       data: isBlob
@@ -114,8 +109,7 @@ export default function Metrics() {
         : (countFilesRecursive(clickedObject).toLocaleString() ?? "unknown"),
       color: missingInMapColor
     },
-    {
-      name: "MOST_COMMITS",
+    MOST_COMMITS: {
       description: "# commits",
       icon: mdiSourceCommit,
       data: isBlob
@@ -127,8 +121,7 @@ export default function Metrics() {
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: clickedObject ? metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path) : missingInMapColor
     },
-    {
-      name: "TOP_CONTRIBUTOR",
+    TOP_CONTRIBUTOR: {
       description: "most line-contributing contributor",
       icon: mdiAccountGroup,
       data: clickedObject
@@ -140,8 +133,7 @@ export default function Metrics() {
         : "unknown",
       color: clickedObject ? metricsData.get("TOP_CONTRIBUTOR")?.colormap?.get(clickedObject.path) : missingInMapColor
     },
-    {
-      name: "MOST_CONTRIBUTIONS",
+    MOST_CONTRIBUTIONS: {
       description: "# Line changes",
       icon: mdiPlusMinusVariant,
       data: isBlob
@@ -155,8 +147,7 @@ export default function Metrics() {
         ? metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
         : missingInMapColor
     },
-    {
-      name: "LAST_CHANGED",
+    LAST_CHANGED: {
       description: "last changed timestamp",
       icon: mdiPulse,
       data: isBlob
@@ -171,47 +162,58 @@ export default function Metrics() {
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: clickedObject ? metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path) : missingInMapColor
     }
-  ]
+  } as const
 
-  const ExpandedPanel = expandedPanelMetric ? expandablePanels[expandedPanelMetric] : undefined
+  const ExpandedPanel = expandablePanels[metricType] ?? null
 
   return (
     <>
       <div className="grid grid-cols-2 gap-2">
-        {Metrics.map((metric) => (
-          <MetricButton
-            key={metric.name}
-            metric={metric}
-            metricType={metricType}
-            isExpanded={metric.name === expandedPanelMetric}
-            onClick={() => {
-              setMetricType(metric.name as MetricType)
-              setExpandedPanelMetric((prev) => (prev === metric.name ? null : metric.name))
-            }}
-          />
-        ))}
+        {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
+          ([metric, { icon, data }]) => (
+            <MetricButton
+              key={metric}
+              metric={metric}
+              icon={icon}
+              path={clickedObject.path}
+              metricType={metricType}
+              onClick={() => {
+                setMetricType(metric)
+              }}
+            >
+              {data}
+            </MetricButton>
+          )
+        )}
       </div>
-      {expandedPanelMetric ? (
-        <div className="border-primary mt-3 rounded-md border p-2">
-          {ExpandedPanel ? <ExpandedPanel /> : <p>This metric has no inspection currently</p>}
-        </div>
-      ) : null}
+      <div className="border-primary mt-3 rounded-md border p-2">
+        {ExpandedPanel ? <ExpandedPanel /> : <p>This metric has no inspection currently</p>}
+      </div>
       <InteractionButtons />
     </>
   )
 }
 
 function MetricButton({
+  icon,
   metric,
+  children,
+  path,
   metricType,
-  isExpanded = false,
   onClick
 }: {
-  metric: { name: string; description: string; icon: string; data: string | number; color?: string }
+  metric: MetricType
+  icon: string
+  children: ReactNode
+  path: string
   metricType?: string
-  isExpanded?: boolean
   onClick?: () => void
 }) {
+  const [metricsData] = useMetrics()
+  const isExpanded = metric === metricType
+  const backgroundColor = isExpanded
+    ? (metricsData.get(metricType)?.colormap?.get(path) ?? missingInMapColor)
+    : undefined
   return (
     <button
       type="button"
@@ -219,16 +221,14 @@ function MetricButton({
         "ring-primary ring-2": isExpanded
       })}
       style={{
-        ...(metric.color && metric.name == metricType
-          ? { backgroundColor: `hsl(from ${metric.color} h s l / 0.7)` }
-          : {})
+        ...(backgroundColor ? { backgroundColor: `hsl(from ${backgroundColor} h s l / 0.7)` } : {})
       }}
       onClick={onClick}
     >
-      <Icon path={metric.icon} size={0.75} />
+      <Icon path={icon} size={0.75} />
       <div className="flex flex-col overflow-hidden text-right">
-        <p className="w-full truncate text-sm font-bold">{metric.data}</p>
-        <p className="truncate text-[10px] font-normal italic">{metric.name}</p>
+        <p className="w-full truncate text-sm font-bold">{children}</p>
+        <p className="truncate text-[10px] font-normal italic">{metric}</p>
       </div>
     </button>
   )

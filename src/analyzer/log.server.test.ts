@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { log, setLogLevel } from "./log.server"
+import { log, setLogLevel } from "~/analyzer/log.server"
 
 describe("log methods array argument concatenation", () => {
   setLogLevel("DEBUG")

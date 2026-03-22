@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import path from "node:path"
-import { getBaseDirFromPath, getRepoNameFromPath, parseArgs, getArgsWithDefaults } from "./util.server"
+import { getBaseDirFromPath, getRepoNameFromPath, parseArgs, getArgsWithDefaults } from "~/shared/util.server"
 
 describe("getBaseDirFromPath", () => {
   it("should return parent directory of repository path", () => {

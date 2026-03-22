@@ -148,28 +148,6 @@ export class GitCaller {
     }
 
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repositoryPath))
-    const allHeads = new Set([...Object.entries(refs.Branches), ...Object.entries(refs.Tags)]).values()
-    const headsWithCaches = await Promise.all(
-      Array.from(allHeads).map(async ([headName, head]) => {
-        const [result] = await GitCaller.retrieveCachedResult({
-          repositoryPath: getRepoNameFromPath(repositoryPath),
-          branch: headName,
-          branchHead: head
-        })
-        return {
-          headName,
-          head,
-          isAnalyzed: result !== null
-        }
-      })
-    )
-    const analyzedHeads = headsWithCaches
-      .filter((head) => head.isAnalyzed)
-      .reduce(
-        (acc, headEntry) => ({ ...acc, [headEntry.head]: true, [headEntry.headName]: true }),
-        {} as { [branch: string]: boolean }
-      )
-
     const repoHead = await GitCaller._getRepositoryHead(repositoryPath)
 
     try {
@@ -199,7 +177,6 @@ export class GitCaller {
         return {
           status: "Success",
           isAnalyzed: false,
-          data: null,
           reasons: reasons,
           repositoryName: repositoryName,
           repositoryPath: repositoryPath,
@@ -207,7 +184,6 @@ export class GitCaller {
           parentDirName: getRepoNameFromPath(parentDir),
           currentHead: branch,
           refs,
-          analyzedHeads,
           lastChanged
         }
       }
@@ -215,7 +191,6 @@ export class GitCaller {
       return {
         status: "Success",
         isAnalyzed: true,
-        data: data,
         reasons: [],
         repositoryName: repositoryName,
         repositoryPath: repositoryPath,
@@ -223,7 +198,6 @@ export class GitCaller {
         parentDirName: getRepoNameFromPath(parentDir),
         currentHead: repoHead,
         refs,
-        analyzedHeads,
         lastChanged
       }
     } catch (e) {

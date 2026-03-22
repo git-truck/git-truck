@@ -4,9 +4,11 @@ type DataItem =
   | "topContributor"
   | "commitCounts"
   | "lastChanged"
+  | "fileSizes"
   | "contributorCounts"
   | "maxMinCommitCount"
   | "newestOldestChangeDate"
+  | "maxMinFileSize"
   | "contributors"
   | "groupedContributors"
   | "filetree"
@@ -43,11 +45,13 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "rename",
     "topContributor",
     "commitCounts",
+    "fileSizes",
     "contribSumPerFile",
     "lastChanged",
     "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
+    "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
     "groupedContributors",
@@ -64,6 +68,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "commitCount",
     "topContributor",
     "commitCounts",
+    "fileSizes",
     "contribSumPerFile",
     "lastChanged",
     "contributorCounts",
@@ -91,11 +96,13 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "rename",
     "topContributor",
     "commitCounts",
+    "fileSizes",
     "contribSumPerFile",
     "lastChanged",
     "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
+    "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors"
   ],
@@ -105,11 +112,13 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "rename",
     "topContributor",
     "commitCounts",
+    "fileSizes",
     "contribSumPerFile",
     "lastChanged",
     "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
+    "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
     "filetree"
@@ -122,6 +131,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "rename",
     "topContributor",
     "commitCounts",
+    "fileSizes",
     "contribSumPerFile",
     "lastChanged",
     "contributorCounts",
@@ -136,7 +146,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "colorSeed",
     "contributorColors",
     "commitCountPerDay",
-    "loadRepoData"
+    "loadRepoData",
+    "maxMinFileSize"
   ],
   none: []
 }

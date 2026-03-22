@@ -13,15 +13,16 @@ import {
   mdiPlusMinusVariant,
   mdiPodiumGold,
   mdiPulse,
-  mdiResize,
   mdiScaleBalance,
   mdiSourceCommit
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
+import { FileSizeMetric } from "~/metrics/fileSize";
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
+  FILE_SIZE: "FILE_SIZE",
   TOP_CONTRIBUTOR: "MOST_CONTRIBUTIONS",
   MOST_COMMITS: "MOST_COMMITS",
   LAST_CHANGED: "LAST_CHANGED",
@@ -32,8 +33,9 @@ export const Options = memo(function Options() {
   const { metricType, chartType, sizeMetric, linkMetricAndSizeMetric, setMetricType, setChartType, setSizeMetricType } =
     useOptions()
 
-  const visualizationIcons: Record<MetricType, string> = {
+  const colorMetricIcons: Record<MetricType, string> = {
     FILE_TYPE: mdiFileCodeOutline,
+    FILE_SIZE: FileSizeMetric.icon,
     LAST_CHANGED: mdiPulse,
     MOST_COMMITS: mdiSourceCommit,
     TOP_CONTRIBUTOR: mdiPodiumGold,
@@ -41,7 +43,7 @@ export const Options = memo(function Options() {
   }
 
   const sizeMetricIcons: Record<SizeMetricType, string> = {
-    FILE_SIZE: mdiResize,
+    FILE_SIZE: FileSizeMetric.icon,
     EQUAL_SIZE: mdiScaleBalance,
     MOST_COMMITS: mdiSourceCommit,
     LAST_CHANGED: mdiPulse,
@@ -89,7 +91,7 @@ export const Options = memo(function Options() {
           titleMap={colorMetricDescriptions}
           group={Metric}
           defaultValue={metricType}
-          iconMap={visualizationIcons}
+          iconMap={colorMetricIcons}
           ariaLabel="Select color metric"
           onChange={(metric: MetricType) => {
             setMetricType(metric)
