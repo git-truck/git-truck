@@ -241,7 +241,7 @@ export const Chart = memo(function Chart({
 
           const shouldColor = clickedObject
             ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
-              (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/")) // or we are a not a child of a clicked tree object
+              (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
             : isSelected
 
           const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
@@ -253,7 +253,7 @@ export const Chart = memo(function Chart({
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
-                "opacity-30 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
+                "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
               {...eventHandlers}
             >
