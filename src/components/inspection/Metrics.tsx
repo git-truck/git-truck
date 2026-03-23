@@ -112,7 +112,7 @@ export default function Metrics() {
         : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
           " " +
           byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
-      color: missingInMapColor
+      color: metricsData.get("FILE_SIZE")?.colormap?.get(clickedObject.path)
     },
     MOST_COMMITS: {
       description: "# commits",
@@ -120,7 +120,7 @@ export default function Metrics() {
       data: isBlob
         ? formatCount(data.databaseInfo.commitCounts[clickedObject.path])
         : currentFetcherData
-          ? currentFetcherData.amountOfCommits
+          ? currentFetcherData.amountOfCommits.toLocaleString()
           : "loading...",
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path)
