@@ -9,6 +9,17 @@ import type { loader } from "~/routes/view.api.contributor-distribution"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 
+function ContributorDistributionLabel({ htmlFor }: { htmlFor?: string }) {
+  return (
+    <label className="label grow" htmlFor={htmlFor}>
+      <h3 className="font-bold">Contributor distribution</h3>
+      <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
+        Shows contributor&apos;s share of line changes to selected file or folder.
+      </p>
+    </label>
+  )
+}
+
 export function ContributorsInspection() {
   const clickedObject = useClickedObject()
   const fetcher = useFetcher<typeof loader>()
@@ -28,7 +39,12 @@ export function ContributorsInspection() {
   }, [clickedObject?.path])
 
   if (!fetcher.data) {
-    return "Loading..."
+    return (
+      <div className="flex flex-col gap-2">
+        <ContributorDistributionLabel />
+        <h3>Loading...</h3>
+      </div>
+    )
   }
 
   return (
@@ -61,12 +77,7 @@ function ContributorDistribution({
       <div
         className={`flex justify-between ${contributorsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
       >
-        <label className="label grow" htmlFor={contributorDistributionExpandId}>
-          <h3 className="font-bold">Contributor distribution</h3>
-          <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
-            Shows each contributor&apos;s share of line changes to the selected file or folder.
-          </p>
-        </label>
+        <ContributorDistributionLabel htmlFor={contributorDistributionExpandId} />
         {contributorsAreCutoff ? (
           <ChevronButton
             id={contributorDistributionExpandId}
