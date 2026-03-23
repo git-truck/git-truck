@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useFetcher, href, Await } from "react-router"
 import type { loader } from "~/routes/view.api.commits"
 import { viewSerializer } from "~/routes/view"
@@ -11,6 +11,13 @@ export function CommitsInspection() {
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
   const [commitShowCount, setCommitShowCount] = useState(COMMIT_STEP)
+  const previousData = useRef<ReturnType<typeof useFetcher<typeof loader>>["data"]>(undefined)
+
+  useEffect(() => {
+    if (fetcher.data) {
+      previousData.current = fetcher.data
+    }
+  }, [fetcher.data])
 
   const loadCommits = useCallback(
     (count: number) => {
@@ -32,17 +39,20 @@ export function CommitsInspection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commitShowCount])
 
-  if (!fetcher.data) {
+  const data = fetcher.data ?? previousData.current
+
+  if (!data) {
     return "Loading..."
   }
 
   return (
-    <Await resolve={fetcher.data.commitsPromise}>
+    <Await resolve={data.commitsPromise}>
       {(commits) => (
         <CommitHistory
           commits={commits}
           loadedCommitCount={commitShowCount}
-          totalCommitCount={fetcher.data?.commitCount ?? 0}
+          totalCommitCount={data.commitCount ?? 0}
+          isLoading={fetcher.state !== "idle"}
           onCountChange={() => {
             setCommitShowCount((prev) => prev + COMMIT_STEP)
           }}

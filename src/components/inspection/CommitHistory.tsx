@@ -1,7 +1,6 @@
 import type { FileChange, FullCommitDTO } from "~/shared/model"
 import { Fragment } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
-import { useNavigation } from "react-router"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -135,14 +134,15 @@ export function CommitHistory({
   commits,
   loadedCommitCount,
   totalCommitCount,
+  isLoading,
   onCountChange
 }: {
   commits: FullCommitDTO[] | null
   loadedCommitCount: number
   totalCommitCount: number
+  isLoading: boolean
   onCountChange: () => void
 }) {
-  const navigation = useNavigation()
   const clickedObject = useClickedObject()
 
   if (!clickedObject) {
@@ -166,20 +166,18 @@ export function CommitHistory({
       <div>
         <CommitDistFragment items={commits} count={loadedCommitCount} />
 
-        {navigation.state === "idle" ? (
-          loadedCommitCount < totalCommitCount ? (
-            <button
-              className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
-              onClick={() => {
-                onCountChange()
-              }}
-            >
-              Show more commits
-            </button>
-          ) : null
-        ) : (
-          <h3>Loading commits...</h3>
-        )}
+        {isLoading ? (
+          <h3>Loading...</h3>
+        ) : loadedCommitCount < totalCommitCount ? (
+          <button
+            className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
+            onClick={() => {
+              onCountChange()
+            }}
+          >
+            Show more commits
+          </button>
+        ) : null}
       </div>
     </>
   )
