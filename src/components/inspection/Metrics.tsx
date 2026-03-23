@@ -50,7 +50,10 @@ export default function Metrics() {
     if (!clickedObject) {
       return
     }
-    fetcher.load(href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject.path, path }))
+    fetcher.load(
+      href("/view/api/contributor-distribution") +
+        viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path })
+    )
     return () => {
       fetcher.reset()
     }
@@ -62,11 +65,12 @@ export default function Metrics() {
     return <p className="p-4">No file or folder selected</p>
   }
 
-  if (
-    Object.entries(data.databaseInfo.commitCounts).filter(
-      ([path]) => clickedObject.path && path.startsWith(clickedObject.path)
-    ).length === 0
-  ) {
+  const currentFetcherData = fetcher.data?.path === clickedObject.path ? fetcher.data : undefined
+  const objectHasChangesInSelectedRange = isBlob
+    ? Boolean(data.databaseInfo.commitCounts[clickedObject.path])
+    : currentFetcherData?.existsInRange
+
+  if (objectHasChangesInSelectedRange === false) {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
@@ -127,8 +131,8 @@ export default function Metrics() {
       data: clickedObject
         ? isBlob
           ? (data.databaseInfo.topContributors[clickedObject.path]?.contributor ?? "unknown")
-          : fetcher.data
-            ? (fetcher.data.contributorDistribution[0]?.contributor ?? "unknown")
+          : currentFetcherData
+            ? (currentFetcherData.contributorDistribution[0]?.contributor ?? "unknown")
             : "loading..."
         : "unknown",
       color: clickedObject ? metricsData.get("TOP_CONTRIBUTOR")?.colormap?.get(clickedObject.path) : missingInMapColor
