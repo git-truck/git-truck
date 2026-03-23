@@ -35,7 +35,6 @@ import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { type inferParserType } from "nuqs"
-import { BrowseParentFolder } from "~/components/BrowseParentFolder"
 import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
@@ -479,7 +478,6 @@ export default function Repo() {
                         <Icon path={mdiMenu} size={1} />
                       </button>
                     ) : null}
-                    <BrowseParentFolder />
                     <Breadcrumb zoom />
                   </div>
                   <div className="flex gap-2">
