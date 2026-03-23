@@ -191,7 +191,7 @@ export default function Metrics() {
         )}
       </div>
       <div className="border-primary mt-3 rounded-md border p-2">
-        {ExpandedPanel ? <ExpandedPanel /> : <p>This metric has no inspection currently</p>}
+        {ExpandedPanel ? <ExpandedPanel key={clickedObject.path} /> : <p>This metric has no inspection currently</p>}
       </div>
       <InteractionButtons />
     </>
