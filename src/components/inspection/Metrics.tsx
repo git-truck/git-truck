@@ -6,7 +6,6 @@ import {
   mdiResize,
   mdiSourceCommit,
   mdiFolderOutline,
-  mdiFileMultipleOutline,
   mdiEyeOffOutline,
   mdiMagnify
 } from "@mdi/js"
@@ -29,7 +28,7 @@ import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
-import type { MetricType } from "~/metrics/metrics"
+import { Metric, type MetricType } from "~/metrics/metrics"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -107,7 +106,7 @@ export default function Metrics() {
     },
     FILE_SIZE: {
       description: isBlob ? "File Size" : "Nested Files",
-      icon: isBlob ? mdiResize : mdiFileMultipleOutline,
+      icon: mdiResize,
       data: isBlob
         ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
         : (countFilesRecursive(clickedObject).toLocaleString() ?? "unknown"),
@@ -232,7 +231,7 @@ function MetricButton({
       <Icon path={icon} size={0.75} />
       <div className="flex flex-col overflow-hidden text-right">
         <p className="w-full truncate text-sm font-bold">{children}</p>
-        <p className="truncate text-[10px] font-normal italic">{metric}</p>
+        <p className="truncate text-[10px] font-normal italic">{Metric[metric]}</p>
       </div>
     </button>
   )
