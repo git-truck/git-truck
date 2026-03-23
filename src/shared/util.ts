@@ -150,6 +150,7 @@ export function getLightness(hex: `#${string}`): number {
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
 export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
+export const isRepositoryRoot = (d: GitObject | null = null): boolean => d?.path === d?.name
 
 export function generateVersionComparisonLink({
   currentVersion,
