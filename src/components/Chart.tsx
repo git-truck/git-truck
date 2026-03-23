@@ -218,6 +218,11 @@ export const Chart = memo(function Chart({
       >
         {nodes.map((d) => {
           const isSearchMatch = Boolean(searchResults[d.data.path])
+          const hasSearchMatches = isTree(d.data)
+            ? Object.keys(searchResults).some((resultPath) => {
+                return resultPath.startsWith(`${d.data.path}/`)
+              })
+            : isSearchMatch
           const eventHandlers = createGroupHandlers(d)
 
           const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
@@ -239,7 +244,7 @@ export const Chart = memo(function Chart({
               (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/")) // or we are a not a child of a clicked tree object
             : isSelected
 
-          const shouldNotColor = (hasSearchResults && !isSearchMatch) || !shouldColor
+          const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
 
           return (
             <g

@@ -1,11 +1,11 @@
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
-import { useMemo } from "react"
-import { getLightness, numToFriendlyString } from "~/shared/util"
-import { noEntryColor } from "~/const"
+import { numToFriendlyString } from "~/shared/util"
 import type { GitObject } from "~/shared/model"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
+import { useData } from "~/contexts/DataContext"
+import type { MetricType } from "~/metrics/metrics"
 
 export type GradLegendData = {
   /**
@@ -27,6 +27,7 @@ export type GradLegendData = {
 export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | null }) {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
+  const data = useData()
 
   const metricCache = metricsData.get(metricType)
 
@@ -35,22 +36,35 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
 
   const clickedObject = useClickedObject()
 
-  const path = clickedObject?.path ?? hoveredObject?.path ?? null
-  const color = path ? metricCache.colormap.get(path) : null
-  let blobLightness = color ? getLightness(color) : -1
-  if (color === noEntryColor) blobLightness = -1
+  const getMetricValue = (path: string | null, metric: MetricType): number | null => {
+    if (!path) return null
 
-  const offset = useMemo(() => {
-    const min = getLightness(minColor)
-    const max = getLightness(maxColor)
+    switch (metric) {
+      case "MOST_COMMITS":
+        return data.databaseInfo.commitCounts[path] ?? null
+      case "MOST_CONTRIBUTIONS":
+        return data.databaseInfo.contribSumPerFile[path] ?? null
+      case "LAST_CHANGED":
+        return data.databaseInfo.lastChanged[path] ?? null
+      case "FILE_SIZE":
+        return data.databaseInfo.fileSizes[path] ?? null
+      default:
+        return null
+    }
+  }
+
+  const calculateOffset = (value: number | null, min: number, max: number): number | null => {
+    if (value === null || Number.isNaN(value)) return null
     const diff = max - min
     if (diff === 0) return 1
-    return (blobLightness - min) / diff
-  }, [blobLightness, maxColor, minColor])
+    const offset = (value - min) / diff
+    return Math.min(1, Math.max(0, offset))
+  }
 
-  const visible = path !== null
+  const clickedOffset = calculateOffset(getMetricValue(clickedObject?.path ?? null, metricType), minValue, maxValue)
+  const hoveredOffset = calculateOffset(getMetricValue(hoveredObject?.path ?? null, metricType), minValue, maxValue)
 
-  const midValue = Math.round((maxValue - minValue) / 2)
+  const midValue = Math.round(minValue + (maxValue - minValue) / 2)
   return (
     <div>
       <div
@@ -59,7 +73,8 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
           backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`
         }}
       >
-        <LegendBarIndicator offset={offset * 100} visible={visible} />
+        <LegendBarIndicator offset={(clickedOffset ?? 0) * 100} visible={clickedOffset !== null} />
+        <LegendBarIndicator offset={(hoveredOffset ?? 0) * 100} visible={hoveredOffset !== null} />
       </div>
       <div className="flex justify-between">
         <span className="font-bold" title={minValue.toLocaleString()}>
