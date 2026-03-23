@@ -22,7 +22,7 @@ export function ContributorsInspection() {
       fetcher.reset()
     }
     // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
-    // TODO: Consider loading data on tab change instead?
+    // TODO: Consider loading data on tab change instead
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clickedObject?.path])
 
@@ -50,7 +50,7 @@ function ContributorDistribution({
   const contributorDistributionExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
 
-  const contributorsAreCutoff = (contributorDistribution?.length ?? 0) > contributorCutoff + 1
+  const contributorsAreCutoff = contributorDistribution.length > contributorCutoff + 1
   const contribSum = !contributorDistribution
     ? 0
     : contributorDistribution.reduce((acc, curr) => acc + curr.contribs, 0)
@@ -89,14 +89,14 @@ function ContributorDistribution({
                 className="cursor-pointer text-left text-xs opacity-70 hover:opacity-100"
                 onClick={() => setCollapsed(!collapsed)}
               >
-                + {(contributorDistribution?.slice(contributorCutoff) ?? []).length} more
+                + {contributorDistribution.slice(contributorCutoff).length} more
               </button>
             ) : null}
           </>
         ) : (
           <>
-            {(contributorDistribution ?? []).length > 0 && hasContributions(contributorDistribution) ? (
-              <ContributorDistFragment show items={contributorDistribution ?? []} contribSum={contribSum} />
+            {contributorDistribution.length > 0 && hasContributions(contributorDistribution) ? (
+              <ContributorDistFragment show items={contributorDistribution} contribSum={contribSum} />
             ) : (
               <p>No contributors found</p>
             )}

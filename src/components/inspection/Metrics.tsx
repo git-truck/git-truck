@@ -56,7 +56,7 @@ export default function Metrics() {
     }
     // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedObject?.path])
+  }, [clickedObject?.path, path])
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
@@ -115,7 +115,7 @@ export default function Metrics() {
       data: isBlob
         ? formatCount(data.databaseInfo.commitCounts[clickedObject.path])
         : Object.entries(data.databaseInfo.commitCounts)
-            .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
+            .filter(([path]) => path.startsWith(clickedObject.path))
             .reduce((sum, [_, count]) => sum + count, 0)
             .toLocaleString(),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
