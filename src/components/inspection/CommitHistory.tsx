@@ -142,7 +142,9 @@ export function CommitHistory({
   const navigation = useNavigation()
   const clickedObject = useClickedObject()
 
-  if (!clickedObject) throw new Error("Clicked object is null in CommitHistory")
+  if (!clickedObject) {
+    return null
+  }
 
   if (!commits) {
     return (
