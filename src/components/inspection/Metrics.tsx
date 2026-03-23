@@ -21,7 +21,7 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
-import type { loader } from "~/routes/view.api.contributor-distribution"
+import type { loader } from "~/routes/view.api.inspect.metrics"
 import { dateFormatRelative, last, resolveParentFolder } from "~/shared/util"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
@@ -35,7 +35,7 @@ export default function Metrics() {
   const [path] = useQueryState("path")
   const clickedObject = useClickedObject()
   const data = useData()
-  const [metricsData] = useMetrics()
+  const [metricsData, contributorColors] = useMetrics()
   const { metricType, setMetricType } = useOptions()
 
   const isBlob = clickedObject?.type === "blob"
@@ -50,7 +50,7 @@ export default function Metrics() {
       return
     }
     fetcher.load(
-      href("/view/api/contributor-distribution") +
+      href("/view/api/inspect/metrics") +
         viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path })
     )
     return () => {
@@ -73,7 +73,7 @@ export default function Metrics() {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
-  const countFilesRecursive = (node: GitObject): number => {
+  const sumFileSizeRecursive = (node: GitObject): number => {
     if (node.type !== "tree") {
       return node.sizeInBytes
     }
@@ -83,7 +83,7 @@ export default function Metrics() {
         return sum + child.sizeInBytes
       }
 
-      return sum + countFilesRecursive(child)
+      return sum + sumFileSizeRecursive(child)
     }, 0)
   }
 
@@ -102,14 +102,16 @@ export default function Metrics() {
       description: "extension",
       icon: isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isBlob ? "." + last(clickedObject.name.split(".")) : "/",
-      color: clickedObject ? metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path) : missingInMapColor
+      color: metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path)
     },
     FILE_SIZE: {
       description: isBlob ? "File Size" : "Nested Files",
       icon: mdiResize,
       data: isBlob
         ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
-        : (countFilesRecursive(clickedObject).toLocaleString() ?? "unknown"),
+        : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
+          " " +
+          byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
       color: missingInMapColor
     },
     MOST_COMMITS: {
@@ -117,24 +119,19 @@ export default function Metrics() {
       icon: mdiSourceCommit,
       data: isBlob
         ? formatCount(data.databaseInfo.commitCounts[clickedObject.path])
-        : Object.entries(data.databaseInfo.commitCounts)
-            .filter(([path]) => path.startsWith(clickedObject.path))
-            .reduce((sum, [_, count]) => sum + count, 0)
-            .toLocaleString(),
+        : currentFetcherData
+          ? currentFetcherData.amountOfCommits
+          : "loading...",
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      color: clickedObject ? metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path) : missingInMapColor
+      color: metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path)
     },
     TOP_CONTRIBUTOR: {
       description: "most line-contributing contributor",
       icon: mdiAccountGroup,
-      data: clickedObject
-        ? isBlob
-          ? (data.databaseInfo.topContributors[clickedObject.path]?.contributor ?? "unknown")
-          : currentFetcherData
-            ? (currentFetcherData.contributorDistribution[0]?.contributor ?? "unknown")
-            : "loading..."
-        : "unknown",
-      color: clickedObject ? metricsData.get("TOP_CONTRIBUTOR")?.colormap?.get(clickedObject.path) : missingInMapColor
+      data: currentFetcherData ? (currentFetcherData.topContributor?.contributor ?? "unknown") : "loading...",
+      color: currentFetcherData?.topContributor?.contributor
+        ? ((contributorColors.get(currentFetcherData?.topContributor?.contributor) as HexColor) ?? missingInMapColor)
+        : (missingInMapColor as HexColor)
     },
     MOST_CONTRIBUTIONS: {
       description: "# Line changes",
@@ -146,9 +143,7 @@ export default function Metrics() {
             .reduce((sum, [_, count]) => sum + count, 0)
             .toLocaleString(),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      color: clickedObject
-        ? metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
-        : missingInMapColor
+      color: metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
     },
     LAST_CHANGED: {
       description: "last changed timestamp",
@@ -163,7 +158,7 @@ export default function Metrics() {
             )
           ) ?? "unknown"),
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      color: clickedObject ? metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path) : missingInMapColor
+      color: metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path)
     }
   } as const
 
@@ -173,12 +168,13 @@ export default function Metrics() {
     <>
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
-          ([metric, { icon, data }]) => (
+          ([metric, { icon, data, color }]) => (
             <MetricButton
               key={metric}
               metric={metric}
               icon={icon}
               path={clickedObject.path}
+              color={color}
               metricType={metricType}
               onClick={() => {
                 setMetricType(metric)
@@ -201,7 +197,7 @@ function MetricButton({
   icon,
   metric,
   children,
-  path,
+  color,
   metricType,
   onClick
 }: {
@@ -209,14 +205,12 @@ function MetricButton({
   icon: string
   children: ReactNode
   path: string
+  color?: HexColor
   metricType?: string
   onClick?: () => void
 }) {
-  const [metricsData] = useMetrics()
   const isExpanded = metric === metricType
-  const backgroundColor = isExpanded
-    ? (metricsData.get(metricType)?.colormap?.get(path) ?? missingInMapColor)
-    : undefined
+  const backgroundColor = isExpanded ? (color ?? missingInMapColor) : undefined
   return (
     <button
       type="button"
