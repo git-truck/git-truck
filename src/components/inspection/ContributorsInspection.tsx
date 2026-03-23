@@ -62,6 +62,9 @@ function ContributorDistribution({
       >
         <label className="label grow" htmlFor={contributorDistributionExpandId}>
           <h3 className="font-bold">Contributor distribution</h3>
+          <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
+            Shows each contributor&apos;s share of line changes to the selected file or folder.
+          </p>
         </label>
         {contributorsAreCutoff ? (
           <ChevronButton

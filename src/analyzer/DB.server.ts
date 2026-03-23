@@ -606,15 +606,78 @@ export default class DB {
 
   public async getContributorDistributionForPath(objectPath: string) {
     const isblob = (await this.getObjectType(objectPath)) === "blob"
-    const res = await this.query(`
-      SELECT author, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached WHERE filepath ${
-        isblob ? "=" : "GLOB"
-      } '${objectPath}${isblob ? "" : "*"}' GROUP BY author ORDER BY contribsum DESC, author ASC;
-    `)
+    let res: ReturnType<DuckDBResultReader["getRowObjects"]>
+
+    if (isblob) {
+      const statement = await this.prepare(`
+        SELECT author, SUM(insertions + deletions) AS contribsum
+        FROM filechanges_commits_renamed_cached
+        WHERE filepath = ?
+        GROUP BY author
+        ORDER BY contribsum DESC, author ASC;
+      `)
+      statement.bindVarchar(1, objectPath)
+      res = (await statement.runAndReadAll()).getRowObjects()
+    } else if (objectPath) {
+      const statement = await this.prepare(`
+        SELECT author, SUM(insertions + deletions) AS contribsum
+        FROM filechanges_commits_renamed_cached
+        WHERE filepath = ? OR filepath LIKE ?
+        GROUP BY author
+        ORDER BY contribsum DESC, author ASC;
+      `)
+      statement.bindVarchar(1, objectPath)
+      statement.bindVarchar(2, `${objectPath}/%`)
+      res = (await statement.runAndReadAll()).getRowObjects()
+    } else {
+      res = await this.query(`
+        SELECT author, SUM(insertions + deletions) AS contribsum
+        FROM filechanges_commits_renamed_cached
+        GROUP BY author
+        ORDER BY contribsum DESC, author ASC;
+      `)
+    }
 
     return res.map((row) => {
       return { contributor: row["author"] as string, contribs: Number(row["contribsum"]) }
     })
+  }
+
+  public async pathExistsInSelectedRange(objectPath: string, isBlob: boolean): Promise<boolean> {
+    let res: ReturnType<DuckDBResultReader["getRowObjects"]>
+
+    if (isBlob) {
+      const statement = await this.prepare(`
+        SELECT EXISTS(
+          SELECT 1
+          FROM filechanges_commits_renamed_cached
+          WHERE filepath = ?
+        ) AS exists_in_range;
+      `)
+      statement.bindVarchar(1, objectPath)
+      res = (await statement.runAndReadAll()).getRowObjects()
+    } else if (objectPath) {
+      const statement = await this.prepare(`
+        SELECT EXISTS(
+          SELECT 1
+          FROM filechanges_commits_renamed_cached
+          WHERE filepath = ? OR filepath LIKE ?
+        ) AS exists_in_range;
+      `)
+      statement.bindVarchar(1, objectPath)
+      statement.bindVarchar(2, `${objectPath}/%`)
+      res = (await statement.runAndReadAll()).getRowObjects()
+    } else {
+      res = await this.query(`
+        SELECT EXISTS(
+          SELECT 1
+          FROM filechanges_commits_renamed_cached
+        ) AS exists_in_range;
+      `)
+    }
+
+    const existsValue = res[0]?.["exists_in_range"]
+    return existsValue === true || existsValue === 1 || existsValue === 1n || existsValue === "1"
   }
 
   private getTimeStringFormat(timerange: [number, number]): [string, "day" | "week" | "month" | "year"] {

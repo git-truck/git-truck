@@ -53,6 +53,7 @@ export const currentRepositoryContext = createContext<{
 export const viewSearchParamsConfig = {
   path: parseAsString,
   objectPath: parseAsString,
+  objectType: parseAsString,
   zoomPath: parseAsString,
   branch: parseAsString
 }
