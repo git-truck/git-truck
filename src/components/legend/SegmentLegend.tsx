@@ -22,14 +22,9 @@ export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | nu
   const { steps, textGenerator, colorGenerator, offsetStepCalc } = metricCache.legend as SegmentLegendData
   const width = 100 / steps
 
-  let arrowVisible = false
-  let arrowOffset = 0
-  const clickedObject = useClickedObject() ?? hoveredObject ?? null
-
-  if (isBlob(clickedObject)) {
-    arrowVisible = true
-    arrowOffset = width / 2 + width * offsetStepCalc(clickedObject)
-  }
+  const clickedObject = useClickedObject()
+  const clickedArrowOffset = isBlob(clickedObject) ? width / 2 + width * offsetStepCalc(clickedObject) : null
+  const hoveredArrowOffset = isBlob(hoveredObject) ? width / 2 + width * offsetStepCalc(hoveredObject) : null
 
   return (
     <>
@@ -49,7 +44,8 @@ export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | nu
               <TopMetricSegment key={i} width={width} color={colorGenerator(i)} text={textGenerator(i)} />
             )
           })}
-          <LegendBarIndicator offset={arrowOffset} visible={arrowVisible} />
+          <LegendBarIndicator offset={hoveredArrowOffset ?? 0} visible={hoveredArrowOffset !== null} />
+          <LegendBarIndicator offset={clickedArrowOffset ?? 0} visible={clickedArrowOffset !== null} />
         </div>
       </div>
     </>
