@@ -7,7 +7,8 @@ import {
   mdiSourceCommit,
   mdiFolderOutline,
   mdiEyeOffOutline,
-  mdiMagnify
+  mdiMagnify,
+  mdiSourceRepository
 } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState, useQueryStates } from "nuqs"
@@ -22,13 +23,14 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { viewSearchParamsConfig, viewSerializer } from "~/routes/view"
 import type { loader } from "~/routes/view.api.inspect.metrics"
-import { dateFormatRelative, last, resolveParentFolder } from "~/shared/util"
+import { dateFormatRelative, isRepositoryRoot, last, resolveParentFolder } from "~/shared/util"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
 import { Metric, type MetricType } from "~/metrics/metrics"
+import { PointLegend } from "~/components/legend/PointLegend"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -39,6 +41,7 @@ export default function Metrics() {
   const { metricType, setMetricType } = useOptions()
 
   const isBlob = clickedObject?.type === "blob"
+  const isRepo = isRepositoryRoot(clickedObject)
 
   const expandablePanels: Record<string, React.ComponentType> = {
     TOP_CONTRIBUTOR: ContributorsInspection,
@@ -100,8 +103,8 @@ export default function Metrics() {
   > = {
     FILE_TYPE: {
       description: "extension",
-      icon: isBlob ? mdiFileOutline : mdiFolderOutline,
-      data: isBlob ? "." + last(clickedObject.name.split(".")) : "/",
+      icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
+      data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "/",
       color: metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path)
     },
     FILE_SIZE: {
