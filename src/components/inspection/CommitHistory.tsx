@@ -41,7 +41,7 @@ function InfoEntry(props: { keyString: string; value: string }) {
 
 function FileChangesEntry(props: { filechanges: FileChange[] }) {
   return (
-    <div className="max-h-64 overflow-auto">
+    <div className="overflow-auto">
       <div className="grid max-w-lg grid-cols-[auto_auto_1fr] gap-x-3 gap-y-1">
         {props.filechanges.map((filechange) => {
           return (
@@ -70,7 +70,10 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <button className="min-w-0 cursor-pointer truncate font-bold opacity-80 hover:opacity-70" onClick={onClick}>
+          <button
+            className="w-full min-w-0 cursor-pointer truncate font-bold opacity-80 hover:opacity-70"
+            onClick={onClick}
+          >
             {props.value.message}
           </button>
         )}
