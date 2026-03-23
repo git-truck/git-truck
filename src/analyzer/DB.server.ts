@@ -13,6 +13,7 @@ import { resolve, dirname } from "path"
 import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
+import { log } from "./log.server"
 
 export default class DB {
   private connectionPromise: Promise<DuckDBConnection>
@@ -50,14 +51,46 @@ export default class DB {
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
+    log.debug("query:", query.trim())
     return (await (await this.connectionPromise).runAndReadAll(query)).getRowObjects()
   }
 
   public async prepare(query: string) {
+    log.debug("prepare:", query.trim())
     return (await this.connectionPromise).prepare(query)
   }
 
+  private async usingPreparedStatement<T>(
+    query: string,
+    callback: (statement: Awaited<ReturnType<DB["prepare"]>>) => Promise<T>,
+    label?: string
+  ): Promise<T> {
+    let statement: Awaited<ReturnType<DB["prepare"]>> | null = null
+    const tag = label ? ` (${label})` : ""
+
+    try {
+      statement = await this.prepare(query)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Failed to prepare statement${tag}: ${message}\nSQL: ${query.trim()}`, {
+        cause: error instanceof Error ? error : undefined
+      })
+    }
+
+    try {
+      return await callback(statement)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Failed to execute prepared statement${tag}: ${message}\nSQL: ${query.trim()}`, {
+        cause: error instanceof Error ? error : undefined
+      })
+    } finally {
+      statement.destroySync()
+    }
+  }
+
   public async run(query: string): Promise<void> {
+    log.debug("run:", query.trim())
     await (await this.connectionPromise).run(query)
   }
 
@@ -318,25 +351,35 @@ export default class DB {
   }
 
   public async addHiddenFile(path: string) {
-    const statement = await this.prepare(`
+    await this.usingPreparedStatement(
+      `
       INSERT INTO hiddenfiles (id, path)
       SELECT nextval('hiddenfiles_id_sequence'), ?
       WHERE NOT EXISTS (
         SELECT 1 FROM hiddenfiles WHERE path = ?
       );
-    `)
-    statement.bindVarchar(1, path)
-    statement.bindVarchar(2, path)
-    await statement.run()
+    `,
+      async (statement) => {
+        statement.bindVarchar(1, path)
+        statement.bindVarchar(2, path)
+        await statement.run()
+      },
+      "addHiddenFile"
+    )
   }
 
   public async removeHiddenFile(path: string) {
-    const statement = await this.prepare(`
+    await this.usingPreparedStatement(
+      `
       DELETE FROM hiddenfiles
       WHERE path = ?;
-    `)
-    statement.bindVarchar(1, path)
-    await statement.run()
+    `,
+      async (statement) => {
+        statement.bindVarchar(1, path)
+        await statement.run()
+      },
+      "removeHiddenFile"
+    )
   }
 
   public async clearHiddenFiles() {
@@ -529,13 +572,15 @@ export default class DB {
   }
 
   public async getObjectType(objectPath: string): Promise<AbstractGitObject["type"] | null> {
-    const statement = await (await this.connectionPromise).prepare(`SELECT type FROM files WHERE path = ?`)
-
-    statement.bindVarchar(1, objectPath)
-
-    const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<Pick<GitObject, "type">>
-
-    return results[0]?.type ?? null
+    return this.usingPreparedStatement(
+      `SELECT type FROM files WHERE path = ?`,
+      async (statement) => {
+        statement.bindVarchar(1, objectPath)
+        const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<Pick<GitObject, "type">>
+        return results[0]?.type ?? null
+      },
+      "getObjectType"
+    )
   }
 
   public async commitTableEmpty() {
@@ -609,26 +654,36 @@ export default class DB {
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isblob) {
-      const statement = await this.prepare(`
+      res = await this.usingPreparedStatement(
+        `
         SELECT author, SUM(insertions + deletions) AS contribsum
         FROM filechanges_commits_renamed_cached
         WHERE filepath = ?
         GROUP BY author
         ORDER BY contribsum DESC, author ASC;
-      `)
-      statement.bindVarchar(1, objectPath)
-      res = (await statement.runAndReadAll()).getRowObjects()
+      `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getContributorDistributionForPath(blob)"
+      )
     } else if (objectPath) {
-      const statement = await this.prepare(`
+      res = await this.usingPreparedStatement(
+        `
         SELECT author, SUM(insertions + deletions) AS contribsum
         FROM filechanges_commits_renamed_cached
         WHERE filepath = ? OR filepath LIKE ?
         GROUP BY author
         ORDER BY contribsum DESC, author ASC;
-      `)
-      statement.bindVarchar(1, objectPath)
-      statement.bindVarchar(2, `${objectPath}/%`)
-      res = (await statement.runAndReadAll()).getRowObjects()
+      `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, `${objectPath}/%`)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getContributorDistributionForPath(tree)"
+      )
     } else {
       res = await this.query(`
         SELECT author, SUM(insertions + deletions) AS contribsum
@@ -647,26 +702,36 @@ export default class DB {
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isBlob) {
-      const statement = await this.prepare(`
+      res = await this.usingPreparedStatement(
+        `
         SELECT EXISTS(
           SELECT 1
           FROM filechanges_commits_renamed_cached
           WHERE filepath = ?
         ) AS exists_in_range;
-      `)
-      statement.bindVarchar(1, objectPath)
-      res = (await statement.runAndReadAll()).getRowObjects()
+      `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "pathExistsInSelectedRange(blob)"
+      )
     } else if (objectPath) {
-      const statement = await this.prepare(`
+      res = await this.usingPreparedStatement(
+        `
         SELECT EXISTS(
           SELECT 1
           FROM filechanges_commits_renamed_cached
           WHERE filepath = ? OR filepath LIKE ?
         ) AS exists_in_range;
-      `)
-      statement.bindVarchar(1, objectPath)
-      statement.bindVarchar(2, `${objectPath}/%`)
-      res = (await statement.runAndReadAll()).getRowObjects()
+      `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, `${objectPath}/%`)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "pathExistsInSelectedRange(tree)"
+      )
     } else {
       res = await this.query(`
         SELECT EXISTS(
