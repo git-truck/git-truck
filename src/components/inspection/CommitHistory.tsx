@@ -1,10 +1,11 @@
 import type { FileChange, FullCommitDTO } from "~/shared/model"
-import { Fragment } from "react"
+import { Fragment, useId, useState } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "~/components/Popover"
+import { ChevronButton } from "~/components/ChevronButton"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -15,16 +16,44 @@ interface CommitDistFragProps {
   handleOnClick?: (commit: FullCommitDTO) => void
 }
 
+export function CommitHistoryLabel({ htmlFor }: { htmlFor?: string }) {
+  return (
+    <label className="label grow" htmlFor={htmlFor}>
+      <h3 className="font-bold">Commit History</h3>
+      <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
+        Shows the commit history for the selected file or folder.
+      </p>
+    </label>
+  )
+}
+
 function CommitDistFragment(props: CommitDistFragProps) {
   const [, contributorColors] = useMetrics()
+  const commitDistExpandId = useId()
+  const [collapsed, setCollapsed] = useState<boolean>(true)
+  const commitsAreCutoff = true
 
-  return props.items.map((value) => (
-    <CommitListEntry
-      key={value.hash + "--itemContentAccordion"}
-      authorColor={contributorColors.get(value.author) ?? "grey"}
-      value={value}
-    />
-  ))
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        className={`flex justify-between ${commitsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
+      >
+        <CommitHistoryLabel htmlFor={commitDistExpandId} />
+        {commitsAreCutoff ? (
+          <ChevronButton id={commitDistExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
+        ) : null}
+      </div>
+      <div className="grid grid-cols-[1fr_auto] items-center justify-center">
+        {props.items.map((value) => (
+          <CommitListEntry
+            key={value.hash + "--itemContentAccordion"}
+            authorColor={contributorColors.get(value.author) ?? "grey"}
+            value={value}
+          />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function InfoEntry(props: { keyString: string; value: string }) {
@@ -62,15 +91,15 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
 
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   return (
-    <div title={`By: ${props.value.author}`} className="flex min-w-0 items-center gap-2 overflow-hidden text-ellipsis">
-      <LegendDot className="ml-1" dotColor={props.authorColor} contributorColorToChange={props.value.author} />
+    <div title={`By: ${props.value.author}`} className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis">
+      <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author} />
       <Popover
         triggerClassName="min-w-0 truncate"
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
           <button
-            className="w-full min-w-0 cursor-pointer truncate font-bold opacity-80 hover:opacity-70"
+            className="w-full min-w-0 cursor-pointer truncate text-sm font-bold opacity-80 hover:opacity-70"
             onClick={onClick}
           >
             {props.value.message}
@@ -151,9 +180,10 @@ export function CommitHistory({
 
   if (!commits) {
     return (
-      <>
-        <h3>Loading commits...</h3>
-      </>
+      <div className="flex flex-col gap-2">
+        <CommitHistoryLabel />
+        <h3>Loading...</h3>
+      </div>
     )
   }
 

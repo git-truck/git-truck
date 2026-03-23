@@ -4,7 +4,7 @@ import { useFetcher, href, Await } from "react-router"
 import type { loader } from "~/routes/view.api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
-import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
+import { COMMIT_STEP, CommitHistory, CommitHistoryLabel } from "~/components/inspection/CommitHistory"
 
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
@@ -42,7 +42,12 @@ export function CommitsInspection() {
   const data = fetcher.data ?? previousData.current
 
   if (!data) {
-    return "Loading..."
+    return (
+      <div className="flex flex-col gap-2">
+        <CommitHistoryLabel />
+        <h3>Loading...</h3>
+      </div>
+    )
   }
 
   return (
