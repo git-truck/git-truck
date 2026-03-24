@@ -1,6 +1,6 @@
 import { mdiMenu } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, useLoaderData, Link, redirect, createContext, useLocation, href, useNavigate } from "react-router"
+import { Await, Link, redirect, createContext, useLocation, href, useNavigate } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, Suspense, useReducer, useState } from "react"
@@ -381,9 +381,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   return fullData
 }
 
-export default function Repo() {
-  const { versionInfo, dataPromise } = useLoaderData<typeof loader>()
-
+export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route.ComponentProps) {
   const [{ leftExpanded }, dispatch] = useReducer(
     (prevState, action: "toggleLeft") => {
       switch (action) {
