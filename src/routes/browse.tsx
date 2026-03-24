@@ -1,4 +1,4 @@
-import { Await, Form, Link, redirect, href, useLoaderData, useLocation, useNavigation } from "react-router"
+import { Await, Form, Link, redirect, href, useLocation, useNavigation } from "react-router"
 import { Code } from "~/components/util"
 import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
@@ -240,9 +240,9 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   }
 }
 
-export default function Index() {
-  const { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount } =
-    useLoaderData<typeof loader>()
+export default function Index({
+  loaderData: { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount }
+}: Route.ComponentProps) {
   const location = useLocation()
   const navigation = useNavigation()
   const [{ path, "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
