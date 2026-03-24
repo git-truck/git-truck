@@ -237,26 +237,31 @@ function MetricButton({
 function InteractionButtons() {
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObject()
+  const data = useData()
   const viewAction = useViewAction()
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
   const { state } = useNavigation()
-  const location = useLocation()
-  const isBlob = clickedObject?.type === "blob"
-  const zoomPath = clickedObject ? (isBlob ? resolveParentFolder(clickedObject.path) : clickedObject.path) : undefined
-  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath })
-  const extension = clickedObject ? last(clickedObject.name.split(".")) : undefined
   const { setPath } = usePath()
 
   if (!clickedObject) {
     return null
   }
 
+  const isBlob = clickedObject.type === "blob"
+  const targetZoomPath = isBlob ? resolveParentFolder(clickedObject.path) : clickedObject.path
+  const currentZoomPath = viewSearchParams.zoomPath ?? data.databaseInfo.repo //If no zoomPath, we are at root
+  const isSelectedObjectZoomPath = currentZoomPath === targetZoomPath
+  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: targetZoomPath ?? undefined })
+  const extension = last(clickedObject.name.split("."))
+
   return (
     <div className="mt-2 flex flex-wrap justify-end gap-2">
-      <Link className="btn" to={zoomLink}>
-        <Icon path={mdiMagnify} />
-        Zoom to {isBlob ? "file" : "folder"}
-      </Link>
+      {!isSelectedObjectZoomPath ? (
+        <Link className="btn" to={zoomLink}>
+          <Icon path={mdiMagnify} />
+          Zoom to {isBlob ? "file" : "folder"}
+        </Link>
+      ) : null}
       <Form
         className="w-max"
         method="post"
