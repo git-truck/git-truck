@@ -30,7 +30,6 @@ import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
 import { Metric, type MetricType } from "~/metrics/metrics"
-import { PointLegend } from "~/components/legend/PointLegend"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -242,6 +241,7 @@ function InteractionButtons() {
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
   const { state } = useNavigation()
   const { setPath } = usePath()
+  const location = useLocation()
 
   if (!clickedObject) {
     return null
