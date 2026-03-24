@@ -241,9 +241,10 @@ function InteractionButtons() {
   const [viewSearchParams] = useQueryStates(viewSearchParamsConfig)
   const { state } = useNavigation()
   const location = useLocation()
-  const zoomLink = location + viewSerializer({ ...viewSearchParams, zoomPath: clickedObject?.path })
-  const extension = clickedObject ? last(clickedObject.name.split(".")) : undefined
   const isBlob = clickedObject?.type === "blob"
+  const zoomPath = clickedObject ? (isBlob ? resolveParentFolder(clickedObject.path) : clickedObject.path) : undefined
+  const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath })
+  const extension = clickedObject ? last(clickedObject.name.split(".")) : undefined
   const { setPath } = usePath()
 
   if (!clickedObject) {
