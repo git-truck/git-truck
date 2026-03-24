@@ -22,6 +22,7 @@ export default class DB {
   public selectedRange: [number, number]
 
   private static async init(dbPath: string): Promise<DuckDBConnection> {
+    log.debug("Initializing database at path:", dbPath)
     const dir = dirname(dbPath)
     if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
     const instance = await DuckDBInstance.create(dbPath, { temp_directory: dir })
@@ -51,12 +52,12 @@ export default class DB {
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
-    log.debug("query:", query.trim())
+    log.debug("query:", query.trim().replaceAll(/\s+/g, " "))
     return (await (await this.connectionPromise).runAndReadAll(query)).getRowObjects()
   }
 
   public async prepare(query: string) {
-    log.debug("prepare:", query.trim())
+    log.debug("prepare:", query.trim().replaceAll(/\s+/g, " "))
     return (await this.connectionPromise).prepare(query)
   }
 
@@ -90,7 +91,7 @@ export default class DB {
   }
 
   public async run(query: string): Promise<void> {
-    log.debug("run:", query.trim())
+    log.debug("run:", query.trim().replaceAll(/\s+/g, " "))
     await (await this.connectionPromise).run(query)
   }
 
