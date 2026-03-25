@@ -14,8 +14,9 @@ import byteSize from "byte-size"
 import { useQueryState, useQueryStates } from "nuqs"
 import { useEffect, type ReactNode } from "react"
 import { useFetcher, href, Form, Link, useNavigation, useLocation } from "react-router"
-import { ContributorsInspection as ContributorsInspection } from "~/components/inspection/ContributorsInspection"
+import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
+import { MetricInspectionPanel, type SearchableContentRenderFn } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor } from "~/const"
 import { useData } from "~/contexts/DataContext"
@@ -30,6 +31,86 @@ import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
 import { Metric, type MetricType } from "~/metrics/metrics"
+import { GradientLegend } from "~/components/legend/GradiantLegend"
+import { PointLegend } from "~/components/legend/PointLegend"
+import { SegmentLegend } from "~/components/legend/SegmentLegend"
+
+function FileTypePanels() {
+  const renderContents: SearchableContentRenderFn = ({ searchValue, onSearchChange }) => (
+    <PointLegend externalSearchValue={searchValue} onExternalSearchChange={onSearchChange} />
+  )
+  return (
+    <MetricInspectionPanel icon={mdiFileOutline} contents={renderContents} actions={{ search: true, clear: true }} />
+  )
+}
+
+function FileSizePanels() {
+  return (
+    <MetricInspectionPanel
+      icon={mdiResize}
+      contents={<SegmentLegend hoveredObject={null} />}
+      actions={{ search: false, clear: false }}
+    />
+  )
+}
+
+function CommitPanels() {
+  return (
+    <>
+      <MetricInspectionPanel
+        icon={mdiSourceCommit}
+        contents={<GradientLegend hoveredObject={null} />}
+        actions={{ search: false, clear: false }}
+      />
+      <MetricInspectionPanel
+        icon={mdiSourceCommit}
+        contents={<CommitsInspection />}
+        actions={{ search: false, clear: false }}
+      />
+    </>
+  )
+}
+
+function ContributorPanels() {
+  const renderContents: SearchableContentRenderFn = ({ searchValue, onSearchChange }) => (
+    <PointLegend externalSearchValue={searchValue} onExternalSearchChange={onSearchChange} />
+  )
+
+  return (
+    <>
+      <MetricInspectionPanel
+        icon={mdiAccountGroup}
+        contents={renderContents}
+        actions={{ search: true, clear: true, groupContributors: true }}
+      />
+      <MetricInspectionPanel
+        icon={mdiAccountGroup}
+        contents={<ContributorsInspection />}
+        actions={{ search: false, clear: false, groupContributors: true }}
+      />
+    </>
+  )
+}
+
+function LinesChangedPanels() {
+  return (
+    <MetricInspectionPanel
+      icon={mdiAccountGroup}
+      contents={<GradientLegend hoveredObject={null} />}
+      actions={{ search: false, clear: false }}
+    />
+  )
+}
+
+function LastChangedPanels() {
+  return (
+    <MetricInspectionPanel
+      icon={mdiPulse}
+      contents={<SegmentLegend hoveredObject={null} />}
+      actions={{ search: false, clear: false }}
+    />
+  )
+}
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -43,8 +124,12 @@ export default function Metrics() {
   const isRepo = isRepositoryRoot(clickedObject)
 
   const expandablePanels: Record<string, React.ComponentType> = {
-    TOP_CONTRIBUTOR: ContributorsInspection,
-    MOST_COMMITS: CommitsInspection
+    TOP_CONTRIBUTOR: ContributorPanels,
+    MOST_COMMITS: CommitPanels,
+    FILE_TYPE: FileTypePanels,
+    FILE_SIZE: FileSizePanels,
+    LAST_CHANGED: LastChangedPanels,
+    MOST_CONTRIBUTIONS: LinesChangedPanels
   }
 
   useEffect(() => {
@@ -187,9 +272,7 @@ export default function Metrics() {
           )
         )}
       </div>
-      <div className="border-primary mt-3 rounded-md border p-2">
-        {ExpandedPanel ? <ExpandedPanel key={clickedObject.path} /> : <p>This metric has no inspection currently</p>}
-      </div>
+      {ExpandedPanel ? <ExpandedPanel key={clickedObject.path} /> : <p>This metric has no inspection currently</p>}
       <InteractionButtons />
     </>
   )
