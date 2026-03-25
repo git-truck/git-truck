@@ -6,6 +6,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useData } from "~/contexts/DataContext"
 import type { MetricType } from "~/metrics/metrics"
+import { Tick } from "~/components/sliderUtils"
 
 export type GradLegendData = {
   /**
@@ -68,7 +69,7 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
   return (
     <div>
       <div
-        className="relative h-4 rounded-sm"
+        className="relative mt-9 h-4 rounded-sm"
         style={{
           backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`
         }}
@@ -76,14 +77,17 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
         <LegendBarIndicator offset={(clickedOffset ?? 0) * 100} visible={clickedOffset !== null} />
         <LegendBarIndicator offset={(hoveredOffset ?? 0) * 100} visible={hoveredOffset !== null} />
       </div>
-      <div className="flex justify-between">
-        <span className="font-bold" title={minValue.toLocaleString()}>
+      <div className="relative mt-0 mb-2 flex h-5">
+        <Tick className="absolute left-0.5" />
+        <span className="absolute top-2 left-0.5 text-xs" title={minValue.toLocaleString()}>
           {numToFriendlyString(minValue)}
         </span>
-        <span className="absolute left-1/2 -translate-x-1/2 font-bold" title={midValue.toLocaleString()}>
+        <Tick className="absolute left-1/2 -translate-x-1/2" />
+        <span className="absolute top-2 left-1/2 -translate-x-1/2 text-xs" title={midValue.toLocaleString()}>
           {numToFriendlyString(midValue)}
         </span>
-        <span className="font-bold" title={maxValue.toLocaleString()}>
+        <Tick className="absolute right-0.5" />
+        <span className="absolute top-2 right-0.5 text-xs" title={maxValue.toLocaleString()}>
           {numToFriendlyString(maxValue)}
         </span>
       </div>

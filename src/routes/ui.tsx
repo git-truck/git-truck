@@ -250,7 +250,6 @@ export default function UI() {
                 }}
                 disabled={false}
                 analyzedBranches={[]}
-                className="input"
               />
             </div>
           </div>

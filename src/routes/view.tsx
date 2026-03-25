@@ -13,7 +13,6 @@ import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath, open
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { HideFilesButton } from "~/components/buttons/HideFilesButton"
-import { Legend } from "~/components/legend/Legend"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { Options } from "~/components/Options"
 import { Providers } from "~/components/Providers"
@@ -451,7 +450,6 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                       <Icon path={mdiMenu} size="1.5em" />
                     </button>
                   </div>
-                  <InspectPanel />
                   <CollapsibleHeader
                     className="card"
                     title={<>Visualization options</>}
@@ -459,9 +457,7 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                   >
                     <Options />
                   </CollapsibleHeader>
-                  <CollapsibleHeader className="card group" title="Legend" contentClassName="pb-6">
-                    <Legend hoveredObject={hoveredObject} />
-                  </CollapsibleHeader>
+                  <InspectPanel />
                 </aside>
               </Activity>
               <main

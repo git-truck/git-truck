@@ -2,6 +2,7 @@ import { PointInfo } from "~/components/legend/PointLegend"
 import { missingInMapColor } from "~/const"
 import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
 import { cn } from "~/styling"
+import { Tick } from "~/components/sliderUtils"
 
 export function PointLegendDistBar({ items, totalWeight }: { items: [string, PointInfo][]; totalWeight: number }) {
   const { isSelected: selected, select, deselect } = useSelectedCategory()
@@ -35,6 +36,13 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
   )
   const restLabels = mapped.filter((seg) => !representedLabels.has(seg.label)).map((seg) => seg.label)
 
+  const truncateLabel = (label: string, availablePercentage: number): string => {
+    // Roughly 2.5% of container width per character at xs font size
+    const estimatedCharsFit = Math.max(2, Math.floor(availablePercentage / 2.5))
+    if (label.length <= estimatedCharsFit) return label
+    return label.slice(0, estimatedCharsFit - 1) + "…"
+  }
+
   const toggleSegmentSelection = (seg: (typeof segments)[number], isSel: boolean) => {
     if (seg.label === "Rest") {
       restLabels.forEach((label) => {
@@ -57,34 +65,93 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
   }
 
   return (
-    <div className="ring-primary-bg dark:ring-primary-bg-dark mt-2 flex h-3 w-full overflow-hidden rounded-4xl ring-4">
-      {segments.map((seg) => {
+    <div className="mt-7 mb-10 flex h-4 w-full overflow-visible">
+      {segments.map((seg, index) => {
         const isSel = selected(seg.label) || (seg.label === "Rest" && restLabels.some((label) => selected(label)))
+        const showTick = seg.percentage >= 5 // Only show tick if segment is at least 5% wide
+        const isFirst = index === 0
+        const isLast = index === segments.length - 1
+        // Calculate available width: current segment + next segment (if exists)
+        const availableWidth = seg.percentage + (index < segments.length - 1 ? segments[index + 1].percentage : 0)
+        const displayLabel = truncateLabel(seg.label, availableWidth)
         return (
-          <span
-            key={seg.label}
-            role="button"
-            tabIndex={0}
-            aria-pressed={isSel}
-            className={cn("h-full cursor-pointer outline-none hover:opacity-80", {
-              "opacity-15 grayscale-100 hover:grayscale-0": !noSelectedCategories && !isSel,
-              "opacity-100": noSelectedCategories || isSel,
-              "z-10 ring-2 ring-black": isSel
-            })}
-            //TODO: Include better tooltip?
-            title={`${seg.label} (${seg.percentage.toFixed(1)}%)`}
-            style={{
-              background: seg.color,
-              width: `${seg.percentage}%`
-            }}
-            onClick={() => toggleSegmentSelection(seg, isSel)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault()
-                toggleSegmentSelection(seg, isSel)
-              }
-            }}
-          />
+          <div key={seg.label} className="relative" style={{ width: `${seg.percentage}%` }}>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-pressed={isSel}
+              className={cn("flex h-full w-full cursor-pointer outline-none hover:opacity-80", {
+                "opacity-15 grayscale-100 hover:grayscale-0": !noSelectedCategories && !isSel,
+                "opacity-100": noSelectedCategories || isSel,
+                "rounded-l-sm": isFirst,
+                "rounded-r-sm": isLast
+              })}
+              //TODO: Include better tooltip?
+              title={`${seg.label} (${seg.percentage.toFixed(1)}%)`}
+              style={{
+                background: seg.color
+              }}
+              onClick={() => toggleSegmentSelection(seg, isSel)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  toggleSegmentSelection(seg, isSel)
+                }
+              }}
+            />
+            <div className="absolute left-0 h-5 w-fit -translate-y-full overflow-visible">
+              {index % 2 === 0 ? (
+                <>
+                  <div className="absolute -top-7 left-full w-fit overflow-visible">
+                    <span
+                      className={cn(
+                        {
+                          "ml-1": isFirst,
+                          "opacity-0": !showTick,
+                          "opacity-15": !noSelectedCategories && !isSel && showTick
+                        },
+                        "pointer-events-none text-xs whitespace-nowrap"
+                      )}
+                      title={seg.label}
+                    >
+                      {displayLabel}
+                    </span>
+                    <Tick
+                      className={cn({
+                        "ml-1": isFirst,
+                        "opacity-15": !noSelectedCategories && !isSel
+                      })}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="absolute top-5 left-full w-fit overflow-visible">
+                    {" "}
+                    <Tick
+                      className={cn({
+                        "ml-1": isFirst,
+                        "opacity-15": !noSelectedCategories && !isSel
+                      })}
+                    />
+                    <span
+                      className={cn(
+                        {
+                          "ml-1": isFirst,
+                          "opacity-0": !showTick,
+                          "opacity-15": !noSelectedCategories && !isSel && showTick
+                        },
+                        "pointer-events-none text-xs whitespace-nowrap"
+                      )}
+                      title={seg.label}
+                    >
+                      {displayLabel}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         )
       })}
     </div>

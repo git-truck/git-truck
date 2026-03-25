@@ -32,11 +32,11 @@ export function CollapsibleHeader({
         onToggle={(event) => setOpen(event.currentTarget.open)}
       >
         <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
-          <ChevronButton aria-hidden as="span" open={open} />
           <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2">{title}</h2>
+          <ChevronButton aria-hidden as="span" open={open} />
         </summary>
 
-        <div className={cn("pr-1 pb-6 pl-8", contentClassName)}>{children}</div>
+        <div className={cn("px-2 pb-6", contentClassName)}>{children}</div>
       </details>
     </CollapsibleHeaderContext.Provider>
   )

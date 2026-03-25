@@ -1,12 +1,13 @@
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useClickedObject } from "~/state/stores/clicked-object"
-import { isBlob } from "~/shared/util"
+import { isBlob, isRepositoryRoot } from "~/shared/util"
 import Metrics from "~/components/inspection/Metrics"
 
 export function InspectPanel() {
   const clickedObject = useClickedObject()
   const objectPath = clickedObject?.path
   const objectPathIsFile = isBlob(clickedObject)
+  const objectPathIsRepo = isRepositoryRoot(clickedObject)
   return (
     <CollapsibleHeader
       className="card"
@@ -15,8 +16,17 @@ export function InspectPanel() {
           {objectPath ? (
             <>
               <span className="truncate" title={objectPath}>
-                Inspect:{" "}
-                <span className="normal-case">{objectPathIsFile ? objectPath.split("/").pop() : objectPath}</span>
+                {" "}
+                <span className="font-black normal-case">
+                  {objectPathIsRepo
+                    ? objectPath
+                    : objectPathIsFile
+                      ? objectPath.split("/").pop()
+                      : objectPath
+                          .split("/")
+                          .map((segment, index, segments) => (index === segments.length - 1 ? segment : "."))
+                          .join("/") + "/"}
+                </span>
               </span>
             </>
           ) : (
