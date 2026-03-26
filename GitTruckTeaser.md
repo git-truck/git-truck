@@ -63,4 +63,3 @@ The only requirements are
 - [git](https://git-scm.com/downloads) version 2.29 or newer.
 
 To run git truck, navigate to a repository or a folder containing multiple repositories in your terminal, and run `npx git-truck`
-

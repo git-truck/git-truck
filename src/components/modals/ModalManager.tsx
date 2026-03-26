@@ -69,7 +69,7 @@ export function ModalManager() {
       aria-modal
       open={false}
       // reason: closedby is a valid attribute on <dialog> elements, but React doesn't know about it
-      // eslint-disable-next-line react/no-unknown-property
+      // oxlint-disable-next-line react/no-unknown-property
       closedby="any"
       className="z-10 m-auto flex flex-col bg-transparent text-inherit backdrop:bg-gray-400/75 backdrop:backdrop-blur-xs dark:backdrop:bg-gray-800/75"
       onClose={onClose}

@@ -1,4 +1,4 @@
-import { it, expect, describe } from "vitest"
+import { it, expect, describe } from "vite-plus/test"
 import { getCoAuthors } from "./coauthors.server"
 import type { Person } from "~/shared/model"
 

@@ -16,15 +16,15 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:e2e && npm run test:unit",
-    "test:unit": "vitest run",
-    "test:unit:watch": "vitest watch",
+    "test:unit": "vp test run",
+    "test:unit:watch": "vp test watch",
     "test:e2e": "npx playwright test",
     "test:e2e:headed": "npx playwright test --headed",
     "pretest:e2e": "npm run build",
     "pretest:e2e:headed": "npm run build",
     "build": "cross-env NODE_ENV=production npm run build-vite && npm run build-cli",
     "build:dev": "cross-env NODE_ENV=development npm run build-vite && npm run build-cli",
-    "build-cli": "cross-env NODE_ENV=production tsdown",
+    "build-cli": "cross-env NODE_ENV=production vp pack",
     "build-vite": "react-router build",
     "dev": "cross-env NODE_ENV=development ./src/cli.ts",
     "dev:bun": "cross-env NODE_ENV=development bun ./src/cli.ts",
@@ -39,15 +39,16 @@
     "pub-prepatch": "npm version prepatch && npm publish --tag next",
     "pub-exp": "node ./scripts/publish-experimental",
     "prepublishOnly": "npm run clean && npm run build",
-    "format:write": "prettier --log-level warn --write src scripts e2e",
-    "lint:fix": "eslint --fix --cache",
+    "format:write": "vp fmt src scripts e2e",
+    "lint:fix": "vp lint --fix",
     "check:write": "npm run knip:write && npm run lint:fix && npm run format:write",
     "check": "npm run knip && npm run lint && npm run format:check",
-    "format:check": "prettier --check src scripts e2e",
-    "lint": "eslint --cache",
+    "format:check": "vp fmt --check src scripts e2e",
+    "lint": "vp lint",
     "update-deps": "npx npm-check-updates -i",
     "knip": "knip",
-    "knip:write": "knip --fix"
+    "knip:write": "knip --fix",
+    "prepare": "vp config"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
@@ -97,7 +98,6 @@
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
-    "eslint": "^9.39.2",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
@@ -105,27 +105,24 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "get-port": "^7.1.0",
     "globals": "^17.3.0",
-    "husky": "^9.1.7",
     "isbot": "^5.1.35",
     "knip": "^5.83.1",
     "language-map": "^1.5.0",
     "npm-check-updates": "^19.3.2",
     "open": "^11.0.0",
-    "prettier": "^3.8.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "^7.13.0",
     "react-router-devtools": "^6.2.0",
     "react-use-size": "^5.0.1",
     "tailwindcss": "^4.1.18",
-    "tsdown": "^0.21.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
-    "vite": "npm:rolldown-vite@7.3.1",
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest",
+    "vite-plus": "latest"
   },
   "tsdown": {
     "entry": "./src/cli.ts",
@@ -140,15 +137,6 @@
     "env": {
       "NODE_ENV": "production"
     }
-  },
-  "prettier": {
-    "semi": false,
-    "printWidth": 120,
-    "trailingComma": "none",
-    "endOfLine": "lf",
-    "plugins": [
-      "prettier-plugin-tailwindcss"
-    ]
   },
   "knip": {
     "entry": [
@@ -167,5 +155,10 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "packageManager": "npm@10.9.2",
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  }
 }
