@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { log, setLogLevel } from "./log.server"
 
 describe("log methods array argument concatenation", () => {
