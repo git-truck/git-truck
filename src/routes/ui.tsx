@@ -5,7 +5,7 @@ import { IconRadioGroup } from "~/components/EnumSelect"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { SearchCard } from "~/components/SearchCard"
 import { Providers } from "~/components/Providers"
-import type { AnalyzerData, RepoData } from "~/shared/model"
+import type { RepoData } from "~/shared/model"
 import { Tooltip } from "~/components/Tooltip"
 import { Icon } from "~/components/Icon"
 import { mdiCog, mdiHelpCircle, mdiPlus } from "@mdi/js"
@@ -13,33 +13,6 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
-
-// Minimal mock AnalyzerData for RepoData
-const mockAnalyzerData: AnalyzerData = {
-  cached: false,
-  interfaceVersion: 18 as const,
-  hiddenFiles: [],
-  repo: "mock-repo",
-  repositoryPath: "mock/path",
-  branch: "main",
-  commit: {
-    type: "commit" as const,
-    hash: "",
-    tree: { type: "tree" as const, name: "root", path: "", hash: "", children: [] },
-    parent: "",
-    parent2: null,
-    author: { name: "", email: "", timestamp: 0, timezone: "" },
-    committer: { name: "", email: "", timestamp: 0, timezone: "" },
-    message: "",
-    description: "",
-    coauthors: [],
-    fileCount: 0
-  },
-  contributors: [],
-  currentVersion: "",
-  lastRunEpoch: 0,
-  commits: {}
-}
 
 // Minimal mock RepoData for context providers
 const mockRepoData: RepoData = {
@@ -218,6 +191,58 @@ export default function UI() {
               <ChevronButton open={false} />
               <ChevronButton open={true} />
               <button className="btn btn--icon">
+                <Icon path={mdiPlus} size="1.25em" />
+                <span className="badge">13</span>
+              </button>
+            </div>
+          </div>
+          {/* Button disabled variants */}
+          <div className="card">
+            <h2 className="card__title">Disabled Buttons</h2>
+            <div className="flex flex-wrap gap-2">
+              <button disabled className="btn">
+                Default
+              </button>
+              <button disabled className="btn btn--text">
+                Default text
+              </button>
+
+              <button disabled className="btn btn--primary">
+                Primary
+              </button>
+              <button disabled className="btn btn--primary btn--outlined">
+                Primary Outlined
+              </button>
+              <button disabled className="btn btn--primary btn--text">
+                Primary Text
+              </button>
+
+              <button disabled className="btn btn--danger">
+                Danger
+              </button>
+              <button disabled className="btn btn--danger btn--outlined">
+                Danger Outlined
+              </button>
+              <button disabled className="btn btn--danger btn--text">
+                Danger Text
+              </button>
+
+              <button disabled className="btn btn--icon">
+                <Icon path={mdiPlus} size="1.25em" />
+              </button>
+              <button disabled className="btn btn--icon btn--primary">
+                <Icon path={mdiCog} size="1.25em" />
+              </button>
+              <button disabled className="btn btn--icon btn--outlined">
+                <Icon path={mdiHelpCircle} size="1.25em" />
+              </button>
+              <button disabled className="btn btn--hover-swap">
+                <span>Hover me</span>
+                <span className="hover-swap">🎉</span>
+              </button>
+              <ChevronButton open={false} />
+              <ChevronButton open={true} />
+              <button disabled className="btn btn--icon">
                 <Icon path={mdiPlus} size="1.25em" />
                 <span className="badge">13</span>
               </button>

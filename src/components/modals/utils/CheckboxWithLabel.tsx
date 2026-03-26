@@ -1,7 +1,6 @@
 import { mdiCheckboxBlankOutline, mdiCheckboxIntermediate, mdiCheckboxMarked } from "@mdi/js"
 import { useState, useTransition } from "react"
 import { Icon } from "~/components/Icon"
-import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
 
 export function CheckboxWithLabel({
@@ -24,10 +23,10 @@ export function CheckboxWithLabel({
   uncheckedIcon?: string
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
   const [value, setValue] = useState(checked)
-  const [isTransitioning, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   return (
-    <label className={`label flex w-full items-center justify-start gap-2 ${className}`} {...props}>
+    <label className={cn("label flex w-full items-center justify-start gap-2", className)} {...props}>
       <input
         type="checkbox"
         checked={value}
@@ -37,25 +36,17 @@ export function CheckboxWithLabel({
           startTransition(() => onChange(e))
         }}
       />
+      <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark contents items-center">
+        {children}
+      </div>
       <Icon
         className={cn(
-          "peer-checked:text-blue-primary place-self-end",
+          "peer-checked:text-blue-primary",
           intermediate ? "text-blue-primary" : "text-tertiary-text dark:text-tertiary-text-dark",
           checkBoxClassName
         )}
         path={intermediate ? mdiCheckboxIntermediate : value ? checkedIcon : uncheckedIcon}
         size={1}
-      />
-      <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark flex flex-1 items-center gap-2">
-        {children}
-      </div>
-      <img
-        src={anitruck}
-        alt=""
-        aria-hidden="true"
-        className={cn("h-5", {
-          "opacity-0": !isTransitioning
-        })}
       />
     </label>
   )

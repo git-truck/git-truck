@@ -24,7 +24,7 @@ export function InspectPanel() {
                       ? objectPath.split("/").pop()
                       : objectPath
                           .split("/")
-                          .map((segment, index, segments) => (index === segments.length - 1 ? segment : "."))
+                          .map((segment, index, segments) => (index === segments.length - 1 ? segment : ".."))
                           .join("/") + "/"}
                 </span>
               </span>

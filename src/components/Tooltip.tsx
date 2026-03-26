@@ -6,7 +6,6 @@ import {
   mdiFileOutline,
   mdiPlusMinusVariant,
   mdiPulse,
-  mdiResize,
   mdiSourceCommit
 } from "@mdi/js"
 import { Icon } from "~/components/Icon"
@@ -76,7 +75,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
           <div className="flex gap-1">
             <ColorMetricDependentInfo
               metric={metricType}
-              hoveredBlob={hoveredObject}
+              hoveredObject={hoveredObject}
               databaseInfo={databaseInfo}
               topContributorCutoff={topContributorCutoff}
             />
@@ -86,7 +85,7 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
               <SizeMetricDependentInfo
                 sizeMetric={sizeMetric}
                 databaseInfo={databaseInfo}
-                hoveredBlob={hoveredObject}
+                hoveredObject={hoveredObject}
               />
             </div>
           ) : null}
@@ -98,13 +97,13 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
 
 function ColorMetricDependentInfo(props: {
   metric: MetricType
-  hoveredBlob: GitBlobObject | null
+  hoveredObject: GitBlobObject | null
   databaseInfo: DatabaseInfo
   topContributorCutoff: number
 }) {
   let icon: string
   let content: string
-  const path = props.hoveredBlob?.path ?? ""
+  const path = props.hoveredObject?.path ?? ""
   switch (props.metric) {
     case "MOST_COMMITS": {
       icon = mdiSourceCommit
@@ -160,16 +159,16 @@ function ColorMetricDependentInfo(props: {
     }
     case "FILE_TYPE": {
       icon = mdiFileOutline
-      const extension = props.hoveredBlob?.name.substring(props.hoveredBlob.name.lastIndexOf(".")) ?? ""
+      const extension = props.hoveredObject?.name.substring(props.hoveredObject.name.lastIndexOf(".")) ?? ""
       content = extension
       break
     }
     case "FILE_SIZE": {
       icon = FileSizeMetric.icon
-      if (!props.hoveredBlob) {
+      if (!props.hoveredObject) {
         content = "Size unknown"
       } else {
-        content = FileSizeMetric.getTooltipContent(props.hoveredBlob, props.databaseInfo)
+        content = FileSizeMetric.getTooltipContent(props.hoveredObject, props.databaseInfo)
       }
     }
   }
@@ -183,11 +182,11 @@ function ColorMetricDependentInfo(props: {
 
 function SizeMetricDependentInfo({
   sizeMetric,
-  hoveredBlob,
+  hoveredObject: hoveredBlob,
   databaseInfo
 }: {
   sizeMetric: SizeMetricType
-  hoveredBlob: GitBlobObject | null
+  hoveredObject: GitBlobObject | null
   databaseInfo: DatabaseInfo
 }) {
   let icon: string = mdiCircleSmall
@@ -198,7 +197,7 @@ function SizeMetricDependentInfo({
 
   switch (sizeMetric) {
     case "FILE_SIZE": {
-      icon = mdiResize
+      icon = FileSizeMetric.icon
       const fileSizeInBytes = hoveredBlob.sizeInBytes
       if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
         content = "Size unknown"

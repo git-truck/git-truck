@@ -4,7 +4,6 @@ import type { PointInfo, PointLegendData } from "~/components/legend/PointLegend
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
-import type { LegendType } from "~/components/legend/Legend"
 import { setExtensionColor } from "~/metrics/fileExtension"
 import { getLastChangedIndex, lastChangedGroupings } from "~/metrics/lastChanged"
 import { CommitAmountTranslater } from "~/metrics/mostCommits"
@@ -64,29 +63,6 @@ export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
   MOST_COMMITS: "Files are sized based on the number of commits in the selected time range.",
   LAST_CHANGED: "Files are sized based on how long ago they were changed.",
   MOST_CONTRIBUTIONS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
-}
-
-export const sizeMetricLegendDescriptions: Record<SizeMetricType, string> = {
-  FILE_SIZE: "Larger node indicates larger file size.",
-  EQUAL_SIZE: "All files have the same size.",
-  MOST_COMMITS: "Larger node indicates more commits.",
-  LAST_CHANGED: "Larger node indicates more recent changes.",
-  MOST_CONTRIBUTIONS: "Larger node indicates more line changes."
-}
-
-export function getMetricLegendType(metric: MetricType): LegendType {
-  switch (metric) {
-    case "FILE_TYPE":
-    case "TOP_CONTRIBUTOR":
-      return "POINT"
-    case "MOST_COMMITS":
-    case "MOST_CONTRIBUTIONS":
-      return "GRADIENT"
-    case "LAST_CHANGED":
-      return feature_flags.lastChangedAsGrad ? "GRADIENT" : "SEGMENTS"
-    case "FILE_SIZE":
-      return feature_flags.fileSizeAsGrad ? "GRADIENT" : "SEGMENTS"
-  }
 }
 
 export interface MetricCache {

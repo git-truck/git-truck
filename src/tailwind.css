@@ -3,9 +3,7 @@
 /* @custom-variant dark (&:where(.dark, .dark *)); */
 
 @theme {
-  --unit: 4px;
-  --side-panel-width-units: 94;
-  --spacing-sidepanel: 45ch;
+  --spacing-sidepanel: 450px;
 
   --spacing-button: calc(var(--spacing) * 8);
 
@@ -126,10 +124,10 @@
 }
 
 @utility btn {
-  @apply h-button tertiary flex cursor-pointer place-items-center justify-center gap-2 rounded-lg fill-current px-2 text-sm font-bold text-nowrap select-none hover:*:opacity-70 not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale;
+  @apply h-button tertiary flex cursor-pointer place-items-center justify-center gap-2 rounded-lg fill-current px-2 text-sm font-bold text-nowrap select-none hover:*:opacity-70 not-disabled:hover:saturate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale aria-disabled:cursor-not-allowed aria-disabled:grayscale;
 
   &:not(.btn--primary):not(.btn--danger):not(.btn--outlined):not(.btn--text) {
-    @apply border-border dark:border-border-dark hover:border-border-highlight dark:hover:border-border-highlight-dark border-2;
+    @apply border-border dark:border-border-dark not-disabled:hover:border-border-highlight dark:not-disabled:hover:border-border-highlight-dark border-2;
   }
 
   & > svg {

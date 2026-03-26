@@ -15,7 +15,7 @@ export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
       onClick={() => openModal()}
     >
       <Icon path={mdiAccountMultiple} />
-      {compact ? null : <span>Group Contributors</span>}
+      {compact ? null : <span>Group contributors</span>}
     </button>
   )
 }
