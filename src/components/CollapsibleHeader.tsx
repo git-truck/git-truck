@@ -1,13 +1,7 @@
 import type { ReactNode } from "react"
-import { createContext, use, useState } from "react"
+import { useState } from "react"
 import { ChevronButton } from "~/components/ChevronButton"
 import { cn } from "~/styling"
-
-const CollapsibleHeaderContext = createContext((_open: boolean) => {})
-
-export function useSetOpenCollapsibleHeader() {
-  return use(CollapsibleHeaderContext)
-}
 
 export function CollapsibleHeader({
   title,
@@ -25,19 +19,17 @@ export function CollapsibleHeader({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <CollapsibleHeaderContext.Provider value={setOpen}>
-      <details
-        className={cn("relative flex flex-col gap-2", className)}
-        open={open}
-        onToggle={(event) => setOpen(event.currentTarget.open)}
-      >
-        <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
-          <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2">{title}</h2>
-          <ChevronButton aria-hidden as="span" open={open} />
-        </summary>
+    <details
+      className={cn("relative flex flex-col gap-2", className)}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
+        <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2">{title}</h2>
+        <ChevronButton aria-hidden as="span" open={open} />
+      </summary>
 
-        <div className={cn("px-2 pb-6", contentClassName)}>{children}</div>
-      </details>
-    </CollapsibleHeaderContext.Provider>
+      <div className={cn("px-2 pb-6", contentClassName)}>{children}</div>
+    </details>
   )
 }

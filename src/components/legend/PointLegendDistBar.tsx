@@ -76,8 +76,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
         const displayLabel = truncateLabel(seg.label, availableWidth)
         return (
           <div key={seg.label} className="relative" style={{ width: `${seg.percentage}%` }}>
-            <span
-              role="button"
+            <button
               tabIndex={0}
               aria-pressed={isSel}
               className={cn("flex h-full w-full cursor-pointer outline-none hover:opacity-80", {

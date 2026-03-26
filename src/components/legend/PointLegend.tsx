@@ -17,6 +17,7 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
+import { Metric } from "~/metrics/metrics"
 
 const legendCutoff = 8
 
@@ -96,7 +97,7 @@ export function PointLegend({
         {items
           .filter(([label]) => isCategorySelected(label))
           .map(([label, info]) => (
-            <div key={label} title={label} className="flex max-w-[25ch] items-center truncate text-sm">
+            <div key={label} title={label} className="flex items-center truncate text-sm">
               <LegendDot dotColor={info.color} />
               {label}
             </div>
@@ -104,26 +105,28 @@ export function PointLegend({
       </div>
       <div className="flex flex-col gap-2">
         <PointLegendDistBar items={items} totalWeight={totalWeight} />
-        <div className="flex w-full justify-end gap-2">
-          <div className="align-center mr-15 mb-2 flex flex-row gap-5 text-right">
-            <p className="self-center text-sm font-bold"># Files</p>
-            <p className="self-center text-sm font-bold">% Files</p>
-          </div>
-        </div>
       </div>
-      <div className="flex justify-between gap-1">
-        <div className="flex flex-1 flex-col gap-1">
-          {shownItems.map(([label, info]) => (
-            <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
-          ))}
-          {filteredItems.length > legendCutoff ? (
-            <PointLegendOther
-              items={filteredItems.slice(legendCutoff)}
-              collapse={collapse}
-              toggle={() => setCollapse(!collapse)}
-            />
-          ) : null}
+      <div className="mt-2 grid grid-cols-[min-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-4 gap-y-1">
+        <div className="contents text-xs font-bold">
+          <div />
+          <p>{Metric[metricType]}</p>
+          <p className="text-right"># Files</p>
+          <p className="text-right">% Files</p>
+          <div />
         </div>
+
+        <span className="bg-border dark:bg-border-dark col-span-full my-1 h-0.5 w-full" />
+
+        {shownItems.map(([label, info]) => (
+          <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
+        ))}
+        {filteredItems.length > legendCutoff ? (
+          <PointLegendOther
+            items={filteredItems.slice(legendCutoff)}
+            collapse={collapse}
+            toggle={() => setCollapse(!collapse)}
+          />
+        ) : null}
       </div>
     </div>
   )
@@ -147,10 +150,11 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   const dotColor = info.color
 
   return (
-    <div key={label} className="justify-content relative flex w-full gap-1 align-middle text-sm leading-none">
+    <>
       <CheckboxWithLabel
         key={String(labelIsSelected)}
-        checkBoxClassName="order-last ml-auto opacity-100 transition-opacity"
+        className="contents"
+        checkBoxClassName=" ml-auto"
         intermediate={noSelectedCategories}
         checked={labelIsSelected}
         onChange={(evt) => {
@@ -167,8 +171,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           <LegendDot key={dotColor} dotColor={dotColor} />
         )}
         <span
-          className={cn("truncate", {
-            "font-bold": true,
+          className={cn("truncate font-bold", {
             "text-blue-primary": labelIsSelected,
             "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
           })}
@@ -184,18 +187,16 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         >
           {label}
         </span>
-        <div className="text-muted-foreground align-center center ml-auto flex flex-row gap-5 text-right text-xs">
-          <span className="self-center">{info.weight.toLocaleString()}</span>
-          <span className="w-12 self-center">
-            {((info.weight / totalWeight) * 100).toLocaleString(undefined, {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1
-            })}
-            %
-          </span>
-        </div>
+        <span className="text-right text-xs font-normal">{info.weight.toLocaleString()}</span>
+        <span className="text-right text-xs font-normal">
+          {((info.weight / totalWeight) * 100).toLocaleString(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          })}
+          %
+        </span>
       </CheckboxWithLabel>
-    </div>
+    </>
   )
 }
 

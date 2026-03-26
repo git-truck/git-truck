@@ -1,39 +1,43 @@
-import { mdiAccountMultiple, mdiClose, mdiMagnify } from "@mdi/js"
-import { useState, useRef, type ReactNode } from "react"
+import { mdiAccountMultiple, mdiClose, mdiDice5, mdiMagnify } from "@mdi/js"
+import { useState, useRef, type ReactNode, createContext, use } from "react"
+import { useNavigation } from "react-router"
+import { ExpandingPanelButton } from "~/components/buttons/ExpandingPanelButton"
+import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
 import { Icon } from "~/components/Icon"
 import { useModal } from "~/components/modals/ModalManager"
 import { useResetSelection, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
 
-//Export search hooks to be used in searchable inspection panels, such as PointLegend
-//TODO: Hook this into Commit History
-type SearchableContentRenderFn = (props: { searchValue: string; onSearchChange: (value: string) => void }) => ReactNode
+const MetricSearchContext = createContext<{ searchValue: string; onSearchChange: (value: string) => void }>({
+  searchValue: "",
+  onSearchChange: () => {}
+})
 
-type MetricPanelActions = {
+export function useMetricSearchContext() {
+  return use(MetricSearchContext)
+}
+
+export type MetricPanelActions = {
   search?: boolean
   clear?: boolean
   groupContributors?: boolean
+  shuffleContributorColors?: boolean
 }
 
 export function MetricInspectionPanel({
   className = "",
   icon,
-  contents,
+  children,
   actions = { search: false, clear: false, groupContributors: false }
 }: {
   className?: string
   icon: string
-  //TODO: This is a bit finicky, maybe there is a simpler way to pass search downstream to an abstract content?
-  contents: ReactNode | SearchableContentRenderFn
+  children: ReactNode
   actions?: MetricPanelActions
 }) {
   const [selectedSearch, setSelectedSearch] = useState("")
   const { openModal } = useModal("group-contributors")
-
-  const renderedContents =
-    typeof contents === "function"
-      ? contents({ searchValue: selectedSearch, onSearchChange: setSelectedSearch })
-      : contents
+  const { state } = useNavigation()
 
   return (
     <div className="mt-4">
@@ -43,59 +47,36 @@ export function MetricInspectionPanel({
             <Icon path={icon} size="1em" />
           </button>
           <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
-            {actions.search && <SearchButton value={selectedSearch} onChange={setSelectedSearch} />}
-            {actions.groupContributors && (
-              <ActionButton icon={mdiAccountMultiple} label="Group Contributors" onClick={() => openModal()} />
-            )}
-            {actions.clear && <ClearSelectionButton />}
+            {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
+            {actions.groupContributors ? (
+              <ExpandingPanelButton icon={mdiAccountMultiple} onClick={() => openModal()}>
+                Group contributors
+              </ExpandingPanelButton>
+            ) : null}
+            {actions.shuffleContributorColors ? (
+              <ShuffleColorsForm>
+                <ExpandingPanelButton
+                  iconClassName={cn({
+                    "animate-spin transition-all starting:rotate-0": state !== "idle"
+                  })}
+                  icon={mdiDice5}
+                >
+                  Shuffle colors
+                </ExpandingPanelButton>
+              </ShuffleColorsForm>
+            ) : null}
+            {actions.clear ? <ClearSelectionButton /> : null}
           </div>
         </div>
         <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">
-          <div className="mt-2">{renderedContents}</div>
+          <div className="mt-2">
+            <MetricSearchContext value={{ searchValue: selectedSearch, onSearchChange: setSelectedSearch }}>
+              {children}
+            </MetricSearchContext>
+          </div>
         </div>
       </div>
     </div>
-  )
-}
-
-function ActionButton({
-  icon,
-  label,
-  disabled = false,
-  onClick,
-  danger = false,
-  expanded = false
-}: {
-  icon: string
-  label: string
-  disabled?: boolean
-  onClick?: () => void
-  danger?: boolean
-  expanded?: boolean
-}) {
-  return (
-    <button
-      disabled={disabled}
-      className={cn(
-        "btn group flex h-8 w-fit shrink-0 items-center justify-start gap-0 overflow-hidden rounded-t-lg rounded-b-none px-2 transition-all duration-200",
-        disabled && "cursor-not-allowed opacity-50",
-        danger && "btn--danger border-border border-2"
-      )}
-      onClick={onClick}
-    >
-      <span className={cn("transition-transform duration-150")}>
-        <Icon path={icon} size="1em" />
-      </span>
-      <span
-        className={cn(
-          "max-w-0 overflow-hidden text-xs font-bold whitespace-nowrap transition-all duration-200",
-          !expanded && !disabled && "opacity-0 group-hover:ml-2 group-hover:max-w-fit group-hover:opacity-100",
-          expanded && "ml-2 max-w-16 opacity-100"
-        )}
-      >
-        {label}
-      </span>
-    </button>
   )
 }
 
@@ -105,14 +86,15 @@ function ClearSelectionButton() {
   const hasSelection = selectedCategories.length > 0
 
   return (
-    <ActionButton
+    <ExpandingPanelButton
       disabled={!hasSelection}
       icon={mdiClose}
-      label="Clear"
       danger={hasSelection}
       expanded={hasSelection}
       onClick={resetSelection}
-    />
+    >
+      Clear
+    </ExpandingPanelButton>
   )
 }
 
@@ -128,9 +110,7 @@ function SearchButton({ value, onChange }: { value: string; onChange: (value: st
         )}
         tabIndex={-1}
       >
-        <span className="">
-          <Icon path={mdiMagnify} size="1em" />
-        </span>
+        <Icon path={mdiMagnify} size="1em" />
         <input
           ref={ref}
           type="text"
@@ -141,6 +121,12 @@ function SearchButton({ value, onChange }: { value: string; onChange: (value: st
             value ? "ml-2 w-20" : "w-0 group-hover:ml-2 group-hover:w-20 focus:ml-2 focus:w-20"
           )}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(evt) => {
+            if (evt.key === "Escape") {
+              evt.currentTarget.blur()
+              evt.stopPropagation()
+            }
+          }}
         />
         <button
           type="button"
@@ -165,5 +151,3 @@ function SearchButton({ value, onChange }: { value: string; onChange: (value: st
     </div>
   )
 }
-
-export type { SearchableContentRenderFn, MetricPanelActions }

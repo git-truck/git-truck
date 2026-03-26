@@ -96,7 +96,7 @@ export function GroupContributorsModal() {
           setSelectedContributors(newSelectedContributors)
         }}
       >
-        <div className="inline-flex flex-row place-items-center gap-2">
+        <div className="inline-flex flex-1 flex-row place-items-center gap-2">
           <LegendDot dotColor={getColorFromDisplayName(contributor)} />
           {contributor}
         </div>
@@ -206,7 +206,7 @@ export function GroupContributorsModal() {
               {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
             </button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          <div className="min-h-0 w-full flex-1 justify-between overflow-y-auto p-2">
             {ungroupedContributorsEntries.length > 0 ? (
               ungroupedContributorsEntries
             ) : (

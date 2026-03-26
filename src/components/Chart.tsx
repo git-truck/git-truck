@@ -225,22 +225,36 @@ export const Chart = memo(function Chart({
             : isSearchMatch
           const eventHandlers = createGroupHandlers(d)
 
-          const extension = d.data.name.substring(d.data.name.lastIndexOf(".") + 1)
-          let topContributor: string = MULTIPLE_CONTRIBUTORS
-          const dominant = databaseInfo.topContributors[d.data.path]
-          const contribSum = databaseInfo.contribSumPerFile[d.data.path]
+          const getCategoryFromNode = (node: GitObject) => {
+            const extension = node.name.substring(node.name.lastIndexOf(".") + 1)
+            let topContributor: string = MULTIPLE_CONTRIBUTORS
+            const dominant = databaseInfo.topContributors[node.path]
+            const contribSum = databaseInfo.contribSumPerFile[node.path]
 
-          const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
-          if (authorPercentage !== null && authorPercentage >= topContributorCutoff) {
-            topContributor = dominant.contributor
+            const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
+            if (authorPercentage !== null && authorPercentage >= topContributorCutoff) {
+              topContributor = dominant.contributor
+            }
+
+            return metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
           }
 
-          const category =
-            metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
-          const isSelected = category ? isCategorySelected(category) : true
+          const category = getCategoryFromNode(d.data)
+          const isSelected = category
+            ? isCategorySelected(category) ||
+              // or we have a child that is selected
+              (isTree(d.data) &&
+                d.data.children.some((node) => {
+                  const cat = getCategoryFromNode(node)
+                  const isSelected = cat ? isCategorySelected(cat) : false
+                  return isSelected
+                }))
+            : // or if no categories are selected, everything is highlighted
+              true
 
           const shouldColor = clickedObject
-            ? d.data.path === clickedObject.path || // we are the clicked object, so should be highlighted
+            ? // we are the clicked object, so should be highlighted
+              d.data.path === clickedObject.path ||
               (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
             : isSelected
 

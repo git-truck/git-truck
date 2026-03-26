@@ -26,7 +26,7 @@ export function SettingsModal() {
 
   return (
     <>
-      <div className="flex min-h-0 max-w-max flex-col items-start justify-center gap-3 overflow-y-auto p-2 pl-0">
+      <div className="flex min-h-0 max-w-max flex-col items-start gap-3 overflow-y-auto p-2 pl-0">
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
           checked={Boolean(linkMetricAndSizeMetric)}
@@ -39,7 +39,7 @@ export function SettingsModal() {
           }}
         >
           <Icon className="ml-1.5" path={mdiLink} size="1.25em" />
-          <span>Link size and color option</span>
+          <span className="flex-1">Link size and color option</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
@@ -48,7 +48,7 @@ export function SettingsModal() {
           onChange={(e) => setTransitionsEnabled(e.target.checked)}
         >
           <Icon className="ml-1.5" path={mdiTransition} size="1.25em" />
-          Transitions
+          <span className="flex-1">Transitions</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
@@ -57,7 +57,7 @@ export function SettingsModal() {
           onChange={(e) => setLabelsVisible(e.target.checked)}
         >
           <Icon className="ml-1.5" path={mdiLabel} size="1.25em" />
-          Labels
+          <span className="flex-1">Labels</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
@@ -66,7 +66,7 @@ export function SettingsModal() {
           onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
         >
           <Icon className="ml-1.5" path={mdiClockEdit} size="1.25em" />
-          Show files with no activity
+          <span className="flex-1">Show files with no activity</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
@@ -78,7 +78,7 @@ export function SettingsModal() {
           }}
         >
           <Icon className="ml-1.5" path={mdiFileTree} size="1.25em" />
-          Flatten file tree
+          <span className="flex-1">Flatten file tree</span>
         </CheckboxWithLabel>
         {/* <CheckboxWithLabel
         className="text-sm"

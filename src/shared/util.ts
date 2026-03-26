@@ -3,15 +3,6 @@ import colorConvert from "color-convert"
 import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "~/shared/model"
 import { getLuminance } from "a11y-contrast-color"
 
-export function dateFormatLong(epochTime?: number) {
-  if (!epochTime) return "Invalid date"
-  return new Date(epochTime * 1000).toLocaleString("en-gb", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  })
-}
-
 export function dateFormatCalendarHeader(epochTime: number) {
   return new Date(epochTime).toLocaleString("en-gb", {
     month: "long",
@@ -94,23 +85,6 @@ export const semverCompare = (a: string, b: string): number => {
 
 const brightnessCalculationCache = new Map<`#${string}`, { isDark: boolean; luminance: number }>()
 
-function weightedDistanceIn3D(hex: `#${string}`) {
-  const rgb = hexToRgb(hex)
-  return Math.sqrt(Math.pow(rgb[0], 2) * 0.241 + Math.pow(rgb[1], 2) * 0.691 + Math.pow(rgb[2], 2) * 0.068)
-}
-
-const hexToRgbCache = new Map<`#${string}`, [number, number, number]>()
-
-function hexToRgb(hexString: `#${string}`): [number, number, number] {
-  const cachedColor = hexToRgbCache.get(hexString)
-  if (cachedColor) {
-    return cachedColor
-  }
-  const rgb = colorConvert.hex.rgb(hexString)
-  hexToRgbCache.set(hexString, rgb)
-  return rgb
-}
-
 export const isDarkColor = (color: `#${string}`): { isDark: boolean; luminance: number } => {
   const cachedColor = brightnessCalculationCache.get(color)
   if (cachedColor !== undefined) {
@@ -142,10 +116,6 @@ export function hslToHex(h: number, s: number, l: number): `#${string}` {
   const hex: `#${string}` = `#${colorConvert.hsl.hex([h, s, l])}`
   colorCache.set(key, hex)
   return hex
-}
-
-export function getLightness(hex: `#${string}`): number {
-  return weightedDistanceIn3D(hex) / 255
 }
 
 export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
@@ -311,8 +281,6 @@ export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T
   return args
 }
 
-export const extname = (filename: string): string => filename.split(".").pop() || ""
-
 /**
  *
  * @deprecated This should be not be used, as it's buggy. Instead, we should use the type provided by Git
@@ -377,12 +345,6 @@ export function expandIntervalToRange(timestamp: number, commitCountPerTimeInter
 }
 
 export const getSep = (path: string) => (path.includes("\\") ? "\\" : "/")
-
-export const comparePaths = (a: string, b: string): boolean => {
-  const sepA = getSep(a)
-  const sepB = getSep(b)
-  return a.split(sepA).join("/") === b.split(sepB).join("/")
-}
 
 export function iconToURL(icon: string) {
   return `url("data:image/svg+xml;utf8,${encodeURIComponent(
