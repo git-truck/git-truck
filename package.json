@@ -77,7 +77,6 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",
     "@react-router/dev": "^7.13.0",
     "@react-router/fs-routes": "^7.13.0",
@@ -98,13 +97,7 @@
     "cross-env": "^10.1.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
-    "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
     "get-port": "^7.1.0",
-    "globals": "^17.3.0",
     "isbot": "^5.1.35",
     "knip": "^5.83.1",
     "language-map": "^1.5.0",
@@ -118,25 +111,10 @@
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.55.0",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "npm:@voidzero-dev/vite-plus-test@latest",
     "vite-plus": "latest"
-  },
-  "tsdown": {
-    "entry": "./src/cli.ts",
-    "outDir": ".",
-    "treeshake": true,
-    "clean": false,
-    "external": [
-      "vite",
-      "lightningcss"
-    ],
-    "cjs-interop": true,
-    "env": {
-      "NODE_ENV": "production"
-    }
   },
   "knip": {
     "entry": [

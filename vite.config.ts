@@ -295,5 +295,12 @@ export default defineConfig({
   },
   plugins: [tailwindcss(), reactRouterDevTools(), reactRouter(), tsconfigPaths(), ssrServerInput()],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
-  test: { exclude: ["e2e", "node_modules"] }
+  test: { exclude: ["e2e", "node_modules"] },
+  pack: {
+    entry: ["./src/cli.ts"],
+    outDir: ".",
+    treeshake: true,
+    clean: false,
+    external: ["vite", "lightningcss"]
+  }
 })
