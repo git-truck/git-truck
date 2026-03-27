@@ -40,6 +40,11 @@ jobs:
       - name: Version packages
         run: bunx @changesets/cli version
 
+      - name: Commit version changes
+        run: |
+          git add .
+          git commit -m "chore: version packages [skip ci]" || echo "No changes to commit"
+
       - name: Push version commit
         run: git push origin main
 
