@@ -23,7 +23,6 @@ import { log } from "~/analyzer/log.server"
 import type { Route } from "./+types/view"
 import { RefreshButton } from "~/components/buttons/RefreshButton"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
-import { ChartTooltip } from "~/components/ChartTooltip"
 import { ClientOnly } from "~/components/util"
 import { FullscreenButton } from "~/components/buttons/FullscreenButton"
 import { invariant } from "~/shared/util"
@@ -39,6 +38,7 @@ import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { Tooltip } from "~/components/Tooltip"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -396,7 +396,6 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
 
   const toggleLeft = () => dispatch("toggleLeft")
 
-  const [hoveredObject, setHoveredObject] = useState<GitObject | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -520,10 +519,10 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                           }
                         >
                           <Await resolve={dataPromise}>
-                            {() => <Chart hoveredObject={hoveredObject} setHoveredObject={setHoveredObject} />}
+                            {() => <Chart />}
                           </Await>
                         </Suspense>
-                        {createPortal(<ChartTooltip hoveredObject={hoveredObject} />, document.body)}
+                        {createPortal(<Tooltip />, document.body)}
                       </>
                     )}
                   </ClientOnly>

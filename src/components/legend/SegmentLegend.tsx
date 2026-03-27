@@ -1,4 +1,4 @@
-import type { GitBlobObject, GitObject } from "~/shared/model"
+import type { GitBlobObject } from "~/shared/model"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
 import { isBlob } from "~/shared/util"
@@ -6,6 +6,7 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { cn } from "~/styling"
 import { Tick } from "~/components/sliderUtils"
 import { useMetrics } from "~/contexts/MetricContext"
+import { useHoveredObject } from "~/state/stores/hovered-object"
 
 export type SegmentLegendData = {
   steps: number
@@ -14,7 +15,8 @@ export type SegmentLegendData = {
   offsetStepCalc: (blob: GitBlobObject) => number
 }
 
-export function SegmentLegend({ hoveredObject }: { hoveredObject: GitObject | null }) {
+export function SegmentLegend() {
+  const hoveredObject = useHoveredObject()
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
 

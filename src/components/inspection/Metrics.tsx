@@ -13,11 +13,9 @@ import byteSize from "byte-size"
 import { useQueryState, useQueryStates } from "nuqs"
 import { useEffect, type ReactNode } from "react"
 import { useFetcher, href, Form, Link, useNavigation, useLocation } from "react-router"
-import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 import {
   MetricInspectionPanel,
-  useMetricSearchContext,
   type MetricPanelActions
 } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
@@ -33,44 +31,13 @@ import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
-import { Metric, type MetricType } from "~/metrics/metrics"
+import { type MetricType } from "~/metrics/metrics"
 import { GradientLegend } from "~/components/legend/GradiantLegend"
 import { PointLegend } from "~/components/legend/PointLegend"
 import { SegmentLegend } from "~/components/legend/SegmentLegend"
 import { FileSizeMetric } from "~/metrics/fileSize"
-
-function FileTypePanels() {
-  const { searchValue, onSearchChange } = useMetricSearchContext()
-
-  return <PointLegend externalSearchValue={searchValue} onExternalSearchChange={onSearchChange} />
-}
-
-function FileSizePanels() {
-  return <SegmentLegend hoveredObject={null} />
-}
-
-function CommitPanels() {
-  return (
-    <>
-      <GradientLegend hoveredObject={null} />
-      <CommitsInspection />
-    </>
-  )
-}
-
-function ContributorPanels() {
-  const { searchValue, onSearchChange } = useMetricSearchContext()
-
-  return <PointLegend externalSearchValue={searchValue} onExternalSearchChange={onSearchChange} />
-}
-
-function LinesChangedPanels() {
-  return <GradientLegend hoveredObject={null} />
-}
-
-function LastChangedPanels() {
-  return <SegmentLegend hoveredObject={null} />
-}
+import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
+import { feature_flags } from "~/feature_flags"
 
 export default function Metrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -125,7 +92,11 @@ export default function Metrics() {
     }, 0)
   }
 
-  const formatCount = (value: number | undefined) => value?.toLocaleString() ?? "0"
+  const commitCount: number | null = isBlob
+    ? data.databaseInfo.commitCounts[clickedObject.path]
+    : currentFetcherData
+      ? currentFetcherData.amountOfCommits
+      : null
 
   const metrics: Record<
     MetricType,
@@ -133,23 +104,23 @@ export default function Metrics() {
       description: string
       icon: string
       data: ReactNode
-      inspectionContent: React.ComponentType
+      inspectionPanels: Array<React.ComponentType>
       actions: MetricPanelActions
       color?: HexColor
     }
   > = {
     FILE_TYPE: {
-      description: "extension",
+      description: clickedObject.type === "tree" ? "folder type" : "file type",
       icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
-      inspectionContent: FileTypePanels,
+      inspectionPanels: [PointLegend],
       actions: { search: true, clear: true },
       color: metricsData.get("FILE_TYPE")?.colormap?.get(clickedObject.path)
     },
     FILE_SIZE: {
-      description: isBlob ? "File Size" : "Nested Files",
+      description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
-      inspectionContent: FileSizePanels,
+      inspectionPanels: [SegmentLegend],
       data: isBlob
         ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
         : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
@@ -159,44 +130,40 @@ export default function Metrics() {
       color: metricsData.get("FILE_SIZE")?.colormap?.get(clickedObject.path)
     },
     MOST_COMMITS: {
-      description: "# commits",
+      description: commitCount && commitCount === 1 ? "commit" : "commits",
       icon: mdiSourceCommit,
-      data: isBlob
-        ? formatCount(data.databaseInfo.commitCounts[clickedObject.path])
-        : currentFetcherData
-          ? currentFetcherData.amountOfCommits.toLocaleString()
-          : "loading...",
-      inspectionContent: CommitPanels,
+      data: commitCount?.toLocaleString() ?? "loading...",
+      inspectionPanels: [GradientLegend, CommitsInspection],
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: metricsData.get("MOST_COMMITS")?.colormap?.get(clickedObject.path)
     },
     TOP_CONTRIBUTOR: {
-      description: "most line-contributing contributor",
+      description: "is the top contributor",
       icon: mdiAccountGroup,
       data: currentFetcherData ? (currentFetcherData.topContributor?.contributor ?? "unknown") : "loading...",
-      inspectionContent: ContributorPanels,
+      inspectionPanels: [PointLegend, ContributorsInspection],
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
       color: currentFetcherData?.topContributor?.contributor
         ? ((contributorColors.get(currentFetcherData?.topContributor?.contributor) as HexColor) ?? missingInMapColor)
         : (missingInMapColor as HexColor)
     },
     MOST_CONTRIBUTIONS: {
-      description: "# Line changes",
+      description: "line changes",
       icon: mdiPlusMinusVariant,
       data: isBlob
-        ? formatCount(data.databaseInfo.contribSumPerFile[clickedObject.path])
+        ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
         : Object.entries(data.databaseInfo.contribSumPerFile)
             .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
             .reduce((sum, [_, count]) => sum + count, 0)
             .toLocaleString(),
-      inspectionContent: LinesChangedPanels,
+      inspectionPanels: [GradientLegend],
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: metricsData.get("MOST_CONTRIBUTIONS")?.colormap?.get(clickedObject.path)
     },
     LAST_CHANGED: {
-      description: "last changed timestamp",
+      description: "since last change",
       icon: mdiPulse,
       data: isBlob
         ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
@@ -207,84 +174,69 @@ export default function Metrics() {
                 .map(([_, epoch]) => epoch)
             )
           ) ?? "unknown"),
-      inspectionContent: LastChangedPanels,
+      inspectionPanels: [feature_flags.lastChangedAsGrad ? GradientLegend : SegmentLegend],
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       color: metricsData.get("LAST_CHANGED")?.colormap?.get(clickedObject.path)
     }
   } as const
 
-  const { icon, inspectionContent: ExpandedPanel, actions } = metrics[metricType] ?? null
+  const { icon, inspectionPanels, actions } = metrics[metricType] ?? null
 
   return (
     <>
+      <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
-          ([metric, { icon, data, color }]) => (
+          ([metric, { icon, data, color, description }]) => (
             <MetricButton
               key={metric}
-              metric={metric}
               icon={icon}
-              path={clickedObject.path}
-              type={clickedObject.type}
-              color={color}
-              metricType={metricType}
+              isExpanded={metric === metricType}
+              style={{
+                ...(metric === metricType ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
+              }}
               onClick={() => {
                 setMetricType(metric)
               }}
             >
-              {data}
+              <p className="w-full truncate text-sm font-bold">{data}</p>
+              <p className="truncate text-xs font-normal opacity-70">{description}</p>
             </MetricButton>
           )
         )}
       </div>
-      <MetricInspectionPanel icon={icon} actions={actions}>
-        {ExpandedPanel ? <ExpandedPanel key={clickedObject.path} /> : <p>This metric has no inspection currently</p>}
-      </MetricInspectionPanel>
-      <InteractionButtons />
+      {inspectionPanels.map((Panel, i) => (
+        <MetricInspectionPanel key={Panel.displayName} icon={icon} actions={i === 0 ? actions : undefined}>
+          <Panel />
+        </MetricInspectionPanel>
+      ))}
     </>
   )
 }
 
 function MetricButton({
   icon,
-  metric,
+  isExpanded,
   children,
-  path,
-  type,
-  color,
-  metricType,
-  onClick
+  ...props
 }: {
-  metric: MetricType
   icon: string
+  isExpanded: boolean
   children: ReactNode
-  path: string
-  type: "blob" | "tree"
-  color?: HexColor
-  metricType?: string
+  style: React.CSSProperties
   onClick?: () => void
 }) {
-  const isExpanded = metric === metricType
-  const backgroundColor = isExpanded ? (color ?? missingInMapColor) : undefined
   return (
     <button
       type="button"
       className={cn("btn flex h-full w-full flex-row items-center justify-between gap-5 px-2 py-1", {
         "ring-primary ring-2": isExpanded
       })}
-      style={{
-        ...(backgroundColor ? { backgroundColor: `hsl(from ${backgroundColor} h s l / 0.7)` } : {})
-      }}
-      onClick={onClick}
+      {...props}
     >
       <Icon path={icon} size={0.75} />
-      <div className="flex flex-col overflow-hidden text-right">
-        <p className="w-full truncate text-sm font-bold">{children}</p>
-        <p className="truncate text-[10px] font-normal italic">
-          {metric.startsWith("FILE") && type === "tree" ? Metric[metric].replace("File", "Folder") : Metric[metric]}
-        </p>
-      </div>
+      <div className="flex flex-col overflow-hidden text-right">{children}</div>
     </button>
   )
 }
@@ -311,7 +263,7 @@ function InteractionButtons() {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="mt-2 flex flex-wrap justify-end gap-2">
+    <div className="mb-4 flex flex-wrap  gap-2">
       {!isSelectedObjectZoomPath ? (
         <Link className="btn" to={zoomLink}>
           <Icon path={mdiMagnify} />

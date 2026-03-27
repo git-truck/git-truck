@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import type { JSX, DOMAttributes } from "react"
-import { useDeferredValue, memo, useEffect, useMemo, startTransition, useRef } from "react"
+import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
@@ -36,16 +36,13 @@ import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useIsCategorySelected as useIsCategorySelected } from "~/state/stores/selection"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
-export const Chart = memo(function Chart({
-  hoveredObject,
-  setHoveredObject
-}: {
-  hoveredObject: GitObject | null
-  setHoveredObject: (obj: GitObject | null) => void
-}) {
+export function Chart() {
+  const hoveredObject = useHoveredObject()
+  const setHoveredObject = useSetHoveredObject()
   const [ref, rawSize] = useComponentSize()
   const { searchResults, hasSearchResults } = useSearch()
   const size = useDeferredValue(rawSize)
@@ -299,7 +296,7 @@ export const Chart = memo(function Chart({
       </div>
     </div>
   )
-})
+}
 
 function filterGitTree(
   tree: GitTreeObject,

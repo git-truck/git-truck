@@ -10,7 +10,7 @@ import {
 } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Fragment, useMemo, useRef } from "react"
-import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
+import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -22,11 +22,13 @@ import { cn } from "~/styling"
 import { missingInMapColor, MULTIPLE_CONTRIBUTORS } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
+import { useHoveredObject } from "~/state/stores/hovered-object"
 
-export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitObject | null; className?: string }) {
+export function Tooltip({ className = "" }: { className?: string }) {
+  const hoveredObject = useHoveredObject()
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { sizeMetric, metricType, topContributorCutoff } = useOptions()
+  const { chartType, sizeMetric, metricType, topContributorCutoff } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const color = hoveredObject ? metricsData.get(metricType)?.colormap?.get(hoveredObject.path) : missingInMapColor
@@ -45,7 +47,9 @@ export function Tooltip({ className = "", hoveredObject }: { hoveredObject: GitO
         className,
         {
           hidden: !visible,
-          "font-bold": isTree(hoveredObject)
+          "font-bold": isTree(hoveredObject),
+          "rounded-xl": chartType === "BUBBLE_CHART",
+          "rounded-xs": chartType === "TREE_MAP" || chartType === "PARTITION"
         },
         isBlob(hoveredObject) && color
           ? isDarkColor(color).luminance >= 0.5

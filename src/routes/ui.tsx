@@ -133,14 +133,7 @@ export default function UI() {
   const [tooltipHovered, setTooltipHovered] = useState(false)
 
   // Minimal mock blob object for tooltip
-  const mockBlob = {
-    type: "blob" as const,
-    name: "demo.txt",
-    path: "src/demo.txt",
-    hash: "abc123",
-    extension: "txt",
-    sizeInBytes: 42
-  }
+
   return (
     <Providers data={mockRepoData}>
       <div className="mx-auto max-w-3xl space-y-8 p-2">
@@ -370,7 +363,7 @@ export default function UI() {
                 >
                   <span className="icon">🛈</span> Hover me
                 </button>
-                {tooltipHovered && <Tooltip hoveredObject={mockBlob} />}
+                {tooltipHovered && <Tooltip />}
               </div>
             </div>
           </div>
