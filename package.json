@@ -47,7 +47,8 @@
     "lint": "eslint --cache",
     "update-deps": "npx npm-check-updates -i",
     "knip": "knip",
-    "knip:write": "knip --fix"
+    "knip:write": "knip --fix",
+    "commit": "cz"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
@@ -94,7 +95,9 @@
     "@types/sha1": "^1.1.5",
     "@types/yargs-parser": "^21.0.3",
     "@typescript/native-preview": "7.0.0-dev.20260313.1",
+    "commitizen": "^4.3.1",
     "cross-env": "^10.1.0",
+    "cz-conventional-changelog": "^3.3.0",
     "d3-hierarchy": "^3.1.2",
     "dotenv": "^17.2.4",
     "eslint": "^9.39.2",
@@ -167,5 +170,10 @@
   "bugs": {
     "url": "https://github.com/git-truck/git-truck/issues"
   },
-  "homepage": "https://github.com/git-truck/git-truck#readme"
+  "homepage": "https://github.com/git-truck/git-truck#readme",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
