@@ -26,7 +26,7 @@
     "build:dev": "cross-env NODE_ENV=development npm run build-vite && npm run build-cli",
     "build-cli": "cross-env NODE_ENV=production tsdown",
     "build-vite": "react-router build",
-    "dev": "cross-env NODE_ENV=development ./src/cli.ts",
+    "dev": "bunx portless git-truck bun dev:bun",
     "dev:bun": "cross-env NODE_ENV=development bun ./src/cli.ts",
     "dev:verbose": "cross-env NODE_ENV=development tsx ./src/cli.ts --log debug",
     "start": "cross-env NODE_ENV=production node .",
