@@ -1,12 +1,12 @@
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendBarIndicator } from "~/components/util"
 import { numToFriendlyString } from "~/shared/util"
-import type { GitObject } from "~/shared/model"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useData } from "~/contexts/DataContext"
 import type { MetricType } from "~/metrics/metrics"
 import { Tick } from "~/components/sliderUtils"
+import { useHoveredObject } from "~/state/stores/hovered-object"
 
 export type GradLegendData = {
   /**
@@ -25,7 +25,8 @@ export type GradLegendData = {
   maxColor: `#${string}`
 }
 
-export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | null }) {
+export function GradientLegend() {
+  const hoveredObject = useHoveredObject()
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const data = useData()
@@ -78,16 +79,16 @@ export function GradientLegend({ hoveredObject }: { hoveredObject: GitObject | n
         <LegendBarIndicator offset={(hoveredOffset ?? 0) * 100} visible={hoveredOffset !== null} />
       </div>
       <div className="relative mt-0 mb-2 flex h-5">
-        <Tick className="absolute top-[-24px] left-1" />
-        <span className="absolute top-[-40px] left-1 text-xs" title={minValue.toLocaleString()}>
+        <Tick className="absolute -top-6 left-1" />
+        <span className="absolute -top-10 left-1 text-xs" title={minValue.toLocaleString()}>
           {numToFriendlyString(minValue)}
         </span>
         <Tick className="absolute left-1/2 -translate-x-1/2" />
         <span className="absolute top-2 left-1/2 -translate-x-1/2 text-xs" title={midValue.toLocaleString()}>
           {numToFriendlyString(midValue)}
         </span>
-        <Tick className="absolute top-[-24px] right-1" />
-        <span className="absolute top-[-40px] right-1 text-xs" title={maxValue.toLocaleString()}>
+        <Tick className="absolute -top-6 right-1" />
+        <span className="absolute -top-10 right-1 text-xs" title={maxValue.toLocaleString()}>
           {numToFriendlyString(maxValue)}
         </span>
       </div>

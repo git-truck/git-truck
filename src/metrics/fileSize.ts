@@ -3,19 +3,12 @@ import { type MetricCache } from "~/metrics/metrics"
 import { noEntryColor } from "~/const"
 import { mdiResize } from "@mdi/js"
 import { hslToHex, isBlob, rgbToHex } from "~/shared/util"
-import { interpolateCool, scaleLog, scaleLinear } from "d3"
+import { interpolateCool } from "d3"
 import { SpectrumTranslater } from "~/metrics/metricUtils"
 import { feature_flags } from "~/feature_flags"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import byteSize from "byte-size"
-
-function formatBytesShort(bytes: number): string {
-  if (bytes < 1024) return `${Math.round(bytes)} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
-}
 
 function uniqueSorted(values: number[]): number[] {
   return values
@@ -24,25 +17,49 @@ function uniqueSorted(values: number[]): number[] {
     .filter((v, i, arr) => i === 0 || v > arr[i - 1])
 }
 
-function getPrettyThresholds(min: number, max: number, desiredBuckets = 7): number[] {
-  if (max <= min) return [max]
+function getPrettyBinaryCandidates(min: number, max: number): number[] {
+  const safeMin = Math.max(1, min)
+  const startExp = Math.floor(Math.log2(safeMin))
+  const endExp = Math.ceil(Math.log2(Math.max(1, max)))
+  const candidates: number[] = []
 
-  // Prefer logarithmic nice ticks for file sizes; fallback to linear when needed.
-  const logMin = Math.max(1, min)
-  let ticks = scaleLog().domain([logMin, max]).nice().ticks(desiredBuckets)
-
-  if (ticks.length < 2) {
-    ticks = scaleLinear().domain([min, max]).nice().ticks(desiredBuckets)
+  for (let exp = startExp; exp <= endExp; exp++) {
+    const value = 2 ** exp
+    if (value > min && value < max) {
+      candidates.push(value)
+    }
   }
 
-  return uniqueSorted(ticks).filter((t) => t > min && t < max)
+  return uniqueSorted(candidates)
+}
+
+function pickDistributed(values: number[], maxCount: number): number[] {
+  if (maxCount <= 0 || values.length === 0) return []
+  if (values.length <= maxCount) return values
+
+  const selected: number[] = []
+  for (let i = 1; i <= maxCount; i++) {
+    const idx = Math.round((i * (values.length + 1)) / (maxCount + 1)) - 1
+    const clamped = Math.max(0, Math.min(values.length - 1, idx))
+    selected.push(values[clamped] ?? values[0] ?? 0)
+  }
+
+  return uniqueSorted(selected).slice(0, maxCount)
+}
+
+function getPrettyThresholds(min: number, max: number, maxBuckets = 7): number[] {
+  if (max <= min) return []
+
+  // Keep the legend readable while still following binary boundaries.
+  const maxThresholds = Math.max(0, Math.floor(maxBuckets) - 1)
+  const candidates = getPrettyBinaryCandidates(min, max)
+  return pickDistributed(candidates, maxThresholds)
 }
 
 export const FileSizeMetric = {
   name: "File size",
   icon: mdiResize,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getTooltipContent(obj: GitObject, dbi: DatabaseInfo) {
+  getTooltipContent(obj: GitObject, _dbi: DatabaseInfo) {
     if (!isBlob(obj)) {
       // TODO: Aggregate folder size
       return "FileSizeMetric is only defined for blobs"
@@ -80,7 +97,12 @@ export const FileSizeMetric = {
       const groupings = Array.from({ length: Math.max(1, edges.length - 1) }, (_, i) => {
         const low = edges[i] ?? min
         const high = edges[i + 1] ?? max
-        const text = i === 0 ? `<= ${formatBytesShort(high)}` : `> ${formatBytesShort(low)}`
+        const text =
+          i === 0
+            ? `<= ${byteSize(1000, {
+                precision: 0
+              })}`
+            : `> ${byteSize(low, { precision: 0 })}`
         return {
           text,
           range: [low, high] as [number, number]

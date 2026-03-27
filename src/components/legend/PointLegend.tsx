@@ -18,6 +18,7 @@ import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
 import { Metric } from "~/metrics/metrics"
+import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 
 const legendCutoff = 8
 
@@ -46,13 +47,9 @@ export class PointInfo {
 
 export type PointLegendData = Map<string, PointInfo>
 
-export function PointLegend({
-  externalSearchValue = "",
-  onExternalSearchChange
-}: {
-  externalSearchValue?: string
-  onExternalSearchChange?: (value: string) => void
-} = {}) {
+export function PointLegend() {
+  const { searchValue } = useMetricSearchContext()
+
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const isCategorySelected = useIsCategorySelected()
@@ -68,8 +65,6 @@ export function PointLegend({
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 
   const [collapse, setCollapse] = useState<boolean>(true)
-
-  const searchValue = onExternalSearchChange !== undefined ? externalSearchValue : ""
 
   const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
