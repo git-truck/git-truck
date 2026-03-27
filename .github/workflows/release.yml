@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Create Release Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          version: bunx @changesets/cli version
+          title: Version packages
+          commit: Version packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -48,7 +48,8 @@
     "update-deps": "npx npm-check-updates -i",
     "knip": "knip",
     "knip:write": "knip --fix",
-    "commit": "cz"
+    "commit": "cz",
+    "changeset": "changeset"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
