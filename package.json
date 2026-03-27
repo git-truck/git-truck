@@ -49,7 +49,7 @@
     "knip": "knip",
     "knip:write": "knip --fix",
     "commit": "cz",
-    "changeset": "changeset"
+    "changeset": "bunx @changesets/cli"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
