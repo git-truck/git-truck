@@ -38,9 +38,15 @@ const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
 let PORT: number
 
-if (process.env.PORT && !isNaN(Number(process.env.PORT))) {
-  PORT = Number(process.env.PORT)
+const envPort = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : Number.NaN
+const hasValidEnvPort = Number.isInteger(envPort) && envPort >= 1 && envPort <= 65535
+
+if (hasValidEnvPort) {
+  PORT = envPort
 } else {
+  if (process.env.PORT) {
+    log.warn(`Invalid PORT environment variable "${process.env.PORT}". Falling back to an available port.`)
+  }
   PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
 }
 
@@ -116,13 +122,16 @@ async function stopHandler() {
 
 async function onListen() {
   const url = `http://localhost:${PORT}`
+  const publicURL = process.env.PORTLESS_URL || url
 
   if (!args.headless && process.env.NODE_ENV === "development") {
     args.headless = true
   }
 
+  console.log(`Application available at ${publicURL}`)
+
   if (!args.headless) {
-    const openURL = url
+    const openURL = publicURL
     // + (extension && isValidURI(extension) ? extension : "")
 
     log.debug(`Opening ${openURL}`)
@@ -132,7 +141,5 @@ async function onListen() {
       afterMsg: "Opened Git Truck in your browser",
       errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
     })
-  } else {
-    console.log(`Application available at ${url}`)
   }
 }
