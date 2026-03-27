@@ -14,10 +14,7 @@ import { useQueryState, useQueryStates } from "nuqs"
 import { useEffect, type ReactNode } from "react"
 import { useFetcher, href, Form, Link, useNavigation, useLocation } from "react-router"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import {
-  MetricInspectionPanel,
-  type MetricPanelActions
-} from "~/components/inspection/MetricInspectionPanel"
+import { MetricInspectionPanel, type MetricPanelActions } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor } from "~/const"
 import { useData } from "~/contexts/DataContext"
@@ -263,7 +260,7 @@ function InteractionButtons() {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="mb-4 flex flex-wrap  gap-2">
+    <div className="mb-4 flex flex-wrap gap-2">
       {!isSelectedObjectZoomPath ? (
         <Link className="btn" to={zoomLink}>
           <Icon path={mdiMagnify} />

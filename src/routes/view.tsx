@@ -518,9 +518,7 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                             </div>
                           }
                         >
-                          <Await resolve={dataPromise}>
-                            {() => <Chart />}
-                          </Await>
+                          <Await resolve={dataPromise}>{() => <Chart />}</Await>
                         </Suspense>
                         {createPortal(<Tooltip />, document.body)}
                       </>
