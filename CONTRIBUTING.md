@@ -75,9 +75,43 @@ We follow **Conventional Commits** to automate versioning and changelogs. Please
 | `fix: calculate truck factor correctly` | Patch (1.0.0 -> 1.0.1) |
 | `feat!: remove legacy API`              | Major (1.0.0 -> 2.0.0) |
 
+### Commit with Commitizen
+
+To help format Conventional Commits consistently, use Commitizen via Bun:
+
+```sh
+bun commit
+```
+
+This runs the configured `cz` prompt and generates a properly formatted commit message.
+
+## Changesets
+
+We use Changesets to track release notes and determine semantic version bumps.
+
+### Add a changeset
+
+When your change should be included in a release, add a changeset:
+
+```sh
+bun changeset
+```
+
+### Version and publish
+
+On pushes to `main`, GitHub Actions automatically creates or updates a release PR that runs versioning (`changeset version`) and updates changelogs.
+
+Review version updates and changelog entries in that release PR, then merge it into `main`.
+Publishing is done manually from the GitHub Actions workflow at:
+
+https://github.com/git-truck/git-truck/actions/workflows/publish.yml
+
+Open that page, click **Run workflow**, select the `main` branch, and run the workflow to publish a new version.
+
 ## Release Process
 
-Releases are automated via GitHub Actions on successful merges to `main`.
+Release preparation is automated with Changesets on pushes to `main`.
+Publishing is manual and intentional: trigger the **Publish** workflow from GitHub Actions when you decide to release.
 
 ### Experimental Releases
 

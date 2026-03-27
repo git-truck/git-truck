@@ -1,0 +1,38 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          always-auth: true
+
+      - name: Run unit tests
+        run: bun test:unit
+
+      - name: Publish packages
+        run: bunx @changesets/cli publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
