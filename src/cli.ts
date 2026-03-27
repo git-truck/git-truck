@@ -36,7 +36,13 @@ const BUILD_ASSETS_PATH = path.join(__dirname, "build/client/assets")
 
 const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
-const PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
+let PORT: number
+
+if (process.env.PORT && !isNaN(Number(process.env.PORT))) {
+  PORT = Number(process.env.PORT)
+} else {
+  PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
+}
 
 const app = express()
 
