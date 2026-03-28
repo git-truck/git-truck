@@ -52,7 +52,7 @@
     "knip:write": "knip --fix",
     "commit": "cz",
     "changeset": "bunx @changesets/cli && git add .changeset && git commit -m \"chore: add changeset\"",
-    "release": "bun run build && bunx @changesets/cli publish --provenance"
+    "release": "bun run build && bunx @changesets/cli publish"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
@@ -177,6 +177,9 @@
     "url": "https://github.com/git-truck/git-truck/issues"
   },
   "homepage": "https://github.com/git-truck/git-truck#readme",
+  "publishConfig": {
+    "provenance": true
+  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
