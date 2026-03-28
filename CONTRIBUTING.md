@@ -99,19 +99,24 @@ bun changeset
 
 ### Version and publish
 
-On pushes to `main`, GitHub Actions automatically creates or updates a release PR that runs versioning (`changeset version`) and updates changelogs.
+On pushes to `main`, the `Release` GitHub Actions workflow automatically creates or updates a release PR with version bumps and changelog updates from `changeset version`.
 
 Review version updates and changelog entries in that release PR, then merge it into `main`.
-Publishing is done manually from the GitHub Actions workflow at:
 
-https://github.com/git-truck/git-truck/actions/workflows/publish.yml
-
-Open that page, click **Run workflow**, select the `main` branch, and run the workflow to publish a new version.
+After the release PR is merged, the same `Release` workflow runs again on the new `main` commit and publishes to npm automatically with `changesets/action`.
 
 ## Release Process
 
 Release preparation is automated with Changesets on pushes to `main`.
-Publishing is manual and intentional: trigger the **Publish** workflow from GitHub Actions when you decide to release.
+Publishing is automated after the release PR is merged into `main`.
+
+The expected flow is:
+
+1. Merge feature or fix branches into `main` with Conventional Commits.
+2. Add a changeset for user-facing changes that should ship in the next release.
+3. Let the `Release` workflow open or update the release PR.
+4. Review and merge the release PR.
+5. Let the post-merge `Release` workflow publish the new version to npm.
 
 ### Experimental Releases
 
