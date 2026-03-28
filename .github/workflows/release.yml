@@ -9,11 +9,12 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
   contents: write
+  id-token: write
   pull-requests: write
 
 jobs:
   release:
-    name: Create Release Pull Request
+    name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -26,12 +27,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          registry-url: https://registry.npmjs.org
 
-      - name: Create Release Pull Request
+      - name: Create Release Pull Request or publish to npm
         uses: changesets/action@v1
         with:
           version: bunx @changesets/cli version
+          publish: bun run release
           title: Version packages
           commit: Version packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

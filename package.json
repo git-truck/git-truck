@@ -5,7 +5,9 @@
   "description": "Visualizing a Git repository",
   "license": "MIT",
   "main": "./cli.mjs",
-  "bin": "./cli.mjs",
+  "bin": {
+    "git-truck": "cli.mjs"
+  },
   "files": [
     "LICENSE",
     "README.md",
@@ -30,7 +32,7 @@
     "dev:bun": "cross-env NODE_ENV=development bun ./src/cli.ts",
     "dev:verbose": "cross-env NODE_ENV=development tsx ./src/cli.ts --log debug",
     "start": "cross-env NODE_ENV=production node .",
-    "clean": "npx -y rimraf build .react-router .cache .temp cli.js cli.cjs",
+    "clean": "npx -y rimraf build .react-router .cache .temp cli.mjs cli.js cli.cjs",
     "typecheck": "react-router typegen && tsgo -b",
     "typegen:watch": "react-router typegen --watch",
     "pub-pre": "npm version prerelease && npm publish --tag next",
@@ -49,7 +51,8 @@
     "knip": "knip",
     "knip:write": "knip --fix",
     "commit": "cz",
-    "changeset": "bunx @changesets/cli && git add .changeset && git commit -m \"chore: add changeset\""
+    "changeset": "bunx @changesets/cli && git add .changeset && git commit -m \"chore: add changeset\"",
+    "release": "bun run build && bunx @changesets/cli publish --provenance"
   },
   "dependencies": {
     "@duckdb/node-api": "^1.4.2-r.1",
@@ -136,10 +139,12 @@
     "outDir": ".",
     "treeshake": true,
     "clean": false,
-    "external": [
-      "vite",
-      "lightningcss"
-    ],
+    "deps": {
+      "neverBundle": [
+        "vite",
+        "lightningcss"
+      ]
+    },
     "cjs-interop": true,
     "env": {
       "NODE_ENV": "production"
