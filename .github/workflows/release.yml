@@ -27,7 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
 
       - name: Create Release Pull Request or publish to npm
         uses: changesets/action@v1
@@ -38,5 +37,3 @@ jobs:
           commit: Version packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
