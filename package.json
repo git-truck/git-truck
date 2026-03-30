@@ -55,7 +55,7 @@
     "release": "bun run build && bunx @changesets/cli publish"
   },
   "dependencies": {
-    "@duckdb/node-api": "^1.4.2-r.1",
+    "@duckdb/node-api": "^1.5.1-r.1",
     "@headlessui/react": "^2.2.9",
     "@mdi/js": "^7.4.47",
     "@react-router/express": "^7.13.0",
@@ -112,7 +112,7 @@
     "get-port": "^7.1.0",
     "globals": "^17.3.0",
     "isbot": "^5.1.35",
-    "knip": "^5.83.1",
+    "knip": "^6.1.0",
     "language-map": "^1.5.0",
     "npm-check-updates": "^19.3.2",
     "open": "^11.0.0",
@@ -126,7 +126,7 @@
     "tailwindcss": "^4.1.18",
     "tsdown": "^0.21.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "^5.1.0",
     "typescript-eslint": "^8.55.0",
     "vite": "npm:rolldown-vite@7.3.1",
     "vite-tsconfig-paths": "^6.1.1",
