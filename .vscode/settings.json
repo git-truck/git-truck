@@ -1,15 +1,14 @@
 {
   "editor.formatOnSave": true,
+  "files.autoSaveWhenNoErrors": true,
+  "files.autoSave": "afterDelay",
   "githubIssues.issueBranchTitle": "${user}/${issueNumber}",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "css.lint.unknownAtRules": "ignore",
   "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
   "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "files.autoSaveWhenNoErrors": true,
   "js/ts.preferences.importModuleSpecifier": "non-relative",
   "js/ts.experimental.useTsgo": true
 }
