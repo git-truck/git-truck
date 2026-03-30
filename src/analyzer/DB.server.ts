@@ -47,6 +47,10 @@ export default class DB {
     const connectionPromise = Promise.withResolvers<DuckDBConnection>()
     this.instancePromise = instancePromise.promise
     this.connectionPromise = connectionPromise.promise
+    DB.init(dbPath).then(({ instance, connection }) => {
+      instancePromise.resolve(instance)
+      connectionPromise.resolve(connection)
+    })
     DB.init(dbPath)
       .then(({ instance, connection }) => {
         instancePromise.resolve(instance)
