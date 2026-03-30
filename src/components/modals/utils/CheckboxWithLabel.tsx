@@ -1,5 +1,5 @@
 import { mdiCheckboxBlankOutline, mdiCheckboxIntermediate, mdiCheckboxMarked } from "@mdi/js"
-import { useState, useTransition } from "react"
+import { useTransition, useState } from "react"
 import { Icon } from "~/components/Icon"
 import { cn } from "~/styling"
 
@@ -22,18 +22,20 @@ export function CheckboxWithLabel({
   checkedIcon?: string
   uncheckedIcon?: string
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
-  const [value, setValue] = useState(checked)
   const [, startTransition] = useTransition()
+  const [localChecked, setLocalChecked] = useState(checked)
 
   return (
     <label className={cn("label flex w-full items-center justify-start gap-2", className)} {...props}>
       <input
         type="checkbox"
-        checked={value}
+        checked={checked !== localChecked ? checked : localChecked}
         className="peer hidden"
         onChange={(e) => {
-          setValue(e.target.checked)
-          startTransition(() => onChange(e))
+          setLocalChecked(e.target.checked)
+          startTransition(() => {
+            onChange(e)
+          })
         }}
       />
       <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark contents items-center">
@@ -45,7 +47,13 @@ export function CheckboxWithLabel({
           intermediate ? "text-blue-primary" : "text-tertiary-text dark:text-tertiary-text-dark",
           checkBoxClassName
         )}
-        path={intermediate ? mdiCheckboxIntermediate : value ? checkedIcon : uncheckedIcon}
+        path={
+          intermediate
+            ? mdiCheckboxIntermediate
+            : (checked !== localChecked ? checked : localChecked)
+              ? checkedIcon
+              : uncheckedIcon
+        }
         size={1}
       />
     </label>
