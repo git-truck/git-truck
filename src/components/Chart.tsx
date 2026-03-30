@@ -50,6 +50,7 @@ export function Chart() {
   const { databaseInfo } = useData()
   const [metricsData] = useMetrics()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
+  const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
 
   const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
@@ -234,14 +235,15 @@ export function Chart() {
           }
 
           const categories = getCategoriesFromNode(d.data)
-          const isSelected = categories
-            ? // do we have contain a selected category?
-              categories.some((c) => isCategorySelected(c)) ||
-              // or we have a child that has a selected category selected
-              (isTree(d.data) &&
-                d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
-            : // or by default, if no categories are selected, everything should be considered selected
-              true
+          const isSelected =
+            selectedCategories.length > 0
+              ? // do we have contain a selected category?
+                categories.some((c) => isCategorySelected(c)) ||
+                // or we have a child that has a selected category selected
+                (isTree(d.data) &&
+                  d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
+              : // or by default, if no categories are selected, everything should be considered selected
+                true
 
           const shouldColor = clickedObject
             ? // we are the clicked object, so should be highlighted
@@ -411,7 +413,8 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
             <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
           ))}
         </radialGradient> */}
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%"> */}
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
             {colors.map((color, i) => (
               <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
             ))}
