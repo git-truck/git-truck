@@ -223,6 +223,7 @@ export interface DatabaseInfo {
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
+  contributorsForPath: Record<string, { contributor: string; contribcount: number }[]>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
 }
