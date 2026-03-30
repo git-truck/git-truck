@@ -75,7 +75,7 @@ export interface ArgsOptions {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 18
+export const AnalyzerDataInterfaceVersion = 19
 
 export interface AnalyzerData {
   cached: boolean
@@ -144,8 +144,7 @@ export interface FileChange {
 }
 
 export interface CommitDTO {
-  author: string
-  authorEmail: string
+  author: Person
   committertime: number
   authortime: number
   hash: string

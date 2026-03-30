@@ -41,7 +41,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
         {props.items.map((value) => (
           <CommitListEntry
             key={value.hash + "--itemContentAccordion"}
-            authorColor={contributorColors.get(value.author) ?? "grey"}
+            authorColor={contributorColors.get(value.author.name) ?? "grey"}
             value={value}
           />
         ))}
@@ -86,7 +86,7 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   return (
     <div title={`By: ${props.value.author}`} className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis">
-      <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author} />
+      <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author.name} />
       <Popover
         triggerClassName="min-w-0 truncate"
         positions={["right", "bottom", "top", "left"]}
@@ -102,8 +102,8 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       >
         <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <InfoEntry keyString="Hash" value={props.value.hash} />
-          <InfoEntry keyString="Author Name" value={props.value.author} />
-          <InfoEntry keyString="Author Email" value={props.value.authorEmail ?? "<unknown>"} />
+          <InfoEntry keyString="Author Name" value={props.value.author.name} />
+          <InfoEntry keyString="Author Email" value={props.value.author.email ?? "<unknown>"} />
           {props.value.committertime === props.value.authortime ? (
             <InfoEntry
               keyString="Date"

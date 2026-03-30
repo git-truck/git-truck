@@ -177,8 +177,8 @@ export default class ServerInstance {
     const FileModifications: FileModification[] = []
     for (const match of matches) {
       const groups = match.groups ?? {}
-      const author = groups.author
-      const authorEmail = groups.authoremail ?? ""
+      const authorName = groups.author
+      const authorEmail = groups.authoremail
       const committertime = Number(groups.datecommitter)
       const authortime = Number(groups.dateauthor)
       const hash = groups.hash
@@ -222,7 +222,14 @@ export default class ServerInstance {
           }) // TODO remove modetype
         }
       }
-      commits.set(hash, { author, authorEmail, committertime, authortime, hash, coauthors: [], fileChanges })
+      commits.set(hash, {
+        author: { name: authorName, email: authorEmail },
+        committertime,
+        authortime,
+        hash,
+        coauthors: [],
+        fileChanges
+      })
     }
 
     renamedFiles.push(
@@ -250,7 +257,7 @@ export default class ServerInstance {
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
       const groups = match.groups ?? {}
-      const author = groups.author
+      const authorName = groups.author
       const authorEmail = groups.authoremail
       const message = groups.message
       const body = groups.body
@@ -272,7 +279,15 @@ export default class ServerInstance {
           fileChanges.push({ isBinary, insertions, deletions, path: file, mode: "modify" })
         }
       }
-      commits.push({ author, authorEmail, committertime, authortime, hash, fileChanges, message, body })
+      commits.push({
+        author: { name: authorName, email: authorEmail },
+        committertime,
+        authortime,
+        hash,
+        fileChanges,
+        message,
+        body
+      })
     }
     return commits
   }

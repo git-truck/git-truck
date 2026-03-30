@@ -420,8 +420,10 @@ export default class DB {
     `)
     return res.map((row) => {
       return {
-        author: row["author"],
-        authorEmail: String(row["authoremail"] ?? ""),
+        author: {
+          name: String(row["author"]),
+          email: String(row["authoremail"])
+        },
         committertime: row["committertime"],
         authortime: row["authortime"],
         body: row["body"],
@@ -849,8 +851,8 @@ export default class DB {
       for (const [hash, commit] of commits) {
         if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         appender.appendVarchar(hash)
-        appender.appendVarchar(commit.author)
-        appender.appendVarchar(commit.authorEmail)
+        appender.appendVarchar(commit.author.name)
+        appender.appendVarchar(commit.author.email)
         appender.appendUInteger(commit.committertime)
         appender.appendUInteger(commit.authortime)
         appender.endRow()
