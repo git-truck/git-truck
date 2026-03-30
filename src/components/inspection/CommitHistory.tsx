@@ -102,7 +102,8 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       >
         <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <InfoEntry keyString="Hash" value={props.value.hash} />
-          <InfoEntry keyString="Author" value={props.value.author} />
+          <InfoEntry keyString="Author Name" value={props.value.author} />
+          <InfoEntry keyString="Author Email" value={props.value.authorEmail ?? "<unknown>"} />
           {props.value.committertime === props.value.authortime ? (
             <InfoEntry
               keyString="Date"
