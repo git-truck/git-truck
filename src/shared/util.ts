@@ -38,15 +38,15 @@ export function dateFormatRelative(epochTime: number) {
   const hourMillis = 60 * 60 * 1000
   const dayMillis = 24 * hourMillis
   const difference = now - epochTime * 1000
-  if (difference < 0) return "Unknown time ago"
+  if (difference < 0) return "Unknown time"
   if (difference > dayMillis) {
     const days = Math.floor(difference / dayMillis)
-    return `${days} day${days > 1 ? "s" : ""} ago`
+    return `${days} day${days > 1 ? "s" : ""}`
   }
   const hours = Math.floor(difference / hourMillis)
-  if (hours > 1) return `${hours} hours ago`
-  if (hours === 1) return "1 hour ago"
-  return "<1 hour ago"
+  if (hours > 1) return `${hours} hours`
+  if (hours === 1) return "1 hour"
+  return "<1 hour"
 }
 
 export const last = <T>(arr: T[]) => arr.at(-1)
