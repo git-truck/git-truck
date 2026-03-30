@@ -34,6 +34,11 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 - **Lint & Format**: `bun check`
 - **Typecheck**: `bun typecheck`
 
+## TypeScript Guidelines
+
+- **Never use `any`**: Avoid the `any` type in all TypeScript code. Always use specific types or generics. Refactor code to eliminate any usage whenever possible.
+- **Prefer `type` over `interface`**: Use `type` aliases for defining shapes and unions. Only use `interface` when extending classes or for compatibility with libraries that require it.
+
 ## Development Guidelines
 
 - **Task Execution**: Prefer using VS Code tasks (via `run_task`) for common operations like building, testing, or starting the server. Fall back to `bun` CLI commands in the terminal if no suitable task exists.
