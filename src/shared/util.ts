@@ -276,7 +276,7 @@ export function resolveParentFolder(path: string) {
 /**
  * Identity function with a logging sideeffect used for quickly inspecting values without changing code behaviour
  * @public */
-export const inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T => {
+export const $inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T => {
   console[trace ? "trace" : "log"](`🔎 ${label}`, args)
   return args
 }
