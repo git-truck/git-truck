@@ -135,6 +135,7 @@ export default class DB {
       CREATE TABLE IF NOT EXISTS commits (
         hash VARCHAR,
         author VARCHAR,
+        authoremail VARCHAR,
         committertime UINTEGER,
         authortime UINTEGER
       );
@@ -178,6 +179,7 @@ export default class DB {
       -- Migrations
       CREATE SEQUENCE IF NOT EXISTS hiddenfiles_id_sequence START 1;
       ALTER TABLE hiddenfiles ADD COLUMN IF NOT EXISTS id INTEGER DEFAULT nextval('hiddenfiles_id_sequence');
+      ALTER TABLE commits ADD COLUMN IF NOT EXISTS authoremail VARCHAR;
     `)
   }
 
@@ -208,16 +210,16 @@ export default class DB {
   private static async initViews(db: DuckDBConnection, start: number, end: number) {
     await db.run(/*sql*/ `
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.committertime, c.authortime FROM
+      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.authoremail, c.committertime, c.authortime FROM
       commits c LEFT JOIN authorunions u ON c.author = u.alias
       WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.insertions, f.deletions, f.filepath, author, c.committertime, c.authortime FROM
+      SELECT f.commithash, f.insertions, f.deletions, f.filepath, author, c.authoremail, c.committertime, c.authortime FROM
       filechanges f JOIN commits_unioned c on f.commithash = c.hash;
 
       CREATE OR REPLACE VIEW filechanges_commits_renamed AS
-      SELECT f.commithash, f.insertions, f.deletions, f.author, f.committertime, f.authortime,
+      SELECT f.commithash, f.insertions, f.deletions, f.author, f.authoremail, f.committertime, f.authortime,
           CASE
               WHEN r.toname IS NOT NULL THEN r.toname
               ELSE f.filepath
@@ -249,7 +251,7 @@ export default class DB {
       group by fromname, toname, timestampauthor;
 
       CREATE OR REPLACE VIEW combined_result AS
-      SELECT f.commithash, f.insertions, f.deletions, c.committertime, c.authortime,
+      SELECT f.commithash, f.insertions, f.deletions, c.authoremail, c.committertime, c.authortime,
         CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
         CASE
             WHEN r.toname IS NOT NULL THEN r.toname
@@ -406,7 +408,7 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const res = await this.query(`
-      SELECT distinct commithash, author, committertime, authortime, message, body
+      SELECT distinct commithash, author, authoremail, committertime, authortime, message, body
       FROM filechanges_commits_renamed_cached
       WHERE filepath GLOB '${path}*'
       ORDER BY committertime DESC, commithash
@@ -415,6 +417,7 @@ export default class DB {
     return res.map((row) => {
       return {
         author: row["author"],
+        authorEmail: String(row["authoremail"] ?? ""),
         committertime: row["committertime"],
         authortime: row["authortime"],
         body: row["body"],
@@ -843,6 +846,7 @@ export default class DB {
         if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         appender.appendVarchar(hash)
         appender.appendVarchar(commit.author)
+        appender.appendVarchar(commit.authorEmail)
         appender.appendUInteger(commit.committertime)
         appender.appendUInteger(commit.authortime)
         appender.endRow()
