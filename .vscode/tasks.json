@@ -33,6 +33,15 @@
       "command": "bun",
       "args": ["run", "build"],
       "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Typecheck with bun",
+      "type": "shell",
+      "command": "bun",
+      "args": ["typecheck"],
+      "group": "build",
+      "problemMatcher": ["$tsc"],
+      "presentation": { "reveal": "always", "panel": "shared" }
     }
   ]
 }
