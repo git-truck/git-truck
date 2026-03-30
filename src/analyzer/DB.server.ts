@@ -59,7 +59,7 @@ export default class DB {
     this.selectedRange = [0, 1_000_000_000_000] as [number, number]
   }
 
-  public async disconnect() {
+  public async close() {
     const connection = await this.connectionPromise
     const instance = await this.instancePromise
     connection.disconnectSync()
