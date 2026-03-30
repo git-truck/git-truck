@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
-import type { JSX, DOMAttributes } from "react"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
+import { type JSX, type DOMAttributes, useId } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
@@ -19,7 +19,7 @@ import {
   treemapTreeBorderRadius,
   letterHeightText,
   clipPathPadding,
-  MULTIPLE_CONTRIBUTORS
+  UNKNOWN_CATEGORY
 } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -34,9 +34,10 @@ import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useIsCategorySelected as useIsCategorySelected } from "~/state/stores/selection"
+import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
+import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -47,6 +48,7 @@ export function Chart() {
   const { searchResults, hasSearchResults } = useSearch()
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
+  const [metricsData] = useMetrics()
   const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
   const isCategorySelected = useIsCategorySelected()
 
@@ -67,7 +69,7 @@ export function Chart() {
   const setClickedObject = useSetClickedObject()
   const clickedObject = useClickedObject()
 
-  const { topContributorCutoff, metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
+  const { metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
 
   useKey({ key: "Escape" }, () => {
     if (clickedObject) {
@@ -132,7 +134,7 @@ export function Chart() {
 
   // TODO: This is very inefficient, as it forces all nodes to rerender each time. Instead, Nodes should manage their own handlers or, use delegate events on svg root
   const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
-    const onClick = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
+    const onClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
       // If clicking the same object, deselect
 
       if (clickedObject && d && clickedObject.path === d.data.path) {
@@ -222,38 +224,23 @@ export function Chart() {
             : isSearchMatch
           const eventHandlers = createGroupHandlers(d)
 
-          const getCategoryFromNode = (node: GitObject) => {
-            const extension = node.name.substring(node.name.lastIndexOf(".") + 1)
-            let topContributor: string = MULTIPLE_CONTRIBUTORS
-            const dominant = databaseInfo.topContributors[node.path]
-            const contribSum = databaseInfo.contribSumPerFile[node.path]
-
-            const authorPercentage = dominant ? (dominant.contribcount / contribSum) * 100 : null
-            if (authorPercentage !== null && authorPercentage >= topContributorCutoff) {
-              topContributor = dominant.contributor
-            }
-
-            return metricType === "FILE_TYPE" ? extension : metricType === "TOP_CONTRIBUTOR" ? topContributor : null
+          const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
+            const cats: Array<string> =
+              metricsData
+                .get(metricType)
+                ?.categoriesMap.get(node.path)
+                ?.map((c) => c.category) ?? []
+            return cats
           }
 
-          const category = getCategoryFromNode(d.data)
-          const isSelected = category
-            ? isCategorySelected(category) ||
-              // or we have a child that is selected
+          const categories = getCategoriesFromNode(d.data)
+          const isSelected = categories
+            ? // do we have contain a selected category?
+              categories.some((c) => isCategorySelected(c)) ||
+              // or we have a child that has a selected category selected
               (isTree(d.data) &&
-                d.data.children.some((node) => {
-                  const cat = getCategoryFromNode(node)
-                  const isSelected =
-                    metricType === "CONTRIBUTORS"
-                      ? ContributorsMetric.categorical
-                          .getCategories(d.data, databaseInfo)
-                          .some((contributor) => isCategorySelected(contributor))
-                      : cat
-                        ? isCategorySelected(cat)
-                        : true
-                  return isSelected
-                }))
-            : // or if no categories are selected, everything is highlighted
+                d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
+            : // or by default, if no categories are selected, everything should be considered selected
               true
 
           const shouldColor = clickedObject
@@ -363,18 +350,25 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   const gradientId = useId()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
+  const selectedCategories = useSelectedCategories()
+  const isSelected = useIsCategorySelected()
 
-  const colors = metricsData.get(metricType)?.colormap.get(d.data.path)
+  const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
+
+  let colors: { category: string; color: string }[] = [metricsData.get(metricType)].flatMap(
+    (c) => c?.categoriesMap?.get(d.data.path)?.filter((c) => isSelected(c.category) || noCategoriesSelected) ?? []
+  )
+
   if ((colors?.length ?? 0) === 0 && isBlob(d.data)) {
-    throw new Error("No colors found for path " + d.data.path)
+    colors = [{ category: UNKNOWN_CATEGORY, color: missingInMapColor }]
   }
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: colors ? (multipleColors ? `url('#${gradientId}')` : colors[0]) : missingInMapColor,
-          stroke: colors ? colors[0] : noEntryColor
+          fill: colors ? (multipleColors ? `url('#${gradientId}')` : colors[0].color) : missingInMapColor,
+          stroke: colors ? colors[0].color : noEntryColor
         }
       : {
           // strokeWidth: "1px"
@@ -406,7 +400,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, colors, gradientId, chartType])
+  }, [d, colors, multipleColors, gradientId, chartType])
 
   return (
     <>
@@ -414,26 +408,12 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
         <defs>
           {/* <radialGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
           {colors.map((color, i) => (
-            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
           ))}
         </radialGradient> */}
-          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          {colors.map((color, i) => (
-            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
-          ))}
-        </linearGradient> */}
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             {colors.map((color, i) => (
-              <>
-                {/* Stripes */}
-                {i > 0 ? (
-                  <stop key={`prev-${i}`} offset={`${(i / (colors.length - 2)) * 100}%`} stopColor={color} />
-                ) : null}
-                <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
-                {i < colors.length - 1 ? (
-                  <stop key={`next${i}`} offset={`${(i / colors.length) * 100}%`} stopColor={color} />
-                ) : null}
-              </>
+              <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
             ))}
           </linearGradient>
         </defs>
@@ -464,8 +444,10 @@ function NodeText({
 
   if (children === null) return null
 
-  const colorValue = metricsData.get(metricType)?.colormap.get(d.data.path) ?? "#333"
-  const contrastResult = isDarkColor(colorValue)
+  const colorValue = metricsData.get(metricType)?.categoriesMap.get(d.data.path) ?? "#333"
+  // const contrastResult = isDarkColor(colorValue)
+  // TODO: what to do for gradients?
+  const contrastResult = isDarkColor("#ffffff")
 
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
