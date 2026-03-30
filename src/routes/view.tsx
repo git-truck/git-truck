@@ -3,11 +3,11 @@ import { Icon } from "~/components/Icon"
 import { Await, Link, redirect, createContext, useLocation, href, useNavigate } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
-import { Activity, Suspense, useReducer, useState } from "react"
+import { Activity, Suspense, useReducer } from "react"
 import { createPortal } from "react-dom"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
-import type { DatabaseInfo, GitObject, RepoData } from "~/shared/model"
+import type { DatabaseInfo, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
 import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath, openFile } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
@@ -234,7 +234,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const isValidRevision = await GitCaller.isValidRevision(branch, path)
   if (!isValidRevision) {
     throw new Error(
-      `Invalid revision of repo ${repo}: ${branch}\nIf ${branch} is a remote branch, make sure it is pulled locally`
+      `Invalid revision of repo ${repo}: ${branch}. If ${branch} is a remote branch, make sure it is pulled locally`
     )
   }
 
@@ -332,6 +332,10 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
       ? prevRes.contribSumPerFile
       : await instance.db.getContribSumPerFile()
+  const contributorsForPath =
+    prevRes && !shouldUpdate(reason, "contributorsForPath")
+      ? prevRes.contributorsForPath
+      : await instance.db.getContributorsForPath()
   const maxMinContribCounts =
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
@@ -372,6 +376,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     commitCountPerTimeIntervalUnit,
     analyzedRepos,
     contribSumPerFile: contribCounts,
+    contributorsForPath: contributorsForPath,
     maxMinContribCounts,
     commitCount
   }

@@ -3,13 +3,8 @@ import { Chart, useOptions } from "~/contexts/OptionsContext"
 import type { MetricType } from "~/metrics/metrics"
 import { Metrics, sizeMetricDescriptions } from "~/metrics/metrics"
 import { IconDropdownGroup } from "~/components/EnumSelect"
-import { mdiScaleBalance } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-import { FileSizeMetric } from "~/metrics/fileSize"
-import { CommitsMetric } from "~/metrics/mostCommits"
-import { LastChangedMetric } from "~/metrics/lastChanged"
-import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { pickKey as pickKey } from "~/shared/utils/object"
 import { Layouts } from "~/layouts/layouts"
 import { FileSizeMetric } from "~/metrics/fileSize"
@@ -24,22 +19,12 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   TOP_CONTRIBUTOR: "MOST_CONTRIBUTIONS",
   MOST_COMMITS: "MOST_COMMITS",
   LAST_CHANGED: "LAST_CHANGED",
-  MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS"
+  MOST_CONTRIBUTIONS: "MOST_CONTRIBUTIONS",
+  CONTRIBUTORS: "EQUAL_SIZE"
 }
 
 const colorMetricIcons = pickKey(Metrics, "icon")
 const colorMetricDescriptions = pickKey(Metrics, "description")
-
-const sizeMetricIcons: Record<SizeMetricType, string> = pickKey(
-  {
-    FILE_SIZE: FileSizeMetric,
-    EQUAL_SIZE: { icon: mdiScaleBalance },
-    MOST_COMMITS: CommitsMetric,
-    LAST_CHANGED: LastChangedMetric,
-    MOST_CONTRIBUTIONS: LinesChangedMetric
-  },
-  "icon"
-)
 
 const layoutTypeIcons: Record<ChartType, string> = pickKey(Layouts, "icon")
 

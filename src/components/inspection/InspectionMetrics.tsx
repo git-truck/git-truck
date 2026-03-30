@@ -197,9 +197,8 @@ export function InspectionMetrics() {
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "contributors",
-      data: "TODO",
-      // currentFetcherData ? currentFetcherData.contributors.length : "loading...",
-      inspectionPanels: [PointLegend],
+      data: currentFetcherData ? (currentFetcherData.contributorCounts?.length ?? UNKNOWN_CATEGORY) : "loading...",
+      inspectionPanels: ContributorsMetric.inspectionPanels,
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true }
     }
   } as const
