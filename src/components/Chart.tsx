@@ -23,7 +23,7 @@ import {
 } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import type { ChartType } from "~/contexts/OptionsContext"
+import type { LayoutType } from "~/layouts/layouts"
 import { useOptions } from "~/contexts/OptionsContext"
 import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
 import clsx from "clsx"
@@ -603,7 +603,7 @@ function createPartitionedHiearchy({
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
   size: { height: number; width: number }
-  chartType: ChartType
+  chartType: LayoutType
   sizeMetricType: SizeMetricType
   renderCutOff: number
 }) {
