@@ -243,7 +243,14 @@ export function Chart() {
               (isTree(d.data) &&
                 d.data.children.some((node) => {
                   const cat = getCategoryFromNode(node)
-                  const isSelected = cat ? isCategorySelected(cat) : false
+                  const isSelected =
+                    metricType === "CONTRIBUTORS"
+                      ? ContributorsMetric.categorical
+                          .getCategories(d.data, databaseInfo)
+                          .some((contributor) => isCategorySelected(contributor))
+                      : cat
+                        ? isCategorySelected(cat)
+                        : true
                   return isSelected
                 }))
             : // or if no categories are selected, everything is highlighted
@@ -352,14 +359,21 @@ function filterGitTree(
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
+  const gradientId = useId()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
+
+  const colors = metricsData.get(metricType)?.colormap.get(d.data.path)
+  if ((colors?.length ?? 0) === 0 && isBlob(d.data)) {
+    throw new Error("No colors found for path " + d.data.path)
+  }
+  const multipleColors = Array.isArray(colors) && colors.length > 1
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: metricsData.get(metricType)?.colormap.get(d.data.path) ?? missingInMapColor,
-          stroke: metricsData.get(metricType)?.colormap.get(d.data.path) ?? noEntryColor
+          fill: colors ? (multipleColors ? `url('#${gradientId}')` : colors[0]) : missingInMapColor,
+          stroke: colors ? colors[0] : noEntryColor
         }
       : {
           // strokeWidth: "1px"
@@ -391,7 +405,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, metricsData, metricType, chartType])
+  }, [d, colors, gradientId, chartType])
 
   return (
     <>

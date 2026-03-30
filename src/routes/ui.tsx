@@ -52,6 +52,7 @@ const mockRepoData: RepoData = {
     colorSeed: null,
     contributorColors: {},
     commitCountPerTimeInterval: [],
+    contributorsForPath: {},
     commitCountPerTimeIntervalUnit: "day",
     selectedRange: [0, 0],
     analyzedRepos: [],

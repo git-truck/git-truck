@@ -5,7 +5,8 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { allExceptFirst, dateFormatRelative, isBlob, isDarkColor, isTree, formatLargeNumber } from "~/shared/util"
+import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isTree } from "~/shared/util"
+
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 import { missingInMapColor } from "~/const"
@@ -45,7 +46,9 @@ export function Tooltip({ className = "" }: { className?: string }) {
           "rounded-xs": chartType === "TREE_MAP" || chartType === "PARTITION"
         },
         isBlob(hoveredObject) && color
-          ? isDarkColor(color).luminance >= 0.5
+          ? // TODO: what to do for gradients?
+            // ? isDarkColor(color).luminance >= 0.5
+            false
             ? "text-primary-text"
             : "text-primary-text-dark"
           : "dark:text-primary-text-dark text-primary-text"
