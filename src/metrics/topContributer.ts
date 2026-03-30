@@ -1,14 +1,17 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
-import { PointInfo } from "~/components/legend/PointLegend"
+import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
 import { MULTIPLE_CONTRIBUTORS, noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPodiumGold } from "@mdi/js"
+import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
+import { PercentageSlider } from "~/components/PercentageSlider"
 
 export const TopContributorMetric: CategoricalMetric = {
   name: "Top contributor",
   description: "Files are colored based on the top contributor for each file.",
   icon: mdiPodiumGold,
+  inspectionPanels: [PointLegend, PercentageSlider, ContributorsInspection],
   getTooltipContent(obj, dbi, { topContributorCutoff }) {
     const top = dbi.topContributors[obj.path]
 

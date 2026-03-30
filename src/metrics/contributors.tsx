@@ -3,13 +3,14 @@ import { type CategoricalMetric, type MetricCache } from "./metrics"
 import { hslToHex } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiAccountGroup } from "@mdi/js"
-import { PointInfo, type PointLegendData } from "~/components/legend/PointLegend"
+import { PointInfo, PointLegend, type PointLegendData } from "~/components/legend/PointLegend"
 import { LegendDot } from "~/components/util"
 
 export const ContributorsMetric: CategoricalMetric = {
   name: "Contributors",
   description: "Files are colored based on which contributors have contributed to it.",
   icon: mdiAccountGroup,
+  inspectionPanels: [PointLegend],
   getTooltipContent(obj, dbi, { contributorColors }) {
     const contributors = dbi.contributorsForPath[obj.path] ?? []
     if (contributors.length === 0) {
@@ -40,9 +41,9 @@ export const ContributorsMetric: CategoricalMetric = {
       for (const { contributor, contribcount } of contributors) {
         const color = contributorColors[contributor] ?? noEntryColor
         if (legend.has(contributor)) {
-          legend.get(contributor)?.add(contribcount)
+          legend.get(contributor)?.add(1)
         } else {
-          legend.set(contributor, new PointInfo(color, contribcount))
+          legend.set(contributor, new PointInfo(color, 1))
         }
       }
       if (contributors.length === 0) {

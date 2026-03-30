@@ -6,7 +6,7 @@ import { hslToHex, isBlob, isTree, rgbToHex } from "~/shared/util"
 import { interpolateCool, scaleLog, scaleLinear } from "d3"
 import { SpectrumTranslater } from "~/metrics/metricUtils"
 import { feature_flags } from "~/feature_flags"
-import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
+import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import byteSize from "byte-size"
 import { reduceTree } from "~/shared/utils/tree"
@@ -36,6 +36,7 @@ export const FileSizeMetric: SegmentedMetric = {
   name: "File size",
   description: "Files are colored based on their file size in bytes.",
   icon: mdiResize,
+  inspectionPanels: [SegmentLegend],
   getTooltipContent(obj: GitObject, _dbi: DatabaseInfo) {
     if (!isBlob(obj)) {
       // TODO: Aggregate folder size

@@ -12,7 +12,6 @@ import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
 import { useEffect, type ReactNode } from "react"
 import { useFetcher, href, Form, useNavigation } from "react-router"
-import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 import { MetricInspectionPanel, type MetricPanelActions } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
@@ -27,15 +26,14 @@ import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
 import type { GitObject, HexColor } from "~/shared/model"
-import { GradientLegend } from "~/components/legend/GradiantLegend"
-import { PointLegend } from "~/components/legend/PointLegend"
-import { SegmentLegend } from "~/components/legend/SegmentLegend"
 import { FileSizeMetric } from "~/metrics/fileSize"
-import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
-import { feature_flags } from "~/feature_flags"
 import { ContributorsMetric } from "~/metrics/contributors"
-import { PercentageSlider } from "~/components/PercentageSlider"
 import type { MetricType } from "~/metrics/metrics"
+import { TypeMetric } from "~/metrics/fileExtension"
+import { CommitsMetric } from "~/metrics/mostCommits"
+import { TopContributorMetric } from "~/metrics/topContributer"
+import { LinesChangedMetric } from "~/metrics/linesChanged"
+import { LastChangedMetric } from "~/metrics/lastChanged"
 
 export function InspectionMetrics() {
   const fetcher = useFetcher<typeof loader>()
@@ -111,7 +109,7 @@ export function InspectionMetrics() {
       description: clickedObject.type === "tree" ? "folder type" : "file type",
       icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
-      inspectionPanels: [PointLegend],
+      inspectionPanels: TypeMetric.inspectionPanels,
       actions: { search: true, clear: true },
       colors: metricsData
         .get("FILE_TYPE")
@@ -121,7 +119,7 @@ export function InspectionMetrics() {
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
-      inspectionPanels: [SegmentLegend],
+      inspectionPanels: FileSizeMetric.inspectionPanels,
       data: isBlob
         ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
         : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
@@ -137,7 +135,7 @@ export function InspectionMetrics() {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
       icon: mdiSourceCommit,
       data: commitCount?.toLocaleString() ?? "loading...",
-      inspectionPanels: [GradientLegend, CommitsInspection],
+      inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors: metricsData
@@ -149,7 +147,7 @@ export function InspectionMetrics() {
       description: "is the top contributor",
       icon: mdiAccountGroup,
       data: currentFetcherData ? (currentFetcherData.topContributor?.contributor ?? UNKNOWN_CATEGORY) : "loading...",
-      inspectionPanels: [PointLegend, PercentageSlider, ContributorsInspection],
+      inspectionPanels: TopContributorMetric.inspectionPanels,
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
       colors: [
         currentFetcherData?.topContributor?.contributor
@@ -166,7 +164,7 @@ export function InspectionMetrics() {
             .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
             .reduce((sum, [_, count]) => sum + count, 0)
             .toLocaleString(),
-      inspectionPanels: [GradientLegend],
+      inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors: metricsData
@@ -186,7 +184,7 @@ export function InspectionMetrics() {
                 .map(([_, epoch]) => epoch)
             )
           ) ?? "unknown"),
-      inspectionPanels: [feature_flags.lastChangedAsGrad ? GradientLegend : SegmentLegend],
+      inspectionPanels: LastChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors: metricsData
@@ -229,7 +227,7 @@ export function InspectionMetrics() {
         )}
       </div>
       {inspectionPanels.map((Panel, i) => (
-        <MetricInspectionPanel key={Panel.displayName} icon={icon} actions={i === 0 ? actions : undefined}>
+        <MetricInspectionPanel key={i} icon={icon} actions={i === 0 ? actions : undefined}>
           <Panel />
         </MetricInspectionPanel>
       ))}
