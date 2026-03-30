@@ -4,12 +4,13 @@ import { SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex, formatLargeNumber } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
-import type { GradLegendData } from "~/components/legend/GradiantLegend"
+import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
 
 export const LinesChangedMetric: Metric = {
   icon: mdiPlusMinusVariant,
   name: "Lines Changed",
   description: "Files are colored based on how many line changes (additions and deletions) have been made to it.",
+  inspectionPanels: [GradientLegend],
   getTooltipContent(obj, dbi) {
     const contribs = dbi.contribSumPerFile[obj.path]
     if (!contribs) {

@@ -2,7 +2,7 @@ import type { GitBlobObject } from "~/shared/model"
 import { getColorFromExtension } from "~/metrics/metricUtils"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
-import { PointInfo } from "~/components/legend/PointLegend"
+import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import { noEntryColor } from "~/const"
 import { feature_flags } from "~/feature_flags"
 import { mdiFileOutline } from "@mdi/js"
@@ -12,6 +12,7 @@ export const TypeMetric: CategoricalMetric = {
   name: "File type",
   description: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
   icon: mdiFileOutline,
+  inspectionPanels: [PointLegend],
   getTooltipContent(obj, dbi, options) {
     return this.getCategories(obj, dbi, options)
   },

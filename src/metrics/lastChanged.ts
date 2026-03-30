@@ -4,14 +4,15 @@ import { feature_flags } from "~/feature_flags"
 import type { Metric, MetricCache } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
 import type { GitBlobObject } from "~/shared/model"
-import type { GradLegendData } from "~/components/legend/GradiantLegend"
-import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
+import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
+import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
 
 export const LastChangedMetric: Metric = {
   name: "Last changed",
   description: "Files are colored based on how long ago they were changed.",
   icon: mdiPulse,
+  inspectionPanels: [feature_flags.lastChangedAsGrad ? GradientLegend : SegmentLegend],
   getTooltipContent(obj, dbi) {
     const epoch = dbi.lastChanged[obj.path]
     if (!epoch) {
