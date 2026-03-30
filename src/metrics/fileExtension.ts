@@ -29,7 +29,7 @@ export const TypeMetric: CategoricalMetric = {
   }
 }
 
-export function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
+function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   const extensionInfo = getColorFromExtension(blob.extension)
   let color = extensionInfo?.color
 

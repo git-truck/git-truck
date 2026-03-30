@@ -38,7 +38,7 @@ export const ContributorsMetric: CategoricalMetric = {
       const legend: PointLegendData = (cache.legend as PointLegendData) ?? new Map<string, PointInfo>()
 
       const contributors = data.databaseInfo.contributorsForPath[blob.path] ?? []
-      for (const { contributor, contribcount } of contributors) {
+      for (const { contributor } of contributors) {
         const color = contributorColors[contributor] ?? noEntryColor
         if (legend.has(contributor)) {
           legend.get(contributor)?.add(1)

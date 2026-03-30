@@ -40,7 +40,7 @@ describe("reduceTree", () => {
   })
 
   it("should collect all file names", () => {
-    const names = reduceTree(root, (prev: string[], curr) => [...prev, curr.name], [])
+    const names = reduceTree(root, (prev, curr) => prev.concat(curr.name), [] as string[])
     expect(names).toEqual(["A.txt", "B.txt"])
   })
 })
