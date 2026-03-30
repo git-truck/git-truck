@@ -514,7 +514,7 @@ export default class DB {
 
     return result
   }
-  
+
   public async getTopContributorPerFile() {
     const res = await this.query(`
       WITH RankedAuthors AS (
