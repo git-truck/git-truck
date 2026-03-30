@@ -1,12 +1,11 @@
-import type { ChartType } from "~/contexts/OptionsContext"
-import { Chart, useOptions } from "~/contexts/OptionsContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import type { MetricType } from "~/metrics/metrics"
 import { Metrics, sizeMetricDescriptions } from "~/metrics/metrics"
 import { IconDropdownGroup } from "~/components/EnumSelect"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { pickKey as pickKey } from "~/shared/utils/object"
-import { Layouts } from "~/layouts/layouts"
+import { LayoutGroups, Layouts, type LayoutType } from "~/layouts/layouts"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
@@ -26,7 +25,7 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
 const colorMetricIcons = pickKey(Metrics, "icon")
 const colorMetricDescriptions = pickKey(Metrics, "description")
 
-const layoutTypeIcons: Record<ChartType, string> = pickKey(Layouts, "icon")
+const layoutTypeIcons: Record<LayoutType, string> = pickKey(Layouts, "icon")
 
 const sizeMetricIcons = pickKey(
   {
@@ -50,11 +49,11 @@ export function Options() {
         <span className="bg-primary-bg dark:bg-text-primary h-0.75 w-full rounded-full opacity-20" />
         <div className="ml-auto min-w-45">
           <IconDropdownGroup
-            group={Chart}
+            group={LayoutGroups}
             defaultValue={chartType}
             iconMap={layoutTypeIcons}
             ariaLabel="Select layout"
-            onChange={(chartType: ChartType) => setChartType(chartType)}
+            onChange={(chartType: LayoutType) => setChartType(chartType)}
           />
         </div>
       </div>

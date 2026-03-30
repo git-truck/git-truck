@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react"
 import type { GitBlobObject, GitObject, RepoData } from "~/shared/model"
 import { DataContext } from "~/contexts/DataContext"
 import { MetricsContext } from "~/contexts/MetricContext"
-import type { ChartType, HierarchyType, Options, OptionsContextType } from "~/contexts/OptionsContext"
+import type { HierarchyType, Options, OptionsContextType } from "~/contexts/OptionsContext"
 import { getDefaultOptionsContextValue as getDefaultOptions, OptionsContext } from "~/contexts/OptionsContext"
 import { SearchContext } from "~/contexts/SearchContext"
 import type { MetricsData, MetricType } from "~/metrics/metrics"
@@ -11,6 +11,7 @@ import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { findSubTree } from "~/shared/util"
 import { useQueryState } from "nuqs"
+import type { LayoutType } from "~/layouts/layouts"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const [options, setOptions] = useState<Options>(() => {
@@ -51,7 +52,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
           ...prevOptions,
           metricType: metric
         })),
-      setChartType: (chartType: ChartType) =>
+      setChartType: (chartType: LayoutType) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
           chartType
