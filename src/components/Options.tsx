@@ -17,7 +17,7 @@ import {
 } from "@mdi/js"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
-import { FileSizeMetric } from "~/metrics/fileSize";
+import { FileSizeMetric } from "~/metrics/fileSize"
 
 export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   FILE_TYPE: "FILE_SIZE",
