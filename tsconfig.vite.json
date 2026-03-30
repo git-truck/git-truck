@@ -10,6 +10,6 @@
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./src/*"] },
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   }
 }
