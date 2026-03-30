@@ -288,6 +288,7 @@ export function Chart() {
         })}
       </svg>
       <div className="absolute bottom-2 left-2 flex gap-2">
+        <ZoomToSelectedObjectButton />
         {zoomPath && zoomPath !== databaseInfo.repo ? (
           <>
             <button className="btn" onClick={() => setZoomPath(null)}>
