@@ -227,5 +227,4 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
-
 export type HexColor = `#${string}`
