@@ -16,12 +16,13 @@ import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/analyzer/log.server"
 
 export default class DB {
+  private instancePromise: Promise<DuckDBInstance>
   private connectionPromise: Promise<DuckDBConnection>
   private repoSanitized: string
   private branchSanitized: string
   public selectedRange: [number, number]
 
-  private static async init(dbPath: string): Promise<DuckDBConnection> {
+  private static async init(dbPath: string): Promise<{ instance: DuckDBInstance; connection: DuckDBConnection }> {
     log.debug("Initializing database at path:", dbPath)
     const dir = dirname(dbPath)
     if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
@@ -29,7 +30,7 @@ export default class DB {
     const connection = await instance.connect()
     await this.initTables(connection)
     await this.initViews(connection, 0, 1_000_000_000_000)
-    return connection
+    return { instance, connection }
   }
 
   public static async clearCache() {
@@ -42,13 +43,31 @@ export default class DB {
     this.repoSanitized = repositoryPath.replace(/\W/g, "_").replace(/\//g, "_").replace(/\//g, "_") + "_"
     this.branchSanitized = branch.replace(/\W/g, "_") + "_"
     const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
-    this.connectionPromise = DB.init(dbPath)
+    const instancePromise = Promise.withResolvers<DuckDBInstance>()
+    const connectionPromise = Promise.withResolvers<DuckDBConnection>()
+    this.instancePromise = instancePromise.promise
+    this.connectionPromise = connectionPromise.promise
+    DB.init(dbPath).then(({ instance, connection }) => {
+      instancePromise.resolve(instance)
+      connectionPromise.resolve(connection)
+    })
+    DB.init(dbPath)
+      .then(({ instance, connection }) => {
+        instancePromise.resolve(instance)
+        connectionPromise.resolve(connection)
+      })
+      .catch((error) => {
+        instancePromise.reject(error)
+        connectionPromise.reject(error)
+      })
     this.selectedRange = [0, 1_000_000_000_000] as [number, number]
   }
 
   public async disconnect() {
     const connection = await this.connectionPromise
+    const instance = await this.instancePromise
     connection.disconnectSync()
+    instance.closeSync()
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
