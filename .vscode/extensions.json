@@ -6,6 +6,7 @@
     "dbaeumer.vscode-eslint",
     "yoavbls.pretty-ts-errors",
     "wayou.vscode-todo-highlight",
-    "webpro.vscode-knip"
+    "webpro.vscode-knip",
+    "blazejkustra.react-compiler-marker"
   ]
 }
