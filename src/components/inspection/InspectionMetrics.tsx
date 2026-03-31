@@ -178,6 +178,7 @@ export function InspectionMetrics() {
       data: isBlob
         ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
         : (dateFormatRelative(
+            // TODO: Get this data from the server, which is much faster
             Math.max(
               ...Object.entries(data.databaseInfo.lastChanged)
                 .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
