@@ -102,7 +102,7 @@ export function MetricsInspection() {
       data: ReactNode
       inspectionPanels: Array<React.ComponentType>
       actions: MetricPanelActions
-      colors?: Array<HexColor>
+      colors: Array<HexColor>
     }
   > = {
     FILE_TYPE: {
@@ -111,10 +111,11 @@ export function MetricsInspection() {
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
       inspectionPanels: TypeMetric.inspectionPanels,
       actions: { search: true, clear: true },
-      colors: metricsData
-        .get("FILE_TYPE")
-        ?.categoriesMap?.get(clickedObject.path)
-        ?.map((c) => c.color)
+      colors:
+        metricsData
+          .get("FILE_TYPE")
+          ?.categoriesMap?.get(clickedObject.path)
+          ?.map((c) => c.color) ?? []
     },
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
@@ -126,10 +127,11 @@ export function MetricsInspection() {
           " " +
           byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
       actions: { search: false, clear: false },
-      colors: metricsData
-        .get("FILE_SIZE")
-        ?.categoriesMap?.get(clickedObject.path)
-        ?.map((c) => c.color)
+      colors:
+        metricsData
+          .get("FILE_SIZE")
+          ?.categoriesMap?.get(clickedObject.path)
+          ?.map((c) => c.color) ?? []
     },
     MOST_COMMITS: {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
@@ -138,10 +140,11 @@ export function MetricsInspection() {
       inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors: metricsData
-        .get("MOST_COMMITS")
-        ?.categoriesMap?.get(clickedObject.path)
-        ?.map((c) => c.color)
+      colors:
+        metricsData
+          .get("MOST_COMMITS")
+          ?.categoriesMap?.get(clickedObject.path)
+          ?.map((c) => c.color) ?? []
     },
     TOP_CONTRIBUTOR: {
       description: "is the top contributor",
@@ -167,10 +170,11 @@ export function MetricsInspection() {
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors: metricsData
-        .get("MOST_CONTRIBUTIONS")
-        ?.categoriesMap?.get(clickedObject.path)
-        ?.map((c) => c.color)
+      colors:
+        metricsData
+          .get("MOST_CONTRIBUTIONS")
+          ?.categoriesMap?.get(clickedObject.path)
+          ?.map((c) => c.color) ?? []
     },
     LAST_CHANGED: {
       description: "since last change",
@@ -188,17 +192,19 @@ export function MetricsInspection() {
       inspectionPanels: LastChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors: metricsData
-        .get("LAST_CHANGED")
-        ?.categoriesMap?.get(clickedObject.path)
-        ?.map((c) => c.color)
+      colors:
+        metricsData
+          .get("LAST_CHANGED")
+          ?.categoriesMap?.get(clickedObject.path)
+          ?.map((c) => c.color) ?? []
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "contributors",
       data: currentFetcherData ? (currentFetcherData.contributorCounts?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
-      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true }
+      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
+      colors: []
     }
   } as const
 
@@ -209,13 +215,14 @@ export function MetricsInspection() {
       <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
-          ([metric, { icon, data, colors: color, description }]) => (
+          ([metric, { icon, data, colors, description }]) => (
             <MetricButton
               key={metric}
               icon={icon}
               isExpanded={metric === metricType}
               style={{
-                ...(metric === metricType ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
+                backgroundColor:
+                  colors.length > 0 && metric === metricType ? `hsl(from ${colors[0]} h s l / 0.7)` : undefined
               }}
               onClick={() => {
                 setMetricType(metric)
