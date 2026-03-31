@@ -52,10 +52,14 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 
 ## Testing
 
-- Write unit tests for logic in `src/analyzer/` and `src/metrics/`.
+- **Unit tests:**
+  - Use **Vitest** for all unit tests. Always import from `vitest` (e.g. `import { describe, it, expect } from "vitest"`).
+  - Colocate tests with the code under test: for `file.ts`, the test file should be named `file.test.ts` in the same directory.
+  - Write unit tests for logic in `src/analyzer/`, `src/metrics/`, and all other logic modules.
   - In `describe`, write the function name under test, e.g. `describe("calculateCommitMetrics", () => { ... })`.
-  - In `it` blocks, describe the expected behavior for each test case using the format: `it("should {expected behavior}, () => {test implementation})`.
-- Write E2E tests in `e2e/` for critical user flows.
+  - In `it` blocks, describe the expected behavior for each test case using the format: `it("should {expected behavior}", () => { /* test */ })`.
+- **E2E tests:**
+  - Write E2E tests in `e2e/` for critical user flows.
 
 ## MANDATORY Verification
 
