@@ -114,7 +114,7 @@ export const FileSizeMetric: SegmentedMetric = {
           return
         }
 
-        cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+        cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color }])
       }
     }
   },
