@@ -22,25 +22,25 @@ export const relatedSizeMetric: Record<MetricType, SizeMetricType> = {
   CONTRIBUTORS: "EQUAL_SIZE"
 }
 
-const colorMetricIcons = pickKey(Metrics, "icon")
-const colorMetricDescriptions = pickKey(Metrics, "description")
-
-const layoutTypeIcons: Record<LayoutType, string> = pickKey(Layouts, "icon")
-
-const sizeMetricIcons = pickKey(
-  {
-    FILE_SIZE: FileSizeMetric,
-    MOST_COMMITS: CommitsMetric,
-    MOST_CONTRIBUTIONS: LinesChangedMetric,
-    EQUAL_SIZE: { icon: mdiScaleBalance },
-    LAST_CHANGED: LastChangedMetric
-  },
-  "icon"
-)
-
 export function Options() {
   const { metricType, chartType, sizeMetric, linkMetricAndSizeMetric, setMetricType, setChartType, setSizeMetricType } =
     useOptions()
+
+  const colorMetricIcons = pickKey(Metrics, "icon")
+  const colorMetricDescriptions = pickKey(Metrics, "description")
+
+  const layoutTypeIcons: Record<LayoutType, string> = pickKey(Layouts, "icon")
+
+  const sizeMetricIcons = pickKey(
+    {
+      FILE_SIZE: FileSizeMetric,
+      MOST_COMMITS: CommitsMetric,
+      MOST_CONTRIBUTIONS: LinesChangedMetric,
+      EQUAL_SIZE: { icon: mdiScaleBalance },
+      LAST_CHANGED: LastChangedMetric
+    },
+    "icon"
+  )
 
   return (
     <>
