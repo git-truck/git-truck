@@ -1,4 +1,4 @@
-import { useTransition, useState, type JSX } from "react"
+import { useTransition, useState } from "react"
 import { useNavigation, Form } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"

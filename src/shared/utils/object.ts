@@ -1,9 +1,3 @@
-export const map = <O extends Record<string, unknown>, R = unknown>(
-  o: O,
-  fn: <K extends keyof O>(v: O[K], k: K) => R
-): { [K in keyof O]: R } =>
-  Object.fromEntries(Object.entries(o).map(([k, v]) => [k, fn(v as O[keyof O], k as keyof O)])) as { [K in keyof O]: R }
-
 type SharedKeys<T> = keyof {
   [K in keyof T[keyof T] as T[keyof T] extends Record<K, unknown> ? K : never]: true
 }

@@ -59,7 +59,7 @@ export const TopContributorMetric: CategoricalMetric = {
   }
 }
 
-export function setTopContributorColor(
+function setTopContributorColor(
   contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
