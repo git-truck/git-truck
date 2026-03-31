@@ -280,26 +280,31 @@ function InteractionButtons() {
     return null
   }
 
+  const isRoot = isRepositoryRoot(clickedObject)
   const isBlob = clickedObject.type === "blob"
   const extension = last(clickedObject.name.split("."))
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
-      <Form
-        className="w-max"
-        method="post"
-        action={viewAction}
-        onSubmit={() => {
-          if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
-          setClickedObject(null)
-        }}
-      >
-        <input type="hidden" name="hide" value={clickedObject.path} />
-        <button className="btn" disabled={state !== "idle"} title="Hide this file">
-          <Icon path={mdiEyeOffOutline} />
-          Hide
-        </button>
-      </Form>
+      {!isRoot ? (
+        <>
+          <Form
+            className="w-max"
+            method="post"
+            action={viewAction}
+            onSubmit={() => {
+              if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
+              setClickedObject(null)
+            }}
+          >
+            <input type="hidden" name="hide" value={clickedObject.path} />
+            <button className="btn" disabled={state !== "idle"} title="Hide this file">
+              <Icon path={mdiEyeOffOutline} />
+              Hide
+            </button>
+          </Form>
+        </>
+      ) : null}
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
