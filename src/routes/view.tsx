@@ -39,6 +39,7 @@ import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalB
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
+import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 
 export const currentRepositoryContext = createContext<{
   instance: ServerInstance
@@ -462,6 +463,14 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                     <Options />
                   </CollapsibleHeader>
                   <InspectPanel />
+                  <CollapsibleHeader
+                    title="Commits"
+                    className="card"
+                    contentClassName="pb-6 flex flex-col gap-2"
+                    defaultOpen={false}
+                  >
+                    <CommitsInspection />
+                  </CollapsibleHeader>
                 </aside>
               </Activity>
               <main
