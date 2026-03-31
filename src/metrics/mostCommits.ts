@@ -5,13 +5,12 @@ import { hslToHex, formatLargeNumber } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiSourceCommit } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
-import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 
 export const CommitsMetric: Metric = {
   name: "Commits",
   description: "Files are colored based on the number of commits in the selected time range.",
   icon: mdiSourceCommit,
-  inspectionPanels: [GradientLegend, CommitsInspection],
+  inspectionPanels: [GradientLegend],
   getTooltipContent(obj, dbi) {
     const noCommits = dbi.commitCounts[obj.path]
 
