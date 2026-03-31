@@ -39,7 +39,7 @@ export const LinesChangedMetric: Metric = {
   }
 }
 
-export class ContribAmountTranslater {
+class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
   readonly min_lightness = 40
   readonly max_lightness = 92

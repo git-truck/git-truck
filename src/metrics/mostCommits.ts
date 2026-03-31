@@ -40,7 +40,7 @@ export const CommitsMetric: Metric = {
   }
 }
 
-export class CommitAmountTranslater {
+class CommitAmountTranslater {
   readonly translater: SpectrumTranslater
   readonly min_lightness = 50
   readonly max_lightness = 95

@@ -22,20 +22,6 @@ export function useIsClient() {
   return client
 }
 
-export function useMediaQuery(query: string) {
-  return useSyncExternalStore(
-    (callback) => {
-      const mediaQuery = window.matchMedia(query)
-      mediaQuery.addEventListener("change", callback)
-      return () => mediaQuery.removeEventListener("change", callback)
-    },
-    () => {
-      return window.matchMedia(query).matches
-    },
-    () => false
-  )
-}
-
 export function useKey(
   options: { key?: string; ctrlOrMeta?: boolean; shift?: boolean; alt?: boolean },
   callback: (event: KeyboardEvent) => void

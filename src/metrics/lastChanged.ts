@@ -70,7 +70,7 @@ interface lastChangedGroup {
   text: string
 }
 
-export function lastChangedGroupings(newestEpoch: number, _oldestChangeDate: number): lastChangedGroup[] {
+function lastChangedGroupings(newestEpoch: number, _oldestChangeDate: number): lastChangedGroup[] {
   // const scale = scaleSequential(interpolateCool)
   // , [oldestChangeDate, newestEpoch])
 
@@ -95,7 +95,7 @@ export function lastChangedGroupings(newestEpoch: number, _oldestChangeDate: num
       ]
 }
 
-export function getLastChangedIndex(groupings: lastChangedGroup[], newest: number, input: number) {
+function getLastChangedIndex(groupings: lastChangedGroup[], newest: number, input: number) {
   const diff = newest - input
   let index = 0
   while (index < groupings.length - 1) {
