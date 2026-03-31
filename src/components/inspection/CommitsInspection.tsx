@@ -27,6 +27,7 @@ export function CommitsInspection() {
         href("/view/api/commits") + viewSerializer({ objectPath: clickedObject.path, path }) + `&count=${count}`
       )
     },
+    // TODO: fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [clickedObject?.path, path]
   )
@@ -36,8 +37,9 @@ export function CommitsInspection() {
     return () => {
       fetcher.reset()
     }
+    // TODO: fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commitShowCount])
+  }, [commitShowCount, loadCommits])
 
   const data = fetcher.data ?? previousData.current
 
