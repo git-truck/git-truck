@@ -25,7 +25,7 @@ for (const [lang, { color, extensions }] of Object.entries(
     const extWithoutDot = ext.startsWith(".") ? ext.slice(1) : ext
     extensionToColor.set(extWithoutDot, {
       lang,
-      color: color as HexColor | null
+      color: (color ?? null) as HexColor | null
     })
   }
 }
