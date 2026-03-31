@@ -441,16 +441,14 @@ function NodeText({
   isSearchMatch?: boolean
   children?: React.ReactNode
 }) {
-  // const [metricsData] = useMetrics()
-  // const { metricType } = useOptions()
+  const [metricsData] = useMetrics()
+  const { metricType } = useOptions()
   const isBubbleChart = isCircularNode(d)
 
   if (children === null) return null
 
-  // const colorValue = metricsData.get(metricType)?.categoriesMap.get(d.data.path) ?? "#333"
-  // const contrastResult = isDarkColor(colorValue)
-  // TODO: what to do for gradients?
-  const contrastResult = isDarkColor("#ffffff")
+  const colors = metricsData.get(metricType)?.categoriesMap.get(d.data.path) ?? []
+  const contrastResult = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0].color)
 
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
