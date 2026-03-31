@@ -255,15 +255,7 @@ export function GroupContributorsModal() {
     </div>
   )
 
-  function AliasEntry({
-    alias,
-    onClick,
-    disabled
-  }: {
-    alias: string
-    disabled?: boolean
-    onClick: () => void
-  }) {
+  function AliasEntry({ alias, onClick, disabled }: { alias: string; disabled?: boolean; onClick: () => void }) {
     return (
       <button
         className="btn flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
