@@ -128,12 +128,7 @@ export const FileSizeMetric: SegmentedMetric = {
     const groupingsWithoutColor = Array.from({ length: Math.max(1, edges.length - 1) }, (_, i) => {
       const low = edges[i] ?? min
       const high = edges[i + 1] ?? max
-      const text =
-        i === 0
-          ? `<= ${byteSize(1000, {
-              precision: 0
-            })}`
-          : `> ${byteSize(low, { precision: 0 })}`
+      const text = i === 0 ? `<= ${byteSize(high, { precision: 0 })}` : `> ${byteSize(low, { precision: 0 })}`
       return {
         text,
         range: [low, high] as [number, number]
