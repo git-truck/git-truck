@@ -30,7 +30,7 @@ export const ContributorsMetric: CategoricalMetric = {
     )
   },
   getCategories(obj, dbi) {
-    return (dbi.contributorsForPath[obj.path] ?? []).map((c) => c.contributor) || ["No contributors"]
+    return (dbi.contributorsForPath[obj.path] ?? []).map((c) => c.contributor)
   },
   metricFunctionFactory:
     (data, { contributorColors }) =>
