@@ -1,11 +1,10 @@
 import type { FileChange, FullCommitDTO } from "~/shared/model"
-import { Fragment, useId, useState } from "react"
+import { Fragment, useId } from "react"
 import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "~/components/Popover"
-import { ChevronButton } from "~/components/ChevronButton"
 
 type SortCommitsMethods = "date" | "author"
 
@@ -19,7 +18,6 @@ interface CommitDistFragProps {
 export function CommitHistoryLabel({ htmlFor }: { htmlFor?: string }) {
   return (
     <label className="label grow" htmlFor={htmlFor}>
-      <h3 className="font-bold">Commit History</h3>
       <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
         Shows the commit history for the selected file or folder.
       </p>
@@ -30,7 +28,6 @@ export function CommitHistoryLabel({ htmlFor }: { htmlFor?: string }) {
 function CommitDistFragment(props: CommitDistFragProps) {
   const [, contributorColors] = useMetrics()
   const commitDistExpandId = useId()
-  const [collapsed, setCollapsed] = useState<boolean>(true)
   const commitsAreCutoff = true
 
   return (
@@ -39,9 +36,6 @@ function CommitDistFragment(props: CommitDistFragProps) {
         className={`flex justify-between ${commitsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
       >
         <CommitHistoryLabel htmlFor={commitDistExpandId} />
-        {commitsAreCutoff ? (
-          <ChevronButton id={commitDistExpandId} open={!collapsed} onClick={() => setCollapsed(!collapsed)} />
-        ) : null}
       </div>
       <div className="grid grid-cols-[1fr_auto] items-center justify-center">
         {props.items.map((value) => (
@@ -205,7 +199,7 @@ export function CommitHistory({
               onCountChange()
             }}
           >
-            Show more commits
+            Load more commits
           </button>
         ) : null}
       </div>
