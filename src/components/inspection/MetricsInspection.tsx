@@ -35,7 +35,7 @@ import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 
-export function InspectionMetrics() {
+export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
   const clickedObject = useClickedObject()
