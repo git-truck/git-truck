@@ -160,7 +160,7 @@ export const FileSizeMetric: SegmentedMetric = {
   }
 } as const
 
-export class FileSizeTranslater {
+class FileSizeTranslater {
   readonly translater: SpectrumTranslater
   readonly min_lightness = 50
   readonly max_lightness = 95
