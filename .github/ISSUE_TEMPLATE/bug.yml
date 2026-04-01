@@ -1,7 +1,6 @@
 name: Bug Report
 description: Report a bug in git-truck
 type: Bug
-title: ''
 body:
   - type: input
     id: version
