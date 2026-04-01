@@ -22,10 +22,10 @@ jobs:
       - name: Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
 
-      - name: Auto fix lint
+      - name: Auto fix issues and formatting
         id: lint_fix
         continue-on-error: true
-        run: bun --bun run lint:fix
+        run: bun --bun run check:write
 
       - name: Report remaining lint issues
         if: steps.lint_fix.outcome == 'failure'
