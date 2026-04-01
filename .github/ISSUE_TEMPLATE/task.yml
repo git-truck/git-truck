@@ -1,0 +1,12 @@
+name: Task
+description: Track a task or piece of work
+type: Task
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Task description
+      description: Describe the task, its goals, and any relevant context.
+      placeholder: Provide details about what needs to be done.
+    validations:
+      required: false
