@@ -1,4 +1,12 @@
 name: Feature Request
 description: Suggest a new feature or improvement
 type: Feature
-body: []
+body:
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature description
+      description: Please describe the feature or improvement you would like to see.
+      placeholder: Describe the problem, your proposed solution, and any alternatives you've considered.
+    validations:
+      required: false
