@@ -1,0 +1,49 @@
+name: Bug Report
+description: Report a bug in git-truck
+type: Bug
+title: "[Bug]: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: git-truck version
+      placeholder: "e.g. 1.2.3"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: false
+  - type: dropdown
+    id: package-manager
+    attributes:
+      label: Package Manager
+      options:
+        - npm
+        - pnpm
+        - bun
+        - yarn
+    validations:
+      required: false
+  - type: input
+    id: runtime-version
+    attributes:
+      label: Runtime Version
+      description: "Bun or Node.js version (e.g. bun 1.2.0 / node 22.0.0)"
+      placeholder: "e.g. bun 1.2.0 / node 22.0.0"
+    validations:
+      required: false
