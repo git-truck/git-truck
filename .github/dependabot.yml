@@ -21,20 +21,15 @@ updates:
           - "eslint"
           - "eslint-*"
           - "@eslint/*"
-          - "typescript-eslint"
-          - "globals"
       react-router:
         patterns:
           - "react-router"
-          - "react-router-devtools"
           - "@react-router/*"
-          - "isbot"
       vite:
         patterns:
           - "vite"
           - "vite-*"
           - "@vitejs/*"
-          - "vitest"
       tailwindcss:
         patterns:
           - "tailwindcss"
