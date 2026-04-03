@@ -43,7 +43,18 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 
 - **Task Execution**: Prefer using VS Code tasks (via `run_task`) for common operations like building, testing, or starting the server. Fall back to `bun` CLI commands in the terminal if no suitable task exists.
 - **Package Manager**: Use `bun` for all script execution and package management.
-- **Commit Messages**: Use Conventional Commits in the form `type: subject`, keep the subject imperative and under 50 characters, and avoid a trailing period, e.g. `feat: add...`, `fix: correct...`, or `chore: update...`.
+- **Commit Messages**: Use Conventional Commits in the form `type: subject`. Keep the subject imperative, under 50 characters, with no trailing period. Prefer the most semantic type first; use `chore:` only when the change does not fit any of the categories below. Use these types in this order:
+  - `feat:` - A new feature
+  - `fix:` - A bug fix
+  - `docs:` - Documentation only changes
+  - `style:` - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+  - `refactor:` - A code change that neither fixes a bug nor adds a feature
+  - `perf:` - A code change that improves performance
+  - `test:` - Adding missing tests or correcting existing tests
+  - `build:` - Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+  - `ci:` - Changes to CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+  - `chore:` - Other changes that do not fit the categories above
+  - `revert:` - Reverts a previous commit
 - **Release Workflow**: Use Changesets for releases. Add a changeset for releasable work, let `.github/workflows/release.yml` open or update the release PR on `main`, and expect npm publishing to happen automatically after that release PR is merged.
 - **Styling**: Use Tailwind CSS utility classes.
 - **Routing**: Follow React Router file-based routing and loaders/actions conventions in `src/routes/`.
