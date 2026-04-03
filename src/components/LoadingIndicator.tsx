@@ -59,7 +59,7 @@ export function LoadingIndicator({
           <div className="h-6 w-3/4 self-center rounded-2xl bg-gray-300">
             <div
               className={cn(
-                "bg-blue-primary h-[calc(100%-4px)] min-w-[calc(var(--spacing)*6-4px)] translate-x-0.5 translate-y-0.5 rounded-2xl transition-[width] ease-in-out",
+                "bg-blue-primary h-[calc(100%-4px)] min-w-[calc(var(--spacing)*6-4px)] translate-x-0.5 translate-y-0.5 rounded-2xl transition-[width] duration-1000 ease-in-out",
                 {
                   "animate-skeet": !progress
                 }
