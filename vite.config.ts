@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { reactRouterDevTools } from "react-router-devtools"
 import { reactRouter } from "@react-router/dev/vite"
-import { reactCompilerPreset } from "@vitejs/plugin-react"
+import react, { reactCompilerPreset } from "@vitejs/plugin-react"
 // import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
@@ -44,6 +44,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     ]
   },
   plugins: [
+    react(),
     babel({
       presets: [reactCompilerPreset()]
     }),
