@@ -3,7 +3,7 @@ import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/view.progress"
 import { currentRepositoryContext } from "~/routes/view"
 
-const POLLING_RATE = 500
+const POLLING_RATE = 1000
 
 export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {
   const { instance } = context.get(currentRepositoryContext)
