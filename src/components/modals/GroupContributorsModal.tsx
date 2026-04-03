@@ -254,22 +254,22 @@ export function GroupContributorsModal() {
       </div>
     </div>
   )
+}
 
-  function AliasEntry({ alias, onClick, disabled }: { alias: string; disabled?: boolean; onClick: () => void }) {
-    return (
-      <button
-        className="btn flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
-        disabled={disabled}
-        title="Make display name for this grouping"
-        onClick={onClick}
-      >
-        <Icon path={mdiArrowUp} size={0.75} />
-        <label title={alias} className="label truncate">
-          {alias}
-        </label>
-      </button>
-    )
-  }
+function AliasEntry({ alias, onClick, disabled }: { alias: string; disabled?: boolean; onClick: () => void }) {
+  return (
+    <button
+      className="btn flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
+      disabled={disabled}
+      title="Make display name for this grouping"
+      onClick={onClick}
+    >
+      <Icon path={mdiArrowUp} size={0.75} />
+      <label title={alias} className="label truncate">
+        {alias}
+      </label>
+    </button>
+  )
 }
 
 const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
