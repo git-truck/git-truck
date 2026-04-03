@@ -1,6 +1,6 @@
 import { useNavigation } from "react-router"
 import { Fragment, useState, useTransition, type CSSProperties } from "react"
-import { Slider, Rail, Handles, Tracks, type RailProps } from "react-compound-slider"
+import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { dateFormatCalendarHeader, dateFormatISO, dateFormatShort } from "~/shared/util"
 import DatePicker from "react-datepicker"
@@ -113,7 +113,7 @@ export default function Timeline({ className }: { className?: string }) {
                     handle={handle}
                     domain={timerange}
                     getHandleProps={getHandleProps}
-                  ></Handle>
+                  />
                 </Fragment>
               ))}
             </div>
@@ -192,7 +192,7 @@ function TimePicker({
         selected={new Date(range[setsBeginning ? 0 : 1] * 1000)}
         minDate={new Date(setsBeginning ? timerange[0] * 1000 : Math.max(timerange[0] * 1000, range[0] * 1000))}
         maxDate={new Date(setsBeginning ? Math.min(timerange[1] * 1000, range[1] * 1000) : timerange[1] * 1000)}
-        onChange={(x) => {
+        onChange={(x: Date | null) => {
           if (x) {
             let newRange: [number, number]
             if (setsBeginning) {
