@@ -15,7 +15,7 @@ const modals = {
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
 type ModalKey = (typeof MODAL_KEYS)[number] | null
 
-const modalSearchParamConfig = parseAsStringLiteral(MODAL_KEYS).withOptions({ shallow: false })
+const modalSearchParamConfig = parseAsStringLiteral(MODAL_KEYS).withOptions({ shallow: true })
 
 export function useModal(modalKey: ModalKey | null = null) {
   const [modal, setModal] = useQueryState("modal", modalSearchParamConfig)
