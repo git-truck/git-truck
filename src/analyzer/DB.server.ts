@@ -2,8 +2,10 @@ import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } fr
 import type {
   AbstractGitObject,
   CommitDTO,
+  ContributorGroup,
   GitLogEntry,
   GitObject,
+  Person,
   RawGitObject,
   RenameEntry,
   RenameInterval
@@ -146,8 +148,9 @@ export default class DB {
         filepath VARCHAR,
       );
       CREATE TABLE IF NOT EXISTS authorunions (
-        alias VARCHAR PRIMARY KEY,
-        actualname VARCHAR
+        displayName VARCHAR,
+        authorEmail VARCHAR,
+        authorName VARCHAR
       );
       CREATE TABLE IF NOT EXISTS renames (
         fromname VARCHAR,
@@ -210,8 +213,9 @@ export default class DB {
   private static async initViews(db: DuckDBConnection, start: number, end: number) {
     await db.run(/*sql*/ `
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author, c.authoremail, c.committertime, c.authortime FROM
-      commits c LEFT JOIN authorunions u ON c.author = u.alias
+      SELECT c.hash, CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE c.author END AS author, c.authoremail, c.committertime, c.authortime FROM
+      commits c LEFT JOIN (SELECT displayName, authorEmail, authorName FROM authorunions) u
+      ON (c.author = u.authorName AND c.authoremail = u.authorEmail)
       WHERE c.committertime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW filechanges_commits AS
@@ -252,13 +256,14 @@ export default class DB {
 
       CREATE OR REPLACE VIEW combined_result AS
       SELECT f.commithash, f.insertions, f.deletions, c.authoremail, c.committertime, c.authortime,
-        CASE WHEN u.actualname IS NOT NULL THEN u.actualname ELSE c.author END AS author,
+        CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE c.author END AS author,
         CASE
             WHEN r.toname IS NOT NULL THEN r.toname
             ELSE f.filepath
         END AS filepath
       FROM commits c
-      LEFT JOIN authorunions u ON c.author = u.alias
+      LEFT JOIN (SELECT displayName, authorEmail, authorName FROM authorunions) u
+      ON (c.author = u.authorName AND c.authoremail = u.authorEmail)
       JOIN filechanges f ON f.commithash = c.hash
       LEFT JOIN temporary_renames r ON f.filepath = r.fromname AND c.committertime BETWEEN r.timestamp AND r.timestampend
       INNER JOIN files fi on fi.path = filepath
@@ -274,16 +279,24 @@ export default class DB {
     await DB.initViews(await this.connectionPromise, start, end)
   }
 
-  public async replaceContributorGroups(unions: string[][]) {
+  public async replaceContributorGroups(unions: ContributorGroup[]) {
     await this.run(`
       DELETE FROM authorunions;
     `)
+
     await this.usingTableAppender("authorunions", async (appender) => {
+      const seen = new Set<string>()
+
       for (const union of unions) {
-        const [actualname, ...aliases] = union
-        for (const alias of aliases) {
-          appender.appendVarchar(alias)
-          appender.appendVarchar(actualname)
+        for (const alias of union.members) {
+          const email = alias.email ?? ""
+          const key = `${union.displayName}\u0000${alias.name}\u0000${email}`
+          if (seen.has(key)) continue
+          seen.add(key)
+
+          appender.appendVarchar(union.displayName)
+          appender.appendVarchar(email)
+          appender.appendVarchar(alias.name)
           appender.endRow()
         }
       }
@@ -314,23 +327,38 @@ export default class DB {
     })
   }
 
-  public async getAuthorUnions(): Promise<string[][]> {
-    const res = (
-      await (
-        await this.connectionPromise
-      ).runAndReadAll(`
-      SELECT actualname, LIST(alias) as aliases FROM authorunions GROUP BY actualname;
+  public async getAuthorUnions(): Promise<ContributorGroup[]> {
+    const res = await this.query(`
+      SELECT displayName, authorEmail, authorName FROM authorunions;  
     `)
-    ).getRowObjects()
-    return res.map((row) => [row["actualname"], ...(row["aliases"] as DuckDBArrayValue).items] as string[])
+
+    const groupsByName = new Map<string, Person[]>()
+    res.forEach((row) => {
+      const displayName = row["displayName"] as string
+      const authorName = row["authorName"] as string
+      const authorEmail = row["authorEmail"] as string
+      const person: Person = { name: authorName, email: authorEmail }
+      const existing = groupsByName.get(displayName)
+      if (existing) {
+        existing.push(person)
+      } else {
+        groupsByName.set(displayName, [person])
+      }
+    })
+
+    return Array.from(groupsByName.entries()).map(([displayName, members]) => ({
+      displayName,
+      members
+    }))
   }
 
   public async getRawUnions() {
     const res = await this.query(`
-      SELECT * FROM authorunions;
+      SELECT displayName, authorEmail, authorName
+      FROM authorunions;
     `)
 
-    return res as { alias: string; actualname: string }[]
+    return res as { displayName: string; authorEmail: string; authorName: string }[]
   }
 
   public async getCommitTimeAtIndex(idx: number) {
@@ -646,9 +674,8 @@ export default class DB {
 
   public async getAuthors() {
     const res = await this.query(`
-      SELECT author, arg_max(authoremail, committertime) AS email
-      FROM commits_unioned
-      GROUP BY author;
+      SELECT DISTINCT author, authoremail AS email
+      FROM commits;
     `)
     return res.map((row) => ({
       name: String(row["author"] ?? ""),

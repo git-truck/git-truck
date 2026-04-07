@@ -133,6 +133,11 @@ type PersonWithTime = Person & {
   timezone: string
 }
 
+export type ContributorGroup = {
+  displayName: string
+  members: Person[]
+}
+
 export type ModeType = "create" | "modify" | "delete"
 
 export interface FileChange {
@@ -208,7 +213,7 @@ export interface DatabaseInfo {
   maxFileSize: number
   minFileSize: number
   contributors: Person[]
-  contributorGroups: string[][]
+  contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }
