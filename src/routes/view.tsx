@@ -189,8 +189,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   if (typeof groupedContributors === "string") {
     instance.prevInvokeReason = "groupedContributors"
-    const json = JSON.parse(groupedContributors) as string[][]
-    await instance.db.replaceContributorGroups(json)
+    const groups = JSON.parse(groupedContributors)
+    await instance.db.replaceContributorGroups(groups)
     return null
   }
 
