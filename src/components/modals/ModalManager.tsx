@@ -15,6 +15,9 @@ const modals = {
 const MODAL_KEYS = Object.keys(modals) as Array<keyof typeof modals>
 type ModalKey = (typeof MODAL_KEYS)[number] | null
 
+type CustomCloseAction = () => void
+let customCloseAction: CustomCloseAction | undefined
+
 const modalSearchParamConfig = parseAsStringLiteral(MODAL_KEYS).withOptions({ shallow: true })
 
 export function useModal(modalKey: ModalKey | null = null) {
@@ -22,7 +25,12 @@ export function useModal(modalKey: ModalKey | null = null) {
 
   const openModal = (modal: ModalKey = modalKey) => void setModal(modal)
   const closeModal = () => setModal(null)
-  return { modal, openModal, closeModal }
+
+  const setCustomCloseAction = (fn: CustomCloseAction | undefined) => {
+    customCloseAction = fn
+  }
+
+  return { modal, openModal, closeModal, customCloseAction, setCustomCloseAction }
 }
 
 export function ModalManager() {
@@ -30,7 +38,12 @@ export function ModalManager() {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   const onClose = () => {
-    return setModal(null)
+    setModal(null)
+    if (modalKey && customCloseAction) {
+      customCloseAction()
+      customCloseAction = undefined
+    }
+    return undefined
   }
 
   useEffect(() => {
