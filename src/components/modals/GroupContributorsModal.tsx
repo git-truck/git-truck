@@ -4,10 +4,12 @@ import type { ContributorGroup, Person } from "~/shared/model"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
-import { mdiArrowUp, mdiAccountMultiplePlus, mdiAccountMultipleMinus } from "@mdi/js"
+import { mdiAccountMultiplePlus, mdiAccountMultipleMinus, mdiAccountMultipleRemove, mdiAccountRemove } from "@mdi/js"
 import { LegendDot } from "~/components/util"
 import { useViewSubmit } from "~/hooks"
 import { useModal } from "~/components/modals/ModalManager"
+import { missingInMapColor } from "~/const"
+import { cn } from "~/styling"
 
 export function GroupContributorsModal() {
   const { databaseInfo } = useData()
@@ -111,25 +113,65 @@ export function GroupContributorsModal() {
     return (
       <div
         key={aliasGroupIndex}
-        className="card bg-primary-bg dark:bg-primary-bg-dark group m-0 flex h-full flex-col p-2"
+        className="card bg-primary-bg dark:bg-primary-bg-dark group m-0 flex h-full flex-col justify-between p-2"
+        title={displayName}
       >
-        <div className="inline-flex flex-row place-items-center gap-2">
-          <LegendDot dotColor={color} />
-          <b className="truncate" title={displayName}>
-            {displayName}
-          </b>
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full flex-row justify-between gap-1">
+            <div className="bg-secondary-bg dark:bg-secondary-bg-dark flex w-full flex-row items-center gap-2 rounded-md px-2 py-1">
+              <LegendDot dotColor={color} />
+              <select
+                className="w-full truncate pr-2 text-sm font-bold"
+                value={displayName}
+                onChange={(e) => makePrimaryAlias(e.target.value, aliasGroupIndex)}
+              >
+                {Array.from(new Set([displayName, ...members.map((member) => member.name)])).map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="h-full opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="h-full max-w-0 overflow-hidden transition-[max-width] group-hover:max-w-20">
+                <button
+                  className="btn btn--danger h-full w-fit"
+                  title="Ungroup"
+                  onClick={() => setLocalContributorGroups((prev) => prev.filter((_, i) => i !== aliasGroupIndex))}
+                >
+                  <Icon path={mdiAccountMultipleRemove} size={0.75} />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div>
+            {members
+              .filter((value, index, array) => array.map((v) => v.email).indexOf(value.email) === index)
+              .map((contributor) => (
+                <AliasEntry
+                  key={uniqueId(contributor)}
+                  contributor={contributor}
+                  onClick={() =>
+                    setLocalContributorGroups((prev) =>
+                      prev.flatMap((group, i) => {
+                        if (i !== aliasGroupIndex) return [group]
+                        const remainingMembers = group.members.filter((member) => member.email !== contributor.email)
+                        return remainingMembers.length > 0 ? [{ ...group, members: remainingMembers }] : []
+                      })
+                    )
+                  }
+                />
+              ))}
+          </div>
         </div>
-        {members.map((alias) => (
-          <AliasEntry
-            key={uniqueId(alias)}
-            alias={alias.name}
-            onClick={() => makePrimaryAlias(alias.name, aliasGroupIndex)}
-          />
-        ))}
-        <div className="grow" />
-        <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div
+          className={cn(
+            "flex h-full w-full origin-top items-end justify-end transition-all delay-50 duration-100",
+            selectedContributors.length === 0 ? "max-h-0 scale-y-0 opacity-0" : "max-h-10 scale-y-100 opacity-100"
+          )}
+        >
           <button
-            className="btn"
+            className="btn btn--primary h-fit w-fit px-2 py-1 text-xs"
             title="Add selected contributors to this group"
             disabled={selectedContributors.length === 0}
             onClick={() => {
@@ -141,14 +183,8 @@ export function GroupContributorsModal() {
               setSelectedContributors([])
             }}
           >
-            Add selected
-          </button>
-          <button
-            className="btn"
-            title="Ungroup"
-            onClick={() => setLocalContributorGroups((prev) => prev.filter((_, i) => i !== aliasGroupIndex))}
-          >
-            Ungroup
+            <Icon path={mdiAccountMultiplePlus} size={0.75} />
+            Add contributor
           </button>
         </div>
       </div>
@@ -199,7 +235,7 @@ export function GroupContributorsModal() {
               {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
             </button>
           </div>
-          <div className="grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto p-2">
+          <div className="bg-primary-bg dark:bg-primary-bg-dark grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto rounded-lg p-2">
             {ungroupedContributorsFiltered.length > 0 ? (
               ungroupedContributorsEntries
             ) : (
@@ -209,9 +245,8 @@ export function GroupContributorsModal() {
             )}
           </div>
         </div>
-
         <div className="min-h-0 overflow-y-auto">
-          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-1 xl:grid-cols-2">
             {localContributorGroups.length > 0 ? (
               groupedContributorsEntries
             ) : (
@@ -255,19 +290,36 @@ export function GroupContributorsModal() {
   )
 }
 
-function AliasEntry({ alias, onClick, disabled }: { alias: string; disabled?: boolean; onClick: () => void }) {
+function AliasEntry({
+  contributor,
+  onClick,
+  disabled
+}: {
+  contributor: Person
+  disabled?: boolean
+  onClick: () => void
+}) {
   return (
-    <button
-      className="btn flex grid-flow-col gap-2 text-sm [&:hover>svg]:opacity-50 [&>svg]:opacity-0"
-      disabled={disabled}
-      title="Make display name for this grouping"
-      onClick={onClick}
-    >
-      <Icon path={mdiArrowUp} size={0.75} />
-      <label title={alias} className="label truncate">
-        {alias}
-      </label>
-    </button>
+    <>
+      <div className="flex w-full items-center gap-2 pl-2">
+        <LegendDot dotColor={missingInMapColor} className="size-2" />
+        <button
+          className="group/alias flex w-full items-center justify-between text-sm"
+          disabled={disabled}
+          title="Make display name for this grouping"
+          onClick={onClick}
+        >
+          <label title={contributor.email} className="label w-8/10 truncate text-start text-xs">
+            {contributor.email}
+          </label>
+          <span className="max-w-0 overflow-hidden transition-[max-width] duration-200 group-hover/alias:max-w-20">
+            <span className="block opacity-0 transition-opacity delay-5 duration-200 group-hover/alias:opacity-100 group-hover/alias:delay-5">
+              <Icon path={mdiAccountRemove} size={0.75} className="" />
+            </span>
+          </span>
+        </button>
+      </div>
+    </>
   )
 }
 
