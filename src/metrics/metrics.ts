@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, GitTreeObject, HexColor, RepoData } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, GitObject, GitTreeObject, HexColor, Person, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import { type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -108,14 +108,16 @@ export interface MetricCache {
 }
 
 function generateContributorColors(
-  contributors: string[],
+  contributors: Person[],
   colorSeed: string | null,
   predefinedContributorColors: Record<string, HexColor>
 ): Record<string, HexColor> {
   const contributorColorMap: Record<string, HexColor> = {}
   const colors = scaleOrdinal(schemeTableau10).range()
 
-  const sortedContributors = contributors.slice().sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
+  const sortedContributors = contributors
+    .map((contributor) => contributor.name)
+    .sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
 
   for (let i = 0; i < sortedContributors.length; i++) {
     const contributor = sortedContributors[i]

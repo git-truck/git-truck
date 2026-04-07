@@ -1,118 +1,114 @@
-import { useTransition, useState } from "react"
-import { useNavigation, Form } from "react-router"
+import { useEffect, useMemo, useRef, useTransition, useState } from "react"
 import { useData } from "~/contexts/DataContext"
+import type { Person } from "~/shared/model"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
 import { mdiArrowUp, mdiAccountMultiplePlus, mdiAccountMultipleMinus } from "@mdi/js"
 import { LegendDot } from "~/components/util"
-import { useViewAction, useViewSubmit } from "~/hooks"
+import { useViewSubmit } from "~/hooks"
+import { useModal } from "~/components/modals/ModalManager"
 
 export function GroupContributorsModal() {
   const { databaseInfo } = useData()
-  const submit = useViewSubmit()
-  const { contributorGroups, contributors: contributors } = databaseInfo
-  const [selectedContributors, setSelectedContributors] = useState<string[]>([])
+  const { contributorGroups, contributors } = databaseInfo
+  const [selectedContributors, setSelectedContributors] = useState<Person[]>([])
+  const [localContributorGroups, setLocalContributorGroups] = useState<string[][]>(contributorGroups)
   const [filter, setFilter] = useState("")
-  const navigationData = useNavigation()
   const [, contributorColors] = useMetrics()
   const [, startTransition] = useTransition()
-  const viewAction = useViewAction()
+  const submit = useViewSubmit()
 
-  const flattedUnionedContributor = contributorGroups
-    .reduce((acc, group) => {
-      return [...acc, ...group]
-    }, [] as string[])
-    .sort(stringSorter)
+  const submitRef = useRef(submit)
+  useEffect(() => {
+    submitRef.current = submit
+  }, [submit])
 
-  function ungroup(groupToUnGroup: number) {
-    const newContributorGroups = contributorGroups.filter((_, i) => i !== groupToUnGroup)
-    const form = new FormData()
-    form.append("groupedContributors", JSON.stringify(newContributorGroups))
-
-    submit(form, {
-      method: "post"
-    })
-  }
-
-  function ungroupAll() {
-    const form = new FormData()
-    form.append("groupedContributors", JSON.stringify([]))
-
-    submit(form, {
-      method: "post"
-    })
-  }
-
-  function groupSelectedContributors() {
-    if (selectedContributors.length < 2) return
-    const form = new FormData()
-    form.append("groupedContributors", JSON.stringify([...contributorGroups, selectedContributors]))
-
-    submit(form, {
-      method: "post"
-    })
-    setSelectedContributors([])
-  }
+  // When the modal is closed, check if the contributor groups have changed. If they have, submit the new groups as custom close action.
+  const { setCustomCloseAction } = useModal("group-contributors")
+  useEffect(() => {
+    const handleCloseWithSubmitIfChanged = () => {
+      const currentGroups = localContributorGroups
+      const originalGroups = contributorGroups
+      if (JSON.stringify(currentGroups) === JSON.stringify(originalGroups)) return
+      const form = new FormData()
+      form.append("groupedContributors", JSON.stringify(currentGroups))
+      submitRef.current(form, {
+        method: "post"
+      })
+    }
+    setCustomCloseAction(handleCloseWithSubmitIfChanged)
+    return () => setCustomCloseAction(undefined)
+  }, [setCustomCloseAction, contributorGroups, localContributorGroups])
 
   function makePrimaryAlias(alias: string, groupIndex: number) {
-    const newContributorUnions = contributorGroups.map((group, i) => {
+    const newContributorUnions = localContributorGroups.map((group, i) => {
       if (i === groupIndex) {
         return [alias, ...group.filter((a) => a !== alias)]
       }
       return group
     })
-    const form = new FormData()
-    form.append("groupedContributors", JSON.stringify(newContributorUnions))
-
-    submit(form, {
-      method: "post"
-    })
+    setLocalContributorGroups(newContributorUnions)
   }
 
-  const disabled = navigationData.state !== "idle"
+  const groupedContributorsSet = useMemo(() => new Set(localContributorGroups.flat()), [localContributorGroups])
 
-  const ungroupedContributorsSorted = contributors
-    .filter((a) => !flattedUnionedContributor.includes(a))
-    .slice(0)
-    .sort(stringSorter)
+  const ungroupedContributorsSorted = useMemo(
+    () =>
+      contributors
+        .filter((contributor) => !groupedContributorsSet.has(contributor.name))
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [contributors, groupedContributorsSet]
+  )
+
+  const ungroupedContributorsFiltered = useMemo(() => {
+    return ungroupedContributorsSorted.filter((contributor) =>
+      contributor.name.toLowerCase().includes(filter.toLowerCase())
+    )
+  }, [ungroupedContributorsSorted, filter])
 
   const getColorFromDisplayName = (displayName: string) => contributorColors.get(displayName) ?? "#333"
 
-  const ungroupedContributorsFiltered = ungroupedContributorsSorted.filter((contributor) =>
-    contributor.toLowerCase().includes(filter.toLowerCase())
-  )
   const ungroupedContributorsEntries = ungroupedContributorsFiltered.map((contributor) => {
-    const isContributorSelected = selectedContributors.includes(contributor)
+    const isContributorSelected = selectedContributors.some((selected) => selected.name === contributor.name)
     return (
       <CheckboxWithLabel
-        key={contributor + isContributorSelected}
-        className="hover:opacity-70"
+        key={contributor.name + isContributorSelected}
+        className="contents"
+        checkBoxClassName="ml-auto"
         checked={isContributorSelected}
         onChange={(e) => {
-          const newSelectedContributors = e.target?.checked
-            ? [...selectedContributors, contributor]
-            : selectedContributors.filter((a) => a !== contributor)
-          setSelectedContributors(newSelectedContributors)
+          setSelectedContributors((prev) => {
+            if (e.target?.checked) return [...prev, contributor]
+            else return prev.filter((selected) => selected.name !== contributor.name)
+          })
         }}
       >
-        <div className="inline-flex flex-1 flex-row place-items-center gap-2">
-          <LegendDot dotColor={getColorFromDisplayName(contributor)} />
-          {contributor}
+        <div className="contents">
+          <LegendDot dotColor={getColorFromDisplayName(contributor.name)} />
+          <span className="truncate font-bold" title={contributor.name}>
+            {contributor.name}
+          </span>
+          <p
+            className="text-secondary-text dark:text-secondary-text-dark truncate text-xs leading-tight"
+            title={contributor.email ?? "<unknown>"}
+          >
+            {contributor.email ?? "<unknown>"}
+          </p>
         </div>
       </CheckboxWithLabel>
     )
   })
 
-  const groupedContributorsEntries = contributorGroups.map((aliasGroup, aliasGroupIndex) => {
+  const groupedContributorsEntries = localContributorGroups.map((aliasGroup, aliasGroupIndex) => {
     const displayName = aliasGroup[0]
-    const disabled = navigationData.state !== "idle"
     const color = getColorFromDisplayName(displayName)
 
     return (
       <div
         key={aliasGroupIndex}
-        className="card bg-tertiary-bg dark:bg-tertiary-bg-dark group m-0 flex h-full flex-col p-2"
+        className="card bg-primary-bg dark:bg-primary-bg-dark group m-0 flex h-full flex-col p-2"
       >
         <div className="inline-flex flex-row place-items-center gap-2">
           <LegendDot dotColor={color} />
@@ -124,41 +120,37 @@ export function GroupContributorsModal() {
           .slice(1)
           .sort(stringSorter)
           .map((alias) => (
-            <AliasEntry
-              key={alias}
-              alias={alias}
-              disabled={disabled}
-              onClick={() => makePrimaryAlias(alias, aliasGroupIndex)}
-            />
+            <AliasEntry key={alias} alias={alias} onClick={() => makePrimaryAlias(alias, aliasGroupIndex)} />
           ))}
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          <Form method="post" action={viewAction}>
-            <input type="hidden" name="groupedContributors" value={JSON.stringify(contributorGroups)} />
-            <button
-              className="btn"
-              title="Add selected contributors to this group"
-              disabled={disabled || selectedContributors.length === 0}
-              onClick={() => {
-                const newContributorUnions = contributorGroups.map(([displayName, ...group], i) => {
-                  if (i === aliasGroupIndex) {
-                    return [displayName, ...group, ...selectedContributors]
-                  }
-                  return [displayName, ...group]
-                })
-                const form = new FormData()
-                form.append("groupedContributors", JSON.stringify(newContributorUnions))
-
-                submit(form, {
-                  method: "post"
-                })
-                setSelectedContributors([])
-              }}
-            >
-              Add selected
-            </button>
-          </Form>
-          <button className="btn" title="Ungroup" disabled={disabled} onClick={() => ungroup(aliasGroupIndex)}>
+          <button
+            className="btn"
+            title="Add selected contributors to this group"
+            disabled={selectedContributors.length === 0}
+            onClick={() => {
+              const newContributorUnions = localContributorGroups.map(([groupDisplayName, ...group], i) => {
+                if (i === aliasGroupIndex) {
+                  return [groupDisplayName, ...group, ...selectedContributors.map((contributor) => contributor.name)]
+                }
+                return [groupDisplayName, ...group]
+              })
+              setLocalContributorGroups(newContributorUnions)
+              setSelectedContributors([])
+            }}
+          >
+            Add selected
+          </button>
+          <button
+            className="btn"
+            title="Ungroup"
+            onClick={() =>
+              setLocalContributorGroups((prev) => {
+                const newContributorGroups = prev.filter((_, i) => i !== aliasGroupIndex)
+                return newContributorGroups
+              })
+            }
+          >
             Ungroup
           </button>
         </div>
@@ -184,8 +176,8 @@ export function GroupContributorsModal() {
               onChange={(e) => startTransition(() => setFilter(e.target.value))}
             />
             <button
-              disabled={disabled || selectedContributors.length === 0}
-              className="btn btn--outlined w-max grow"
+              disabled={selectedContributors.length === 0}
+              className="btn w-max grow"
               title="Clear selection"
               onClick={() => setSelectedContributors([])}
             >
@@ -193,21 +185,25 @@ export function GroupContributorsModal() {
             </button>
             <button
               disabled={ungroupedContributorsSorted.length === 0}
-              className="btn btn--outlined w-max grow"
+              className="btn w-max grow"
               title="Clear selection"
               onClick={() =>
                 selectedContributors.length === ungroupedContributorsFiltered.length
                   ? setSelectedContributors([])
-                  : setSelectedContributors((selected) =>
-                      Array.from(new Set([...selected, ...ungroupedContributorsFiltered]))
-                    )
+                  : setSelectedContributors((selected) => {
+                      const next = new Map(selected.map((contributor) => [contributor.name, contributor]))
+                      for (const contributor of ungroupedContributorsFiltered) {
+                        next.set(contributor.name, contributor)
+                      }
+                      return Array.from(next.values())
+                    })
               }
             >
               {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
             </button>
           </div>
-          <div className="min-h-0 w-full flex-1 justify-between overflow-y-auto p-2">
-            {ungroupedContributorsEntries.length > 0 ? (
+          <div className="grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto p-2">
+            {ungroupedContributorsFiltered.length > 0 ? (
               ungroupedContributorsEntries
             ) : (
               <p className="place-self-center text-sm">
@@ -219,7 +215,7 @@ export function GroupContributorsModal() {
 
         <div className="min-h-0 overflow-y-auto">
           <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-2 xl:grid-cols-3">
-            {contributorGroups.length > 0 ? (
+            {localContributorGroups.length > 0 ? (
               groupedContributorsEntries
             ) : (
               <p className="col-span-2 text-center text-sm">No contributors have been grouped yet</p>
@@ -231,21 +227,24 @@ export function GroupContributorsModal() {
         <button
           className="btn btn--primary mx-auto w-fit"
           title={
-            disabled || selectedContributors.length < 2
+            selectedContributors.length < 2
               ? "Select at least 2 contributors to group them"
               : "Group the selected contributors"
           }
-          disabled={disabled || selectedContributors.length < 2}
-          onClick={groupSelectedContributors}
+          disabled={selectedContributors.length < 2}
+          onClick={() => {
+            setLocalContributorGroups((prev) => [...prev, selectedContributors.map((contributor) => contributor.name)])
+            setSelectedContributors([])
+          }}
         >
           <Icon path={mdiAccountMultiplePlus} size={1} />
           Create group
         </button>
         <button
           className="btn btn--danger mx-auto w-fit"
-          disabled={disabled || contributorGroups.length === 0}
+          disabled={localContributorGroups.length === 0}
           onClick={() => {
-            if (confirm("Are you sure you want to ungroup all grouped contributors?")) ungroupAll()
+            if (confirm("Are you sure you want to ungroup all grouped contributors?")) setLocalContributorGroups([])
           }}
         >
           <Icon path={mdiAccountMultipleMinus} size={1} />

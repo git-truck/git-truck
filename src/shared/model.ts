@@ -207,7 +207,7 @@ export interface DatabaseInfo {
   oldestChangeDate: number
   maxFileSize: number
   minFileSize: number
-  contributors: string[]
+  contributors: Person[]
   contributorGroups: string[][]
   fileTree: GitTreeObject
   hiddenFiles: string[]
