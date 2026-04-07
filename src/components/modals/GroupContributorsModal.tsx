@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useTransition, useState } from "react"
 import { useData } from "~/contexts/DataContext"
-import type { Person } from "~/shared/model"
+import type { ContributorGroup, Person } from "~/shared/model"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
@@ -13,7 +13,7 @@ export function GroupContributorsModal() {
   const { databaseInfo } = useData()
   const { contributorGroups, contributors } = databaseInfo
   const [selectedContributors, setSelectedContributors] = useState<Person[]>([])
-  const [localContributorGroups, setLocalContributorGroups] = useState<string[][]>(contributorGroups)
+  const [localContributorGroups, setLocalContributorGroups] = useState<ContributorGroup[]>(contributorGroups)
   const [filter, setFilter] = useState("")
   const [, contributorColors] = useMetrics()
   const [, startTransition] = useTransition()
@@ -28,11 +28,11 @@ export function GroupContributorsModal() {
   const { setCustomCloseAction } = useModal("group-contributors")
   useEffect(() => {
     const handleCloseWithSubmitIfChanged = () => {
-      const currentGroups = localContributorGroups
-      const originalGroups = contributorGroups
-      if (JSON.stringify(currentGroups) === JSON.stringify(originalGroups)) return
+      const currentSerialized = JSON.stringify(localContributorGroups)
+      const originalSerialized = JSON.stringify(contributorGroups)
+      if (currentSerialized === originalSerialized) return
       const form = new FormData()
-      form.append("groupedContributors", JSON.stringify(currentGroups))
+      form.append("groupedContributors", currentSerialized)
       submitRef.current(form, {
         method: "post"
       })
@@ -41,23 +41,27 @@ export function GroupContributorsModal() {
     return () => setCustomCloseAction(undefined)
   }, [setCustomCloseAction, contributorGroups, localContributorGroups])
 
-  function makePrimaryAlias(alias: string, groupIndex: number) {
-    const newContributorUnions = localContributorGroups.map((group, i) => {
-      if (i === groupIndex) {
-        return [alias, ...group.filter((a) => a !== alias)]
-      }
-      return group
+  function makePrimaryAlias(aliasName: string, groupIndex: number) {
+    setLocalContributorGroups((prev) => {
+      const group = prev[groupIndex]
+      if (!group || group.displayName === aliasName) return prev
+      return prev.map((group, i) => (i === groupIndex ? { ...group, displayName: aliasName } : group))
     })
-    setLocalContributorGroups(newContributorUnions)
   }
 
-  const groupedContributorsSet = useMemo(() => new Set(localContributorGroups.flat()), [localContributorGroups])
+  useEffect(() => {
+    setLocalContributorGroups(contributorGroups)
+  }, [contributorGroups])
+
+  const groupedContributorsSet = useMemo(
+    () => new Set(localContributorGroups.flatMap((group) => group.members).map(uniqueId)),
+    [localContributorGroups]
+  )
 
   const ungroupedContributorsSorted = useMemo(
     () =>
       contributors
-        .filter((contributor) => !groupedContributorsSet.has(contributor.name))
-        .slice()
+        .filter((contributor) => !groupedContributorsSet.has(uniqueId(contributor)))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [contributors, groupedContributorsSet]
   )
@@ -71,17 +75,17 @@ export function GroupContributorsModal() {
   const getColorFromDisplayName = (displayName: string) => contributorColors.get(displayName) ?? "#333"
 
   const ungroupedContributorsEntries = ungroupedContributorsFiltered.map((contributor) => {
-    const isContributorSelected = selectedContributors.some((selected) => selected.name === contributor.name)
+    const isContributorSelected = selectedContributors.some((selected) => uniqueId(selected) === uniqueId(contributor))
     return (
       <CheckboxWithLabel
-        key={contributor.name + isContributorSelected}
+        key={uniqueId(contributor) + isContributorSelected}
         className="contents"
         checkBoxClassName="ml-auto"
         checked={isContributorSelected}
         onChange={(e) => {
           setSelectedContributors((prev) => {
             if (e.target?.checked) return [...prev, contributor]
-            else return prev.filter((selected) => selected.name !== contributor.name)
+            else return prev.filter((selected) => uniqueId(selected) !== uniqueId(contributor))
           })
         }}
       >
@@ -92,17 +96,16 @@ export function GroupContributorsModal() {
           </span>
           <p
             className="text-secondary-text dark:text-secondary-text-dark truncate text-xs leading-tight"
-            title={contributor.email ?? "<unknown>"}
+            title={contributor.email}
           >
-            {contributor.email ?? "<unknown>"}
+            {contributor.email}
           </p>
         </div>
       </CheckboxWithLabel>
     )
   })
 
-  const groupedContributorsEntries = localContributorGroups.map((aliasGroup, aliasGroupIndex) => {
-    const displayName = aliasGroup[0]
+  const groupedContributorsEntries = localContributorGroups.map(({ displayName, members }, aliasGroupIndex) => {
     const color = getColorFromDisplayName(displayName)
 
     return (
@@ -116,12 +119,13 @@ export function GroupContributorsModal() {
             {displayName}
           </b>
         </div>
-        {aliasGroup
-          .slice(1)
-          .sort(stringSorter)
-          .map((alias) => (
-            <AliasEntry key={alias} alias={alias} onClick={() => makePrimaryAlias(alias, aliasGroupIndex)} />
-          ))}
+        {members.map((alias) => (
+          <AliasEntry
+            key={uniqueId(alias)}
+            alias={alias.name}
+            onClick={() => makePrimaryAlias(alias.name, aliasGroupIndex)}
+          />
+        ))}
         <div className="grow" />
         <div className="flex items-end justify-end gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
@@ -129,13 +133,11 @@ export function GroupContributorsModal() {
             title="Add selected contributors to this group"
             disabled={selectedContributors.length === 0}
             onClick={() => {
-              const newContributorUnions = localContributorGroups.map(([groupDisplayName, ...group], i) => {
-                if (i === aliasGroupIndex) {
-                  return [groupDisplayName, ...group, ...selectedContributors.map((contributor) => contributor.name)]
-                }
-                return [groupDisplayName, ...group]
+              setLocalContributorGroups((prev) => {
+                return prev.map((group, i) =>
+                  i === aliasGroupIndex ? { ...group, members: group.members.concat(selectedContributors) } : group
+                )
               })
-              setLocalContributorGroups(newContributorUnions)
               setSelectedContributors([])
             }}
           >
@@ -144,12 +146,7 @@ export function GroupContributorsModal() {
           <button
             className="btn"
             title="Ungroup"
-            onClick={() =>
-              setLocalContributorGroups((prev) => {
-                const newContributorGroups = prev.filter((_, i) => i !== aliasGroupIndex)
-                return newContributorGroups
-              })
-            }
+            onClick={() => setLocalContributorGroups((prev) => prev.filter((_, i) => i !== aliasGroupIndex))}
           >
             Ungroup
           </button>
@@ -191,9 +188,9 @@ export function GroupContributorsModal() {
                 selectedContributors.length === ungroupedContributorsFiltered.length
                   ? setSelectedContributors([])
                   : setSelectedContributors((selected) => {
-                      const next = new Map(selected.map((contributor) => [contributor.name, contributor]))
+                      const next = new Map(selected.map((contributor) => [uniqueId(contributor), contributor]))
                       for (const contributor of ungroupedContributorsFiltered) {
-                        next.set(contributor.name, contributor)
+                        next.set(uniqueId(contributor), contributor)
                       }
                       return Array.from(next.values())
                     })
@@ -233,7 +230,10 @@ export function GroupContributorsModal() {
           }
           disabled={selectedContributors.length < 2}
           onClick={() => {
-            setLocalContributorGroups((prev) => [...prev, selectedContributors.map((contributor) => contributor.name)])
+            setLocalContributorGroups((prev) => [
+              ...prev,
+              { displayName: selectedContributors[0]?.name ?? "Group", members: selectedContributors }
+            ])
             setSelectedContributors([])
           }}
         >
@@ -271,4 +271,6 @@ function AliasEntry({ alias, onClick, disabled }: { alias: string; disabled?: bo
   )
 }
 
-const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
+function uniqueId(person: Person) {
+  return `${person.name}\u0000${person.email ?? ""}`
+}
