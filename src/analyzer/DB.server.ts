@@ -646,9 +646,14 @@ export default class DB {
 
   public async getAuthors() {
     const res = await this.query(`
-      SELECT DISTINCT author FROM commits_unioned;
+      SELECT author, arg_max(authoremail, committertime) AS email
+      FROM commits_unioned
+      GROUP BY author;
     `)
-    return res.map((row) => row["author"] as string)
+    return res.map((row) => ({
+      name: String(row["author"] ?? ""),
+      email: String(row["email"] ?? "")
+    }))
   }
 
   public async getNewestAndOldestChangeDates() {
