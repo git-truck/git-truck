@@ -69,6 +69,6 @@ export function Modal({
   )
 }
 
-export function ModalHeader({ icon, children, onClose }: { icon: string; children: ReactNode; onClose: () => void }) {
+function ModalHeader({ icon, children, onClose }: { icon: string; children: ReactNode; onClose: () => void }) {
   return <></>
 }
