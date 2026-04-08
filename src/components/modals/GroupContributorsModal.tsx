@@ -300,26 +300,25 @@ function AliasEntry({
   onClick: () => void
 }) {
   return (
-    <>
-      <div className="flex w-full items-center gap-2 pl-2">
-        <LegendDot dotColor={missingInMapColor} className="size-2" />
-        <button
-          className="group/alias flex w-full items-center justify-between text-sm"
-          disabled={disabled}
-          title="Make display name for this grouping"
-          onClick={onClick}
+    <div className="flex w-full items-center gap-2 pl-2">
+      <LegendDot dotColor={missingInMapColor} className="size-2" />
+      <button
+        className="group/alias grid w-full grid-cols-[minmax(0,1fr)_1rem] items-center gap-2 text-sm"
+        disabled={disabled}
+        title="Make display name for this grouping"
+        onClick={onClick}
+      >
+        <label
+          title={contributor.email}
+          className="label group min-w-0 truncate text-start text-xs group-hover/alias:text-red-500"
         >
-          <label title={contributor.email} className="label w-8/10 truncate text-start text-xs">
-            {contributor.email}
-          </label>
-          <span className="max-w-0 overflow-hidden transition-[max-width] duration-200 group-hover/alias:max-w-20">
-            <span className="block opacity-0 transition-opacity delay-5 duration-200 group-hover/alias:opacity-100 group-hover/alias:delay-5">
-              <Icon path={mdiAccountRemove} size={0.75} className="" />
-            </span>
-          </span>
-        </button>
-      </div>
-    </>
+          {contributor.email}
+        </label>
+        <span className="flex opacity-0 transition-opacity duration-200 group-hover/alias:opacity-100">
+          <Icon path={mdiAccountRemove} size={0.75} />
+        </span>
+      </button>
+    </div>
   )
 }
 
