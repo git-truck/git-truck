@@ -33,7 +33,6 @@ import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { type inferParserType } from "nuqs"
-import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
@@ -549,7 +548,6 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                 </div>
               </main>
             </div>
-            <ModalManager />
           </Providers>
         )}
       </Await>
