@@ -10,12 +10,14 @@ import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks"
 import jsxA11y from "eslint-plugin-jsx-a11y"
 import importPlugin from "eslint-plugin-import"
+import reactYouMightNotNeedAnEffect from "eslint-plugin-react-you-might-not-need-an-effect"
 import globals from "globals"
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  reactYouMightNotNeedAnEffect.configs.recommended,
   {
     files: ["src/**/*.{js,jsx,ts,tsx}", "e2e/**/*.{js,jsx,ts,tsx}", "scripts/**/*.{js,ts}"],
     plugins: {
