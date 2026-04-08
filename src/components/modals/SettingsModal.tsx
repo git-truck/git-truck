@@ -1,12 +1,13 @@
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { getDefaultOptionsContextValue, useOptions } from "~/contexts/OptionsContext"
 import { Icon } from "~/components/Icon"
-import { mdiClockEdit, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
+import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useState, useTransition } from "react"
 import anitruck from "~/assets/truck.gif"
 import { relatedSizeMetric } from "~/components/Options"
+import { Modal } from "~/components/modals/Modal"
 
-export function SettingsModal() {
+export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const {
     metricType,
     hierarchyType,
@@ -25,7 +26,7 @@ export function SettingsModal() {
   } = useOptions()
 
   return (
-    <>
+    <Modal open={open} title="Settings" icon={mdiCog} onClose={onClose}>
       <div className="flex min-h-0 max-w-max flex-col items-start gap-3 overflow-y-auto p-2 pl-0">
         <CheckboxWithLabel
           className="group text-sm hover:text-blue-500 hover:opacity-100"
@@ -103,7 +104,7 @@ export function SettingsModal() {
         </CheckboxWithLabel>
         <RenderCutOff />
       </div>
-    </>
+    </Modal>
   )
 }
 function RenderCutOff() {

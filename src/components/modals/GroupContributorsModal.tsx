@@ -1,17 +1,24 @@
-import { useEffect, useMemo, useRef, useTransition, useState } from "react"
+import { useEffect, useMemo, useTransition, useState } from "react"
 import { useData } from "~/contexts/DataContext"
 import type { ContributorGroup, Person } from "~/shared/model"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Icon } from "~/components/Icon"
-import { mdiAccountMultiplePlus, mdiAccountMultipleMinus, mdiAccountMultipleRemove, mdiAccountRemove } from "@mdi/js"
+import {
+  mdiAccountMultiplePlus,
+  mdiAccountMultipleMinus,
+  mdiAccountMultipleRemove,
+  mdiAccountRemove,
+  mdiAccountMultipleCheck,
+  mdiAccountMultiple
+} from "@mdi/js"
 import { LegendDot } from "~/components/util"
 import { useViewSubmit } from "~/hooks"
-import { useModal } from "~/components/modals/ModalManager"
+import { Modal } from "~/components/modals/Modal"
 import { missingInMapColor } from "~/const"
 import { cn } from "~/styling"
 
-export function GroupContributorsModal() {
+export function GroupContributorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { databaseInfo } = useData()
   const { contributorGroups, contributors } = databaseInfo
   const [selectedContributors, setSelectedContributors] = useState<Person[]>([])
@@ -20,28 +27,18 @@ export function GroupContributorsModal() {
   const [, contributorColors] = useMetrics()
   const [, startTransition] = useTransition()
   const submit = useViewSubmit()
-
-  const submitRef = useRef(submit)
-  useEffect(() => {
-    submitRef.current = submit
-  }, [submit])
-
   // When the modal is closed, check if the contributor groups have changed. If they have, submit the new groups as custom close action.
-  const { setCustomCloseAction } = useModal("group-contributors")
-  useEffect(() => {
-    const handleCloseWithSubmitIfChanged = () => {
-      const currentSerialized = JSON.stringify(localContributorGroups)
-      const originalSerialized = JSON.stringify(contributorGroups)
-      if (currentSerialized === originalSerialized) return
-      const form = new FormData()
-      form.append("groupedContributors", currentSerialized)
-      submitRef.current(form, {
-        method: "post"
-      })
-    }
-    setCustomCloseAction(handleCloseWithSubmitIfChanged)
-    return () => setCustomCloseAction(undefined)
-  }, [setCustomCloseAction, contributorGroups, localContributorGroups])
+
+  const handleCloseWithSubmitIfChanged = () => {
+    const currentSerialized = JSON.stringify(localContributorGroups)
+    const originalSerialized = JSON.stringify(contributorGroups)
+    if (currentSerialized === originalSerialized) return
+    const form = new FormData()
+    form.append("groupedContributors", currentSerialized)
+    submit(form, {
+      method: "post"
+    })
+  }
 
   function makePrimaryAlias(aliasName: string, groupIndex: number) {
     setLocalContributorGroups((prev) => {
@@ -73,6 +70,15 @@ export function GroupContributorsModal() {
       contributor.name.toLowerCase().includes(filter.toLowerCase())
     )
   }, [ungroupedContributorsSorted, filter])
+
+  const autoGroupCandidates = useMemo(
+    () => buildAutoContributorGroups(ungroupedContributorsSorted),
+    [ungroupedContributorsSorted]
+  )
+  const autoGroupAuthorCount = useMemo(
+    () => autoGroupCandidates.reduce((sum, group) => sum + group.members.length, 0),
+    [autoGroupCandidates]
+  )
 
   const getColorFromDisplayName = (displayName: string) => contributorColors.get(displayName) ?? "#333"
 
@@ -166,12 +172,12 @@ export function GroupContributorsModal() {
         </div>
         <div
           className={cn(
-            "flex h-full w-full origin-top items-end justify-end transition-all delay-50 duration-100",
+            "relative flex h-full w-full origin-top items-end justify-end transition-all delay-50 duration-100",
             selectedContributors.length === 0 ? "max-h-0 scale-y-0 opacity-0" : "max-h-10 scale-y-100 opacity-100"
           )}
         >
           <button
-            className="btn btn--primary h-fit w-fit px-2 py-1 text-xs"
+            className="btn btn--primary right bottom absolute h-fit w-fit px-2 py-1 text-xs shadow-lg"
             title="Add selected contributors to this group"
             disabled={selectedContributors.length === 0}
             onClick={() => {
@@ -192,101 +198,138 @@ export function GroupContributorsModal() {
   })
 
   return (
-    <div className="flex min-h-0 w-auto max-w-(--breakpoint-lg) min-w-0 flex-col gap-2 p-4">
-      <div className="grid grid-cols-[1fr_1fr] gap-2">
-        <h3 className="text-center text-lg font-bold">Ungrouped Contributors ({ungroupedContributorsSorted.length})</h3>
-        <h3 className="text-center text-lg font-bold">Contributor Groups ({groupedContributorsEntries.length})</h3>
-      </div>
-
-      <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr] gap-2">
-        <div className="flex min-h-0 flex-col rounded-md">
-          <div className="flex gap-2 p-2">
-            <input
-              className="input min-w-0"
-              type="search"
-              placeholder="Filter..."
-              disabled={ungroupedContributorsSorted.length === 0}
-              onChange={(e) => startTransition(() => setFilter(e.target.value))}
-            />
+    <Modal
+      open={open}
+      title="Group contributors"
+      icon={mdiAccountMultiple}
+      onClose={() => {
+        handleCloseWithSubmitIfChanged()
+        onClose()
+      }}
+    >
+      <div className="flex min-h-0 w-auto max-w-(--breakpoint-lg) min-w-0 flex-col gap-2 p-4">
+        <div className="grid grid-cols-[1fr_1fr] gap-2">
+          <h3 className="text-center text-lg font-bold">
+            Ungrouped Contributors ({ungroupedContributorsSorted.length})
+          </h3>
+          <h3 className="text-center text-lg font-bold">Contributor Groups ({groupedContributorsEntries.length})</h3>
+        </div>
+        <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr] gap-2">
+          <div className="flex min-h-0 flex-col rounded-md">
+            <div className="flex gap-2 p-2">
+              <input
+                className="input min-w-0"
+                type="search"
+                placeholder="Filter..."
+                disabled={ungroupedContributorsSorted.length === 0}
+                onChange={(e) => startTransition(() => setFilter(e.target.value))}
+              />
+              <button
+                disabled={selectedContributors.length === 0}
+                className="btn w-max grow"
+                title="Clear selection"
+                onClick={() => setSelectedContributors([])}
+              >
+                Clear
+              </button>
+              <button
+                disabled={ungroupedContributorsSorted.length === 0}
+                className="btn w-max grow"
+                title="Clear selection"
+                onClick={() =>
+                  selectedContributors.length === ungroupedContributorsFiltered.length
+                    ? setSelectedContributors([])
+                    : setSelectedContributors((selected) => {
+                        const next = new Map(selected.map((contributor) => [uniqueId(contributor), contributor]))
+                        for (const contributor of ungroupedContributorsFiltered) {
+                          next.set(uniqueId(contributor), contributor)
+                        }
+                        return Array.from(next.values())
+                      })
+                }
+              >
+                {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
+              </button>
+            </div>
+            <div className="bg-primary-bg dark:bg-primary-bg-dark grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto rounded-lg p-2">
+              {ungroupedContributorsFiltered.length > 0 ? (
+                ungroupedContributorsEntries
+              ) : (
+                <p className="place-self-center text-sm">
+                  {filter.length > 0 ? "No contributors found" : "All contributors have been grouped"}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="min-h-0 overflow-y-auto">
+            <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-1 xl:grid-cols-2">
+              {localContributorGroups.length > 0 ? (
+                groupedContributorsEntries
+              ) : (
+                <p className="col-span-2 text-center text-sm">No contributors have been grouped yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-[1fr_1fr] gap-2">
+          <div className="flex w-full flex-row justify-end gap-2">
+            {autoGroupAuthorCount > 0 ? (
+              <button
+                className="btn btn--primary w-fit transition-all duration-100"
+                title={
+                  autoGroupCandidates.length === 0
+                    ? "No ungrouped contributors share the same name or email"
+                    : `Create ${autoGroupCandidates.length} inferred group${autoGroupCandidates.length > 1 ? "s" : ""} containing ${autoGroupAuthorCount} author${autoGroupAuthorCount > 1 ? "s" : ""}`
+                }
+                disabled={autoGroupCandidates.length === 0}
+                onClick={() => {
+                  setLocalContributorGroups((prev) => {
+                    const next = prev.slice()
+                    for (const autoGroup of autoGroupCandidates) next.push(autoGroup)
+                    return next
+                  })
+                  setSelectedContributors([])
+                }}
+              >
+                <Icon path={mdiAccountMultipleCheck} size={1} />
+                Auto group ({autoGroupAuthorCount})
+              </button>
+            ) : null}
             <button
-              disabled={selectedContributors.length === 0}
-              className="btn w-max grow"
-              title="Clear selection"
-              onClick={() => setSelectedContributors([])}
-            >
-              Clear
-            </button>
-            <button
-              disabled={ungroupedContributorsSorted.length === 0}
-              className="btn w-max grow"
-              title="Clear selection"
-              onClick={() =>
-                selectedContributors.length === ungroupedContributorsFiltered.length
-                  ? setSelectedContributors([])
-                  : setSelectedContributors((selected) => {
-                      const next = new Map(selected.map((contributor) => [uniqueId(contributor), contributor]))
-                      for (const contributor of ungroupedContributorsFiltered) {
-                        next.set(uniqueId(contributor), contributor)
-                      }
-                      return Array.from(next.values())
-                    })
+              className="btn btn--primary w-fit transition-all duration-100"
+              title={
+                selectedContributors.length < 2
+                  ? "Select at least 2 contributors to group them"
+                  : "Group the selected contributors"
               }
+              disabled={selectedContributors.length < 2}
+              onClick={() => {
+                setLocalContributorGroups((prev) => [
+                  ...prev,
+                  { displayName: selectedContributors[0]?.name ?? "Group", members: selectedContributors }
+                ])
+                setSelectedContributors([])
+              }}
             >
-              {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
+              <Icon path={mdiAccountMultiplePlus} size={1} />
+              Create new group
             </button>
           </div>
-          <div className="bg-primary-bg dark:bg-primary-bg-dark grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto rounded-lg p-2">
-            {ungroupedContributorsFiltered.length > 0 ? (
-              ungroupedContributorsEntries
-            ) : (
-              <p className="place-self-center text-sm">
-                {filter.length > 0 ? "No contributors found" : "All contributors have been grouped"}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="min-h-0 overflow-y-auto">
-          <div className="grid h-min min-h-0 grid-cols-1 gap-4 rounded-md p-2 lg:grid-cols-1 xl:grid-cols-2">
-            {localContributorGroups.length > 0 ? (
-              groupedContributorsEntries
-            ) : (
-              <p className="col-span-2 text-center text-sm">No contributors have been grouped yet</p>
-            )}
+          <div className="flex w-full flex-row justify-end gap-2">
+            <button
+              className="btn btn--danger w-fit transition-all duration-100"
+              disabled={localContributorGroups.length === 0}
+              onClick={() => {
+                if (confirm("Are you sure you want to ungroup all grouped contributors?")) setLocalContributorGroups([])
+              }}
+            >
+              <Icon path={mdiAccountMultipleMinus} size={1} />
+              Ungroup all
+            </button>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-[1fr_1fr] gap-2">
-        <button
-          className="btn btn--primary mx-auto w-fit"
-          title={
-            selectedContributors.length < 2
-              ? "Select at least 2 contributors to group them"
-              : "Group the selected contributors"
-          }
-          disabled={selectedContributors.length < 2}
-          onClick={() => {
-            setLocalContributorGroups((prev) => [
-              ...prev,
-              { displayName: selectedContributors[0]?.name ?? "Group", members: selectedContributors }
-            ])
-            setSelectedContributors([])
-          }}
-        >
-          <Icon path={mdiAccountMultiplePlus} size={1} />
-          Create group
-        </button>
-        <button
-          className="btn btn--danger mx-auto w-fit"
-          disabled={localContributorGroups.length === 0}
-          onClick={() => {
-            if (confirm("Are you sure you want to ungroup all grouped contributors?")) setLocalContributorGroups([])
-          }}
-        >
-          <Icon path={mdiAccountMultipleMinus} size={1} />
-          Ungroup all
-        </button>
-      </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -308,15 +351,15 @@ function AliasEntry({
         title="Make display name for this grouping"
         onClick={onClick}
       >
-        <label
+        <span
           title={contributor.email}
           className="label group min-w-0 truncate text-start text-xs group-hover/alias:text-red-500"
         >
           {contributor.email}
-        </label>
-        <span className="flex opacity-0 transition-opacity duration-200 group-hover/alias:opacity-100">
-          <Icon path={mdiAccountRemove} size={0.75} />
         </span>
+        <div className="flex opacity-0 transition-opacity duration-200 group-hover/alias:opacity-100">
+          <Icon path={mdiAccountRemove} size={0.75} />
+        </div>
       </button>
     </div>
   )
@@ -324,4 +367,60 @@ function AliasEntry({
 
 function uniqueId(person: Person) {
   return `${person.name}\u0000${person.email ?? ""}`
+}
+
+function buildAutoContributorGroups(ungroupedContributors: Person[]): ContributorGroup[] {
+  if (ungroupedContributors.length < 2) return []
+
+  const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
+  const parent = Array.from({ length: ungroupedContributors.length }, (_, i) => i)
+  const rank = Array(ungroupedContributors.length).fill(0)
+
+  const find = (i: number): number => {
+    if (parent[i] !== i) parent[i] = find(parent[i])
+    return parent[i]
+  }
+
+  const union = (a: number, b: number) => {
+    const rootA = find(a)
+    const rootB = find(b)
+    if (rootA === rootB) return
+    if (rank[rootA] < rank[rootB]) parent[rootA] = rootB
+    else if (rank[rootA] > rank[rootB]) parent[rootB] = rootA
+    else {
+      parent[rootB] = rootA
+      rank[rootA]++
+    }
+  }
+
+  const firstByName = new Map<string, number>()
+  const firstByEmail = new Map<string, number>()
+
+  for (const [i, { name, email }] of ungroupedContributors.entries()) {
+    if (name) {
+      if (firstByName.has(name)) union(i, firstByName.get(name)!)
+      else firstByName.set(name, i)
+    }
+    if (email) {
+      if (firstByEmail.has(email)) union(i, firstByEmail.get(email)!)
+      else firstByEmail.set(email, i)
+    }
+  }
+
+  const groupsByRoot = new Map<number, Person[]>()
+  for (const [i, person] of ungroupedContributors.entries()) {
+    const root = find(i)
+    const group = groupsByRoot.get(root) ?? []
+    group.push(person)
+    groupsByRoot.set(root, group)
+  }
+
+  return Array.from(groupsByRoot.values())
+    .filter((g) => g.length > 1)
+    .map((members) => {
+      const sorted = [...members].sort(
+        (a, b) => stringSorter(a.name, b.name) || stringSorter(a.email ?? "", b.email ?? "")
+      )
+      return { displayName: sorted[0]?.name ?? "Group", members: sorted }
+    })
 }
