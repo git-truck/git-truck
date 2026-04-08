@@ -7,8 +7,9 @@ import { useRef } from "react"
 import { getSep } from "~/shared/util"
 import { useViewAction } from "~/hooks"
 import { cn } from "~/styling"
+import { Modal } from "~/components/modals/Modal"
 
-export function HideFilesModal() {
+export function HideFilesModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigationState = useNavigation()
   const { databaseInfo } = useData()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -33,92 +34,94 @@ export function HideFilesModal() {
   const filteredHiddenFiles = displayedHiddenFiles.filter((path) => path !== optimisticUnhide)
 
   return (
-    <div className="flex min-h-0 max-w-[40ch] flex-col items-start justify-center gap-3 overflow-y-auto p-2 pl-0">
-      <p className="text-sm">
-        Pattern-matched files are hidden from the file tree and excluded from metric computations.
-      </p>
-      <p className="text-sm">
-        Hidden files behave like entries in a <Code inline>.gitignore</Code> file.
-      </p>
-      <Form
-        action={viewAction}
-        method="post"
-        className="flex w-full flex-wrap items-end gap-2"
-        onSubmit={() => {
-          // Clear after form data is captured
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.value = ""
-            }
-          }, 0)
-        }}
-      >
-        <label className="label flex min-w-0 flex-1 flex-col gap-2">
-          Path or glob
-          <input
-            ref={inputRef}
-            type="text"
-            className="input"
-            name="hide"
-            placeholder="Enter pattern..."
-            onChange={(e) => {
-              // Update form validity based on whether pattern already exists
-              const exists = databaseInfo.hiddenFiles.includes(e.target.value)
-              e.target.setCustomValidity(exists ? "Pattern already exists" : "")
-            }}
-          />
-        </label>
-        <button className="btn btn--primary whitespace-nowrap">Hide</button>
-      </Form>
-      <div className="flex w-full items-center justify-between">
-        <h3 className="text-tertiary-text dark:text-tertiary-text-dark text-sm font-bold tracking-wide uppercase">
-          Hidden files/patterns
-        </h3>
+    <Modal open={open} title="Hide files" icon={mdiEyeOff} onClose={onClose}>
+      <div className="flex min-h-0 max-w-[40ch] flex-col items-start justify-center gap-3 overflow-y-auto p-2 pl-0">
+        <p className="text-sm">
+          Pattern-matched files are hidden from the file tree and excluded from metric computations.
+        </p>
+        <p className="text-sm">
+          Hidden files behave like entries in a <Code inline>.gitignore</Code> file.
+        </p>
         <Form
           action={viewAction}
           method="post"
-          className={cn({
-            hidden: databaseInfo.hiddenFiles.length === 0
-          })}
+          className="flex w-full flex-wrap items-end gap-2"
+          onSubmit={() => {
+            // Clear after form data is captured
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.value = ""
+              }
+            }, 0)
+          }}
         >
-          <input type="hidden" name="unhideAll" value="true" />
-          <button className="btn btn--danger btn--text">Reset</button>
+          <label className="label flex min-w-0 flex-1 flex-col gap-2">
+            Path or glob
+            <input
+              ref={inputRef}
+              type="text"
+              className="input"
+              name="hide"
+              placeholder="Enter pattern..."
+              onChange={(e) => {
+                // Update form validity based on whether pattern already exists
+                const exists = databaseInfo.hiddenFiles.includes(e.target.value)
+                e.target.setCustomValidity(exists ? "Pattern already exists" : "")
+              }}
+            />
+          </label>
+          <button className="btn btn--primary whitespace-nowrap">Hide</button>
         </Form>
+        <div className="flex w-full items-center justify-between">
+          <h3 className="text-tertiary-text dark:text-tertiary-text-dark text-sm font-bold tracking-wide uppercase">
+            Hidden files/patterns
+          </h3>
+          <Form
+            action={viewAction}
+            method="post"
+            className={cn({
+              hidden: databaseInfo.hiddenFiles.length === 0
+            })}
+          >
+            <input type="hidden" name="unhideAll" value="true" />
+            <button className="btn btn--danger btn--text">Reset</button>
+          </Form>
+        </div>
+        <div className="flex max-h-96 min-h-0 w-full flex-col gap-2 overflow-y-auto">
+          {filteredHiddenFiles.length > 0 ? (
+            filteredHiddenFiles.map((hidden) => {
+              const isOptimistic = hidden === optimisticHide
+              const isPendingRemoval = hidden === optimisticUnhide
+              return (
+                <div
+                  key={hidden}
+                  className="primary grid grid-cols-[auto_1fr] items-center gap-2 rounded-md px-2 py-1 text-sm"
+                  style={{ opacity: isOptimistic ? 0.6 : isPendingRemoval ? 0.4 : 1 }}
+                  title={hidden}
+                >
+                  <Form action={viewAction} className="w-4" method="post">
+                    <input type="hidden" name="show" value={hidden} />
+                    <button
+                      className="btn btn--text btn--hover-swap h-4"
+                      title="Show file"
+                      disabled={navigationState.state !== "idle" || isOptimistic}
+                    >
+                      <Icon path={mdiEyeOff} className="inline-block h-full" />
+                      <Icon path={mdiEye} className="hover-swap inline-block h-full" />
+                    </button>
+                  </Form>
+                  <span className="truncate text-sm" title={hidden}>
+                    {hiddenFileFormat(hidden)}
+                  </span>
+                </div>
+              )
+            })
+          ) : (
+            <div className="text-secondary-text dark:text-secondary-text-dark text-sm opacity-70">No hidden files</div>
+          )}
+        </div>
       </div>
-      <div className="flex max-h-96 min-h-0 w-full flex-col gap-2 overflow-y-auto">
-        {filteredHiddenFiles.length > 0 ? (
-          filteredHiddenFiles.map((hidden) => {
-            const isOptimistic = hidden === optimisticHide
-            const isPendingRemoval = hidden === optimisticUnhide
-            return (
-              <div
-                key={hidden}
-                className="primary grid grid-cols-[auto_1fr] items-center gap-2 rounded-md px-2 py-1 text-sm"
-                style={{ opacity: isOptimistic ? 0.6 : isPendingRemoval ? 0.4 : 1 }}
-                title={hidden}
-              >
-                <Form action={viewAction} className="w-4" method="post">
-                  <input type="hidden" name="show" value={hidden} />
-                  <button
-                    className="btn btn--text btn--hover-swap h-4"
-                    title="Show file"
-                    disabled={navigationState.state !== "idle" || isOptimistic}
-                  >
-                    <Icon path={mdiEyeOff} className="inline-block h-full" />
-                    <Icon path={mdiEye} className="hover-swap inline-block h-full" />
-                  </button>
-                </Form>
-                <span className="truncate text-sm" title={hidden}>
-                  {hiddenFileFormat(hidden)}
-                </span>
-              </div>
-            )
-          })
-        ) : (
-          <div className="text-secondary-text dark:text-secondary-text-dark text-sm opacity-70">No hidden files</div>
-        )}
-      </div>
-    </div>
+    </Modal>
   )
 }
 
