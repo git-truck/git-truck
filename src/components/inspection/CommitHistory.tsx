@@ -85,7 +85,10 @@ function FileChangesEntry(props: { filechanges: FileChange[] }) {
 
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
   return (
-    <div title={`By: ${props.value.author}`} className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis">
+    <div
+      title={`By: ${props.value.author.name}`}
+      className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis"
+    >
       <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author.name} />
       <Popover
         triggerClassName="min-w-0 truncate"
