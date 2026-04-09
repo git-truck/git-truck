@@ -125,7 +125,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                 </>
               ) : (
                 <>
-                  <div className="absolute top-5 left-full w-fit overflow-visible">
+                  <div className="absolute top-5 left-full w-fit overflow-visible" title={seg.label}>
                     {" "}
                     <Tick
                       className={cn({
@@ -142,7 +142,6 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                         },
                         "pointer-events-none text-xs whitespace-nowrap"
                       )}
-                      title={seg.label}
                     >
                       {displayLabel}
                     </span>
