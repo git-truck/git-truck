@@ -8,14 +8,15 @@
       // "command": "/home/node/.bun/bin/bun",
       // For local development
       "command": "bun",
-      "args": ["--bun", "dev:bun"],
+      "args": ["dev"],
       "presentation": {
         "reveal": "always",
         "panel": "shared"
       },
       "runOptions": {
         "runOn": "folderOpen"
-      }
+      },
+      "dependsOn": ["Install dependencies with bun"]
     },
     {
       "label": "Install dependencies with bun",
@@ -31,6 +32,7 @@
       "label": "Build with bun",
       "type": "process",
       "command": "bun",
+      "group": "build",
       "args": ["run", "build"],
       "presentation": { "reveal": "always", "panel": "shared" }
     },
@@ -39,7 +41,6 @@
       "type": "shell",
       "command": "bun",
       "args": ["typecheck"],
-      "group": "build",
       "problemMatcher": ["$tsc"],
       "presentation": { "reveal": "always", "panel": "shared" }
     }
