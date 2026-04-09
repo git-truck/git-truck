@@ -555,6 +555,66 @@ export default class DB {
     return result
   }
 
+  public async getContributorMetricsPerFile(): Promise<
+    Map<
+      string,
+      {
+        contributors: Array<{ contributor: string; lineChanges: number; commits: number }>
+        totalCommits: number
+        totalSum: number
+        numContributors: number
+      }
+    >
+  > {
+    const res = await this.query(`
+      SELECT
+        fc.filepath,
+        fc.author,
+        SUM(fc.insertions + fc.deletions) AS line_changes,
+        COUNT(DISTINCT fc.commithash) AS commit_count,
+        (SELECT COUNT(DISTINCT author) FROM filechanges_commits_renamed_cached fc2 WHERE fc2.filepath = fc.filepath) AS num_contributors,
+        (SELECT SUM(insertions + deletions) FROM filechanges_commits_renamed_cached fc3 WHERE fc3.filepath = fc.filepath) AS total_sum
+      FROM filechanges_commits_renamed_cached fc
+      GROUP BY fc.filepath, fc.author
+      ORDER BY fc.filepath ASC, line_changes DESC, fc.author ASC;
+    `)
+
+    const result = new Map<
+      string,
+      {
+        contributors: Array<{ contributor: string; lineChanges: number; commits: number }>
+        totalCommits: number
+        totalSum: number
+        numContributors: number
+      }
+    >()
+
+    for (const row of res) {
+      const filepath = row["filepath"] as string
+      const contributor = row["author"] as string
+      const lineChanges = Number(row["line_changes"])
+      const commits = Number(row["commit_count"])
+
+      const existing = result.get(filepath)
+      if (!existing) {
+        result.set(filepath, {
+          contributors: [{ contributor, lineChanges, commits }],
+          totalCommits: commits,
+          totalSum: Number(row["total_sum"]),
+          numContributors: Number(row["num_contributors"])
+        })
+        continue
+      }
+
+      existing.contributors.push({ contributor, lineChanges, commits })
+      existing.totalCommits += commits
+      existing.totalSum += lineChanges
+      existing.numContributors += 1
+    }
+
+    return result
+  }
+
   public async updateCachedResult() {
     // TODO: fix combined_result
     await this.run(`

@@ -349,7 +349,11 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+
+  const fileToContributorMetrics = await instance.db.getContributorMetricsPerFile()
+
   const databaseInfo: DatabaseInfo = {
+    fileToContributorMetrics,
     topContributors,
     commitCounts,
     fileSizes,

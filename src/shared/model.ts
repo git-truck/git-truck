@@ -196,6 +196,19 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
+  fileToContributorMetrics: Map<
+    string,
+    {
+      contributors: {
+        contributor: string
+        lineChanges: number
+        commits: number
+      }[]
+      totalCommits: number
+      totalSum: number
+      numContributors: number
+    }
+  >
   topContributors: Record<string, { contributor: string; contribcount: number }>
   commitCounts: Record<string, number>
   fileSizes: Record<string, number>
