@@ -149,10 +149,6 @@ async function onListen() {
   const url = `http://localhost:${PORT}`
   const publicURL = process.env.PORTLESS_URL || url
 
-  if (!args.headless && process.env.NODE_ENV === "development") {
-    args.headless = true
-  }
-
   console.log(`Application available at ${publicURL}`)
 
   if (!args.headless) {

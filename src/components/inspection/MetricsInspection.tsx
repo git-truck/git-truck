@@ -298,7 +298,7 @@ function InteractionButtons() {
             }}
           >
             <input type="hidden" name="hide" value={clickedObject.path} />
-            <button className="btn" disabled={state !== "idle"} title="Hide this file">
+            <button className="btn btn--primary" disabled={state !== "idle"} title="Hide this file">
               <Icon path={mdiEyeOffOutline} />
               Hide
             </button>
@@ -310,7 +310,11 @@ function InteractionButtons() {
           {clickedObject.name.includes(".") ? (
             <Form className="w-max" method="post" action={viewAction} onSubmit={() => setClickedObject(null)}>
               <input type="hidden" name="hide" value={`*.${extension}`} />
-              <button className="btn" disabled={state !== "idle"} title={`Hide all files with .${extension} extension`}>
+              <button
+                className="btn btn--primary"
+                disabled={state !== "idle"}
+                title={`Hide all files with .${extension} extension`}
+              >
                 <Icon path={mdiEyeOffOutline} />
                 <span>Hide *.{extension}</span>
               </button>
