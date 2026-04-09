@@ -556,7 +556,7 @@ export default class DB {
   }
 
   public async getContributorMetricsPerFile(): Promise<
-    Map<
+    Record<
       string,
       {
         contributors: Array<{ contributor: string; lineChanges: number; commits: number }>
@@ -579,7 +579,7 @@ export default class DB {
       ORDER BY fc.filepath ASC, line_changes DESC, fc.author ASC;
     `)
 
-    const result = new Map<
+    const result: Record<
       string,
       {
         contributors: Array<{ contributor: string; lineChanges: number; commits: number }>
@@ -587,7 +587,7 @@ export default class DB {
         totalSum: number
         numContributors: number
       }
-    >()
+    > = {}
 
     for (const row of res) {
       const filepath = row["filepath"] as string
@@ -595,14 +595,14 @@ export default class DB {
       const lineChanges = Number(row["line_changes"])
       const commits = Number(row["commit_count"])
 
-      const existing = result.get(filepath)
+      const existing = result[filepath]
       if (!existing) {
-        result.set(filepath, {
+        result[filepath] = {
           contributors: [{ contributor, lineChanges, commits }],
           totalCommits: commits,
           totalSum: Number(row["total_sum"]),
           numContributors: Number(row["num_contributors"])
-        })
+        }
         continue
       }
 

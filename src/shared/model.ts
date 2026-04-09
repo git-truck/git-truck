@@ -196,7 +196,7 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
-  fileToContributorMetrics: Map<
+  fileToContributorMetrics: Record<
     string,
     {
       contributors: {
