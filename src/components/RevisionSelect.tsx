@@ -25,11 +25,7 @@ export function RevisionSelect({
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
               {Object.entries(heads).map(([headName]) => (
-                <option
-                  key={headName}
-                  value={headName}
-                  disabled={disabled}
-                >
+                <option key={headName} value={headName} disabled={disabled}>
                   {headName}
                 </option>
               ))}

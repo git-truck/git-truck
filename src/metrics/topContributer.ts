@@ -47,13 +47,7 @@ export const TopContributorMetric: CategoricalMetric = {
   metricFunctionFactory(data, { contributorColors, topContributorCutoff }) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
-      setTopContributorColor(
-        data.databaseInfo,
-        contributorColors,
-        blob,
-        cache,
-        topContributorCutoff,
-      )
+      setTopContributorColor(data.databaseInfo, contributorColors, blob, cache, topContributorCutoff)
     }
   }
 }
@@ -63,11 +57,13 @@ function setTopContributorColor(
   contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  topContributorCutoff: number,
+  topContributorCutoff: number
 ) {
   // const topContributor = databaseInfo.topContributors[blob.path]
   console.time("setTopContributorColor")
-  const topContributor = databaseInfo.fileToContributorMetrics[blob.path].contributors.sort((a, b) => b.lineChanges - a.lineChanges)[0]
+  const topContributor = databaseInfo.fileToContributorMetrics[blob.path].contributors.sort(
+    (a, b) => b.lineChanges - a.lineChanges
+  )[0]
   console.timeEnd("setTopContributorColor")
   const contribSum = databaseInfo.contribSumPerFile[blob.path]
   const legend = cache.legend as PointLegendData
