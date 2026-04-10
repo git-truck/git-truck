@@ -37,6 +37,7 @@ const BUILD_ASSETS_PATH = path.join(__dirname, "build/client/assets")
 const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
 let PORT: number
+let HMR_PORT: number | null = null
 
 const envPort = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : Number.NaN
 const hasValidEnvPort = Number.isInteger(envPort) && envPort >= 1 && envPort <= 65535
@@ -50,10 +51,28 @@ if (hasValidEnvPort) {
   PORT = await getPort({ port: [...portNumbers(3000, 4000)] })
 }
 
+if (DEVELOPMENT) {
+  HMR_PORT = await getPort({ port: [...portNumbers(24678, 24778)] })
+}
+
 const app = express()
 
 if (DEVELOPMENT) {
-  const viteDevServer = await import("vite").then((vite) => vite.createServer({ server: { middlewareMode: true } }))
+  const viteDevServer = await import("vite").then((vite) =>
+    vite.createServer({
+      server: {
+        middlewareMode: true,
+        ...(HMR_PORT
+          ? {
+              hmr: {
+                port: HMR_PORT,
+                clientPort: HMR_PORT
+              }
+            }
+          : {})
+      }
+    })
+  )
   app.use(viteDevServer.middlewares)
   app.use(async (req, res, next) => {
     try {
