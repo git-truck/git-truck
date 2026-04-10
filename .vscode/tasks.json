@@ -4,9 +4,6 @@
     {
       "label": "Start dev server with bun",
       "type": "process",
-      // For codespaces (since bun for some reason is not in the PATH)
-      // "command": "/home/node/.bun/bin/bun",
-      // For local development
       "command": "bun",
       "args": ["dev"],
       "presentation": {
@@ -16,7 +13,8 @@
       "runOptions": {
         "runOn": "folderOpen"
       },
-      "dependsOn": ["Install dependencies with bun"]
+      "dependsOn": ["Install dependencies with bun"],
+      "problemMatcher": []
     },
     {
       "label": "Install dependencies with bun",
@@ -34,7 +32,10 @@
       "command": "bun",
       "group": "build",
       "args": ["run", "build"],
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     },
     {
       "label": "Typecheck with bun",
@@ -42,7 +43,10 @@
       "command": "bun",
       "args": ["typecheck"],
       "problemMatcher": ["$tsc"],
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
     }
   ]
 }
