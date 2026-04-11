@@ -288,7 +288,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
 
   const lastChanged =
     prevRes && !shouldUpdate(reason, "lastChanged") ? prevRes.lastChanged : await instance.db.getLastChangedPerFile()
-  const authorCounts =
+  const contributorCounts =
     prevRes && !shouldUpdate(reason, "contributorCounts")
       ? prevRes.contributorCounts
       : await instance.db.getAuthorCountPerFile()
@@ -343,18 +343,18 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await instance.db.getMaxMinContribCounts()
   const commitCount =
     prevRes && !shouldUpdate(reason, "commitCount") ? prevRes.commitCount : await instance.db.getCommitCount()
-  const analyzedRepos =
-    prevRes && !shouldUpdate(reason, "analyzedRepos")
-      ? prevRes.analyzedRepos
-      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+
   log.timeEnd("dbQueries")
 
+  const fileToContributorMetrics = await instance.db.getContributorMetricsPerFile()
+
   const databaseInfo: DatabaseInfo = {
+    fileToContributorMetrics,
     topContributors,
     commitCounts,
     fileSizes,
     lastChanged,
-    contributorCounts: authorCounts,
+    contributorCounts,
     maxCommitCount,
     minCommitCount,
     newestChangeDate,
@@ -372,12 +372,11 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
     timerange,
     colorSeed,
     selectedRange,
-    contributorColors: contributorColors,
+    contributorColors,
     commitCountPerTimeInterval,
     commitCountPerTimeIntervalUnit,
-    analyzedRepos,
     contribSumPerFile: contribCounts,
-    contributorsForPath: contributorsForPath,
+    contributorsForPath,
     maxMinContribCounts,
     commitCount
   }
@@ -501,9 +500,6 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                         title="Select branch"
                         defaultValue={data.databaseInfo.branch}
                         headGroups={data.repo.refs}
-                        analyzedBranches={data.databaseInfo.analyzedRepos.filter(
-                          (rep) => rep.repo === data.databaseInfo.repo
-                        )}
                         onChange={(e) =>
                           navigate(
                             href("/view") + viewSerializer({ path: data.repo.repositoryPath, branch: e.target.value })

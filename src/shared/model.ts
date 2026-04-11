@@ -195,37 +195,84 @@ export interface RepoData {
   databaseInfo: DatabaseInfo
 }
 
+type FilePath = string
+
 export interface DatabaseInfo {
-  topContributors: Record<string, { contributor: string; contribcount: number }>
-  commitCounts: Record<string, number>
-  fileSizes: Record<string, number>
-  lastChanged: Record<string, number>
-  contributorCounts: Record<string, number>
+  fileToContributorMetrics: Record<
+    FilePath,
+    {
+      contributors: {
+        contributor: string
+        lineChanges: number
+        commits: number
+      }[]
+      totalCommits: number
+      totalSum: number
+      numContributors: number
+    }
+  >
+
+  // Top contributor
+  topContributors: Record<FilePath, { contributor: string; contribcount: number }>
+
+  // Line Changes
+  contribSumPerFile: Record<FilePath, number> // also used by Top Contributor, due to percentage cutoff
+  // ^this is redundant and can be derived from contributorsForPath
+  maxMinContribCounts: { max: number; min: number }
+
+  // Commit counts
+  commitCounts: Record<FilePath, number>
   maxCommitCount: number
   minCommitCount: number
+
+  // Last changed
+  lastChanged: Record<FilePath, number>
   newestChangeDate: number
   oldestChangeDate: number
+
+  // File size
+  fileSizes: Record<FilePath, number>
   maxFileSize: number
   minFileSize: number
+
+  contributorsForPath: Record<
+    FilePath,
+    Array<{
+      contributor: string
+      // these can all be used to determine top contributor
+      contribcount: number
+      // commitcount: number; <- does not exist yet
+      // bytecount: number <- does not exist yet
+    }>
+  >
+  contributorCounts: Record<FilePath, number>
+
   contributors: string[]
-  contributorGroups: string[][]
+
   fileTree: GitTreeObject
-  hiddenFiles: string[]
+
+  // Timeline
+  commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
+  commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
+
+  // Metadata
   lastRunInfo: { time: number; hash: string }
   fileCount: number
   repo: string
   branch: string
+
+  /**
+   * Static time range for the project commit history
+   */
   timerange: [number, number]
+  commitCount: number
+
+  // User prefs
+  contributorGroups: string[][]
+  hiddenFiles: string[]
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
-  commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
-  commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
   selectedRange: [number, number]
-  analyzedRepos: CompletedResult[]
-  contribSumPerFile: Record<string, number>
-  contributorsForPath: Record<string, { contributor: string; contribcount: number }[]>
-  maxMinContribCounts: { max: number; min: number }
-  commitCount: number
 }
 
 export type HexColor = `#${string}`

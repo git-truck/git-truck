@@ -6,7 +6,6 @@ import { cn } from "~/styling"
 
 type GroupedBranchSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   headGroups: GitRefs
-  analyzedBranches: CompletedResult[]
   iconGroupColorMap?: Record<string, string>
 }
 
@@ -14,7 +13,6 @@ export function RevisionSelect({
   headGroups,
   disabled,
   className = "",
-  analyzedBranches,
   ...props
 }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const groupsEntries = Object.entries(headGroups)
@@ -26,19 +24,11 @@ export function RevisionSelect({
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
             <optgroup key={group} label={group}>
-              {Object.entries(heads).map(([headName]) => {
-                const isAnalyzed = analyzedBranches.find((rep) => rep.branch === headName)
-                return (
-                  <option
-                    key={headName}
-                    value={headName}
-                    disabled={disabled}
-                    title={isAnalyzed ? "Analyzed" : "Not analyzed"}
-                  >
-                    {headName}
-                  </option>
-                )
-              })}
+              {Object.entries(heads).map(([headName]) => (
+                <option key={headName} value={headName} disabled={disabled}>
+                  {headName}
+                </option>
+              ))}
             </optgroup>
           ) : null
         )}

@@ -1,4 +1,4 @@
-import type { GitBlobObject } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
@@ -47,28 +47,25 @@ export const TopContributorMetric: CategoricalMetric = {
   metricFunctionFactory(data, { contributorColors, topContributorCutoff }) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
-      setTopContributorColor(
-        contributorColors,
-        blob,
-        cache,
-        data.databaseInfo.topContributors,
-        topContributorCutoff,
-        data.databaseInfo.contribSumPerFile
-      )
+      setTopContributorColor(data.databaseInfo, contributorColors, blob, cache, topContributorCutoff)
     }
   }
 }
 
 function setTopContributorColor(
+  databaseInfo: DatabaseInfo,
   contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  topContributorPerFile: Record<string, { contributor: string; contribcount: number }>,
-  topContributorCutoff: number,
-  contribSumPerFile: Record<string, number>
+  topContributorCutoff: number
 ) {
-  const topContributor = topContributorPerFile[blob.path]
-  const contribSum = contribSumPerFile[blob.path]
+  // const topContributor = databaseInfo.topContributors[blob.path]
+  console.time("setTopContributorColor")
+  const topContributor = databaseInfo.fileToContributorMetrics[blob.path].contributors.sort(
+    (a, b) => b.lineChanges - a.lineChanges
+  )[0]
+  console.timeEnd("setTopContributorColor")
+  const contribSum = databaseInfo.contribSumPerFile[blob.path]
   const legend = cache.legend as PointLegendData
 
   // helper to bump multiple-contributors count
@@ -86,7 +83,7 @@ function setTopContributorColor(
     return
   }
 
-  const contributorPercentage = (topContributor.contribcount / contribSum) * 100
+  const contributorPercentage = (topContributor.lineChanges / contribSum) * 100
   if (contributorPercentage < topContributorCutoff) {
     bumpMultiple()
     return
