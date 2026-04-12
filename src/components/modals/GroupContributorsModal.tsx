@@ -354,7 +354,7 @@ function AliasEntry({
       <button
         className="group/alias grid w-full grid-cols-[minmax(0,1fr)_1rem] items-center gap-2 text-sm"
         disabled={disabled}
-        title="Make display name for this grouping"
+        title="Remove from group"
         onClick={onClick}
       >
         <span
