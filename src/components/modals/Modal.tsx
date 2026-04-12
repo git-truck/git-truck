@@ -59,7 +59,11 @@ export function Modal({
               <Icon path={icon} size="1.75em" />
               <h2 className="text-2xl font-semibold">{title}</h2>
             </div>
-            <CloseButton absolute={false} className="justify-self-end px-1" onClick={onClose} />
+            <CloseButton
+              absolute={false}
+              className="justify-self-end px-1"
+              onClick={() => dialogRef.current?.close()}
+            />
           </div>
           <span className="w-full border-b-3 border-gray-500 px-20"></span>
           {children}
