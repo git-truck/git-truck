@@ -1,9 +1,15 @@
 import type { Person, ContributorGroup } from "~/shared/model"
 
+// Extract the numeric account id from GitHub noreply emails like: 123456-username@users.noreply.github.com
+const getGithubNoreplyId = (email: string): string | null => {
+  const match = email.match(/^(\d+)-[^@]+@users\.noreply\.github\.com$/i)
+  return match?.[1] ?? null
+}
+
 export function autoBuildContributorGroups(ungroupedContributors: Person[]): ContributorGroup[] {
   if (ungroupedContributors.length < 2) return []
 
-  const stringSorter = (a: string, b: string) => a.toLowerCase().localeCompare(b.toLowerCase())
+  // Union-Find setup: each contributor starts in its own set.
   const parent = Array.from({ length: ungroupedContributors.length }, (_, i) => i)
   const rank = Array(ungroupedContributors.length).fill(0)
 
@@ -26,7 +32,9 @@ export function autoBuildContributorGroups(ungroupedContributors: Person[]): Con
 
   const firstByName = new Map<string, number>()
   const firstByEmail = new Map<string, number>()
+  const firstByGithubNoreplyId = new Map<string, number>()
 
+  // Matching is transitive: if A matches B and B matches C, all become one group.
   for (const [i, { name, email }] of ungroupedContributors.entries()) {
     if (name) {
       if (firstByName.has(name)) union(i, firstByName.get(name)!)
@@ -35,6 +43,12 @@ export function autoBuildContributorGroups(ungroupedContributors: Person[]): Con
     if (email) {
       if (firstByEmail.has(email)) union(i, firstByEmail.get(email)!)
       else firstByEmail.set(email, i)
+
+      const githubNoreplyId = getGithubNoreplyId(email)
+      if (githubNoreplyId) {
+        if (firstByGithubNoreplyId.has(githubNoreplyId)) union(i, firstByGithubNoreplyId.get(githubNoreplyId)!)
+        else firstByGithubNoreplyId.set(githubNoreplyId, i)
+      }
     }
   }
 
