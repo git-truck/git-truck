@@ -129,7 +129,7 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
             <div className="bg-secondary-bg dark:bg-secondary-bg-dark flex w-full flex-row items-center gap-2 rounded-md px-2 py-1">
               <LegendDot dotColor={color} />
               <select
-                className="w-full truncate pr-2 text-sm font-bold"
+                className="input h-fit w-full truncate border-0 bg-inherit pr-2 text-sm font-bold ring-0"
                 value={displayName}
                 onChange={(e) => makePrimaryAlias(e.target.value, aliasGroupIndex)}
               >
