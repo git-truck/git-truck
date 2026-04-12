@@ -68,7 +68,3 @@ export function Modal({
     </Activity>
   )
 }
-
-function ModalHeader({ icon, children, onClose }: { icon: string; children: ReactNode; onClose: () => void }) {
-  return <></>
-}
