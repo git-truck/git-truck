@@ -84,6 +84,10 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
     () => autoGroupCandidates.reduce((sum, group) => sum + group.members.length, 0),
     [autoGroupCandidates]
   )
+  const selectedIds = useMemo(() => new Set(selectedContributors.map(uniqueId)), [selectedContributors])
+  const isAllVisibleSelected =
+    ungroupedContributorsFiltered.length > 0 &&
+    ungroupedContributorsFiltered.every((contributor) => selectedIds.has(uniqueId(contributor)))
 
   const getColorFromDisplayName = (displayName: string) => contributorColors.get(displayName) ?? "#333"
 
@@ -238,26 +242,31 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
                 Clear
               </button>
               <button
-                disabled={ungroupedContributorsSorted.length === 0}
+                disabled={ungroupedContributorsFiltered.length === 0}
                 className="btn w-max grow"
-                title={
-                  selectedContributors.length === ungroupedContributorsFiltered.length
-                    ? "Deselect all selected contributors"
-                    : "Select all contributors from list"
-                }
+                title={isAllVisibleSelected ? "Deselect selected contributors" : "Select all contributors from list"}
                 onClick={() =>
-                  selectedContributors.length === ungroupedContributorsFiltered.length
-                    ? setSelectedContributors([])
-                    : setSelectedContributors((selected) => {
-                        const next = new Map(selected.map((contributor) => [uniqueId(contributor), contributor]))
-                        for (const contributor of ungroupedContributorsFiltered) {
-                          next.set(uniqueId(contributor), contributor)
-                        }
-                        return Array.from(next.values())
-                      })
+                  setSelectedContributors((selected) =>
+                    isAllVisibleSelected
+                      ? selected.filter(
+                          (contributor) =>
+                            !ungroupedContributorsFiltered.some(
+                              (visibleContributor) => uniqueId(visibleContributor) === uniqueId(contributor)
+                            )
+                        )
+                      : [
+                          ...selected,
+                          ...ungroupedContributorsFiltered.filter(
+                            (contributor) =>
+                              !selected.some(
+                                (selectedContributor) => uniqueId(selectedContributor) === uniqueId(contributor)
+                              )
+                          )
+                        ]
+                  )
                 }
               >
-                {selectedContributors.length === ungroupedContributorsFiltered.length ? "Deselect all" : "Select all"}
+                {isAllVisibleSelected ? "Deselect all" : "Select all"}
               </button>
             </div>
             <div className="bg-primary-bg dark:bg-primary-bg-dark grid min-h-0 w-full grid-cols-[min-content_3fr_3fr_min-content] items-center gap-x-4 gap-y-1 overflow-y-auto rounded-lg p-2">
