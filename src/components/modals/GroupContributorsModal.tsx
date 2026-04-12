@@ -264,7 +264,7 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
               {ungroupedContributorsFiltered.length > 0 ? (
                 ungroupedContributorsEntries
               ) : (
-                <p className="place-self-center text-sm">
+                <p className="col-span-full place-self-center text-sm">
                   {filter.length > 0 ? "No contributors found" : "All contributors have been grouped"}
                 </p>
               )}
