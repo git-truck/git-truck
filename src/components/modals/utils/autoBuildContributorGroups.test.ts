@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
+import { pickContributorGroupDisplayName } from "~/components/modals/utils/displayNameStrategy"
 import type { Person } from "~/shared/model"
 
 describe("autoBuildContributorGroups", () => {
@@ -74,5 +75,27 @@ describe("autoBuildContributorGroups", () => {
     ]
 
     expect(autoBuildContributorGroups(contributors)).toEqual([])
+  })
+
+  it("should prefer capitalized full names with most middle names for displayName", () => {
+    const members: Person[] = [
+      { name: "jdoe", email: "jdoe@example.com" },
+      { name: "John Doe", email: "jd@example.com" },
+      { name: "alicejohnson", email: "alice@example.com" },
+      { name: "John Albert Doe", email: "jad@example.com" }
+    ]
+
+    expect(pickContributorGroupDisplayName(members)).toBe("John Albert Doe")
+  })
+
+  it("should use strategy-selected displayName in grouped result", () => {
+    const contributors: Person[] = [
+      { name: "jdoe", email: "same@example.com" },
+      { name: "John Doe", email: "same@example.com" },
+      { name: "John Albert Doe", email: "same@example.com" }
+    ]
+
+    const groups = autoBuildContributorGroups(contributors)
+    expect(groups[0]?.displayName).toBe("John Albert Doe")
   })
 })
