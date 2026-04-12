@@ -1,4 +1,5 @@
 import type { Person, ContributorGroup } from "~/shared/model"
+import { pickContributorGroupDisplayName } from "~/components/modals/utils/displayNameStrategy"
 
 // Extract the numeric account id from GitHub noreply emails like: 123456-username@users.noreply.github.com
 const getGithubNoreplyId = (email: string): string | null => {
@@ -62,10 +63,8 @@ export function autoBuildContributorGroups(ungroupedContributors: Person[]): Con
 
   return Array.from(groupsByRoot.values())
     .filter((g) => g.length > 1)
-    .map((members) => {
-      const sorted = [...members].sort(
-        (a, b) => stringSorter(a.name, b.name) || stringSorter(a.email ?? "", b.email ?? "")
-      )
-      return { displayName: sorted[0]?.name ?? "Group", members: sorted }
-    })
+    .map((members) => ({
+      displayName: pickContributorGroupDisplayName(members),
+      members
+    }))
 }

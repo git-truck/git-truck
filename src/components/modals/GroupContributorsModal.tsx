@@ -18,6 +18,7 @@ import { Modal } from "~/components/modals/Modal"
 import { missingInMapColor } from "~/const"
 import { cn } from "~/styling"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
+import { pickContributorGroupDisplayName } from "~/components/modals/utils/displayNameStrategy"
 
 export function GroupContributorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { databaseInfo } = useData()
@@ -307,7 +308,7 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
               onClick={() => {
                 setLocalContributorGroups((prev) => [
                   ...prev,
-                  { displayName: selectedContributors[0]?.name ?? "Group", members: selectedContributors }
+                  { displayName: pickContributorGroupDisplayName(selectedContributors), members: selectedContributors }
                 ])
                 setSelectedContributors([])
               }}
