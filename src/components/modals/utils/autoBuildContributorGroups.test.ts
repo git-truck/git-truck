@@ -36,6 +36,36 @@ describe("autoBuildContributorGroups", () => {
     expect(groups[0]?.members.map((m) => m.name)).toEqual(["Alice A", "Alice B"])
   })
 
+  it("should group contributors by matching GitHub noreply numeric id", () => {
+    const contributors: Person[] = [
+      { name: "Alice", email: "123456-alice@users.noreply.github.com" },
+      { name: "Alicia", email: "123456-alicia@users.noreply.github.com" },
+      { name: "Bob", email: "999999-bob@users.noreply.github.com" }
+    ]
+
+    const groups = autoBuildContributorGroups(contributors)
+
+    expect(groups).toHaveLength(1)
+    expect(groups[0]?.members).toHaveLength(2)
+    expect(groups[0]?.members.map((m) => m.email)).toEqual([
+      "123456-alice@users.noreply.github.com",
+      "123456-alicia@users.noreply.github.com"
+    ])
+  })
+
+  it("should apply transitive grouping across match types", () => {
+    const contributors: Person[] = [
+      { name: "Shared Name", email: "123456-alpha@users.noreply.github.com" },
+      { name: "Shared Name", email: "mid@example.com" },
+      { name: "Other", email: "123456-beta@users.noreply.github.com" }
+    ]
+
+    const groups = autoBuildContributorGroups(contributors)
+
+    expect(groups).toHaveLength(1)
+    expect(groups[0]?.members).toHaveLength(3)
+  })
+
   it("should not include singleton contributors", () => {
     const contributors: Person[] = [
       { name: "A", email: "a@example.com" },
