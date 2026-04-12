@@ -237,7 +237,11 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
               <button
                 disabled={ungroupedContributorsSorted.length === 0}
                 className="btn w-max grow"
-                title="Clear selection"
+                title={
+                  selectedContributors.length === ungroupedContributorsFiltered.length
+                    ? "Deselect all selected contributors"
+                    : "Select all contributors from list"
+                }
                 onClick={() =>
                   selectedContributors.length === ungroupedContributorsFiltered.length
                     ? setSelectedContributors([])
