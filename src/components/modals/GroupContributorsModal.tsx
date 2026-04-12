@@ -51,8 +51,11 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
   }
 
   useEffect(() => {
+    if (!open) return
     setLocalContributorGroups(contributorGroups)
-  }, [contributorGroups])
+    setSelectedContributors([])
+    setFilter("")
+  }, [contributorGroups, open])
 
   const groupedContributorsSet = useMemo(
     () => new Set(localContributorGroups.flatMap((group) => group.members).map(uniqueId)),
