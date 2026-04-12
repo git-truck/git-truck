@@ -1,6 +1,7 @@
 import { useQueryState } from "nuqs"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useFetcher, href, Await } from "react-router"
+import { useData } from "~/contexts/DataContext"
 import type { loader } from "~/routes/view.api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
@@ -10,6 +11,7 @@ export function CommitsInspection() {
   const clickedObject = useClickedObject()
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
+  const { databaseInfo } = useData()
   const [commitShowCount, setCommitShowCount] = useState(COMMIT_STEP)
   const previousData = useRef<ReturnType<typeof useFetcher<typeof loader>>["data"]>(undefined)
 
@@ -29,7 +31,7 @@ export function CommitsInspection() {
     },
     // TODO: fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [clickedObject?.path, path]
+    [clickedObject?.path, path, databaseInfo.contributorGroups]
   )
 
   useEffect(() => {

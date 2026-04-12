@@ -3,6 +3,7 @@ import { Fragment, useEffect, useId, useState } from "react"
 import { useFetcher, href } from "react-router"
 import { ChevronButton } from "~/components/ChevronButton"
 import { LegendDot } from "~/components/util"
+import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { viewSerializer } from "~/routes/view"
 import type { loader } from "~/routes/view.api.contributor-distribution"
@@ -24,6 +25,7 @@ export function ContributorsInspection() {
   const clickedObject = useClickedObject()
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
+  const { databaseInfo } = useData()
 
   useEffect(() => {
     if (!clickedObject) {
@@ -36,7 +38,7 @@ export function ContributorsInspection() {
     // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // TODO: Consider loading data on tab change instead
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedObject?.path])
+  }, [clickedObject?.path, path, databaseInfo.contributorGroups])
 
   if (!fetcher.data) {
     return (
