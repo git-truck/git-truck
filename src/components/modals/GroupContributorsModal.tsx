@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useTransition, useState } from "react"
+import { useMemo, useTransition, useState } from "react"
 import { useData } from "~/contexts/DataContext"
 import type { ContributorGroup, Person } from "~/shared/model"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
@@ -20,13 +20,40 @@ import { cn } from "~/styling"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
 import { pickContributorGroupDisplayName } from "~/components/modals/utils/displayNameStrategy"
 
+//Wrapper to inject necessary data and reset internal state when reopening the modal
 export function GroupContributorsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { databaseInfo } = useData()
+  const [, contributorColors] = useMetrics()
   const { contributorGroups, contributors } = databaseInfo
+
+  return (
+    <GroupContributorsModalContent
+      key={open.toString()} // Reset internal state when reopening the modal
+      open={open}
+      contributorGroups={contributorGroups}
+      contributors={contributors}
+      contributorColors={contributorColors}
+      onClose={onClose}
+    />
+  )
+}
+
+function GroupContributorsModalContent({
+  open,
+  contributorGroups,
+  contributors,
+  contributorColors,
+  onClose
+}: {
+  open: boolean
+  contributorGroups: ContributorGroup[]
+  contributors: Person[]
+  contributorColors: Map<string, string>
+  onClose: () => void
+}) {
   const [selectedContributors, setSelectedContributors] = useState<Person[]>([])
   const [localContributorGroups, setLocalContributorGroups] = useState<ContributorGroup[]>(contributorGroups)
   const [filter, setFilter] = useState("")
-  const [, contributorColors] = useMetrics()
   const [, startTransition] = useTransition()
   const submit = useViewSubmit()
 
@@ -49,13 +76,6 @@ export function GroupContributorsModal({ open, onClose }: { open: boolean; onClo
       return prev.map((group, i) => (i === groupIndex ? { ...group, displayName: aliasName } : group))
     })
   }
-
-  useEffect(() => {
-    if (!open) return
-    setLocalContributorGroups(contributorGroups)
-    setSelectedContributors([])
-    setFilter("")
-  }, [contributorGroups, open])
 
   const groupedContributorsSet = useMemo(
     () => new Set(localContributorGroups.flatMap((group) => group.members).map(uniqueId)),
