@@ -61,11 +61,11 @@ function InfoEntry(props: { keyString: string; value: string }) {
   )
 }
 
-function FileChangesEntry(props: { filechanges: FileChange[] }) {
+function FileChangesEntry(props: { fileChanges: FileChange[] }) {
   return (
     <div className="overflow-auto">
       <div className="grid max-w-lg grid-cols-[auto_auto_1fr] gap-x-3 gap-y-1">
-        {props.filechanges.map((filechange) => {
+        {props.fileChanges.map((filechange) => {
           return (
             <Fragment key={filechange.path}>
               <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre text-green-600">
@@ -107,25 +107,25 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
           <InfoEntry keyString="Hash" value={props.value.hash} />
           <InfoEntry keyString="Author Name" value={props.value.author.name} />
           <InfoEntry keyString="Author Email" value={props.value.author.email ?? "<unknown>"} />
-          {props.value.committertime === props.value.authortime ? (
+          {props.value.committerTime === props.value.authorTime ? (
             <InfoEntry
               keyString="Date"
-              value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
-                props.value.committertime
+              value={`${dateTimeFormatShort(props.value.committerTime * 1000)} (${dateFormatRelative(
+                props.value.committerTime
               )})`}
             />
           ) : (
             <>
               <InfoEntry
                 keyString="Date committed"
-                value={`${dateTimeFormatShort(props.value.committertime * 1000)} (${dateFormatRelative(
-                  props.value.committertime
+                value={`${dateTimeFormatShort(props.value.committerTime * 1000)} (${dateFormatRelative(
+                  props.value.committerTime
                 )})`}
               />
               <InfoEntry
                 keyString="Date authored"
-                value={`${dateTimeFormatShort(props.value.authortime * 1000)} (${dateFormatRelative(
-                  props.value.authortime
+                value={`${dateTimeFormatShort(props.value.authorTime * 1000)} (${dateFormatRelative(
+                  props.value.authorTime
                 )})`}
               />
             </>
@@ -149,7 +149,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
             }
           />
         </div>
-        <FileChangesEntry filechanges={props.value.fileChanges} />
+        <FileChangesEntry fileChanges={props.value.fileChanges} />
       </Popover>
     </div>
   )
