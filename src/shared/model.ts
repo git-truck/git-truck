@@ -1,5 +1,3 @@
-import type { ANALYZER_CACHE_MISS_REASONS } from "~/analyzer/git-caller.server"
-
 export type Repository = {
   /**
    * Relative path to the base directory that Git Truck was started in
@@ -26,7 +24,6 @@ export type Repository = {
       status: "Success"
       isAnalyzed: true
       refs: GitRefs
-      reasons: ANALYZER_CACHE_MISS_REASONS[]
       currentHead: string
       lastChanged: number
     }
@@ -40,7 +37,6 @@ export type Repository = {
       status: "Success"
       isAnalyzed: false
       refs: GitRefs
-      reasons: ANALYZER_CACHE_MISS_REASONS[]
       currentHead: string
       lastChanged: number
     }
@@ -74,12 +70,8 @@ export interface ArgsOptions {
   path: string
 }
 
-// Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 19
-
 export interface AnalyzerData {
   cached: boolean
-  interfaceVersion: typeof AnalyzerDataInterfaceVersion
   hiddenFiles: string[]
   repo: string
   repositoryPath: string
