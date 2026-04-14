@@ -41,6 +41,7 @@ export function GitTruckInfo({
                 title="View on GitHub"
               >
                 Git Truck
+                {loading ? <> &middot; Loading...</> : null}
               </a>
             </h1>
             <span className="text-tertiary-text dark:text-tertiary-text-dark text-xs">Version {installedVersion}</span>
