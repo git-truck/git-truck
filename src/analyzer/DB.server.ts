@@ -16,6 +16,7 @@ import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/analyzer/log.server"
+import pkg from "../../package.json" with { type: "json" }
 
 export default class DB {
   private instancePromise: Promise<DuckDBInstance>
@@ -32,6 +33,8 @@ export default class DB {
     const connection = await instance.connect()
     await this.initTables(connection)
     await this.initViews(connection, 0, 1_000_000_000_000)
+    await this.insertGitTruckVersion(connection)
+
     return { instance, connection }
   }
 
@@ -173,8 +176,8 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS metadata (
         field VARCHAR,
-        value UBIGINT,
-        value2 VARCHAR
+        intValue UBIGINT,
+        stringValue VARCHAR
       );
       CREATE TABLE IF NOT EXISTS temporaryRenames (
         fromName VARCHAR,
@@ -1032,24 +1035,46 @@ export default class DB {
   public async updateColorSeed(seed: string) {
     await this.run(`DELETE FROM metadata
        WHERE field = 'colorSeed';
-       INSERT INTO metadata (field, value, value2) 
+       INSERT INTO metadata (field, intValue, stringValue)
        VALUES ('colorSeed', null, '${seed}');`)
     log.debug("inserted seed", seed)
   }
 
+  public static async insertGitTruckVersion(connection: DuckDBConnection) {
+    // Check if metadata has a git-truck-version already, if so, error
+    const result = await (
+      await connection.run(`SELECT stringValue FROM metadata WHERE field = 'version';`)
+    ).getRowObjects()
+
+    if (result.length > 0) {
+      throw new Error("DB has already been populated with version metadata")
+    }
+
+    await connection.run(`INSERT INTO metadata (field, stringValue) VALUES ('version', '${pkg.version}');
+      `)
+  }
+
+  public async getGitTruckVersion(): Promise<string | null> {
+    const result = await this.query(`SELECT stringValue from metadata WHERE field = 'version';`)
+
+    if (result.length === 0) {
+      return null
+    }
+
+    return result[0]["stringValue"] as string
+  }
+
   public async getColorSeed() {
-    const res = await this.query(`
-      SELECT value2 FROM metadata WHERE field = 'colorSeed';
-    `)
+    const res = await this.query(`SELECT stringValue FROM metadata WHERE field = 'colorSeed';`)
     if (res.length < 1) return null
-    log.debug("retrieved seed", res[0]["value2"])
-    return res[0]["value2"] as string
+    log.debug("retrieved seed", res[0]["stringValue"])
+    return res[0]["stringValue"] as string
   }
 
   public async getLastRunInfo() {
-    const res = await this.query(`
-      SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;
-    `)
+    const res = await this.query(
+      `SELECT intValue as time, stringValue as hash FROM metadata WHERE field = 'finished' ORDER BY intValue DESC LIMIT 1;`
+    )
     if (!res[0]) return { time: 0, hash: "" }
     return { time: Number(res[0]["time"]), hash: res[0]["hash"] as string }
   }
