@@ -37,7 +37,7 @@ export function MetricInspectionPanel({
 }) {
   const [selectedSearch, setSelectedSearch] = useState("")
   const [open, setOpen] = useState(false)
-  const { state } = useNavigation()
+  const { state, formData } = useNavigation()
 
   return (
     <div className="mt-4">
@@ -50,7 +50,11 @@ export function MetricInspectionPanel({
             {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
             {actions.groupContributors ? (
               <>
-                <ExpandingPanelButton icon={mdiAccountMultiple} onClick={() => setOpen(true)}>
+                <ExpandingPanelButton
+                  icon={mdiAccountMultiple}
+                  disabled={formData?.has("groupContributors")}
+                  onClick={() => setOpen(true)}
+                >
                   Group contributors
                 </ExpandingPanelButton>
                 <GroupContributorsModal open={open} onClose={() => setOpen(false)} />
