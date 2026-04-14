@@ -328,9 +328,7 @@ export default class DB {
   }
 
   public async getAuthorUnions(): Promise<ContributorGroup[]> {
-    const res = await this.query(`
-      SELECT displayName, email, name FROM contributorGroups;
-    `)
+    const res = await this.query(`SELECT displayName, email, name FROM contributorGroups;`)
 
     const groupsByName = new Map<string, Person[]>()
     res.forEach((row) => {
@@ -353,31 +351,25 @@ export default class DB {
   }
 
   public async getRawUnions() {
-    const res = await this.query(`
-      SELECT displayName, email, name
-      FROM contributorGroups;
-    `)
+    const res = await this.query(`SELECT displayName, email, name FROM contributorGroups;`)
 
     return res as { displayName: string; email: string; name: string }[]
   }
 
   public async getCommitTimeAtIndex(idx: number) {
-    const res = await this.query(`
-      SELECT committerTime FROM commits ORDER BY committerTime DESC OFFSET ${idx} LIMIT 1;
+    const res = await this.query(`SELECT committerTime FROM commits ORDER BY committerTime DESC OFFSET ${idx} LIMIT 1;
     `)
     return res.length > 0 ? Number(res[0]["committerTime"]) : 0
   }
 
   public async getOverallTimeRange() {
-    const res = await this.query(`
-      SELECT MIN(committerTime) as min, MAX(committerTime) as max from commits;
+    const res = await this.query(`SELECT MIN(committerTime) as min, MAX(committerTime) as max from commits;
     `)
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
 
   public async getCurrentRenameIntervals() {
-    const res = await this.query(`
-        SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampAuthor DESC;
+    const res = await this.query(`SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampAuthor DESC;
     `)
     return res.map((row) => {
       return {
@@ -390,20 +382,17 @@ export default class DB {
   }
 
   public async getHiddenFiles() {
-    const res = await this.query(`
-      SELECT path, id FROM hiddenFiles ORDER BY id DESC;
-    `)
+    const res = await this.query(`SELECT path, id FROM hiddenFiles ORDER BY id DESC;`)
     return res.map((row) => row["path"] as string)
   }
 
   public async addHiddenFile(path: string) {
     await this.usingPreparedStatement(
-      `
-      INSERT INTO hiddenFiles (id, path)
-      SELECT nextval('hiddenFiles_id_sequence'), ?
-      WHERE NOT EXISTS (
-        SELECT 1 FROM hiddenFiles WHERE path = ?
-      );
+      `INSERT INTO hiddenFiles (id, path)
+       SELECT nextval('hiddenFiles_id_sequence'), ?
+       WHERE NOT EXISTS (
+         SELECT 1 FROM hiddenFiles WHERE path = ?
+       );
     `,
       async (statement) => {
         statement.bindVarchar(1, path)
@@ -416,8 +405,7 @@ export default class DB {
 
   public async removeHiddenFile(path: string) {
     await this.usingPreparedStatement(
-      `
-      DELETE FROM hiddenFiles
+      `DELETE FROM hiddenFiles
       WHERE path = ?;
     `,
       async (statement) => {
@@ -429,19 +417,18 @@ export default class DB {
   }
 
   public async clearHiddenFiles() {
-    await this.run(`
-      DELETE FROM hiddenFiles;
-    `)
+    await this.run(`DELETE FROM hiddenFiles;`)
   }
 
   public async getCommits(path: string, count: number) {
-    const res = await this.query(`
-      SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
-      FROM fileChanges_commits_renamed_cached
-      WHERE filePath GLOB '${path}*'
-      ORDER BY committerTime DESC, commitHash
-      LIMIT ${count};
-    `)
+    const res = await this.query(
+      `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+       FROM fileChanges_commits_renamed_cached
+       WHERE filePath GLOB '${path}*'
+       ORDER BY committerTime DESC, commitHash
+       LIMIT ${count};
+    `
+    )
     return res.map((row) => {
       return {
         author: {
@@ -458,8 +445,7 @@ export default class DB {
   }
 
   public async getCommitHashes(path: string, count: number) {
-    const res = await this.query(`
-      SELECT distinct commitHash
+    const res = await this.query(`SELECT distinct commitHash
       FROM fileChanges_commits_renamed_cached
       WHERE filePath GLOB '${path}*'
       ORDER BY committerTime DESC, commitHash
@@ -471,15 +457,14 @@ export default class DB {
   }
 
   public async getCommitCountForPath(path: string) {
-    const res = await this.query(`
-      SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*';
+    const res = await this
+      .query(`SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*';
     `)
     return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
-    const res = await this.query(`
-      SELECT filePath, count(DISTINCT commitHash) AS count
+    const res = await this.query(`SELECT filePath, count(DISTINCT commitHash) AS count
       FROM fileChanges_commits_renamed_cached
       GROUP BY filePath
       ORDER BY count DESC;
@@ -494,8 +479,7 @@ export default class DB {
   }
 
   public async getLastChangedPerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`
-      SELECT filePath, MAX(committerTime) AS max_time
+    const res = await this.query(`SELECT filePath, MAX(committerTime) AS max_time
       FROM fileChanges_commits_renamed_cached
       GROUP BY filePath;
     `)
@@ -509,8 +493,7 @@ export default class DB {
   }
 
   public async getContributorCountPerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`
-      SELECT filePath, count(DISTINCT author) AS contributorCount
+    const res = await this.query(`SELECT filePath, count(DISTINCT author) AS contributorCount
       FROM fileChanges_commits_renamed_cached
       GROUP BY filePath;
     `)
@@ -524,15 +507,15 @@ export default class DB {
   }
 
   public async getMaxMinContribCounts() {
-    const res = await this.query(`
-      SELECT MAX(contribSum) as max, MIN(contribSum) as min FROM (SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath);
+    const res = await this
+      .query(`SELECT MAX(contribSum) as max, MIN(contribSum) as min FROM (SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath);
     `)
     return { max: Number(res[0]["max"]), min: Number(res[0]["min"]) }
   }
 
   public async getContribSumPerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`
-      SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath;
+    const res = await this
+      .query(`SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath;
     `)
 
     return res.reduce<Record<string, number>>((acc, row) => {
@@ -543,8 +526,7 @@ export default class DB {
 
   public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
     //Respects aliases for contributors through commits_unioned view
-    const res = await this.query(`
-      SELECT DISTINCT author
+    const res = await this.query(`SELECT DISTINCT author
       FROM fileChanges_commits_renamed_cached
       WHERE filePath GLOB '${objectPath}*'
     `)
@@ -554,8 +536,7 @@ export default class DB {
   public async getContributorContributionsForPath(): Promise<
     Record<string, { contributor: string; contribcount: number }[]>
   > {
-    const res = await this.query(`
-    SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount
+    const res = await this.query(`SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount
     FROM fileChanges_commits_renamed_cached
     GROUP BY filePath, author
   `)
@@ -602,8 +583,7 @@ export default class DB {
 
   public async updateCachedResult() {
     // TODO: fix combined_result
-    await this.run(`
-    CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
+    await this.run(`CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
     SELECT * FROM fileChanges_commits_renamed_files;
     `)
   }
@@ -633,9 +613,7 @@ export default class DB {
   }
 
   public async replaceFiles(files: RawGitObject[]) {
-    await this.run(`
-      DELETE FROM files;
-    `)
+    await this.run(`DELETE FROM files;`)
     await this.usingTableAppender("files", async (appender) => {
       for (const file of files) {
         appender.appendVarchar(file.path)
@@ -648,9 +626,7 @@ export default class DB {
   }
 
   public async getFiles() {
-    const res = await this.query(`
-      FROM files;
-    `)
+    const res = await this.query(`FROM files;`)
     return res.map((row) => row["path"] as string)
   }
 
@@ -667,17 +643,14 @@ export default class DB {
   }
 
   public async commitTableEmpty() {
-    const res = await this.query(`
-      SELECT * FROM commits LIMIT 1;
-    `)
+    const res = await this.query(`SELECT * FROM commits LIMIT 1;`)
     return res.length === 0
   }
 
   public async getLatestCommitHash(beforeTime?: number) {
-    const res = await this.query(`
-      SELECT hash FROM commits WHERE committerTime <= ${
-        beforeTime ?? 1_000_000_000_000
-      } ORDER BY committerTime DESC LIMIT 1;
+    const res = await this.query(`SELECT hash FROM commits WHERE committerTime <= ${
+      beforeTime ?? 1_000_000_000_000
+    } ORDER BY committerTime DESC LIMIT 1;
     `)
     if (res.length < 1)
       throw new Error("Could not get latest commit hash. Commits table is empty. beforeTime set to " + beforeTime)
@@ -685,8 +658,7 @@ export default class DB {
   }
 
   public async getAuthors() {
-    const res = await this.query(`
-      SELECT DISTINCT author, authorEmail AS email
+    const res = await this.query(`SELECT DISTINCT author, authorEmail AS email
       FROM commits;
     `)
     return res.map((row) => ({
@@ -696,37 +668,34 @@ export default class DB {
   }
 
   public async getNewestAndOldestChangeDates() {
-    const res = await this.query(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filePath, MAX(committerTime) AS max_time FROM fileChanges_commits_renamed_cached GROUP BY filePath);
+    const res = await this
+      .query(`SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filePath, MAX(committerTime) AS max_time FROM fileChanges_commits_renamed_cached GROUP BY filePath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
 
   public async getCommitCount() {
-    const res = await this.query(`
-      SELECT count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached;
+    const res = await this.query(`SELECT count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached;
     `)
     return Number(res[0]["count"])
   }
 
   public async getMaxAndMinCommitCount() {
-    const res = await this.query(`
-      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filePath, count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached GROUP BY filePath ORDER BY count DESC);
-    `)
+    const res = await this.query(
+      `SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filePath, count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached GROUP BY filePath ORDER BY count DESC);`
+    )
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
 
   public async getMaxAndMinFileSize() {
-    const res = await this.query(`
-      SELECT MAX(sizeInBytes) as max_size, MIN(sizeInBytes) as min_size FROM files WHERE type = 'blob';
-    `)
+    const res = await this.query(
+      `SELECT MAX(sizeInBytes) as max_size, MIN(sizeInBytes) as min_size FROM files WHERE type = 'blob';`
+    )
     return { maxFileSize: Number(res[0]["max_size"]), minFileSize: Number(res[0]["min_size"]) }
   }
 
   public async getFileSizePerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`
-      SELECT path, sizeInBytes FROM files WHERE type = 'blob';
-    `)
+    const res = await this.query(`SELECT path, sizeInBytes FROM files WHERE type = 'blob';`)
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
@@ -742,13 +711,11 @@ export default class DB {
 
     if (isblob) {
       res = await this.usingPreparedStatement(
-        `
-        SELECT author, SUM(insertions + deletions) AS contribSum
-        FROM fileChanges_commits_renamed_cached
-        WHERE filePath = ?
-        GROUP BY author
-        ORDER BY contribSum DESC, author ASC;
-      `,
+        `SELECT author, SUM(insertions + deletions) AS contribSum
+         FROM fileChanges_commits_renamed_cached
+         WHERE filePath = ?
+         GROUP BY author
+         ORDER BY contribSum DESC, author ASC;`,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           return (await statement.runAndReadAll()).getRowObjects()
@@ -757,13 +724,11 @@ export default class DB {
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `
-        SELECT author, SUM(insertions + deletions) AS contribSum
-        FROM fileChanges_commits_renamed_cached
-        WHERE filePath = ? OR filePath LIKE ?
-        GROUP BY author
-        ORDER BY contribSum DESC, author ASC;
-      `,
+        `SELECT author, SUM(insertions + deletions) AS contribSum
+         FROM fileChanges_commits_renamed_cached
+         WHERE filePath = ? OR filePath LIKE ?
+         GROUP BY author
+         ORDER BY contribSum DESC, author ASC;`,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           statement.bindVarchar(2, `${objectPath}/%`)
@@ -772,12 +737,12 @@ export default class DB {
         "getContributorDistributionForPath(tree)"
       )
     } else {
-      res = await this.query(`
-        SELECT author, SUM(insertions + deletions) AS contribSum
-        FROM fileChanges_commits_renamed_cached
-        GROUP BY author
-        ORDER BY contribSum DESC, author ASC;
-      `)
+      res = await this.query(
+        `SELECT author, SUM(insertions + deletions) AS contribSum
+         FROM fileChanges_commits_renamed_cached
+         GROUP BY author
+         ORDER BY contribSum DESC, author ASC;`
+      )
     }
 
     return res.map((row) => {
@@ -790,13 +755,11 @@ export default class DB {
 
     if (isBlob) {
       res = await this.usingPreparedStatement(
-        `
-        SELECT EXISTS(
+        `SELECT EXISTS(
           SELECT 1
           FROM fileChanges_commits_renamed_cached
           WHERE filePath = ?
-        ) AS exists_in_range;
-      `,
+        ) AS exists_in_range;`,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           return (await statement.runAndReadAll()).getRowObjects()
@@ -805,13 +768,11 @@ export default class DB {
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `
-        SELECT EXISTS(
+        `SELECT EXISTS(
           SELECT 1
           FROM fileChanges_commits_renamed_cached
           WHERE filePath = ? OR filePath LIKE ?
-        ) AS exists_in_range;
-      `,
+        ) AS exists_in_range;`,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           statement.bindVarchar(2, `${objectPath}/%`)
@@ -820,12 +781,10 @@ export default class DB {
         "pathExistsInSelectedRange(tree)"
       )
     } else {
-      res = await this.query(`
-        SELECT EXISTS(
-          SELECT 1
-          FROM fileChanges_commits_renamed_cached
-        ) AS exists_in_range;
-      `)
+      res = await this.query(
+        `SELECT EXISTS(SELECT 1 FROM fileChanges_commits_renamed_cached) AS exists_in_range;
+      `
+      )
     }
 
     const existsValue = res[0]?.["exists_in_range"]
@@ -844,9 +803,15 @@ export default class DB {
     timerange: [number, number]
   ): Promise<[{ date: string; count: number; timestamp: number }[], "day" | "week" | "month" | "year"]> {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
-    const res = await this.query(`
-      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committerTime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committerTime)) AS date, committerTime FROM commits) GROUP BY date ORDER BY date ASC;
-    `)
+    const res = await this.query(
+      `SELECT strftime(date, '${query}') as timestring,
+        count(*) AS count,
+        MIN(committerTime) AS ct FROM (SELECT date_trunc('${timeUnit}',
+        to_timestamp(committerTime)) AS date,
+        committerTime FROM commits)
+       GROUP BY date
+       ORDER BY date ASC;`
+    )
     const mapped = res.map((x) => {
       return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["ct"]) }
     })
@@ -862,10 +827,12 @@ export default class DB {
   }
 
   public async updateColorSeed(seed: string) {
-    await this.run(`
-    DELETE FROM metadata WHERE field = 'colorseed';
-      INSERT INTO metadata (field, value, value2) VALUES ('colorseed', null, '${seed}');
-      `)
+    await this.run(
+      `DELETE FROM metadata
+       WHERE field = 'colorSeed';
+       INSERT INTO metadata (field, stringValue)
+       VALUES ('colorSeed', '${seed}');`
+    )
     log.debug("inserted seed", seed)
   }
 
