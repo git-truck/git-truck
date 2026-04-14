@@ -177,10 +177,10 @@ export default class ServerInstance {
     const FileModifications: FileModification[] = []
     for (const match of matches) {
       const groups = match.groups ?? {}
-      const authorName = groups.author
-      const authorEmail = groups.authoremail
-      const committertime = Number(groups.datecommitter)
-      const authortime = Number(groups.dateauthor)
+      const contributorName = groups.author
+      const authorEmail = groups.authorEmail
+      const committerTime = Number(groups.dateCommitter)
+      const authorTime = Number(groups.dateAuthor)
       const hash = groups.hash
       const contributionsString = groups.contributions
       const modesString = groups.modes
@@ -193,7 +193,7 @@ export default class ServerInstance {
           const mode = modeMatch.groups?.mode.trim()
           if (!file || !mode) continue
           if (mode === "delete" || mode === "create") {
-            FileModifications.push({ path: file, timestamp: committertime, timestampauthor: authortime, type: mode })
+            FileModifications.push({ path: file, timestamp: committerTime, timestampAuthor: authorTime, type: mode })
           }
         }
       }
@@ -208,7 +208,7 @@ export default class ServerInstance {
           const fileHasMoved = file.includes("=>")
           let filePath = file
           if (fileHasMoved) {
-            filePath = analyzeRenamedFile(file, committertime, authortime, renamedFiles, this.repositoryName)
+            filePath = analyzeRenamedFile(file, committerTime, authorTime, renamedFiles, this.repositoryName)
           }
 
           const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
@@ -223,9 +223,9 @@ export default class ServerInstance {
         }
       }
       commits.set(hash, {
-        author: { name: authorName, email: authorEmail },
-        committertime,
-        authortime,
+        author: { name: contributorName, email: authorEmail },
+        committerTime,
+        authorTime,
         hash,
         coauthors: [],
         fileChanges
@@ -236,17 +236,17 @@ export default class ServerInstance {
       ...FileModifications.map((modification) => {
         if (modification.type === "delete") {
           return {
-            fromname: modification.path,
-            toname: null,
+            fromName: modification.path,
+            toName: null,
             timestamp: modification.timestamp,
-            timestampauthor: modification.timestampauthor
+            timestampAuthor: modification.timestampAuthor
           }
         }
         return {
-          fromname: null,
-          toname: modification.path,
+          fromName: null,
+          toName: modification.path,
           timestamp: modification.timestamp,
-          timestampauthor: modification.timestampauthor
+          timestampAuthor: modification.timestampAuthor
         }
       })
     )
@@ -257,12 +257,12 @@ export default class ServerInstance {
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
       const groups = match.groups ?? {}
-      const authorName = groups.author
-      const authorEmail = groups.authoremail
+      const name = groups.author
+      const authorEmail = groups.authorEmail
       const message = groups.message
       const body = groups.body
-      const committertime = Number(groups.datecommitter)
-      const authortime = Number(groups.dateauthor)
+      const committerTime = Number(groups.dateCommitter)
+      const authorTime = Number(groups.dateAuthor)
       const hash = groups.hash
       const contributionsString = groups.contributions
       const fileChanges: FileChange[] = []
@@ -280,9 +280,9 @@ export default class ServerInstance {
         }
       }
       commits.push({
-        author: { name: authorName, email: authorEmail },
-        committertime,
-        authortime,
+        author: { name: name, email: authorEmail },
+        committerTime,
+        authorTime,
         hash,
         fileChanges,
         message,
@@ -306,8 +306,8 @@ export default class ServerInstance {
 
   private flattenChains(chains: RenameInterval[][]) {
     return chains.flatMap((chain) => {
-      const destinationName = chain[0].toname
-      return chain.map((interval) => ({ ...interval, toname: destinationName }) as RenameInterval)
+      const destinationName = chain[0].toName
+      return chain.map((interval) => ({ ...interval, toName: destinationName }) as RenameInterval)
     })
   }
 
@@ -324,26 +324,26 @@ export default class ServerInstance {
     const finishedChains: RenameInterval[][] = []
 
     for (const file of currentFiles)
-      currentPathToRenameChain.set(file, [{ fromname: file, toname: file, timestamp: 0, timestampend: 4_000_000_000 }])
+      currentPathToRenameChain.set(file, [{ fromName: file, toName: file, timestamp: 0, timestampEnd: 4_000_000_000 }])
 
     for (const rename of orderedRenames) {
       // if file was deleted, we not care about what it was previously called
-      if (rename.toname === null) continue
-      const existing = currentPathToRenameChain.get(rename.toname)
+      if (rename.toName === null) continue
+      const existing = currentPathToRenameChain.get(rename.toName)
       if (existing) {
         const prevRename = existing[existing.length - 1]
-        prevRename.timestamp = rename.timestampend
-        // rename.timestampend = prevRename.timestamp
-        if (rename.fromname !== null) {
+        prevRename.timestamp = rename.timestampEnd
+        // rename.timestampEnd = prevRename.timestamp
+        if (rename.fromName !== null) {
           // add rename to chain, and set the current rename to the newly found rename
           existing.push(rename)
-          currentPathToRenameChain.set(rename.fromname, existing)
+          currentPathToRenameChain.set(rename.fromName, existing)
         } else {
           // if we found the time of file creation, we do not need to follow renames for it any more
-          prevRename.timestamp = rename.timestampend
+          prevRename.timestamp = rename.timestampEnd
           finishedChains.push(existing)
         }
-        currentPathToRenameChain.delete(rename.toname)
+        currentPathToRenameChain.delete(rename.toName)
       }
     }
 

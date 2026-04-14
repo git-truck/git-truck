@@ -22,9 +22,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       const fullCommits = await instance.getFullCommits(gitLogResult)
       const unions = await instance.db.getRawUnions()
       return fullCommits.map((commit) => {
-        const alias = unions.find(
-          ({ authorName, authorEmail }) => authorName === commit.author.name && authorEmail === commit.author.email
-        )
+        const alias = unions.find(({ name, email }) => name === commit.author.name && email === commit.author.email)
         if (!alias) return commit
         return {
           ...commit,

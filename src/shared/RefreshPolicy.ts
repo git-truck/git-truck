@@ -11,8 +11,8 @@ type DataItem =
   | "maxMinFileSize"
   | "contributors"
   | "groupedContributors"
-  | "filetree"
-  | "hiddenfiles"
+  | "fileTree"
+  | "hiddenFiles"
   | "lastRunInfo"
   | "colorSeed"
   | "contributorColors"
@@ -57,8 +57,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "newestOldestChangeDate",
     "contributors",
     "groupedContributors",
-    "filetree",
-    "hiddenfiles",
+    "fileTree",
+    "hiddenFiles",
     "lastRunInfo",
     "colorSeed",
     "contributorColors",
@@ -79,7 +79,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinContribCounts",
     "newestOldestChangeDate",
     "contributors",
-    "hiddenfiles"
+    "hiddenFiles"
   ],
   hide: [
     "cache",
@@ -88,7 +88,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinContribCounts",
     "newestOldestChangeDate",
     "contributors",
-    "hiddenfiles"
+    "hiddenFiles"
   ],
   open: [],
   groupedContributors: ["cache", "topContributor", "contributorCounts", "contributors", "groupedContributors"],
@@ -126,7 +126,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
-    "filetree"
+    "fileTree"
   ],
   contributorColor: ["contributorColors"],
   unknown: [
@@ -146,8 +146,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "newestOldestChangeDate",
     "contributors",
     "groupedContributors",
-    "filetree",
-    "hiddenfiles",
+    "fileTree",
+    "hiddenFiles",
     "lastRunInfo",
     "colorSeed",
     "contributorColors",

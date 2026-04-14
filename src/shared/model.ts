@@ -150,8 +150,8 @@ export interface FileChange {
 
 export interface CommitDTO {
   author: Person
-  committertime: number
-  authortime: number
+  committerTime: number
+  authorTime: number
   hash: string
 }
 
@@ -174,24 +174,24 @@ export interface GitLogEntry extends CommitDTO {
 }
 
 export interface RenameEntry {
-  fromname: string | null
-  toname: string | null
+  fromName: string | null
+  toName: string | null
   timestamp: number
-  timestampauthor: number
+  timestampAuthor: number
   timestampEnd?: number
 }
 
 export interface RenameInterval {
-  fromname: string | null
-  toname: string | null
+  fromName: string | null
+  toName: string | null
   timestamp: number
-  timestampend: number
+  timestampEnd: number
 }
 
 export interface FileModification {
   path: string
   timestamp: number
-  timestampauthor: number
+  timestampAuthor: number
   type: ModeType
 }
 

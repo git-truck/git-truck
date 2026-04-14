@@ -261,7 +261,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
 
   log.time("fileTree")
   const filetree =
-    prevRes && !shouldUpdate(reason, "filetree")
+    prevRes && !shouldUpdate(reason, "fileTree")
       ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
       : await instance.analyzeTree()
   log.timeEnd("fileTree")
@@ -290,7 +290,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const authorCounts =
     prevRes && !shouldUpdate(reason, "contributorCounts")
       ? prevRes.contributorCounts
-      : await instance.db.getAuthorCountPerFile()
+      : await instance.db.getContributorCountPerFile()
   const { maxCommitCount, minCommitCount } =
     prevRes && !shouldUpdate(reason, "maxMinCommitCount")
       ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
@@ -311,7 +311,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await instance.db.getAuthorUnions()
   const { rootTree, fileCount } = filetree
   const hiddenFiles =
-    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+    prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo

@@ -1,4 +1,4 @@
-import { DuckDBInstance, DuckDBConnection, DuckDBAppender, DuckDBArrayValue } from "@duckdb/node-api"
+import { DuckDBInstance, DuckDBConnection, DuckDBAppender } from "@duckdb/node-api"
 import type {
   AbstractGitObject,
   CommitDTO,
@@ -133,32 +133,36 @@ export default class DB {
   }
 
   private static async initTables(db: DuckDBConnection) {
-    await db.run(`
+    await db.run(/*sql*/ `
       CREATE TABLE IF NOT EXISTS commits (
         hash VARCHAR,
         author VARCHAR,
-        authoremail VARCHAR,
-        committertime UINTEGER,
-        authortime UINTEGER
+        authorEmail VARCHAR,
+        committerTime UINTEGER,
+        authorTime UINTEGER
       );
-      CREATE TABLE IF NOT EXISTS filechanges (
-        commithash VARCHAR,
+      CREATE TABLE IF NOT EXISTS fileChanges (
+        commitHash VARCHAR,
         insertions UINTEGER,
         deletions UINTEGER,
-        filepath VARCHAR,
+        filePath VARCHAR,
       );
-      CREATE TABLE IF NOT EXISTS authorunions (
+      CREATE TABLE IF NOT EXISTS contributorGroups (
         displayName VARCHAR,
-        authorEmail VARCHAR,
-        authorName VARCHAR
+        email VARCHAR,
+        name VARCHAR
       );
       CREATE TABLE IF NOT EXISTS renames (
-        fromname VARCHAR,
-        toname VARCHAR,
+        fromName VARCHAR,
+        toName VARCHAR,
         timestamp UINTEGER,
-        timestampauthor UINTEGER
+        timestampAuthor UINTEGER
       );
-      CREATE TABLE IF NOT EXISTS hiddenfiles (
+
+      CREATE SEQUENCE IF NOT EXISTS hiddenFiles_id_sequence START 1;
+
+      CREATE TABLE IF NOT EXISTS hiddenFiles (
+        id INTEGER DEFAULT nextval('hiddenFiles_id_sequence'),
         path VARCHAR
       );
       CREATE TABLE IF NOT EXISTS metadata (
@@ -166,11 +170,11 @@ export default class DB {
         value UBIGINT,
         value2 VARCHAR
       );
-      CREATE TABLE IF NOT EXISTS temporary_renames (
-        fromname VARCHAR,
-        toname VARCHAR,
+      CREATE TABLE IF NOT EXISTS temporaryRenames (
+        fromName VARCHAR,
+        toName VARCHAR,
         timestamp UINTEGER,
-        timestampend UINTEGER
+        timestampEnd UINTEGER
       );
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR,
@@ -179,10 +183,6 @@ export default class DB {
         sizeInBytes UINTEGER
       );
 
-      -- Migrations
-      CREATE SEQUENCE IF NOT EXISTS hiddenfiles_id_sequence START 1;
-      ALTER TABLE hiddenfiles ADD COLUMN IF NOT EXISTS id INTEGER DEFAULT nextval('hiddenfiles_id_sequence');
-      ALTER TABLE commits ADD COLUMN IF NOT EXISTS authoremail VARCHAR;
     `)
   }
 
@@ -193,81 +193,81 @@ export default class DB {
   public async clearAllTables() {
     await this.run(`
       DELETE FROM commits;
-      DELETE FROM filechanges;
-      DELETE FROM authorunions;
+      DELETE FROM fileChanges;
+      DELETE FROM contributorGroups;
       DELETE FROM renames;
-      DELETE FROM hiddenfiles;
+      DELETE FROM hiddenFiles;
       DELETE FROM metadata;
-      DELETE FROM temporary_renames;
+      DELETE FROM temporaryRenames;
       DELETE FROM files;
     `)
   }
 
   public async createIndexes() {
     await this.run(`
-      CREATE INDEX IF NOT EXISTS commitstime ON commits(committertime);
-      CREATE INDEX IF NOT EXISTS renamestime ON renames(timestamp);
+      CREATE INDEX IF NOT EXISTS commitsTime ON commits(committerTime);
+      CREATE INDEX IF NOT EXISTS renamesTime ON renames(timestamp);
     `)
   }
 
   private static async initViews(db: DuckDBConnection, start: number, end: number) {
     await db.run(/*sql*/ `
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE c.author END AS author, c.authoremail, c.committertime, c.authortime FROM
-      commits c LEFT JOIN (SELECT displayName, authorEmail, authorName FROM authorunions) u
-      ON (c.author = u.authorName AND c.authoremail = u.authorEmail)
-      WHERE c.committertime BETWEEN ${start} AND ${end};
+      SELECT c.hash, CASE WHEN cg.displayName IS NOT NULL THEN cg.displayName ELSE c.author END AS author, c.authorEmail, c.committerTime, c.authorTime FROM
+      commits c LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+      ON (c.author = cg.name AND c.authorEmail = cg.email)
+      WHERE c.committerTime BETWEEN ${start} AND ${end};
 
-      CREATE OR REPLACE VIEW filechanges_commits AS
-      SELECT f.commithash, f.insertions, f.deletions, f.filepath, author, c.authoremail, c.committertime, c.authortime FROM
-      filechanges f JOIN commits_unioned c on f.commithash = c.hash;
+      CREATE OR REPLACE VIEW fileChanges_commits AS
+      SELECT f.commitHash, f.insertions, f.deletions, f.filePath, author, c.authorEmail, c.committerTime, c.authorTime FROM
+      fileChanges f JOIN commits_unioned c on f.commitHash = c.hash;
 
-      CREATE OR REPLACE VIEW filechanges_commits_renamed AS
-      SELECT f.commithash, f.insertions, f.deletions, f.author, f.authoremail, f.committertime, f.authortime,
+      CREATE OR REPLACE VIEW fileChanges_commits_renamed AS
+      SELECT f.commitHash, f.insertions, f.deletions, f.author, f.authorEmail, f.committerTime, f.authorTime,
           CASE
-              WHEN r.toname IS NOT NULL THEN r.toname
-              ELSE f.filepath
-          END AS filepath
-      FROM filechanges_commits f
-      LEFT JOIN temporary_renames r ON f.filepath = r.fromname
+              WHEN r.toName IS NOT NULL THEN r.toName
+              ELSE f.filePath
+          END AS filePath
+      FROM fileChanges_commits f
+      LEFT JOIN temporaryRenames r ON f.filePath = r.fromName
       AND (
-        f.committertime BETWEEN r.timestamp AND r.timestampend
-        --OR (f.committertime = r.timestampend + 1
-        --AND f.authortime < r.timestampend)
+        f.committerTime BETWEEN r.timestamp AND r.timestampEnd
+        --OR (f.committerTime = r.timestampEnd + 1
+        --AND f.authorTime < r.timestampEnd)
       );
 
       CREATE OR REPLACE VIEW filtered_files AS
       SELECT f.path
       FROM files f
-      LEFT JOIN hiddenfiles g ON
+      LEFT JOIN hiddenFiles g ON
           (g.path LIKE '*.%' AND f.path GLOB g.path)
           OR (g.path NOT LIKE '*.%' AND f.path GLOB g.path || '*')
       WHERE g.path IS NULL;
 
 
-      CREATE OR REPLACE VIEW filechanges_commits_renamed_files AS
-      SELECT * FROM filechanges_commits_renamed f
-      INNER JOIN filtered_files fi on fi.path = f.filepath;
+      CREATE OR REPLACE VIEW fileChanges_commits_renamed_files AS
+      SELECT * FROM fileChanges_commits_renamed f
+      INNER JOIN filtered_files fi on fi.path = f.filePath;
 
       CREATE OR REPLACE VIEW relevant_renames AS
-      SELECT fromname, toname, min(timestamp) AS timestamp, timestampauthor FROM renames
+      SELECT fromName, toName, min(timestamp) AS timestamp, timestampAuthor FROM renames
       WHERE timestamp BETWEEN ${start} AND ${end}
-      group by fromname, toname, timestampauthor;
+      group by fromName, toName, timestampAuthor;
 
       CREATE OR REPLACE VIEW combined_result AS
-      SELECT f.commithash, f.insertions, f.deletions, c.authoremail, c.committertime, c.authortime,
-        CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE c.author END AS author,
+      SELECT f.commitHash, f.insertions, f.deletions, c.authorEMail, c.committerTime, c.authorTime,
+        CASE WHEN cg.displayName IS NOT NULL THEN cg.displayName ELSE c.author END AS author,
         CASE
-            WHEN r.toname IS NOT NULL THEN r.toname
-            ELSE f.filepath
-        END AS filepath
+            WHEN r.toName IS NOT NULL THEN r.toName
+            ELSE f.filePath
+        END AS filePath
       FROM commits c
-      LEFT JOIN (SELECT displayName, authorEmail, authorName FROM authorunions) u
-      ON (c.author = u.authorName AND c.authoremail = u.authorEmail)
-      JOIN filechanges f ON f.commithash = c.hash
-      LEFT JOIN temporary_renames r ON f.filepath = r.fromname AND c.committertime BETWEEN r.timestamp AND r.timestampend
-      INNER JOIN files fi on fi.path = filepath
-      WHERE c.committertime BETWEEN ${start} AND ${end}
+      LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+      ON (c.author = cg.name AND c.authorEMail = cg.email)
+      JOIN fileChanges f ON f.commitHash = c.hash
+      LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+      INNER JOIN files fi on fi.path = filePath
+      WHERE c.committerTime BETWEEN ${start} AND ${end}
 
     `)
   }
@@ -279,15 +279,15 @@ export default class DB {
     await DB.initViews(await this.connectionPromise, start, end)
   }
 
-  public async replaceContributorGroups(unions: ContributorGroup[]) {
+  public async replaceContributorGroups(groups: ContributorGroup[]) {
     await this.run(`
-      DELETE FROM authorunions;
+      DELETE FROM contributorGroups;
     `)
 
-    await this.usingTableAppender("authorunions", async (appender) => {
+    await this.usingTableAppender("contributorGroups", async (appender) => {
       const seen = new Set<string>()
 
-      for (const union of unions) {
+      for (const union of groups) {
         for (const alias of union.members) {
           const email = alias.email ?? ""
           const key = `${union.displayName}\u0000${alias.name}\u0000${email}`
@@ -305,23 +305,23 @@ export default class DB {
 
   public async replaceTemporaryRenames(renames: RenameInterval[]) {
     await this.run(`
-      DELETE FROM temporary_renames;
+      DELETE FROM temporaryRenames;
     `)
 
-    await this.usingTableAppender("temporary_renames", async (appender) => {
+    await this.usingTableAppender("temporaryRenames", async (appender) => {
       for (const rename of renames) {
-        if (rename.fromname) {
-          appender.appendVarchar(rename.fromname)
+        if (rename.fromName) {
+          appender.appendVarchar(rename.fromName)
         } else {
           appender.appendDefault()
         }
-        if (rename.toname) {
-          appender.appendVarchar(rename.toname)
+        if (rename.toName) {
+          appender.appendVarchar(rename.toName)
         } else {
           appender.appendDefault()
         }
         appender.appendUInteger(rename.timestamp)
-        appender.appendUInteger(rename.timestampend)
+        appender.appendUInteger(rename.timestampEnd)
         appender.endRow()
       }
     })
@@ -329,15 +329,15 @@ export default class DB {
 
   public async getAuthorUnions(): Promise<ContributorGroup[]> {
     const res = await this.query(`
-      SELECT displayName, authorEmail, authorName FROM authorunions;  
+      SELECT displayName, email, name FROM contributorGroups;
     `)
 
     const groupsByName = new Map<string, Person[]>()
     res.forEach((row) => {
       const displayName = row["displayName"] as string
-      const authorName = row["authorName"] as string
-      const authorEmail = row["authorEmail"] as string
-      const person: Person = { name: authorName, email: authorEmail }
+      const name = row["name"] as string
+      const email = row["email"] as string
+      const person: Person = { name, email }
       const existing = groupsByName.get(displayName)
       if (existing) {
         existing.push(person)
@@ -354,44 +354,44 @@ export default class DB {
 
   public async getRawUnions() {
     const res = await this.query(`
-      SELECT displayName, authorEmail, authorName
-      FROM authorunions;
+      SELECT displayName, email, name
+      FROM contributorGroups;
     `)
 
-    return res as { displayName: string; authorEmail: string; authorName: string }[]
+    return res as { displayName: string; email: string; name: string }[]
   }
 
   public async getCommitTimeAtIndex(idx: number) {
     const res = await this.query(`
-      SELECT committertime FROM commits ORDER BY committertime DESC OFFSET ${idx} LIMIT 1;
+      SELECT committerTime FROM commits ORDER BY committerTime DESC OFFSET ${idx} LIMIT 1;
     `)
-    return res.length > 0 ? Number(res[0]["committertime"]) : 0
+    return res.length > 0 ? Number(res[0]["committerTime"]) : 0
   }
 
   public async getOverallTimeRange() {
     const res = await this.query(`
-      SELECT MIN(committertime) as min, MAX(committertime) as max from commits;
+      SELECT MIN(committerTime) as min, MAX(committerTime) as max from commits;
     `)
     return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
   }
 
   public async getCurrentRenameIntervals() {
     const res = await this.query(`
-        SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampauthor DESC;
+        SELECT * FROM relevant_renames ORDER BY timestamp DESC, timestampAuthor DESC;
     `)
     return res.map((row) => {
       return {
-        fromname: row["fromname"] as string | null,
-        toname: row["toname"] as string | null,
+        fromName: row["fromName"] as string | null,
+        toName: row["toName"] as string | null,
         timestamp: 0,
-        timestampend: Number(row["timestamp"])
+        timestampEnd: Number(row["timestamp"])
       } as RenameInterval
     })
   }
 
   public async getHiddenFiles() {
     const res = await this.query(`
-      SELECT path, id FROM hiddenfiles ORDER BY id DESC;
+      SELECT path, id FROM hiddenFiles ORDER BY id DESC;
     `)
     return res.map((row) => row["path"] as string)
   }
@@ -399,10 +399,10 @@ export default class DB {
   public async addHiddenFile(path: string) {
     await this.usingPreparedStatement(
       `
-      INSERT INTO hiddenfiles (id, path)
-      SELECT nextval('hiddenfiles_id_sequence'), ?
+      INSERT INTO hiddenFiles (id, path)
+      SELECT nextval('hiddenFiles_id_sequence'), ?
       WHERE NOT EXISTS (
-        SELECT 1 FROM hiddenfiles WHERE path = ?
+        SELECT 1 FROM hiddenFiles WHERE path = ?
       );
     `,
       async (statement) => {
@@ -417,7 +417,7 @@ export default class DB {
   public async removeHiddenFile(path: string) {
     await this.usingPreparedStatement(
       `
-      DELETE FROM hiddenfiles
+      DELETE FROM hiddenFiles
       WHERE path = ?;
     `,
       async (statement) => {
@@ -430,28 +430,28 @@ export default class DB {
 
   public async clearHiddenFiles() {
     await this.run(`
-      DELETE FROM hiddenfiles;
+      DELETE FROM hiddenFiles;
     `)
   }
 
   public async getCommits(path: string, count: number) {
     const res = await this.query(`
-      SELECT distinct commithash, author, authoremail, committertime, authortime, message, body
-      FROM filechanges_commits_renamed_cached
-      WHERE filepath GLOB '${path}*'
-      ORDER BY committertime DESC, commithash
+      SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+      FROM fileChanges_commits_renamed_cached
+      WHERE filePath GLOB '${path}*'
+      ORDER BY committerTime DESC, commitHash
       LIMIT ${count};
     `)
     return res.map((row) => {
       return {
         author: {
           name: String(row["author"]),
-          email: String(row["authoremail"])
+          email: String(row["authorEmail"])
         },
-        committertime: row["committertime"],
-        authortime: row["authortime"],
+        committerTime: row["committerTime"],
+        authorTime: row["authorTime"],
         body: row["body"],
-        hash: row["commithash"],
+        hash: row["commitHash"],
         message: row["message"]
       } as CommitDTO
     })
@@ -459,35 +459,35 @@ export default class DB {
 
   public async getCommitHashes(path: string, count: number) {
     const res = await this.query(`
-      SELECT distinct commithash
-      FROM filechanges_commits_renamed_cached
-      WHERE filepath GLOB '${path}*'
-      ORDER BY committertime DESC, commithash
+      SELECT distinct commitHash
+      FROM fileChanges_commits_renamed_cached
+      WHERE filePath GLOB '${path}*'
+      ORDER BY committerTime DESC, commitHash
       LIMIT ${count};
     `)
     return res.map((row) => {
-      return row["commithash"] as string
+      return row["commitHash"] as string
     })
   }
 
   public async getCommitCountForPath(path: string) {
     const res = await this.query(`
-      SELECT COUNT(DISTINCT commithash) AS count from filechanges_commits_renamed_cached WHERE filepath GLOB '${path}*';
+      SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*';
     `)
     return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
     const res = await this.query(`
-      SELECT filepath, count(DISTINCT commithash) AS count
-      FROM filechanges_commits_renamed_cached
-      GROUP BY filepath
+      SELECT filePath, count(DISTINCT commitHash) AS count
+      FROM fileChanges_commits_renamed_cached
+      GROUP BY filePath
       ORDER BY count DESC;
     `)
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"] as string] = Number(row["count"])
+      result[row["filePath"] as string] = Number(row["count"])
     })
 
     return result
@@ -495,29 +495,29 @@ export default class DB {
 
   public async getLastChangedPerFile(): Promise<Record<string, number>> {
     const res = await this.query(`
-      SELECT filepath, MAX(committertime) AS max_time
-      FROM filechanges_commits_renamed_cached
-      GROUP BY filepath;
+      SELECT filePath, MAX(committerTime) AS max_time
+      FROM fileChanges_commits_renamed_cached
+      GROUP BY filePath;
     `)
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"] as string] = Number(row["max_time"])
+      result[row["filePath"] as string] = Number(row["max_time"])
     })
 
     return result
   }
 
-  public async getAuthorCountPerFile(): Promise<Record<string, number>> {
+  public async getContributorCountPerFile(): Promise<Record<string, number>> {
     const res = await this.query(`
-      SELECT filepath, count(DISTINCT author) AS author_count
-      FROM filechanges_commits_renamed_cached
-      GROUP BY filepath;
+      SELECT filePath, count(DISTINCT author) AS contributorCount
+      FROM fileChanges_commits_renamed_cached
+      GROUP BY filePath;
     `)
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["filepath"] as string] = Number(row["author_count"])
+      result[row["filePath"] as string] = Number(row["contributorCount"])
     })
 
     return result
@@ -525,18 +525,18 @@ export default class DB {
 
   public async getMaxMinContribCounts() {
     const res = await this.query(`
-      SELECT MAX(contribsum) as max, MIN(contribsum) as min FROM (SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath);
+      SELECT MAX(contribSum) as max, MIN(contribSum) as min FROM (SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath);
     `)
     return { max: Number(res[0]["max"]), min: Number(res[0]["min"]) }
   }
 
   public async getContribSumPerFile(): Promise<Record<string, number>> {
     const res = await this.query(`
-      SELECT filepath, SUM(insertions + deletions) AS contribsum FROM filechanges_commits_renamed_cached GROUP BY filepath;
+      SELECT filePath, SUM(insertions + deletions) AS contribSum FROM fileChanges_commits_renamed_cached GROUP BY filePath;
     `)
 
     return res.reduce<Record<string, number>>((acc, row) => {
-      acc[row["filepath"] as string] = Number(row["contribsum"])
+      acc[row["filePath"] as string] = Number(row["contribSum"])
       return acc as Record<string, number>
     }, {})
   }
@@ -545,8 +545,8 @@ export default class DB {
     //Respects aliases for contributors through commits_unioned view
     const res = await this.query(`
       SELECT DISTINCT author
-      FROM filechanges_commits_renamed_cached
-      WHERE filepath GLOB '${objectPath}*'
+      FROM fileChanges_commits_renamed_cached
+      WHERE filePath GLOB '${objectPath}*'
     `)
     return res.map((row) => row["author"] as string)
   }
@@ -555,20 +555,20 @@ export default class DB {
     Record<string, { contributor: string; contribcount: number }[]>
   > {
     const res = await this.query(`
-    SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount
-    FROM filechanges_commits_renamed_cached
-    GROUP BY filepath, author
+    SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount
+    FROM fileChanges_commits_renamed_cached
+    GROUP BY filePath, author
   `)
 
     const result: Record<string, { contributor: string; contribcount: number }[]> = {}
     res.forEach((row) => {
-      const filepath = row["filepath"] as string
-      if (!result[filepath]) {
-        result[filepath] = []
+      const filePath = row["filePath"] as string
+      if (!result[filePath]) {
+        result[filePath] = []
       }
-      result[filepath].push({
+      result[filePath].push({
         contributor: row["author"] as string,
-        contribcount: Number(row["total_contribcount"])
+        contribcount: Number(row["totalContribCount"])
       })
     })
 
@@ -578,12 +578,12 @@ export default class DB {
   public async getTopContributorPerFile() {
     const res = await this.query(`
       WITH RankedAuthors AS (
-        SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount,
-        ROW_NUMBER() OVER (PARTITION BY filepath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank
-        FROM filechanges_commits_renamed_cached
-        GROUP BY filepath, author
+        SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount,
+        ROW_NUMBER() OVER (PARTITION BY filePath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank
+        FROM fileChanges_commits_renamed_cached
+        GROUP BY filePath, author
       )
-      SELECT filepath, author, total_contribcount
+      SELECT filePath, author, totalContribCount
       FROM RankedAuthors
       WHERE rank = 1;
     `)
@@ -594,7 +594,7 @@ export default class DB {
       if (typeof contributor !== "string") {
         throw new Error("Error when getting top contributor per file: Contributor is not a string")
       }
-      result[row["filepath"] as string] = { contributor: contributor, contribcount: Number(row["total_contribcount"]) }
+      result[row["filePath"] as string] = { contributor: contributor, contribcount: Number(row["totalContribCount"]) }
     })
 
     return result
@@ -603,8 +603,8 @@ export default class DB {
   public async updateCachedResult() {
     // TODO: fix combined_result
     await this.run(`
-    CREATE OR REPLACE TEMP TABLE filechanges_commits_renamed_cached AS
-    SELECT * FROM filechanges_commits_renamed_files;
+    CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
+    SELECT * FROM fileChanges_commits_renamed_files;
     `)
   }
 
@@ -615,18 +615,18 @@ export default class DB {
   public async addRenames(renames: RenameEntry[]) {
     await this.usingTableAppender("renames", async (appender) => {
       for (const rename of renames) {
-        if (rename.fromname) {
-          appender.appendVarchar(rename.fromname)
+        if (rename.fromName) {
+          appender.appendVarchar(rename.fromName)
         } else {
           appender.appendDefault()
         }
-        if (rename.toname) {
-          appender.appendVarchar(rename.toname)
+        if (rename.toName) {
+          appender.appendVarchar(rename.toName)
         } else {
           appender.appendDefault()
         }
         appender.appendUInteger(rename.timestamp)
-        appender.appendUInteger(rename.timestampauthor)
+        appender.appendUInteger(rename.timestampAuthor)
         appender.endRow()
       }
     })
@@ -675,9 +675,9 @@ export default class DB {
 
   public async getLatestCommitHash(beforeTime?: number) {
     const res = await this.query(`
-      SELECT hash FROM commits WHERE committertime <= ${
+      SELECT hash FROM commits WHERE committerTime <= ${
         beforeTime ?? 1_000_000_000_000
-      } ORDER BY committertime DESC LIMIT 1;
+      } ORDER BY committerTime DESC LIMIT 1;
     `)
     if (res.length < 1)
       throw new Error("Could not get latest commit hash. Commits table is empty. beforeTime set to " + beforeTime)
@@ -686,7 +686,7 @@ export default class DB {
 
   public async getAuthors() {
     const res = await this.query(`
-      SELECT DISTINCT author, authoremail AS email
+      SELECT DISTINCT author, authorEmail AS email
       FROM commits;
     `)
     return res.map((row) => ({
@@ -697,21 +697,21 @@ export default class DB {
 
   public async getNewestAndOldestChangeDates() {
     const res = await this.query(`
-      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filepath, MAX(committertime) AS max_time FROM filechanges_commits_renamed_cached GROUP BY filepath);
+      SELECT MAX(max_time) AS newest, MIN(max_time) AS oldest FROM (SELECT filePath, MAX(committerTime) AS max_time FROM fileChanges_commits_renamed_cached GROUP BY filePath);
     `)
     return { newestChangeDate: res[0]["newest"] as number, oldestChangeDate: res[0]["oldest"] as number }
   }
 
   public async getCommitCount() {
     const res = await this.query(`
-      SELECT count(distinct commithash) AS count FROM filechanges_commits_renamed_cached;
+      SELECT count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached;
     `)
     return Number(res[0]["count"])
   }
 
   public async getMaxAndMinCommitCount() {
     const res = await this.query(`
-      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filepath, count(distinct commithash) AS count FROM filechanges_commits_renamed_cached GROUP BY filepath ORDER BY count DESC);
+      SELECT MAX(count) as max_commits, MIN(count) as min_commits FROM (SELECT filePath, count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached GROUP BY filePath ORDER BY count DESC);
     `)
     return { maxCommitCount: Number(res[0]["max_commits"]), minCommitCount: Number(res[0]["min_commits"]) }
   }
@@ -743,11 +743,11 @@ export default class DB {
     if (isblob) {
       res = await this.usingPreparedStatement(
         `
-        SELECT author, SUM(insertions + deletions) AS contribsum
-        FROM filechanges_commits_renamed_cached
-        WHERE filepath = ?
+        SELECT author, SUM(insertions + deletions) AS contribSum
+        FROM fileChanges_commits_renamed_cached
+        WHERE filePath = ?
         GROUP BY author
-        ORDER BY contribsum DESC, author ASC;
+        ORDER BY contribSum DESC, author ASC;
       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
@@ -758,11 +758,11 @@ export default class DB {
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
         `
-        SELECT author, SUM(insertions + deletions) AS contribsum
-        FROM filechanges_commits_renamed_cached
-        WHERE filepath = ? OR filepath LIKE ?
+        SELECT author, SUM(insertions + deletions) AS contribSum
+        FROM fileChanges_commits_renamed_cached
+        WHERE filePath = ? OR filePath LIKE ?
         GROUP BY author
-        ORDER BY contribsum DESC, author ASC;
+        ORDER BY contribSum DESC, author ASC;
       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
@@ -773,15 +773,15 @@ export default class DB {
       )
     } else {
       res = await this.query(`
-        SELECT author, SUM(insertions + deletions) AS contribsum
-        FROM filechanges_commits_renamed_cached
+        SELECT author, SUM(insertions + deletions) AS contribSum
+        FROM fileChanges_commits_renamed_cached
         GROUP BY author
-        ORDER BY contribsum DESC, author ASC;
+        ORDER BY contribSum DESC, author ASC;
       `)
     }
 
     return res.map((row) => {
-      return { contributor: row["author"] as string, contribs: Number(row["contribsum"]) }
+      return { contributor: row["author"] as string, contribs: Number(row["contribSum"]) }
     })
   }
 
@@ -793,8 +793,8 @@ export default class DB {
         `
         SELECT EXISTS(
           SELECT 1
-          FROM filechanges_commits_renamed_cached
-          WHERE filepath = ?
+          FROM fileChanges_commits_renamed_cached
+          WHERE filePath = ?
         ) AS exists_in_range;
       `,
         async (statement) => {
@@ -808,8 +808,8 @@ export default class DB {
         `
         SELECT EXISTS(
           SELECT 1
-          FROM filechanges_commits_renamed_cached
-          WHERE filepath = ? OR filepath LIKE ?
+          FROM fileChanges_commits_renamed_cached
+          WHERE filePath = ? OR filePath LIKE ?
         ) AS exists_in_range;
       `,
         async (statement) => {
@@ -823,7 +823,7 @@ export default class DB {
       res = await this.query(`
         SELECT EXISTS(
           SELECT 1
-          FROM filechanges_commits_renamed_cached
+          FROM fileChanges_commits_renamed_cached
         ) AS exists_in_range;
       `)
     }
@@ -845,7 +845,7 @@ export default class DB {
   ): Promise<[{ date: string; count: number; timestamp: number }[], "day" | "week" | "month" | "year"]> {
     const [query, timeUnit] = this.getTimeStringFormat(timerange)
     const res = await this.query(`
-      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committertime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committertime)) AS date, committertime FROM commits) GROUP BY date ORDER BY date ASC;
+      SELECT strftime(date, '${query}') as timestring, count(*) AS count, MIN(committerTime) AS ct FROM (SELECT date_trunc('${timeUnit}',to_timestamp(committerTime)) AS date, committerTime FROM commits) GROUP BY date ORDER BY date ASC;
     `)
     const mapped = res.map((x) => {
       return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["ct"]) }
@@ -893,13 +893,13 @@ export default class DB {
         appender.appendVarchar(hash)
         appender.appendVarchar(commit.author.name)
         appender.appendVarchar(commit.author.email)
-        appender.appendUInteger(commit.committertime)
-        appender.appendUInteger(commit.authortime)
+        appender.appendUInteger(commit.committerTime)
+        appender.appendUInteger(commit.authorTime)
         appender.endRow()
       }
     })
 
-    await this.usingTableAppender("filechanges", async (appender) => {
+    await this.usingTableAppender("fileChanges", async (appender) => {
       for (const [hash, commit] of commits) {
         if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         for (const change of commit.fileChanges) {
