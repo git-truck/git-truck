@@ -335,7 +335,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const contributorsForPath =
     prevRes && !shouldUpdate(reason, "contributorsForPath")
       ? prevRes.contributorsForPath
-      : await instance.db.getContributorsForPath()
+      : await instance.db.getContributorContributionsForPath()
   const maxMinContribCounts =
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
