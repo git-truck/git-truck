@@ -201,7 +201,7 @@ export function MetricsInspection() {
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "contributors",
-      data: currentFetcherData ? (currentFetcherData.contributorCounts?.length ?? UNKNOWN_CATEGORY) : "loading...",
+      data: currentFetcherData ? (currentFetcherData.contributors?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
       colors: []

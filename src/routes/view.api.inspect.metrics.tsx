@@ -17,6 +17,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, isBlob),
     topContributor: topContributorData.length > 0 ? topContributorData[0] : null,
     amountOfCommits: await instance.db.getCommitCountForPath(objectPath),
-    contributorCounts: (await instance.db.getContributorsForPath())[objectPath]
+    contributors: await instance.db.getUniqueContributorsForPath(objectPath)
   }
 }

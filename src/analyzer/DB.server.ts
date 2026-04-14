@@ -545,7 +545,19 @@ export default class DB {
     }, {})
   }
 
-  public async getContributorsForPath(): Promise<Record<string, { contributor: string; contribcount: number }[]>> {
+  public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
+    //Respects aliases for contributors through commits_unioned view
+    const res = await this.query(`
+      SELECT DISTINCT author
+      FROM filechanges_commits_renamed_cached
+      WHERE filepath GLOB '${objectPath}*'
+    `)
+    return res.map((row) => row["author"] as string)
+  }
+
+  public async getContributorContributionsForPath(): Promise<
+    Record<string, { contributor: string; contribcount: number }[]>
+  > {
     const res = await this.query(`
     SELECT filepath, author, SUM(insertions + deletions) AS total_contribcount
     FROM filechanges_commits_renamed_cached
