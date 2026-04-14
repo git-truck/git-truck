@@ -24,7 +24,6 @@ const mockRepoData: RepoData = {
     status: "Success",
     isAnalyzed: true,
     refs: { Branches: {}, Tags: {} },
-    reasons: [],
     currentHead: "main",
     lastChanged: 0
   },

@@ -4,22 +4,12 @@ import { promiseHelper, branchCompare, semverCompare } from "~/shared/util.ts"
 
 import { resolve, join } from "node:path"
 import { promises as fs, existsSync, readFileSync } from "node:fs"
-import type { AnalyzerData, GitRefs, Repository } from "~/shared/model.ts"
-import { AnalyzerDataInterfaceVersion } from "~/shared/model.ts"
+import type { GitRefs, Repository } from "~/shared/model.ts"
 
 import os from "node:os"
 import ServerInstance from "~/analyzer/ServerInstance.server.ts"
 import { inflateSync } from "node:zlib"
 import { readFile } from "node:fs/promises"
-
-const ANALYZER_CACHE_MISS_REASONS = {
-  OTHER_REPO: "The cache was not created for this repo",
-  NOT_CACHED: "No cache was found",
-  BRANCH_HEAD_CHANGED: "Branch head changed",
-  DATA_VERSION_MISMATCH: "Outdated cache"
-}
-
-export type ANALYZER_CACHE_MISS_REASONS = (typeof ANALYZER_CACHE_MISS_REASONS)[keyof typeof ANALYZER_CACHE_MISS_REASONS]
 
 export class GitCaller {
   private useCache = true
@@ -51,19 +41,13 @@ export class GitCaller {
     return !findBranchHeadError
   }
 
-  /**
-   *
-   * @param repositoryPath The repository path to find the branch head for
-   * @param branch The branch to find the head for (default: checkout branch)
-   * @returns Promise<[branchHead: string, branchName: string]>
-   */
   static async findBranchHead({
     repositoryPath,
     branch
   }: {
     repositoryPath: string
     branch?: string
-  }): Promise<[string, string]> {
+  }): Promise<string> {
     if (!branch) {
       const [foundBranch, getBranchError] = await promiseHelper(GitCaller._getRepositoryHead(repositoryPath))
       if (getBranchError) {
@@ -81,7 +65,7 @@ export class GitCaller {
     const branchHead = await GitCaller._revParse(gitFolder, branch)
     log.debug(`${branch} -> [commit] ${branchHead}`)
 
-    return [branchHead, branch]
+    return branch
   }
   static getCachePath(repo: string, branch: string) {
     return resolve(os.tmpdir(), "git-truck", repo, `${branch}.json`)
@@ -148,68 +132,30 @@ export class GitCaller {
     }
 
     const refs = GitCaller.parseRefs(await GitCaller._getRefs(repositoryPath))
-    const repoHead = await GitCaller._getRepositoryHead(repositoryPath)
 
-    try {
-      const [findBranchHeadResult, error] = await promiseHelper(
-        GitCaller.findBranchHead({ repositoryPath: repositoryPath })
-      )
-      if (error) {
-        return {
-          status: "Error",
-          errorMessage: error.message,
-          repositoryName: repositoryName,
-          repositoryPath: repositoryPath,
-          parentDirPath: parentDir,
-          parentDirName: getRepoNameFromPath(parentDir),
-          lastChanged
-        }
-      }
-
-      const [branchHead, branch] = findBranchHeadResult
-      const [data, reasons] = await GitCaller.retrieveCachedResult({
-        repositoryPath: repositoryName,
-        branch,
-        branchHead
-      })
-
-      if (!data) {
-        return {
-          status: "Success",
-          isAnalyzed: false,
-          reasons: reasons,
-          repositoryName: repositoryName,
-          repositoryPath: repositoryPath,
-          parentDirPath: parentDir,
-          parentDirName: getRepoNameFromPath(parentDir),
-          currentHead: branch,
-          refs,
-          lastChanged
-        }
-      }
-
-      return {
-        status: "Success",
-        isAnalyzed: true,
-        reasons: [],
-        repositoryName: repositoryName,
-        repositoryPath: repositoryPath,
-        parentDirPath: parentDir,
-        parentDirName: getRepoNameFromPath(parentDir),
-        currentHead: repoHead,
-        refs,
-        lastChanged
-      }
-    } catch (e) {
+    const [branch, error] = await promiseHelper(GitCaller.findBranchHead({ repositoryPath: repositoryPath }))
+    if (error) {
       return {
         status: "Error",
-        errorMessage: e instanceof Error ? e.message : "Unknown error",
+        errorMessage: error.message,
         repositoryName: repositoryName,
         repositoryPath: repositoryPath,
         parentDirPath: parentDir,
         parentDirName: getRepoNameFromPath(parentDir),
         lastChanged
       }
+    }
+
+    return {
+      status: "Success",
+      isAnalyzed: false,
+      repositoryName: repositoryName,
+      repositoryPath: repositoryPath,
+      parentDirPath: parentDir,
+      parentDirName: getRepoNameFromPath(parentDir),
+      currentHead: branch,
+      refs,
+      lastChanged
     }
   }
   public static async getLastChanged(repoPath: string): Promise<number | null> {
@@ -337,44 +283,6 @@ export class GitCaller {
     return result.trim()
   }
 
-  static async retrieveCachedResult({
-    repositoryPath,
-    branch,
-    branchHead
-  }: {
-    repositoryPath: string
-    branch: string
-    branchHead: string
-  }): Promise<[AnalyzerData | null, ANALYZER_CACHE_MISS_REASONS[]]> {
-    const reasons = []
-    const cachedDataPath = GitCaller.getCachePath(repositoryPath, branch)
-    if (!existsSync(cachedDataPath)) return [null, [ANALYZER_CACHE_MISS_REASONS.NOT_CACHED]]
-
-    const cachedData = JSON.parse(await fs.readFile(cachedDataPath, "utf8")) as AnalyzerData
-
-    // Check if the current branchHead matches the hash of the analyzed commit from the cache
-    const branchHeadMatches = branchHead === cachedData.commit.hash
-    if (!branchHeadMatches) reasons.push(ANALYZER_CACHE_MISS_REASONS.BRANCH_HEAD_CHANGED)
-
-    // Check if the data uses the most recent analyzer data interface
-    const dataVersionMatches = cachedData.interfaceVersion === AnalyzerDataInterfaceVersion
-    if (!branchHeadMatches) reasons.push(ANALYZER_CACHE_MISS_REASONS.DATA_VERSION_MISMATCH)
-
-    // Check if the selected repository has changed
-    const repoMatches = repositoryPath === cachedData.repositoryPath
-
-    const cacheConditions = {
-      branchHeadMatches,
-      dataVersionMatches,
-      repoMatches
-    }
-
-    // Only return cached data if every criteria is met
-    if (!Object.values(cacheConditions).every(Boolean)) return [null, reasons]
-
-    return [cachedData, reasons]
-  }
-
   setUseCache(useCache: boolean) {
     this.useCache = useCache
   }
@@ -396,10 +304,6 @@ export class GitCaller {
   private async catFile(hash: string) {
     const result = await runProcess(this.repositoryPath, "git", ["cat-file", "-p", hash])
     return result as string
-  }
-
-  async findBranchHead() {
-    return await GitCaller.findBranchHead({ repositoryPath: this.repositoryPath, branch: this.branch })
   }
 
   async catFileCached(hash: string): Promise<string> {

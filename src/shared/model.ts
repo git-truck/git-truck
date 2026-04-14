@@ -1,5 +1,3 @@
-import type { ANALYZER_CACHE_MISS_REASONS } from "~/analyzer/git-caller.server"
-
 export type Repository = {
   /**
    * Relative path to the base directory that Git Truck was started in
@@ -26,7 +24,6 @@ export type Repository = {
       status: "Success"
       isAnalyzed: true
       refs: GitRefs
-      reasons: ANALYZER_CACHE_MISS_REASONS[]
       currentHead: string
       lastChanged: number
     }
@@ -40,7 +37,6 @@ export type Repository = {
       status: "Success"
       isAnalyzed: false
       refs: GitRefs
-      reasons: ANALYZER_CACHE_MISS_REASONS[]
       currentHead: string
       lastChanged: number
     }
@@ -74,23 +70,6 @@ export interface ArgsOptions {
   path: string
 }
 
-// Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 19
-
-export interface AnalyzerData {
-  cached: boolean
-  interfaceVersion: typeof AnalyzerDataInterfaceVersion
-  hiddenFiles: string[]
-  repo: string
-  repositoryPath: string
-  branch: string
-  commit: GitCommitObject
-  contributors: string[]
-  currentVersion: string
-  lastRunEpoch: number
-  commits: Record<string, GitLogEntry>
-}
-
 type RefType = "Branches" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
@@ -110,27 +89,9 @@ export interface GitTreeObject extends AbstractGitObject {
   children: (GitTreeObject | GitBlobObject)[]
 }
 
-interface GitCommitObject extends AbstractGitObject {
-  type: "commit"
-  tree: GitTreeObject
-  parent: string
-  parent2: string | null
-  author: PersonWithTime
-  committer: PersonWithTime
-  message: string
-  description: string
-  coauthors: Person[]
-  fileCount?: number
-}
-
 export interface Person {
   name: string
   email: string
-}
-
-type PersonWithTime = Person & {
-  timestamp: number
-  timezone: string
 }
 
 export type ContributorGroup = {
