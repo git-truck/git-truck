@@ -53,6 +53,7 @@ export function ContributorsInspection() {
     <ContributorDistribution
       className={fetcher.state !== "idle" ? "opacity-60" : ""}
       contributorDistribution={fetcher.data.contributorDistribution}
+      lineChangesSum={fetcher.data.lineChangesSum}
     />
   )
 }
@@ -61,18 +62,19 @@ const contributorCutoff = 2
 
 function ContributorDistribution({
   className = "",
-  contributorDistribution
+  contributorDistribution,
+  lineChangesSum
 }: {
   className?: string
   contributorDistribution: { contributor: string; contribs: number }[]
+  lineChangesSum: number
 }) {
   const contributorDistributionExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
 
   const contributorsAreCutoff = contributorDistribution.length > contributorCutoff + 1
-  const contribSum = !contributorDistribution
-    ? 0
-    : contributorDistribution.reduce((acc, curr) => acc + curr.contribs, 0)
+  //ContribSum > sum(Contribs) if there are coauthors
+  const contribSum = lineChangesSum ?? 0
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
