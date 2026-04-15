@@ -876,18 +876,16 @@ export default class DB {
   }
 
   public async updateColorSeed(seed: string) {
-    await this.run(
-      `DELETE FROM metadata
+    await this.run(`DELETE FROM metadata
        WHERE field = 'colorSeed';
-       INSERT INTO metadata (field, stringValue)
-       VALUES ('colorSeed', '${seed}');`
-    )
+       INSERT INTO metadata (field, value, value2) 
+       VALUES ('colorSeed', null, '${seed}');`)
     log.debug("inserted seed", seed)
   }
 
   public async getColorSeed() {
     const res = await this.query(`
-      SELECT value2 FROM metadata WHERE field = 'colorseed';
+      SELECT value2 FROM metadata WHERE field = 'colorSeed';
     `)
     if (res.length < 1) return null
     log.debug("retrieved seed", res[0]["value2"])
