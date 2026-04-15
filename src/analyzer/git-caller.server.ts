@@ -96,7 +96,7 @@ export class GitCaller {
       "log",
       "--no-walk",
       "--numstat",
-      '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      '--format="author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
     ]
 
@@ -314,7 +314,7 @@ export class GitCaller {
       "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="author <|%aN|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
+      '--format="author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
     const result = (await runProcess(this.repositoryPath, "git", args)) as string
@@ -330,7 +330,7 @@ export class GitCaller {
       "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="<|%aN|><|%ct %at|><|%H|>"'
+      '--format="<|%aN|><|%aE|><|%ct %at|><|%H|>"'
     ]
 
     const result = (await runProcess(this.repositoryPath, "git", args, instance, index)) as string

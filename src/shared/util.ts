@@ -204,7 +204,7 @@ export function getTimeIntervals(
 export function analyzeRenamedFile(
   file: string,
   timestamp: number,
-  authortime: number,
+  authorTime: number,
   renamedFiles: RenameEntry[],
   repo: string
 ) {
@@ -225,7 +225,7 @@ export function analyzeRenamedFile(
     newPath = repo + "/" + (groups["newPath2"] ?? "")
   }
 
-  renamedFiles.push({ fromname: oldPath, toname: newPath, timestamp: timestamp, timestampauthor: authortime })
+  renamedFiles.push({ fromName: oldPath, toName: newPath, timestamp: timestamp, timestampAuthor: authorTime })
   return newPath
 }
 

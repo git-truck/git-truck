@@ -4,7 +4,7 @@ import { useNavigation } from "react-router"
 import { ExpandingPanelButton } from "~/components/buttons/ExpandingPanelButton"
 import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
 import { Icon } from "~/components/Icon"
-import { useModal } from "~/components/modals/ModalManager"
+import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
 import { useResetSelection, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
 
@@ -36,8 +36,8 @@ export function MetricInspectionPanel({
   actions?: MetricPanelActions
 }) {
   const [selectedSearch, setSelectedSearch] = useState("")
-  const { openModal } = useModal("group-contributors")
-  const { state } = useNavigation()
+  const [open, setOpen] = useState(false)
+  const { state, formData } = useNavigation()
 
   return (
     <div className="mt-4">
@@ -49,9 +49,16 @@ export function MetricInspectionPanel({
           <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
             {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
             {actions.groupContributors ? (
-              <ExpandingPanelButton icon={mdiAccountMultiple} onClick={() => openModal()}>
-                Group contributors
-              </ExpandingPanelButton>
+              <>
+                <ExpandingPanelButton
+                  icon={mdiAccountMultiple}
+                  disabled={formData?.has("groupContributors")}
+                  onClick={() => setOpen(true)}
+                >
+                  Group contributors
+                </ExpandingPanelButton>
+                <GroupContributorsModal open={open} onClose={() => setOpen(false)} />
+              </>
             ) : null}
             {actions.shuffleContributorColors ? (
               <ShuffleColorsForm>

@@ -200,7 +200,7 @@
 }
 
 @utility btn--danger {
-  @apply text-primary-text-dark rounded border-red-900 bg-red-700 enabled:hover:opacity-70 dark:border-red-800 dark:bg-red-800;
+  @apply text-primary-text-dark border-red-900 bg-red-700 enabled:hover:opacity-70 dark:border-red-800 dark:bg-red-800;
 
   &.btn--text {
     @apply border-transparent bg-transparent text-red-700 dark:text-red-400;

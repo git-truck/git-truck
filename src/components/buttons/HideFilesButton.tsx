@@ -1,13 +1,17 @@
 import { mdiEyeOff } from "@mdi/js"
+import { useState } from "react"
 import { Icon } from "~/components/Icon"
-import { useModal } from "~/components/modals/ModalManager"
+import { HideFilesModal } from "~/components/modals/HideFilesModal"
 
 export function HideFilesButton() {
-  const { openModal } = useModal("ignore-files")
+  const [open, setOpen] = useState(false)
 
   return (
-    <button className="btn btn--icon" title="Hidden files" aria-label="Hidden files" onClick={() => openModal()}>
-      <Icon path={mdiEyeOff} />
-    </button>
+    <>
+      <button className="btn btn--icon" title="Hidden files" aria-label="Hidden files" onClick={() => setOpen(true)}>
+        <Icon path={mdiEyeOff} />
+      </button>
+      <HideFilesModal open={open} onClose={() => setOpen(false)} />
+    </>
   )
 }

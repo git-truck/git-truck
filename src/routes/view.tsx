@@ -33,7 +33,6 @@ import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { type inferParserType } from "nuqs"
-import { ModalManager } from "~/components/modals/ModalManager"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
@@ -189,8 +188,8 @@ export const action = async ({ request, context }: Route.ActionArgs) => {
 
   if (typeof groupedContributors === "string") {
     instance.prevInvokeReason = "groupedContributors"
-    const json = JSON.parse(groupedContributors) as string[][]
-    await instance.db.replaceContributorGroups(json)
+    const groups = JSON.parse(groupedContributors)
+    await instance.db.replaceContributorGroups(groups)
     return null
   }
 
@@ -262,7 +261,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
 
   log.time("fileTree")
   const filetree =
-    prevRes && !shouldUpdate(reason, "filetree")
+    prevRes && !shouldUpdate(reason, "fileTree")
       ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
       : await instance.analyzeTree()
   log.timeEnd("fileTree")
@@ -291,7 +290,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const authorCounts =
     prevRes && !shouldUpdate(reason, "contributorCounts")
       ? prevRes.contributorCounts
-      : await instance.db.getAuthorCountPerFile()
+      : await instance.db.getContributorCountPerFile()
   const { maxCommitCount, minCommitCount } =
     prevRes && !shouldUpdate(reason, "maxMinCommitCount")
       ? { maxCommitCount: prevRes.maxCommitCount, minCommitCount: prevRes.minCommitCount }
@@ -312,7 +311,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
       : await instance.db.getAuthorUnions()
   const { rootTree, fileCount } = filetree
   const hiddenFiles =
-    prevRes && !shouldUpdate(reason, "hiddenfiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+    prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
@@ -336,7 +335,7 @@ async function analyze({ instance, path, branch }: { instance: ServerInstance; p
   const contributorsForPath =
     prevRes && !shouldUpdate(reason, "contributorsForPath")
       ? prevRes.contributorsForPath
-      : await instance.db.getContributorsForPath()
+      : await instance.db.getContributorContributionsForPath()
   const maxMinContribCounts =
     prevRes && !shouldUpdate(reason, "maxMinContribCounts")
       ? prevRes.maxMinContribCounts
@@ -549,7 +548,6 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                 </div>
               </main>
             </div>
-            <ModalManager />
           </Providers>
         )}
       </Await>

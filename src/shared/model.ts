@@ -75,7 +75,7 @@ export interface ArgsOptions {
 }
 
 // Bump this if changes are made to this file
-export const AnalyzerDataInterfaceVersion = 18
+export const AnalyzerDataInterfaceVersion = 19
 
 export interface AnalyzerData {
   cached: boolean
@@ -133,6 +133,11 @@ type PersonWithTime = Person & {
   timezone: string
 }
 
+export type ContributorGroup = {
+  displayName: string
+  members: Person[]
+}
+
 export type ModeType = "create" | "modify" | "delete"
 
 export interface FileChange {
@@ -144,9 +149,9 @@ export interface FileChange {
 }
 
 export interface CommitDTO {
-  author: string
-  committertime: number
-  authortime: number
+  author: Person
+  committerTime: number
+  authorTime: number
   hash: string
 }
 
@@ -169,24 +174,24 @@ export interface GitLogEntry extends CommitDTO {
 }
 
 export interface RenameEntry {
-  fromname: string | null
-  toname: string | null
+  fromName: string | null
+  toName: string | null
   timestamp: number
-  timestampauthor: number
+  timestampAuthor: number
   timestampEnd?: number
 }
 
 export interface RenameInterval {
-  fromname: string | null
-  toname: string | null
+  fromName: string | null
+  toName: string | null
   timestamp: number
-  timestampend: number
+  timestampEnd: number
 }
 
 export interface FileModification {
   path: string
   timestamp: number
-  timestampauthor: number
+  timestampAuthor: number
   type: ModeType
 }
 
@@ -207,8 +212,8 @@ export interface DatabaseInfo {
   oldestChangeDate: number
   maxFileSize: number
   minFileSize: number
-  contributors: string[]
-  contributorGroups: string[][]
+  contributors: Person[]
+  contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }

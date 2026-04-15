@@ -59,7 +59,7 @@ export function MetricsInspection() {
     }
     // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedObject?.path, path])
+  }, [clickedObject?.path, path, data.databaseInfo.contributorGroups])
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
@@ -201,7 +201,7 @@ export function MetricsInspection() {
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "contributors",
-      data: currentFetcherData ? (currentFetcherData.contributorCounts?.length ?? UNKNOWN_CATEGORY) : "loading...",
+      data: currentFetcherData ? (currentFetcherData.contributors?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
       colors: []
