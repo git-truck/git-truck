@@ -165,6 +165,7 @@ export interface CompletedResult {
 export interface FullCommitDTO extends CommitDTO {
   body: string
   message: string
+  coauthors: Person[]
   fileChanges: FileChange[]
 }
 

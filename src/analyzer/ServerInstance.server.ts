@@ -1,4 +1,5 @@
 import DB from "~/analyzer/DB.server.ts"
+import { getCoAuthors } from "~/analyzer/coauthors.server.ts"
 import { GitCaller } from "~/analyzer/git-caller.server.ts"
 import type {
   GitBlobObject,
@@ -184,6 +185,7 @@ export default class ServerInstance {
       const hash = groups.hash
       const contributionsString = groups.contributions
       const modesString = groups.modes
+      const coauthors = getCoAuthors(groups.trailers)
       const fileChanges: FileChange[] = []
 
       if (modesString) {
@@ -227,7 +229,7 @@ export default class ServerInstance {
         committerTime,
         authorTime,
         hash,
-        coauthors: [],
+        coauthors: coauthors,
         fileChanges
       })
     }
@@ -286,7 +288,8 @@ export default class ServerInstance {
         hash,
         fileChanges,
         message,
-        body
+        body,
+        coauthors: getCoAuthors(body)
       })
     }
     return commits
