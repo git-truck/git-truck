@@ -147,6 +147,12 @@ export default class DB {
         deletions UINTEGER,
         filePath VARCHAR,
       );
+      CREATE TABLE IF NOT EXISTS commitTrailers (
+        commitHash VARCHAR,
+        name VARCHAR,
+        email VARCHAR,
+        trailerType VARCHAR
+      );
       CREATE TABLE IF NOT EXISTS contributorGroups (
         displayName VARCHAR,
         email VARCHAR,
@@ -194,6 +200,7 @@ export default class DB {
     await this.run(`
       DELETE FROM commits;
       DELETE FROM fileChanges;
+      DELETE FROM commitTrailers;
       DELETE FROM contributorGroups;
       DELETE FROM renames;
       DELETE FROM hiddenFiles;
@@ -658,8 +665,15 @@ export default class DB {
   }
 
   public async getAuthors() {
-    const res = await this.query(`SELECT DISTINCT author, authorEmail AS email
-      FROM commits;
+    const res = await this.query(`SELECT DISTINCT author, email
+      FROM (
+        SELECT c.author AS author, c.authorEmail AS email
+        FROM commits AS c
+        UNION
+        SELECT co.name AS author, co.email AS email
+        FROM commitTrailers AS co
+        WHERE co.trailerType = 'coauthor'
+      );
     `)
     return res.map((row) => ({
       name: String(row["author"] ?? ""),
@@ -863,6 +877,19 @@ export default class DB {
         appender.appendUInteger(commit.committerTime)
         appender.appendUInteger(commit.authorTime)
         appender.endRow()
+      }
+    })
+
+    await this.usingTableAppender("commitTrailers", async (appender) => {
+      for (const [hash, commit] of commits) {
+        if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
+        for (const coauthor of commit.coauthors) {
+          appender.appendVarchar(hash)
+          appender.appendVarchar(coauthor.name)
+          appender.appendVarchar(coauthor.email)
+          appender.appendVarchar("coauthor")
+          appender.endRow()
+        }
       }
     })
 
