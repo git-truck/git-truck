@@ -754,48 +754,113 @@ export default class DB {
     return result
   }
 
+  public async getLineChangesSumForPath(objectPath: string): Promise<number> {
+    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    let res: number
+
+    if (isblob) {
+      res = await this.usingPreparedStatement(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE filePath = ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{ lineChanges: number | bigint }>
+          return Number(results[0]?.lineChanges ?? 0)
+        },
+        "getLineChangesSumForPath(blob)"
+      )
+    } else if (objectPath) {
+      res = await this.usingPreparedStatement(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE filePath LIKE ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, `${objectPath}/%`)
+          const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{ lineChanges: number | bigint }>
+          return Number(results[0]?.lineChanges ?? 0)
+        },
+        "getLineChangesSumForPath(tree)"
+      )
+    } else {
+      res = await this.query(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached;`
+      ).then((results) => Number(results[0]?.lineChanges ?? 0))
+    }
+    return res
+  }
+
   public async getContributorDistributionForPath(objectPath: string) {
     const isblob = (await this.getObjectType(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isblob) {
       res = await this.usingPreparedStatement(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         WHERE filePath = ?
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`,
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          WHERE f.filePath = ?
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE f.filePath = ? AND co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, objectPath)
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getContributorDistributionForPath(blob)"
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         WHERE filePath = ? OR filePath LIKE ?
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`,
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          WHERE (f.filePath = ? OR f.filePath LIKE ?)
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE (f.filePath = ? OR f.filePath LIKE ?) AND co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(3, objectPath)
+          statement.bindVarchar(4, `${objectPath}/%`)
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getContributorDistributionForPath(tree)"
       )
     } else {
       res = await this.query(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `
       )
     }
 
     return res.map((row) => {
-      return { contributor: row["author"] as string, contribs: Number(row["contribSum"]) }
+      return { contributor: row["contributor"] as string, contribs: Number(row["totalContribCount"]) }
     })
   }
 
