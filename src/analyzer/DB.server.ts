@@ -229,6 +229,11 @@ export default class DB {
       SELECT f.commitHash, f.insertions, f.deletions, f.filePath, author, c.authorEmail, c.committerTime, c.authorTime FROM
       fileChanges f JOIN commits_unioned c on f.commitHash = c.hash;
 
+      CREATE OR REPLACE VIEW commitTrailers_unioned AS
+      SELECT co.commitHash, CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE co.name END AS name, co.email, co.trailerType FROM
+      commitTrailers AS co LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) AS u
+      ON (co.name = u.name AND co.email = u.email);
+
       CREATE OR REPLACE VIEW fileChanges_commits_renamed AS
       SELECT f.commitHash, f.insertions, f.deletions, f.author, f.authorEmail, f.committerTime, f.authorTime,
           CASE
