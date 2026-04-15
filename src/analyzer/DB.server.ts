@@ -500,8 +500,18 @@ export default class DB {
   }
 
   public async getContributorCountPerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`SELECT filePath, count(DISTINCT author) AS contributorCount
-      FROM fileChanges_commits_renamed_cached
+    const res = await this.query(/*sql*/ `
+      WITH file_people AS (
+        SELECT f.filePath, f.author AS person_name, f.authorEmail AS person_email
+        FROM filechanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, co.name AS person_name, co.email AS person_email
+        FROM filechanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor'
+      )
+      SELECT filePath, COUNT(DISTINCT person_name) AS contributorCount
+      FROM file_people
       GROUP BY filePath;
     `)
 
@@ -533,20 +543,40 @@ export default class DB {
 
   public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
     //Respects aliases for contributors through commits_unioned view
-    const res = await this.query(`SELECT DISTINCT author
-      FROM fileChanges_commits_renamed_cached
-      WHERE filePath GLOB '${objectPath}*'
+    const res = await this.query(/*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        WHERE f.filePath GLOB '${objectPath}*'
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor' AND f.filePath GLOB '${objectPath}*'
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
     `)
-    return res.map((row) => row["author"] as string)
+    return res.map((row) => row["contributor"] as string)
   }
 
   public async getContributorContributionsForPath(): Promise<
     Record<string, { contributor: string; contribcount: number }[]>
   > {
-    const res = await this.query(`SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount
-    FROM fileChanges_commits_renamed_cached
-    GROUP BY filePath, author
-  `)
+    const res = await this.query(/*sql*/ `
+      WITH commit_contributors AS (
+        SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND co.name <> f.author
+      )
+      SELECT filePath, contributor, SUM(lineChanges) AS totalContribCount
+      FROM commit_contributors
+      GROUP BY filePath, contributor;
+    `)
 
     const result: Record<string, { contributor: string; contribcount: number }[]> = {}
     res.forEach((row) => {
@@ -555,7 +585,7 @@ export default class DB {
         result[filePath] = []
       }
       result[filePath].push({
-        contributor: row["author"] as string,
+        contributor: row["contributor"] as string,
         contribcount: Number(row["totalContribCount"])
       })
     })
