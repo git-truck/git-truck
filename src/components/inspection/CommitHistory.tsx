@@ -61,6 +61,11 @@ function InfoEntry(props: { keyString: string; value: string }) {
   )
 }
 
+function formatCoauthors(coauthors: FullCommitDTO["coauthors"]) {
+  if (coauthors.length < 1) return "<none>"
+  return coauthors.map((coauthor) => `${coauthor.name} <${coauthor.email}>`).join(", ")
+}
+
 function FileChangesEntry(props: { fileChanges: FileChange[] }) {
   return (
     <div className="overflow-auto">
@@ -105,8 +110,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       >
         <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <InfoEntry keyString="Hash" value={props.value.hash} />
-          <InfoEntry keyString="Author Name" value={props.value.author.name} />
-          <InfoEntry keyString="Author Email" value={props.value.author.email ?? "<unknown>"} />
+          <InfoEntry keyString="Author" value={`${props.value.author.name} <${props.value.author.email}>`} />
           {props.value.committerTime === props.value.authorTime ? (
             <InfoEntry
               keyString="Date"
@@ -131,6 +135,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
             </>
           )}
           <InfoEntry keyString="Message" value={props.value.message} />
+          <InfoEntry keyString="Co-authors" value={formatCoauthors(props.value.coauthors)} />
           <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Body</div>
           <div className="max-h-64 overflow-auto">
             <p className="text-sm break-all text-ellipsis">
