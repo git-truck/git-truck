@@ -599,21 +599,36 @@ export default class DB {
   }
 
   public async getTopContributorPerFile() {
-    const res = await this.query(`
-      WITH RankedAuthors AS (
-        SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount,
-        ROW_NUMBER() OVER (PARTITION BY filePath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank
-        FROM fileChanges_commits_renamed_cached
-        GROUP BY filePath, author
+    const res = await this.query(/*sql*/ `
+      WITH commit_contributors AS (
+        SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND (co.name <> f.author)
+      ),
+      ranked_contributors AS (
+        SELECT
+          filePath,
+          contributor,
+          SUM(lineChanges) AS totalContribCount,
+          ROW_NUMBER() OVER (
+            PARTITION BY filePath
+            ORDER BY SUM(lineChanges) DESC, contributor ASC
+          ) AS rank
+        FROM commit_contributors
+        GROUP BY filePath, contributor
       )
-      SELECT filePath, author, totalContribCount
-      FROM RankedAuthors
+      SELECT filePath, contributor, totalContribCount
+      FROM ranked_contributors
       WHERE rank = 1;
     `)
 
     const result: Record<string, { contributor: string; contribcount: number }> = {}
     res.forEach((row) => {
-      const contributor = row["author"]
+      const contributor = row["contributor"]
       if (typeof contributor !== "string") {
         throw new Error("Error when getting top contributor per file: Contributor is not a string")
       }
