@@ -32,8 +32,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       }
 
       return fullCommits.map((commit) => {
-        const alias = unions.find(({ name, email }) => name === commit.author.name && email === commit.author.email)
-        if (!alias) return commit
         return {
           ...commit,
           author: applyUnionAlias(commit.author),
