@@ -84,7 +84,7 @@ function setTopContributorColor(
     } else {
       legend.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
     }
-    cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+    cache.categoriesMap.set(blob.path, [{ category: MULTIPLE_CONTRIBUTORS, color: noEntryColor }])
   }
 
   if (!topContributor || topContributor.hasTie) {
