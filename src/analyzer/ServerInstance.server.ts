@@ -229,7 +229,7 @@ export default class ServerInstance {
         committerTime,
         authorTime,
         hash,
-        coauthors: coauthors,
+        coauthors,
         fileChanges
       })
     }
@@ -267,6 +267,7 @@ export default class ServerInstance {
       const authorTime = Number(groups.dateAuthor)
       const hash = groups.hash
       const contributionsString = groups.contributions
+      const coauthors = getCoAuthors(body)
       const fileChanges: FileChange[] = []
 
       if (contributionsString) {
@@ -289,7 +290,7 @@ export default class ServerInstance {
         fileChanges,
         message,
         body,
-        coauthors: getCoAuthors(body)
+        coauthors
       })
     }
     return commits
