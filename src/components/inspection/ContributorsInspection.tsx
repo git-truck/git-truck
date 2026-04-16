@@ -114,7 +114,7 @@ function ContributorDistribution({
           </>
         ) : (
           <>
-            {contributorDistribution.length > 0 && hasContributions(contributorDistribution) ? (
+            {contributorDistribution.length > 0 ? (
               <ContributorDistFragment show items={contributorDistribution} contribSum={contribSum} />
             ) : (
               <p>No contributors found</p>
@@ -124,14 +124,6 @@ function ContributorDistribution({
       </div>
     </div>
   )
-}
-
-function hasContributions(contributors?: { contributor: string; contribs: number }[] | null) {
-  if (!contributors) return false
-  for (const { contribs } of contributors) {
-    if (contribs > 0) return true
-  }
-  return false
 }
 
 function ContributorDistFragment(props: {
@@ -149,7 +141,7 @@ function ContributorDistFragment(props: {
         const contrib = legendItem.contribs
         const contributor = legendItem.contributor
         const roundedContrib = Math.round((contrib / props.contribSum) * 100)
-        const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
+        const contribPercentage = props.contribSum == 0 ? "100" : roundedContrib === 0 ? "<1" : roundedContrib
         return (
           <Fragment key={contributor + contrib}>
             <div className="flex items-center gap-1">
