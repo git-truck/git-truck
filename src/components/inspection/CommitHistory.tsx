@@ -95,17 +95,27 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       <div className="w-min-content flex items-start">
         <div className="flex-end flex flex-row-reverse">
           {props.value.coauthors.length > 0
-            ? props.value.coauthors
-                .slice(0, 3)
-                .map((coauthor) => (
+            ? props.value.coauthors.slice(0, 3).map((coauthor) => {
+                const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
+                return (
                   <LegendDot
-                    key={props.value.hash + coauthor.email}
-                    dotColor={contributorColors.get(coauthor.name) ?? "grey"}
+                    key={props.value.hash + coauthor.email + coauthorColor}
+                    dotColor={coauthorColor}
                     className="z-0 -ml-2.5"
                   />
-                ))
+                )
+              })
             : null}
-          <LegendDot dotColor={contributorColors.get(props.value.author.name) ?? "grey"} className="z-0" />
+          {(() => {
+            const authorColor = contributorColors.get(props.value.author.name) ?? "grey"
+            return (
+              <LegendDot
+                key={props.value.hash + props.value.author.email + authorColor}
+                dotColor={authorColor}
+                className="z-0"
+              />
+            )
+          })()}
         </div>
       </div>
       <Popover
