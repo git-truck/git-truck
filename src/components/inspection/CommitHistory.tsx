@@ -37,7 +37,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       >
         <CommitHistoryLabel htmlFor={commitDistExpandId} />
       </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-center">
+      <div className="grid grid-cols-[max-content_auto] items-center justify-start gap-x-1 gap-y-0.5">
         {props.items.map((value) => (
           <CommitListEntry
             key={value.hash + "--itemContentAccordion"}
@@ -89,19 +89,32 @@ function FileChangesEntry(props: { fileChanges: FileChange[] }) {
 }
 
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
+  const [, contributorColors] = useMetrics()
   return (
-    <div
-      title={`By: ${props.value.author.name}`}
-      className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis"
-    >
-      <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author.name} />
+    <>
+      <div className="w-min-content flex items-start">
+        <div className="flex-end flex flex-row-reverse">
+          {props.value.coauthors.length > 0
+            ? props.value.coauthors
+                .slice(0, 3)
+                .map((coauthor) => (
+                  <LegendDot
+                    key={props.value.hash + coauthor.email}
+                    dotColor={contributorColors.get(coauthor.name) ?? "grey"}
+                    className="z-0 -ml-2.5"
+                  />
+                ))
+            : null}
+          <LegendDot dotColor={contributorColors.get(props.value.author.name) ?? "grey"} className="z-0" />
+        </div>
+      </div>
       <Popover
         triggerClassName="min-w-0 truncate"
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
           <button
-            className="w-full min-w-0 cursor-pointer truncate text-sm font-bold opacity-80 hover:opacity-70"
+            className="w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold opacity-80 hover:opacity-70"
             onClick={onClick}
           >
             {props.value.message}
@@ -156,7 +169,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         </div>
         <FileChangesEntry fileChanges={props.value.fileChanges} />
       </Popover>
-    </div>
+    </>
   )
 }
 
