@@ -202,7 +202,7 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
-  topContributors: Record<string, { contributor: string; contribcount: number }>
+  topContributors: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>
   commitCounts: Record<string, number>
   fileSizes: Record<string, number>
   lastChanged: Record<string, number>

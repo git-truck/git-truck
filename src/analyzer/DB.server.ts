@@ -609,30 +609,53 @@ export default class DB {
         INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
         WHERE co.trailerType = 'coauthor' AND (co.name <> f.author)
       ),
-      ranked_contributors AS (
-        SELECT
-          filePath,
-          contributor,
-          SUM(lineChanges) AS totalContribCount,
-          ROW_NUMBER() OVER (
-            PARTITION BY filePath
-            ORDER BY SUM(lineChanges) DESC, contributor ASC
-          ) AS rank
+      contributor_totals AS (
+        SELECT filePath, contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
         GROUP BY filePath, contributor
+      ),
+      max_per_file AS (
+        SELECT filePath, MAX(totalContribCount) AS maxContribCount
+        FROM contributor_totals
+        GROUP BY filePath
+      ),
+      top_ties AS (
+        SELECT ct.filePath, COUNT(*) AS topCount
+        FROM contributor_totals ct
+        INNER JOIN max_per_file mpf
+          ON ct.filePath = mpf.filePath
+          AND ct.totalContribCount = mpf.maxContribCount
+        GROUP BY ct.filePath
+      ),
+      ranked_contributors AS (
+        SELECT
+          ct.filePath,
+          ct.contributor,
+          ct.totalContribCount,
+          tt.topCount,
+          ROW_NUMBER() OVER (
+            PARTITION BY ct.filePath
+            ORDER BY ct.totalContribCount DESC, ct.contributor ASC
+          ) AS rank
+        FROM contributor_totals ct
+        INNER JOIN top_ties tt ON ct.filePath = tt.filePath
       )
-      SELECT filePath, contributor, totalContribCount
+      SELECT filePath, contributor, totalContribCount, topCount
       FROM ranked_contributors
       WHERE rank = 1;
     `)
 
-    const result: Record<string, { contributor: string; contribcount: number }> = {}
+    const result: Record<string, { contributor: string; contribcount: number; hasTie: boolean }> = {}
     res.forEach((row) => {
       const contributor = row["contributor"]
       if (typeof contributor !== "string") {
         throw new Error("Error when getting top contributor per file: Contributor is not a string")
       }
-      result[row["filePath"] as string] = { contributor: contributor, contribcount: Number(row["totalContribCount"]) }
+      result[row["filePath"] as string] = {
+        contributor: contributor,
+        contribcount: Number(row["totalContribCount"]),
+        hasTie: Number(row["topCount"]) > 1
+      }
     })
 
     return result

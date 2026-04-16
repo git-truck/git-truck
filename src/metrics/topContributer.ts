@@ -19,7 +19,10 @@ export const TopContributorMetric: CategoricalMetric = {
     if (!top) {
       return "No activity in selected range"
     }
-    if (!contribSum) {
+    if (top.hasTie) {
+      return MULTIPLE_CONTRIBUTORS
+    }
+    if (contribSum === 0) {
       return top.contributor
     }
     const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
@@ -34,8 +37,11 @@ export const TopContributorMetric: CategoricalMetric = {
     if (!top) {
       return ["No contributors"]
     }
+    if (top.hasTie) {
+      return [MULTIPLE_CONTRIBUTORS]
+    }
     const contribSum = dbi.contribSumPerFile[obj.path]
-    if (!contribSum) {
+    if (contribSum === 0) {
       return [top.contributor]
     }
     const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
@@ -63,7 +69,7 @@ function setTopContributorColor(
   contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  topContributorPerFile: Record<string, { contributor: string; contribcount: number }>,
+  topContributorPerFile: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>,
   topContributorCutoff: number,
   contribSumPerFile: Record<string, number>
 ) {
@@ -81,7 +87,24 @@ function setTopContributorColor(
     cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
   }
 
-  if (!topContributor || !contribSum) {
+  if (!topContributor || topContributor.hasTie) {
+    bumpMultiple()
+    return
+  }
+
+  if (contribSum === 0) {
+    const color = contributorColors[topContributor.contributor] ?? noEntryColor
+    cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
+
+    if (legend.has(topContributor.contributor)) {
+      legend.get(topContributor.contributor)?.add(1)
+      return
+    }
+    legend.set(topContributor.contributor, new PointInfo(color, 1))
+    return
+  }
+
+  if (contribSum === undefined) {
     bumpMultiple()
     return
   }

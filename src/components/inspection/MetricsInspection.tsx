@@ -147,14 +147,20 @@ export function MetricsInspection() {
           ?.map((c) => c.color) ?? []
     },
     TOP_CONTRIBUTOR: {
-      description: "is the top contributor",
+      description: currentFetcherData?.multiTopContributors ? "are top contributors" : "is top contributor",
       icon: mdiAccountGroup,
-      data: currentFetcherData ? (currentFetcherData.topContributor?.contributor ?? UNKNOWN_CATEGORY) : "loading...",
+      data: currentFetcherData
+        ? currentFetcherData.multiTopContributors
+          ? "Multiple people"
+          : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
+        : "loading...",
       inspectionPanels: TopContributorMetric.inspectionPanels,
       actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
       colors: [
-        currentFetcherData?.topContributor?.contributor
-          ? ((contributorColors.get(currentFetcherData?.topContributor?.contributor) as HexColor) ?? missingInMapColor)
+        currentFetcherData
+          ? currentFetcherData.multiTopContributors
+            ? missingInMapColor
+            : (contributorColors.get(currentFetcherData.topContributor[0].contributor) as HexColor)
           : (missingInMapColor as HexColor)
       ]
     },
