@@ -22,8 +22,16 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       const fullCommits = await instance.getFullCommits(gitLogResult)
       const unions = await instance.db.getRawUnions()
 
+      const aliasByIdentity = new Map<string, { displayName: string; email: string }>()
+      unions.forEach((union) => {
+        aliasByIdentity.set(`${union.name}\u0000${union.email}`, {
+          displayName: union.displayName,
+          email: union.email
+        })
+      })
+
       const applyUnionAlias = (person: { name: string; email: string }) => {
-        const alias = unions.find(({ name, email }) => name === person.name && email === person.email)
+        const alias = aliasByIdentity.get(`${person.name}\u0000${person.email}`)
         if (!alias) return person
         return {
           name: alias.displayName,
