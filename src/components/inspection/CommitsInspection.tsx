@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useFetcher, href, Await } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import type { loader } from "~/routes/view.api.commits"
@@ -13,11 +13,11 @@ export function CommitsInspection() {
   const [path] = useQueryState("path")
   const { databaseInfo } = useData()
   const [commitShowCount, setCommitShowCount] = useState(COMMIT_STEP)
-  const previousData = useRef<ReturnType<typeof useFetcher<typeof loader>>["data"]>(undefined)
+  const [previousData, setPreviousData] = useState<ReturnType<typeof useFetcher<typeof loader>>["data"]>(undefined)
 
   useEffect(() => {
     if (fetcher.data) {
-      previousData.current = fetcher.data
+      setPreviousData(fetcher.data)
     }
   }, [fetcher.data])
 
@@ -43,7 +43,7 @@ export function CommitsInspection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commitShowCount, loadCommits])
 
-  const data = fetcher.data ?? previousData.current
+  const data = fetcher.data ?? previousData
 
   if (!data) {
     return (
