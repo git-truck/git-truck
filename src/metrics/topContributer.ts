@@ -2,7 +2,7 @@ import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
-import { MULTIPLE_CONTRIBUTORS, noEntryColor, UNKNOWN_CATEGORY } from "~/const"
+import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 import { mdiPodiumGold } from "@mdi/js"
 import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { PercentageSlider } from "~/components/PercentageSlider"
@@ -86,12 +86,18 @@ function setTopContributorColor(
     }
     cache.categoriesMap.set(blob.path, [{ category: MULTIPLE_CONTRIBUTORS, color: noEntryColor }])
   }
+  //No activity in selected range == no top contributor
+  if (!topContributor) {
+    return
+  }
 
-  if (!topContributor || topContributor.hasTie) {
+  //There is a tie between top contributors, so we can't determine a single top contributor
+  if (topContributor.hasTie) {
     bumpMultiple()
     return
   }
 
+  //There is an empty file
   if (contribSum === 0) {
     const color = contributorColors[topContributor.contributor] ?? noEntryColor
     cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
@@ -104,11 +110,7 @@ function setTopContributorColor(
     return
   }
 
-  if (contribSum === undefined) {
-    bumpMultiple()
-    return
-  }
-
+  //The top contributor does not meet the cutoff
   const contributorPercentage = (topContributor.contribcount / contribSum) * 100
   if (contributorPercentage < topContributorCutoff) {
     bumpMultiple()
