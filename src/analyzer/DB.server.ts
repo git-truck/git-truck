@@ -548,20 +548,71 @@ export default class DB {
 
   public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
     //Respects aliases for contributors through commits_unioned view
-    const res = await this.query(/*sql*/ `
+    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    let res: ReturnType<DuckDBResultReader["getRowObjects"]>
+
+    if (isblob) {
+      res = await this.usingPreparedStatement(
+        /*sql*/ `
       WITH file_contributors AS (
         SELECT f.filePath, f.author AS contributor
         FROM filechanges_commits_renamed_cached AS f
-        WHERE f.filePath GLOB '${objectPath}*'
+        WHERE f.filePath = ?
         UNION
         SELECT f.filePath, ca.name AS contributor
         FROM filechanges_commits_renamed_cached AS f
         JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
-        WHERE ca.trailerType = 'coauthor' AND f.filePath GLOB '${objectPath}*'
+        WHERE ca.trailerType = 'coauthor' AND f.filePath = ?
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
+    `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, objectPath)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getUniqueContributorsForPath(blob)"
+      )
+    } else if (objectPath) {
+      res = await this.usingPreparedStatement(
+        /*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        WHERE f.filePath LIKE ?
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor' AND f.filePath LIKE ?
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
+    `,
+        async (statement) => {
+          statement.bindVarchar(1, `${objectPath}/%`)
+          statement.bindVarchar(2, `${objectPath}/%`)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getUniqueContributorsForPath(tree)"
+      )
+    } else {
+      res = await this.query(/*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor'
       )
       SELECT DISTINCT contributor
       FROM file_contributors;
     `)
+    }
+
     return res.map((row) => row["contributor"] as string)
   }
 
