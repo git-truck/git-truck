@@ -37,7 +37,7 @@ function CommitDistFragment(props: CommitDistFragProps) {
       >
         <CommitHistoryLabel htmlFor={commitDistExpandId} />
       </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-center">
+      <div className="grid grid-cols-[max-content_auto] items-center justify-start gap-x-1 gap-y-0.5">
         {props.items.map((value) => (
           <CommitListEntry
             key={value.hash + "--itemContentAccordion"}
@@ -59,6 +59,11 @@ function InfoEntry(props: { keyString: string; value: string }) {
       <p className="text-sm break-all text-ellipsis">{props.value}</p>
     </>
   )
+}
+
+function formatCoauthors(coauthors: FullCommitDTO["coauthors"]) {
+  if (coauthors.length < 1) return "<none>"
+  return coauthors.map((coauthor) => `${coauthor.name} <${coauthor.email}>`).join(", ")
 }
 
 function FileChangesEntry(props: { fileChanges: FileChange[] }) {
@@ -84,19 +89,42 @@ function FileChangesEntry(props: { fileChanges: FileChange[] }) {
 }
 
 function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
+  const [, contributorColors] = useMetrics()
   return (
-    <div
-      title={`By: ${props.value.author.name}`}
-      className="flex min-w-0 items-center gap-1 overflow-hidden text-ellipsis"
-    >
-      <LegendDot dotColor={props.authorColor} contributorColorToChange={props.value.author.name} />
+    <>
+      <div className="w-min-content flex items-start">
+        <div className="flex-end flex flex-row-reverse">
+          {props.value.coauthors.length > 0
+            ? props.value.coauthors.slice(0, 3).map((coauthor) => {
+                const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
+                return (
+                  <LegendDot
+                    key={props.value.hash + coauthor.email + coauthorColor}
+                    dotColor={coauthorColor}
+                    className="z-0 -ml-2.5"
+                  />
+                )
+              })
+            : null}
+          {(() => {
+            const authorColor = contributorColors.get(props.value.author.name) ?? "grey"
+            return (
+              <LegendDot
+                key={props.value.hash + props.value.author.email + authorColor}
+                dotColor={authorColor}
+                className="z-0"
+              />
+            )
+          })()}
+        </div>
+      </div>
       <Popover
         triggerClassName="min-w-0 truncate"
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
           <button
-            className="w-full min-w-0 cursor-pointer truncate text-sm font-bold opacity-80 hover:opacity-70"
+            className="w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold opacity-80 hover:opacity-70"
             onClick={onClick}
           >
             {props.value.message}
@@ -105,8 +133,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
       >
         <div className="grid max-w-lg grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <InfoEntry keyString="Hash" value={props.value.hash} />
-          <InfoEntry keyString="Author Name" value={props.value.author.name} />
-          <InfoEntry keyString="Author Email" value={props.value.author.email ?? "<unknown>"} />
+          <InfoEntry keyString="Author" value={`${props.value.author.name} <${props.value.author.email}>`} />
           {props.value.committerTime === props.value.authorTime ? (
             <InfoEntry
               keyString="Date"
@@ -131,6 +158,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
             </>
           )}
           <InfoEntry keyString="Message" value={props.value.message} />
+          <InfoEntry keyString="Co-authors" value={formatCoauthors(props.value.coauthors)} />
           <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">Body</div>
           <div className="max-h-64 overflow-auto">
             <p className="text-sm break-all text-ellipsis">
@@ -151,7 +179,7 @@ function CommitListEntry(props: { value: FullCommitDTO; authorColor: string }) {
         </div>
         <FileChangesEntry fileChanges={props.value.fileChanges} />
       </Popover>
-    </div>
+    </>
   )
 }
 

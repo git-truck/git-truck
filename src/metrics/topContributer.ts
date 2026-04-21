@@ -2,7 +2,7 @@ import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
-import { MULTIPLE_CONTRIBUTORS, noEntryColor, UNKNOWN_CATEGORY } from "~/const"
+import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 import { mdiPodiumGold } from "@mdi/js"
 import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { PercentageSlider } from "~/components/PercentageSlider"
@@ -19,7 +19,10 @@ export const TopContributorMetric: CategoricalMetric = {
     if (!top) {
       return "No activity in selected range"
     }
-    if (!contribSum) {
+    if (top.hasTie) {
+      return MULTIPLE_CONTRIBUTORS
+    }
+    if (contribSum === 0) {
       return top.contributor
     }
     const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
@@ -34,8 +37,11 @@ export const TopContributorMetric: CategoricalMetric = {
     if (!top) {
       return ["No contributors"]
     }
+    if (top.hasTie) {
+      return [MULTIPLE_CONTRIBUTORS]
+    }
     const contribSum = dbi.contribSumPerFile[obj.path]
-    if (!contribSum) {
+    if (contribSum === 0) {
       return [top.contributor]
     }
     const contributorPercentage = Math.round((top.contribcount / contribSum) * 100)
@@ -63,7 +69,7 @@ function setTopContributorColor(
   contributorColors: Record<string, `#${string}`>,
   blob: GitBlobObject,
   cache: MetricCache,
-  topContributorPerFile: Record<string, { contributor: string; contribcount: number }>,
+  topContributorPerFile: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>,
   topContributorCutoff: number,
   contribSumPerFile: Record<string, number>
 ) {
@@ -78,14 +84,33 @@ function setTopContributorColor(
     } else {
       legend.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
     }
-    cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+    cache.categoriesMap.set(blob.path, [{ category: MULTIPLE_CONTRIBUTORS, color: noEntryColor }])
+  }
+  //No activity in selected range == no top contributor
+  if (!topContributor) {
+    return
   }
 
-  if (!topContributor || !contribSum) {
+  //There is a tie between top contributors, so we can't determine a single top contributor
+  if (topContributor.hasTie) {
     bumpMultiple()
     return
   }
 
+  //There is an empty file
+  if (contribSum === 0) {
+    const color = contributorColors[topContributor.contributor] ?? noEntryColor
+    cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
+
+    if (legend.has(topContributor.contributor)) {
+      legend.get(topContributor.contributor)?.add(1)
+      return
+    }
+    legend.set(topContributor.contributor, new PointInfo(color, 1))
+    return
+  }
+
+  //The top contributor does not meet the cutoff
   const contributorPercentage = (topContributor.contribcount / contribSum) * 100
   if (contributorPercentage < topContributorCutoff) {
     bumpMultiple()

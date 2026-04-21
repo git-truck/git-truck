@@ -53,6 +53,7 @@ export function ContributorsInspection() {
     <ContributorDistribution
       className={fetcher.state !== "idle" ? "opacity-60" : ""}
       contributorDistribution={fetcher.data.contributorDistribution}
+      lineChangesSum={fetcher.data.lineChangesSum}
     />
   )
 }
@@ -61,18 +62,19 @@ const contributorCutoff = 2
 
 function ContributorDistribution({
   className = "",
-  contributorDistribution
+  contributorDistribution,
+  lineChangesSum
 }: {
   className?: string
   contributorDistribution: { contributor: string; contribs: number }[]
+  lineChangesSum: number
 }) {
   const contributorDistributionExpandId = useId()
   const [collapsed, setCollapsed] = useState<boolean>(true)
 
   const contributorsAreCutoff = contributorDistribution.length > contributorCutoff + 1
-  const contribSum = !contributorDistribution
-    ? 0
-    : contributorDistribution.reduce((acc, curr) => acc + curr.contribs, 0)
+  //ContribSum > sum(Contribs) if there are coauthors
+  const contribSum = lineChangesSum ?? 0
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -112,7 +114,7 @@ function ContributorDistribution({
           </>
         ) : (
           <>
-            {contributorDistribution.length > 0 && hasContributions(contributorDistribution) ? (
+            {contributorDistribution.length > 0 ? (
               <ContributorDistFragment show items={contributorDistribution} contribSum={contribSum} />
             ) : (
               <p>No contributors found</p>
@@ -122,14 +124,6 @@ function ContributorDistribution({
       </div>
     </div>
   )
-}
-
-function hasContributions(contributors?: { contributor: string; contribs: number }[] | null) {
-  if (!contributors) return false
-  for (const { contribs } of contributors) {
-    if (contribs > 0) return true
-  }
-  return false
 }
 
 function ContributorDistFragment(props: {
@@ -147,7 +141,7 @@ function ContributorDistFragment(props: {
         const contrib = legendItem.contribs
         const contributor = legendItem.contributor
         const roundedContrib = Math.round((contrib / props.contribSum) * 100)
-        const contribPercentage = roundedContrib === 0 ? "<1" : roundedContrib
+        const contribPercentage = props.contribSum == 0 ? "100" : roundedContrib === 0 ? "<1" : roundedContrib
         return (
           <Fragment key={contributor + contrib}>
             <div className="flex items-center gap-1">

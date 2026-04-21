@@ -147,6 +147,12 @@ export default class DB {
         deletions UINTEGER,
         filePath VARCHAR,
       );
+      CREATE TABLE IF NOT EXISTS commitTrailers (
+        commitHash VARCHAR,
+        name VARCHAR,
+        email VARCHAR,
+        trailerType VARCHAR
+      );
       CREATE TABLE IF NOT EXISTS contributorGroups (
         displayName VARCHAR,
         email VARCHAR,
@@ -194,6 +200,7 @@ export default class DB {
     await this.run(`
       DELETE FROM commits;
       DELETE FROM fileChanges;
+      DELETE FROM commitTrailers;
       DELETE FROM contributorGroups;
       DELETE FROM renames;
       DELETE FROM hiddenFiles;
@@ -221,6 +228,11 @@ export default class DB {
       CREATE OR REPLACE VIEW fileChanges_commits AS
       SELECT f.commitHash, f.insertions, f.deletions, f.filePath, author, c.authorEmail, c.committerTime, c.authorTime FROM
       fileChanges f JOIN commits_unioned c on f.commitHash = c.hash;
+
+      CREATE OR REPLACE VIEW commitTrailers_unioned AS
+      SELECT co.commitHash, CASE WHEN u.displayName IS NOT NULL THEN u.displayName ELSE co.name END AS name, co.email, co.trailerType FROM
+      commitTrailers AS co LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) AS u
+      ON (co.name = u.name AND co.email = u.email);
 
       CREATE OR REPLACE VIEW fileChanges_commits_renamed AS
       SELECT f.commitHash, f.insertions, f.deletions, f.author, f.authorEmail, f.committerTime, f.authorTime,
@@ -493,8 +505,18 @@ export default class DB {
   }
 
   public async getContributorCountPerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`SELECT filePath, count(DISTINCT author) AS contributorCount
-      FROM fileChanges_commits_renamed_cached
+    const res = await this.query(/*sql*/ `
+      WITH file_people AS (
+        SELECT f.filePath, f.author AS person_name, f.authorEmail AS person_email
+        FROM filechanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, co.name AS person_name, co.email AS person_email
+        FROM filechanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor'
+      )
+      SELECT filePath, COUNT(DISTINCT person_name) AS contributorCount
+      FROM file_people
       GROUP BY filePath;
     `)
 
@@ -526,20 +548,91 @@ export default class DB {
 
   public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
     //Respects aliases for contributors through commits_unioned view
-    const res = await this.query(`SELECT DISTINCT author
-      FROM fileChanges_commits_renamed_cached
-      WHERE filePath GLOB '${objectPath}*'
+    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    let res: ReturnType<DuckDBResultReader["getRowObjects"]>
+
+    if (isblob) {
+      res = await this.usingPreparedStatement(
+        /*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        WHERE f.filePath = ?
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor' AND f.filePath = ?
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
+    `,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, objectPath)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getUniqueContributorsForPath(blob)"
+      )
+    } else if (objectPath) {
+      res = await this.usingPreparedStatement(
+        /*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        WHERE f.filePath LIKE ?
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor' AND f.filePath LIKE ?
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
+    `,
+        async (statement) => {
+          statement.bindVarchar(1, `${objectPath}/%`)
+          statement.bindVarchar(2, `${objectPath}/%`)
+          return (await statement.runAndReadAll()).getRowObjects()
+        },
+        "getUniqueContributorsForPath(tree)"
+      )
+    } else {
+      res = await this.query(/*sql*/ `
+      WITH file_contributors AS (
+        SELECT f.filePath, f.author AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, ca.name AS contributor
+        FROM filechanges_commits_renamed_cached AS f
+        JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
+        WHERE ca.trailerType = 'coauthor'
+      )
+      SELECT DISTINCT contributor
+      FROM file_contributors;
     `)
-    return res.map((row) => row["author"] as string)
+    }
+
+    return res.map((row) => row["contributor"] as string)
   }
 
   public async getContributorContributionsForPath(): Promise<
     Record<string, { contributor: string; contribcount: number }[]>
   > {
-    const res = await this.query(`SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount
-    FROM fileChanges_commits_renamed_cached
-    GROUP BY filePath, author
-  `)
+    const res = await this.query(/*sql*/ `
+      WITH commit_contributors AS (
+        SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND co.name <> f.author
+      )
+      SELECT filePath, contributor, SUM(lineChanges) AS totalContribCount
+      FROM commit_contributors
+      GROUP BY filePath, contributor;
+    `)
 
     const result: Record<string, { contributor: string; contribcount: number }[]> = {}
     res.forEach((row) => {
@@ -548,7 +641,7 @@ export default class DB {
         result[filePath] = []
       }
       result[filePath].push({
-        contributor: row["author"] as string,
+        contributor: row["contributor"] as string,
         contribcount: Number(row["totalContribCount"])
       })
     })
@@ -557,25 +650,63 @@ export default class DB {
   }
 
   public async getTopContributorPerFile() {
-    const res = await this.query(`
-      WITH RankedAuthors AS (
-        SELECT filePath, author, SUM(insertions + deletions) AS totalContribCount,
-        ROW_NUMBER() OVER (PARTITION BY filePath ORDER BY SUM(insertions + deletions) DESC, author ASC) AS rank
-        FROM fileChanges_commits_renamed_cached
-        GROUP BY filePath, author
+    const res = await this.query(/*sql*/ `
+      WITH commit_contributors AS (
+        SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        UNION
+        SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+        FROM fileChanges_commits_renamed_cached AS f
+        INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND (co.name <> f.author)
+      ),
+      contributor_totals AS (
+        SELECT filePath, contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY filePath, contributor
+      ),
+      max_per_file AS (
+        SELECT filePath, MAX(totalContribCount) AS maxContribCount
+        FROM contributor_totals
+        GROUP BY filePath
+      ),
+      top_ties AS (
+        SELECT ct.filePath, COUNT(*) AS topCount
+        FROM contributor_totals ct
+        INNER JOIN max_per_file mpf
+          ON ct.filePath = mpf.filePath
+          AND ct.totalContribCount = mpf.maxContribCount
+        GROUP BY ct.filePath
+      ),
+      ranked_contributors AS (
+        SELECT
+          ct.filePath,
+          ct.contributor,
+          ct.totalContribCount,
+          tt.topCount,
+          ROW_NUMBER() OVER (
+            PARTITION BY ct.filePath
+            ORDER BY ct.totalContribCount DESC, ct.contributor ASC
+          ) AS rank
+        FROM contributor_totals ct
+        INNER JOIN top_ties tt ON ct.filePath = tt.filePath
       )
-      SELECT filePath, author, totalContribCount
-      FROM RankedAuthors
+      SELECT filePath, contributor, totalContribCount, topCount
+      FROM ranked_contributors
       WHERE rank = 1;
     `)
 
-    const result: Record<string, { contributor: string; contribcount: number }> = {}
+    const result: Record<string, { contributor: string; contribcount: number; hasTie: boolean }> = {}
     res.forEach((row) => {
-      const contributor = row["author"]
+      const contributor = row["contributor"]
       if (typeof contributor !== "string") {
         throw new Error("Error when getting top contributor per file: Contributor is not a string")
       }
-      result[row["filePath"] as string] = { contributor: contributor, contribcount: Number(row["totalContribCount"]) }
+      result[row["filePath"] as string] = {
+        contributor: contributor,
+        contribcount: Number(row["totalContribCount"]),
+        hasTie: Number(row["topCount"]) > 1
+      }
     })
 
     return result
@@ -658,8 +789,15 @@ export default class DB {
   }
 
   public async getAuthors() {
-    const res = await this.query(`SELECT DISTINCT author, authorEmail AS email
-      FROM commits;
+    const res = await this.query(`SELECT DISTINCT author, email
+      FROM (
+        SELECT c.author AS author, c.authorEmail AS email
+        FROM commits AS c
+        UNION
+        SELECT co.name AS author, co.email AS email
+        FROM commitTrailers AS co
+        WHERE co.trailerType = 'coauthor'
+      );
     `)
     return res.map((row) => ({
       name: String(row["author"] ?? ""),
@@ -705,48 +843,113 @@ export default class DB {
     return result
   }
 
+  public async getLineChangesSumForPath(objectPath: string): Promise<number> {
+    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    let res: number
+
+    if (isblob) {
+      res = await this.usingPreparedStatement(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE filePath = ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, objectPath)
+          const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{ lineChanges: number | bigint }>
+          return Number(results[0]?.lineChanges ?? 0)
+        },
+        "getLineChangesSumForPath(blob)"
+      )
+    } else if (objectPath) {
+      res = await this.usingPreparedStatement(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE filePath LIKE ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, `${objectPath}/%`)
+          const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{ lineChanges: number | bigint }>
+          return Number(results[0]?.lineChanges ?? 0)
+        },
+        "getLineChangesSumForPath(tree)"
+      )
+    } else {
+      res = await this.query(
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached;`
+      ).then((results) => Number(results[0]?.lineChanges ?? 0))
+    }
+    return res
+  }
+
   public async getContributorDistributionForPath(objectPath: string) {
     const isblob = (await this.getObjectType(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isblob) {
       res = await this.usingPreparedStatement(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         WHERE filePath = ?
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`,
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          WHERE f.filePath = ?
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE f.filePath = ? AND co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, objectPath)
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getContributorDistributionForPath(blob)"
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         WHERE filePath = ? OR filePath LIKE ?
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`,
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          WHERE (f.filePath = ? OR f.filePath LIKE ?)
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE (f.filePath = ? OR f.filePath LIKE ?) AND co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
           statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(3, objectPath)
+          statement.bindVarchar(4, `${objectPath}/%`)
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getContributorDistributionForPath(tree)"
       )
     } else {
       res = await this.query(
-        `SELECT author, SUM(insertions + deletions) AS contribSum
-         FROM fileChanges_commits_renamed_cached
-         GROUP BY author
-         ORDER BY contribSum DESC, author ASC;`
+        `WITH commit_contributors AS (
+          SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          UNION
+          SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
+          FROM fileChanges_commits_renamed_cached AS f
+          INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
+          WHERE co.trailerType = 'coauthor' AND co.name <> f.author
+        )
+        SELECT contributor, SUM(lineChanges) AS totalContribCount
+        FROM commit_contributors
+        GROUP BY contributor
+        ORDER BY totalContribCount DESC, contributor ASC;
+       `
       )
     }
 
     return res.map((row) => {
-      return { contributor: row["author"] as string, contribs: Number(row["contribSum"]) }
+      return { contributor: row["contributor"] as string, contribs: Number(row["totalContribCount"]) }
     })
   }
 
@@ -827,18 +1030,16 @@ export default class DB {
   }
 
   public async updateColorSeed(seed: string) {
-    await this.run(
-      `DELETE FROM metadata
+    await this.run(`DELETE FROM metadata
        WHERE field = 'colorSeed';
-       INSERT INTO metadata (field, stringValue)
-       VALUES ('colorSeed', '${seed}');`
-    )
+       INSERT INTO metadata (field, value, value2) 
+       VALUES ('colorSeed', null, '${seed}');`)
     log.debug("inserted seed", seed)
   }
 
   public async getColorSeed() {
     const res = await this.query(`
-      SELECT value2 FROM metadata WHERE field = 'colorseed';
+      SELECT value2 FROM metadata WHERE field = 'colorSeed';
     `)
     if (res.length < 1) return null
     log.debug("retrieved seed", res[0]["value2"])
@@ -863,6 +1064,19 @@ export default class DB {
         appender.appendUInteger(commit.committerTime)
         appender.appendUInteger(commit.authorTime)
         appender.endRow()
+      }
+    })
+
+    await this.usingTableAppender("commitTrailers", async (appender) => {
+      for (const [hash, commit] of commits) {
+        if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
+        for (const coauthor of commit.coauthors) {
+          appender.appendVarchar(hash)
+          appender.appendVarchar(coauthor.name)
+          appender.appendVarchar(coauthor.email)
+          appender.appendVarchar("coauthor")
+          appender.endRow()
+        }
       }
     })
 

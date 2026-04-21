@@ -10,7 +10,7 @@ describe("getCoAuthors", () => {
   })
 
   it("should return a single co-author", () => {
-    const description = "This is a commit message.\n\nCo-authored-by: John Doe <john.doe@example.com>"
+    const description = "This is a commit message.\n\nCo-Authored-By: John Doe <john.doe@example.com>"
     const result: Person[] = getCoAuthors(description)
     expect(result).toEqual([{ name: "John Doe", email: "john.doe@example.com" }])
   })
@@ -70,6 +70,13 @@ describe("getCoAuthors", () => {
     const actual = getCoAuthors(sampleDescription)
     expect(actual).toStrictEqual(expected)
   })
+
+  it("should parse co-authors case-insensitively", () => {
+    const description = "Feature work\n\nco-authored-by: Jane Doe <jane@example.com>"
+    const result: Person[] = getCoAuthors(description)
+    expect(result).toEqual([{ name: "Jane Doe", email: "jane@example.com" }])
+  })
+
   it("should ignore invalid co-author entries", () => {
     const description = `This is a commit message.
 

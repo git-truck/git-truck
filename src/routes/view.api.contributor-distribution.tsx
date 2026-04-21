@@ -13,6 +13,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   return {
     path: objectPath,
     existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, isBlob),
-    contributorDistribution: await instance.db.getContributorDistributionForPath(objectPath)
+    contributorDistribution: await instance.db.getContributorDistributionForPath(objectPath),
+    lineChangesSum: await instance.db.getLineChangesSumForPath(objectPath)
   }
 }
