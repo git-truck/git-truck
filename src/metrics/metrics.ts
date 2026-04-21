@@ -113,7 +113,27 @@ function generateContributorColors(
   predefinedContributorColors: Record<string, HexColor>
 ): Record<string, HexColor> {
   const contributorColorMap: Record<string, HexColor> = {}
-  const colors = scaleOrdinal(schemeTableau10).range()
+  // const colors = scaleOrdinal(schemeTableau10).range()
+  const colors = [
+    "#F06292",
+    // "#F48FB1",
+    "#CE93D8",
+    "#BA68C8",
+    "#9575CD",
+    "#7986CB",
+    "#64B5F6",
+    "#4ECAEC",
+    "#4DB6AC",
+    "#81C784",
+    "#AED581",
+    "#DCE775",
+    "#FFF176",
+    "#FFD54F",
+    "#FFB74D",
+    "#FF8A65",
+    "#E57373",
+    "#A1887F"
+  ]
 
   const sortedContributors = contributors
     .map((contributor) => contributor.name)

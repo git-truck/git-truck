@@ -1,5 +1,5 @@
 import { dateFormatRelative, dateFormatShort, rgbToHex } from "~/shared/util"
-import { interpolateCool, scaleSequential } from "d3"
+import { interpolateCool, interpolateRdYlBu, interpolateSpectral, scaleSequential } from "d3"
 import { feature_flags } from "~/feature_flags"
 import type { Metric, MetricCache } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
@@ -7,6 +7,7 @@ import type { GitBlobObject } from "~/shared/model"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
+import { getColorSteps } from "~/metrics/metricUtils"
 
 export const LastChangedMetric: Metric = {
   name: "Last changed",
@@ -23,8 +24,11 @@ export const LastChangedMetric: Metric = {
   metricFunctionFactory(data) {
     const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
 
+    // const interpolater = interpolateRdYlBu
+    const interpolater = interpolateSpectral
+
     return (blob: GitBlobObject, cache: MetricCache) => {
-      const domainedScale = scaleSequential(interpolateCool).domain([
+      const domainedScale = scaleSequential(interpolater).domain([
         data.databaseInfo.oldestChangeDate,
         data.databaseInfo.newestChangeDate
       ])
@@ -35,6 +39,8 @@ export const LastChangedMetric: Metric = {
               maxValue: data.databaseInfo.newestChangeDate,
               minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
               maxValueAltFormat: dateFormatShort(data.databaseInfo.newestChangeDate * 1000),
+              gradientColorSteps: getColorSteps(20, (v) => rgbToHex(interpolater(v))).map((c) => c.color),
+
               minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
               maxColor: rgbToHex(domainedScale(data.databaseInfo.newestChangeDate))
             } satisfies GradLegendData)

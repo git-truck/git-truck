@@ -9,20 +9,19 @@ import { Tick } from "~/components/sliderUtils"
 import { useHoveredObject } from "~/state/stores/hovered-object"
 
 export type GradLegendData = {
-  /**
-   * @deprecated
-   * @todo remove deprecated fields and add support for multi stop gradients
-   */
   minValue: number
-  /**
-   * @deprecated
-   * @todo remove deprecated fields and add support for multi stop gradients
-   */
   maxValue: number
   minValueAltFormat: string | undefined
   maxValueAltFormat: string | undefined
+  /**
+   * @deprecated
+   */
   minColor: `#${string}`
+  /**
+   * @deprecated
+   */
   maxColor: `#${string}`
+  gradientColorSteps: Array<`#${string}`>
 }
 
 export function GradientLegend() {
@@ -34,7 +33,7 @@ export function GradientLegend() {
   const metricCache = metricsData.get(metricType)
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
-  const { minValue, maxValue, minColor, maxColor } = metricCache.legend as GradLegendData
+  const { minValue, maxValue, gradientColorSteps } = metricCache.legend as GradLegendData
 
   const clickedObject = useClickedObject()
 
@@ -72,7 +71,7 @@ export function GradientLegend() {
       <div
         className="relative mt-9 h-4 rounded-sm"
         style={{
-          backgroundImage: `linear-gradient(to right, ${minColor}, ${maxColor})`
+          backgroundImage: `linear-gradient(to right, ${gradientColorSteps.join(", ")})`
         }}
       >
         <LegendBarIndicator offset={(clickedOffset ?? 0) * 100} visible={clickedOffset !== null} />

@@ -57,3 +57,12 @@ export class SpectrumTranslater {
     return this.target_max - this.translate(input) + this.target_min
   }
 }
+
+export const getColorSteps = (
+  stepCount: number,
+  interpolateFunc: (t: number) => HexColor
+): Array<{ color: HexColor; value: number }> =>
+  Array.from({ length: stepCount }, (_, i) => {
+    const value = i / (stepCount - 1)
+    return { value, color: interpolateFunc(value) as `#${string}` }
+  })
