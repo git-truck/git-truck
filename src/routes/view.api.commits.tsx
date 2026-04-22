@@ -15,6 +15,9 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   invariant(instance, `Instance for repo ${repositoryPath} and branch ${branch} not found`)
 
   return {
+    objectPath,
+    currentCommitCount: count,
+    totalCommitCount: await instance.db.getCommitCountForPath(objectPath),
     commitsPromise: (async () => {
       const commitHashes = await instance.db.getCommitHashes(objectPath, count)
       if (commitHashes.length < 1) return []
@@ -46,7 +49,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
           coauthors: commit.coauthors.map((coauthor) => applyUnionAlias(coauthor))
         }
       })
-    })(),
-    commitCount: await instance.db.getCommitCountForPath(objectPath)
+    })()
   }
 }

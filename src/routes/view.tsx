@@ -462,14 +462,7 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                     <Options />
                   </CollapsibleHeader>
                   <InspectPanel />
-                  <CollapsibleHeader
-                    title="Commits"
-                    className="card"
-                    contentClassName="pb-6 flex flex-col gap-2"
-                    defaultOpen={false}
-                  >
-                    <CommitsInspection />
-                  </CollapsibleHeader>
+                  <CommitsInspection />
                 </aside>
               </Activity>
               <main

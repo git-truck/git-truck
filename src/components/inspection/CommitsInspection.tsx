@@ -1,72 +1,69 @@
 import { useQueryState } from "nuqs"
-import { useCallback, useEffect, useState } from "react"
 import { useFetcher, href, Await } from "react-router"
-import { useData } from "~/contexts/DataContext"
 import type { loader } from "~/routes/view.api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory, CommitHistoryLabel } from "~/components/inspection/CommitHistory"
+import { useCallback, useEffect } from "react"
+import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
-  const fetcher = useFetcher<typeof loader>()
+  const { load, data, state, reset } = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
-  const { databaseInfo } = useData()
-  const [commitShowCount, setCommitShowCount] = useState(COMMIT_STEP)
-  const [previousData, setPreviousData] = useState<ReturnType<typeof useFetcher<typeof loader>>["data"]>(undefined)
-
-  useEffect(() => {
-    if (fetcher.data) {
-      setPreviousData(fetcher.data)
-    }
-  }, [fetcher.data])
+  const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
+  const objectPath = data?.objectPath ?? ""
 
   const loadCommits = useCallback(
-    (count: number) => {
-      if (!clickedObject) return
-
-      fetcher.load(
-        href("/view/api/commits") + viewSerializer({ objectPath: clickedObject.path, path }) + `&count=${count}`
-      )
-    },
-    // TODO: fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [clickedObject?.path, path, databaseInfo.contributorGroups]
+    (objectPath: string, count: number) =>
+      load(href("/view/api/commits") + viewSerializer({ objectPath, path }) + `&count=${count}`),
+    [load, path]
   )
 
   useEffect(() => {
-    loadCommits(commitShowCount)
-    return () => {
-      fetcher.reset()
+    if (objectPath && objectPath !== clickedObject?.path) {
+      reset()
+      loadCommits(clickedObject.path, commitShowCount)
     }
-    // TODO: fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commitShowCount, loadCommits])
-
-  const data = fetcher.data ?? previousData
-
-  if (!data) {
-    return (
-      <div className="flex flex-col gap-2">
-        <CommitHistoryLabel />
-        <h3>Loading...</h3>
-      </div>
-    )
-  }
+  }, [clickedObject.path, commitShowCount, loadCommits, objectPath, reset])
 
   return (
-    <Await resolve={data.commitsPromise}>
-      {(commits) => (
-        <CommitHistory
-          commits={commits}
-          loadedCommitCount={commitShowCount}
-          totalCommitCount={data.commitCount ?? 0}
-          isLoading={fetcher.state !== "idle"}
-          onCountChange={() => {
-            setCommitShowCount((prev) => prev + COMMIT_STEP)
-          }}
-        />
+    <CollapsibleHeader
+      title="Commits"
+      className="card"
+      contentClassName="pb-6 flex flex-col gap-2"
+      defaultOpen={false}
+      onToggle={(open) => {
+        if (open) {
+          if (!data && state === "idle") {
+            loadCommits(clickedObject.path, commitShowCount)
+          }
+        } else {
+          reset()
+        }
+      }}
+    >
+      {!data ? (
+        <div className="flex flex-col gap-2">
+          <CommitHistoryLabel />
+          <h3>Loading...</h3>
+        </div>
+      ) : (
+        <Await resolve={data.commitsPromise}>
+          {(commits) => (
+            <CommitHistory
+              commits={commits}
+              loadedCommitCount={commitShowCount}
+              totalCommitCount={data?.totalCommitCount ?? 0}
+              isLoading={state !== "idle"}
+              onShowMoreCommits={() => {
+                if (!clickedObject) return
+                loadCommits(clickedObject.path, commitShowCount + COMMIT_STEP)
+              }}
+            />
+          )}
+        </Await>
       )}
-    </Await>
+    </CollapsibleHeader>
   )
 }

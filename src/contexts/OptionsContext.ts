@@ -4,7 +4,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { LayoutGroups, type LayoutType } from "~/layouts/layouts"
 
-export const Hierarchy = {
+const Hierarchy = {
   NESTED: "Nested",
   FLAT: "Flat"
 } as const
