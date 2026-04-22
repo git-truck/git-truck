@@ -28,7 +28,7 @@
     "build:dev": "cross-env NODE_ENV=development npm run build-vite && npm run build-cli",
     "build-cli": "cross-env NODE_ENV=production tsdown",
     "build-vite": "react-router build",
-    "dev": "bunx portless proxy start --no-tls && bunx portless git-truck bun dev:bun",
+    "dev": "bunx --bun portless proxy start --no-tls && bunx --bun portless git-truck bun dev:bun",
     "dev:bun": "cross-env NODE_ENV=development bun --bun ./src/cli.ts",
     "dev:node": "cross-env NODE_ENV=development tsx ./src/cli.ts",
     "dev:verbose": "cross-env NODE_ENV=development bun --bun ./src/cli.ts --log debug",
