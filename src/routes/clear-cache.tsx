@@ -1,7 +1,6 @@
 import { mdiDeleteForever } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { href, Link, redirect, useFetcher, useLocation } from "react-router"
-import DB from "~/analyzer/DB.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { Route } from "./+types/clear-cache"
 import { cn } from "~/styling"
@@ -18,8 +17,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
   if (!redirectPath) {
     throw new Error("Missing redirect path")
   }
-  await InstanceManager.closeAllDBConnections()
-  await DB.clearCache()
+  await InstanceManager.closeAllDBInstances()
+  await InstanceManager.clearAllCaches()
   throw redirect(redirectPath)
 }
 
@@ -44,7 +43,7 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
         title="Click here if you are experiencing issues"
       >
         <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
-        {isTransitioning ? "Clearing..." : "Clear all data"}
+        {isTransitioning ? "Clearing..." : "Clear cache"}
       </button>
     </fetcher.Form>
   )
