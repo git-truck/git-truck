@@ -97,7 +97,10 @@ process.once("SIGTERM", stopHandler)
 process.once("SIGINT", stopHandler)
 
 process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED:", err)
+  const error = new Error("Unhandled Rejection", {
+    cause: err instanceof Error ? err : undefined
+  })
+  console.error("UNHANDLED:", error)
 })
 
 async function getUpdateMessage() {

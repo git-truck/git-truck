@@ -107,7 +107,7 @@ export async function describeAsyncJob<T>({
     } else log.info(text)
   }
 
-  const error = (text: string) => (spinner === null ? log.error(text) : spinner.error({ text }))
+  const outputError = (text: Error) => (spinner === null ? log.error(text) : spinner.error({ text: text.message }))
 
   if (beforeMsg.length > 0) {
     output(beforeMsg)
@@ -119,10 +119,12 @@ export async function describeAsyncJob<T>({
     const suffix = c.gray(`${formatMs(!ms ? stopTime - startTime : ms)}`)
     success(`${afterMsg} ${suffix}`, true)
     return [result, null]
-  } catch (e) {
-    error(errorMsg)
-    log.error(e as Error)
-    return [null, e as Error]
+  } catch (err) {
+    const error = new Error(errorMsg, {
+      cause: err
+    })
+    outputError(error)
+    return [null, error]
   }
 }
 
