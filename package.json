@@ -31,7 +31,7 @@
     "dev": "bunx --bun portless proxy start --no-tls && bunx --bun portless git-truck bun dev:bun",
     "dev:bun": "NODE_ENV=development bun --bun ./src/cli.ts",
     "dev:node": "cross-env NODE_ENV=development tsx ./src/cli.ts",
-    "dev:verbose": "NODE_ENV=development bun --bun ./src/cli.ts --log debug",
+    "dev:verbose": "bun dev --log debug",
     "start": "cross-env NODE_ENV=production node .",
     "clean": "npx -y rimraf build .react-router .cache .temp cli.mjs cli.js cli.cjs",
     "typecheck": "react-router typegen && tsc -b",
