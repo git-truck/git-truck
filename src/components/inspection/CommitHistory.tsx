@@ -190,13 +190,13 @@ export function CommitHistory({
   loadedCommitCount,
   totalCommitCount,
   isLoading,
-  onCountChange
+  onShowMoreCommits
 }: {
   commits: FullCommitDTO[] | null
   loadedCommitCount: number
   totalCommitCount: number
   isLoading: boolean
-  onCountChange: () => void
+  onShowMoreCommits: () => void
 }) {
   const clickedObject = useClickedObject()
 
@@ -227,9 +227,7 @@ export function CommitHistory({
         ) : loadedCommitCount < totalCommitCount ? (
           <button
             className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
-            onClick={() => {
-              onCountChange()
-            }}
+            onClick={onShowMoreCommits}
           >
             Load more commits
           </button>

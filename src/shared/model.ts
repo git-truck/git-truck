@@ -58,7 +58,7 @@ export interface AbstractGitObject {
   hash: string
 }
 
-export type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
+type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
 export type RawGitObject = {
   hash: string
   type: RawGitObjectType
@@ -110,7 +110,7 @@ export interface GitTreeObject extends AbstractGitObject {
   children: (GitTreeObject | GitBlobObject)[]
 }
 
-export interface GitCommitObject extends AbstractGitObject {
+interface GitCommitObject extends AbstractGitObject {
   type: "commit"
   tree: GitTreeObject
   parent: string
@@ -138,7 +138,7 @@ export type ContributorGroup = {
   members: Person[]
 }
 
-export type ModeType = "create" | "modify" | "delete"
+type ModeType = "create" | "modify" | "delete"
 
 export interface FileChange {
   path: string

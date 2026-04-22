@@ -8,13 +8,15 @@ export function CollapsibleHeader({
   children,
   defaultOpen = true,
   className,
-  contentClassName = ""
+  contentClassName = "",
+  onToggle
 }: {
   title: ReactNode
   children: ReactNode
   defaultOpen?: boolean
   className?: string
   contentClassName?: string
+  onToggle?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -22,7 +24,11 @@ export function CollapsibleHeader({
     <details
       className={cn("relative flex flex-col gap-2", className)}
       open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
+      onToggle={(event) => {
+        const isOpen = event.currentTarget.open
+        setOpen(isOpen)
+        onToggle?.(isOpen)
+      }}
     >
       <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
         <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2">{title}</h2>
