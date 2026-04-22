@@ -37,13 +37,24 @@ export default class ServerInstance {
 
   public repositoryPath: string
   public repositoryName: string
+
   public branch: string
-  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+  constructor({
+    db,
+    gitCaller,
+    repositoryPath,
+    branch
+  }: {
+    db: DB
+    gitCaller: GitCaller
+    repositoryPath: string
+    branch: string
+  }) {
     this.repositoryPath = repositoryPath
     this.repositoryName = getRepoNameFromPath(repositoryPath)
     this.branch = branch
-    this.gitCaller = new GitCaller({ repositoryPath, branch })
-    this.db = new DB({ repositoryPath, branch })
+    this.gitCaller = gitCaller
+    this.db = db
   }
 
   public updateProgress(index: number) {

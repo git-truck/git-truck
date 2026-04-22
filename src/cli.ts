@@ -133,7 +133,7 @@ ${generateVersionComparisonLink({ currentVersion: pkg.version, latestVersion: la
 }
 
 async function stopHandler() {
-  const promise = InstanceManager.closeAllDBConnections()
+  const promise = InstanceManager.closeAllDBInstances()
   log.info("Shutting down server")
   server.close(console.error)
   log.info("Web server shut down")
