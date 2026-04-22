@@ -38,6 +38,7 @@ import { LastChangedMetric } from "~/metrics/lastChanged"
 export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
+  const [branch] = useQueryState("branch")
   const clickedObject = useClickedObject()
   const data = useData()
   const [metricsData, contributorColors] = useMetrics()
@@ -52,7 +53,7 @@ export function MetricsInspection() {
     }
     fetcher.load(
       href("/view/api/inspect/metrics") +
-        viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path })
+        viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path, branch })
     )
     return () => {
       fetcher.reset()

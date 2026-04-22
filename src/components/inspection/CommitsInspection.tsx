@@ -10,14 +10,15 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
   const { load, data, state, reset } = useFetcher<typeof loader>()
+  const [branch] = useQueryState("branch")
   const [path] = useQueryState("path")
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
   const objectPath = data?.objectPath ?? ""
 
   const loadCommits = useCallback(
     (objectPath: string, count: number) =>
-      load(href("/view/api/commits") + viewSerializer({ objectPath, path }) + `&count=${count}`),
-    [load, path]
+      load(href("/view/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`),
+    [branch, load, path]
   )
 
   useEffect(() => {

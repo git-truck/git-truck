@@ -25,13 +25,15 @@ export function LoadingIndicator({
   className?: string
 }) {
   const [path] = useQueryState("path")
+  const [branch] = useQueryState("branch")
 
   const fetcher = useFetcher<ProgressData>()
   useEffect(() => {
     if (fetcher.state === "idle" && showProgress && fetchProgress) {
-      fetcher.load(href("/view/progress") + viewSerializer({ path }))
+      fetcher.load(href("/view/progress") + viewSerializer({ path, branch }))
     }
-  }, [fetchProgress, fetcher, fetcher.state, path, showProgress])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branch, fetchProgress, fetcher.state, path, showProgress])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!fetcher.data) return ["Loading truck...", 0]
