@@ -1,15 +1,21 @@
 import { mdiMenu } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, Link, redirect, useLocation, href, useNavigate } from "react-router"
+import { Await, redirect, href, useNavigate, useFetcher, useNavigation, Link } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
-import { Activity, Suspense, useReducer } from "react"
+import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
 import { createPortal } from "react-dom"
 import { GitCaller } from "~/analyzer/git-caller.server"
 import InstanceManager from "~/analyzer/InstanceManager.server"
 import type { DatabaseInfo, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath, openFile } from "~/shared/util.server"
+import {
+  getArgsWithDefaults,
+  getBaseDirFromPath,
+  getRepoNameFromPath,
+  normalizeAndResolvePath,
+  openFile
+} from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { HideFilesButton } from "~/components/buttons/HideFilesButton"
@@ -30,7 +36,6 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { createLoader, createSerializer, parseAsString } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
-import { type inferParserType } from "nuqs"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
@@ -38,6 +43,9 @@ import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 import { invariant } from "~/shared/util"
+import { browseSerializer } from "~/routes/browse"
+import { useQueryStates } from "nuqs"
+import { abortSerializer } from "~/routes/api.abort"
 
 export const viewSearchParamsConfig = {
   path: parseAsString,
@@ -50,8 +58,6 @@ export const viewSearchParamsConfig = {
 export const viewSerializer = createSerializer(viewSearchParamsConfig)
 export const loadViewSearchParams = createLoader(viewSearchParamsConfig)
 
-type ViewSearchParams = inferParserType<typeof viewSearchParamsConfig>
-
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
     title: `${loaderData.repositoryName} - Git Truck`
@@ -59,48 +65,46 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
 ]
 
 export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const repositoryPath = normalizeAndResolvePath(getArgsWithDefaults().path)
-  const repositoryName = getRepoNameFromPath(repositoryPath)
+  const argsRepositoryPath = normalizeAndResolvePath(getArgsWithDefaults().path)
 
   const versionInfo = context.get(versionContext)
 
   const viewSearchParams = loadViewSearchParams(request)
 
-  const { path, zoomPath, branch } = viewSearchParams
+  let { path, zoomPath, branch } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitCaller.isValidGitRepo(path))) {
-    const url = href("/browse") + viewSerializer({ path: repositoryPath })
-    log.warn(`Path ${repositoryPath} is not a git repository, redirecting to ${url}`)
+    const url = href("/browse") + browseSerializer({ path })
+    log.warn(`Path ${path} is not a git repository, redirecting to ${url}`)
     throw redirect(url)
   }
 
-  let shouldRedirect = false
-  const params = (
-    [
-      ["path", { param: path, fallback: repositoryPath }],
-      ["branch", { param: branch, fallback: await GitCaller._getRepositoryHead(repositoryPath) }],
-      // ["objectPath", { param: objectPath, fallback: instance.repositoryName }],
-      ["zoomPath", { param: zoomPath, fallback: getRepoNameFromPath(repositoryPath) }]
-    ] as const
-  ).reduce<ViewSearchParams>((params, [paramName, { param, fallback }]) => {
-    if (!param) {
-      shouldRedirect = true
-      return { ...params, [paramName]: fallback }
-    }
-    return params
-  }, viewSearchParams)
-
-  if (shouldRedirect) {
+  // Redirect to same page with required search params if they are missing
+  if (!path || !branch || !zoomPath) {
     const redirectUrl = new URL(request.url)
-    redirectUrl.search = viewSerializer(params)
+
+    path ??= argsRepositoryPath
+    branch ??= await GitCaller._getRepositoryHead(path)
+    zoomPath ??= getRepoNameFromPath(path)
+
+    redirectUrl.search = viewSerializer({
+      path,
+      branch,
+      zoomPath
+    })
+
     log.warn(`At least one required parameter is missing, redirecting to ${redirectUrl}`)
+
     throw redirect(redirectUrl.toString())
   }
 
+  const parentDirectoryPath = getBaseDirFromPath(path)
+
   return {
-    dataPromise: analyze({ path: repositoryPath, branch: branch! }),
-    repositoryName,
+    dataPromise: analyze({ path, branch: branch! }),
+    repositoryName: getRepoNameFromPath(path),
+    parentDirectoryPath,
     versionInfo
   }
 }
@@ -356,7 +360,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   return fullData
 }
 
-export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route.ComponentProps) {
+export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, dataPromise } }: Route.ComponentProps) {
   const [{ leftExpanded }, dispatch] = useReducer(
     (prevState, action: "toggleLeft") => {
       switch (action) {
@@ -372,27 +376,48 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
 
   const toggleLeft = () => dispatch("toggleLeft")
 
-  const location = useLocation()
   const navigate = useNavigate()
 
-  const clearCacheUrl = `/clear-cache?${new URLSearchParams({
-    redirect: location.pathname + location.search
-  }).toString()}`
+  const fetcher = useFetcher<typeof loader>()
+  const navigation = useNavigation()
+  const isLoading = navigation.state !== "idle"
+  const isAborting = fetcher.state !== "idle"
+
+  const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
+  const [params] = useQueryStates(viewSearchParamsConfig)
+
+  const abort = useCallback(() => {
+    startTransition(async () => {
+      if (isAborting) return
+      if (!params.branch || !params.path) return
+
+      const abortUrl = href("/api/abort") + abortSerializer({ branch: params.branch, path: params.path })
+      await fetcher.submit(null, { action: abortUrl, method: "post" })
+      navigate(browseParent)
+    })
+  }, [isAborting, params.branch, params.path, fetcher, navigate, browseParent])
 
   return (
     <Suspense
       fallback={
         <div className="grid h-screen place-items-center">
           <LoadingIndicator
-            showProgress
-            loadingText={
+            showProgress={!isAborting}
+            loadingText={({ status }) => (
               <div className="flex flex-col items-center gap-2">
-                Stuck? Try clearing the cache:
-                <Link to={clearCacheUrl} className="btn btn--primary">
-                  Clear Cache
-                </Link>
+                <div className="flex gap-2">
+                  {status !== "Aborted" && status !== "CommitHistoryProcessed" ? (
+                    <button className="btn btn--text btn--danger" disabled={isAborting} onClick={abort}>
+                      {isAborting ? "Aborting..." : "Abort"}
+                    </button>
+                  ) : (
+                    <Link to={browseParent} className="btn btn--text">
+                      Go back
+                    </Link>
+                  )}
+                </div>
               </div>
-            }
+            )}
           />
         </div>
       }
@@ -495,7 +520,7 @@ export default function Repo({ loaderData: { versionInfo, dataPromise } }: Route
                             </div>
                           }
                         >
-                          <Await resolve={dataPromise}>{() => <Chart />}</Await>
+                          <Await resolve={dataPromise}>{() => (isLoading ? <LoadingIndicator /> : <Chart />)}</Await>
                         </Suspense>
                         {createPortal(<Tooltip />, document.body)}
                       </>

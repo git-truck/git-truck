@@ -22,7 +22,7 @@ import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import InstanceManager from "~/analyzer/InstanceManager.server.ts"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
-export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
+export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart" | "Aborted"
 
 export default class ServerInstance {
   public analyzationStatus: AnalyzationStatus = "Starting"
@@ -30,10 +30,10 @@ export default class ServerInstance {
   public db: DB
   public progress = [0]
   public totalCommitCount = 0
+  public progressRevision = 0
   private fileTreeAsOf: string | null = null
   public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
-  public prevProgress = { str: "", timestamp: 0 }
 
   public repositoryPath: string
   public repositoryName: string
@@ -59,6 +59,24 @@ export default class ServerInstance {
 
   public updateProgress(index: number) {
     this.progress[index]++
+    this.progressRevision++
+  }
+
+  public abort() {
+    this.analyzationStatus = "Aborted"
+    this.progressRevision++
+  }
+
+  private throwIfAborted() {
+    if (this.analyzationStatus === "Aborted") {
+      throw new Error("Instance aborted")
+    }
+  }
+
+  private setAnalyzationStatus(status: AnalyzationStatus) {
+    if (this.analyzationStatus === "Aborted") return
+    this.analyzationStatus = status
+    this.progressRevision++
   }
 
   private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
@@ -84,6 +102,7 @@ export default class ServerInstance {
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
   public async analyzeTree() {
+    this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
     const lsTreeEntries: RawGitObject[] = []
@@ -111,6 +130,7 @@ export default class ServerInstance {
       children: []
     } as GitTreeObject
 
+    this.throwIfAborted()
     await this.db.replaceFiles(lsTreeEntries)
 
     for (const child of lsTreeEntries) {
@@ -188,6 +208,8 @@ export default class ServerInstance {
     const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
     for (const match of matches) {
+      this.throwIfAborted()
+
       const groups = match.groups ?? {}
       const contributorName = groups.author
       const authorEmail = groups.authorEmail
@@ -269,6 +291,8 @@ export default class ServerInstance {
     const commits: FullCommitDTO[] = []
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
+      this.throwIfAborted()
+
       const groups = match.groups ?? {}
       const name = groups.author
       const authorEmail = groups.authorEmail
@@ -314,6 +338,7 @@ export default class ServerInstance {
     renamedFiles: RenameEntry[],
     index: number
   ) {
+    this.throwIfAborted()
     const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this, index)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
@@ -412,7 +437,7 @@ export default class ServerInstance {
   }
 
   public async loadRepoData() {
-    this.analyzationStatus = "Starting"
+    this.setAnalyzationStatus("Starting")
 
     let commitCount = await this.gitCaller.getCommitCount()
     const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
@@ -441,7 +466,7 @@ export default class ServerInstance {
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
     this.progress = Array(threadCount).fill(0)
-    this.analyzationStatus = "Hydrating"
+    this.setAnalyzationStatus("Hydrating")
     const sections = this.calculateSections(commitCount, threadCount)
     const promises = Array.from({ length: threadCount }, async (_, i) => {
       const sectionStart = sections[i][0]
@@ -469,6 +494,6 @@ export default class ServerInstance {
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
-    this.analyzationStatus = "GeneratingChart"
+    this.setAnalyzationStatus("GeneratingChart")
   }
 }

@@ -274,7 +274,7 @@ export default function UI() {
           {/* LoadingIndicator Demo */}
           <div className="card">
             <h2 className="card__title">LoadingIndicator</h2>
-            <LoadingIndicator loadingText="Loading something..." showProgress={false} />
+            <LoadingIndicator loadingText={() => "Loading something..."} showProgress={false} />
           </div>
           {/* Git Truck Info Demo */}
           <div className="card">

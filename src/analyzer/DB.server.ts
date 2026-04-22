@@ -227,6 +227,9 @@ export default class DB {
       SELECT * FROM fileChanges_commits_renamed f
       INNER JOIN filtered_files fi on fi.path = f.filePath;
 
+      CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
+      SELECT * FROM fileChanges_commits_renamed_files;
+
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT fromName, toName, min(timestamp) AS timestamp, timestampAuthor FROM renames
       WHERE timestamp BETWEEN ${start} AND ${end}
