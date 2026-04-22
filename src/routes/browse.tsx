@@ -1,4 +1,4 @@
-import { Await, Form, Link, redirect, href, useLocation, useNavigation } from "react-router"
+import { Await, Form, Link, redirect, href, useNavigation } from "react-router"
 import { Code } from "~/components/util"
 import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
@@ -31,6 +31,7 @@ import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates,
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
 import { viewSerializer } from "~/routes/view"
+import { ClearCacheForm } from "~/routes/clear-cache"
 
 const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
@@ -243,7 +244,6 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 export default function Index({
   loaderData: { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount }
 }: Route.ComponentProps) {
-  const location = useLocation()
   const navigation = useNavigation()
   const [{ path, "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
     useQueryStates(browseSearchParamsConfig)
@@ -342,12 +342,7 @@ export default function Index({
             </div>
             <div />
             <div />
-            <Link
-              to={`/clear-cache?redirect=${encodeURIComponent(location.pathname + location.search)}`}
-              className="btn btn--danger max-w-min justify-self-end"
-            >
-              Clear cache
-            </Link>
+            <ClearCacheForm />
           </Form>
         </div>
         <Breadcrumb className="px-2" />

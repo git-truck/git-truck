@@ -138,9 +138,14 @@ export function invariant<T>(condition: T, message: string): asserts condition i
   }
 }
 
-export function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
+export function sleep(ms: number, { signal }: { signal?: AbortSignal } = {}): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(resolve, ms)
+    const onAbort = () => {
+      clearTimeout(timeoutId)
+      reject(new Error("Sleep aborted"))
+    }
+    signal?.addEventListener("abort", onAbort, { once: true })
   })
 }
 
