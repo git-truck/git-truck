@@ -1,12 +1,18 @@
-import { sleep } from "~/shared/util"
+import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/view.progress"
-import { currentRepositoryContext } from "~/routes/view"
+import { loadViewSearchParams } from "~/routes/view"
+import InstanceManager from "~/analyzer/InstanceManager.server"
 
 const POLLING_RATE = 1000
 
-export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {
-  const { instance } = context.get(currentRepositoryContext)
+export const loader = async ({ request }: Route.LoaderArgs): Promise<ProgressData> => {
+  const { path: repositoryPath, branch } = loadViewSearchParams(request)
+  invariant(repositoryPath, "path is required")
+  invariant(branch, "branch is required")
+
+  await using disposable = InstanceManager.usingInstance({ repositoryPath, branch })
+  const instance = await disposable.instancePromise
   let progressPercentage = calculateProgressPercentage(instance.progress, instance.totalCommitCount)
   let status = instance.analyzationStatus
   while (
