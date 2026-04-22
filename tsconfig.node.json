@@ -11,6 +11,7 @@
   ],
   "compilerOptions": {
     "composite": true,
+    "lib": ["esnext", "esnext.disposable"],
     "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "bundler"
