@@ -67,7 +67,7 @@ export type SegmentedMetric = CategoricalMetric & {
 
 export type MetricType = keyof typeof Metrics
 
-export type MetricFunction = (blob: GitBlobObject, cache: MetricCache) => void
+type MetricFunction = (blob: GitBlobObject, cache: MetricCache) => void
 
 export type MetricsData = {
   caches: Map<MetricType, MetricCache>

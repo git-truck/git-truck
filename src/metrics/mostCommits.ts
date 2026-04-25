@@ -19,10 +19,7 @@ export const CommitsMetric: Metric = {
     return `${formatLargeNumber(noCommits)} commit${noCommits > 1 ? "s" : ""}`
   },
   metricFunctionFactory(data, root) {
-    const { min: minCommitCount, max: maxCommitCount } = getMinMaxValuesForMetric(
-      root, 
-      data.databaseInfo.commitCounts
-    )
+    const { min: minCommitCount, max: maxCommitCount } = getMinMaxValuesForMetric(root, data.databaseInfo.commitCounts)
     const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
