@@ -1,6 +1,6 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { Metric, MetricCache } from "~/metrics/metrics"
-import { SpectrumTranslater } from "~/metrics/metricUtils"
+import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex, formatLargeNumber } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
@@ -18,9 +18,11 @@ export const LinesChangedMetric: Metric = {
     }
     return `${formatLargeNumber(contribs)} lines`
   },
-  metricFunctionFactory(data) {
-    const maxContribCount = data.databaseInfo.maxMinContribCounts.max
-    const minContribCount = data.databaseInfo.maxMinContribCounts.min
+  metricFunctionFactory(data, root) {
+    const { min: minContribCount, max: maxContribCount } = getMinMaxValuesForMetric(
+      root,
+      data.databaseInfo.contribSumPerFile
+    )
     const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
     return (blob: GitBlobObject, cache: MetricCache) => {

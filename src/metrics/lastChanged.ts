@@ -20,7 +20,7 @@ export const LastChangedMetric: Metric = {
     }
     return dateFormatRelative(epoch)
   },
-  metricFunctionFactory(data) {
+  metricFunctionFactory(data, _root) {
     const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
