@@ -68,7 +68,8 @@ export const FileSizeMetric: SegmentedMetric = {
       ?.map((c) => c.text)
   },
 
-  metricFunctionFactory({ databaseInfo: dbi }) {
+  //For now we don't use _root for calculation
+  metricFunctionFactory({ databaseInfo: dbi }, _root) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       const fileSizeGroupings = this.getBuckets(dbi)
       const fileSizeMapper = new FileSizeTranslater(dbi.minFileSize, dbi.maxFileSize)

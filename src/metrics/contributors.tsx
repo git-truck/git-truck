@@ -30,8 +30,9 @@ export const ContributorsMetric: CategoricalMetric = {
   getCategories(obj, dbi) {
     return (dbi.contributorsForPath[obj.path] ?? []).map((c) => c.contributor)
   },
+  //For now we don't use _root for calculation
   metricFunctionFactory:
-    (data, { contributorColors }) =>
+    (data, root, { contributorColors }) =>
     (blob, cache) => {
       const legend: PointLegendData = (cache.legend as PointLegendData) ?? new Map<string, PointInfo>()
 

@@ -50,7 +50,8 @@ export const TopContributorMetric: CategoricalMetric = {
     }
     return [top.contributor]
   },
-  metricFunctionFactory(data, { contributorColors, topContributorCutoff }) {
+  //For now we don't use _root for calculation
+  metricFunctionFactory(data, root, { contributorColors, topContributorCutoff }) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
       setTopContributorColor(

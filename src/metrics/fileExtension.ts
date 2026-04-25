@@ -19,7 +19,8 @@ export const TypeMetric: CategoricalMetric = {
   getCategories(obj) {
     return isBlob(obj) ? [obj.extension] : []
   },
-  metricFunctionFactory() {
+  //For now we don't use _root for calculation
+  metricFunctionFactory(_data, _root) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       if (!cache.legend) {
         cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
