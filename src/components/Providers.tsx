@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import type { GitBlobObject, GitObject, RepoData } from "~/shared/model"
 import { DataContext } from "~/contexts/DataContext"
-import { MetricsContext } from "~/contexts/MetricContext"
+import { MetricsContext, type MetricsContextValue } from "~/contexts/MetricContext"
 import type { HierarchyType, Options, OptionsContextType } from "~/contexts/OptionsContext"
 import { getDefaultOptionsContextValue as getDefaultOptions, OptionsContext } from "~/contexts/OptionsContext"
 import { SearchContext } from "~/contexts/SearchContext"
-import type { MetricsData, MetricType } from "~/metrics/metrics"
+import type { MetricType } from "~/metrics/metrics"
 import { createMetricData } from "~/metrics/metrics"
+import { buildMetricsHierarchyCache } from "~/metrics/cache"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { findSubTree } from "~/shared/util"
 import { useQueryState } from "nuqs"
 import type { LayoutType } from "~/layouts/layouts"
+import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const [options, setOptions] = useState<Options>(() => {
@@ -33,16 +35,33 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
     [data.databaseInfo, zoomPath]
   )
 
-  const metricsData: MetricsData = useMemo(() => {
-    const res = createMetricData(
+  const hierarchyCache = useMemo(() => {
+    return buildMetricsHierarchyCache(
+      data,
+      data.databaseInfo.colorSeed,
+      data.databaseInfo.contributorColors,
+      options?.topContributorCutoff ?? 70,
+      METRICS_HIERARCHY_CACHE_DEPTH
+    )
+  }, [data, options?.topContributorCutoff])
+
+  const metricsContextValue = useMemo<MetricsContextValue>(() => {
+    const rootPath = zoomPath ?? data.databaseInfo.fileTree.path
+    const cachedMetrics = hierarchyCache.get(rootPath)
+    if (cachedMetrics) {
+      return { metricsData: cachedMetrics, hierarchyCache }
+    }
+
+    // Fallback: calculate metrics for the current view
+    const metricsData = createMetricData(
       { ...data, databaseInfo },
       data.databaseInfo.colorSeed,
       data.databaseInfo.contributorColors,
       options?.topContributorCutoff ?? 70
     )
 
-    return res
-  }, [data, databaseInfo, options?.topContributorCutoff])
+    return { metricsData, hierarchyCache }
+  }, [zoomPath, hierarchyCache, data, databaseInfo, options?.topContributorCutoff])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -138,7 +157,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
         databaseInfo: databaseInfo
       }}
     >
-      <MetricsContext.Provider value={metricsData}>
+      <MetricsContext.Provider value={metricsContextValue}>
         <OptionsContext.Provider value={optionsValue}>
           <SearchContext.Provider
             value={{
