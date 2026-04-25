@@ -1,5 +1,5 @@
 import languageMap from "language-map/languages.json" with { type: "json" }
-import type { HexColor } from "~/shared/model"
+import type { GitObject, HexColor } from "~/shared/model"
 
 interface ColorResult {
   lang: string
@@ -56,4 +56,29 @@ export class SpectrumTranslater {
   inverseTranslate(input: number) {
     return this.target_max - this.translate(input) + this.target_min
   }
+}
+
+export function getMinMaxValuesForMetric(
+  root: GitObject,
+  perFileMap: Record<string, number>
+): { min: number; max: number } {
+  let min = Infinity
+  let max = -Infinity
+
+  function traverse(node: GitObject) {
+    if (node.type === "blob") {
+      const value = perFileMap[node.path]
+      if (value !== undefined) {
+        min = Math.min(min, value)
+        max = Math.max(max, value)
+      }
+    } else {
+      for (const child of node.children) {
+        traverse(child)
+      }
+    }
+  }
+
+  traverse(root)
+  return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 0 : max }
 }

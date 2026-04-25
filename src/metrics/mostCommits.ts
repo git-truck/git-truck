@@ -1,27 +1,28 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { Metric, MetricCache } from "~/metrics/metrics"
-import { SpectrumTranslater } from "~/metrics/metricUtils"
+import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex, formatLargeNumber } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiSourceCommit } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
 
 export const CommitsMetric: Metric = {
+  icon: mdiSourceCommit,
   name: "Commits",
   description: "Files are colored based on the number of commits in the selected time range.",
-  icon: mdiSourceCommit,
   inspectionPanels: [GradientLegend],
   getTooltipContent(obj, dbi) {
     const noCommits = dbi.commitCounts[obj.path]
-
     if (!noCommits) {
       return "No activity in selected range"
     }
     return `${formatLargeNumber(noCommits)} commit${noCommits > 1 ? "s" : ""}`
   },
-  metricFunctionFactory(data) {
-    const maxCommitCount = data.databaseInfo.maxCommitCount
-    const minCommitCount = data.databaseInfo.minCommitCount
+  metricFunctionFactory(data, root) {
+    const { min: minCommitCount, max: maxCommitCount } = getMinMaxValuesForMetric(
+      root, 
+      data.databaseInfo.commitCounts
+    )
     const commitmapper = new CommitAmountTranslater(minCommitCount, maxCommitCount)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
