@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LegendDot } from "~/components/util"
 import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
-import { useMetrics } from "~/contexts/MetricContext"
+import { useData } from "~/contexts/DataContext"
+import { useMetricsHierarchyCache } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import {
   useSelectedCategory,
@@ -17,8 +18,9 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
-import { Metrics } from "~/metrics/metrics"
+import { createMetricDataForNode, Metrics } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
+import { useClickedObject } from "~/state/stores/clicked-object"
 
 const legendCutoff = 8
 
@@ -49,9 +51,11 @@ export type PointLegendData = Map<string, PointInfo>
 
 export function PointLegend() {
   const { searchValue } = useMetricSearchContext()
+  const data = useData()
 
-  const { metricType } = useOptions()
-  const [metricsData] = useMetrics()
+  const { metricType, topContributorCutoff } = useOptions()
+  const clickedObject = useClickedObject()
+  const hierarchyCache = useMetricsHierarchyCache()
   const isCategorySelected = useIsCategorySelected()
   const [path] = useQueryState("path")
   const resetSelection = useResetSelection()
@@ -60,7 +64,25 @@ export function PointLegend() {
     resetSelection()
   }, [path, resetSelection])
 
-  const metricCache = metricsData.get(metricType)
+  const metricCache = useMemo(() => {
+    const cacheKey = clickedObject ? clickedObject.path : data.databaseInfo.fileTree.path
+
+    // Try to get from hierarchy cache first
+    const cachedMetricsData = hierarchyCache.get(cacheKey)
+    if (cachedMetricsData) {
+      return cachedMetricsData.caches.get(metricType)
+    }
+
+    // Fallback: calculate on the fly (for nodes not in the pre-computed hierarchy)
+    const subtreeRoot = clickedObject ?? data.databaseInfo.fileTree
+    return createMetricDataForNode(
+      data,
+      subtreeRoot,
+      data.databaseInfo.colorSeed,
+      data.databaseInfo.contributorColors,
+      topContributorCutoff
+    ).caches.get(metricType)
+  }, [clickedObject, data, metricType, topContributorCutoff, hierarchyCache])
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 

@@ -17,3 +17,5 @@ export const missingInMapColor = "#808080"
 
 export const MULTIPLE_CONTRIBUTORS = "Multiple contributors" as const
 export const UNKNOWN_CATEGORY = "Unknown" as const
+// Configuration for how many tree levels to cache below project root
+export const METRICS_HIERARCHY_CACHE_DEPTH = 1
