@@ -89,6 +89,19 @@ export interface GitTreeObject extends AbstractGitObject {
   children: (GitTreeObject | GitBlobObject)[]
 }
 
+interface GitCommitObject extends AbstractGitObject {
+  type: "commit"
+  tree: GitTreeObject
+  parent: string
+  parent2: string | null
+  author: PersonWithTime
+  committer: PersonWithTime
+  message: string
+  description: string
+  coauthors: Person[]
+  fileCount?: number
+}
+
 export interface Person {
   name: string
   email: string
