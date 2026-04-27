@@ -1,9 +1,5 @@
 import {
-  mdiAccountGroup,
   mdiFileOutline,
-  mdiPlusMinusVariant,
-  mdiPulse,
-  mdiSourceCommit,
   mdiFolderOutline,
   mdiEyeOffOutline,
   mdiSourceRepository
@@ -136,7 +132,7 @@ export function MetricsInspection() {
     },
     MOST_COMMITS: {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
-      icon: mdiSourceCommit,
+      icon: CommitsMetric.icon,
       data: commitCount?.toLocaleString() ?? "loading...",
       inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
@@ -149,7 +145,7 @@ export function MetricsInspection() {
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "are top contributors" : "is top contributor",
-      icon: mdiAccountGroup,
+      icon: TopContributorMetric.icon,
       data: currentFetcherData
         ? currentFetcherData.multiTopContributors
           ? "Multiple people"
@@ -167,7 +163,7 @@ export function MetricsInspection() {
     },
     MOST_CONTRIBUTIONS: {
       description: "line changes",
-      icon: mdiPlusMinusVariant,
+      icon: LinesChangedMetric.icon,
       data: isBlob
         ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
         : Object.entries(data.databaseInfo.contribSumPerFile)
@@ -185,7 +181,7 @@ export function MetricsInspection() {
     },
     LAST_CHANGED: {
       description: "since last change",
-      icon: mdiPulse,
+      icon: LastChangedMetric.icon,
       data: isBlob
         ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
         : (dateFormatRelative(
