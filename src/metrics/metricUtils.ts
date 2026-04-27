@@ -1,9 +1,27 @@
 import languageMap from "language-map/languages.json" with { type: "json" }
-import type { GitObject, HexColor } from "~/shared/model"
+import type { GitObject, HexColor, GitTreeObject } from "~/shared/model"
 
 interface ColorResult {
   lang: string
   color: HexColor | null
+}
+
+/**
+ * Counts all leaf nodes (blobs) in a tree recursively.
+ * @param root The root GitObject to count leaf nodes from
+ * @returns The total number of leaf nodes (blobs)
+ */
+export function countLeafNodes(root: GitObject): number {
+  if (root.type === "blob") {
+    return 1
+  }
+
+  if (root.type === "tree") {
+    const treeRoot = root as GitTreeObject
+    return treeRoot.children.reduce((sum, child) => sum + countLeafNodes(child), 0)
+  }
+
+  return 0
 }
 
 const extensionToColor = new Map<string, ColorResult>()

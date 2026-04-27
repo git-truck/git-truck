@@ -1,5 +1,5 @@
 import type { GitBlobObject } from "~/shared/model"
-import { getColorFromExtension } from "~/metrics/metricUtils"
+import { getColorFromExtension, countLeafNodes } from "~/metrics/metricUtils"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
@@ -20,10 +20,13 @@ export const TypeMetric: CategoricalMetric = {
     return isBlob(obj) ? [obj.extension] : []
   },
   //For now we don't use _root for calculation
-  metricFunctionFactory(_data, _root) {
+  metricFunctionFactory(_data, root) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       if (!cache.legend) {
-        cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
+        cache.legend = {
+          entries: new Map<string, PointInfo>(),
+          totalWeight: countLeafNodes(root)
+        } satisfies PointLegendData
       }
       setExtensionColor(blob, cache)
     }
@@ -44,30 +47,30 @@ function setExtensionColor(blob: GitBlobObject, cache: MetricCache) {
   //Add uncolored (e.g. png, gif) under parent category "Other"
   if (feature_flags.group_noncode_filetypes_in_other) {
     if (color) {
-      if (legend.has(blob.extension)) {
-        legend.get(blob.extension)?.add(1)
+      if (legend.entries.has(blob.extension)) {
+        legend.entries.get(blob.extension)?.add(1)
       } else {
-        legend.set(blob.extension, new PointInfo(color, 1))
+        legend.entries.set(blob.extension, new PointInfo(color, 1))
       }
       cache.categoriesMap.set(blob.path, [{ category: blob.extension, color }])
     } else {
-      if (!legend.has("Other")) {
-        legend.set("Other", new PointInfo(noEntryColor, 0))
+      if (!legend.entries.has("Other")) {
+        legend.entries.set("Other", new PointInfo(noEntryColor, 0))
       }
-      if (legend.get("Other")?.children?.has(blob.extension)) {
-        legend.get("Other")?.children?.get(blob.extension)?.add(1)
+      if (legend.entries.get("Other")?.children?.has(blob.extension)) {
+        legend.entries.get("Other")?.children?.get(blob.extension)?.add(1)
       } else {
-        legend.get("Other")?.addChild(blob.extension, new PointInfo(noEntryColor, 1))
+        legend.entries.get("Other")?.addChild(blob.extension, new PointInfo(noEntryColor, 1))
       }
-      legend.get("Other")?.add(1)
+      legend.entries.get("Other")?.add(1)
       cache.categoriesMap.set(blob.path, [{ category: "Other", color: noEntryColor }])
     }
     //Add uncolored (e.g. png, gif) as normal categories
   } else {
-    if (legend.has(blob.extension)) {
-      legend.get(blob.extension)?.add(1)
+    if (legend.entries.has(blob.extension)) {
+      legend.entries.get(blob.extension)?.add(1)
     } else {
-      legend.set(blob.extension, new PointInfo(color ? color : noEntryColor, 1))
+      legend.entries.set(blob.extension, new PointInfo(color ? color : noEntryColor, 1))
     }
     cache.categoriesMap.set(blob.path, [{ category: blob.extension, color: color ? color : noEntryColor }])
   }
