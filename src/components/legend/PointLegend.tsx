@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { LegendDot } from "~/components/util"
-import { ChevronButton } from "~/components/ChevronButton"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useData } from "~/contexts/DataContext"
 import { useMetricsHierarchyCache } from "~/contexts/MetricContext"
@@ -22,7 +21,7 @@ import { createMetricDataForNode, Metrics } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObject } from "~/state/stores/clicked-object"
 
-const legendCutoff = 8
+const ITEMS_PER_PAGE = 10
 
 export class PointInfo {
   public readonly color: `#${string}`
@@ -59,10 +58,19 @@ export function PointLegend() {
   const isCategorySelected = useIsCategorySelected()
   const [path] = useQueryState("path")
   const resetSelection = useResetSelection()
+  const [currentPage, setCurrentPage] = useState<number>(0)
+  const [, startTransition] = useTransition()
 
   useEffect(() => {
     resetSelection()
   }, [path, resetSelection])
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    startTransition(() => {
+      setCurrentPage(0)
+    })
+  }, [searchValue])
 
   const metricCache = useMemo(() => {
     const cacheKey = clickedObject ? clickedObject.path : data.databaseInfo.fileTree.path
@@ -86,8 +94,6 @@ export function PointLegend() {
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 
-  const [collapse, setCollapse] = useState<boolean>(true)
-
   const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
     if (info1.weight > info2.weight) return -1
@@ -100,9 +106,21 @@ export function PointLegend() {
 
   const filteredItems = searchValue.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
 
-  const shownItems = filteredItems.slice(0, collapse ? legendCutoff : filteredItems.length)
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE)
+  const safePage = Math.min(currentPage, totalPages - 1)
+  const startIdx = safePage * ITEMS_PER_PAGE
+  const endIdx = startIdx + ITEMS_PER_PAGE
+  const shownItems = filteredItems.slice(startIdx, endIdx)
 
   if (items.length === 0) return null
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
+  }
 
   return (
     <div className="flex flex-col">
@@ -131,18 +149,29 @@ export function PointLegend() {
           <p className="text-right">% Files</p>
           <div />
         </div>
-
         <span className="bg-border dark:bg-border-dark col-span-full my-1 h-0.5 w-full" />
 
         {shownItems.map(([label, info]) => (
           <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
         ))}
-        {filteredItems.length > legendCutoff ? (
-          <PointLegendOther
-            items={filteredItems.slice(legendCutoff)}
-            collapse={collapse}
-            toggle={() => setCollapse(!collapse)}
-          />
+
+        {totalPages > 1 ? (
+          <div className="col-span-full flex items-center justify-between gap-2 pt-2">
+            <button disabled={safePage === 0} className="btn text-xs" title="Previous page" onClick={handlePrevPage}>
+              ← Prev
+            </button>
+            <span className="text-secondary-text text-xs">
+              Page {safePage + 1} of {totalPages}
+            </span>
+            <button
+              disabled={safePage === totalPages - 1}
+              className="btn text-xs"
+              title="Next page"
+              onClick={handleNextPage}
+            >
+              Next →
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
@@ -214,43 +243,5 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         </span>
       </CheckboxWithLabel>
     </>
-  )
-}
-
-function PointLegendOther({
-  toggle,
-  items,
-  collapse
-}: {
-  toggle: () => void
-  items: [string, PointInfo][]
-  collapse: boolean
-}) {
-  return (
-    <ChevronButton
-      size={0.75}
-      className="group col-span-full flex items-center gap-2 hover:opacity-80"
-      open={!collapse}
-      title={collapse ? "Show more" : "Show less"}
-      onClick={toggle}
-    >
-      {collapse ? (
-        <>
-          <div className="ml-3 flex gap-2">
-            {items.slice(0, 14).map(([label, info]) => (
-              <LegendDot
-                key={label}
-                className="-ml-3 rotate-12 transition-transform duration-300 group-hover:-rotate-12"
-                dotColor={info.color}
-              />
-            ))}
-          </div>
-          {/* <span className="text-xs">+{items.length} more</span> */}
-          <span className="text-xs">Show {items.length.toLocaleString()} more</span>
-        </>
-      ) : (
-        <span className="text-xs">Show less</span>
-      )}
-    </ChevronButton>
   )
 }
