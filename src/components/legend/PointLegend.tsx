@@ -48,7 +48,10 @@ export class PointInfo {
   }
 }
 
-export type PointLegendData = Map<string, PointInfo>
+export type PointLegendData = {
+  entries: Map<string, PointInfo>
+  totalWeight: number
+}
 
 export function PointLegend() {
   const { searchValue } = useMetricSearchContext()
@@ -96,13 +99,16 @@ export function PointLegend() {
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 
-  const items = Array.from(metricCache.legend as PointLegendData).sort(([, info1], [, info2]) => {
+  const legendData = metricCache.legend as PointLegendData
+
+  const items = Array.from(legendData.entries).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
     if (info1.weight > info2.weight) return -1
     return 0
   })
 
-  const totalWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
+  const summedWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
+  const totalWeight = legendData.totalWeight
 
   const matchesSearch = (label: string) => label.toLowerCase().includes(searchValue.toLowerCase())
 
@@ -133,7 +139,8 @@ export function PointLegend() {
           ))}
       </div>
       <div className="flex flex-col gap-2">
-        <PointLegendDistBar items={items} totalWeight={totalWeight} />
+        {/* DISTBAR still uses summed weight of items, as it cannot distribute width when weight > 100% */}
+        <PointLegendDistBar items={items} totalWeight={summedWeight} />
       </div>
       <div className="flex flex-col gap-2">
         <PointLegendTable

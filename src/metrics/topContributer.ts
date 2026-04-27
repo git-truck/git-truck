@@ -6,6 +6,7 @@ import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 import { mdiPodiumGold } from "@mdi/js"
 import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { PercentageSlider } from "~/components/PercentageSlider"
+import { countLeafNodes } from "~/metrics/metricUtils"
 
 export const TopContributorMetric: CategoricalMetric = {
   name: "Top contributor",
@@ -53,7 +54,12 @@ export const TopContributorMetric: CategoricalMetric = {
   //For now we don't use _root for calculation
   metricFunctionFactory(data, root, { contributorColors, topContributorCutoff }) {
     return (blob: GitBlobObject, cache: MetricCache) => {
-      if (!cache.legend) cache.legend = new Map<string, PointInfo>() satisfies PointLegendData
+      if (!cache.legend) {
+        cache.legend = {
+          entries: new Map<string, PointInfo>(),
+          totalWeight: countLeafNodes(root)
+        } satisfies PointLegendData
+      }
       setTopContributorColor(
         contributorColors,
         blob,
@@ -80,10 +86,10 @@ function setTopContributorColor(
 
   // helper to bump multiple-contributors count
   const bumpMultiple = () => {
-    if (legend.has(MULTIPLE_CONTRIBUTORS)) {
-      legend.get(MULTIPLE_CONTRIBUTORS)?.add(1)
+    if (legend.entries.has(MULTIPLE_CONTRIBUTORS)) {
+      legend.entries.get(MULTIPLE_CONTRIBUTORS)?.add(1)
     } else {
-      legend.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
+      legend.entries.set(MULTIPLE_CONTRIBUTORS, new PointInfo(noEntryColor, 1))
     }
     cache.categoriesMap.set(blob.path, [{ category: MULTIPLE_CONTRIBUTORS, color: noEntryColor }])
   }
@@ -103,11 +109,11 @@ function setTopContributorColor(
     const color = contributorColors[topContributor.contributor] ?? noEntryColor
     cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
 
-    if (legend.has(topContributor.contributor)) {
-      legend.get(topContributor.contributor)?.add(1)
+    if (legend.entries.has(topContributor.contributor)) {
+      legend.entries.get(topContributor.contributor)?.add(1)
       return
     }
-    legend.set(topContributor.contributor, new PointInfo(color, 1))
+    legend.entries.set(topContributor.contributor, new PointInfo(color, 1))
     return
   }
 
@@ -121,9 +127,9 @@ function setTopContributorColor(
   const color = contributorColors[topContributor.contributor] ?? noEntryColor
   cache.categoriesMap.set(blob.path, [{ category: topContributor.contributor, color }])
 
-  if (legend.has(topContributor.contributor)) {
-    legend.get(topContributor.contributor)?.add(1)
+  if (legend.entries.has(topContributor.contributor)) {
+    legend.entries.get(topContributor.contributor)?.add(1)
     return
   }
-  legend.set(topContributor.contributor, new PointInfo(color, 1))
+  legend.entries.set(topContributor.contributor, new PointInfo(color, 1))
 }
