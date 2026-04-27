@@ -1,9 +1,4 @@
-import {
-  mdiFileOutline,
-  mdiFolderOutline,
-  mdiEyeOffOutline,
-  mdiSourceRepository
-} from "@mdi/js"
+import { mdiFileOutline, mdiFolderOutline, mdiEyeOffOutline, mdiSourceRepository } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
 import { useEffect, type ReactNode } from "react"
@@ -288,25 +283,21 @@ function InteractionButtons() {
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
-      {!isRoot ? (
-        <>
-          <Form
-            className="w-max"
-            method="post"
-            action={viewAction}
-            onSubmit={() => {
-              if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
-              setClickedObject(null)
-            }}
-          >
-            <input type="hidden" name="hide" value={clickedObject.path} />
-            <button className="btn" disabled={state !== "idle"} title="Hide this file">
-              <Icon path={mdiEyeOffOutline} />
-              Hide
-            </button>
-          </Form>
-        </>
-      ) : null}
+      <Form
+        className="w-max"
+        method="post"
+        action={viewAction}
+        onSubmit={() => {
+          if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
+          setClickedObject(null)
+        }}
+      >
+        <input type="hidden" name="hide" value={clickedObject.path} />
+        <button className="btn" disabled={state !== "idle" || isRoot} title="Hide this file">
+          <Icon path={mdiEyeOffOutline} />
+          Hide
+        </button>
+      </Form>
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
