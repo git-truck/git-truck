@@ -43,7 +43,7 @@ export const LastChangedMetric: Metric = {
                 getLastChangedIndex(groupings, data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate) +
                 1,
               textGenerator: (n) => groupings[n].text,
-              colorGenerator: (n) => groupings[n].color,
+              colorGenerator: (n) => groupings[groupings.length - 1 - n].color,
               offsetStepCalc: (blob) =>
                 getLastChangedIndex(
                   groupings,
