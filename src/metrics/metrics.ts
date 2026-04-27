@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, GitTreeObject, HexColor, Person, RepoData } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, GitObject, HexColor, Person, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import { type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
