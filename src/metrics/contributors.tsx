@@ -3,6 +3,7 @@ import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiAccountGroup } from "@mdi/js"
 import { PointInfo, PointLegend, type PointLegendData } from "~/components/legend/PointLegend"
 import { LegendDot } from "~/components/util"
+import { countLeafNodes } from "~/metrics/metricUtils"
 
 export const ContributorsMetric: CategoricalMetric = {
   name: "Contributors",
@@ -34,22 +35,29 @@ export const ContributorsMetric: CategoricalMetric = {
   metricFunctionFactory:
     (data, root, { contributorColors }) =>
     (blob, cache) => {
-      const legend: PointLegendData = (cache.legend as PointLegendData) ?? new Map<string, PointInfo>()
+      let legend: PointLegendData | undefined = cache.legend as PointLegendData | undefined
+
+      if (!legend) {
+        legend = {
+          entries: new Map<string, PointInfo>(),
+          totalWeight: countLeafNodes(root)
+        }
+      }
 
       const contributors = data.databaseInfo.contributorsForPath[blob.path] ?? []
       for (const { contributor } of contributors) {
         const color = contributorColors[contributor] ?? noEntryColor
-        if (legend.has(contributor)) {
-          legend.get(contributor)?.add(1)
+        if (legend.entries.has(contributor)) {
+          legend.entries.get(contributor)?.add(1)
         } else {
-          legend.set(contributor, new PointInfo(color, 1))
+          legend.entries.set(contributor, new PointInfo(color, 1))
         }
       }
       if (contributors.length === 0) {
-        if (!legend.has(UNKNOWN_CATEGORY)) {
-          legend.set(UNKNOWN_CATEGORY, new PointInfo(noEntryColor, 0))
+        if (!legend.entries.has(UNKNOWN_CATEGORY)) {
+          legend.entries.set(UNKNOWN_CATEGORY, new PointInfo(noEntryColor, 0))
         }
-        legend.get(UNKNOWN_CATEGORY)?.add(1)
+        legend.entries.get(UNKNOWN_CATEGORY)?.add(1)
       }
 
       const colors = contributors.map((c) => ({ category: c.contributor, color: contributorColors[c.contributor] }))
