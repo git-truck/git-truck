@@ -17,11 +17,13 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
-import { createMetricDataForNode, Metrics } from "~/metrics/metrics"
+import { createMetricDataForNode, Metrics, type MetricType } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObject } from "~/state/stores/clicked-object"
+import { Icon } from "~/components/Icon"
+import { mdiCheckboxIntermediate } from "@mdi/js"
 
-const ITEMS_PER_PAGE = 10
+const ITEMS_PER_PAGE = 8
 
 export class PointInfo {
   public readonly color: `#${string}`
@@ -114,14 +116,6 @@ export function PointLegend() {
 
   if (items.length === 0) return null
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(0, prev - 1))
-  }
-
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
-  }
-
   return (
     <div className="flex flex-col">
       <div
@@ -141,23 +135,22 @@ export function PointLegend() {
       <div className="flex flex-col gap-2">
         <PointLegendDistBar items={items} totalWeight={totalWeight} />
       </div>
-      <div className="mt-2 grid grid-cols-[min-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-4 gap-y-1">
-        <div className="contents text-xs font-bold">
-          <div />
-          <p>{Metrics[metricType].name}</p>
-          <p className="text-right"># Files</p>
-          <p className="text-right">% Files</p>
-          <div />
-        </div>
-        <span className="bg-border dark:bg-border-dark col-span-full my-1 h-0.5 w-full" />
-
-        {shownItems.map(([label, info]) => (
-          <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
-        ))}
+      <div className="flex flex-col gap-2">
+        <PointLegendTable
+          items={shownItems}
+          totalWeight={totalWeight}
+          metricType={metricType}
+          totalPages={totalPages}
+        />
 
         {totalPages > 1 ? (
-          <div className="col-span-full flex items-center justify-between gap-2 pt-2">
-            <button disabled={safePage === 0} className="btn text-xs" title="Previous page" onClick={handlePrevPage}>
+          <div className="border-border dark:border-border-dark flex items-center justify-between gap-2 border-t pt-2">
+            <button
+              disabled={safePage === 0}
+              className="btn text-xs"
+              title="Previous page"
+              onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+            >
               ← Prev
             </button>
             <span className="text-secondary-text text-xs">
@@ -167,13 +160,70 @@ export function PointLegend() {
               disabled={safePage === totalPages - 1}
               className="btn text-xs"
               title="Next page"
-              onClick={handleNextPage}
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
             >
               Next →
             </button>
           </div>
         ) : null}
       </div>
+    </div>
+  )
+}
+
+const GRID_COLS = "grid-cols-[min-content_4fr_max-content_max-content_max-content]"
+
+interface PointLegendTableProps {
+  items: [string, PointInfo][]
+  totalWeight: number
+  metricType: MetricType
+  totalPages: number
+}
+
+function PointLegendHeader({ metricType }: { metricType: MetricType }) {
+  return (
+    <>
+      <div className="contents text-xs font-bold">
+        <LegendDot dotColor={""} className="opacity-0" />
+        <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
+        <p className="text-right"># Files</p>
+        <p className="text-right">% Files</p>
+        <Icon path={mdiCheckboxIntermediate} size={1} className="justify-self-end opacity-0" />
+      </div>
+      <span className="bg-border dark:bg-border-dark col-span-full my-1 h-0.5 w-full" />
+    </>
+  )
+}
+
+function PointLegendTable({ items, totalWeight, metricType, totalPages }: PointLegendTableProps) {
+  const itemHeight = 26
+  const headerHeight = 48
+  // Keep max height if pagination exists, otherwise scale with actual items
+  const maxItemsToShow = totalPages > 1 ? ITEMS_PER_PAGE : items.length
+  const minHeight = headerHeight + itemHeight * maxItemsToShow + 2
+
+  return (
+    <div style={{ minHeight: `${minHeight}px` }}>
+      <div className={cn(`grid ${GRID_COLS} items-center justify-between gap-x-4 gap-y-1`)}>
+        <PointLegendHeader metricType={metricType} />
+      </div>
+
+      {items.length === 0 ? (
+        <div
+          className="text-secondary-text flex items-center justify-center text-xs"
+          style={{
+            minHeight: `${minHeight - headerHeight}px`
+          }}
+        >
+          No items matched your search
+        </div>
+      ) : (
+        <div className={cn(`grid ${GRID_COLS} items-center justify-between gap-x-4 gap-y-1`)}>
+          {items.map(([label, info]) => (
+            <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -196,11 +246,13 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   const dotColor = info.color
 
   return (
-    <>
+    <div className="group/pointentry contents">
       <CheckboxWithLabel
         key={String(labelIsSelected)}
         className="contents"
-        checkBoxClassName=" ml-auto"
+        checkBoxClassName={cn("ml-auto transition-opacity duration-50 group-hover/pointentry:opacity-100", {
+          "opacity-15": !noSelectedCategories && !labelIsSelected
+        })}
         intermediate={noSelectedCategories}
         checked={labelIsSelected}
         onChange={(evt) => {
@@ -212,12 +264,26 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         }}
       >
         {isAuthorRelatedLegend ? (
-          <LegendDot key={dotColor} dotColor={dotColor} contributorColorToChange={label} />
+          <LegendDot
+            key={dotColor}
+            dotColor={dotColor}
+            contributorColorToChange={label}
+            className={cn("transition-opacity duration-50 group-hover/pointentry:opacity-100", {
+              "opacity-15": !noSelectedCategories && !labelIsSelected
+            })}
+          />
         ) : (
-          <LegendDot key={dotColor} dotColor={dotColor} />
+          <LegendDot
+            key={dotColor}
+            dotColor={dotColor}
+            className={cn("transition-opacity duration-50 group-hover/pointentry:opacity-100", {
+              "opacity-15": !noSelectedCategories && !labelIsSelected
+            })}
+          />
         )}
         <span
-          className={cn("truncate font-bold", {
+          className={cn("truncate font-bold transition-opacity duration-50 group-hover/pointentry:opacity-100", {
+            "opacity-15": !noSelectedCategories && !labelIsSelected,
             "text-blue-primary": labelIsSelected,
             "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
           })}
@@ -233,8 +299,24 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         >
           {label}
         </span>
-        <span className="text-right text-xs font-normal">{info.weight.toLocaleString()}</span>
-        <span className="text-right text-xs font-normal">
+        <span
+          className={cn(
+            "text-right text-xs font-normal transition-opacity duration-50 group-hover/pointentry:opacity-100",
+            {
+              "opacity-15": !noSelectedCategories && !labelIsSelected
+            }
+          )}
+        >
+          {info.weight.toLocaleString()}
+        </span>
+        <span
+          className={cn(
+            "text-right text-xs font-normal transition-opacity duration-50 group-hover/pointentry:opacity-100",
+            {
+              "opacity-15": !noSelectedCategories && !labelIsSelected
+            }
+          )}
+        >
           {((info.weight / totalWeight) * 100).toLocaleString(undefined, {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1
@@ -242,6 +324,6 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           %
         </span>
       </CheckboxWithLabel>
-    </>
+    </div>
   )
 }
