@@ -2,7 +2,7 @@ import { href, useFetcher } from "react-router"
 import clsx from "clsx"
 import type React from "react"
 import { useEffect, useMemo } from "react"
-import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
+import type { AnalysisStatus } from "~/server/Analysis"
 import truck from "~/assets/truck.png"
 import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
@@ -11,7 +11,7 @@ import { useQueryState } from "nuqs"
 
 export type ProgressData = {
   progress: number
-  analyzationStatus: AnalyzationStatus
+  analysisStatus: AnalysisStatus
   progressRevision?: number
 }
 
@@ -23,7 +23,7 @@ export function LoadingIndicator({
   fetchProgress = true,
   loadingText: LoadingText
 }: {
-  loadingText?: React.FC<{ status: AnalyzationStatus }>
+  loadingText?: React.FC<{ status: AnalysisStatus }>
   showProgress?: boolean
   fetchProgress?: boolean
   className?: string
@@ -40,25 +40,25 @@ export function LoadingIndicator({
       !path ||
       !branch ||
       state !== "idle" ||
-      data?.analyzationStatus === "Aborted" ||
-      data?.analyzationStatus === "CommitHistoryProcessed"
+      data?.analysisStatus === "Aborted" ||
+      data?.analysisStatus === "CommitHistoryProcessed"
     )
       return
 
     const timeoutId = window.setTimeout(() => {
       const params = new URLSearchParams(viewSerializer({ path, branch }).replace(/^\?/, ""))
       params.set("lastSeenRevision", String(data?.progressRevision ?? -1))
-      load(`${href("/view/progress")}?${params.toString()}`)
+      load(`${href("/api/progress")}?${params.toString()}`)
     }, PROGRESS_POLL_INTERVAL_MS)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [branch, fetchProgress, state, path, showProgress, data?.progressRevision, load, data?.analyzationStatus])
+  }, [branch, fetchProgress, state, path, showProgress, data?.progressRevision, load, data?.analysisStatus])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
     if (!data) return ["Loading truck...", 0]
-    const { progress, analyzationStatus } = data
+    const { progress, analysisStatus: analyzationStatus } = data
 
     switch (analyzationStatus) {
       case "Initialized":
@@ -81,7 +81,7 @@ export function LoadingIndicator({
           className="pixelated aspect-square w-full"
         />
         {showProgress ? <div className="text-center text-3xl font-bold">{progressText}</div> : null}
-        {showProgress && data?.analyzationStatus !== "Aborted" ? (
+        {showProgress && data?.analysisStatus !== "Aborted" ? (
           <div className="h-6 w-3/4 self-center rounded-2xl bg-gray-300">
             <div
               className={cn(
@@ -96,7 +96,7 @@ export function LoadingIndicator({
         ) : null}
         {LoadingText ? (
           <div className="text-center">
-            <LoadingText status={data?.analyzationStatus ?? "Initialized"} />
+            <LoadingText status={data?.analysisStatus ?? "Initialized"} />
           </div>
         ) : null}
       </div>

@@ -5,8 +5,8 @@ import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
 import { createPortal } from "react-dom"
-import { GitCaller } from "~/analyzer/git-caller.server"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import { GitService } from "~/server/git-service"
+import { AnalysisManager } from "~/server/AnalysisManager"
 import type { DatabaseInfo, RepoData } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
 import {
@@ -25,7 +25,7 @@ import { Providers } from "~/components/Providers"
 import { SearchCard } from "~/components/SearchCard"
 import Timeline from "~/components/TimeSlider"
 import { cn } from "~/styling"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 import type { Route } from "./+types/view"
 import { RefreshButton } from "~/components/buttons/RefreshButton"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
@@ -74,7 +74,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   let { path, zoomPath, branch } = viewSearchParams
 
   // Redirect to browse if not a git repo
-  if (path && !(await GitCaller.isValidGitRepo(path))) {
+  if (path && !(await GitService.isValidGitRepo(path))) {
     const url = href("/browse") + browseSerializer({ path })
     log.warn(`Path ${path} is not a git repository, redirecting to ${url}`)
     throw redirect(url)
@@ -85,7 +85,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     const redirectUrl = new URL(request.url)
 
     path ??= argsRepositoryPath
-    branch ??= await GitCaller._getRepositoryHead(path)
+    branch ??= await GitService._getRepositoryHead(path)
     zoomPath ??= getRepoNameFromPath(path)
 
     redirectUrl.search = viewSerializer({
@@ -114,7 +114,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   invariant(repositoryPath, "path is required")
   invariant(branch, "branch is required")
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath, branch })
+  const instance = await AnalysisManager.getInstance({ repositoryPath, branch })
   const formData = await request.formData()
   const refresh = formData.get("refresh")
   const groupedContributors = formData.get("groupedContributors")
@@ -193,7 +193,10 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
   if (typeof contributorName === "string") {
     instance.prevInvokeReason = "contributorColor"
-    await InstanceManager.getOrCreateMetadataDB().addContributorColor(contributorName, contributorColor as string)
+    await AnalyzationInstanceManager.getOrCreateMetadataDB().addContributorColor(
+      contributorName,
+      contributorColor as string
+    )
     return null
   }
 
@@ -201,12 +204,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
 }
 
 async function analyze({ path, branch }: { path: string; branch: string }) {
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath: path, branch: branch })
+  const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
 
   const repo = path.split("/").pop()!
-  const isRepo = await GitCaller.isValidGitRepo(path)
+  const isRepo = await GitService.isValidGitRepo(path)
   if (!isRepo) throw new Error(`No repo found at ${path}`)
-  const isValidRevision = await GitCaller.isValidRevision(branch, path)
+  const isValidRevision = await GitService.isValidRevision(branch, path)
   if (!isValidRevision) {
     throw new Error(
       `Invalid revision of repo ${repo}: ${branch}. If ${branch} is a remote branch, make sure it is pulled locally`
@@ -223,7 +226,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const timerange = await instance.db.getOverallTimeRange()
   const selectedRange = instance.db.selectedRange
 
-  const repositoryMetadata = await GitCaller.getRepoMetadata(path)
+  const repositoryMetadata = await GitService.getRepoMetadata(path)
 
   if (!repositoryMetadata) {
     throw Error("Error loading repo")
@@ -290,7 +293,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
-      : await InstanceManager.getOrCreateMetadataDB().getLastRun({
+      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getLastRun({
           repositoryPath: instance.repositoryPath,
           branch: instance.branch
         })
@@ -298,7 +301,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const contributorColors =
     prevRes && !shouldUpdate(reason, "contributorColors")
       ? prevRes.contributorColors
-      : await InstanceManager.getOrCreateMetadataDB().getContributorColors()
+      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getContributorColors()
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
@@ -320,7 +323,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const analyzedRepos =
     prevRes && !shouldUpdate(reason, "analyzedRepos")
       ? prevRes.analyzedRepos
-      : await InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getCompletedRepos()
   log.timeEnd("dbQueries")
 
   const databaseInfo: DatabaseInfo = {

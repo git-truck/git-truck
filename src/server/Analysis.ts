@@ -1,6 +1,6 @@
-import DB from "~/analyzer/DB.server.ts"
-import { getCoAuthors } from "~/analyzer/coauthors.server.ts"
-import { GitCaller } from "~/analyzer/git-caller.server.ts"
+import DB from "~/server/DB"
+import { getCoAuthors } from "~/server/coauthors"
+import { GitService } from "~/server/git-service"
 import type {
   GitBlobObject,
   GitTreeObject,
@@ -13,20 +13,20 @@ import type {
   FullCommitDTO,
   RepoData
 } from "~/shared/model.ts"
-import { log } from "~/analyzer/log.server.ts"
+import { log } from "~/server/log"
 import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
-import InstanceManager from "~/analyzer/InstanceManager.server.ts"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
-export type AnalyzationStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
+export type AnalysisStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
-export default class ServerInstance {
-  public status: AnalyzationStatus = "Initialized"
-  public gitCaller: GitCaller
+export class Analysis {
+  public status: AnalysisStatus = "Initialized"
+  public gitService: GitService
   public db: DB
   public progress = [0]
   public totalCommitCount = 0
@@ -41,19 +41,19 @@ export default class ServerInstance {
   public branch: string
   constructor({
     db,
-    gitCaller,
+    gitService,
     repositoryPath,
     branch
   }: {
     db: DB
-    gitCaller: GitCaller
+    gitService: GitService
     repositoryPath: string
     branch: string
   }) {
     this.repositoryPath = repositoryPath
     this.repositoryName = getRepoNameFromPath(repositoryPath)
     this.branch = branch
-    this.gitCaller = gitCaller
+    this.gitService = gitService
     this.db = db
   }
 
@@ -62,7 +62,7 @@ export default class ServerInstance {
     this.progressRevision++
   }
 
-  public abort(): AnalyzationStatus {
+  public abort(): AnalysisStatus {
     const status = this.status
     this.status = "Aborted"
     this.progressRevision++
@@ -75,7 +75,7 @@ export default class ServerInstance {
     }
   }
 
-  private setAnalyzationStatus(status: AnalyzationStatus) {
+  private setAnalyzationStatus(status: AnalysisStatus) {
     if (this.status === "Aborted") return
     this.status = status
     this.progressRevision++
@@ -106,7 +106,7 @@ export default class ServerInstance {
   public async analyzeTree() {
     this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
-    const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
+    const rawContent = await this.gitService.lsTree(this.fileTreeAsOf)
     const lsTreeEntries: RawGitObject[] = []
     const matches = rawContent.matchAll(treeRegex)
     let fileCount = 0
@@ -341,7 +341,7 @@ export default class ServerInstance {
     index: number
   ) {
     this.throwIfAborted()
-    const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this, index)
+    const gitLogResult = await this.gitService.gitLogSimple(start, end - start, this, index)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
   }
@@ -441,15 +441,15 @@ export default class ServerInstance {
   public async loadRepoData() {
     this.setAnalyzationStatus("Initialized")
 
-    let commitCount = await this.gitCaller.getCommitCount()
-    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
+    let commitCount = await this.gitService.getCommitCount()
+    const priorRun = await MetadataDB.getInstance().getLastRun({
       repositoryPath: this.repositoryPath,
       branch: this.branch
     })
     if (!(await this.db.commitTableEmpty())) {
       if (priorRun) {
         const latestCommit = await this.db.getLatestCommitHash()
-        commitCount = await this.gitCaller.commitCountSinceCommit(latestCommit, this.branch)
+        commitCount = await this.gitService.commitCountSinceCommit(latestCommit, this.branch)
         log.debug(`Repo has been analyzed previously, only analyzing ${commitCount} commits`)
       } else {
         log.warn("Incomplete database found. Clearing and running complete analysis.")
@@ -458,12 +458,12 @@ export default class ServerInstance {
     }
 
     if (commitCount < 1) return
-    const [quotePathDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("core.quotepath"))
-    await promiseHelper(this.gitCaller.setGitSetting("core.quotePath", "off"))
-    const [renamesDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("diff.renames"))
-    await promiseHelper(this.gitCaller.setGitSetting("diff.renames", "true"))
-    const [renameLimitDefaultValue] = await promiseHelper(this.gitCaller.getDefaultGitSettingValue("diff.renameLimit"))
-    await promiseHelper(this.gitCaller.setGitSetting("diff.renameLimit", "1000000"))
+    const [quotePathDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("core.quotepath"))
+    await promiseHelper(this.gitService.setGitSetting("core.quotePath", "off"))
+    const [renamesDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("diff.renames"))
+    await promiseHelper(this.gitService.setGitSetting("diff.renames", "true"))
+    const [renameLimitDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("diff.renameLimit"))
+    await promiseHelper(this.gitService.setGitSetting("diff.renameLimit", "1000000"))
 
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
@@ -483,16 +483,16 @@ export default class ServerInstance {
     await this.db.createIndexes()
     await this.db.checkpoint()
     if (quotePathDefaultValue) {
-      await promiseHelper(this.gitCaller.resetGitSetting("core.quotepath", quotePathDefaultValue))
+      await promiseHelper(this.gitService.resetGitSetting("core.quotepath", quotePathDefaultValue))
     }
     if (renamesDefaultValue) {
-      await promiseHelper(this.gitCaller.resetGitSetting("diff.renames", renamesDefaultValue))
+      await promiseHelper(this.gitService.resetGitSetting("diff.renames", renamesDefaultValue))
     }
     if (renameLimitDefaultValue) {
-      await promiseHelper(this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
+      await promiseHelper(this.gitService.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
     }
 
-    await InstanceManager.getOrCreateMetadataDB().setCompletion(
+    await AnalyzationInstanceManager.getOrCreateMetadataDB().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )

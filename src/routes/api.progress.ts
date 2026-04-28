@@ -1,8 +1,8 @@
 import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
-import type { Route } from "./+types/view.progress"
+import type { Route } from "./+types/api.progress"
 import { loadViewSearchParams } from "~/routes/view"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import { AnalysisManager } from "~/server/AnalysisManager"
 import { parseAsInteger } from "nuqs"
 import { createLoader } from "nuqs/server"
 
@@ -22,16 +22,16 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   const { lastSeenRevision } = loadProgressSearchParams(request)
 
-  const instanceIsAborted = InstanceManager.getInstanceIsAborted({ repositoryPath, branch })
+  const instanceIsAborted = AnalysisManager.getInstanceIsAborted({ repositoryPath, branch })
   if (instanceIsAborted) {
     return {
       progress: 0,
-      analyzationStatus: "Aborted" as const,
+      analysisStatus: "Aborted" as const,
       progressRevision: -1
     } satisfies ProgressData
   }
 
-  const progressData = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+  const progressData = AnalysisManager.getInstanceProgress({ repositoryPath, branch })
   if (!progressData) {
     return
   }
@@ -40,7 +40,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   if (progressData.progressRevision > lastSeenRevision) {
     return {
       progress: progressData.progressPercentage,
-      analyzationStatus: progressData.status,
+      analysisStatus: progressData.status,
       progressRevision: progressData.progressRevision
     } satisfies ProgressData
   }
@@ -53,21 +53,21 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
       return
     }
 
-    const updatedProgress = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+    const updatedProgress = AnalysisManager.getInstanceProgress({ repositoryPath, branch })
     if (!updatedProgress) {
       return
     }
     if (updatedProgress.progressRevision > lastSeenRevision) {
       return {
         progress: updatedProgress.progressPercentage,
-        analyzationStatus: updatedProgress.status,
+        analysisStatus: updatedProgress.status,
         progressRevision: updatedProgress.progressRevision
       } satisfies ProgressData
     }
   }
 
   // Timeout reached, return current state
-  const finalProgress = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+  const finalProgress = AnalysisManager.getInstanceProgress({ repositoryPath, branch })
 
   if (!finalProgress) {
     return
@@ -75,7 +75,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   return {
     progress: finalProgress.progressPercentage,
-    analyzationStatus: finalProgress.status,
+    analysisStatus: finalProgress.status,
     progressRevision: finalProgress.progressRevision
   } satisfies ProgressData
 }

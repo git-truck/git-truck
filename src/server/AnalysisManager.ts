@@ -7,11 +7,9 @@ import MetadataDB from "~/server/MetadataDB"
 import { Analysis, type AnalysisStatus } from "~/server/Analysis"
 import pkg from "../../package.json" with { type: "json" }
 import os from "os"
-import { createHash } from "crypto"
 import { GitService } from "~/server/git-service"
 import DB from "~/server/DB"
 import fs from "fs/promises"
-import { DisposableMutex } from "~/server/DisposableMutex"
 
 export class AnalysisManager {
   private static instancesSingleton: Map<string, Map<string, Analysis>> = new Map() // repo -> branch -> instance
@@ -40,7 +38,6 @@ export class AnalysisManager {
       }
       return true
     }
-
     return false
   }
 

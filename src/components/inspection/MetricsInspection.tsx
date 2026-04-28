@@ -19,7 +19,7 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { viewSerializer } from "~/routes/view"
-import type { loader } from "~/routes/view.api.inspect.metrics"
+import type { loader } from "~/routes/api.inspect"
 import { dateFormatRelative, isRepositoryRoot, last, resolveParentFolder } from "~/shared/util"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
@@ -52,7 +52,7 @@ export function MetricsInspection() {
       return
     }
     fetcher.load(
-      href("/view/api/inspect/metrics") +
+      href("/api/inspect") +
         viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path, branch })
     )
     return () => {

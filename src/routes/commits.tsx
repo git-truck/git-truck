@@ -1,5 +1,5 @@
 import { invariant } from "~/shared/util"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import { AnalysisManager } from "~/server/AnalysisManager"
 import type { Route } from "./+types/commits"
 import { loadViewSearchParams } from "~/routes/view"
 import { parseAsInteger } from "nuqs"
@@ -19,11 +19,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   invariant(path, "path is required")
   invariant(count, "count is required")
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath: path, branch })
+  const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch })
 
   const commitHashes = await instance.db.getCommitHashes(path, count)
   if (commitHashes.length < 1) return []
-  const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
+  const gitLogResult = await instance.gitService.gitLogSpecificCommits(commitHashes)
   const fullCommits = await instance.getFullCommits(gitLogResult)
   const unions = await instance.db.getRawUnions()
 

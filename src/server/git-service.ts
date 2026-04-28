@@ -1,4 +1,4 @@
-import { log } from "~/analyzer/log.server.ts"
+import { log } from "~/server/log"
 import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "~/shared/util.server.ts"
 import { promiseHelper, branchCompare, semverCompare } from "~/shared/util.ts"
 
@@ -7,11 +7,11 @@ import { promises as fs, existsSync, readFileSync } from "node:fs"
 import type { GitRefs, Repository } from "~/shared/model.ts"
 
 import os from "node:os"
-import ServerInstance from "~/analyzer/ServerInstance.server.ts"
+import { Analysis } from "~/server/Analysis"
 import { inflateSync } from "node:zlib"
 import { readFile } from "node:fs/promises"
 
-export class GitCaller {
+export class GitService {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
 
@@ -31,13 +31,13 @@ export class GitCaller {
   static async isValidGitRepo(path: string): Promise<boolean> {
     const hasGitFolder = this.hasGitDirectory(path)
     if (!hasGitFolder) return false
-    const [, findBranchHeadError] = await promiseHelper(GitCaller.findBranchHead({ repositoryPath: path }))
+    const [, findBranchHeadError] = await promiseHelper(GitService.findBranchHead({ repositoryPath: path }))
     return Boolean(hasGitFolder && !findBranchHeadError)
   }
 
   static async isValidRevision(revision: string, path: string) {
     const gitFolder = join(path, ".git")
-    const [, findBranchHeadError] = await promiseHelper(GitCaller._revParse(gitFolder, revision))
+    const [, findBranchHeadError] = await promiseHelper(GitService._revParse(gitFolder, revision))
     return !findBranchHeadError
   }
 
@@ -49,7 +49,7 @@ export class GitCaller {
     branch?: string
   }): Promise<string> {
     if (!branch) {
-      const [foundBranch, getBranchError] = await promiseHelper(GitCaller._getRepositoryHead(repositoryPath))
+      const [foundBranch, getBranchError] = await promiseHelper(GitService._getRepositoryHead(repositoryPath))
       if (getBranchError) {
         throw getBranchError
       }
@@ -62,7 +62,7 @@ export class GitCaller {
     }
     // Find file containing the branch head
 
-    const branchHead = await GitCaller._revParse(gitFolder, branch)
+    const branchHead = await GitService._revParse(gitFolder, branch)
     log.debug(`${branch} -> [commit] ${branchHead}`)
 
     return branch
@@ -72,7 +72,7 @@ export class GitCaller {
   }
 
   async getRepositoryHead() {
-    return await GitCaller._getRepositoryHead(this.repositoryPath)
+    return await GitService._getRepositoryHead(this.repositoryPath)
   }
 
   async gitLogSpecificCommits(commits: string[]) {
@@ -97,7 +97,7 @@ export class GitCaller {
   }
 
   async lsTree(hash: string) {
-    return await GitCaller._lsTree(this.repositoryPath, hash)
+    return await GitService._lsTree(this.repositoryPath, hash)
   }
 
   static async _lsTree(repo: string, hash: string) {
@@ -106,7 +106,7 @@ export class GitCaller {
   }
 
   async revParse(ref: string) {
-    return await GitCaller._revParse(this.repositoryPath, ref)
+    return await GitService._revParse(this.repositoryPath, ref)
   }
 
   static async _revParse(dir: string, ref: string) {
@@ -116,7 +116,7 @@ export class GitCaller {
   static async getRepoMetadata(repositoryPath: string): Promise<Repository | null> {
     const repositoryName = getRepoNameFromPath(repositoryPath)
     const parentDir = getBaseDirFromPath(repositoryPath)
-    const lastChanged = await GitCaller.getLastChanged(repositoryPath)
+    const lastChanged = await GitService.getLastChanged(repositoryPath)
 
     if (!lastChanged) {
       return {
@@ -131,9 +131,9 @@ export class GitCaller {
       }
     }
 
-    const refs = GitCaller.parseRefs(await GitCaller._getRefs(repositoryPath))
+    const refs = GitService.parseRefs(await GitService._getRefs(repositoryPath))
 
-    const [branch, error] = await promiseHelper(GitCaller.findBranchHead({ repositoryPath: repositoryPath }))
+    const [branch, error] = await promiseHelper(GitService.findBranchHead({ repositoryPath: repositoryPath }))
     if (error) {
       return {
         status: "Error",
@@ -160,21 +160,21 @@ export class GitCaller {
   }
   public static async getLastChanged(repoPath: string): Promise<number | null> {
     // Fast path: read HEAD file
-    const head = await GitCaller.readFileSafe(join(repoPath, ".git", "HEAD"))
+    const head = await GitService.readFileSafe(join(repoPath, ".git", "HEAD"))
     if (!head) return null
 
     const ref: string = head.trim()
 
     // Detached HEAD? Already a hash
     if (!ref.startsWith("ref:")) {
-      const timestamp = GitCaller.readCommitTimestamp(repoPath, ref)
+      const timestamp = GitService.readCommitTimestamp(repoPath, ref)
       if (timestamp !== null) return timestamp
     } else {
       // Normal branch
       const refPath = join(repoPath, ".git", ref.slice(5).trim())
-      const hash = await GitCaller.readFileSafe(refPath)
+      const hash = await GitService.readFileSafe(refPath)
       if (hash) {
-        const timestamp = GitCaller.readCommitTimestamp(repoPath, hash.trim())
+        const timestamp = GitService.readCommitTimestamp(repoPath, hash.trim())
         if (timestamp !== null) return timestamp
       }
     }
@@ -267,7 +267,7 @@ export class GitCaller {
     return result.trim()
   }
 
-  async gitLogSimple(skip: number, count: number, instance: ServerInstance, index: number) {
+  async gitLogSimple(skip: number, count: number, instance: Analysis, index: number) {
     const args = [
       "log",
       `--skip=${skip}`,
@@ -293,7 +293,7 @@ export class GitCaller {
   }
 
   async getRefs(): Promise<string> {
-    return await GitCaller._getRefs(this.repositoryPath)
+    return await GitService._getRefs(this.repositoryPath)
   }
 
   static async _getRefs(repo: string): Promise<string> {
