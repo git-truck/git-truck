@@ -1,4 +1,4 @@
-import { log } from "~/analyzer/log.server.ts"
+import { log } from "~/server/log"
 import { getBaseDirFromPath, getRepoNameFromPath, runProcess } from "~/shared/util.server.ts"
 import { promiseHelper, branchCompare, semverCompare } from "~/shared/util.ts"
 
@@ -7,7 +7,7 @@ import { promises as fs, existsSync, readFileSync } from "node:fs"
 import type { AnalyzerData, GitRefs, Repository } from "~/shared/model.ts"
 
 import os from "node:os"
-import ServerInstance from "~/analyzer/ServerInstance.server.ts"
+import AnalyzationInstance from "~/server/AnalyzationInstance"
 import { inflateSync } from "node:zlib"
 import { readFile } from "node:fs/promises"
 
@@ -267,7 +267,7 @@ export class GitCaller {
     return result.trim()
   }
 
-  async gitLogSimple(skip: number, count: number, instance: ServerInstance, index: number) {
+  async gitLogSimple(skip: number, count: number, instance: AnalyzationInstance, index: number) {
     const args = [
       "log",
       `--skip=${skip}`,

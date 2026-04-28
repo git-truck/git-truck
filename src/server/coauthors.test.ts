@@ -1,5 +1,5 @@
 import { it, expect, describe } from "vitest"
-import { getCoAuthors } from "~/analyzer/coauthors.server"
+import { getCoAuthors } from "~/server/coauthors"
 import type { Person } from "~/shared/model"
 
 describe("getCoAuthors", () => {

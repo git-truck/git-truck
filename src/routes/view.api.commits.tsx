@@ -1,7 +1,7 @@
 import { loadViewSearchParams } from "~/routes/view"
 import { invariant } from "~/shared/util"
 import type { Route } from "./+types/view.api.commits"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request)
@@ -13,7 +13,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const parsedCount = rawCount ? Number(rawCount) : Number.NaN
   const count = Number.isFinite(parsedCount) && parsedCount > 0 ? Math.floor(parsedCount) : 10
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath, branch: branch })
+  const instance = await AnalyzationInstanceManager.getOrCreateInstance({ repositoryPath, branch: branch })
 
   return {
     objectPath,

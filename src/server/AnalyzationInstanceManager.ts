@@ -2,17 +2,17 @@ import { DuckDBConnection, DuckDBInstance } from "@duckdb/node-api"
 import { existsSync } from "fs"
 import { dirname, resolve } from "path"
 import { diff } from "semver"
-import { log } from "~/analyzer/log.server"
-import MetadataDB from "~/analyzer/MetadataDB.server.ts"
-import ServerInstance, { type AnalyzationStatus } from "~/analyzer/ServerInstance.server.ts"
+import { log } from "~/server/log"
+import MetadataDB from "~/server/MetadataDB"
+import AnalyzationInstance, { type AnalyzationStatus } from "~/server/AnalyzationInstance"
 import pkg from "../../package.json" with { type: "json" }
 import os from "os"
-import { GitCaller } from "~/analyzer/git-caller.server"
-import DB from "~/analyzer/DB.server"
+import { GitCaller } from "~/server/git-service"
+import DB from "~/server/DB"
 import fs from "fs/promises"
 
-export default class InstanceManager {
-  private static instances: Map<string, Map<string, ServerInstance>> = new Map() // repo -> branch -> instance
+export default class AnalyzationInstanceManager {
+  private static instancesSingleton: Map<string, Map<string, AnalyzationInstance>> = new Map() // repo -> branch -> instance
   public static metadataDB: MetadataDB
 
   public static getOrCreateMetadataDB() {
@@ -24,12 +24,12 @@ export default class InstanceManager {
    * Returns a boolean whether the instance is aborted
    */
   public static getInstanceIsAborted({ repositoryPath, branch }: { repositoryPath: string; branch: string }): boolean {
-    const instance = this.instances.get(repositoryPath)?.get(branch)
+    const instance = this.instancesSingleton.get(repositoryPath)?.get(branch)
     return instance ? instance.status === "Aborted" : false
   }
 
   public static async abortInstance({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
-    const instance = this.instances.get(repositoryPath)?.get(branch)
+    const instance = this.instancesSingleton.get(repositoryPath)?.get(branch)
     if (instance) {
       const status = instance.abort()
       await this.closeInstance({ repositoryPath, branch })
@@ -55,7 +55,7 @@ export default class InstanceManager {
     progressPercentage: number
     progressRevision: number
   } | null {
-    const instance = this.instances.get(repositoryPath)?.get(branch)
+    const instance = this.instancesSingleton.get(repositoryPath)?.get(branch)
 
     if (!instance) {
       return null
@@ -82,9 +82,9 @@ export default class InstanceManager {
   }: {
     repositoryPath: string
     branch: string
-  }): Promise<ServerInstance> {
-    if (!this.instances) this.instances = new Map()
-    const existing = this.instances.get(repositoryPath)?.get(branch)
+  }): Promise<AnalyzationInstance> {
+    if (!this.instancesSingleton) this.instancesSingleton = new Map()
+    const existing = this.instancesSingleton.get(repositoryPath)?.get(branch)
 
     if (existing && existing.status !== "Aborted") {
       return existing
@@ -95,43 +95,43 @@ export default class InstanceManager {
       branch
     })
 
-    const newInstance = new ServerInstance({
+    const newInstance = new AnalyzationInstance({
       db,
       gitCaller: new GitCaller({ repositoryPath, branch }),
       repositoryPath,
       branch
     })
 
-    const existingRepo = this.instances.get(repositoryPath)
+    const existingRepo = this.instancesSingleton.get(repositoryPath)
     if (existingRepo) {
       existingRepo.set(branch, newInstance)
     } else {
-      this.instances.set(repositoryPath, new Map([[branch, newInstance]]))
+      this.instancesSingleton.set(repositoryPath, new Map([[branch, newInstance]]))
     }
 
     return newInstance
   }
 
   public static async closeInstance({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
-    const instance = this.instances.get(repositoryPath)?.get(branch)
+    const instance = this.instancesSingleton.get(repositoryPath)?.get(branch)
     if (instance) {
-      this.instances.get(repositoryPath)?.delete(branch)
-      if (this.instances.get(repositoryPath)?.size === 0) {
-        this.instances.delete(repositoryPath)
+      this.instancesSingleton.get(repositoryPath)?.delete(branch)
+      if (this.instancesSingleton.get(repositoryPath)?.size === 0) {
+        this.instancesSingleton.delete(repositoryPath)
       }
       await instance.db.close()
     }
   }
 
   public static async closeAllDBInstances() {
-    const promises = Array.from(this.instances.values()).flatMap((repoInstance) =>
+    const promises = Array.from(this.instancesSingleton.values()).flatMap((repoInstance) =>
       Array.from(repoInstance.values()).flatMap((branchInstance) => {
         branchInstance.abort()
         return branchInstance.db.close()
       })
     )
     await Promise.all(promises)
-    this.instances = new Map()
+    this.instancesSingleton = new Map()
   }
 
   public static getDBPath({ repositoryPath, branch }: { repositoryPath: string; branch: string }): string {

@@ -2,7 +2,7 @@ import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/view.progress"
 import { loadViewSearchParams } from "~/routes/view"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import { parseAsInteger } from "nuqs"
 import { createLoader } from "nuqs/server"
 
@@ -22,7 +22,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   const { lastSeenRevision } = loadProgressSearchParams(request)
 
-  const instanceIsAborted = InstanceManager.getInstanceIsAborted({ repositoryPath, branch })
+  const instanceIsAborted = AnalyzationInstanceManager.getInstanceIsAborted({ repositoryPath, branch })
   if (instanceIsAborted) {
     return {
       progress: 0,
@@ -31,7 +31,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     } satisfies ProgressData
   }
 
-  const progressData = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+  const progressData = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
   if (!progressData) {
     return
   }
@@ -53,7 +53,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
       return
     }
 
-    const updatedProgress = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+    const updatedProgress = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
     if (!updatedProgress) {
       return
     }
@@ -67,7 +67,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   }
 
   // Timeout reached, return current state
-  const finalProgress = InstanceManager.getInstanceProgress({ repositoryPath, branch })
+  const finalProgress = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
 
   if (!finalProgress) {
     return

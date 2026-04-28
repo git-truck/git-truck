@@ -1,7 +1,7 @@
 import { mdiDeleteForever } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { href, redirect, useFetcher, useLocation } from "react-router"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import type { Route } from "./+types/clear-cache"
 import { cn } from "~/styling"
 import { versionContext } from "~/root"
@@ -15,8 +15,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
   if (!redirectPath) {
     throw new Error("Missing redirect path")
   }
-  await InstanceManager.closeAllDBInstances()
-  await InstanceManager.clearAllCaches()
+  await AnalyzationInstanceManager.closeAllDBInstances()
+  await AnalyzationInstanceManager.clearAllCaches()
   throw redirect(redirectPath)
 }
 

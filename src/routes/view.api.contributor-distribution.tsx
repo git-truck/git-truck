@@ -1,7 +1,7 @@
 import { invariant } from "~/shared/util"
 import { loadViewSearchParams } from "~/routes/view"
 import type { Route } from "./+types/view.api.contributor-distribution"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { path, branch, objectPath, objectType } = loadViewSearchParams(request)
@@ -9,7 +9,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   invariant(branch, "branch is required")
   invariant(objectPath, "objectPath is required")
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath: path, branch })
+  const instance = await AnalyzationInstanceManager.getOrCreateInstance({ repositoryPath: path, branch })
   const isBlob = objectType === "blob"
 
   return {

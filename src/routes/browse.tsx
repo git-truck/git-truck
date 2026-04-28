@@ -17,12 +17,12 @@ import {
   mdiCheckboxBlank,
   mdiCheckboxMarked
 } from "@mdi/js"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import { existsSync } from "node:fs"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 import type { Route } from "./+types/browse"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { GitCaller } from "~/server/git-service"
 import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
@@ -228,7 +228,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   log.timeEnd("Read directories")
 
-  const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedReposPromise = AnalyzationInstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
   return {
     error: null,

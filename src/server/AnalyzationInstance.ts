@@ -1,6 +1,6 @@
-import DB from "~/analyzer/DB.server.ts"
-import { getCoAuthors } from "~/analyzer/coauthors.server.ts"
-import { GitCaller } from "~/analyzer/git-caller.server.ts"
+import DB from "~/server/DB"
+import { getCoAuthors } from "~/server/coauthors"
+import { GitCaller } from "~/server/git-service"
 import type {
   GitBlobObject,
   GitTreeObject,
@@ -13,18 +13,18 @@ import type {
   FullCommitDTO,
   RepoData
 } from "~/shared/model.ts"
-import { log } from "~/analyzer/log.server.ts"
+import { log } from "~/server/log"
 import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
-import InstanceManager from "~/analyzer/InstanceManager.server.ts"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
 export type AnalyzationStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
-export default class ServerInstance {
+export default class AnalyzationInstance {
   public status: AnalyzationStatus = "Initialized"
   public gitCaller: GitCaller
   public db: DB
@@ -442,7 +442,7 @@ export default class ServerInstance {
     this.setAnalyzationStatus("Initialized")
 
     let commitCount = await this.gitCaller.getCommitCount()
-    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
+    const priorRun = await AnalyzationInstanceManager.getOrCreateMetadataDB().getLastRun({
       repositoryPath: this.repositoryPath,
       branch: this.branch
     })
@@ -492,7 +492,7 @@ export default class ServerInstance {
       await promiseHelper(this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
     }
 
-    await InstanceManager.getOrCreateMetadataDB().setCompletion(
+    await AnalyzationInstanceManager.getOrCreateMetadataDB().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )

@@ -3,9 +3,9 @@ import { createSpinner } from "nanospinner"
 import { exec, spawn } from "node:child_process"
 import path from "node:path"
 import { performance } from "node:perf_hooks"
-import { getLogLevel, log, LOG_LEVEL } from "~/analyzer/log.server.ts"
+import { getLogLevel, log, LOG_LEVEL } from "~/server/log"
 import type { ArgsOptions } from "~/shared/model"
-import ServerInstance from "~/analyzer/ServerInstance.server.ts"
+import AnalyzationInstance from "~/server/AnalyzationInstance"
 import { formatMs, invariant, normalizePath, promiseHelper } from "~/shared/util.ts"
 import yargsParser from "yargs-parser"
 
@@ -13,7 +13,7 @@ export function runProcess(
   dir: string,
   command: string,
   args: string[],
-  serverInstance?: ServerInstance,
+  serverInstance?: AnalyzationInstance,
   index?: number
 ) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)

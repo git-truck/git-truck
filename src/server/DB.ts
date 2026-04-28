@@ -12,7 +12,7 @@ import type {
 } from "~/shared/model"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 
 export default class DB {
   private instance: DuckDBInstance

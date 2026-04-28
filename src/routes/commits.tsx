@@ -1,5 +1,5 @@
 import { invariant } from "~/shared/util"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import type { Route } from "./+types/commits"
 import { loadViewSearchParams } from "~/routes/view"
 import { parseAsInteger } from "nuqs"
@@ -19,7 +19,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   invariant(path, "path is required")
   invariant(count, "count is required")
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath: path, branch })
+  const instance = await AnalyzationInstanceManager.getOrCreateInstance({ repositoryPath: path, branch })
 
   const commitHashes = await instance.db.getCommitHashes(path, count)
   if (commitHashes.length < 1) return []
