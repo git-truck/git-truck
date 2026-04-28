@@ -41,7 +41,7 @@ export function LoadingIndicator({
       !branch ||
       state !== "idle" ||
       data?.analyzationStatus === "Aborted" ||
-      data?.analyzationStatus === "GeneratingChart"
+      data?.analyzationStatus === "CommitHistoryProcessed"
     )
       return
 
@@ -61,13 +61,13 @@ export function LoadingIndicator({
     const { progress, analyzationStatus } = data
 
     switch (analyzationStatus) {
-      case "Starting":
+      case "Initialized":
         return ["Loading truck...", 0]
-      case "GeneratingChart":
+      case "CommitHistoryProcessed":
         return ["Unloading truck...", 0]
       case "Aborted":
         return ["Aborted", 0]
-      case "Hydrating":
+      case "ProcessingCommitHistory":
         return [progress < 100 ? "Driving to destination..." : "Parking truck...", progress]
     }
   }, [data])
@@ -96,7 +96,7 @@ export function LoadingIndicator({
         ) : null}
         {LoadingText ? (
           <div className="text-center">
-            <LoadingText status={data?.analyzationStatus ?? "Starting"} />
+            <LoadingText status={data?.analyzationStatus ?? "Initialized"} />
           </div>
         ) : null}
       </div>

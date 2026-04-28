@@ -25,7 +25,7 @@ export default class InstanceManager {
    */
   public static getInstanceIsAborted({ repositoryPath, branch }: { repositoryPath: string; branch: string }): boolean {
     const instance = this.instances.get(repositoryPath)?.get(branch)
-    return instance ? instance.analyzationStatus === "Aborted" : false
+    return instance ? instance.status === "Aborted" : false
   }
 
   public static async abortInstance({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
@@ -33,8 +33,8 @@ export default class InstanceManager {
     if (instance) {
       const status = instance.abort()
       await this.closeInstance({ repositoryPath, branch })
-      
-      if (status !== "GeneratingChart") {
+
+      if (status !== "CommitHistoryProcessed") {
         await this.clearCache({
           repositoryPath,
           branch
@@ -49,7 +49,7 @@ export default class InstanceManager {
    * Gets the progress of a ServerInstance for a given repository path and branch, or null if it doesn't exist
    */
   public static getInstanceProgress({ repositoryPath, branch }: { repositoryPath: string; branch: string }): {
-    analyzationStatus: AnalyzationStatus
+    status: AnalyzationStatus
     progress: number[]
     totalCommitCount: number
     progressPercentage: number
@@ -62,7 +62,7 @@ export default class InstanceManager {
     }
 
     return {
-      analyzationStatus: instance.analyzationStatus,
+      status: instance.status,
       totalCommitCount: instance.totalCommitCount,
       progress: instance.progress,
       progressPercentage: this.calculateProgressPercentage(instance.progress, instance.totalCommitCount),
@@ -86,7 +86,7 @@ export default class InstanceManager {
     if (!this.instances) this.instances = new Map()
     const existing = this.instances.get(repositoryPath)?.get(branch)
 
-    if (existing && existing.analyzationStatus !== "Aborted") {
+    if (existing && existing.status !== "Aborted") {
       return existing
     }
 
@@ -127,8 +127,7 @@ export default class InstanceManager {
     const promises = Array.from(this.instances.values()).flatMap((repoInstance) =>
       Array.from(repoInstance.values()).flatMap((branchInstance) => {
         branchInstance.abort()
-        const closePromise = branchInstance.db.close()
-        return closePromise
+        return branchInstance.db.close()
       })
     )
     await Promise.all(promises)
