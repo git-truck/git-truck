@@ -107,6 +107,7 @@ export function PointLegend() {
     return 0
   })
 
+  //Differentiate summed weight (entries accumulated), vs total weight (actual amount of entries)
   const summedWeight = items.reduce((sum, [, info]) => sum + info.weight, 0)
   const totalWeight = legendData.totalWeight
 
@@ -114,7 +115,8 @@ export function PointLegend() {
 
   const filteredItems = searchValue.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
 
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE)
+  const maxTotalPages = Math.max(Math.ceil(items.length / ITEMS_PER_PAGE), 1)
+  const totalPages = Math.max(Math.ceil(filteredItems.length / ITEMS_PER_PAGE), 1)
   const safePage = Math.min(currentPage, totalPages - 1)
   const startIdx = safePage * ITEMS_PER_PAGE
   const endIdx = startIdx + ITEMS_PER_PAGE
@@ -123,7 +125,7 @@ export function PointLegend() {
   if (items.length === 0) return null
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-2">
       <div
         className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2", {
           hidden: !feature_flags.show_legend_highlight
@@ -147,32 +149,30 @@ export function PointLegend() {
           items={shownItems}
           totalWeight={totalWeight}
           metricType={metricType}
-          totalPages={totalPages}
+          maxTotalPages={maxTotalPages}
         />
-
-        {totalPages > 1 ? (
-          <div className="border-border dark:border-border-dark flex items-center justify-between gap-2 border-t pt-2">
-            <button
-              disabled={safePage === 0}
-              className="btn text-xs"
-              title="Previous page"
-              onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
-            >
-              ← Prev
-            </button>
-            <span className="text-secondary-text text-xs">
-              Page {safePage + 1} of {totalPages}
-            </span>
-            <button
-              disabled={safePage === totalPages - 1}
-              className="btn text-xs"
-              title="Next page"
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
-            >
-              Next →
-            </button>
-          </div>
-        ) : null}
+        <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
+        <div className="flex items-center justify-between gap-2">
+          <button
+            disabled={safePage === 0}
+            className="btn text-xs"
+            title="Previous page"
+            onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+          >
+            ← Prev
+          </button>
+          <span className="text-secondary-text text-xs">
+            Page {safePage + 1} of {totalPages}
+          </span>
+          <button
+            disabled={safePage === totalPages - 1}
+            className="btn text-xs"
+            title="Next page"
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
+          >
+            Next →
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -180,16 +180,10 @@ export function PointLegend() {
 
 const GRID_COLS = "grid-cols-[min-content_4fr_max-content_max-content_max-content]"
 
-interface PointLegendTableProps {
-  items: [string, PointInfo][]
-  totalWeight: number
-  metricType: MetricType
-  totalPages: number
-}
-
 function PointLegendHeader({ metricType }: { metricType: MetricType }) {
   return (
     <>
+      <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
       <div className="contents text-xs font-bold">
         <LegendDot dotColor={""} className="opacity-0" />
         <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
@@ -197,21 +191,31 @@ function PointLegendHeader({ metricType }: { metricType: MetricType }) {
         <p className="text-right">% Files</p>
         <Icon path={mdiCheckboxIntermediate} size={1} className="justify-self-end opacity-0" />
       </div>
-      <span className="bg-border dark:bg-border-dark col-span-full my-1 h-0.5 w-full" />
+      <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
     </>
   )
 }
 
-function PointLegendTable({ items, totalWeight, metricType, totalPages }: PointLegendTableProps) {
-  const itemHeight = 26
+function PointLegendTable({
+  items,
+  totalWeight,
+  metricType,
+  maxTotalPages
+}: {
+  items: [string, PointInfo][]
+  totalWeight: number
+  metricType: MetricType
+  maxTotalPages: number
+}) {
+  const itemHeight = 25
   const headerHeight = 48
   // Keep max height if pagination exists, otherwise scale with actual items
-  const maxItemsToShow = totalPages > 1 ? ITEMS_PER_PAGE : items.length
-  const minHeight = headerHeight + itemHeight * maxItemsToShow + 2
+  const maxItemsToShow = maxTotalPages > 1 ? ITEMS_PER_PAGE : items.length
+  const minHeight = headerHeight + itemHeight * maxItemsToShow
 
   return (
-    <div style={{ minHeight: `${minHeight}px` }}>
-      <div className={cn(`grid ${GRID_COLS} items-center justify-between gap-x-4 gap-y-1`)}>
+    <div style={{ minHeight: `${minHeight}px` }} className="flex flex-col gap-2">
+      <div className={cn("grid items-center justify-between gap-x-4", GRID_COLS)}>
         <PointLegendHeader metricType={metricType} />
       </div>
 
@@ -225,7 +229,7 @@ function PointLegendTable({ items, totalWeight, metricType, totalPages }: PointL
           No items matched your search
         </div>
       ) : (
-        <div className={cn(`grid ${GRID_COLS} items-center justify-between gap-x-4 gap-y-1`)}>
+        <div className={cn("grid items-center justify-between gap-x-4 gap-y-0.5", GRID_COLS)}>
           {items.map(([label, info]) => (
             <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
           ))}
