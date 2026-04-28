@@ -21,7 +21,9 @@ import { createMetricDataForNode, Metrics, type MetricType } from "~/metrics/met
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
-import { mdiCheckboxIntermediate } from "@mdi/js"
+import { mdiCheckboxIntermediate, mdiDice5 } from "@mdi/js"
+import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
+import { useNavigation } from "react-router"
 
 const ITEMS_PER_PAGE = 8
 
@@ -181,11 +183,30 @@ export function PointLegend() {
 const GRID_COLS = "grid-cols-[min-content_4fr_max-content_max-content_max-content]"
 
 function PointLegendHeader({ metricType }: { metricType: MetricType }) {
+  const navigationState = useNavigation().state
+  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
+
   return (
     <>
       <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
       <div className="contents text-xs font-bold">
-        <LegendDot dotColor={""} className="opacity-0" />
+        <ShuffleColorsForm>
+          <button
+            disabled={!isAuthorRelatedLegend}
+            className={cn("btn--icon m-0 mt-1 h-min", {
+              "opacity-0": !isAuthorRelatedLegend
+            })}
+            title="Shuffle contributor colors"
+          >
+            <Icon
+              className={cn("transition-transform duration-100 hover:rotate-20", {
+                "animate-spin transition-all starting:rotate-0": navigationState !== "idle"
+              })}
+              path={mdiDice5}
+              size="1.5em"
+            />
+          </button>
+        </ShuffleColorsForm>
         <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
         <p className="text-right"># Files</p>
         <p className="text-right">% Files</p>
