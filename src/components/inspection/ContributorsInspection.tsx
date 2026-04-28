@@ -6,7 +6,7 @@ import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { viewSerializer } from "~/routes/view"
-import type { loader } from "~/routes/view.api.contributor-distribution"
+import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 
@@ -33,7 +33,7 @@ export function ContributorsInspection() {
       return
     }
     fetcher.load(
-      href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch })
+      href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch })
     )
     return () => {
       fetcher.reset()

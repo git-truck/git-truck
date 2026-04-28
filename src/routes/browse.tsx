@@ -17,12 +17,12 @@ import {
   mdiCheckboxBlank,
   mdiCheckboxMarked
 } from "@mdi/js"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 import { existsSync } from "node:fs"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 import type { Route } from "./+types/browse"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { GitService } from "~/server/git-service"
 import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
@@ -110,7 +110,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     }
   }
 
-  const pathIsValidRepository = await GitCaller.isValidGitRepo(parentDirectory)
+  const pathIsValidRepository = await GitService.isValidGitRepo(parentDirectory)
 
   if (pathIsValidRepository) {
     const url = href("/view") + viewSerializer({ path: parentDirectory })
@@ -144,7 +144,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
       return {
         name: entry.name,
         directoryPath: entryDirectoryPath,
-        hasGitDirectory: GitCaller.hasGitDirectory(entryDirectoryPath)
+        hasGitDirectory: GitService.hasGitDirectory(entryDirectoryPath)
       }
     })
     .filter(
@@ -166,7 +166,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
     ? await Promise.all(
         filteredEntries.map(async (entry) => {
           const [lastChanged] = entry.hasGitDirectory
-            ? ((await promiseHelper(GitCaller.getLastChanged(entry.directoryPath))) ?? [0])
+            ? ((await promiseHelper(GitService.getLastChanged(entry.directoryPath))) ?? [0])
             : [null]
 
           return { ...entry, lastChanged }
@@ -206,12 +206,12 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
         } as const
       }
 
-      const [branch] = await promiseHelper(GitCaller._getRepositoryHead(entry.directoryPath))
-      const [hash] = branch ? await promiseHelper(GitCaller._revParse(entry.directoryPath, branch)) : [null]
+      const [branch] = await promiseHelper(GitService._getRepositoryHead(entry.directoryPath))
+      const [hash] = branch ? await promiseHelper(GitService._revParse(entry.directoryPath, branch)) : [null]
       const [lastChanged] =
         entry.lastChanged !== null
           ? [entry.lastChanged]
-          : ((await promiseHelper(GitCaller.getLastChanged(entry.directoryPath))) ?? [0])
+          : ((await promiseHelper(GitService.getLastChanged(entry.directoryPath))) ?? [0])
 
       return {
         name: entry.name,
@@ -228,7 +228,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   log.timeEnd("Read directories")
 
-  const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedReposPromise = AnalyzationInstanceManager.getOrCreateMetadataDB().getCompletedRepos()
 
   return {
     error: null,

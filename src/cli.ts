@@ -8,8 +8,8 @@ import open from "open"
 import { parseArgs, describeAsyncJob, getLatestVersion } from "~/shared/util.server.ts"
 import { generateVersionComparisonLink, semverCompare, promiseHelper } from "~/shared/util.ts"
 
-import { log, setLogLevel } from "~/analyzer/log.server.ts"
-import InstanceManager from "~/analyzer/InstanceManager.server.ts"
+import { log, setLogLevel } from "~/server/log"
+import { AnalysisManager } from "~/server/AnalysisManager"
 
 const args = parseArgs()
 if (args?.log) {
@@ -136,7 +136,7 @@ ${generateVersionComparisonLink({ currentVersion: pkg.version, latestVersion: la
 }
 
 async function stopHandler() {
-  const promise = InstanceManager.closeAllDBInstances()
+  const promise = AnalysisManager.closeAllDBInstances()
   log.info("Shutting down server")
   server.close(console.error)
   log.info("Web server shut down")

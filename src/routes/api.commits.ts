@@ -1,7 +1,7 @@
 import { loadViewSearchParams } from "~/routes/view"
 import { invariant } from "~/shared/util"
-import type { Route } from "./+types/view.api.commits"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import type { Route } from "./+types/api.commits"
+import { AnalysisManager } from "~/server/AnalysisManager"
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request)
@@ -13,7 +13,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const parsedCount = rawCount ? Number(rawCount) : Number.NaN
   const count = Number.isFinite(parsedCount) && parsedCount > 0 ? Math.floor(parsedCount) : 10
 
-  const instance = await InstanceManager.getOrCreateInstance({ repositoryPath, branch: branch })
+  const instance = await AnalysisManager.getInstance({ repositoryPath, branch: branch })
 
   return {
     objectPath,
@@ -22,7 +22,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     commitsPromise: (async () => {
       const commitHashes = await instance.db.getCommitHashes(objectPath, count)
       if (commitHashes.length < 1) return []
-      const gitLogResult = await instance.gitCaller.gitLogSpecificCommits(commitHashes)
+      const gitLogResult = await instance.gitService.gitLogSpecificCommits(commitHashes)
       const fullCommits = await instance.getFullCommits(gitLogResult)
       const unions = await instance.db.getRawUnions()
 

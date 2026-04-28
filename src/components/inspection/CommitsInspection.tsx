@@ -1,6 +1,6 @@
 import { useQueryState } from "nuqs"
 import { useFetcher, href, Await } from "react-router"
-import type { loader } from "~/routes/view.api.commits"
+import type { loader } from "~/routes/api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory, CommitHistoryLabel } from "~/components/inspection/CommitHistory"
@@ -17,7 +17,7 @@ export function CommitsInspection() {
 
   const loadCommits = useCallback(
     (objectPath: string, count: number) =>
-      load(href("/view/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`),
+      load(href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`),
     [branch, load, path]
   )
 
