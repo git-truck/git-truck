@@ -22,10 +22,10 @@ import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import InstanceManager from "~/analyzer/InstanceManager.server.ts"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
-export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart" | "Aborted"
+export type AnalyzationStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
 export default class ServerInstance {
-  public analyzationStatus: AnalyzationStatus = "Starting"
+  public status: AnalyzationStatus = "Initialized"
   public gitCaller: GitCaller
   public db: DB
   public progress = [0]
@@ -62,20 +62,22 @@ export default class ServerInstance {
     this.progressRevision++
   }
 
-  public abort() {
-    this.analyzationStatus = "Aborted"
+  public abort(): AnalyzationStatus {
+    const status = this.status
+    this.status = "Aborted"
     this.progressRevision++
+    return status
   }
 
   private throwIfAborted() {
-    if (this.analyzationStatus === "Aborted") {
+    if (this.status === "Aborted") {
       throw new Error("Instance aborted")
     }
   }
 
   private setAnalyzationStatus(status: AnalyzationStatus) {
-    if (this.analyzationStatus === "Aborted") return
-    this.analyzationStatus = status
+    if (this.status === "Aborted") return
+    this.status = status
     this.progressRevision++
   }
 
@@ -437,7 +439,7 @@ export default class ServerInstance {
   }
 
   public async loadRepoData() {
-    this.setAnalyzationStatus("Starting")
+    this.setAnalyzationStatus("Initialized")
 
     let commitCount = await this.gitCaller.getCommitCount()
     const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
@@ -466,7 +468,7 @@ export default class ServerInstance {
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
     this.progress = Array(threadCount).fill(0)
-    this.setAnalyzationStatus("Hydrating")
+    this.setAnalyzationStatus("ProcessingCommitHistory")
     const sections = this.calculateSections(commitCount, threadCount)
     const promises = Array.from({ length: threadCount }, async (_, i) => {
       const sectionStart = sections[i][0]
@@ -494,6 +496,6 @@ export default class ServerInstance {
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
-    this.setAnalyzationStatus("GeneratingChart")
+    this.setAnalyzationStatus("CommitHistoryProcessed")
   }
 }
