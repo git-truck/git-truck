@@ -31,12 +31,15 @@ export default class InstanceManager {
   public static async abortInstance({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
     const instance = this.instances.get(repositoryPath)?.get(branch)
     if (instance) {
-      instance.abort()
+      const status = instance.abort()
       await this.closeInstance({ repositoryPath, branch })
-      await this.clearCache({
-        repositoryPath,
-        branch
-      })
+      
+      if (status !== "GeneratingChart") {
+        await this.clearCache({
+          repositoryPath,
+          branch
+        })
+      }
       return true
     }
     return false
