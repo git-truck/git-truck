@@ -40,7 +40,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   if (progressData.progressRevision > lastSeenRevision) {
     return {
       progress: progressData.progressPercentage,
-      analyzationStatus: progressData.analyzationStatus,
+      analyzationStatus: progressData.status,
       progressRevision: progressData.progressRevision
     } satisfies ProgressData
   }
@@ -60,7 +60,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     if (updatedProgress.progressRevision > lastSeenRevision) {
       return {
         progress: updatedProgress.progressPercentage,
-        analyzationStatus: updatedProgress.analyzationStatus,
+        analyzationStatus: updatedProgress.status,
         progressRevision: updatedProgress.progressRevision
       } satisfies ProgressData
     }
@@ -75,7 +75,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   return {
     progress: finalProgress.progressPercentage,
-    analyzationStatus: finalProgress.analyzationStatus,
+    analyzationStatus: finalProgress.status,
     progressRevision: finalProgress.progressRevision
   } satisfies ProgressData
 }
