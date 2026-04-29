@@ -1,17 +1,18 @@
-import type { GitBlobObject } from "~/shared/model"
-import type { Metric, MetricCache } from "~/metrics/metrics"
+import type { DatabaseInfo, GitBlobObject, GitObject, HexColor } from "~/shared/model"
+import type { GradientedMetric, MetricCache } from "~/metrics/metrics"
 import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
-import { hslToHex, formatLargeNumber } from "~/shared/util"
+import { hslToHex, formatLargeNumber, isTree } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
+import { reduceTree } from "~/shared/utils/tree"
 
-export const LINES_CHANGED_HUE = 118
-export const LINES_CHANGED_SATURATION = 50
-export const LINES_CHANGED_MIN_LIGHTNESS = 40
-export const LINES_CHANGED_MAX_LIGHTNESS = 92
+const LINES_CHANGED_HUE = 118
+const LINES_CHANGED_SATURATION = 50
+const LINES_CHANGED_MIN_LIGHTNESS = 40
+const LINES_CHANGED_MAX_LIGHTNESS = 92
 
-export const LinesChangedMetric: Metric = {
+export const LinesChangedMetric: GradientedMetric = {
   icon: mdiPlusMinusVariant,
   name: "Lines Changed",
   description: "Files are colored based on how many line changes (additions and deletions) have been made to it.",
@@ -45,6 +46,26 @@ export const LinesChangedMetric: Metric = {
       }
       contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
     }
+  },
+  //GradientLegend specific function
+  getColorFromValue(value: number, dbi: DatabaseInfo, cache: MetricCache) {
+    const legend = cache.legend as GradLegendData
+    const cappedValue = Math.min(value, legend.maxValue)
+    const translater = new SpectrumTranslater(
+      legend.minValue,
+      legend.maxValue,
+      LINES_CHANGED_MIN_LIGHTNESS,
+      LINES_CHANGED_MAX_LIGHTNESS
+    )
+    const lightness = translater.inverseTranslate(cappedValue)
+    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, lightness) as HexColor
+  },
+  //GradientLegend specific function
+  getColorFromObject(obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) {
+    const contribSum = isTree(obj)
+      ? reduceTree(obj, (s, o) => s + (dbi.contribSumPerFile[o.path] || 0), 0 as number)
+      : dbi.contribSumPerFile[obj.path]
+    return this.getColorFromValue(contribSum, dbi, cache)
   }
 }
 

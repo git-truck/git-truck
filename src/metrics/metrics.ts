@@ -65,6 +65,11 @@ export type SegmentedMetric = CategoricalMetric & {
   getBucketIndex(obj: GitObject, dbi: DatabaseInfo): number
 }
 
+export type GradientedMetric = Metric & {
+  getColorFromValue: (value: number, dbi: DatabaseInfo, cache: MetricCache) => HexColor
+  getColorFromObject: (obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) => HexColor
+}
+
 export type MetricType = keyof typeof Metrics
 
 type MetricFunction = (blob: GitBlobObject, cache: MetricCache) => void
