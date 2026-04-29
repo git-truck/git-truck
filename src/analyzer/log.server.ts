@@ -8,7 +8,7 @@ export const LOG_LEVEL = {
   DEBUG: 4
 } as const
 
-export type LOG_LEVEL_KEY = keyof typeof LOG_LEVEL
+type LOG_LEVEL_KEY = keyof typeof LOG_LEVEL
 export type LOG_LEVEL = (typeof LOG_LEVEL)[LOG_LEVEL_KEY]
 
 const LOG_LEVEL_LABEL = {
