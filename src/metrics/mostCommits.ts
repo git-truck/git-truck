@@ -6,6 +6,11 @@ import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiSourceCommit } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
 
+export const COMMITS_HUE = 20
+export const COMMITS_SATURATION = 100
+export const COMMITS_MIN_LIGHTNESS = 50
+export const COMMITS_MAX_LIGHTNESS = 95
+
 export const CommitsMetric: Metric = {
   icon: mdiSourceCommit,
   name: "Commits",
@@ -40,15 +45,13 @@ export const CommitsMetric: Metric = {
 
 class CommitAmountTranslater {
   readonly translater: SpectrumTranslater
-  readonly min_lightness = 50
-  readonly max_lightness = 95
 
   constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
+    this.translater = new SpectrumTranslater(min, max, COMMITS_MIN_LIGHTNESS, COMMITS_MAX_LIGHTNESS)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(20, 100, this.translater.inverseTranslate(value))
+    return hslToHex(COMMITS_HUE, COMMITS_SATURATION, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Record<string, number>) {
