@@ -1,110 +1,169 @@
-import { dateFormatRelative, dateFormatShort, rgbToHex } from "~/shared/util"
-import { interpolateCool, scaleSequential } from "d3"
-import { feature_flags } from "~/feature_flags"
-import type { Metric, MetricCache } from "~/metrics/metrics"
+import { dateFormatRelative, dateFormatShort, isBlob, isTree, rgbToHex } from "~/shared/util"
+import { interpolateYlGnBu } from "d3"
+import type { MetricCache, SegmentedMetric } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
-import type { GitBlobObject } from "~/shared/model"
-import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
+import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
+import { reduceTree } from "~/shared/utils/tree"
 
-export const LastChangedMetric: Metric = {
+/**
+ * Time thresholds for last changed groupings (in seconds)
+ */
+const TIMEUNITS = {
+  ONE_HOUR: 3600,
+  ONE_DAY: 86400,
+  ONE_WEEK: 604800,
+  ONE_MONTH: 2629743,
+  SIX_MONTHS: 2629743 * 6,
+  ONE_YEAR: 31556926,
+  TWO_YEARS: 31556926 * 2,
+  FOUR_YEARS: 31556926 * 4
+}
+
+export const LastChangedMetric: SegmentedMetric = {
   name: "Last changed",
   description: "Files are colored based on how long ago they were changed.",
   icon: mdiPulse,
-  inspectionPanels: [
-    feature_flags.lastChangedAsGrad
-      ? { title: "Last Changed", content: GradientLegend }
-      : { title: "Last Changed", content: SegmentLegend }
-  ],
-  getTooltipContent(obj, dbi) {
+  inspectionPanels: [{ title: "Last Changed", content: SegmentLegend }],
+  getTooltipContent(obj: GitObject, dbi: DatabaseInfo) {
+    if (!isBlob(obj)) {
+      // TODO: Find max last changed time for tree
+      return "LastChangedMetric is only defined for blobs"
+    }
+
     const epoch = dbi.lastChanged[obj.path]
     if (!epoch) {
       return "No activity in selected range"
     }
     return dateFormatRelative(epoch)
   },
-  metricFunctionFactory(data, _root) {
-    const groupings = lastChangedGroupings(data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate)
+
+  getCategories(obj: GitObject, dbi: DatabaseInfo) {
+    const epoch = isTree(obj)
+      ? reduceTree(obj, (s, o) => Math.max(s, dbi.lastChanged[o.path] ?? 0), 0 as number)
+      : dbi.lastChanged[obj.path]
+    const timeDiff = dbi.newestChangeDate - (epoch ?? 0)
+    const categories = this.getBuckets(dbi)
+    const lastIndex = categories.length - 1
+
+    return categories
+      .filter((g, i) =>
+        i === lastIndex
+          ? timeDiff >= g.range[0] && timeDiff <= g.range[1]
+          : timeDiff >= g.range[0] && timeDiff < g.range[1]
+      )
+      ?.map((c) => c.text)
+  },
+
+  //For now we don't use _root for calculation
+  metricFunctionFactory({ databaseInfo: dbi }, _root) {
+    const buckets = LastChangedMetric.getBuckets(dbi)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
-      const domainedScale = scaleSequential(interpolateCool).domain([
-        data.databaseInfo.oldestChangeDate,
-        data.databaseInfo.newestChangeDate
-      ])
       if (!cache.legend) {
-        cache.legend = feature_flags.lastChangedAsGrad
-          ? ({
-              minValue: data.databaseInfo.oldestChangeDate,
-              maxValue: data.databaseInfo.newestChangeDate,
-              minValueAltFormat: dateFormatShort(data.databaseInfo.oldestChangeDate * 1000),
-              maxValueAltFormat: dateFormatShort(data.databaseInfo.newestChangeDate * 1000),
-              minColor: rgbToHex(domainedScale(data.databaseInfo.oldestChangeDate)),
-              maxColor: rgbToHex(domainedScale(data.databaseInfo.newestChangeDate))
-            } satisfies GradLegendData)
-          : ({
-              steps:
-                getLastChangedIndex(groupings, data.databaseInfo.newestChangeDate, data.databaseInfo.oldestChangeDate) +
-                1,
-              textGenerator: (n) => groupings[n].text,
-              colorGenerator: (n) => groupings[groupings.length - 1 - n].color,
-              offsetStepCalc: (blob) =>
-                getLastChangedIndex(
-                  groupings,
-                  data.databaseInfo.newestChangeDate,
-                  data.databaseInfo.lastChanged[blob.path] ?? 0
-                ) ?? -1
-            } satisfies SegmentLegendData)
+        cache.legend = {
+          steps: buckets.length,
+          textGenerator: (n) => buckets[n].text,
+          colorGenerator: (n) => buckets[n].color,
+          offsetStepCalc: (blob) => {
+            return LastChangedMetric.getBucketIndex(blob, dbi)
+          }
+        } satisfies SegmentLegendData
       }
 
-      const existing = data.databaseInfo.lastChanged[blob.path]
-      // const color = existing ? groupings[getLastChangedIndex(groupings, newestEpoch, existing)].color : noEntryColor
-      const color = rgbToHex(domainedScale(existing ?? 0))
+      const epoch = dbi.lastChanged[blob.path]
+      if (epoch === undefined) {
+        cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+        return
+      }
+
+      const index = LastChangedMetric.getBucketIndex(blob, dbi)
+      if (index < 0) {
+        cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
+        return
+      }
+
+      const color = buckets[index]?.color
       if (!color) {
         cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
         return
       }
+
       cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color }])
     }
+  },
+  getBuckets(dbi: DatabaseInfo) {
+    const now = Math.floor(Date.now() / 1000)
+    const newestDate = new Date(dbi.newestChangeDate * 1000)
+    const today = new Date(now * 1000)
+
+    // Check if newest change is from today
+    const isToday =
+      newestDate.getFullYear() === today.getFullYear() &&
+      newestDate.getMonth() === today.getMonth() &&
+      newestDate.getDate() === today.getDate()
+
+    const firstBucketText = isToday ? "Today" : dateFormatShort(dbi.newestChangeDate * 1000)
+
+    const timeDifferences = [
+      {
+        text: firstBucketText,
+        range: [0, TIMEUNITS.ONE_DAY] as [number, number]
+      },
+      {
+        text: "+1d",
+        range: [TIMEUNITS.ONE_DAY, TIMEUNITS.ONE_WEEK] as [number, number]
+      },
+      {
+        text: "+1w",
+        range: [TIMEUNITS.ONE_WEEK, TIMEUNITS.ONE_MONTH] as [number, number]
+      },
+      {
+        text: "+1m",
+        range: [TIMEUNITS.ONE_MONTH, TIMEUNITS.ONE_YEAR] as [number, number]
+      },
+      {
+        text: "+6m",
+        range: [TIMEUNITS.SIX_MONTHS, TIMEUNITS.ONE_YEAR] as [number, number]
+      },
+      {
+        text: "+1y",
+        range: [TIMEUNITS.ONE_YEAR, TIMEUNITS.TWO_YEARS] as [number, number]
+      },
+      {
+        text: "+2y",
+        range: [TIMEUNITS.TWO_YEARS, TIMEUNITS.FOUR_YEARS] as [number, number]
+      },
+      {
+        text: "+4y",
+        range: [TIMEUNITS.FOUR_YEARS, Infinity] as [number, number]
+      }
+    ].map((group, i, arr) => ({
+      ...group,
+      //Offset color spectrum to avoid very light colors
+      color: rgbToHex(interpolateYlGnBu((i + 3) / (arr.length + 2))) as `#${string}`
+    }))
+
+    return timeDifferences
+  },
+
+  getBucketIndex(obj: GitObject, dbi: DatabaseInfo): number {
+    const epoch = isTree(obj)
+      ? reduceTree(obj, (s, o) => Math.max(s, dbi.lastChanged[o.path] ?? 0), 0 as number)
+      : dbi.lastChanged[obj.path]
+
+    if (epoch === undefined || epoch === 0) {
+      return -1
+    }
+
+    const timeDiff = dbi.newestChangeDate - epoch
+    const buckets = this.getBuckets(dbi)
+    const lastIndex = buckets.length - 1
+    return buckets.findIndex((g, i) =>
+      i === lastIndex
+        ? timeDiff >= g.range[0] && timeDiff <= g.range[1]
+        : timeDiff >= g.range[0] && timeDiff < g.range[1]
+    )
   }
-}
-interface lastChangedGroup {
-  epoch: number
-  color: `#${string}`
-  text: string
-}
-
-function lastChangedGroupings(newestEpoch: number, _oldestChangeDate: number): lastChangedGroup[] {
-  // const scale = scaleSequential(interpolateCool)
-  // , [oldestChangeDate, newestEpoch])
-
-  return feature_flags.newLastChangedColorScheme
-    ? [
-        { epoch: 0, text: dateFormatShort(newestEpoch * 1000) },
-        { epoch: 86400, text: ">1d" },
-        { epoch: 604800, text: ">1w" },
-        { epoch: 2629743, text: ">1m" },
-        { epoch: 31556926, text: ">1y" },
-        { epoch: 31556926 * 2, text: ">2y" },
-        { epoch: 31556926 * 4, text: ">4y" }
-      ].map((group, i, arr) => ({ ...group, color: rgbToHex(interpolateCool(i / arr.length)) as `#${string}` }))
-    : [
-        { epoch: 0, text: dateFormatShort(newestEpoch * 1000), color: "#cff2ff" },
-        { epoch: 86400, text: "+1d", color: "#c6dbef" },
-        { epoch: 604800, text: "+1w", color: "#9ecae1" },
-        { epoch: 2629743, text: "+1m", color: "#6baed6" },
-        { epoch: 31556926, text: "+1y", color: "#4292c6" },
-        { epoch: 31556926 * 2, text: "+2y", color: "#2171b5" },
-        { epoch: 31556926 * 4, text: "+4y", color: "#084594" }
-      ]
-}
-
-function getLastChangedIndex(groupings: lastChangedGroup[], newest: number, input: number) {
-  const diff = newest - input
-  let index = 0
-  while (index < groupings.length - 1) {
-    if (diff < groupings[index + 1].epoch) return index
-    else index++
-  }
-  return index
-}
+} as const
