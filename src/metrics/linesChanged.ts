@@ -6,6 +6,11 @@ import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
 
+export const LINES_CHANGED_HUE = 118
+export const LINES_CHANGED_SATURATION = 50
+export const LINES_CHANGED_MIN_LIGHTNESS = 40
+export const LINES_CHANGED_MAX_LIGHTNESS = 92
+
 export const LinesChangedMetric: Metric = {
   icon: mdiPlusMinusVariant,
   name: "Lines Changed",
@@ -45,15 +50,13 @@ export const LinesChangedMetric: Metric = {
 
 class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
-  readonly min_lightness = 40
-  readonly max_lightness = 92
 
   constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
+    this.translater = new SpectrumTranslater(min, max, LINES_CHANGED_MIN_LIGHTNESS, LINES_CHANGED_MAX_LIGHTNESS)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(118, 50, this.translater.inverseTranslate(value))
+    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {
