@@ -30,11 +30,11 @@ export const Metrics = {
   CONTRIBUTORS: ContributorsMetric
 } as const satisfies Record<string, Metric>
 
-export type Metric = {
+type Metric = {
   name: string
   description: string
   icon: string
-  inspectionPanels: Array<{ title: string; content: React.ComponentType}>
+  inspectionPanels: Array<{ title: string; content: React.ComponentType }>
   getTooltipContent: (
     /**
      * The hovered objectGitObject

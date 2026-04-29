@@ -12,9 +12,7 @@ export const TypeMetric: CategoricalMetric = {
   name: "File type",
   description: "Files are colored based on their file extension, which is useful to get an overview of the codebase.",
   icon: mdiFileOutline,
-  inspectionPanels: [
-    { title: "File Types", content: PointLegend}
-  ],
+  inspectionPanels: [{ title: "File Types", content: PointLegend }],
   getTooltipContent(obj, dbi, options) {
     return this.getCategories(obj, dbi, options)
   },
