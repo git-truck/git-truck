@@ -12,7 +12,20 @@ export const TopContributorMetric: CategoricalMetric = {
   name: "Top contributor",
   description: "Files are colored based on the top contributor for each file.",
   icon: mdiPodiumGold,
-  inspectionPanels: [PointLegend, PercentageSlider, ContributorsInspection],
+  inspectionPanels: [
+    {
+      title: "Top Churner",
+      content: PointLegend
+    },
+    {
+      title: "Top Cutoff",
+      content: PercentageSlider
+    },
+    {
+      title: "Churn Distribution",
+      content: ContributorsInspection
+    }
+  ],
   getTooltipContent(obj, dbi, { topContributorCutoff }) {
     const top = dbi.topContributors[obj.path]
 

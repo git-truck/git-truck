@@ -12,7 +12,11 @@ export const LastChangedMetric: Metric = {
   name: "Last changed",
   description: "Files are colored based on how long ago they were changed.",
   icon: mdiPulse,
-  inspectionPanels: [feature_flags.lastChangedAsGrad ? GradientLegend : SegmentLegend],
+  inspectionPanels: [
+    feature_flags.lastChangedAsGrad
+      ? { title: "Last Changed", content: GradientLegend }
+      : { title: "Last Changed", content: SegmentLegend }
+  ],
   getTooltipContent(obj, dbi) {
     const epoch = dbi.lastChanged[obj.path]
     if (!epoch) {

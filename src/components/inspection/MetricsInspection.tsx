@@ -1,9 +1,13 @@
-import { mdiFileOutline, mdiFolderOutline, mdiEyeOffOutline, mdiSourceRepository } from "@mdi/js"
+import { mdiFileOutline, mdiFolderOutline, mdiEyeOffOutline, mdiSourceRepository, mdiAccountMultiple } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useFetcher, href, Form, useNavigation } from "react-router"
-import { MetricInspectionPanel, type MetricPanelActions } from "~/components/inspection/MetricInspectionPanel"
+import {
+  MetricInspectionPanel,
+  type MetricPanelMenuItem,
+  type MetricPanelButton
+} from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useData } from "~/contexts/DataContext"
@@ -25,6 +29,8 @@ import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
+import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
+import type { GradLegendData } from "~/components/legend/GradiantLegend"
 
 export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
@@ -34,6 +40,7 @@ export function MetricsInspection() {
   const data = useData()
   const [metricsData, contributorColors] = useMetrics()
   const { metricType, setMetricType } = useOptions()
+  const [modalOpen, setModalOpen] = useState(false)
 
   const isBlob = clickedObject?.type === "blob"
   const isRepo = isRepositoryRoot(clickedObject)
@@ -92,8 +99,9 @@ export function MetricsInspection() {
       description: string
       icon: string
       data: ReactNode
-      inspectionPanels: Array<React.ComponentType>
-      actions: MetricPanelActions
+      inspectionPanels: Array<{ title: string; content: React.ComponentType }>
+      actions: MetricPanelButton
+      metricMenuItems: MetricPanelMenuItem[]
       colors: Array<HexColor>
     }
   > = {
@@ -103,6 +111,7 @@ export function MetricsInspection() {
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
       inspectionPanels: TypeMetric.inspectionPanels,
       actions: { search: true, clear: true },
+      metricMenuItems: [],
       colors:
         metricsData
           .get("FILE_TYPE")
@@ -119,6 +128,7 @@ export function MetricsInspection() {
           " " +
           byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
       actions: { search: false, clear: false },
+      metricMenuItems: [],
       colors:
         metricsData
           .get("FILE_SIZE")
@@ -131,6 +141,7 @@ export function MetricsInspection() {
       data: commitCount?.toLocaleString() ?? "loading...",
       inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
+      metricMenuItems: [],
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors:
         metricsData
@@ -147,7 +158,14 @@ export function MetricsInspection() {
           : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
         : "loading...",
       inspectionPanels: TopContributorMetric.inspectionPanels,
-      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
+      actions: { search: true, clear: true },
+      metricMenuItems: [
+        {
+          label: "Group Contributors",
+          icon: mdiAccountMultiple,
+          onClick: () => setModalOpen(true)
+        }
+      ],
       colors: [
         currentFetcherData
           ? currentFetcherData.multiTopContributors
@@ -167,6 +185,7 @@ export function MetricsInspection() {
             .toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
+      metricMenuItems: [],
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors:
         metricsData
@@ -189,6 +208,7 @@ export function MetricsInspection() {
           ) ?? "unknown"),
       inspectionPanels: LastChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
+      metricMenuItems: [],
       //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
       colors:
         metricsData
@@ -201,15 +221,24 @@ export function MetricsInspection() {
       description: "contributors",
       data: currentFetcherData ? (currentFetcherData.contributors?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
-      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
+      actions: { search: true, clear: true },
+      metricMenuItems: [
+        {
+          label: "Group Contributors",
+          icon: mdiAccountMultiple,
+          onClick: () => setModalOpen(true)
+        }
+      ],
       colors: []
     }
   } as const
 
-  const { icon, inspectionPanels, actions } = metrics[metricType]
+  const { icon, inspectionPanels, actions, metricMenuItems } = metrics[metricType]
 
   return (
     <>
+      <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
       <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
@@ -233,8 +262,14 @@ export function MetricsInspection() {
         )}
       </div>
       {inspectionPanels.map((Panel, i) => (
-        <MetricInspectionPanel key={i} icon={icon} actions={i === 0 ? actions : undefined}>
-          <Panel />
+        <MetricInspectionPanel
+          key={i}
+          icon={icon}
+          actions={i === 0 ? actions : undefined}
+          metricMenuItems={metricMenuItems}
+          title={Panel.title ?? "default"}
+        >
+          <Panel.content />
         </MetricInspectionPanel>
       ))}
     </>

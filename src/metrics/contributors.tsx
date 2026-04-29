@@ -9,7 +9,12 @@ export const ContributorsMetric: CategoricalMetric = {
   name: "Contributors",
   description: "Files are colored based on which contributors have contributed to it.",
   icon: mdiAccountGroup,
-  inspectionPanels: [PointLegend],
+  inspectionPanels: [
+    {
+      title: "Contributors",
+      content: PointLegend
+    }
+  ],
   getTooltipContent(obj, dbi, { contributorColors }) {
     const contributors = dbi.contributorsForPath[obj.path] ?? []
     if (contributors.length === 0) {
