@@ -60,11 +60,7 @@ export const FileSizeMetric: SegmentedMetric = {
     const lastIndex = categories.length - 1
 
     return categories
-      .filter((g, i) =>
-        i === lastIndex
-          ? fileSize >= g.range[0] && fileSize <= g.range[1]
-          : fileSize >= g.range[0] && fileSize < g.range[1]
-      )
+      .filter((g, i) => (i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]))
       ?.map((c) => c.text)
   },
 
@@ -149,9 +145,7 @@ export const FileSizeMetric: SegmentedMetric = {
     const categories = this.getBuckets(dbi)
     const lastIndex = categories.length - 1
     return categories.findIndex((g, i) =>
-      i === lastIndex
-        ? fileSize >= g.range[0] && fileSize <= g.range[1]
-        : fileSize >= g.range[0] && fileSize < g.range[1]
+      i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]
     )
   }
 } as const

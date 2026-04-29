@@ -20,17 +20,17 @@ import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-ob
 import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
-import type { GitObject, HexColor } from "~/shared/model"
+import type { HexColor } from "~/shared/model"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
-import type { MetricType } from "~/metrics/metrics"
+import type { MetricCache, MetricType } from "~/metrics/metrics"
 import { TypeMetric } from "~/metrics/fileExtension"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
-import type { GradLegendData } from "~/components/legend/GradiantLegend"
+import { reduceTree } from "~/shared/utils/tree"
 
 export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
@@ -73,20 +73,6 @@ export function MetricsInspection() {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
-  const sumFileSizeRecursive = (node: GitObject): number => {
-    if (node.type !== "tree") {
-      return node.sizeInBytes
-    }
-
-    return (node.children ?? []).reduce((sum, child): number => {
-      if (child.type !== "tree") {
-        return sum + child.sizeInBytes
-      }
-
-      return sum + sumFileSizeRecursive(child)
-    }, 0)
-  }
-
   const commitCount: number | null = isBlob
     ? data.databaseInfo.commitCounts[clickedObject.path]
     : currentFetcherData
@@ -112,28 +98,27 @@ export function MetricsInspection() {
       inspectionPanels: TypeMetric.inspectionPanels,
       actions: { search: true, clear: true },
       metricMenuItems: [],
-      colors:
-        metricsData
-          .get("FILE_TYPE")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      colors: metricsData
+        .get("FILE_TYPE")
+        ?.categoriesMap?.get(clickedObject.path)
+        ?.map((c) => c.color) ?? [missingInMapColor]
     },
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
       inspectionPanels: FileSizeMetric.inspectionPanels,
-      data: isBlob
-        ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
-        : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
-          " " +
-          byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
+      data: (() => {
+        const size = isBlob
+          ? clickedObject.sizeInBytes
+          : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] || 0), 0 as number)
+        return byteSize(size ?? 0).value + " " + byteSize(size ?? 0).unit
+      })(),
       actions: { search: false, clear: false },
       metricMenuItems: [],
-      colors:
-        metricsData
-          .get("FILE_SIZE")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      colors: [
+        FileSizeMetric.getBuckets(data.databaseInfo)[FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)]
+          .color
+      ]
     },
     MOST_COMMITS: {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
@@ -142,12 +127,13 @@ export function MetricsInspection() {
       inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
       metricMenuItems: [],
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("MOST_COMMITS")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      colors: [
+        CommitsMetric.getColorFromValue(
+          commitCount ?? 0,
+          data.databaseInfo,
+          metricsData.get("MOST_COMMITS") as MetricCache
+        )
+      ]
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "are top contributors" : "is top contributor",
@@ -186,12 +172,13 @@ export function MetricsInspection() {
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       metricMenuItems: [],
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("MOST_CONTRIBUTIONS")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      colors: [
+        LinesChangedMetric.getColorFromObject(
+          clickedObject,
+          data.databaseInfo,
+          metricsData.get("MOST_CONTRIBUTIONS") as MetricCache
+        )
+      ]
     },
     LAST_CHANGED: {
       description: "since last change",
@@ -209,12 +196,11 @@ export function MetricsInspection() {
       inspectionPanels: LastChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       metricMenuItems: [],
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("LAST_CHANGED")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      colors: [
+        LastChangedMetric.getBuckets(data.databaseInfo)[
+          LastChangedMetric.getBucketIndex(clickedObject, data.databaseInfo)
+        ]?.color
+      ]
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
