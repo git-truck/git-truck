@@ -34,7 +34,7 @@ export type Metric = {
   name: string
   description: string
   icon: string
-  inspectionPanels: Array<React.ComponentType>
+  inspectionPanels: Array<{ title: string; content: React.ComponentType}>
   getTooltipContent: (
     /**
      * The hovered objectGitObject

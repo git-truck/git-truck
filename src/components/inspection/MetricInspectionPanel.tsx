@@ -1,10 +1,8 @@
-import { mdiAccountMultiple, mdiClose, mdiDice5, mdiMagnify } from "@mdi/js"
+import { DropdownMenu } from "radix-ui"
+import { mdiClose, mdiDotsVertical, mdiMagnify } from "@mdi/js"
 import { useState, useRef, type ReactNode, createContext, use } from "react"
-import { useNavigation } from "react-router"
 import { ExpandingPanelButton } from "~/components/buttons/ExpandingPanelButton"
-import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
 import { Icon } from "~/components/Icon"
-import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
 import { useResetSelection, useSelectedCategories } from "~/state/stores/selection"
 import { cn } from "~/styling"
 
@@ -17,62 +15,46 @@ export function useMetricSearchContext() {
   return use(MetricSearchContext)
 }
 
-export type MetricPanelActions = {
+export type MetricPanelButton = {
   search?: boolean
   clear?: boolean
-  groupContributors?: boolean
-  shuffleContributorColors?: boolean
+}
+
+export type MetricPanelMenuItem = {
+  icon: string
+  label: string
+  onClick: () => void
 }
 
 export function MetricInspectionPanel({
   className = "",
   icon,
+  title,
   children,
-  actions = { search: false, clear: false, groupContributors: false }
+  actions = { search: false, clear: false },
+  metricMenuItems = []
 }: {
   className?: string
   icon: string
+  title: string
   children: ReactNode
-  actions?: MetricPanelActions
+  actions?: MetricPanelButton
+  metricMenuItems: MetricPanelMenuItem[]
 }) {
   const [selectedSearch, setSelectedSearch] = useState("")
-  const [open, setOpen] = useState(false)
-  const { state, formData } = useNavigation()
 
   return (
     <div className="mt-4">
       <div className={cn("flex w-full flex-col gap-0", className)}>
         <div className="flex w-full flex-row items-end justify-between align-bottom">
-          <button className="btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2">
+          <button className="btn--primary border-border dark:border-border-dark flex h-8 shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2">
             <Icon path={icon} size="1em" />
+            <span className="text-sm font-bold">{title}</span>
           </button>
           <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
             {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
-            {actions.groupContributors ? (
-              <>
-                <ExpandingPanelButton
-                  icon={mdiAccountMultiple}
-                  disabled={formData?.has("groupContributors")}
-                  onClick={() => setOpen(true)}
-                >
-                  Group contributors
-                </ExpandingPanelButton>
-                <GroupContributorsModal open={open} onClose={() => setOpen(false)} />
-              </>
-            ) : null}
-            {actions.shuffleContributorColors ? (
-              <ShuffleColorsForm>
-                <ExpandingPanelButton
-                  iconClassName={cn({
-                    "animate-spin transition-all starting:rotate-0": state !== "idle"
-                  })}
-                  icon={mdiDice5}
-                >
-                  Shuffle colors
-                </ExpandingPanelButton>
-              </ShuffleColorsForm>
-            ) : null}
             {actions.clear ? <ClearSelectionButton /> : null}
+            <SettingsButton metricMenuItems={metricMenuItems} />
           </div>
         </div>
         <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">
@@ -102,6 +84,40 @@ function ClearSelectionButton() {
     >
       Clear
     </ExpandingPanelButton>
+  )
+}
+
+function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelMenuItem[] }) {
+  return (
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild disabled={metricMenuItems.length === 0}>
+          <button
+            disabled={metricMenuItems.length === 0}
+            className="btn border-border dark:border-border-dark flex h-8 shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
+          >
+            <Icon path={mdiDotsVertical} size="1em" />
+          </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content
+          align="end"
+          alignOffset={5}
+          className="bg-primary-bg dark:bg-primary-bg-dark border-border dark:border-border-dark z-1 -mt-0.5 rounded-lg"
+        >
+          <DropdownMenu.Arrow className="fill-border dark:fill-border-dark" />
+          {metricMenuItems.map((item, index) => (
+            <DropdownMenu.Item
+              key={index}
+              className="btn flex cursor-pointer flex-row items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              onClick={item.onClick}
+            >
+              <Icon path={item.icon} size="1em" />
+              {item.label}
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </>
   )
 }
 
