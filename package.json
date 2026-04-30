@@ -185,9 +185,6 @@
     "url": "https://github.com/git-truck/git-truck/issues"
   },
   "homepage": "https://github.com/git-truck/git-truck#readme",
-  "publishConfig": {
-    "provenance": true
-  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
