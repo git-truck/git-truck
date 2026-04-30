@@ -48,7 +48,8 @@ export const LinesChangedMetric: GradientedMetric = {
   //GradientLegend specific function
   getColorFromValue(value: number, dbi: DatabaseInfo, cache: MetricCache) {
     const legend = cache.legend as GradLegendData
-    const cappedValue = Math.min(value, legend.maxValue)
+    if (!Number.isFinite(value) || value <= 0) return noEntryColor
+    const cappedValue = Math.max(legend.minValue, Math.min(value, legend.maxValue))
     const translater = new SpectrumTranslater(
       legend.minValue,
       legend.maxValue,
@@ -62,7 +63,8 @@ export const LinesChangedMetric: GradientedMetric = {
   getColorFromObject(obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) {
     const contribSum = isTree(obj)
       ? reduceTree(obj, (s, o) => s + (dbi.contribSumPerFile[o.path] || 0), 0 as number)
-      : dbi.contribSumPerFile[obj.path]
+      : (dbi.contribSumPerFile[obj.path] ?? 0)
+    if (contribSum <= 0) return noEntryColor
     return this.getColorFromValue(contribSum, dbi, cache)
   }
 }
