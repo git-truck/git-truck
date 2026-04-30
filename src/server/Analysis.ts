@@ -17,9 +17,8 @@ import { log } from "~/server/log"
 import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
-
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
-import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
+import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
 export type AnalysisStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
@@ -492,7 +491,7 @@ export class Analysis {
       await promiseHelper(this.gitService.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
     }
 
-    await AnalyzationInstanceManager.getOrCreateMetadataDB().setCompletion(
+    await MetadataDB.getInstance().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
