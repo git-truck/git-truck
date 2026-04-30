@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo } from "react"
 import { LegendDot } from "~/components/util"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useData } from "~/contexts/DataContext"
@@ -24,6 +24,7 @@ import { Icon } from "~/components/Icon"
 import { mdiCheckboxIntermediate, mdiDice5 } from "@mdi/js"
 import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
 import { useNavigation } from "react-router"
+import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 
 const ITEMS_PER_PAGE = 8
 
@@ -65,19 +66,10 @@ export function PointLegend() {
   const isCategorySelected = useIsCategorySelected()
   const [path] = useQueryState("path")
   const resetSelection = useResetSelection()
-  const [currentPage, setCurrentPage] = useState<number>(0)
-  const [, startTransition] = useTransition()
 
   useEffect(() => {
     resetSelection()
   }, [path, resetSelection])
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    startTransition(() => {
-      setCurrentPage(0)
-    })
-  }, [searchValue])
 
   const metricCache = useMemo(() => {
     const cacheKey = clickedObject ? clickedObject.path : data.databaseInfo.fileTree.path
@@ -117,13 +109,6 @@ export function PointLegend() {
 
   const filteredItems = searchValue.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
 
-  const maxTotalPages = Math.max(Math.ceil(items.length / ITEMS_PER_PAGE), 1)
-  const totalPages = Math.max(Math.ceil(filteredItems.length / ITEMS_PER_PAGE), 1)
-  const safePage = Math.min(currentPage, totalPages - 1)
-  const startIdx = safePage * ITEMS_PER_PAGE
-  const endIdx = startIdx + ITEMS_PER_PAGE
-  const shownItems = filteredItems.slice(startIdx, endIdx)
-
   if (items.length === 0) return null
 
   return (
@@ -146,36 +131,24 @@ export function PointLegend() {
         {/* DISTBAR still uses summed weight of items, as it cannot distribute width when weight > 100% */}
         <PointLegendDistBar items={items} totalWeight={summedWeight} />
       </div>
-      <div className="flex flex-col gap-2">
-        <PointLegendTable
-          items={shownItems}
-          totalWeight={totalWeight}
-          metricType={metricType}
-          maxTotalPages={maxTotalPages}
-        />
-        <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
-        <div className="flex items-center justify-between gap-2">
-          <button
-            disabled={safePage === 0}
-            className="btn text-xs"
-            title="Previous page"
-            onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
-          >
-            ← Prev
-          </button>
-          <span className="text-secondary-text text-xs">
-            Page {safePage + 1} of {totalPages}
-          </span>
-          <button
-            disabled={safePage === totalPages - 1}
-            className="btn text-xs"
-            title="Next page"
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
-          >
-            Next →
-          </button>
-        </div>
-      </div>
+      <PaginatedList
+        items={filteredItems}
+        itemsPerPage={ITEMS_PER_PAGE}
+        originalItemsCount={items.length}
+        itemHeight={22}
+        headerHeight={54}
+      >
+        {(shownItems, { totalPages }) => (
+          <>
+            <PointLegendTable
+              items={shownItems}
+              totalWeight={totalWeight}
+              metricType={metricType}
+              maxTotalPages={totalPages}
+            />
+          </>
+        )}
+      </PaginatedList>
     </div>
   )
 }
@@ -188,12 +161,12 @@ function PointLegendHeader({ metricType }: { metricType: MetricType }) {
 
   return (
     <>
-      <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
-      <div className="contents text-xs font-bold">
+      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
+      <div className="text-primary-text dark:text-primary-text-dark contents text-sm font-bold">
         <ShuffleColorsForm>
           <button
             disabled={!isAuthorRelatedLegend}
-            className={cn("btn--icon m-0 mt-1 h-min", {
+            className={cn("btn--icon m-0 mt-1 h-min text-xs", {
               "opacity-0": !isAuthorRelatedLegend
             })}
             title="Shuffle contributor colors"
@@ -208,11 +181,11 @@ function PointLegendHeader({ metricType }: { metricType: MetricType }) {
           </button>
         </ShuffleColorsForm>
         <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
-        <p className="text-right"># Files</p>
-        <p className="text-right">% Files</p>
+        <p className="text-right text-xs"># Files</p>
+        <p className="min-w-12 text-right text-xs">% Files</p>
         <Icon path={mdiCheckboxIntermediate} size={1} className="justify-self-end opacity-0" />
       </div>
-      <span className="bg-border dark:bg-border-dark col-span-full h-0.5 w-full" />
+      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
     </>
   )
 }
@@ -220,37 +193,25 @@ function PointLegendHeader({ metricType }: { metricType: MetricType }) {
 function PointLegendTable({
   items,
   totalWeight,
-  metricType,
-  maxTotalPages
+  metricType
 }: {
   items: [string, PointInfo][]
   totalWeight: number
   metricType: MetricType
   maxTotalPages: number
 }) {
-  const itemHeight = 25
-  const headerHeight = 48
-  // Keep max height if pagination exists, otherwise scale with actual items
-  const maxItemsToShow = maxTotalPages > 1 ? ITEMS_PER_PAGE : items.length
-  const minHeight = headerHeight + itemHeight * maxItemsToShow
-
   return (
-    <div style={{ minHeight: `${minHeight}px` }} className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <div className={cn("grid items-center justify-between gap-x-4", GRID_COLS)}>
         <PointLegendHeader metricType={metricType} />
       </div>
 
       {items.length === 0 ? (
-        <div
-          className="text-secondary-text flex items-center justify-center text-xs"
-          style={{
-            minHeight: `${minHeight - headerHeight}px`
-          }}
-        >
+        <div className="text-tertiary-text dark:text-tertiary-text-dark flex items-center justify-center text-sm">
           No items matched your search
         </div>
       ) : (
-        <div className={cn("grid items-center justify-between gap-x-4 gap-y-0.5", GRID_COLS)}>
+        <div className={cn("grid items-center justify-between gap-x-4", GRID_COLS)}>
           {items.map(([label, info]) => (
             <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
           ))}
@@ -282,7 +243,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
       <CheckboxWithLabel
         key={String(labelIsSelected)}
         className="contents"
-        checkBoxClassName={cn("ml-auto transition-opacity duration-50 group-hover/pointentry:opacity-100", {
+        checkBoxClassName={cn("ml-auto transition-opacity duration-200 group-hover/pointentry:opacity-100", {
           "opacity-15": !noSelectedCategories && !labelIsSelected
         })}
         intermediate={noSelectedCategories}
@@ -314,11 +275,14 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           />
         )}
         <span
-          className={cn("truncate font-bold transition-opacity duration-50 group-hover/pointentry:opacity-100", {
-            "opacity-15": !noSelectedCategories && !labelIsSelected,
-            "text-blue-primary": labelIsSelected,
-            "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
-          })}
+          className={cn(
+            "group-hover/pointentry:text-blue-primary truncate font-bold transition-opacity duration-200 group-hover/pointentry:opacity-100",
+            {
+              "text-secondary-text dark:text-secondary-text-dark": !labelIsSelected,
+              "opacity-15": !noSelectedCategories && !labelIsSelected,
+              "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
+            }
+          )}
           title={
             noSelectedCategories
               ? `Highlight ${label} exclusively`
@@ -333,7 +297,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         </span>
         <span
           className={cn(
-            "text-right text-xs font-normal transition-opacity duration-50 group-hover/pointentry:opacity-100",
+            "text-tertiary-text dark:text-tertiary-text-dark text-right text-xs transition-opacity duration-200 group-hover/pointentry:opacity-100",
             {
               "opacity-15": !noSelectedCategories && !labelIsSelected
             }
@@ -343,7 +307,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         </span>
         <span
           className={cn(
-            "text-right text-xs font-normal transition-opacity duration-50 group-hover/pointentry:opacity-100",
+            "text-tertiary-text dark:text-tertiary-text-dark min-w-12 text-right text-xs transition-opacity duration-50 group-hover/pointentry:opacity-100",
             {
               "opacity-15": !noSelectedCategories && !labelIsSelected
             }
