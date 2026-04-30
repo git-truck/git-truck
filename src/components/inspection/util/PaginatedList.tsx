@@ -28,12 +28,8 @@ export function PaginatedList<T>({
   const [currentPage, setCurrentPage] = useState<number>(0)
 
   const totalPages = Math.max(Math.ceil(items.length / itemsPerPage), 1)
-  const maxTotalPages = originalItemsCount ? Math.max(Math.ceil(originalItemsCount / itemsPerPage), 1) : totalPages
   const safePage = Math.min(currentPage, totalPages - 1)
-
-  // Calculate minimum height if pagination exists in original items
-  const shouldMaintainHeight = maxTotalPages > 1 && itemHeight > 0
-  const minHeight = shouldMaintainHeight ? headerHeight + itemHeight * itemsPerPage : undefined
+  const minHeight = headerHeight + itemHeight * Math.min(itemsPerPage, originalItemsCount ?? 1)
 
   // Reset to first page when items change
   useEffect(() => {
