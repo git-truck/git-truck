@@ -223,7 +223,7 @@ function PointLegendTable({
 
 function PointLegendEntry({ label, info, totalWeight }: { label: string; info: PointInfo; totalWeight: number }) {
   const { metricType } = useOptions()
-  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR"
+  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
 
   const selectedCategories = useSelectedCategories()
 
