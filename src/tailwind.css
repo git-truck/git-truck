@@ -16,11 +16,12 @@
   --color-tertiary-bg: var(--color-gray-50);
 
   --color-border: var(--color-gray-400);
+  --color-border-secondary: var(--color-gray-200);
   --color-border-highlight: var(--color-gray-600);
 
   --color-primary-text: var(--color-gray-950);
   --color-secondary-text: var(--color-gray-600);
-  --color-tertiary-text: var(--color-gray-400);
+  --color-tertiary-text: var(--color-gray-500);
 
   /* Dark */
   --color-primary-bg-dark: var(--color-gray-950);
@@ -28,11 +29,12 @@
   --color-tertiary-bg-dark: var(--color-gray-950);
 
   --color-border-dark: var(--color-gray-500);
+  --color-border-secondary-dark: var(--color-gray-700);
   --color-border-highlight-dark: var(--color-gray-200);
 
-  --color-primary-text-dark: var(--color-gray-50);
+  --color-primary-text-dark: var(--color-gray-100);
   --color-secondary-text-dark: var(--color-gray-300);
-  --color-tertiary-text-dark: var(--color-gray-400);
+  --color-tertiary-text-dark: var(--color-gray-500);
 
   /* Animations */
   --animate-hide-initially: 1s 1s linear forwards hide_initially;
