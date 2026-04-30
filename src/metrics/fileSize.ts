@@ -36,7 +36,7 @@ export const FileSizeMetric: SegmentedMetric = {
   name: "File size",
   description: "Files are colored based on their file size in bytes.",
   icon: mdiResize,
-  inspectionPanels: [SegmentLegend],
+  inspectionPanels: [{ title: "File Size", content: SegmentLegend }],
   getTooltipContent(obj: GitObject, _dbi: DatabaseInfo) {
     if (!isBlob(obj)) {
       // TODO: Aggregate folder size
@@ -60,15 +60,12 @@ export const FileSizeMetric: SegmentedMetric = {
     const lastIndex = categories.length - 1
 
     return categories
-      .filter((g, i) =>
-        i === lastIndex
-          ? fileSize >= g.range[0] && fileSize <= g.range[1]
-          : fileSize >= g.range[0] && fileSize < g.range[1]
-      )
+      .filter((g, i) => (i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]))
       ?.map((c) => c.text)
   },
 
-  metricFunctionFactory({ databaseInfo: dbi }) {
+  //For now we don't use _root for calculation
+  metricFunctionFactory({ databaseInfo: dbi }, _root) {
     return (blob: GitBlobObject, cache: MetricCache) => {
       const fileSizeGroupings = this.getBuckets(dbi)
       const fileSizeMapper = new FileSizeTranslater(dbi.minFileSize, dbi.maxFileSize)
@@ -148,9 +145,7 @@ export const FileSizeMetric: SegmentedMetric = {
     const categories = this.getBuckets(dbi)
     const lastIndex = categories.length - 1
     return categories.findIndex((g, i) =>
-      i === lastIndex
-        ? fileSize >= g.range[0] && fileSize <= g.range[1]
-        : fileSize >= g.range[0] && fileSize < g.range[1]
+      i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]
     )
   }
 } as const

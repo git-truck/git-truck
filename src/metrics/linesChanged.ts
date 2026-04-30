@@ -1,16 +1,22 @@
-import type { GitBlobObject } from "~/shared/model"
-import type { Metric, MetricCache } from "~/metrics/metrics"
-import { SpectrumTranslater } from "~/metrics/metricUtils"
-import { hslToHex, formatLargeNumber } from "~/shared/util"
+import type { DatabaseInfo, GitBlobObject, GitObject, HexColor } from "~/shared/model"
+import type { GradientedMetric, MetricCache } from "~/metrics/metrics"
+import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
+import { hslToHex, formatLargeNumber, isTree } from "~/shared/util"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiPlusMinusVariant } from "@mdi/js"
 import { GradientLegend, type GradLegendData } from "~/components/legend/GradiantLegend"
+import { reduceTree } from "~/shared/utils/tree"
 
-export const LinesChangedMetric: Metric = {
+const LINES_CHANGED_HUE = 118
+const LINES_CHANGED_SATURATION = 50
+const LINES_CHANGED_MIN_LIGHTNESS = 40
+const LINES_CHANGED_MAX_LIGHTNESS = 92
+
+export const LinesChangedMetric: GradientedMetric = {
   icon: mdiPlusMinusVariant,
   name: "Lines Changed",
   description: "Files are colored based on how many line changes (additions and deletions) have been made to it.",
-  inspectionPanels: [GradientLegend],
+  inspectionPanels: [{ title: "Lines Changed", content: GradientLegend }],
   getTooltipContent(obj, dbi) {
     const contribs = dbi.contribSumPerFile[obj.path]
     if (!contribs) {
@@ -18,9 +24,11 @@ export const LinesChangedMetric: Metric = {
     }
     return `${formatLargeNumber(contribs)} lines`
   },
-  metricFunctionFactory(data) {
-    const maxContribCount = data.databaseInfo.maxMinContribCounts.max
-    const minContribCount = data.databaseInfo.maxMinContribCounts.min
+  metricFunctionFactory(data, root) {
+    const { min: minContribCount, max: maxContribCount } = getMinMaxValuesForMetric(
+      root,
+      data.databaseInfo.contribSumPerFile
+    )
     const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
@@ -36,20 +44,40 @@ export const LinesChangedMetric: Metric = {
       }
       contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
     }
+  },
+  //GradientLegend specific function
+  getColorFromValue(value: number, dbi: DatabaseInfo, cache: MetricCache) {
+    const legend = cache.legend as GradLegendData
+    if (!Number.isFinite(value) || value <= 0) return noEntryColor
+    const cappedValue = Math.max(legend.minValue, Math.min(value, legend.maxValue))
+    const translater = new SpectrumTranslater(
+      legend.minValue,
+      legend.maxValue,
+      LINES_CHANGED_MIN_LIGHTNESS,
+      LINES_CHANGED_MAX_LIGHTNESS
+    )
+    const lightness = translater.inverseTranslate(cappedValue)
+    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, lightness) as HexColor
+  },
+  //GradientLegend specific function
+  getColorFromObject(obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) {
+    const contribSum = isTree(obj)
+      ? reduceTree(obj, (s, o) => s + (dbi.contribSumPerFile[o.path] || 0), 0 as number)
+      : (dbi.contribSumPerFile[obj.path] ?? 0)
+    if (contribSum <= 0) return noEntryColor
+    return this.getColorFromValue(contribSum, dbi, cache)
   }
 }
 
 class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
-  readonly min_lightness = 40
-  readonly max_lightness = 92
 
   constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(min, max, this.min_lightness, this.max_lightness)
+    this.translater = new SpectrumTranslater(min, max, LINES_CHANGED_MIN_LIGHTNESS, LINES_CHANGED_MAX_LIGHTNESS)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(118, 50, this.translater.inverseTranslate(value))
+    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {

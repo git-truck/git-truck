@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, GitTreeObject, HexColor, Person, RepoData } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, GitObject, HexColor, Person, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import { type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -30,11 +30,11 @@ export const Metrics = {
   CONTRIBUTORS: ContributorsMetric
 } as const satisfies Record<string, Metric>
 
-export type Metric = {
+type Metric = {
   name: string
   description: string
   icon: string
-  inspectionPanels: Array<React.ComponentType>
+  inspectionPanels: Array<{ title: string; content: React.ComponentType }>
   getTooltipContent: (
     /**
      * The hovered objectGitObject
@@ -51,6 +51,7 @@ export type Metric = {
   ) => ReactNode
   metricFunctionFactory: (
     data: RepoData,
+    root: GitObject,
     options: { contributorColors: Record<string, HexColor>; topContributorCutoff: number }
   ) => MetricFunction
 }
@@ -62,6 +63,11 @@ export type CategoricalMetric = Metric & {
 export type SegmentedMetric = CategoricalMetric & {
   getBuckets(dbi: DatabaseInfo): { text: string; range: [number, number]; color: HexColor }[]
   getBucketIndex(obj: GitObject, dbi: DatabaseInfo): number
+}
+
+export type GradientedMetric = Metric & {
+  getColorFromValue: (value: number, dbi: DatabaseInfo, cache: MetricCache) => HexColor
+  getColorFromObject: (obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) => HexColor
 }
 
 export type MetricType = keyof typeof Metrics
@@ -79,6 +85,22 @@ export function createMetricData(
   predefinedContributorColors: Record<string, HexColor>,
   topContributorCutoff: number
 ): MetricsData {
+  return createMetricDataForNode(
+    data,
+    data.databaseInfo.fileTree,
+    colorSeed,
+    predefinedContributorColors,
+    topContributorCutoff
+  )
+}
+
+export function createMetricDataForNode(
+  data: RepoData,
+  root: GitObject,
+  colorSeed: string | null,
+  predefinedContributorColors: Record<string, HexColor>,
+  topContributorCutoff: number
+): MetricsData {
   const contributorColors = generateContributorColors(
     data.databaseInfo.contributors,
     colorSeed,
@@ -86,10 +108,7 @@ export function createMetricData(
   )
 
   return {
-    caches: setupMetricsCache(
-      data.databaseInfo.fileTree,
-      getMetricCalcs(data, contributorColors, topContributorCutoff)
-    ),
+    caches: setupMetricsCache(root, getMetricCalcs(data, root, contributorColors, topContributorCutoff)),
     contributorColorMap: new Map(Object.entries(contributorColors))
   }
 }
@@ -134,48 +153,70 @@ function generateContributorColors(
 
 function getMetricCalcs(
   data: RepoData,
+  root: GitObject,
   contributorColors: Record<string, HexColor>,
   topContributorCutoff: number
 ): Record<MetricType, MetricFunction> {
+  const options = { contributorColors, topContributorCutoff }
   return {
-    FILE_TYPE: TypeMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    MOST_COMMITS: CommitsMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    LAST_CHANGED: LastChangedMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    TOP_CONTRIBUTOR: TopContributorMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    MOST_CONTRIBUTIONS: LinesChangedMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    FILE_SIZE: FileSizeMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff }),
-    CONTRIBUTORS: ContributorsMetric.metricFunctionFactory(data, { contributorColors, topContributorCutoff })
+    FILE_TYPE: TypeMetric.metricFunctionFactory(data, root, options),
+    MOST_COMMITS: CommitsMetric.metricFunctionFactory(data, root, options),
+    LAST_CHANGED: LastChangedMetric.metricFunctionFactory(data, root, options),
+    TOP_CONTRIBUTOR: TopContributorMetric.metricFunctionFactory(data, root, options),
+    MOST_CONTRIBUTIONS: LinesChangedMetric.metricFunctionFactory(data, root, options),
+    FILE_SIZE: FileSizeMetric.metricFunctionFactory(data, root, options),
+    CONTRIBUTORS: ContributorsMetric.metricFunctionFactory(data, root, options)
   }
 }
 
 function setupMetricsCache(
-  tree: GitTreeObject,
+  root: GitObject,
   metricCalcs: Record<MetricType, (blob: GitBlobObject, cache: MetricCache) => void>
 ) {
   const metricCache = new Map<MetricType, MetricCache>()
-  setupMetricsCacheRec(tree, metricCalcs, metricCache)
+  setupMetricsCacheRec(root, metricCalcs, metricCache)
   return metricCache
 }
 
 function setupMetricsCacheRec(
-  tree: GitTreeObject,
+  root: GitObject,
   metricCalcs: Record<MetricType, MetricFunction>,
   acc: Map<MetricType, MetricCache>
 ) {
-  for (const child of tree.children) {
+  if (root.type === "blob") {
+    const entries = Object.entries(metricCalcs) as [MetricType, MetricFunction][]
+    for (const [metricType, metricFunc] of entries) {
+      if (!acc.has(metricType)) {
+        acc.set(metricType, {
+          legend: undefined,
+          categoriesMap: new Map<string, Array<{ category: string; color: `#${string}` }>>()
+        })
+      }
+      metricFunc(
+        root,
+        acc.get(metricType) ?? {
+          legend: undefined,
+          categoriesMap: new Map<string, Array<{ category: string; color: `#${string}` }>>()
+        }
+      )
+    }
+    return
+  }
+
+  for (const child of root.children) {
     switch (child.type) {
-      case "tree": {
+      case "tree":
         setupMetricsCacheRec(child, metricCalcs, acc)
         break
-      }
       case "blob": {
         const entries = Object.entries(metricCalcs) as [MetricType, MetricFunction][]
         for (const [metricType, metricFunc] of entries) {
-          if (!acc.has(metricType))
+          if (!acc.has(metricType)) {
             acc.set(metricType, {
               legend: undefined,
               categoriesMap: new Map<string, Array<{ category: string; color: `#${string}` }>>()
             })
+          }
           metricFunc(
             child,
             acc.get(metricType) ?? {

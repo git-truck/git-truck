@@ -1,18 +1,13 @@
-import {
-  mdiAccountGroup,
-  mdiFileOutline,
-  mdiPlusMinusVariant,
-  mdiPulse,
-  mdiSourceCommit,
-  mdiFolderOutline,
-  mdiEyeOffOutline,
-  mdiSourceRepository
-} from "@mdi/js"
+import { mdiFileOutline, mdiFolderOutline, mdiEyeOffOutline, mdiSourceRepository, mdiAccountMultiple } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useFetcher, href, Form, useNavigation } from "react-router"
-import { MetricInspectionPanel, type MetricPanelActions } from "~/components/inspection/MetricInspectionPanel"
+import {
+  MetricInspectionPanel,
+  type MetricPanelMenuItem,
+  type MetricPanelButton
+} from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useData } from "~/contexts/DataContext"
@@ -25,15 +20,17 @@ import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-ob
 import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { usePath } from "~/contexts/PathContext"
-import type { GitObject, HexColor } from "~/shared/model"
+import type { HexColor } from "~/shared/model"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
-import type { MetricType } from "~/metrics/metrics"
+import type { MetricCache, MetricType } from "~/metrics/metrics"
 import { TypeMetric } from "~/metrics/fileExtension"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
+import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
+import { reduceTree } from "~/shared/utils/tree"
 
 export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
@@ -42,6 +39,7 @@ export function MetricsInspection() {
   const data = useData()
   const [metricsData, contributorColors] = useMetrics()
   const { metricType, setMetricType } = useOptions()
+  const [modalOpen, setModalOpen] = useState(false)
 
   const isBlob = clickedObject?.type === "blob"
   const isRepo = isRepositoryRoot(clickedObject)
@@ -74,20 +72,6 @@ export function MetricsInspection() {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
-  const sumFileSizeRecursive = (node: GitObject): number => {
-    if (node.type !== "tree") {
-      return node.sizeInBytes
-    }
-
-    return (node.children ?? []).reduce((sum, child): number => {
-      if (child.type !== "tree") {
-        return sum + child.sizeInBytes
-      }
-
-      return sum + sumFileSizeRecursive(child)
-    }, 0)
-  }
-
   const commitCount: number | null = isBlob
     ? data.databaseInfo.commitCounts[clickedObject.path]
     : currentFetcherData
@@ -100,8 +84,9 @@ export function MetricsInspection() {
       description: string
       icon: string
       data: ReactNode
-      inspectionPanels: Array<React.ComponentType>
-      actions: MetricPanelActions
+      inspectionPanels: Array<{ title: string; content: React.ComponentType }>
+      actions: MetricPanelButton
+      metricMenuItems: MetricPanelMenuItem[]
       colors: Array<HexColor>
     }
   > = {
@@ -111,51 +96,61 @@ export function MetricsInspection() {
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
       inspectionPanels: TypeMetric.inspectionPanels,
       actions: { search: true, clear: true },
-      colors:
-        metricsData
-          .get("FILE_TYPE")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      metricMenuItems: [],
+      colors: metricsData
+        .get("FILE_TYPE")
+        ?.categoriesMap?.get(clickedObject.path)
+        ?.map((c) => c.color) ?? [missingInMapColor]
     },
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
       inspectionPanels: FileSizeMetric.inspectionPanels,
-      data: isBlob
-        ? byteSize(clickedObject.sizeInBytes ?? 0).value + " " + byteSize(clickedObject.sizeInBytes ?? 0).unit
-        : byteSize(sumFileSizeRecursive(clickedObject) ?? 0).value +
-          " " +
-          byteSize(sumFileSizeRecursive(clickedObject) ?? 0).unit,
+      data: (() => {
+        const size = isBlob
+          ? clickedObject.sizeInBytes
+          : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] || 0), 0 as number)
+        return byteSize(size ?? 0).value + " " + byteSize(size ?? 0).unit
+      })(),
       actions: { search: false, clear: false },
-      colors:
-        metricsData
-          .get("FILE_SIZE")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      metricMenuItems: [],
+      colors: [
+        FileSizeMetric.getBuckets(data.databaseInfo)[FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)]
+          .color ?? missingInMapColor
+      ]
     },
     MOST_COMMITS: {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
-      icon: mdiSourceCommit,
+      icon: CommitsMetric.icon,
       data: commitCount?.toLocaleString() ?? "loading...",
       inspectionPanels: CommitsMetric.inspectionPanels,
       actions: { search: false, clear: false },
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("MOST_COMMITS")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      metricMenuItems: [],
+      colors: [
+        CommitsMetric.getColorFromValue(
+          commitCount ?? 0,
+          data.databaseInfo,
+          metricsData.get("MOST_COMMITS") as MetricCache
+        )
+      ]
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "are top contributors" : "is top contributor",
-      icon: mdiAccountGroup,
+      icon: TopContributorMetric.icon,
       data: currentFetcherData
         ? currentFetcherData.multiTopContributors
           ? "Multiple people"
           : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
         : "loading...",
       inspectionPanels: TopContributorMetric.inspectionPanels,
-      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
+      actions: { search: true, clear: true },
+      metricMenuItems: [
+        {
+          label: "Group Contributors",
+          icon: mdiAccountMultiple,
+          onClick: () => setModalOpen(true)
+        }
+      ],
       colors: [
         currentFetcherData
           ? currentFetcherData.multiTopContributors
@@ -166,7 +161,7 @@ export function MetricsInspection() {
     },
     MOST_CONTRIBUTIONS: {
       description: "line changes",
-      icon: mdiPlusMinusVariant,
+      icon: LinesChangedMetric.icon,
       data: isBlob
         ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
         : Object.entries(data.databaseInfo.contribSumPerFile)
@@ -175,16 +170,18 @@ export function MetricsInspection() {
             .toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("MOST_CONTRIBUTIONS")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      metricMenuItems: [],
+      colors: [
+        LinesChangedMetric.getColorFromObject(
+          clickedObject,
+          data.databaseInfo,
+          metricsData.get("MOST_CONTRIBUTIONS") as MetricCache
+        )
+      ]
     },
     LAST_CHANGED: {
       description: "since last change",
-      icon: mdiPulse,
+      icon: LastChangedMetric.icon,
       data: isBlob
         ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
         : (dateFormatRelative(
@@ -197,27 +194,36 @@ export function MetricsInspection() {
           ) ?? "unknown"),
       inspectionPanels: LastChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
-      //TODO: Find a way to determine continous metric colour based on input value with cap of the max of current view.
-      colors:
-        metricsData
-          .get("LAST_CHANGED")
-          ?.categoriesMap?.get(clickedObject.path)
-          ?.map((c) => c.color) ?? []
+      metricMenuItems: [],
+      colors: [
+        LastChangedMetric.getBuckets(data.databaseInfo)[
+          LastChangedMetric.getBucketIndex(clickedObject, data.databaseInfo)
+        ]?.color ?? missingInMapColor
+      ]
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "contributors",
       data: currentFetcherData ? (currentFetcherData.contributors?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
-      actions: { search: true, clear: true, groupContributors: true, shuffleContributorColors: true },
+      actions: { search: true, clear: true },
+      metricMenuItems: [
+        {
+          label: "Group Contributors",
+          icon: mdiAccountMultiple,
+          onClick: () => setModalOpen(true)
+        }
+      ],
       colors: []
     }
   } as const
 
-  const { icon, inspectionPanels, actions } = metrics[metricType]
+  const { icon, inspectionPanels, actions, metricMenuItems } = metrics[metricType]
 
   return (
     <>
+      <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
       <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
@@ -241,8 +247,14 @@ export function MetricsInspection() {
         )}
       </div>
       {inspectionPanels.map((Panel, i) => (
-        <MetricInspectionPanel key={i} icon={icon} actions={i === 0 ? actions : undefined}>
-          <Panel />
+        <MetricInspectionPanel
+          key={i}
+          icon={icon}
+          actions={i === 0 ? actions : undefined}
+          metricMenuItems={metricMenuItems}
+          title={Panel.title ?? "default"}
+        >
+          <Panel.content />
         </MetricInspectionPanel>
       ))}
     </>
@@ -292,25 +304,21 @@ function InteractionButtons() {
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
-      {!isRoot ? (
-        <>
-          <Form
-            className="w-max"
-            method="post"
-            action={viewAction}
-            onSubmit={() => {
-              if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
-              setClickedObject(null)
-            }}
-          >
-            <input type="hidden" name="hide" value={clickedObject.path} />
-            <button className="btn" disabled={state !== "idle"} title="Hide this file">
-              <Icon path={mdiEyeOffOutline} />
-              Hide
-            </button>
-          </Form>
-        </>
-      ) : null}
+      <Form
+        className="w-max"
+        method="post"
+        action={viewAction}
+        onSubmit={() => {
+          if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
+          setClickedObject(null)
+        }}
+      >
+        <input type="hidden" name="hide" value={clickedObject.path} />
+        <button className="btn" disabled={state !== "idle" || isRoot} title="Hide this file">
+          <Icon path={mdiEyeOffOutline} />
+          Hide
+        </button>
+      </Form>
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
