@@ -14,6 +14,8 @@ const BarChart = () => {
   const data = databaseInfo.commitCountPerTimeInterval
   const [start, end] = databaseInfo.selectedRange
   const height = 50
+  const selectedFileTimestamps = databaseInfo.selectedFileCommitTimestamps
+  const hasSelectedFile = selectedFileTimestamps.length > 0
 
   const width = size.width
 
@@ -56,6 +58,12 @@ const BarChart = () => {
           const barHeight = height - yScale(d.count)
           const barY = yScale(d.count)
           const isInRange = d.timestamp >= start && d.timestamp < end
+          const [intervalStart, intervalEnd] = expandIntervalToRange(
+            d.timestamp,
+            databaseInfo.commitCountPerTimeIntervalUnit
+          )
+          const hasFileActivity =
+            hasSelectedFile && selectedFileTimestamps.some((t) => t >= intervalStart && t < intervalEnd)
 
           return (
             <g key={`${d.date}-${i}`}>
@@ -68,7 +76,17 @@ const BarChart = () => {
                 ry={treemapBlobBorderRadius}
                 className={cn(
                   "transition-[height,y] duration-300 ease-out",
-                  isInRange ? "fill-blue-primary" : "fill-blue-primary/40"
+                  hasSelectedFile
+                    ? hasFileActivity
+                      ? isInRange
+                        ? "fill-amber-400"
+                        : "fill-amber-400/40"
+                      : isInRange
+                        ? "fill-blue-primary/30"
+                        : "fill-blue-primary/15"
+                    : isInRange
+                      ? "fill-blue-primary"
+                      : "fill-blue-primary/40"
                 )}
               />
               <rect
@@ -80,10 +98,6 @@ const BarChart = () => {
                 ry={treemapBlobBorderRadius}
                 className="hover:stroke-blue-secondary stroke-transparent stroke-1 hover:fill-transparent"
                 onClick={() => {
-                  const [intervalStart, intervalEnd] = expandIntervalToRange(
-                    d.timestamp,
-                    databaseInfo.commitCountPerTimeIntervalUnit
-                  )
                   updateTimeseries([intervalStart, intervalEnd])
                 }}
               >
@@ -98,3 +112,4 @@ const BarChart = () => {
 }
 
 export default BarChart
+

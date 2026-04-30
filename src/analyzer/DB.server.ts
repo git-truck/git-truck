@@ -1002,6 +1002,16 @@ export default class DB {
     return ["%Y", "year"]
   }
 
+  public async getCommitTimestampsForPath(objectPath: string): Promise<number[]> {
+    const statement = await this.prepare(
+      `SELECT DISTINCT committertime FROM filechanges_commits_renamed_cached WHERE filepath = ? OR filepath GLOB ?;`
+    )
+    statement.bindVarchar(1, objectPath)
+    statement.bindVarchar(2, objectPath + "/*")
+    const result = await statement.runAndReadAll()
+    return result.getRowObjects().map((row) => Number(row["committertime"]))
+  }
+
   public async getCommitCountPerTime(
     timerange: [number, number]
   ): Promise<[{ date: string; count: number; timestamp: number }[], "day" | "week" | "month" | "year"]> {

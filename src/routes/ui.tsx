@@ -58,7 +58,8 @@ const mockRepoData: RepoData = {
     analyzedRepos: [],
     contribSumPerFile: {},
     maxMinContribCounts: { max: 0, min: 0 },
-    commitCount: 0
+    commitCount: 0,
+    selectedFileCommitTimestamps: []
   }
 }
 
