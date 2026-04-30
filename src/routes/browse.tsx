@@ -404,7 +404,10 @@ export default function Index({
                       status="Success"
                       isAnalyzed={
                         repo.type === "repository"
-                          ? analyzedRepos.find((ar) => ar.hash === repo.hash) !== undefined
+                          ? analyzedRepos.find(
+                              (ar) =>
+                                ar.repositoryPath === repo.path && ar.hash === repo.hash && ar.branch === repo.branch
+                            ) !== undefined
                           : false
                       }
                     />

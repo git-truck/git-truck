@@ -83,8 +83,8 @@ export default class MetadataDB {
     const completedResults: CompletedResult[] = []
     const currentMetadata = await this.readMetadata()
     for (const [key, val] of Object.entries(currentMetadata.completions)) {
-      const [repo, branch] = key.split(this.separator)
-      completedResults.push({ repo, branch, time: val.time, hash: val.hash })
+      const [repositoryPath, branch] = key.split(this.separator)
+      completedResults.push({ repositoryPath, branch, time: val.time, hash: val.hash })
     }
     return completedResults
   }
