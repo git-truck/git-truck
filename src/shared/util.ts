@@ -132,7 +132,7 @@ export function generateVersionComparisonLink({
   return `https://github.com/git-truck/git-truck/compare/v${currentVersion}...v${latestVersion}`
 }
 
-export function invariant<T>(condition: T, message: string): asserts condition is NonNullable<T> {
+export function invariant<T>(condition: T, message: string): asserts condition {
   if (!condition) {
     throw new Error(message)
   }

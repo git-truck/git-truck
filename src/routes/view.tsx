@@ -194,7 +194,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
   if (typeof contributorName === "string") {
     instance.prevInvokeReason = "contributorColor"
-    await MetadataDB.getInstance().addContributorColor(contributorName, contributorColor as string)
+    invariant(typeof contributorColor === "string", "contributorColor is required")
+    await MetadataDB.getInstance().addContributorColor(contributorName, contributorColor)
     return null
   }
 
