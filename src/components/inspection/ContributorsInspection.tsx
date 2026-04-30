@@ -1,7 +1,6 @@
 import { useQueryState } from "nuqs"
-import { Fragment, useEffect, useId, useState } from "react"
-import { useFetcher, href } from "react-router"
-import { ChevronButton } from "~/components/ChevronButton"
+import { Fragment, useEffect } from "react"
+import { useFetcher, href, useNavigation } from "react-router"
 import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -9,6 +8,12 @@ import { viewSerializer } from "~/routes/view"
 import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
+import { PaginatedList } from "~/components/inspection/util/PaginatedList"
+import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
+import { Icon } from "~/components/Icon"
+import { mdiDice5 } from "@mdi/js"
+import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
+import { missingInMapColor } from "~/const"
 
 function ContributorDistributionLabel({ htmlFor }: { htmlFor?: string }) {
   return (
@@ -61,7 +66,36 @@ export function ContributorsInspection() {
   )
 }
 
-const contributorCutoff = 2
+const CONTRIBUTORS_PER_PAGE = 8
+
+const CONTRIBUTOR_GRID_COLS = "grid-cols-[max-content_4fr_max-content_max-content_max-content]"
+
+function ContributorDistributionHeader() {
+  const navigationState = useNavigation().state
+
+  return (
+    <>
+      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
+      <div className="text-primary-text dark:text-primary-text-dark contents text-sm font-bold">
+        <ShuffleColorsForm>
+          <button className="btn--icon m-0 mt-1 h-min text-xs" title="Shuffle contributor colors">
+            <Icon
+              className={cn("transition-transform duration-100 hover:rotate-20", {
+                "animate-spin transition-all starting:rotate-0": navigationState !== "idle"
+              })}
+              path={mdiDice5}
+              size="1.5em"
+            />
+          </button>
+        </ShuffleColorsForm>
+        <p>Contributor</p>
+        <p className="text-right text-xs"># Line Changes</p>
+        <p className="min-w-12 text-right text-xs">%</p>
+      </div>
+      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
+    </>
+  )
+}
 
 function ContributorDistribution({
   className = "",
@@ -72,89 +106,78 @@ function ContributorDistribution({
   contributorDistribution: { contributor: string; contribs: number }[]
   lineChangesSum: number
 }) {
-  const contributorDistributionExpandId = useId()
-  const [collapsed, setCollapsed] = useState<boolean>(true)
-
-  const contributorsAreCutoff = contributorDistribution.length > contributorCutoff + 1
-  //ContribSum > sum(Contribs) if there are coauthors
   const contribSum = lineChangesSum ?? 0
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div
-        className={`flex justify-between ${contributorsAreCutoff ? "hover:text-secondary-text dark:hover:text-secondary-text-dark cursor-pointer" : ""}`}
-      >
-        <ContributorDistributionLabel htmlFor={contributorDistributionExpandId} />
-        {contributorsAreCutoff ? (
-          <ChevronButton
-            id={contributorDistributionExpandId}
-            open={!collapsed}
-            onClick={() => setCollapsed(!collapsed)}
-          />
-        ) : null}
-      </div>
-      <div className="grid grid-cols-[1fr_auto] items-center justify-center gap-1">
-        {contributorsAreCutoff ? (
-          <>
-            <ContributorDistFragment
-              show
-              items={contributorDistribution.slice(0, contributorCutoff)}
-              contribSum={contribSum}
-            />
-            <ContributorDistFragment
-              show={!collapsed}
-              items={contributorDistribution.slice(contributorCutoff)}
-              contribSum={contribSum}
-            />
-            {collapsed ? (
-              <button
-                className="cursor-pointer text-left text-xs opacity-70 hover:opacity-100"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                + {contributorDistribution.slice(contributorCutoff).length} more
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {contributorDistribution.length > 0 ? (
-              <ContributorDistFragment show items={contributorDistribution} contribSum={contribSum} />
-            ) : (
-              <p>No contributors found</p>
-            )}
-          </>
-        )}
-      </div>
+      {contributorDistribution.length === 0 ? (
+        <p>No contributors found</p>
+      ) : (
+        <PaginatedList
+          items={contributorDistribution}
+          itemsPerPage={CONTRIBUTORS_PER_PAGE}
+          itemHeight={22}
+          headerHeight={53}
+        >
+          {(shownItems) => (
+            <>
+              <div className={cn("grid items-center justify-between gap-x-2", CONTRIBUTOR_GRID_COLS)}>
+                <ContributorDistributionHeader />
+              </div>
+              <div className={cn("grid items-center justify-between gap-x-2 gap-y-1", CONTRIBUTOR_GRID_COLS)}>
+                <ContributorDistFragment items={shownItems} contribSum={contribSum} />
+              </div>
+            </>
+          )}
+        </PaginatedList>
+      )}
     </div>
   )
 }
 
-function ContributorDistFragment(props: {
-  items: { contributor: string; contribs: number }[]
-  show: boolean
-  contribSum: number
-}) {
+function ContributorDistFragment(props: { items: { contributor: string; contribs: number }[]; contribSum: number }) {
   const [, contributorColors] = useMetrics()
+  const selectedCategories = useSelectedCategories()
 
-  if (!props.show) return null
+  const { isSelected } = useSelectedCategory()
 
   return (
     <>
       {props.items.map((legendItem) => {
         const contrib = legendItem.contribs
         const contributor = legendItem.contributor
-        const roundedContrib = Math.round((contrib / props.contribSum) * 100)
-        const contribPercentage = props.contribSum == 0 ? "100" : roundedContrib === 0 ? "<1" : roundedContrib
+        const roundedContrib = (contrib / props.contribSum) * 100
+        const contribPercentage =
+          props.contribSum == 0
+            ? "100.0"
+            : roundedContrib.toLocaleString(undefined, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+              })
+
+        const noSelectedCategories = selectedCategories.length === 0
+        const labelIsSelected = isSelected(contributor)
         return (
           <Fragment key={contributor + contrib}>
-            <div className="flex items-center gap-1">
+            <div
+              className={cn(
+                "text-tertiary-text dark:text-tertiary-text-dark contents *:transition-opacity *:duration-200",
+                {
+                  "*:opacity-15": !noSelectedCategories && !labelIsSelected
+                }
+              )}
+            >
               <LegendDot
                 contributorColorToChange={contributor}
-                dotColor={contributorColors.get(contributor) ?? "grey"}
+                dotColor={contributorColors.get(contributor) ?? missingInMapColor}
               />
-              <span className="overflow-hidden text-sm font-bold text-ellipsis whitespace-pre">{contributor}</span>
+              <span className="text-secondary-text dark:text-secondary-text-dark truncate text-sm font-bold">
+                {contributor}
+              </span>
+              <span className="text-right text-xs">{contrib.toLocaleString()}</span>
+              <span className="min-w-12 text-right text-xs">{contribPercentage}%</span>
+              <div />
             </div>
-            <span className="text-right text-sm break-all">{contribPercentage}%</span>
           </Fragment>
         )
       })}

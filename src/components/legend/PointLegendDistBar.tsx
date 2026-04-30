@@ -107,9 +107,11 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                         {
                           "ml-1": isFirst,
                           "opacity-0": !showTick,
-                          "opacity-15": !noSelectedCategories && !isSel && showTick
+                          "opacity-15": !noSelectedCategories && !isSel && showTick,
+                          "text-secondary-text dark:text-primary-text-dark": isSel,
+                          "text-tertiary-text dark:text-tertiary-text-dark": !isSel
                         },
-                        "pointer-events-none text-xs whitespace-nowrap"
+                        "pointer-events-none text-xs font-semibold whitespace-nowrap"
                       )}
                       title={seg.label}
                     >
@@ -138,9 +140,11 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                         {
                           "ml-1": isFirst,
                           "opacity-0": !showTick,
+                          "text-secondary-text dark:text-primary-text-dark": isSel,
+                          "text-tertiary-text dark:text-tertiary-text-dark": !isSel,
                           "opacity-15": !noSelectedCategories && !isSel && showTick
                         },
-                        "pointer-events-none text-xs whitespace-nowrap"
+                        "pointer-events-none text-xs font-semibold whitespace-nowrap"
                       )}
                     >
                       {displayLabel}
