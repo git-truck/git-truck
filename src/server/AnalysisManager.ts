@@ -10,6 +10,8 @@ import os from "os"
 import { GitService } from "~/server/git-service"
 import DB from "~/server/DB"
 import fs from "fs/promises"
+import { DisposableMutex } from "~/server/DisposableMutex"
+import { createHash } from "crypto"
 
 export class AnalysisManager {
   private static instancesSingleton: Map<string, Map<string, Analysis>> = new Map() // repo -> branch -> instance

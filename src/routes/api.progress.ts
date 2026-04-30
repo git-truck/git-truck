@@ -48,7 +48,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   // Otherwise, long-poll until revision changes or timeout
   const startTime = Date.now()
   while (Date.now() - startTime < LONG_POLL_TIMEOUT && !request.signal.aborted) {
-    await sleep(POLLING_RATE, { signal: request.signal })
+    try {
+      await sleep(POLLING_RATE, { signal: request.signal })
+    } catch {
+      return
+    }
     if (request.signal.aborted) {
       return
     }
