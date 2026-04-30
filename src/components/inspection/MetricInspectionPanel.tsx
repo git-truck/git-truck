@@ -94,6 +94,8 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelMenuI
         <DropdownMenu.Trigger asChild disabled={metricMenuItems.length === 0}>
           <button
             disabled={metricMenuItems.length === 0}
+            aria-label="Panel options"
+            title="Panel options"
             className="btn border-border dark:border-border-dark flex h-8 shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
           >
             <Icon path={mdiDotsVertical} size="1em" />
@@ -109,7 +111,7 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelMenuI
             <DropdownMenu.Item
               key={index}
               className="btn flex cursor-pointer flex-row items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
-              onClick={item.onClick}
+              onSelect={item.onClick}
             >
               <Icon path={item.icon} size="1em" />
               {item.label}
