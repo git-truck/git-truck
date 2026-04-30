@@ -127,6 +127,22 @@ function prefix(label: LOG_LEVEL_LABEL): string {
   }
 }
 
+/**
+ * @public
+ */
+export const there = () => {
+  return new Error()
+    .stack!.split("\n")
+    .slice(3)
+    .filter((l) => l.includes(".ts:"))
+    .map(
+      (s) => `#${s.trim().match(/at (.+)\(/)![1]}`.padEnd(20)
+      // .split("/")
+      // .at(-1)
+    )
+    .join(" ")
+}
+
 export const log = {
   error,
   warn,

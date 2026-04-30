@@ -23,11 +23,11 @@ export class DisposableMutex {
    * // The mutex is now locked and will be released when the block is exited
    */
   public async withDisposable(): Promise<Disposable> {
-    await this.mutex.acquire()
+    const releaser = await this.mutex.acquire()
 
     return {
       [Symbol.dispose]: () => {
-        this.mutex.release()
+        releaser()
       }
     }
   }
