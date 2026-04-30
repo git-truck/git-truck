@@ -208,7 +208,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const repo = path.split("/").pop()!
   const isRepo = await GitService.isValidGitRepo(path)
   if (!isRepo) throw new Error(`No repo found at ${path}`)
-  const isValidRevision = await GitService.isValidRevision(branch, path)
+  const isValidRevision = await GitService.isValidRevision({ repositoryPath: path, revision: branch })
   if (!isValidRevision) {
     throw new Error(
       `Invalid revision of repo ${repo}: ${branch}. If ${branch} is a remote branch, make sure it is pulled locally`
