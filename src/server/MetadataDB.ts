@@ -16,6 +16,16 @@ interface MetadataJson {
 export default class MetadataDB {
   private path = resolve(os.tmpdir(), "git-truck-cache", "metadata.json")
   private separator = "---"
+  private static metadataDB: MetadataDB
+
+  public static getInstance(): MetadataDB {
+    if (!this.metadataDB) this.metadataDB = new MetadataDB()
+    return this.metadataDB
+  }
+
+  public static resetInstance() {
+    this.metadataDB = new MetadataDB()
+  }
 
   async readMetadata(): Promise<MetadataJson> {
     try {

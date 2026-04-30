@@ -15,12 +15,6 @@ import { DisposableMutex } from "~/server/DisposableMutex"
 export default class AnalyzationInstanceManager {
   private static instancesSingleton: Map<string, Map<string, AnalyzationInstance>> = new Map() // repo -> branch -> instance
   private static mutex = new DisposableMutex()
-  public static metadataDB: MetadataDB
-
-  public static getOrCreateMetadataDB() {
-    if (!this.metadataDB) this.metadataDB = new MetadataDB()
-    return this.metadataDB
-  }
 
   /**
    * Returns a boolean whether the instance is aborted
@@ -140,7 +134,7 @@ export default class AnalyzationInstanceManager {
     using _ = await this.mutex.withDisposable()
     await this.closeAllDBInstancesUnlocked()
     await this.clearAllCachesUnlocked()
-    this.metadataDB = new MetadataDB()
+    MetadataDB.resetInstance()
   }
 
   public static async closeAllDBInstances() {

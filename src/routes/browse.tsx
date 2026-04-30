@@ -17,7 +17,7 @@ import {
   mdiCheckboxBlank,
   mdiCheckboxMarked
 } from "@mdi/js"
-import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
+import MetadataDB from "~/server/MetadataDB"
 import { existsSync } from "node:fs"
 import { log } from "~/server/log"
 import type { Route } from "./+types/browse"
@@ -228,7 +228,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   log.timeEnd("Read directories")
 
-  const analyzedReposPromise = AnalyzationInstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedReposPromise = MetadataDB.getInstance().getCompletedRepos()
 
   return {
     error: null,
