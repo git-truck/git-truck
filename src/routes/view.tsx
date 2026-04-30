@@ -46,6 +46,7 @@ import { invariant } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
+import MetadataDB from "~/server/MetadataDB"
 
 export const viewSearchParamsConfig = {
   path: parseAsString,
@@ -193,10 +194,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
   if (typeof contributorName === "string") {
     instance.prevInvokeReason = "contributorColor"
-    await AnalyzationInstanceManager.getOrCreateMetadataDB().addContributorColor(
-      contributorName,
-      contributorColor as string
-    )
+    await MetadataDB.getInstance().addContributorColor(contributorName, contributorColor as string)
     return null
   }
 
@@ -293,7 +291,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
-      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getLastRun({
+      : await MetadataDB.getInstance().getLastRun({
           repositoryPath: instance.repositoryPath,
           branch: instance.branch
         })
@@ -301,7 +299,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const contributorColors =
     prevRes && !shouldUpdate(reason, "contributorColors")
       ? prevRes.contributorColors
-      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getContributorColors()
+      : await MetadataDB.getInstance().getContributorColors()
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
@@ -323,7 +321,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const analyzedRepos =
     prevRes && !shouldUpdate(reason, "analyzedRepos")
       ? prevRes.analyzedRepos
-      : await AnalyzationInstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+      : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
   const databaseInfo: DatabaseInfo = {
