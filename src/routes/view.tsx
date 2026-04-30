@@ -492,7 +492,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                         defaultValue={data.databaseInfo.branch}
                         headGroups={data.repo.refs}
                         analyzedBranches={data.databaseInfo.analyzedRepos.filter(
-                          (rep) => rep.repo === data.databaseInfo.repo
+                          (rep) => rep.repositoryPath === data.databaseInfo.repo
                         )}
                         onChange={(e) =>
                           navigate(

@@ -117,7 +117,7 @@ export interface CommitDTO {
 }
 
 export interface CompletedResult {
-  repo: string
+  repositoryPath: string
   branch: string
   hash: string
   time: number
