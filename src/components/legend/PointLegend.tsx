@@ -136,7 +136,7 @@ export function PointLegend() {
         itemsPerPage={ITEMS_PER_PAGE}
         originalItemsCount={items.length}
         itemHeight={22}
-        headerHeight={54}
+        headerHeight={55}
       >
         {(shownItems, { totalPages }) => (
           <>

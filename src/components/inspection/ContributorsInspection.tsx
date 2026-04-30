@@ -116,8 +116,9 @@ function ContributorDistribution({
         <PaginatedList
           items={contributorDistribution}
           itemsPerPage={CONTRIBUTORS_PER_PAGE}
+          originalItemsCount={contributorDistribution.length}
           itemHeight={22}
-          headerHeight={53}
+          headerHeight={55}
         >
           {(shownItems) => (
             <>
