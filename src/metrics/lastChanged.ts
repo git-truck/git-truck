@@ -1,5 +1,5 @@
 import { dateFormatRelative, dateFormatShort, isBlob, isTree, rgbToHex } from "~/shared/util"
-import { interpolateYlGnBu } from "d3"
+import { interpolateTurbo } from "d3"
 import type { MetricCache, SegmentedMetric } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
 import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
@@ -142,7 +142,7 @@ export const LastChangedMetric: SegmentedMetric = {
     ].map((group, i, arr) => ({
       ...group,
       //Offset color spectrum to avoid very light colors
-      color: rgbToHex(interpolateYlGnBu((i + 3) / (arr.length + 2))) as `#${string}`
+      color: rgbToHex(interpolateTurbo(1 - i / arr.length)) as `#${string}`
     }))
 
     return timeDifferences
