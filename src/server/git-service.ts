@@ -28,20 +28,22 @@ export class GitService {
     return existsSync(gitFolderPath)
   }
 
-  static async isValidGitRepo(path: string): Promise<boolean> {
-    const hasGitFolder = this.hasGitDirectory(path)
+  static async isValidGitRepo(repositoryPath: string): Promise<boolean> {
+    const hasGitFolder = this.hasGitDirectory(repositoryPath)
     if (!hasGitFolder) return false
-    const [, findBranchHeadError] = await promiseHelper(GitService.findBranchHead({ repositoryPath: path }))
-    return Boolean(hasGitFolder && !findBranchHeadError)
+    const [, findCommitHashError] = await promiseHelper(
+      GitService.getCommitHashOfBranchHead({ repositoryPath: repositoryPath })
+    )
+    return hasGitFolder && !findCommitHashError
   }
 
-  static async isValidRevision(revision: string, path: string) {
-    const gitFolder = join(path, ".git")
-    const [, findBranchHeadError] = await promiseHelper(GitService._revParse(gitFolder, revision))
-    return !findBranchHeadError
+  static async isValidRevision({ revision, repositoryPath }: { repositoryPath: string; revision: string }) {
+    const gitFolder = join(repositoryPath, ".git")
+    const [, findCommitHashError] = await promiseHelper(GitService._revParse(gitFolder, revision))
+    return !findCommitHashError
   }
 
-  static async findBranchHead({
+  static async getCommitHashOfBranchHead({
     repositoryPath,
     branch
   }: {
@@ -65,7 +67,7 @@ export class GitService {
     const branchHead = await GitService._revParse(gitFolder, branch)
     log.debug(`${branch} -> [commit] ${branchHead}`)
 
-    return branch
+    return branchHead
   }
   static getCachePath(repo: string, branch: string) {
     return resolve(os.tmpdir(), "git-truck", repo, `${branch}.json`)
@@ -133,7 +135,9 @@ export class GitService {
 
     const refs = GitService.parseRefs(await GitService._getRefs(repositoryPath))
 
-    const [branch, error] = await promiseHelper(GitService.findBranchHead({ repositoryPath: repositoryPath }))
+    const [currentHead, error] = await promiseHelper(
+      GitService.getCommitHashOfBranchHead({ repositoryPath: repositoryPath })
+    )
     if (error) {
       return {
         status: "Error",
@@ -153,7 +157,7 @@ export class GitService {
       repositoryPath: repositoryPath,
       parentDirPath: parentDir,
       parentDirName: getRepoNameFromPath(parentDir),
-      currentHead: branch,
+      currentHead: currentHead,
       refs,
       lastChanged
     }
