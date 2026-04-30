@@ -61,7 +61,7 @@ export function PaginatedList<T>({
         >
           ← Prev
         </button>
-        <span className="text-tertirary-text dark:text-tertiary-text-dark text-xs">
+        <span className="text-tertiary-text dark:text-tertiary-text-dark text-xs">
           Page {safePage + 1} of {totalPages}
         </span>
         <button
