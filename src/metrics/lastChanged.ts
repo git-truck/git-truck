@@ -121,7 +121,7 @@ export const LastChangedMetric: SegmentedMetric = {
       },
       {
         text: "+1m",
-        range: [TIMEUNITS.ONE_MONTH, TIMEUNITS.ONE_YEAR] as [number, number]
+        range: [TIMEUNITS.ONE_MONTH, TIMEUNITS.SIX_MONTHS] as [number, number]
       },
       {
         text: "+6m",
