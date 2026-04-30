@@ -117,7 +117,7 @@ export function MetricsInspection() {
       metricMenuItems: [],
       colors: [
         FileSizeMetric.getBuckets(data.databaseInfo)[FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)]
-          .color
+          .color ?? missingInMapColor
       ]
     },
     MOST_COMMITS: {
@@ -199,7 +199,7 @@ export function MetricsInspection() {
       colors: [
         LastChangedMetric.getBuckets(data.databaseInfo)[
           LastChangedMetric.getBucketIndex(clickedObject, data.databaseInfo)
-        ]?.color
+        ]?.color ?? missingInMapColor
       ]
     },
     CONTRIBUTORS: {
