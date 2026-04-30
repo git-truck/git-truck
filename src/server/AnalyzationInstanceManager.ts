@@ -10,9 +10,11 @@ import os from "os"
 import { GitCaller } from "~/server/git-service"
 import DB from "~/server/DB"
 import fs from "fs/promises"
+import { DisposableMutex } from "~/server/DisposableMutex"
 
 export default class AnalyzationInstanceManager {
   private static instancesSingleton: Map<string, Map<string, AnalyzationInstance>> = new Map() // repo -> branch -> instance
+  private static mutex = new DisposableMutex()
   public static metadataDB: MetadataDB
 
   public static getOrCreateMetadataDB() {
@@ -83,6 +85,17 @@ export default class AnalyzationInstanceManager {
     repositoryPath: string
     branch: string
   }): Promise<AnalyzationInstance> {
+    using _ = await this.mutex.withDisposable()
+    return await this.getOrCreateInstanceUnlocked({ repositoryPath, branch })
+  }
+
+  private static async getOrCreateInstanceUnlocked({
+    repositoryPath,
+    branch
+  }: {
+    repositoryPath: string
+    branch: string
+  }): Promise<AnalyzationInstance> {
     if (!this.instancesSingleton) this.instancesSingleton = new Map()
     const existing = this.instancesSingleton.get(repositoryPath)?.get(branch)
 
@@ -123,7 +136,19 @@ export default class AnalyzationInstanceManager {
     }
   }
 
+  public static async clearAllCaches() {
+    using _ = await this.mutex.withDisposable()
+    await this.closeAllDBInstancesUnlocked()
+    await this.clearAllCachesUnlocked()
+    this.metadataDB = new MetadataDB()
+  }
+
   public static async closeAllDBInstances() {
+    using _ = await this.mutex.withDisposable()
+    await this.closeAllDBInstancesUnlocked()
+  }
+
+  private static async closeAllDBInstancesUnlocked() {
     const promises = Array.from(this.instancesSingleton.values()).flatMap((repoInstance) =>
       Array.from(repoInstance.values()).flatMap((branchInstance) => {
         branchInstance.abort()
@@ -134,29 +159,26 @@ export default class AnalyzationInstanceManager {
     this.instancesSingleton = new Map()
   }
 
-  public static getDBPath({ repositoryPath, branch }: { repositoryPath: string; branch: string }): string {
+  private static getDBPath({ repositoryPath, branch }: { repositoryPath: string; branch: string }): string {
     const repoSanitized = repositoryPath.replace(/\W/g, "_").replace(/\//g, "_").replace(/\//g, "_") + "_"
     const branchSanitized = branch.replace(/\W/g, "_") + "_"
     return resolve(os.tmpdir(), "git-truck-cache", repoSanitized, branchSanitized + ".db")
   }
 
-  public static getRepositoryCachePath({ repositoryPath }: { repositoryPath: string }): string {
+  private static getRepositoryCachePath({ repositoryPath }: { repositoryPath: string }): string {
     const repoSanitized = repositoryPath.replace(/\W/g, "_").replace(/\//g, "_").replace(/\//g, "_") + "_"
     return resolve(os.tmpdir(), "git-truck-cache", repoSanitized)
   }
 
-  public static async clearAllCaches() {
+  private static async clearAllCachesUnlocked() {
     const dir = resolve(os.tmpdir(), "git-truck-cache")
     if (!existsSync(dir)) return
     await fs.rm(dir, { recursive: true, force: true })
   }
 
-  public static async clearCache({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+  private static async clearCache({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
     const dbPath = this.getDBPath({ repositoryPath, branch })
-    fs.rm(dbPath).catch(() => {})
-    fs.rm(dbPath + ".wal")
-      .catch(() => {})
-      .catch(() => {})
+    await Promise.allSettled([fs.rm(dbPath, { force: true }), fs.rm(`${dbPath}.wal`, { force: true })])
     const parentFolder = this.getRepositoryCachePath({ repositoryPath })
     const files = await fs.readdir(parentFolder).catch(() => [])
     if (files.length === 0) {
@@ -164,7 +186,7 @@ export default class AnalyzationInstanceManager {
     }
   }
 
-  static async initDuckDBInstance({
+  private static async initDuckDBInstance({
     repositoryPath,
     branch
   }: {
@@ -178,7 +200,7 @@ export default class AnalyzationInstanceManager {
     return await DuckDBInstance.create(dbPath, { temp_directory: dir })
   }
 
-  static async initOrRecreateDatabase({
+  private static async initOrRecreateDatabase({
     repositoryPath,
     branch
   }: {
@@ -244,7 +266,7 @@ export default class AnalyzationInstanceManager {
     return db
   }
 
-  public static async insertGitTruckVersion(connection: DuckDBConnection) {
+  private static async insertGitTruckVersion(connection: DuckDBConnection) {
     // Check if metadata has a git-truck-version already, if so, error
     const result = await (
       await connection.run(`SELECT stringValue FROM metadata WHERE field = 'version';`)
@@ -254,7 +276,6 @@ export default class AnalyzationInstanceManager {
       throw new Error("DB has already been populated with version metadata")
     }
 
-    await connection.run(`INSERT INTO metadata (field, stringValue) VALUES ('version', '${pkg.version}');
-      `)
+    await connection.run(`INSERT INTO metadata (field, stringValue) VALUES ('version', '${pkg.version}');`)
   }
 }

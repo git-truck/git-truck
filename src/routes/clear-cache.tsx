@@ -15,7 +15,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
   if (!redirectPath) {
     throw new Error("Missing redirect path")
   }
-  await AnalyzationInstanceManager.closeAllDBInstances()
   await AnalyzationInstanceManager.clearAllCaches()
   throw redirect(redirectPath)
 }
