@@ -1,7 +1,8 @@
 import { href, useFetcher } from "react-router"
 import clsx from "clsx"
-import { useEffect, useMemo, type ReactNode } from "react"
-import type { AnalyzationStatus } from "~/analyzer/ServerInstance.server"
+import type React from "react"
+import { useEffect, useMemo } from "react"
+import type { AnalyzationStatus } from "~/server/AnalyzationInstance"
 import truck from "~/assets/truck.png"
 import anitruck from "~/assets/truck.gif"
 import { cn } from "~/styling"
@@ -11,40 +12,65 @@ import { useQueryState } from "nuqs"
 export type ProgressData = {
   progress: number
   analyzationStatus: AnalyzationStatus
+  progressRevision?: number
 }
+
+const PROGRESS_POLL_INTERVAL_MS = 1000
 
 export function LoadingIndicator({
   className = "",
   showProgress = false,
   fetchProgress = true,
-  loadingText
+  loadingText: LoadingText
 }: {
-  loadingText?: ReactNode
+  loadingText?: React.FC<{ status: AnalyzationStatus }>
   showProgress?: boolean
   fetchProgress?: boolean
   className?: string
 }) {
   const [path] = useQueryState("path")
+  const [branch] = useQueryState("branch")
 
-  const fetcher = useFetcher<ProgressData>()
+  const { load, data, state } = useFetcher<ProgressData>()
+
   useEffect(() => {
-    if (fetcher.state === "idle" && showProgress && fetchProgress) {
-      fetcher.load(href("/view/progress") + viewSerializer({ path }))
+    if (
+      !showProgress ||
+      !fetchProgress ||
+      !path ||
+      !branch ||
+      state !== "idle" ||
+      data?.analyzationStatus === "Aborted" ||
+      data?.analyzationStatus === "CommitHistoryProcessed"
+    )
+      return
+
+    const timeoutId = window.setTimeout(() => {
+      const params = new URLSearchParams(viewSerializer({ path, branch }).replace(/^\?/, ""))
+      params.set("lastSeenRevision", String(data?.progressRevision ?? -1))
+      load(`${href("/view/progress")}?${params.toString()}`)
+    }, PROGRESS_POLL_INTERVAL_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
     }
-  }, [fetchProgress, fetcher, fetcher.state, path, showProgress])
+  }, [branch, fetchProgress, state, path, showProgress, data?.progressRevision, load, data?.analyzationStatus])
 
   const [progressText, progress] = useMemo<[string, number]>(() => {
-    if (!fetcher.data) return ["Loading truck...", 0]
-    const { progress, analyzationStatus } = fetcher.data
+    if (!data) return ["Loading truck...", 0]
+    const { progress, analyzationStatus } = data
+
     switch (analyzationStatus) {
-      case "Starting":
+      case "Initialized":
         return ["Loading truck...", 0]
-      case "GeneratingChart":
-        return ["Unloading truck...", 100]
-      default:
+      case "CommitHistoryProcessed":
+        return ["Unloading truck...", 0]
+      case "Aborted":
+        return ["Aborted", 0]
+      case "ProcessingCommitHistory":
         return [progress < 100 ? "Driving to destination..." : "Parking truck...", progress]
     }
-  }, [fetcher.data])
+  }, [data])
 
   return (
     <div className={clsx("grid h-full w-full place-items-center px-4", className)}>
@@ -55,7 +81,7 @@ export function LoadingIndicator({
           className="pixelated aspect-square w-full"
         />
         {showProgress ? <div className="text-center text-3xl font-bold">{progressText}</div> : null}
-        {showProgress ? (
+        {showProgress && data?.analyzationStatus !== "Aborted" ? (
           <div className="h-6 w-3/4 self-center rounded-2xl bg-gray-300">
             <div
               className={cn(
@@ -68,7 +94,11 @@ export function LoadingIndicator({
             />
           </div>
         ) : null}
-        {loadingText ? <div className="text-center font-bold">{loadingText}</div> : null}
+        {LoadingText ? (
+          <div className="text-center">
+            <LoadingText status={data?.analyzationStatus ?? "Initialized"} />
+          </div>
+        ) : null}
       </div>
     </div>
   )

@@ -4,12 +4,12 @@
   "compilerOptions": {
     "composite": true,
     "strict": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2024"],
+    "lib": ["DOM", "DOM.Iterable", "esnext"],
     "types": ["vite/client"],
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
     "paths": { "~/*": ["./src/*"] },
     "esModuleInterop": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   }
 }

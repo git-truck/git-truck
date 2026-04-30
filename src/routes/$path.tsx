@@ -1,5 +1,5 @@
 import type { Route } from "./+types/$path"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { GitCaller } from "~/server/git-service"
 import { href, redirect } from "react-router"
 import { loadViewSearchParams, viewSerializer } from "~/routes/view"
 import { browseSerializer } from "~/routes/browse"

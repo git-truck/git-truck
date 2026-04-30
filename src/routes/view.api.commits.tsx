@@ -1,18 +1,19 @@
-import { currentRepositoryContext, loadViewSearchParams } from "~/routes/view"
+import { loadViewSearchParams } from "~/routes/view"
 import { invariant } from "~/shared/util"
 import type { Route } from "./+types/view.api.commits"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 
-export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const { objectPath } = loadViewSearchParams(request)
-  invariant(objectPath, "path is required")
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request)
+  invariant(repositoryPath, "path is required")
+  invariant(branch, "branch is required")
+  invariant(objectPath, "objectPath is required")
 
   const rawCount = new URL(request.url).searchParams.get("count")
   const parsedCount = rawCount ? Number(rawCount) : Number.NaN
   const count = Number.isFinite(parsedCount) && parsedCount > 0 ? Math.floor(parsedCount) : 10
 
-  const { repositoryPath, branch, instance } = context.get(currentRepositoryContext)
-
-  invariant(instance, `Instance for repo ${repositoryPath} and branch ${branch} not found`)
+  const instance = await AnalyzationInstanceManager.getOrCreateInstance({ repositoryPath, branch: branch })
 
   return {
     objectPath,

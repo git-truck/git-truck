@@ -1,32 +1,85 @@
-import { sleep } from "~/shared/util"
+import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/view.progress"
-import { currentRepositoryContext } from "~/routes/view"
+import { loadViewSearchParams } from "~/routes/view"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
+import { parseAsInteger } from "nuqs"
+import { createLoader } from "nuqs/server"
 
 const POLLING_RATE = 1000
+const LONG_POLL_TIMEOUT = 30000
 
-export const loader = async ({ context }: Route.LoaderArgs): Promise<ProgressData> => {
-  const { instance } = context.get(currentRepositoryContext)
-  let progressPercentage = calculateProgressPercentage(instance.progress, instance.totalCommitCount)
-  let status = instance.analyzationStatus
-  while (
-    instance.prevProgress.str === status + progressPercentage ||
-    instance.prevProgress.timestamp + POLLING_RATE > Date.now()
-  ) {
-    await sleep(POLLING_RATE)
-    progressPercentage = calculateProgressPercentage(instance.progress, instance.totalCommitCount)
-    status = instance.analyzationStatus
-  }
-  instance.prevProgress.str = status + progressPercentage
-  instance.prevProgress.timestamp = Date.now()
-  return {
-    progress: progressPercentage,
-    analyzationStatus: instance.analyzationStatus
-  } as ProgressData
+const progressSearchParamsConfig = {
+  lastSeenRevision: parseAsInteger.withDefault(-1)
 }
 
-function calculateProgressPercentage(progress: number[], totalCommitCount: number): number {
-  return totalCommitCount > 0
-    ? Math.min(Math.floor((progress.reduce((acc, curr) => acc + curr, 0) / totalCommitCount) * 100), 100)
-    : 0
+const loadProgressSearchParams = createLoader(progressSearchParamsConfig)
+
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { path: repositoryPath, branch } = loadViewSearchParams(request)
+  invariant(repositoryPath, "path is required")
+  invariant(branch, "branch is required")
+
+  const { lastSeenRevision } = loadProgressSearchParams(request)
+
+  const instanceIsAborted = AnalyzationInstanceManager.getInstanceIsAborted({ repositoryPath, branch })
+  if (instanceIsAborted) {
+    return {
+      progress: 0,
+      analyzationStatus: "Aborted" as const,
+      progressRevision: -1
+    } satisfies ProgressData
+  }
+
+  const progressData = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
+  if (!progressData) {
+    return
+  }
+
+  // If we already have a newer revision, return immediately
+  if (progressData.progressRevision > lastSeenRevision) {
+    return {
+      progress: progressData.progressPercentage,
+      analyzationStatus: progressData.status,
+      progressRevision: progressData.progressRevision
+    } satisfies ProgressData
+  }
+
+  // Otherwise, long-poll until revision changes or timeout
+  const startTime = Date.now()
+  while (Date.now() - startTime < LONG_POLL_TIMEOUT && !request.signal.aborted) {
+    try {
+      await sleep(POLLING_RATE, { signal: request.signal })
+    } catch {
+      return
+    }
+    if (request.signal.aborted) {
+      return
+    }
+
+    const updatedProgress = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
+    if (!updatedProgress) {
+      return
+    }
+    if (updatedProgress.progressRevision > lastSeenRevision) {
+      return {
+        progress: updatedProgress.progressPercentage,
+        analyzationStatus: updatedProgress.status,
+        progressRevision: updatedProgress.progressRevision
+      } satisfies ProgressData
+    }
+  }
+
+  // Timeout reached, return current state
+  const finalProgress = AnalyzationInstanceManager.getInstanceProgress({ repositoryPath, branch })
+
+  if (!finalProgress) {
+    return
+  }
+
+  return {
+    progress: finalProgress.progressPercentage,
+    analyzationStatus: finalProgress.status,
+    progressRevision: finalProgress.progressRevision
+  } satisfies ProgressData
 }

@@ -8,8 +8,8 @@ import open from "open"
 import { parseArgs, describeAsyncJob, getLatestVersion } from "~/shared/util.server.ts"
 import { generateVersionComparisonLink, semverCompare, promiseHelper } from "~/shared/util.ts"
 
-import { log, setLogLevel } from "~/analyzer/log.server.ts"
-import InstanceManager from "~/analyzer/InstanceManager.server.ts"
+import { log, setLogLevel } from "~/server/log"
+import AnalyzationInstanceManager from "~/server/AnalyzationInstanceManager"
 
 const args = parseArgs()
 if (args?.log) {
@@ -97,7 +97,10 @@ process.once("SIGTERM", stopHandler)
 process.once("SIGINT", stopHandler)
 
 process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED:", err)
+  const error = new Error("Unhandled Rejection", {
+    cause: err instanceof Error ? err : undefined
+  })
+  console.error("UNHANDLED:", error)
 })
 
 async function getUpdateMessage() {
@@ -133,7 +136,7 @@ ${generateVersionComparisonLink({ currentVersion: pkg.version, latestVersion: la
 }
 
 async function stopHandler() {
-  const promise = InstanceManager.closeAllDBConnections()
+  const promise = AnalyzationInstanceManager.closeAllDBInstances()
   log.info("Shutting down server")
   server.close(console.error)
   log.info("Web server shut down")

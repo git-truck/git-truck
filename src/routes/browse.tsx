@@ -1,4 +1,4 @@
-import { Await, Form, Link, redirect, href, useLocation, useNavigation } from "react-router"
+import { Await, Form, Link, redirect, href, useNavigation } from "react-router"
 import { Code } from "~/components/util"
 import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
@@ -17,12 +17,12 @@ import {
   mdiCheckboxBlank,
   mdiCheckboxMarked
 } from "@mdi/js"
-import InstanceManager from "~/analyzer/InstanceManager.server"
+import MetadataDB from "~/server/MetadataDB"
 import { existsSync } from "node:fs"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 import type { Route } from "./+types/browse"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
-import { GitCaller } from "~/analyzer/git-caller.server"
+import { GitCaller } from "~/server/git-service"
 import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
@@ -31,6 +31,7 @@ import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates,
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
 import { viewSerializer } from "~/routes/view"
+import { ClearCacheForm } from "~/routes/clear-cache"
 
 const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
@@ -227,7 +228,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   log.timeEnd("Read directories")
 
-  const analyzedReposPromise = InstanceManager.getOrCreateMetadataDB().getCompletedRepos()
+  const analyzedReposPromise = MetadataDB.getInstance().getCompletedRepos()
 
   return {
     error: null,
@@ -243,7 +244,6 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 export default function Index({
   loaderData: { error, versionInfo, directories, parentDirectoryPath, analyzedReposPromise, totalCount }
 }: Route.ComponentProps) {
-  const location = useLocation()
   const navigation = useNavigation()
   const [{ path, "include-dirs": includeDirs, sort: sortMethod, search: searchQuery, count }, setSearchParams] =
     useQueryStates(browseSearchParamsConfig)
@@ -342,12 +342,7 @@ export default function Index({
             </div>
             <div />
             <div />
-            <Link
-              to={`/clear-cache?redirect=${encodeURIComponent(location.pathname + location.search)}`}
-              className="btn btn--danger max-w-min justify-self-end"
-            >
-              Clear cache
-            </Link>
+            <ClearCacheForm />
           </Form>
         </div>
         <Breadcrumb className="px-2" />

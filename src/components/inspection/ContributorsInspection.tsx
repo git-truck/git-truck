@@ -25,13 +25,16 @@ export function ContributorsInspection() {
   const clickedObject = useClickedObject()
   const fetcher = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
+  const [branch] = useQueryState("branch")
   const { databaseInfo } = useData()
 
   useEffect(() => {
     if (!clickedObject) {
       return
     }
-    fetcher.load(href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path }))
+    fetcher.load(
+      href("/view/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch })
+    )
     return () => {
       fetcher.reset()
     }

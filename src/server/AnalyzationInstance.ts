@@ -1,6 +1,6 @@
-import DB from "~/analyzer/DB.server.ts"
-import { getCoAuthors } from "~/analyzer/coauthors.server.ts"
-import { GitCaller } from "~/analyzer/git-caller.server.ts"
+import DB from "~/server/DB"
+import { getCoAuthors } from "~/server/coauthors"
+import { GitCaller } from "~/server/git-service"
 import type {
   GitBlobObject,
   GitTreeObject,
@@ -13,41 +13,71 @@ import type {
   FullCommitDTO,
   RepoData
 } from "~/shared/model.ts"
-import { log } from "~/analyzer/log.server.ts"
+import { log } from "~/server/log"
 import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
-
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
-import InstanceManager from "~/analyzer/InstanceManager.server.ts"
+import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 
-export type AnalyzationStatus = "Starting" | "Hydrating" | "GeneratingChart"
+export type AnalyzationStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
-export default class ServerInstance {
-  public analyzationStatus: AnalyzationStatus = "Starting"
+export default class AnalyzationInstance {
+  public status: AnalyzationStatus = "Initialized"
   public gitCaller: GitCaller
   public db: DB
   public progress = [0]
   public totalCommitCount = 0
+  public progressRevision = 0
   private fileTreeAsOf: string | null = null
   public prevResult: RepoData | null = null
   public prevInvokeReason: InvocationReason = "unknown"
-  public prevProgress = { str: "", timestamp: 0 }
 
   public repositoryPath: string
   public repositoryName: string
+
   public branch: string
-  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
+  constructor({
+    db,
+    gitCaller,
+    repositoryPath,
+    branch
+  }: {
+    db: DB
+    gitCaller: GitCaller
+    repositoryPath: string
+    branch: string
+  }) {
     this.repositoryPath = repositoryPath
     this.repositoryName = getRepoNameFromPath(repositoryPath)
     this.branch = branch
-    this.gitCaller = new GitCaller({ repositoryPath, branch })
-    this.db = new DB({ repositoryPath, branch })
+    this.gitCaller = gitCaller
+    this.db = db
   }
 
   public updateProgress(index: number) {
     this.progress[index]++
+    this.progressRevision++
+  }
+
+  public abort(): AnalyzationStatus {
+    const status = this.status
+    this.status = "Aborted"
+    this.progressRevision++
+    return status
+  }
+
+  private throwIfAborted() {
+    if (this.status === "Aborted") {
+      throw new Error("Instance aborted")
+    }
+  }
+
+  private setAnalyzationStatus(status: AnalyzationStatus) {
+    if (this.status === "Aborted") return
+    this.status = status
+    this.progressRevision++
   }
 
   private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
@@ -73,6 +103,7 @@ export default class ServerInstance {
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
   public async analyzeTree() {
+    this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitCaller.lsTree(this.fileTreeAsOf)
     const lsTreeEntries: RawGitObject[] = []
@@ -100,6 +131,7 @@ export default class ServerInstance {
       children: []
     } as GitTreeObject
 
+    this.throwIfAborted()
     await this.db.replaceFiles(lsTreeEntries)
 
     for (const child of lsTreeEntries) {
@@ -177,6 +209,8 @@ export default class ServerInstance {
     const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
     for (const match of matches) {
+      this.throwIfAborted()
+
       const groups = match.groups ?? {}
       const contributorName = groups.author
       const authorEmail = groups.authorEmail
@@ -258,6 +292,8 @@ export default class ServerInstance {
     const commits: FullCommitDTO[] = []
     const matches = gitLogResult.matchAll(gitLogRegex)
     for (const match of matches) {
+      this.throwIfAborted()
+
       const groups = match.groups ?? {}
       const name = groups.author
       const authorEmail = groups.authorEmail
@@ -303,6 +339,7 @@ export default class ServerInstance {
     renamedFiles: RenameEntry[],
     index: number
   ) {
+    this.throwIfAborted()
     const gitLogResult = await this.gitCaller.gitLogSimple(start, end - start, this, index)
     await this.gatherCommitsFromGitLog(gitLogResult, commits, renamedFiles)
     log.debug("done gathering")
@@ -401,10 +438,10 @@ export default class ServerInstance {
   }
 
   public async loadRepoData() {
-    this.analyzationStatus = "Starting"
+    this.setAnalyzationStatus("Initialized")
 
     let commitCount = await this.gitCaller.getCommitCount()
-    const priorRun = await InstanceManager.getOrCreateMetadataDB().getLastRun({
+    const priorRun = await MetadataDB.getInstance().getLastRun({
       repositoryPath: this.repositoryPath,
       branch: this.branch
     })
@@ -430,7 +467,7 @@ export default class ServerInstance {
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
     this.progress = Array(threadCount).fill(0)
-    this.analyzationStatus = "Hydrating"
+    this.setAnalyzationStatus("ProcessingCommitHistory")
     const sections = this.calculateSections(commitCount, threadCount)
     const promises = Array.from({ length: threadCount }, async (_, i) => {
       const sectionStart = sections[i][0]
@@ -454,10 +491,10 @@ export default class ServerInstance {
       await promiseHelper(this.gitCaller.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
     }
 
-    await InstanceManager.getOrCreateMetadataDB().setCompletion(
+    await MetadataDB.getInstance().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
-    this.analyzationStatus = "GeneratingChart"
+    this.setAnalyzationStatus("CommitHistoryProcessed")
   }
 }

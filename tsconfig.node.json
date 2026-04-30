@@ -7,10 +7,17 @@
     "src/**/*.server.ts",
     "src/cli.ts",
     "vite.config.ts",
-    "react-router.config.ts"
+    "react-router.config.ts",
+    "src/server/coauthors.ts",
+    "src/server/git-service.ts",
+    "src/server/AnalyzationInstanceManager.ts",
+    "src/server/log.ts",
+    "src/server/MetadataDB.ts",
+    "src/server/AnalyzationInstance.ts"
   ],
   "compilerOptions": {
     "composite": true,
+    "lib": ["esnext", "esnext.disposable"],
     "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "bundler"

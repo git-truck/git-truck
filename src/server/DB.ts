@@ -1,4 +1,4 @@
-import { DuckDBInstance, DuckDBConnection, DuckDBAppender } from "@duckdb/node-api"
+import { DuckDBConnection, DuckDBAppender, DuckDBInstance } from "@duckdb/node-api"
 import type {
   AbstractGitObject,
   CommitDTO,
@@ -10,72 +10,48 @@ import type {
   RenameEntry,
   RenameInterval
 } from "~/shared/model"
-import os from "os"
-import { resolve, dirname } from "path"
-import { promises as fs, existsSync } from "fs"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
-import { log } from "~/analyzer/log.server"
+import { log } from "~/server/log"
 
 export default class DB {
-  private instancePromise: Promise<DuckDBInstance>
-  private connectionPromise: Promise<DuckDBConnection>
-  private repoSanitized: string
-  private branchSanitized: string
+  private instance: DuckDBInstance
+  private connection: DuckDBConnection
   public selectedRange: [number, number]
 
-  private static async init(dbPath: string): Promise<{ instance: DuckDBInstance; connection: DuckDBConnection }> {
-    log.debug("Initializing database at path:", dbPath)
-    const dir = dirname(dbPath)
-    if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
-    const instance = await DuckDBInstance.create(dbPath, { temp_directory: dir })
-    const connection = await instance.connect()
-    await this.initTables(connection)
-    await this.initViews(connection, 0, 1_000_000_000_000)
-    return { instance, connection }
+  public async init(): Promise<DB> {
+    await this.initTables()
+    await this.initViews(0, 1_000_000_000_000)
+    return this
   }
 
-  public static async clearCache() {
-    const dir = resolve(os.tmpdir(), "git-truck-cache")
-    if (!existsSync(dir)) return
-    await fs.rm(dir, { recursive: true, force: true })
-  }
-
-  constructor({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
-    this.repoSanitized = repositoryPath.replace(/\W/g, "_").replace(/\//g, "_").replace(/\//g, "_") + "_"
-    this.branchSanitized = branch.replace(/\W/g, "_") + "_"
-    const dbPath = resolve(os.tmpdir(), "git-truck-cache", this.repoSanitized, this.branchSanitized + ".db")
-    const instancePromise = Promise.withResolvers<DuckDBInstance>()
-    const connectionPromise = Promise.withResolvers<DuckDBConnection>()
-    this.instancePromise = instancePromise.promise
-    this.connectionPromise = connectionPromise.promise
-    DB.init(dbPath)
-      .then(({ instance, connection }) => {
-        instancePromise.resolve(instance)
-        connectionPromise.resolve(connection)
-      })
-      .catch((error) => {
-        instancePromise.reject(error)
-        connectionPromise.reject(error)
-      })
+  constructor({
+    instance,
+    connection
+  }: {
+    instance: DuckDBInstance
+    connection: DuckDBConnection
+    repositoryPath: string
+    branch: string
+  }) {
+    this.instance = instance
+    this.connection = connection
     this.selectedRange = [0, 1_000_000_000_000] as [number, number]
   }
 
   public async close() {
-    const connection = await this.connectionPromise
-    const instance = await this.instancePromise
-    connection.disconnectSync()
-    instance.closeSync()
+    this.connection.disconnectSync()
+    this.instance.closeSync()
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
     log.debug("query:", query.trim().replaceAll(/\s+/g, " "))
-    return (await (await this.connectionPromise).runAndReadAll(query)).getRowObjects()
+    return (await this.connection.runAndReadAll(query)).getRowObjects()
   }
 
   public async prepare(query: string) {
     log.debug("prepare:", query.trim().replaceAll(/\s+/g, " "))
-    return (await this.connectionPromise).prepare(query)
+    return this.connection.prepare(query)
   }
 
   private async usingPreparedStatement<T>(
@@ -109,7 +85,7 @@ export default class DB {
 
   public async run(query: string): Promise<void> {
     log.debug("run:", query.trim().replaceAll(/\s+/g, " "))
-    await (await this.connectionPromise).run(query)
+    await this.connection.run(query)
   }
 
   /**
@@ -120,7 +96,7 @@ export default class DB {
    * @returns The result of the callback
    */
   public async usingTableAppender(table: string, callback: (appender: DuckDBAppender) => Promise<void>) {
-    const appender = await (await this.connectionPromise).createAppender(table)
+    const appender = await this.connection.createAppender(table)
     try {
       await callback(appender)
     } finally {
@@ -132,8 +108,8 @@ export default class DB {
     await this.run("CHECKPOINT;")
   }
 
-  private static async initTables(db: DuckDBConnection) {
-    await db.run(/*sql*/ `
+  private async initTables() {
+    await this.connection.run(/*sql*/ `
       CREATE TABLE IF NOT EXISTS commits (
         hash VARCHAR,
         author VARCHAR,
@@ -173,8 +149,8 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS metadata (
         field VARCHAR,
-        value UBIGINT,
-        value2 VARCHAR
+        intValue UBIGINT,
+        stringValue VARCHAR
       );
       CREATE TABLE IF NOT EXISTS temporaryRenames (
         fromName VARCHAR,
@@ -193,11 +169,11 @@ export default class DB {
   }
 
   public async getDbConnection(): Promise<DuckDBConnection> {
-    return await this.connectionPromise
+    return this.connection
   }
 
   public async clearAllTables() {
-    await this.run(`
+    await this.run(/*sql*/ `
       DELETE FROM commits;
       DELETE FROM fileChanges;
       DELETE FROM commitTrailers;
@@ -206,19 +182,17 @@ export default class DB {
       DELETE FROM hiddenFiles;
       DELETE FROM metadata;
       DELETE FROM temporaryRenames;
-      DELETE FROM files;
-    `)
+      DELETE FROM files;`)
   }
 
   public async createIndexes() {
-    await this.run(`
+    await this.run(/*sql*/ `
       CREATE INDEX IF NOT EXISTS commitsTime ON commits(committerTime);
-      CREATE INDEX IF NOT EXISTS renamesTime ON renames(timestamp);
-    `)
+      CREATE INDEX IF NOT EXISTS renamesTime ON renames(timestamp);`)
   }
 
-  private static async initViews(db: DuckDBConnection, start: number, end: number) {
-    await db.run(/*sql*/ `
+  private async initViews(start: number, end: number) {
+    await this.connection.run(/*sql*/ `
       CREATE OR REPLACE VIEW commits_unioned AS
       SELECT c.hash, CASE WHEN cg.displayName IS NOT NULL THEN cg.displayName ELSE c.author END AS author, c.authorEmail, c.committerTime, c.authorTime FROM
       commits c LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
@@ -261,6 +235,9 @@ export default class DB {
       SELECT * FROM fileChanges_commits_renamed f
       INNER JOIN filtered_files fi on fi.path = f.filePath;
 
+      CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
+      SELECT * FROM fileChanges_commits_renamed_files;
+
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT fromName, toName, min(timestamp) AS timestamp, timestampAuthor FROM renames
       WHERE timestamp BETWEEN ${start} AND ${end}
@@ -288,7 +265,7 @@ export default class DB {
     const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
     const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
     this.selectedRange = [start, end]
-    await DB.initViews(await this.connectionPromise, start, end)
+    await this.initViews(start, end)
   }
 
   public async replaceContributorGroups(groups: ContributorGroup[]) {
@@ -1032,24 +1009,32 @@ export default class DB {
   public async updateColorSeed(seed: string) {
     await this.run(`DELETE FROM metadata
        WHERE field = 'colorSeed';
-       INSERT INTO metadata (field, value, value2) 
+       INSERT INTO metadata (field, intValue, stringValue)
        VALUES ('colorSeed', null, '${seed}');`)
     log.debug("inserted seed", seed)
   }
 
+  public async getGitTruckVersion(): Promise<string | null> {
+    const result = await this.query(`SELECT stringValue from metadata WHERE field = 'version';`)
+
+    if (result.length === 0) {
+      return null
+    }
+
+    return result[0]["stringValue"] as string
+  }
+
   public async getColorSeed() {
-    const res = await this.query(`
-      SELECT value2 FROM metadata WHERE field = 'colorSeed';
-    `)
+    const res = await this.query(`SELECT stringValue FROM metadata WHERE field = 'colorSeed';`)
     if (res.length < 1) return null
-    log.debug("retrieved seed", res[0]["value2"])
-    return res[0]["value2"] as string
+    log.debug("retrieved seed", res[0]["stringValue"])
+    return res[0]["stringValue"] as string
   }
 
   public async getLastRunInfo() {
-    const res = await this.query(`
-      SELECT value as time, value2 as hash FROM metadata WHERE field = 'finished' ORDER BY value DESC LIMIT 1;
-    `)
+    const res = await this.query(
+      `SELECT intValue as time, stringValue as hash FROM metadata WHERE field = 'finished' ORDER BY intValue DESC LIMIT 1;`
+    )
     if (!res[0]) return { time: 0, hash: "" }
     return { time: Number(res[0]["time"]), hash: res[0]["hash"] as string }
   }

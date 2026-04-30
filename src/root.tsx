@@ -100,7 +100,7 @@ export const ErrorBoundary = () => {
       <ErrorPage noTruck className="min-h-screen" message={message}>
         {!mainProcessClosed ? <ClearCacheForm redirectPath={pathname + search} /> : null}
         <div className="flex flex-wrap justify-center gap-2">
-          <Link className="btn" to={pathname + search}>
+          <Link reloadDocument className="btn" to={pathname + search}>
             Retry
           </Link>
           {!mainProcessClosed ? (
