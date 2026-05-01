@@ -165,10 +165,11 @@ export function MetricsInspection() {
       icon: LinesChangedMetric.icon,
       data: isBlob
         ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
-        : Object.entries(data.databaseInfo.contribSumPerFile)
-            .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
-            .reduce((sum, [_, count]) => sum + count, 0)
-            .toLocaleString(),
+        : reduceTree(
+            clickedObject,
+            (sum, n) => sum + (n.type === "blob" ? data.databaseInfo.contribSumPerFile[n.path] || 0 : 0),
+            0
+          ).toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       actions: { search: false, clear: false },
       metricMenuItems: [],
@@ -187,10 +188,10 @@ export function MetricsInspection() {
         ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
         : (dateFormatRelative(
             // TODO: Get this data from the server, which is much faster
-            Math.max(
-              ...Object.entries(data.databaseInfo.lastChanged)
-                .filter(([path]) => clickedObject.path && path.startsWith(clickedObject.path))
-                .map(([_, epoch]) => epoch)
+            reduceTree(
+              clickedObject,
+              (maxEpoch, n) => Math.max(maxEpoch, n.type === "blob" ? (data.databaseInfo.lastChanged[n.path] ?? 0) : 0),
+              0
             )
           ) ?? "unknown"),
       inspectionPanels: LastChangedMetric.inspectionPanels,
