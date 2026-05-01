@@ -444,6 +444,16 @@ export default class DB {
     return Number(res[0]["count"])
   }
 
+  public async getCommitTimestampsForPath(objectPath: string): Promise<number[]> {
+    const statement = await this.prepare(
+      `SELECT DISTINCT committerTime FROM filechanges_commits_renamed_cached WHERE filepath = ? OR filepath GLOB ?;`
+    )
+    statement.bindVarchar(1, objectPath)
+    statement.bindVarchar(2, objectPath + "/*")
+    const result = await statement.runAndReadAll()
+    return result.getRowObjects().map((row) => Number(row["committerTime"]))
+  }
+
   public async getCommitCountPerFile() {
     const res = await this.query(`SELECT filePath, count(DISTINCT commitHash) AS count
       FROM fileChanges_commits_renamed_cached
@@ -683,7 +693,7 @@ export default class DB {
 
   public async updateCachedResult() {
     // TODO: fix combined_result
-    await this.run(`CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
+    await this.run(/*sql*/ `CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
     SELECT * FROM fileChanges_commits_renamed_files;
     `)
   }

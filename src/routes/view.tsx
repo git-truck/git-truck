@@ -42,7 +42,7 @@ import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { invariant } from "~/shared/util"
+import { $inspect, invariant } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
@@ -50,7 +50,7 @@ import MetadataDB from "~/server/MetadataDB"
 
 export const viewSearchParamsConfig = {
   path: parseAsString,
-  objectPath: parseAsString,
+  objectPath: parseAsString.withOptions({ shallow: false }),
   objectType: parseAsString,
   zoomPath: parseAsString,
   branch: parseAsString
@@ -73,6 +73,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const viewSearchParams = loadViewSearchParams(request)
 
   let { path, zoomPath, branch } = viewSearchParams
+  const { objectPath } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -103,7 +104,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const parentDirectoryPath = getBaseDirFromPath(path)
 
   return {
-    dataPromise: analyze({ path, branch: branch! }),
+    dataPromise: analyze({ path, branch: branch!, objectPath: objectPath ?? null }),
     repositoryName: getRepoNameFromPath(path),
     parentDirectoryPath,
     versionInfo
@@ -202,7 +203,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
-async function analyze({ path, branch }: { path: string; branch: string }) {
+async function analyze({ path, branch, objectPath }: { path: string; branch: string; objectPath: string | null }) {
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
 
   const repo = path.split("/").pop()!
@@ -325,6 +326,10 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+  const selectedFileCommitTimestamps = $inspect(
+    objectPath ? await instance.db.getCommitTimestampsForPath(objectPath) : []
+  )
+
   const databaseInfo: DatabaseInfo = {
     topContributors,
     commitCounts,
@@ -355,7 +360,8 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
     contribSumPerFile: contribCounts,
     contributorsForPath: contributorsForPath,
     maxMinContribCounts,
-    commitCount
+    commitCount,
+    selectedFileCommitTimestamps
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }

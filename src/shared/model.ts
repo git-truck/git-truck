@@ -193,6 +193,7 @@ export interface DatabaseInfo {
   contributorsForPath: Record<string, { contributor: string; contribcount: number }[]>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
+  selectedFileCommitTimestamps: number[]
 }
 
 export type HexColor = `#${string}`
