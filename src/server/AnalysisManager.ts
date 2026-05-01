@@ -167,7 +167,7 @@ export class AnalysisManager {
   }
 
   private static getFilesystemKey(value: string): string {
-    return createHash("sha256").update(value).digest("hex")
+    return createHash("shake256", { outputLength: 16 }).update(value).digest("hex")
   }
 
   private static async clearAllCachesUnlocked() {
