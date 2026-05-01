@@ -11,9 +11,9 @@ import { GitService } from "~/server/git-service"
 import DB from "~/server/DB"
 import fs from "fs/promises"
 import { DisposableMutex } from "~/server/DisposableMutex"
-import { createHash } from "crypto"
 
 export class AnalysisManager {
+  private static CACHE_FOLDER = resolve(os.tmpdir(), "git-truck-cache")
   private static instancesSingleton: Map<string, Map<string, Analysis>> = new Map() // repo -> branch -> instance
   private static mutex = new DisposableMutex()
 
@@ -156,44 +156,29 @@ export class AnalysisManager {
   }
 
   private static getDBPath({ repositoryPath, branch }: { repositoryPath: string; branch: string }): string {
-    const repoHash = this.getFilesystemKey(repositoryPath)
-    const branchHash = this.getFilesystemKey(branch)
-    return resolve(os.tmpdir(), "git-truck-cache", repoHash, `${branchHash}.db`)
-  }
-
-  private static getRepositoryCachePath({ repositoryPath }: { repositoryPath: string }): string {
-    const repoHash = this.getFilesystemKey(repositoryPath)
-    return resolve(os.tmpdir(), "git-truck-cache", repoHash)
-  }
-
-  private static getFilesystemKey(value: string): string {
-    return createHash("shake256", { outputLength: 16 }).update(value).digest("hex")
+    const repoSanitized = encodeURIComponent(repositoryPath)
+    const branchSanitized = encodeURIComponent(branch)
+    return resolve(this.CACHE_FOLDER, repoSanitized, `${branchSanitized}.db`)
   }
 
   private static async clearAllCachesUnlocked() {
-    const dir = resolve(os.tmpdir(), "git-truck-cache")
-    if (!existsSync(dir)) return
-    await fs.rm(dir, { recursive: true, force: true })
+    if (!existsSync(this.CACHE_FOLDER)) {
+      return
+    }
+    await fs.rm(this.CACHE_FOLDER, { recursive: true, force: true })
   }
 
   private static async clearCache({ repositoryPath, branch }: { repositoryPath: string; branch: string }) {
     const dbPath = this.getDBPath({ repositoryPath, branch })
     await Promise.allSettled([fs.rm(dbPath, { force: true }), fs.rm(`${dbPath}.wal`, { force: true })])
-    const parentFolder = this.getRepositoryCachePath({ repositoryPath })
+    const parentFolder = dirname(dbPath)
     const files = await fs.readdir(parentFolder).catch(() => [])
     if (files.length === 0) {
       await fs.rmdir(parentFolder).catch(() => {})
     }
   }
 
-  private static async initDuckDBInstance({
-    repositoryPath,
-    branch
-  }: {
-    repositoryPath: string
-    branch: string
-  }): Promise<DuckDBInstance> {
-    const dbPath = this.getDBPath({ repositoryPath, branch })
+  private static async initDuckDBInstance(dbPath: string): Promise<DuckDBInstance> {
     const dir = dirname(dbPath)
 
     if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true })
@@ -208,7 +193,7 @@ export class AnalysisManager {
     branch: string
   }): Promise<DB> {
     const dbPath = this.getDBPath({ repositoryPath, branch })
-    let instance = await this.initDuckDBInstance({ repositoryPath, branch })
+    let instance = await this.initDuckDBInstance(dbPath)
     let connection = await instance.connect()
 
     // Check if tables already exist, if so, expect a version number in the metadata table and check if it is compatible
@@ -240,7 +225,7 @@ export class AnalysisManager {
         repositoryPath,
         branch
       })
-      instance = await this.initDuckDBInstance({ repositoryPath, branch })
+      instance = await this.initDuckDBInstance(dbPath)
       connection = await instance.connect()
 
       log.info("Database reset complete. Verifying...")
