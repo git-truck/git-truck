@@ -9,7 +9,7 @@ import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
-import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectNullable, useSetClickedObject } from "~/state/stores/clicked-object"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 type Segment = {
@@ -25,7 +25,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   const setClickedObject = useSetClickedObject()
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
-  const clickedObject = useClickedObject()
+  const clickedObject = useClickedObjectNullable()
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
@@ -146,7 +146,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         )
       })}
 
-      {clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
+      {clickedObject && clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
         <>
           <Icon path={mdiChevronDoubleRight} className="mx-1" size="1.25rem" />
           <ClickedObjectButton />
