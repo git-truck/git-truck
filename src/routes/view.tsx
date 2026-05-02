@@ -478,9 +478,6 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     <Breadcrumb zoom />
                   </div>
                   <div className="flex gap-2">
-                    <ClickedObjectButton />
-                  </div>
-                  <div className="flex gap-2">
                     <div className="relative">
                       <SearchCard />
                     </div>
