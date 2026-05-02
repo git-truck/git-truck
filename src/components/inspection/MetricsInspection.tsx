@@ -1,4 +1,11 @@
-import { mdiFileOutline, mdiFolderOutline, mdiEyeOffOutline, mdiSourceRepository, mdiAccountMultiple } from "@mdi/js"
+import {
+  mdiFileOutline,
+  mdiFolderOutline,
+  mdiEyeOffOutline,
+  mdiSourceRepository,
+  mdiAccountMultiple,
+  mdiOpenInNew
+} from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
 import { useEffect, useState, type ReactNode } from "react"
@@ -306,6 +313,17 @@ function InteractionButtons() {
 
   return (
     <div className="mb-4 flex flex-wrap gap-2">
+      <Form method="post" action={viewAction}>
+        <input type="hidden" name="open" value={clickedObject.path} />
+        <button
+          className="btn"
+          disabled={state !== "idle"}
+          title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
+        >
+          <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
+          {clickedObject.type === "blob" ? "Open file" : "Open folder"}
+        </button>
+      </Form>
       <Form
         className="w-max"
         method="post"
