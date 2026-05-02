@@ -1,4 +1,4 @@
-import { mdiChevronRight, mdiSourceRepository } from "@mdi/js"
+import { mdiChevronDoubleRight, mdiChevronRight, mdiSourceRepository } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { cn } from "~/styling"
@@ -9,10 +9,11 @@ import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
-import { useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 type Segment = {
-  type: "browse" | "zoom" | "filler"
+  type: "browse" | "zoom" | "filler" | "clicked"
   segment: string
   fullPath: string
   showAnalysisInfo: boolean
@@ -24,6 +25,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   const setClickedObject = useSetClickedObject()
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
+  const clickedObject = useClickedObject()
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
@@ -85,7 +87,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   return (
     <div
       className={cn(
-        "text-secondary-text dark:text-secondary-text-dark flex items-center gap-1 overflow-x-auto",
+        "text-secondary-text dark:text-secondary-text-dark flex items-center gap-0 overflow-x-auto",
         className
       )}
     >
@@ -106,14 +108,17 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         )
         const button =
           isLast || type === "filler" ? (
-            <span className="flex items-center gap-1 truncate font-bold" title={fullPath}>
+            <button
+              title={fullPath}
+              className="btn--text cursor-events-none flex flex-row items-center gap-2 truncate p-2 text-sm font-bold"
+            >
               {content}
-            </span>
+            </button>
           ) : type === "browse" ? (
             <Link
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
-              className="btn btn--primary truncate"
+              className="btn btn--primary truncate text-sm font-bold"
               onClick={() => setClickedObject(null)}
             >
               {content}
@@ -121,7 +126,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           ) : (
             <button
               title={title}
-              className="btn btn--primary truncate"
+              className="btn btn--primary truncate text-sm font-bold"
               onClick={() => {
                 if (!data) {
                   throw Error("Attempting to access data when none is loaded")
@@ -135,11 +140,18 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
 
         return (
           <Fragment key={fullPath}>
-            {!isFirst ? <Icon path={mdiChevronRight} /> : null}
+            {!isFirst ? <Icon path={mdiChevronRight} size="1.25rem" /> : null}
             {isRepo ? <AnalysisInfo trigger={button} /> : button}
           </Fragment>
         )
       })}
+
+      {clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
+        <>
+          <Icon path={mdiChevronDoubleRight} className="mx-1" size="1.25rem" />
+          <ClickedObjectButton />
+        </>
+      ) : null}
     </div>
   )
 }
