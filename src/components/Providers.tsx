@@ -14,6 +14,8 @@ import { findSubTree } from "~/shared/util"
 import { useQueryState } from "nuqs"
 import type { LayoutType } from "~/layouts/layouts"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
+import ignore from "ignore"
+import { filterTree } from "~/shared/utils/tree"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const [options, setOptions] = useState<Options>(() => {
@@ -30,23 +32,40 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
 
   const [zoomPath] = useQueryState("zoomPath")
 
-  const databaseInfo = useMemo(
-    () => ({ ...data.databaseInfo, fileTree: findSubTree(data.databaseInfo.fileTree, zoomPath ?? undefined) }),
-    [data.databaseInfo, zoomPath]
+  const filteredRootTree = useMemo(() => {
+    const ig = ignore()
+    ig.add(data.databaseInfo.hiddenFiles)
+    return filterTree(data.databaseInfo.fileTree, (node) => !ig.ignores(node.path))
+  }, [data.databaseInfo.fileTree, data.databaseInfo.hiddenFiles])
+
+  // Database info representing the filtered repository root (used for building caches).
+  const rootDatabaseInfo = useMemo(
+    () => ({ ...data.databaseInfo, fileTree: filteredRootTree }),
+    [data.databaseInfo, filteredRootTree]
   )
 
+  const zoomedTree = useMemo(() => findSubTree(filteredRootTree, zoomPath ?? undefined), [filteredRootTree, zoomPath])
+
+  // Database info representing the current view (filtered + zoomed)
+  const viewDatabaseInfo = useMemo(
+    () => ({ ...data.databaseInfo, fileTree: zoomedTree }),
+    [data.databaseInfo, zoomedTree]
+  )
+
+  // Build the hierarchy cache from the filtered root (not the zoomed view)
   const hierarchyCache = useMemo(() => {
+    const dataWithFilteredDb = { ...data, databaseInfo: rootDatabaseInfo }
     return buildMetricsHierarchyCache(
-      data,
-      data.databaseInfo.colorSeed,
-      data.databaseInfo.contributorColors,
+      dataWithFilteredDb,
+      rootDatabaseInfo.colorSeed,
+      rootDatabaseInfo.contributorColors,
       options?.topContributorCutoff ?? 70,
       METRICS_HIERARCHY_CACHE_DEPTH
     )
-  }, [data, options?.topContributorCutoff])
+  }, [data, rootDatabaseInfo, options?.topContributorCutoff])
 
   const metricsContextValue = useMemo<MetricsContextValue>(() => {
-    const rootPath = zoomPath ?? data.databaseInfo.fileTree.path
+    const rootPath = zoomPath ?? rootDatabaseInfo.fileTree.path
     const cachedMetrics = hierarchyCache.get(rootPath)
     if (cachedMetrics) {
       return { metricsData: cachedMetrics, hierarchyCache }
@@ -54,14 +73,14 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
 
     // Fallback: calculate metrics for the current view
     const metricsData = createMetricData(
-      { ...data, databaseInfo },
-      data.databaseInfo.colorSeed,
-      data.databaseInfo.contributorColors,
+      { ...data, databaseInfo: viewDatabaseInfo },
+      rootDatabaseInfo.colorSeed,
+      rootDatabaseInfo.contributorColors,
       options?.topContributorCutoff ?? 70
     )
 
     return { metricsData, hierarchyCache }
-  }, [zoomPath, hierarchyCache, data, databaseInfo, options?.topContributorCutoff])
+  }, [zoomPath, hierarchyCache, data, viewDatabaseInfo, rootDatabaseInfo, options?.topContributorCutoff])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
@@ -154,7 +173,7 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
     <DataContext.Provider
       value={{
         ...data,
-        databaseInfo: databaseInfo
+        databaseInfo: viewDatabaseInfo
       }}
     >
       <MetricsContext.Provider value={metricsContextValue}>
