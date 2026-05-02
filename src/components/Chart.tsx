@@ -29,7 +29,6 @@ import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
-import ignore, { type Ignore } from "ignore"
 import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
 import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
@@ -38,6 +37,7 @@ import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories }
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
+import { filterTree, flattenTree } from "~/shared/utils/tree"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -79,31 +79,24 @@ export function Chart() {
   })
 
   const filetree = useMemo(() => {
-    // TODO: make filtering faster, e.g. by not having to refetch everything every time
-    const ig = ignore()
-    ig.add(databaseInfo.hiddenFiles)
-    const filtered = filterGitTree(databaseInfo.fileTree, {
-      commitCounts: databaseInfo.commitCounts,
-      showFilesWithoutChanges,
-      ig,
-      searchResults,
-      hasSearchResults,
-      showOnlySearchMatches
+    const tree = filterTree(databaseInfo.fileTree, (node) => {
+      if (hasSearchResults && !searchResults[node.path] && showOnlySearchMatches) return false
+      if (!showFilesWithoutChanges && !databaseInfo.commitCounts[node.path]) return false
+      return true
     })
-    if (hierarchyType === "NESTED") return filtered
+    if (hierarchyType === "NESTED") return tree
     return {
-      ...filtered,
-      children: flatten(filtered)
+      ...tree,
+      children: flattenTree(tree)
     } as GitTreeObject
   }, [
-    databaseInfo.hiddenFiles,
     databaseInfo.fileTree,
     databaseInfo.commitCounts,
-    showFilesWithoutChanges,
-    searchResults,
+    hierarchyType,
     hasSearchResults,
+    searchResults,
     showOnlySearchMatches,
-    hierarchyType
+    showFilesWithoutChanges
   ])
 
   const nodes = useMemo(() => {
@@ -293,59 +286,6 @@ export function Chart() {
       </div>
     </div>
   )
-}
-
-function filterGitTree(
-  tree: GitTreeObject,
-  {
-    commitCounts,
-    searchResults,
-    hasSearchResults,
-    showFilesWithoutChanges,
-    showOnlySearchMatches,
-    ig
-  }: {
-    commitCounts: Record<string, number>
-    searchResults: Record<string, GitObject>
-    hasSearchResults: boolean
-    showFilesWithoutChanges: boolean
-    showOnlySearchMatches: boolean
-    ig: Ignore
-  }
-): GitTreeObject {
-  function filterNode(node: GitObject): GitObject | null {
-    if (ig.ignores(node.path)) {
-      return null
-    }
-    if (node.type === "blob") {
-      if (hasSearchResults && !searchResults[node.path] && showOnlySearchMatches) {
-        return null
-      }
-      if (!showFilesWithoutChanges && !commitCounts[node.path]) {
-        return null
-      }
-      return node
-    } else {
-      // It's a tree
-      const children: GitObject[] = []
-      for (const child of node.children) {
-        const filteredChild = filterNode(child)
-        if (filteredChild !== null) {
-          children.push(filteredChild)
-        }
-      }
-      if (children.length === 0) return null
-      return { type: "tree", name: node.name, path: node.path, children } as GitTreeObject
-    }
-  }
-
-  let filteredTree = filterNode(tree)
-  if (filteredTree === null) filteredTree = { ...tree, children: [] }
-  if (filteredTree.type !== "tree") {
-    throw new Error("Filtered tree must be a tree structure")
-  }
-
-  return filteredTree
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
@@ -673,16 +613,4 @@ function circularPath(x: number, y: number, r: number) {
           m0,${r}
           a${r},${r} 0 1,1 0,${-r * 2}
           a${r},${r} 0 1,1 0,${r * 2}`
-}
-
-function flatten(tree: GitTreeObject) {
-  const flattened: GitBlobObject[] = []
-  for (const child of tree.children) {
-    if (child.type === "blob") {
-      flattened.push(child)
-    } else {
-      flattened.push(...flatten(child))
-    }
-  }
-  return flattened
 }
