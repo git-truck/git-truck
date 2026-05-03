@@ -47,8 +47,7 @@ export function MetricInspectionPanel({
     <div className="mt-4">
       <div className={cn("flex w-full flex-col gap-0", className)}>
         <div className="flex w-full flex-row items-end justify-between align-bottom">
-          <button className="btn--primary border-border dark:border-border-dark flex h-8 shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2">
-            <Icon path={icon} size="1em" />
+          <button className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2">
             <span className="text-sm font-bold">{title}</span>
           </button>
           <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
@@ -96,7 +95,7 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelMenuI
             disabled={metricMenuItems.length === 0}
             aria-label="Panel options"
             title="Panel options"
-            className="btn border-border dark:border-border-dark flex h-8 shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
+            className="btn border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
           >
             <Icon path={mdiDotsVertical} size="1em" />
           </button>
@@ -133,10 +132,10 @@ function SearchButton({ value, onChange }: { value: string; onChange: (value: st
   const ref = useRef<HTMLInputElement>(null)
 
   return (
-    <div className="group flex h-8 w-fit items-center gap-0">
+    <div className="group flex w-fit items-center gap-0">
       <span
         className={cn(
-          "btn flex h-8 items-center justify-start gap-0 overflow-hidden rounded-t-lg rounded-b-none px-2 transition-all duration-200",
+          "btn flex items-center justify-start gap-0 overflow-hidden rounded-t-lg rounded-b-none px-2 transition-all duration-200",
           value ? "w-auto" : "w-fit max-w-fit group-hover:w-auto"
         )}
         tabIndex={-1}
