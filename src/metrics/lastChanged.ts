@@ -25,7 +25,14 @@ export const LastChangedMetric: SegmentedMetric = {
   name: "Last changed",
   description: "Files are colored based on how long ago they were changed.",
   icon: mdiPulse,
-  inspectionPanels: [{ title: "Last Changed", content: SegmentLegend }],
+  inspectionPanels: [
+    {
+      title: "Last Changed",
+      content: SegmentLegend,
+      description: "Files are colored based on how long ago they were changed (from latest commit).",
+      actions: { search: false, clear: false }
+    }
+  ],
   getTooltipContent(obj: GitObject, dbi: DatabaseInfo) {
     if (!isBlob(obj)) {
       // TODO: Find max last changed time for tree

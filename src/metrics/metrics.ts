@@ -13,6 +13,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "./contributors"
 import type { ReactNode } from "react"
+import type { MetricPanelButton } from "~/components/inspection/MetricInspectionPanel"
 
 /**
  * Defines the available metrics in the application
@@ -34,7 +35,7 @@ type Metric = {
   name: string
   description: string
   icon: string
-  inspectionPanels: Array<{ title: string; content: React.ComponentType }>
+  inspectionPanels: MetricPanelConfig[]
   getTooltipContent: (
     /**
      * The hovered objectGitObject
@@ -68,6 +69,23 @@ export type SegmentedMetric = CategoricalMetric & {
 export type GradientedMetric = Metric & {
   getColorFromValue: (value: number, dbi: DatabaseInfo, cache: MetricCache) => HexColor
   getColorFromObject: (obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) => HexColor
+}
+
+//Metric Panel Types
+export type MetricPanelActionId = "group-contributors" | "shuffle-colors" | "toggle-top-contributor-slider"
+
+export type MetricPanelDropdownButtonConfig = {
+  icon: string
+  label: string
+  actionId: MetricPanelActionId
+}
+
+export type MetricPanelConfig = {
+  title: string
+  content: React.ComponentType
+  description: string
+  actions?: MetricPanelButton
+  menuItems?: MetricPanelDropdownButtonConfig[]
 }
 
 export type MetricType = keyof typeof Metrics

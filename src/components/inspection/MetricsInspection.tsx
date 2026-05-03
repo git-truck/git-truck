@@ -3,20 +3,14 @@ import {
   mdiFolderOutline,
   mdiEyeOffOutline,
   mdiSourceRepository,
-  mdiAccountMultiple,
-  mdiDice5,
-  mdiScaleBalance,
-  mdiOpenInNew
+  mdiOpenInNew,
+  mdiScaleBalance
 } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
 import { useEffect, useState, type ReactNode } from "react"
 import { useFetcher, href, Form, useNavigation, useSubmit } from "react-router"
-import {
-  MetricInspectionPanel,
-  type MetricPanelMenuItem,
-  type MetricPanelButton
-} from "~/components/inspection/MetricInspectionPanel"
+import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useData } from "~/contexts/DataContext"
@@ -33,7 +27,13 @@ import { usePath } from "~/contexts/PathContext"
 import type { HexColor } from "~/shared/model"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
-import type { MetricCache, MetricType } from "~/metrics/metrics"
+import type {
+  MetricCache,
+  MetricPanelActionId,
+  MetricPanelConfig,
+  MetricPanelDropdownButtonConfig,
+  MetricType
+} from "~/metrics/metrics"
 import { TypeMetric } from "~/metrics/fileExtension"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
@@ -91,15 +91,31 @@ export function MetricsInspection() {
       ? currentFetcherData.amountOfCommits
       : null
 
+  const resolvePanelAction = (actionId: MetricPanelActionId) => {
+    switch (actionId) {
+      case "group-contributors":
+        return () => setModalOpen(true)
+      case "shuffle-colors":
+        return () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
+      case "toggle-top-contributor-slider":
+        return () => setShowTopContributorSlider(!showTopContributorSlider)
+    }
+  }
+
+  const toPanelMenuItems = (menuItems: MetricPanelDropdownButtonConfig[] = []): MetricPanelDropdownButton[] =>
+    menuItems.map((item) => ({
+      icon: item.icon,
+      label: item.label,
+      onClick: resolvePanelAction(item.actionId)
+    }))
+
   const metrics: Record<
     MetricType,
     {
       description: string
       icon: string
       data: ReactNode
-      inspectionPanels: Array<{ title: string; content: React.ComponentType }>
-      actions: MetricPanelButton
-      metricMenuItems: MetricPanelMenuItem[]
+      inspectionPanels: MetricPanelConfig[]
       colors: Array<HexColor>
     }
   > = {
@@ -108,8 +124,6 @@ export function MetricsInspection() {
       icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
       inspectionPanels: TypeMetric.inspectionPanels,
-      actions: { search: true, clear: true },
-      metricMenuItems: [],
       colors: metricsData
         .get("FILE_TYPE")
         ?.categoriesMap?.get(clickedObject.path)
@@ -118,15 +132,13 @@ export function MetricsInspection() {
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
-      inspectionPanels: FileSizeMetric.inspectionPanels,
       data: (() => {
         const size = isBlob
           ? clickedObject.sizeInBytes
           : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] || 0), 0 as number)
         return byteSize(size ?? 0).value + " " + byteSize(size ?? 0).unit
       })(),
-      actions: { search: false, clear: false },
-      metricMenuItems: [],
+      inspectionPanels: FileSizeMetric.inspectionPanels,
       colors: [
         FileSizeMetric.getBuckets(data.databaseInfo)[FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)]
           .color ?? missingInMapColor
@@ -137,8 +149,6 @@ export function MetricsInspection() {
       icon: CommitsMetric.icon,
       data: commitCount?.toLocaleString() ?? "loading...",
       inspectionPanels: CommitsMetric.inspectionPanels,
-      actions: { search: false, clear: false },
-      metricMenuItems: [],
       colors: [
         CommitsMetric.getColorFromValue(
           commitCount ?? 0,
@@ -148,7 +158,7 @@ export function MetricsInspection() {
       ]
     },
     TOP_CONTRIBUTOR: {
-      description: currentFetcherData?.multiTopContributors ? "are top contributors" : "is top contributor",
+      description: currentFetcherData?.multiTopContributors ? "are top churners" : "is top churner",
       icon: TopContributorMetric.icon,
       data: currentFetcherData
         ? currentFetcherData.multiTopContributors
@@ -156,27 +166,21 @@ export function MetricsInspection() {
           : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
         : "loading...",
       inspectionPanels: [
-        { title: "Top Churner", content: TopContributorMetric.inspectionPanels[0].content },
-        ...(showTopContributorSlider ? [{ title: "Top Cutoff", content: PercentageSlider }] : []),
-        { title: "Churn Distribution", content: TopContributorMetric.inspectionPanels[2].content }
-      ],
-      actions: { search: true, clear: true },
-      metricMenuItems: [
-        {
-          label: "Group Contributors",
-          icon: mdiAccountMultiple,
-          onClick: () => setModalOpen(true)
-        },
-        {
-          label: "Shuffle Colors",
-          icon: mdiDice5,
-          onClick: () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
-        },
-        {
-          label: showTopContributorSlider ? "Hide Cutoff Slider" : "Show Cutoff Slider",
-          icon: mdiScaleBalance,
-          onClick: () => setShowTopContributorSlider(!showTopContributorSlider)
-        }
+        //Inject top-contributor slider if toggled
+        ...(showTopContributorSlider
+          ? [
+              {
+                title: "Top Cutoff",
+                content: PercentageSlider,
+                description:
+                  "Adjust percentage-threshold of line-changes needed to be considered top churner (otherwise 'Multiple Contributors').",
+                menuItems: [
+                  { icon: mdiScaleBalance, label: "Toggle Cutoff Slider", actionId: "toggle-top-contributor-slider" }
+                ] as MetricPanelDropdownButtonConfig[]
+              }
+            ]
+          : []),
+        ...TopContributorMetric.inspectionPanels
       ],
       colors: [
         currentFetcherData
@@ -197,8 +201,6 @@ export function MetricsInspection() {
             0
           ).toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
-      actions: { search: false, clear: false },
-      metricMenuItems: [],
       colors: [
         LinesChangedMetric.getColorFromObject(
           clickedObject,
@@ -221,8 +223,6 @@ export function MetricsInspection() {
             )
           ) ?? "unknown"),
       inspectionPanels: LastChangedMetric.inspectionPanels,
-      actions: { search: false, clear: false },
-      metricMenuItems: [],
       colors: [
         LastChangedMetric.getBuckets(data.databaseInfo)[
           LastChangedMetric.getBucketIndex(clickedObject, data.databaseInfo)
@@ -234,24 +234,11 @@ export function MetricsInspection() {
       description: "contributors",
       data: currentFetcherData ? (currentFetcherData.contributors?.length ?? UNKNOWN_CATEGORY) : "loading...",
       inspectionPanels: ContributorsMetric.inspectionPanels,
-      actions: { search: true, clear: true },
-      metricMenuItems: [
-        {
-          label: "Group Contributors",
-          icon: mdiAccountMultiple,
-          onClick: () => setModalOpen(true)
-        },
-        {
-          label: "Shuffle Colors",
-          icon: mdiDice5,
-          onClick: () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
-        }
-      ],
       colors: []
     }
   } as const
 
-  const { icon, inspectionPanels, actions, metricMenuItems } = metrics[metricType]
+  const { inspectionPanels } = metrics[metricType]
 
   return (
     <>
@@ -282,10 +269,10 @@ export function MetricsInspection() {
       {inspectionPanels.map((Panel, i) => (
         <MetricInspectionPanel
           key={i}
-          icon={icon}
-          actions={i === 0 ? actions : undefined}
-          metricMenuItems={metricMenuItems}
+          actions={Panel.actions}
+          metricMenuItems={toPanelMenuItems(Panel.menuItems)}
           title={Panel.title ?? "default"}
+          description={Panel.description ?? "Description not provided."}
         >
           <Panel.content />
         </MetricInspectionPanel>
