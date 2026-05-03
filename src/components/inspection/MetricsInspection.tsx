@@ -4,12 +4,14 @@ import {
   mdiEyeOffOutline,
   mdiSourceRepository,
   mdiAccountMultiple,
+  mdiDice5,
+  mdiScaleBalance,
   mdiOpenInNew
 } from "@mdi/js"
 import byteSize from "byte-size"
 import { useQueryState } from "nuqs"
 import { useEffect, useState, type ReactNode } from "react"
-import { useFetcher, href, Form, useNavigation } from "react-router"
+import { useFetcher, href, Form, useNavigation, useSubmit } from "react-router"
 import {
   MetricInspectionPanel,
   type MetricPanelMenuItem,
@@ -20,6 +22,7 @@ import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
+import { PercentageSlider } from "~/components/PercentageSlider"
 import { viewSerializer } from "~/routes/view"
 import type { loader } from "~/routes/api.inspect"
 import { dateFormatRelative, isRepositoryRoot, last, resolveParentFolder } from "~/shared/util"
@@ -41,12 +44,14 @@ import { reduceTree } from "~/shared/utils/tree"
 
 export function MetricsInspection() {
   const fetcher = useFetcher<typeof loader>()
+  const submit = useSubmit()
   const [path] = useQueryState("path")
   const [branch] = useQueryState("branch")
   const clickedObject = useClickedObject()
   const data = useData()
   const [metricsData, contributorColors] = useMetrics()
-  const { metricType, setMetricType } = useOptions()
+  const { metricType, setMetricType, showTopContributorSlider, setShowTopContributorSlider } = useOptions()
+  const viewAction = useViewAction()
   const [modalOpen, setModalOpen] = useState(false)
 
   const isBlob = clickedObject?.type === "blob"
@@ -150,13 +155,27 @@ export function MetricsInspection() {
           ? "Multiple people"
           : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
         : "loading...",
-      inspectionPanels: TopContributorMetric.inspectionPanels,
+      inspectionPanels: [
+        { title: "Top Churner", content: TopContributorMetric.inspectionPanels[0].content },
+        ...(showTopContributorSlider ? [{ title: "Top Cutoff", content: PercentageSlider }] : []),
+        { title: "Churn Distribution", content: TopContributorMetric.inspectionPanels[2].content }
+      ],
       actions: { search: true, clear: true },
       metricMenuItems: [
         {
           label: "Group Contributors",
           icon: mdiAccountMultiple,
           onClick: () => setModalOpen(true)
+        },
+        {
+          label: "Shuffle Colors",
+          icon: mdiDice5,
+          onClick: () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
+        },
+        {
+          label: showTopContributorSlider ? "Hide Cutoff Slider" : "Show Cutoff Slider",
+          icon: mdiScaleBalance,
+          onClick: () => setShowTopContributorSlider(!showTopContributorSlider)
         }
       ],
       colors: [
@@ -221,6 +240,11 @@ export function MetricsInspection() {
           label: "Group Contributors",
           icon: mdiAccountMultiple,
           onClick: () => setModalOpen(true)
+        },
+        {
+          label: "Shuffle Colors",
+          icon: mdiDice5,
+          onClick: () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
         }
       ],
       colors: []

@@ -137,6 +137,11 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
           ...prevOptions,
           topContributorCutoff
         })),
+      setShowTopContributorSlider: (show: boolean) =>
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          showTopContributorSlider: show
+        })),
       setLinkMetricAndSizeMetric: (link: boolean) =>
         setOptions((prevOptions) => ({
           ...prevOptions,
