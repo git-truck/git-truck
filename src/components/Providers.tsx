@@ -59,10 +59,10 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       dataWithFilteredDb,
       rootDatabaseInfo.colorSeed,
       rootDatabaseInfo.contributorColors,
-      options?.topContributorCutoff ?? 70,
+      options.topContributorCutoff ?? 70,
       METRICS_HIERARCHY_CACHE_DEPTH
     )
-  }, [data, rootDatabaseInfo, options?.topContributorCutoff])
+  }, [data, rootDatabaseInfo, options.topContributorCutoff])
 
   const metricsContextValue = useMemo<MetricsContextValue>(() => {
     const rootPath = zoomPath ?? rootDatabaseInfo.fileTree.path
@@ -76,11 +76,11 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       { ...data, databaseInfo: viewDatabaseInfo },
       rootDatabaseInfo.colorSeed,
       rootDatabaseInfo.contributorColors,
-      options?.topContributorCutoff ?? 70
+      options.topContributorCutoff ?? 70
     )
 
     return { metricsData, hierarchyCache }
-  }, [zoomPath, hierarchyCache, data, viewDatabaseInfo, rootDatabaseInfo, options?.topContributorCutoff])
+  }, [zoomPath, hierarchyCache, data, viewDatabaseInfo, rootDatabaseInfo, options.topContributorCutoff])
 
   const optionsValue = useMemo<OptionsContextType>(
     () => ({
