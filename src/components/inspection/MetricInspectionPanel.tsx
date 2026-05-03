@@ -104,13 +104,19 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelMenuI
         <DropdownMenu.Content
           align="end"
           alignOffset={5}
-          className="bg-primary-bg dark:bg-primary-bg-dark border-border dark:border-border-dark z-1 -mt-0.5 rounded-lg"
+          className="bg-primary-bg dark:bg-primary-bg-dark border-border dark:border-border-dark z-1 -mt-0.5"
         >
           <DropdownMenu.Arrow className="fill-border dark:fill-border-dark" />
           {metricMenuItems.map((item, index) => (
             <DropdownMenu.Item
               key={index}
-              className="btn flex cursor-pointer flex-row items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+              className={cn(
+                "btn -mt-0.5 flex cursor-pointer flex-row items-center rounded-none px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
+                {
+                  "rounded-t-lg": index === 0,
+                  "rounded-b-lg": index === metricMenuItems.length - 1
+                }
+              )}
               onSelect={item.onClick}
             >
               <Icon path={item.icon} size="1em" />

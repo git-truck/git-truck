@@ -25,6 +25,10 @@ export type Options = {
   topContributorCutoff: number
   linkMetricAndSizeMetric: boolean
   /**
+   * Whether to show the percentage slider in the Top Contributor inspection
+   */
+  showTopContributorSlider: boolean
+  /**
    * When searching, hide files that do not match the search query
    */
   showOnlySearchMatches: boolean
@@ -42,6 +46,7 @@ export type OptionsContextType = Options & {
   setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => void
   setTopContributorCutoff: (topContributorCutoff: number) => void
   setLinkMetricAndSizeMetric: (link: boolean) => void
+  setShowTopContributorSlider: (show: boolean) => void
   setShowOnlySearchMatches: (showOnlySearchMatches: boolean) => void
 }
 
@@ -68,6 +73,7 @@ const defaultOptions: Options = {
   showFilesWithoutChanges: true,
   topContributorCutoff: 0,
   linkMetricAndSizeMetric: false,
+  showTopContributorSlider: false,
   showOnlySearchMatches: false
 }
 
