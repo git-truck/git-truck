@@ -3,27 +3,36 @@ import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
 import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
 import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
-import { mdiPodiumGold } from "@mdi/js"
+import { mdiPodiumGold, mdiAccountMultiple, mdiDice5, mdiScaleBalance } from "@mdi/js"
 import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
-import { PercentageSlider } from "~/components/PercentageSlider"
 import { countLeafNodes } from "~/metrics/metricUtils"
 
 export const TopContributorMetric: CategoricalMetric = {
-  name: "Top contributor",
+  name: "Top churner",
   description: "Files are colored based on the top contributor for each file.",
   icon: mdiPodiumGold,
   inspectionPanels: [
     {
       title: "Top Churner",
-      content: PointLegend
-    },
-    {
-      title: "Top Cutoff",
-      content: PercentageSlider
+      content: PointLegend,
+      description:
+        "Shows contributor with the most line-changes to a file. Click on the contributor to isolate the files they are the top churner for.",
+      actions: { search: true, clear: true },
+      menuItems: [
+        { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
+        { icon: mdiDice5, label: "Shuffle Colors", actionId: "shuffle-colors" },
+        { icon: mdiScaleBalance, label: "Toggle Cutoff Slider", actionId: "toggle-top-contributor-slider" }
+      ]
     },
     {
       title: "Churn Distribution",
-      content: ContributorsInspection
+      content: ContributorsInspection,
+      description: "Shows the distribution of line-changes among contributors.",
+      actions: { search: false, clear: true },
+      menuItems: [
+        { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
+        { icon: mdiDice5, label: "Shuffle Colors", actionId: "shuffle-colors" }
+      ]
     }
   ],
   getTooltipContent(obj, dbi, { topContributorCutoff }) {

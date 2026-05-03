@@ -16,7 +16,14 @@ export const LinesChangedMetric: GradientedMetric = {
   icon: mdiPlusMinusVariant,
   name: "Lines Changed",
   description: "Files are colored based on how many line changes (additions and deletions) have been made to it.",
-  inspectionPanels: [{ title: "Lines Changed", content: GradientLegend }],
+  inspectionPanels: [
+    {
+      title: "Lines Changed",
+      content: GradientLegend,
+      description: "Files colored based on their accumulated number of line changes.",
+      actions: { search: false, clear: false }
+    }
+  ],
   getTooltipContent(obj, dbi) {
     const contribs = dbi.contribSumPerFile[obj.path]
     if (!contribs) {

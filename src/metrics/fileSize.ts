@@ -36,7 +36,14 @@ export const FileSizeMetric: SegmentedMetric = {
   name: "File size",
   description: "Files are colored based on their file size in bytes.",
   icon: mdiResize,
-  inspectionPanels: [{ title: "File Size", content: SegmentLegend }],
+  inspectionPanels: [
+    {
+      title: "File Size",
+      content: SegmentLegend,
+      description: "Files colored based on their file size in bytes.",
+      actions: { search: false, clear: false }
+    }
+  ],
   getTooltipContent(obj: GitObject, _dbi: DatabaseInfo) {
     if (!isBlob(obj)) {
       // TODO: Aggregate folder size

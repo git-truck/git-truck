@@ -15,7 +15,14 @@ export const CommitsMetric: GradientedMetric = {
   icon: mdiSourceCommit,
   name: "Commits",
   description: "Files are colored based on the number of commits in the selected time range.",
-  inspectionPanels: [{ title: "Commits", content: GradientLegend }],
+  inspectionPanels: [
+    {
+      title: "Commits",
+      content: GradientLegend,
+      description: "Files colored based on the number of commits made to them.",
+      actions: { search: false, clear: false }
+    }
+  ],
   getTooltipContent(obj, dbi) {
     const noCommits = dbi.commitCounts[obj.path]
     if (!noCommits) {

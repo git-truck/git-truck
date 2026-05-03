@@ -1,6 +1,6 @@
 import { type CategoricalMetric } from "./metrics"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
-import { mdiAccountGroup } from "@mdi/js"
+import { mdiAccountGroup, mdiAccountMultiple, mdiDice5 } from "@mdi/js"
 import { PointInfo, PointLegend, type PointLegendData } from "~/components/legend/PointLegend"
 import { LegendDot } from "~/components/util"
 import { countLeafNodes } from "~/metrics/metricUtils"
@@ -12,7 +12,14 @@ export const ContributorsMetric: CategoricalMetric = {
   inspectionPanels: [
     {
       title: "Contributors",
-      content: PointLegend
+      content: PointLegend,
+      description:
+        "Shows how many files a contributor has modified. Click on a contributor to isolate the files they have contributed to.",
+      actions: { search: true, clear: true },
+      menuItems: [
+        { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
+        { icon: mdiDice5, label: "Shuffle Colors", actionId: "shuffle-colors" }
+      ]
     }
   ],
   getTooltipContent(obj, dbi, { contributorColors }) {
