@@ -16,16 +16,17 @@ export function InspectPanel() {
           {objectPath ? (
             <>
               <span className="truncate" title={objectPath}>
-                {" "}
-                <span className="font-black normal-case">
-                  {objectPathIsRepo
-                    ? objectPath
-                    : objectPathIsFile
-                      ? objectPath.split("/").pop()
-                      : objectPath
-                          .split("/")
-                          .map((segment, index, segments) => (index === segments.length - 1 ? segment : ".."))
-                          .join("/") + "/"}
+                {"inspecting: "}
+                <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
+                  {objectPathIsRepo ? (
+                    <span>
+                      {objectPath} <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
+                    </span>
+                  ) : objectPathIsFile ? (
+                    objectPath.split("/").pop()
+                  ) : (
+                    objectPath.split("/").pop() + "/"
+                  )}
                 </span>
               </span>
             </>
@@ -36,33 +37,7 @@ export function InspectPanel() {
       }
       contentClassName="pb-6"
     >
-      {clickedObject ? <MetricsInspection /> : <InspectIndex />}
+      {<MetricsInspection />}
     </CollapsibleHeader>
-  )
-}
-
-function InspectIndex() {
-  return (
-    <div className="space-y-4 text-sm">
-      <div className="space-y-1">
-        <p className="flex items-center gap-1">
-          <Key title="Left click">Click</Key> to inspect
-        </p>
-        <p className="flex items-center gap-1">
-          <Key title="Double click">Double click</Key> or <Key title="Scroll">Scroll</Key> to zoom
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function Key({ children, title }: { children: React.ReactNode; title?: string }) {
-  return (
-    <kbd
-      className="bg-primary-bg dark:bg-primary-bg-dark h-button flex w-max min-w-max items-center rounded-sm border px-2"
-      title={title}
-    >
-      {children}
-    </kbd>
   )
 }
