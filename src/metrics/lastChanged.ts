@@ -2,7 +2,7 @@ import { dateFormatRelative, dateFormatShort, isBlob, isTree, rgbToHex } from "~
 import { interpolateTurbo } from "d3"
 import type { MetricCache, SegmentedMetric } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
-import type { GitBlobObject, GitObject, DatabaseInfo } from "~/shared/model"
+import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
 import { reduceTree } from "~/shared/utils/tree"
@@ -33,7 +33,7 @@ export const LastChangedMetric: SegmentedMetric = {
       actions: { search: false, clear: false }
     }
   ],
-  getTooltipContent(obj: GitObject, dbi: DatabaseInfo) {
+  getTooltipContent(obj, dbi) {
     if (!isBlob(obj)) {
       // TODO: Find max last changed time for tree
       return "LastChangedMetric is only defined for blobs"
@@ -46,7 +46,7 @@ export const LastChangedMetric: SegmentedMetric = {
     return dateFormatRelative(epoch)
   },
 
-  getCategories(obj: GitObject, dbi: DatabaseInfo) {
+  getCategories(obj, dbi) {
     const epoch = isTree(obj)
       ? reduceTree(obj, (s, o) => Math.max(s, dbi.lastChanged[o.path] ?? 0), 0 as number)
       : dbi.lastChanged[obj.path]
@@ -148,14 +148,13 @@ export const LastChangedMetric: SegmentedMetric = {
       }
     ].map((group, i, arr) => ({
       ...group,
-      //Offset color spectrum to avoid very light colors
-      color: rgbToHex(interpolateTurbo(1 - i / arr.length)) as `#${string}`
+      color: rgbToHex(interpolateTurbo(1 - i / arr.length))
     }))
 
     return timeDifferences
   },
 
-  getBucketIndex(obj: GitObject, dbi: DatabaseInfo): number {
+  getBucketIndex(obj, dbi): number {
     const epoch = isTree(obj)
       ? reduceTree(obj, (s, o) => Math.max(s, dbi.lastChanged[o.path] ?? 0), 0 as number)
       : dbi.lastChanged[obj.path]

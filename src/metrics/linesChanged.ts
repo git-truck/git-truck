@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, HexColor } from "~/shared/model"
+import type { GitBlobObject, HexColor } from "~/shared/model"
 import type { GradientedMetric, MetricCache } from "~/metrics/metrics"
 import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex, formatLargeNumber, isTree } from "~/shared/util"
@@ -38,7 +38,7 @@ export const LinesChangedMetric: GradientedMetric = {
     )
     const contribmapper = new ContribAmountTranslater(minContribCount, maxContribCount)
 
-    return (blob: GitBlobObject, cache: MetricCache) => {
+    return (blob, cache) => {
       if (!cache.legend) {
         cache.legend = {
           minValue: minContribCount,
@@ -52,8 +52,8 @@ export const LinesChangedMetric: GradientedMetric = {
       contribmapper.setColor(blob, cache, data.databaseInfo.contribSumPerFile)
     }
   },
-  //GradientLegend specific function
-  getColorFromValue(value: number, dbi: DatabaseInfo, cache: MetricCache) {
+  // GradientLegend specific function
+  getColorFromValue(value, dbi, cache) {
     const legend = cache.legend as GradLegendData
     if (!Number.isFinite(value) || value <= 0) return noEntryColor
     const cappedValue = Math.max(legend.minValue, Math.min(value, legend.maxValue))
@@ -67,7 +67,7 @@ export const LinesChangedMetric: GradientedMetric = {
     return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, lightness) as HexColor
   },
   //GradientLegend specific function
-  getColorFromObject(obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) {
+  getColorFromObject(obj, dbi, cache) {
     const contribSum = isTree(obj)
       ? reduceTree(obj, (s, o) => s + (dbi.contribSumPerFile[o.path] || 0), 0 as number)
       : (dbi.contribSumPerFile[obj.path] ?? 0)
