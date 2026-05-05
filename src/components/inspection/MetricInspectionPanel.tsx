@@ -73,7 +73,7 @@ export function MetricInspectionPanel({
                   <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-medium">{description}</p>
                 </div>
                 <button className="btn btn--text" onClick={() => setInfoOpen(false)}>
-                  <Icon path={mdiClose} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
+                  <Icon path={mdiClose} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark" />
                 </button>
               </div>
             </div>
