@@ -17,7 +17,7 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
-import { createMetricDataForNode, Metrics, type MetricType } from "~/metrics/metrics"
+import { createMetricDataForNode, Metrics, type MetricCache, type MetricType } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
@@ -70,24 +70,21 @@ export function PointLegend() {
     resetSelection()
   }, [path, resetSelection])
 
-  const metricCache = useMemo(() => {
-    const cacheKey = clickedObject ? clickedObject.path : data.databaseInfo.fileTree.path
+  const metricCache = useMemo<MetricCache>(() => {
+    const cacheKey = clickedObject.path
 
-    // Try to get from hierarchy cache first
-    const cachedMetricsData = hierarchyCache.get(cacheKey)
-    if (cachedMetricsData) {
-      return cachedMetricsData.caches.get(metricType)
-    }
-
-    // Fallback: calculate on the fly (for nodes not in the pre-computed hierarchy)
-    const subtreeRoot = clickedObject ?? data.databaseInfo.fileTree
-    return createMetricDataForNode(
-      data,
-      subtreeRoot,
-      data.databaseInfo.colorSeed,
-      data.databaseInfo.contributorColors,
-      topContributorCutoff
-    ).caches.get(metricType)
+    return (
+      // Try to get from hierarchy cache first
+      hierarchyCache.get(cacheKey)?.caches.get(metricType) ??
+      // Fallback to creating metric data for the clicked object
+      createMetricDataForNode(
+        data,
+        clickedObject,
+        data.databaseInfo.colorSeed,
+        data.databaseInfo.contributorColors,
+        topContributorCutoff
+      ).caches.get(metricType)!
+    )
   }, [clickedObject, data, metricType, topContributorCutoff, hierarchyCache])
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
