@@ -90,7 +90,7 @@ function ContributorDistributionHeader() {
         <p className="text-right text-xs"># Line Changes</p>
         <p className="min-w-12 text-right text-xs">%</p>
       </div>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
+      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full mb-1 h-0.5 w-full" />
     </>
   )
 }
@@ -122,16 +122,10 @@ function ContributorDistribution({
             <>
               <div
                 className={cn(
-                  "grid grid-cols-[max-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-2"
+                  "grid grid-cols-[max-content_1fr_max-content_minmax(calc(12*var(--spacing)),max-content)] items-center justify-between gap-x-2"
                 )}
               >
                 <ContributorDistributionHeader />
-              </div>
-              <div
-                className={cn(
-                  "grid grid-cols-[max-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-2 gap-y-1"
-                )}
-              >
                 <ContributorDistFragment items={shownItems} contribSum={contribSum} />
               </div>
             </>
@@ -172,6 +166,7 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
               )}
             >
               <LegendDot
+                className="my-1"
                 contributorColorToChange={contributor}
                 dotColor={contributorColors.get(contributor) ?? missingInMapColor}
               />
@@ -180,7 +175,6 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
               </span>
               <span className="text-right text-xs">{contrib.toLocaleString()}</span>
               <span className="min-w-12 text-right text-xs">{contribPercentage}%</span>
-              <div />
             </div>
           </Fragment>
         )
