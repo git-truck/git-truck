@@ -3,7 +3,7 @@ import { useFetcher, href, Await } from "react-router"
 import type { loader } from "~/routes/api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
-import { COMMIT_STEP, CommitHistory, CommitHistoryLabel } from "~/components/inspection/CommitHistory"
+import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
 import { useCallback, useEffect } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
@@ -46,7 +46,6 @@ export function CommitsInspection() {
     >
       {!data ? (
         <div className="flex flex-col gap-2">
-          <CommitHistoryLabel />
           <h3>Loading...</h3>
         </div>
       ) : (
