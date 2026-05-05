@@ -68,8 +68,6 @@ export function ContributorsInspection() {
 
 const CONTRIBUTORS_PER_PAGE = 8
 
-const CONTRIBUTOR_GRID_COLS = "grid-cols-[max-content_4fr_max-content_max-content_max-content]"
-
 function ContributorDistributionHeader() {
   const navigationState = useNavigation().state
 
@@ -122,10 +120,18 @@ function ContributorDistribution({
         >
           {(shownItems) => (
             <>
-              <div className={cn("grid items-center justify-between gap-x-2", CONTRIBUTOR_GRID_COLS)}>
+              <div
+                className={cn(
+                  "grid grid-cols-[max-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-2"
+                )}
+              >
                 <ContributorDistributionHeader />
               </div>
-              <div className={cn("grid items-center justify-between gap-x-2 gap-y-1", CONTRIBUTOR_GRID_COLS)}>
+              <div
+                className={cn(
+                  "grid grid-cols-[max-content_4fr_max-content_max-content_max-content] items-center justify-between gap-x-2 gap-y-1"
+                )}
+              >
                 <ContributorDistFragment items={shownItems} contribSum={contribSum} />
               </div>
             </>
