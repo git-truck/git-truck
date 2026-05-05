@@ -19,9 +19,9 @@ export function InspectPanel() {
                 {"inspecting: "}
                 <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
                   {objectPathIsRepo ? (
-                    <span>
+                    <>
                       {objectPath} <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
-                    </span>
+                    </>
                   ) : objectPathIsFile ? (
                     objectPath.split("/").pop()
                   ) : (
