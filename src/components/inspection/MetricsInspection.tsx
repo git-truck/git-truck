@@ -91,22 +91,17 @@ export function MetricsInspection() {
       ? currentFetcherData.amountOfCommits
       : null
 
-  const resolvePanelAction = (actionId: MetricPanelActionId) => {
-    switch (actionId) {
-      case "group-contributors":
-        return () => setModalOpen(true)
-      case "shuffle-colors":
-        return () => submit({ rerollColors: "" }, { method: "post", action: viewAction })
-      case "toggle-top-contributor-slider":
-        return () => setShowTopContributorSlider(!showTopContributorSlider)
-    }
-  }
+  const panelActionMap = {
+    "group-contributors": () => setModalOpen(true),
+    "shuffle-colors": () => submit({ rerollColors: "" }, { method: "post", action: viewAction }),
+    "toggle-top-contributor-slider": () => setShowTopContributorSlider(!showTopContributorSlider)
+  } satisfies Record<MetricPanelActionId, () => void>
 
   const toPanelMenuItems = (menuItems: MetricPanelDropdownButtonConfig[] = []): MetricPanelDropdownButton[] =>
     menuItems.map((item) => ({
       icon: item.icon,
       label: item.label,
-      onClick: resolvePanelAction(item.actionId)
+      onClick: panelActionMap[item.actionId]
     }))
 
   const metrics: Record<
@@ -135,7 +130,7 @@ export function MetricsInspection() {
       data: (() => {
         const size = isBlob
           ? clickedObject.sizeInBytes
-          : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] || 0), 0 as number)
+          : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] ?? 0), 0 as number)
         return byteSize(size ?? 0).value + " " + byteSize(size ?? 0).unit
       })(),
       inspectionPanels: FileSizeMetric.inspectionPanels,
@@ -197,7 +192,7 @@ export function MetricsInspection() {
         ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
         : reduceTree(
             clickedObject,
-            (sum, n) => sum + (n.type === "blob" ? data.databaseInfo.contribSumPerFile[n.path] || 0 : 0),
+            (sum, n) => sum + (n.type === "blob" ? (data.databaseInfo.contribSumPerFile[n.path] ?? 0) : 0),
             0
           ).toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
@@ -243,7 +238,6 @@ export function MetricsInspection() {
   return (
     <>
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
-
       <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
