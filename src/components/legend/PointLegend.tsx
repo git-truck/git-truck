@@ -21,10 +21,9 @@ import { createMetricDataForNode, Metrics, type MetricType } from "~/metrics/met
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
-import { mdiCheckboxIntermediate, mdiDice5 } from "@mdi/js"
-import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
-import { useNavigation } from "react-router"
+import { mdiCheckboxIntermediate } from "@mdi/js"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
+import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
 const ITEMS_PER_PAGE = 8
 
@@ -154,37 +153,13 @@ export function PointLegend() {
 }
 
 function PointLegendHeader({ metricType }: { metricType: MetricType }) {
-  const navigationState = useNavigation().state
-  const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
-
   return (
-    <>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
-      <div className="text-primary-text dark:text-primary-text-dark contents text-sm font-bold">
-        <ShuffleColorsForm>
-          <button
-            disabled={!isAuthorRelatedLegend}
-            className={cn("btn--icon m-0 mt-1 h-min text-xs", {
-              "opacity-0": !isAuthorRelatedLegend
-            })}
-            title="Shuffle contributor colors"
-          >
-            <Icon
-              className={cn("transition-transform duration-100 hover:rotate-20", {
-                "animate-spin transition-all starting:rotate-0": navigationState !== "idle"
-              })}
-              path={mdiDice5}
-              size="1.5em"
-            />
-          </button>
-        </ShuffleColorsForm>
-        <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
-        <p className="text-right text-xs"># Files</p>
-        <p className="min-w-12 text-right text-xs">% Files</p>
-        <Icon path={mdiCheckboxIntermediate} size={1} className="justify-self-end opacity-0" />
-      </div>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
-    </>
+    <ContributorTableHeader>
+      <p>{Metrics[metricType as keyof typeof Metrics].name}</p>
+      <p className="text-right text-xs"># Files</p>
+      <p className="min-w-12 text-right text-xs">% Files</p>
+      <Icon path={mdiCheckboxIntermediate} size={1} className="invisible" />
+    </ContributorTableHeader>
   )
 }
 

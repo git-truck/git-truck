@@ -1,6 +1,6 @@
 import { useQueryState } from "nuqs"
 import { Fragment, useEffect } from "react"
-import { useFetcher, href, useNavigation } from "react-router"
+import { useFetcher, href } from "react-router"
 import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -9,11 +9,9 @@ import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
-import { ShuffleColorsForm } from "~/components/forms/ShuffleColorsForm"
-import { Icon } from "~/components/Icon"
-import { mdiDice5 } from "@mdi/js"
 import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
 import { missingInMapColor } from "~/const"
+import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
 function ContributorDistributionLabel({ htmlFor }: { htmlFor?: string }) {
   return (
@@ -41,7 +39,6 @@ export function ContributorsInspection() {
     return () => {
       reset()
     }
-
   }, [clickedObject?.path, path, databaseInfo.contributorGroups, clickedObject, load, branch, reset])
 
   if (!data) {
@@ -65,29 +62,12 @@ export function ContributorsInspection() {
 const CONTRIBUTORS_PER_PAGE = 8
 
 function ContributorDistributionHeader() {
-  const navigationState = useNavigation().state
-
   return (
-    <>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
-      <div className="text-primary-text dark:text-primary-text-dark contents text-sm font-bold">
-        <ShuffleColorsForm>
-          <button className="btn--icon m-0 mt-1 h-min text-xs" title="Shuffle contributor colors">
-            <Icon
-              className={cn("transition-transform duration-100 hover:rotate-20", {
-                "animate-spin transition-all starting:rotate-0": navigationState !== "idle"
-              })}
-              path={mdiDice5}
-              size="1.5em"
-            />
-          </button>
-        </ShuffleColorsForm>
-        <p>Contributor</p>
-        <p className="text-right text-xs"># Line Changes</p>
-        <p className="min-w-12 text-right text-xs">%</p>
-      </div>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full mb-1 h-0.5 w-full" />
-    </>
+    <ContributorTableHeader>
+      <p>Contributor</p>
+      <p className="text-right text-xs"># Line Changes</p>
+      <p className="min-w-12 text-right text-xs">%</p>
+    </ContributorTableHeader>
   )
 }
 
