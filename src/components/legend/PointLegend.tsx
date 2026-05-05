@@ -153,8 +153,6 @@ export function PointLegend() {
   )
 }
 
-const GRID_COLS = "grid-cols-[min-content_4fr_max-content_max-content_max-content]"
-
 function PointLegendHeader({ metricType }: { metricType: MetricType }) {
   const navigationState = useNavigation().state
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
@@ -202,21 +200,23 @@ function PointLegendTable({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className={cn("grid items-center justify-between gap-x-4", GRID_COLS)}>
+      <div
+        className={cn(
+          "grid grid-cols-[max-content_1fr_max-content_minmax(calc(12*var(--spacing)),max-content)_max-content] items-center justify-between gap-x-2"
+        )}
+      >
         <PointLegendHeader metricType={metricType} />
-      </div>
 
-      {items.length === 0 ? (
-        <div className="text-tertiary-text dark:text-tertiary-text-dark flex items-center justify-center text-sm">
-          No items matched your search
-        </div>
-      ) : (
-        <div className={cn("grid items-center justify-between gap-x-4", GRID_COLS)}>
-          {items.map(([label, info]) => (
+        {items.length === 0 ? (
+          <div className="text-tertiary-text dark:text-tertiary-text-dark col-span-full flex items-center justify-center text-sm">
+            No items matched your search
+          </div>
+        ) : (
+          items.map(([label, info]) => (
             <PointLegendEntry key={label} label={label} info={info} totalWeight={totalWeight} />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }
