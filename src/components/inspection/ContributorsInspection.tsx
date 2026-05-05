@@ -153,14 +153,11 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
       {props.items.map((legendItem) => {
         const contrib = legendItem.contribs
         const contributor = legendItem.contributor
-        const roundedContrib = (contrib / props.contribSum) * 100
-        const contribPercentage =
-          props.contribSum == 0
-            ? "100.0"
-            : roundedContrib.toLocaleString(undefined, {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1
-              })
+        const roundedContrib = props.contribSum == 0 ? 100 : (contrib / props.contribSum) * 100
+        const contribPercentage = roundedContrib.toLocaleString(undefined, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        })
 
         const noSelectedCategories = selectedCategories.length === 0
         const labelIsSelected = isSelected(contributor)
