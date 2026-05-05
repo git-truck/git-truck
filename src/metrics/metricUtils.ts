@@ -1,5 +1,7 @@
 import languageMap from "language-map/languages.json" with { type: "json" }
-import type { GitObject, HexColor, GitTreeObject } from "~/shared/model"
+import type { GitObject, HexColor } from "~/shared/model"
+import { isBlob } from "~/shared/util"
+import { reduceTree } from "~/shared/utils/tree"
 
 interface ColorResult {
   lang: string
@@ -16,12 +18,7 @@ export function countLeafNodes(root: GitObject): number {
     return 1
   }
 
-  if (root.type === "tree") {
-    const treeRoot = root as GitTreeObject
-    return treeRoot.children.reduce((sum, child) => sum + countLeafNodes(child), 0)
-  }
-
-  return 0
+  return reduceTree(root, (prev, curr) => prev + (isBlob(curr) ? 1 : 0), 0)
 }
 
 const extensionToColor = new Map<string, ColorResult>()
