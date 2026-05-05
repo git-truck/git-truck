@@ -131,7 +131,7 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: MetricPanelDropd
             <DropdownMenu.Item
               key={index}
               className={cn(
-                "btn -mt-0.5 flex cursor-pointer flex-row items-center rounded-none px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
+                "btn -mt-0.5 flex cursor-pointer flex-row items-center justify-start rounded-none px-2 py-1 text-sm hover:bg-gray-200 dark:hover:bg-gray-700",
                 {
                   "rounded-t-lg": index === 0,
                   "rounded-b-lg": index === metricMenuItems.length - 1
