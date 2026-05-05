@@ -159,7 +159,7 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
           maximumFractionDigits: 1
         })
 
-        const noSelectedCategories = selectedCategories.length === 0
+        const hasNoSelectedCategories = selectedCategories.length === 0
         const labelIsSelected = isSelected(contributor)
         return (
           <Fragment key={contributor + contrib}>
@@ -167,7 +167,7 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
               className={cn(
                 "text-tertiary-text dark:text-tertiary-text-dark contents *:transition-opacity *:duration-200",
                 {
-                  "*:opacity-15": !noSelectedCategories && !labelIsSelected
+                  "*:opacity-15": !hasNoSelectedCategories && !labelIsSelected
                 }
               )}
             >
