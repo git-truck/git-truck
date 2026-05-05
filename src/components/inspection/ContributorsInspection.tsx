@@ -28,7 +28,7 @@ function ContributorDistributionLabel({ htmlFor }: { htmlFor?: string }) {
 
 export function ContributorsInspection() {
   const clickedObject = useClickedObject()
-  const fetcher = useFetcher<typeof loader>()
+  const { state, data, load, reset } = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
   const [branch] = useQueryState("branch")
   const { databaseInfo } = useData()
@@ -37,18 +37,14 @@ export function ContributorsInspection() {
     if (!clickedObject) {
       return
     }
-    fetcher.load(
-      href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch })
-    )
+    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch }))
     return () => {
-      fetcher.reset()
+      reset()
     }
-    // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
-    // TODO: Consider loading data on tab change instead
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedObject?.path, path, databaseInfo.contributorGroups])
 
-  if (!fetcher.data) {
+  }, [clickedObject?.path, path, databaseInfo.contributorGroups, clickedObject, load, branch, reset])
+
+  if (!data) {
     return (
       <div className="flex flex-col gap-2">
         <ContributorDistributionLabel />
@@ -59,9 +55,9 @@ export function ContributorsInspection() {
 
   return (
     <ContributorDistribution
-      className={fetcher.state !== "idle" ? "opacity-60" : ""}
-      contributorDistribution={fetcher.data.contributorDistribution}
-      lineChangesSum={fetcher.data.lineChangesSum}
+      className={state !== "idle" ? "opacity-60" : ""}
+      contributorDistribution={data.contributorDistribution}
+      lineChangesSum={data.lineChangesSum}
     />
   )
 }
