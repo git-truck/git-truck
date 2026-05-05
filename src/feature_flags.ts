@@ -1,9 +1,5 @@
 export const feature_flags = {
   /**
-   * Enable last changed metric to be shown as a gradient legend instead of segments.
-   */
-  lastChangedAsGrad: false,
-  /**
    * Enable file size metric to be shown as a gradient legend instead of segments.
    */
   fileSizeAsGrad: false,
