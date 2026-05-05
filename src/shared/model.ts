@@ -88,6 +88,7 @@ export interface GitTreeObject extends AbstractGitObject {
   path: string
   children: (GitTreeObject | GitBlobObject)[]
 }
+
 export interface Person {
   name: string
   email: string
