@@ -3,7 +3,6 @@ import { getDefaultOptionsContextValue, useOptions } from "~/contexts/OptionsCon
 import { Icon } from "~/components/Icon"
 import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, mdiLink, mdiTransition } from "@mdi/js"
 import { useState, useTransition } from "react"
-import anitruck from "~/assets/truck.gif"
 import { relatedSizeMetric } from "~/components/Options"
 import { Modal } from "~/components/modals/Modal"
 
@@ -107,10 +106,11 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
     </Modal>
   )
 }
+
 function RenderCutOff() {
   const { renderCutOff, setRenderCutOff } = useOptions()
   const [value, setValue] = useState(renderCutOff)
-  const [isTransitioning, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   return (
     <label
       className="label group flex w-full items-center justify-start gap-2 text-sm hover:text-blue-500 hover:opacity-100"
@@ -118,7 +118,7 @@ function RenderCutOff() {
     >
       <span className="group flex grow items-center gap-2">
         <Icon className="ml-1.5" path={mdiContentCut} size="1.25em" />
-        Pixel render cut-off {isTransitioning ? <img src={anitruck} alt="" aria-hidden="true" className="h-5" /> : ""}
+        Pixel render cut-off
       </span>
       <input
         type="number"

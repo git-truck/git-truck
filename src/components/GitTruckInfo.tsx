@@ -1,6 +1,6 @@
 import { semverCompare } from "~/shared/util"
-import gitTruckLogo from "~/assets/truck.png"
-import gitTruckLogoGif from "~/assets/truck.gif"
+import parkedTruck from "~/assets/parkedTruck_32x.png"
+import drivingTruck from "~/assets/drivingTruck_32x.gif"
 import { UpdateNotifier } from "~/components/UpdateNotifier"
 import { useNavigation } from "react-router"
 import { cn } from "~/styling"
@@ -26,9 +26,9 @@ export function GitTruckInfo({
             <UpdateNotifier installedVersion={installedVersion} latestVersion={latestVersion} />
           ) : (
             <img
-              src={loading ? gitTruckLogoGif : gitTruckLogo}
+              src={loading ? drivingTruck : parkedTruck}
               alt="Git Truck Logo"
-              className="tertiary size-10 rounded-full border p-1"
+              className="tertiary pixelated aspect-square size-12 rounded-full border p-1"
             />
           )}
           <div className="flex flex-col items-start">
