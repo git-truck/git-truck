@@ -239,8 +239,8 @@ export function CommitHistory({
           items={commits ?? []}
           itemsPerPage={COMMIT_STEP}
           totalPages={totalPages}
-          itemHeight={22}
-          headerHeight={55}
+          itemHeight={20}
+          originalItemsCount={COMMIT_STEP}
           onNextFunc={loadedCommitCount < totalCommitCount ? onShowMoreCommits : undefined}
         >
           {(paginatedCommits) => (
