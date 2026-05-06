@@ -78,7 +78,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
       <div className="w-min-content flex items-start">
         <div className="flex-end flex flex-row-reverse items-center">
           {props.value.coauthors.length > 0
-            ? props.value.coauthors.slice(0, 3).map((coauthor) => {
+            ? props.value.coauthors.slice(0, 2).map((coauthor) => {
                 const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
                 return (
                   <LegendDot
@@ -131,16 +131,21 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
           </GenericEntry>
           {props.value.coauthors.length > 0 ? (
             <GenericEntry keyString="Co-authors">
-              <div className="grid grid-cols-[max-content_max-content_auto] items-center gap-1 text-sm">
+              <div className="flex flex-col gap-y-1">
                 {props.value.coauthors.map((coauthor) => (
-                  <div key={coauthor.email} className="flex flex-row items-center gap-1">
-                    <LegendDot dotColor={contributorColors.get(coauthor.name) ?? "grey"} />
-                    <span title={coauthor.name} className="text-ellipsis">
-                      {coauthor.name}
-                    </span>
-                    <span title={coauthor.email} className="text-tertiary-text dark:text-tertiary-text-dark truncate">
-                      &nbsp;{`<${coauthor.email}>`}
-                    </span>
+                  <div
+                    key={coauthor.email}
+                    className="grid grid-cols-[max-content_max-content_auto] items-center gap-1 text-sm"
+                  >
+                    <div className="flex flex-row items-center gap-1">
+                      <LegendDot dotColor={contributorColors.get(coauthor.name) ?? "grey"} />
+                      <span title={coauthor.name} className="text-ellipsis">
+                        {coauthor.name}
+                      </span>
+                      <span title={coauthor.email} className="text-tertiary-text dark:text-tertiary-text-dark truncate">
+                        &nbsp;{`<${coauthor.email}>`}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
