@@ -75,20 +75,23 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
   const [, contributorColors] = useMetrics()
   return (
     <>
-      <div className="w-min-content flex items-start">
+      <div className="w-min-content flex min-w-5.5 items-start">
         <div className="flex-end flex flex-row-reverse items-center">
           {props.value.coauthors.length > 0
-            ? props.value.coauthors.slice(0, 2).map((coauthor) => {
-                const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
-                return (
-                  <LegendDot
-                    key={props.value.hash + coauthor.email + coauthorColor}
-                    title={coauthor.name}
-                    dotColor={coauthorColor}
-                    className="z-0 -ml-2.5"
-                  />
-                )
-              })
+            ? props.value.coauthors
+                .filter((coauthor) => coauthor.name != props.value.author.name)
+                .slice(0, 2)
+                .map((coauthor) => {
+                  const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
+                  return (
+                    <LegendDot
+                      key={props.value.hash + coauthor.email + coauthorColor}
+                      title={coauthor.name}
+                      dotColor={coauthorColor}
+                      className="z-0 -ml-2.5"
+                    />
+                  )
+                })
             : null}
           {(() => {
             const authorColor = contributorColors.get(props.value.author.name) ?? "grey"
