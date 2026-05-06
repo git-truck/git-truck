@@ -16,7 +16,6 @@ import type { LayoutType } from "~/layouts/layouts"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
-
   const [options, setOptions] = useState<Options>(() => {
     const savedOptions = typeof document !== "undefined" ? localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY) : null
     return {

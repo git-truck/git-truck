@@ -30,7 +30,7 @@ export function TimeRangePresetButtons() {
   const selectionDuration = selectedRange[1] - selectedRange[0]
 
   return (
-    <div className="flex gap-0 justify-end">
+    <div className="flex justify-end gap-0">
       {presets.map((preset) => {
         const isActive =
           (preset.durationSecs === Infinity && selectionDuration === projectDuration) ||
@@ -43,7 +43,12 @@ export function TimeRangePresetButtons() {
         return duration <= projectDuration || duration === Infinity ? (
           <button
             key={preset.label}
-            className={cn("btn btn--text uppercase", $inspect(isActive) ? "text-primary-text dark:text-primary-text-dark" : "text-tertiary-text dark:text-tertiary-text-dark")}
+            className={cn(
+              "btn btn--text uppercase",
+              $inspect(isActive)
+                ? "text-primary-text dark:text-primary-text-dark"
+                : "text-tertiary-text dark:text-tertiary-text-dark"
+            )}
             onClick={() => {
               const end = data.databaseInfo.timerange[1]
               const start = duration === Infinity ? timerange[0] : end - Math.floor(duration)

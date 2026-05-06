@@ -25,9 +25,7 @@ export function filterTree(tree: GitTreeObject, predicate: (node: GitObject) => 
     //It's a GitBlobObject (file)
     if (node.type === "blob") {
       return predicate(node) ? node : null
-    }
-
-    else {
+    } else {
       const children: GitObject[] = []
       for (const child of node.children) {
         const filteredChild = filterNode(child)

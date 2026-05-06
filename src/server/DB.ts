@@ -1021,7 +1021,7 @@ export default class DB {
 
   private getTimeStringFormat(timerange: [number, number]): TimeUnit {
     const durationDays = (timerange[1] - timerange[0]) / (60 * 60 * 24)
-    
+
     if (durationDays < 150) return "day"
     if (durationDays < 1000) return "week"
     if (durationDays < 4000) return "month"

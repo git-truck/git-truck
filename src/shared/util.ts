@@ -118,8 +118,8 @@ export function hslToHex(h: number, s: number, l: number): `#${string}` {
   return hex
 }
 
-export const isTree = (d: { type: "tree"| "blob" } | null = null): d is GitTreeObject => d?.type === "tree"
-export const isBlob = (d: { type: "tree"| "blob" } | null = null): d is GitBlobObject => d?.type === "blob"
+export const isTree = (d: { type: "tree" | "blob" } | null = null): d is GitTreeObject => d?.type === "tree"
+export const isBlob = (d: { type: "tree" | "blob" } | null = null): d is GitBlobObject => d?.type === "blob"
 export const isRepositoryRoot = (d: RawGitObject | null = null): boolean => d?.path === d?.name
 
 export function generateVersionComparisonLink({

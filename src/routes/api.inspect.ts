@@ -4,7 +4,7 @@ import type { Route } from "./+types/api.inspect"
 import { AnalysisManager } from "~/server/AnalysisManager"
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { path, branch, objectPath,  } = loadViewSearchParams(request)
+  const { path, branch, objectPath } = loadViewSearchParams(request)
 
   invariant(path, "path is required")
   invariant(branch, "branch is required")
@@ -12,7 +12,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch })
 
-  const isBlob = await instance.db.getObjectType(objectPath) === "blob"
+  const isBlob = (await instance.db.getObjectType(objectPath)) === "blob"
 
   const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
 

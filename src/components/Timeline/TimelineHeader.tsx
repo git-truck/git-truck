@@ -8,7 +8,10 @@ export function TimelineHeader() {
 
   return (
     <div className="grid grid-cols-3 items-center justify-between gap-2">
-      <h2 className="card__title flex items-center" title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}>
+      <h2
+        className="card__title flex items-center"
+        title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}
+      >
         <span>
           Commits
           {clickedObject ? (

@@ -113,12 +113,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "fileTree",
     "clickedObjectData"
   ],
-  timeUnit: [
-    "commitCountPerDay"
-  ],
-  clickedObject: [
-    "clickedObjectData"
-  ],
+  timeUnit: ["commitCountPerDay"],
+  clickedObject: ["clickedObjectData"],
   contributorColor: ["contributorColors"],
   unknown: [
     "cache",

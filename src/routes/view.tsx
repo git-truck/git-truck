@@ -99,7 +99,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     branch ??= await GitService._getRepositoryHead(path)
     zoomPath ??= getRepoNameFromPath(path)
 
-
     redirectUrl.search = viewSerializer({
       path,
       branch,
@@ -118,7 +117,12 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const parentDirectoryPath = getBaseDirFromPath(path)
 
   return {
-    dataPromise: analyze({ path, branch: branch!, objectPath: objectPath ?? undefined, timeUnit: timeUnit ?? undefined }),
+    dataPromise: analyze({
+      path,
+      branch: branch!,
+      objectPath: objectPath ?? undefined,
+      timeUnit: timeUnit ?? undefined
+    }),
     repositoryName: getRepoNameFromPath(path),
     parentDirectoryPath,
     versionInfo

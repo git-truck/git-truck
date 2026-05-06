@@ -10,7 +10,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   invariant(objectPath, "objectPath is required")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch })
-  const isBlob = await instance.db.getObjectType(objectPath) === "blob"
+  const isBlob = (await instance.db.getObjectType(objectPath)) === "blob"
 
   return {
     path: objectPath,
