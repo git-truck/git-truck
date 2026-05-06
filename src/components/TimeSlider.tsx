@@ -139,10 +139,7 @@ export default function Timeline({ className }: { className?: string }) {
       </Slider>
       <TicksByCount
         className="mb-2"
-        // TODO: Fix tick spacing. Temporary fix: keep only outer most ticks
-        // count={15}
-        count={2}
-        // align="left"
+        count={15}
         tickToLabel={(t) => dateFormatShort((oldestChangeDate + (newestChangeDate - oldestChangeDate) * t) * 1000)}
       />
     </div>

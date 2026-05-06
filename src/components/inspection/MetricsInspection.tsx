@@ -7,9 +7,8 @@ import {
   mdiScaleBalance
 } from "@mdi/js"
 import byteSize from "byte-size"
-import { useQueryState } from "nuqs"
-import { useEffect, useState, type ReactNode } from "react"
-import { useFetcher, href, Form, useNavigation, useSubmit } from "react-router"
+import { useState, type ReactNode } from "react"
+import { Form, useNavigation, useSubmit } from "react-router"
 import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
@@ -17,8 +16,6 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
-import { viewSerializer } from "~/routes/view"
-import type { loader } from "~/routes/api.inspect"
 import { dateFormatRelative, isRepositoryRoot, last, resolveParentFolder } from "~/shared/util"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
@@ -40,13 +37,12 @@ import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
-import { reduceTree } from "~/shared/utils/tree"
 
 export function MetricsInspection() {
-  const fetcher = useFetcher<typeof loader>()
+  // const fetcher = useFetcher<typeof loader>()
   const submit = useSubmit()
-  const [path] = useQueryState("path")
-  const [branch] = useQueryState("branch")
+  // const [path] = useQueryState("path")
+  // const [branch] = useQueryState("branch")
   const clickedObject = useClickedObject()
   const data = useData()
   const [metricsData, contributorColors] = useMetrics()
@@ -57,38 +53,49 @@ export function MetricsInspection() {
   const isBlob = clickedObject?.type === "blob"
   const isRepo = isRepositoryRoot(clickedObject)
 
-  useEffect(() => {
-    if (!clickedObject) {
-      return
-    }
-    fetcher.load(
-      href("/api/inspect") +
-        viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path, branch })
-    )
-    return () => {
-      fetcher.reset()
-    }
-    // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clickedObject?.path, path, data.databaseInfo.contributorGroups])
+  // useEffect(() => {
+  //   if (!clickedObject) {
+  //     return
+  //   }
+  //   fetcher.load(
+  //     href("/api/inspect") +
+  //       viewSerializer({ objectPath: clickedObject.path, objectType: clickedObject.type, path, branch })
+  //   )
+  //   return () => {
+  //     fetcher.reset()
+  //   }
+  //   // For some reason, fetcher does not have a stable identity and causes an infinite loop when added to the dependency array
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [clickedObject?.path, path, data.databaseInfo.contributorGroups])
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
   }
 
-  const currentFetcherData = fetcher.data?.path === clickedObject.path ? fetcher.data : undefined
+  const currentFetcherData = data.databaseInfo.clickedObjectInfo
+
   const objectHasChangesInSelectedRange = isBlob
     ? Boolean(data.databaseInfo.commitCounts[clickedObject.path])
-    : currentFetcherData?.existsInRange
+    : currentFetcherData.existsInRange
 
   if (objectHasChangesInSelectedRange === false) {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
   }
 
+  const contributions = isBlob
+    ? data.databaseInfo.contribSumPerFile[clickedObject.path]
+    : (currentFetcherData?.contributions ?? null)
+
   const commitCount: number | null = isBlob
     ? data.databaseInfo.commitCounts[clickedObject.path]
     : currentFetcherData
       ? currentFetcherData.amountOfCommits
+      : null
+
+  const lastChanged = isBlob
+    ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
+    : currentFetcherData?.lastChanged
+      ? dateFormatRelative(currentFetcherData.lastChanged)
       : null
 
   const panelActionMap = {
@@ -103,6 +110,10 @@ export function MetricsInspection() {
       label: item.label,
       onClick: panelActionMap[item.actionId]
     }))
+  const fileSizeBucketIndex = FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)
+  if (fileSizeBucketIndex < 0) {
+    debugger
+  }
 
   const metrics: Record<
     MetricType,
@@ -128,16 +139,10 @@ export function MetricsInspection() {
       description: clickedObject.type === "tree" ? "folder size" : "file size",
       icon: FileSizeMetric.icon,
       data: (() => {
-        const size = isBlob
-          ? clickedObject.sizeInBytes
-          : reduceTree(clickedObject, (s, o) => s + (data.databaseInfo.fileSizes[o.path] ?? 0), 0 as number)
-        return byteSize(size ?? 0).value + " " + byteSize(size ?? 0).unit
+        return byteSize(clickedObject.byteSize).value + " " + byteSize(clickedObject.byteSize).unit
       })(),
       inspectionPanels: FileSizeMetric.inspectionPanels,
-      colors: [
-        FileSizeMetric.getBuckets(data.databaseInfo)[FileSizeMetric.getBucketIndex(clickedObject, data.databaseInfo)]
-          .color ?? missingInMapColor
-      ]
+      colors: [FileSizeMetric.getBuckets(data.databaseInfo)[fileSizeBucketIndex].color ?? missingInMapColor]
     },
     MOST_COMMITS: {
       description: commitCount && commitCount === 1 ? "commit" : "commits",
@@ -188,13 +193,7 @@ export function MetricsInspection() {
     MOST_CONTRIBUTIONS: {
       description: "line changes",
       icon: LinesChangedMetric.icon,
-      data: isBlob
-        ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
-        : reduceTree(
-            clickedObject,
-            (sum, n) => sum + (n.type === "blob" ? (data.databaseInfo.contribSumPerFile[n.path] ?? 0) : 0),
-            0
-          ).toLocaleString(),
+      data: isBlob ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString() : contributions,
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       colors: [
         LinesChangedMetric.getColorFromObject(
@@ -207,16 +206,7 @@ export function MetricsInspection() {
     LAST_CHANGED: {
       description: "since last change",
       icon: LastChangedMetric.icon,
-      data: isBlob
-        ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
-        : (dateFormatRelative(
-            // TODO: Get this data from the server, which is much faster
-            reduceTree(
-              clickedObject,
-              (maxEpoch, n) => Math.max(maxEpoch, n.type === "blob" ? (data.databaseInfo.lastChanged[n.path] ?? 0) : 0),
-              0
-            )
-          ) ?? "unknown"),
+      data: lastChanged,
       inspectionPanels: LastChangedMetric.inspectionPanels,
       colors: [
         LastChangedMetric.getBuckets(data.databaseInfo)[

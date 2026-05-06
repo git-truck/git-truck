@@ -123,7 +123,7 @@ function SizeMetricContent({
   switch (sizeMetric) {
     case "FILE_SIZE": {
       icon = FileSizeMetric.icon
-      const fileSizeInBytes = hoveredBlob.sizeInBytes
+      const fileSizeInBytes = hoveredBlob.byteSize
       if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
         content = "Size unknown"
       } else if (fileSizeInBytes < 1024) {

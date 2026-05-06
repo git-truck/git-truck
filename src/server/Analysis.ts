@@ -11,15 +11,18 @@ import type {
   FileModification,
   RenameInterval,
   FullCommitDTO,
-  RepoData
+  RepoData,
+  GitObject
 } from "~/shared/model.ts"
 import { log } from "~/server/log"
-import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
+import { analyzeRenamedFile, isTree, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
+import ignore from "ignore"
+import { reduceTreeIncludeTrees } from "~/shared/utils/tree"
 
 export type AnalysisStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
@@ -102,34 +105,63 @@ export class Analysis {
 
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
-  public async analyzeTree() {
+  public async analyzeTree({ hiddenFiles }: { hiddenFiles: string[] }) {
+    const ig = ignore().add(hiddenFiles)
     this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitService.lsTree(this.fileTreeAsOf)
-    const lsTreeEntries: RawGitObject[] = []
-    const matches = rawContent.matchAll(treeRegex)
-    let fileCount = 0
 
-    for (const match of matches) {
-      if (!match.groups) continue
+    log.time("calculate tree sizes")
 
-      const groups = match.groups
+    const matchGroups = rawContent
+      .matchAll(treeRegex)
+      .toArray()
+      .flatMap((match) => {
+        if (!match.groups || ig.ignores(match.groups.path)) {
+          log.warn("empty match found")
+          return []
+        }
 
-      lsTreeEntries.push({
-        type: groups["type"] as "blob" | "tree",
-        hash: groups["hash"],
-        size: groups["size"] === "-" ? undefined : Number(groups["size"]),
-        path: this.repositoryName + "/" + groups["path"]
+        const groups = match.groups
+
+        const entryName = groups["path"].split("/").at(-1)!
+        return {
+          type: groups["type"] as "blob" | "tree",
+          hash: groups["hash"],
+          byteSize: Number(groups["size"] === "-" ? NaN : groups["size"]),
+          path: this.repositoryName + "/" + groups["path"],
+          name: entryName
+        }
       })
-    }
 
-    const rootTree = {
-      type: "tree",
-      path: this.repositoryName,
-      name: this.repositoryName,
-      hash: this.fileTreeAsOf,
-      children: []
-    } as GitTreeObject
+    const lsTreeEntries: RawGitObject[] = [
+      {
+        type: "tree",
+        path: this.repositoryName,
+        name: this.repositoryName,
+        hash: this.fileTreeAsOf,
+        byteSize: NaN
+      } as const,
+      ...matchGroups
+    ].map((entry, i, entries) => ({
+      ...entry,
+      byteSize:
+        entry.type === "tree"
+          ? entries.reduce(
+              (acc, otherEntry) =>
+                otherEntry.type === "blob" && otherEntry.path.startsWith(entry.path + "/")
+                  ? acc + (otherEntry.byteSize ?? 0)
+                  : acc,
+              0
+            )
+          : entry.byteSize
+    }))
+
+    log.timeEnd("calculate tree sizes")
+
+    const fileCount = lsTreeEntries.filter((e) => e.type === "blob").length
+
+    const rootTree = { ...lsTreeEntries[0], children: [] } as GitTreeObject
 
     this.throwIfAborted()
     await this.db.replaceFiles(lsTreeEntries)
@@ -139,18 +171,26 @@ export class Analysis {
       const newName = prevTrees.pop() as string
       const newPath = `${child.path}`
       let currTree = rootTree
+
       for (const treePath of prevTrees) {
-        const foundTree = currTree.children.find((t) => t.name === treePath && t.type === "tree")
+        const foundTree: GitTreeObject = currTree.children.find(
+          (t) => t.name === treePath && isTree(t)
+        ) as GitTreeObject
         if (!foundTree) continue
-        currTree = foundTree as GitTreeObject
+        currTree = foundTree
       }
+
       switch (child.type) {
         case "tree": {
+          if (!child.hash) {
+            throw new Error("oh no missing hash")
+          }
           const newTree: GitTreeObject = {
             type: "tree",
+            hash: child.hash,
             path: newPath,
             name: newName,
-            hash: child.hash,
+            byteSize: child.byteSize,
             children: []
           }
 
@@ -159,14 +199,13 @@ export class Analysis {
           break
         }
         case "blob": {
-          fileCount += 1
           const blob: GitBlobObject = {
             type: "blob",
             hash: child.hash,
             path: newPath,
             name: newName,
             extension: newName.substring(newName.lastIndexOf(".") + 1),
-            sizeInBytes: child.size as number
+            byteSize: child.byteSize as number
           }
           currTree.children.push(blob)
           break
@@ -175,7 +214,13 @@ export class Analysis {
     }
 
     this.treeCleanup(rootTree)
-    return { rootTree, fileCount }
+
+    const objectMap = {
+      [rootTree.hash]: rootTree,
+      ...reduceTreeIncludeTrees<Record<string, GitObject>>(rootTree, (acc, obj) => ({ ...acc, [obj.hash]: obj }), {})
+    }
+
+    return { rootTree, objectMap, fileCount }
   }
 
   private treeCleanup(tree: GitTreeObject) {

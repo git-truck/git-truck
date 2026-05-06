@@ -49,18 +49,14 @@ export type Repository = {
 
 export type GitObject = GitBlobObject | GitTreeObject
 
-export interface AbstractGitObject {
-  type: "blob" | "tree" | "commit"
-  hash: string
-}
+export type RawGitObjectType = "blob" | "tree"
 
-type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
 export type RawGitObject = {
-  hash: string
   type: RawGitObjectType
+  hash: string
   path: string
-  value?: string
-  size?: number
+  name: string
+  byteSize: number
 }
 
 export interface ArgsOptions {
@@ -74,18 +70,13 @@ type RefType = "Branches" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
 
-export interface GitBlobObject extends AbstractGitObject {
+export type GitBlobObject = Omit<RawGitObject, "type"> & {
   type: "blob"
-  name: string
-  path: string
   extension: string
-  sizeInBytes: number
 }
 
-export interface GitTreeObject extends AbstractGitObject {
+export type GitTreeObject = Omit<RawGitObject, "type"> & {
   type: "tree"
-  name: string
-  path: string
   children: (GitTreeObject | GitBlobObject)[]
 }
 
@@ -163,6 +154,19 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
+  clickedObjectInfo: {
+    path: string
+    existsInRange: boolean
+    topContributor: {
+      contributor: string
+      contribs: number
+    }[]
+    multiTopContributors: boolean
+    amountOfCommits: number
+    contributors: string[]
+    contributions: number
+    lastChanged: number
+  }
   topContributors: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>
   commitCounts: Record<string, number>
   fileSizes: Record<string, number>
@@ -177,6 +181,7 @@ export interface DatabaseInfo {
   contributors: Person[]
   contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
+  objectMap: Record<string, GitObject>
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }
   fileCount: number
@@ -186,7 +191,7 @@ export interface DatabaseInfo {
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
   commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
-  commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
+  commitCountPerTimeIntervalUnit: TimeUnit
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
@@ -197,3 +202,6 @@ export interface DatabaseInfo {
 }
 
 export type HexColor = `#${string}`
+
+export const TimeUnitValues = ["day", "week", "month", "year"] as const
+export type TimeUnit = (typeof TimeUnitValues)[number]

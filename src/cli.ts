@@ -36,6 +36,7 @@ const BUILD_ASSETS_PATH = path.join(__dirname, "build/client/assets")
 
 const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
+
 let PORT: number
 let HMR_PORT: number | null = null
 

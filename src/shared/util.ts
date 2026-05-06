@@ -1,6 +1,6 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
 import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatCalendarHeader(epochTime: number) {
@@ -118,9 +118,9 @@ export function hslToHex(h: number, s: number, l: number): `#${string}` {
   return hex
 }
 
-export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
-export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
-export const isRepositoryRoot = (d: GitObject | null = null): boolean => d?.path === d?.name
+export const isTree = (d: { type: "tree"| "blob" } | null = null): d is GitTreeObject => d?.type === "tree"
+export const isBlob = (d: { type: "tree"| "blob" } | null = null): d is GitBlobObject => d?.type === "blob"
+export const isRepositoryRoot = (d: RawGitObject | null = null): boolean => d?.path === d?.name
 
 export function generateVersionComparisonLink({
   currentVersion,
