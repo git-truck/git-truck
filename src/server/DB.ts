@@ -425,22 +425,48 @@ export default class DB {
     })
   }
 
-  public async getCommitHashes(path: string, count: number) {
-    const res = await this.query(`SELECT distinct commitHash
+  public async getCommitHashes(path: string, count: number, authors: string[] = []) {
+    let query = `SELECT distinct commitHash
       FROM fileChanges_commits_renamed_cached
-      WHERE filePath GLOB '${path}*'
-      ORDER BY committerTime DESC, commitHash
-      LIMIT ${count};
-    `)
+      WHERE filePath GLOB '${path}*'`
+
+    if (authors.length > 0) {
+      const authorList = authors.map((a) => `'${a.replace(/'/g, "''")}'`).join(",")
+      query += ` AND (
+        author IN (${authorList})
+        OR commitHash IN (
+          SELECT commitHash FROM commitTrailers_unioned
+          WHERE trailerType = 'coauthor' AND name IN (${authorList})
+        )
+      )`
+    }
+
+    query += ` ORDER BY committerTime DESC, commitHash
+      LIMIT ${count};`
+
+    const res = await this.query(query)
     return res.map((row) => {
       return row["commitHash"] as string
     })
   }
 
-  public async getCommitCountForPath(path: string) {
-    const res = await this
-      .query(`SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*';
-    `)
+  public async getCommitCountForPath(path: string, authors: string[] = []) {
+    let query = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*'`
+
+    if (authors.length > 0) {
+      const authorList = authors.map((a) => `'${a.replace(/'/g, "''")}'`).join(",")
+      query += ` AND (
+        author IN (${authorList})
+        OR commitHash IN (
+          SELECT commitHash FROM commitTrailers_unioned
+          WHERE trailerType = 'coauthor' AND name IN (${authorList})
+        )
+      )`
+    }
+
+    query += ";"
+
+    const res = await this.query(query)
     return Number(res[0]["count"])
   }
 
