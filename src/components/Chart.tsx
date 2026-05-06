@@ -108,7 +108,10 @@ export function Chart() {
     const res = createPartitionedHiearchy({
       databaseInfo,
       tree: filetree,
-      size,
+      size: {
+        height: size.height,
+        width: size.width
+      },
       chartType,
       sizeMetricType: sizeMetric,
       renderCutOff
@@ -117,7 +120,8 @@ export function Chart() {
       console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -125,58 +129,6 @@ export function Chart() {
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
-
-  // TODO: This is very inefficient, as it forces all nodes to rerender each time. Instead, Nodes should manage their own handlers or, use delegate events on svg root
-  const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
-    const onClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
-      // If clicking the same object, deselect
-
-      if (clickedObject && d && clickedObject.path === d.data.path) {
-        setClickedObject(null)
-        return
-      }
-
-      // Else, navigate to object details
-      setClickedObject(d ? d.data : null)
-    }
-    const onDoubleClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
-      if (zoomPath && zoomPath === d?.data.path) {
-        setZoomPath("")
-        return
-      }
-      setZoomPath(d?.data.path ?? null)
-    }
-    return {
-      onClick: (evt) => {
-        evt.stopPropagation()
-
-        if (clickTimer.current) {
-          return
-        }
-        clickTimer.current = window.setTimeout(() => {
-          clickTimer.current = null
-
-          onClick(evt)
-        }, DOUBLE_CLICK_DELAY)
-      },
-      onDoubleClick(evt) {
-        evt.stopPropagation()
-
-        if (clickTimer.current) {
-          window.clearTimeout(clickTimer.current)
-          clickTimer.current = null
-          onDoubleClick(evt)
-        }
-      },
-      onMouseOver: (evt) => {
-        evt.stopPropagation()
-        if (d) setHoveredObject(d.data)
-      },
-      onMouseOut: () => {
-        return setHoveredObject(null)
-      }
-    }
-  }
 
   return (
     <div ref={ref} className="relative grid place-items-center">
@@ -216,7 +168,6 @@ export function Chart() {
                 return resultPath.startsWith(`${d.data.path}/`)
               })
             : isSearchMatch
-          const eventHandlers = createGroupHandlers(d)
 
           const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
             const cats: Array<string> =
@@ -255,7 +206,45 @@ export function Chart() {
                   isTree(d.data) && !clickedObject,
                 "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
-              {...eventHandlers}
+              onClick={(evt) => {
+                evt.stopPropagation()
+
+                if (clickTimer.current) {
+                  return
+                }
+                clickTimer.current = window.setTimeout(() => {
+                  clickTimer.current = null
+
+                  if (clickedObject && d && clickedObject.path === d.data.path) {
+                    setClickedObject(null)
+                    return
+                  }
+
+                  // Else, navigate to object details
+                  setClickedObject(d ? d.data : null)
+                }, DOUBLE_CLICK_DELAY)
+              }}
+              onDoubleClick={(evt) => {
+                evt.stopPropagation()
+
+                if (clickTimer.current) {
+                  window.clearTimeout(clickTimer.current)
+                  clickTimer.current = null
+
+                  if (zoomPath && zoomPath === d?.data.path) {
+                    setZoomPath("")
+                    return
+                  }
+                  setZoomPath(d?.data.path ?? null)
+                }
+              }}
+              onMouseOver={(evt) => {
+                evt.stopPropagation()
+                if (d && hoveredObject?.hash !== d.data.hash) setHoveredObject(d.data)
+              }}
+              onMouseOut={() => {
+                return setHoveredObject(null)
+              }}
             >
               <Node d={d} />
               {labelsVisible ? (
