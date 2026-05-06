@@ -137,15 +137,13 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
                     key={coauthor.email}
                     className="grid grid-cols-[max-content_max-content_auto] items-center gap-1 text-sm"
                   >
-                    <div className="flex flex-row items-center gap-1">
-                      <LegendDot dotColor={contributorColors.get(coauthor.name) ?? "grey"} />
-                      <span title={coauthor.name} className="text-ellipsis">
-                        {coauthor.name}
-                      </span>
-                      <span title={coauthor.email} className="text-tertiary-text dark:text-tertiary-text-dark truncate">
-                        &nbsp;{`<${coauthor.email}>`}
-                      </span>
-                    </div>
+                    <LegendDot dotColor={contributorColors.get(coauthor.name) ?? "grey"} />
+                    <span title={coauthor.name} className="text-ellipsis">
+                      {coauthor.name}
+                    </span>
+                    <span title={coauthor.email} className="text-tertiary-text dark:text-tertiary-text-dark truncate">
+                      &nbsp;{`<${coauthor.email}>`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -184,7 +182,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
             <div className="flex h-full items-center text-sm text-ellipsis">{props.value.message}</div>
           </GenericEntry>
           <GenericEntry keyString="Body">
-            <div className="text-tertiary-text dark:text-tertiary-text-darkflex max-h-64 items-center overflow-auto text-xs font-semibold text-ellipsis whitespace-pre-wrap">
+            <div className="text-tertiary-text dark:text-tertiary-text-dark flex max-h-64 items-center overflow-auto text-xs font-semibold text-ellipsis whitespace-pre-wrap">
               {props.value.body.length > 0 ? props.value.body : "<none>"}
             </div>
           </GenericEntry>
