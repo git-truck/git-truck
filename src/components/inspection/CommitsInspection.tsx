@@ -6,14 +6,18 @@ import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
 import { useCallback, useEffect } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
+import { isBlob, isRepositoryRoot } from "~/shared/util"
 
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
+  const objectPathIsFile = isBlob(clickedObject)
+  const objectPathIsRepo = isRepositoryRoot(clickedObject)
   const { load, data, state, reset } = useFetcher<typeof loader>()
   const [branch] = useQueryState("branch")
   const [path] = useQueryState("path")
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
   const objectPath = data?.objectPath ?? ""
+  const clickedObjectPath = clickedObject.path
 
   const loadCommits = useCallback(
     (objectPath: string, count: number) =>
@@ -30,7 +34,31 @@ export function CommitsInspection() {
 
   return (
     <CollapsibleHeader
-      title="Commits"
+      title={
+        <>
+          {clickedObjectPath ? (
+            <>
+              <span className="truncate" title={clickedObjectPath}>
+                {"Commits: "}
+                <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
+                  {objectPathIsRepo ? (
+                    <>
+                      {clickedObjectPath}{" "}
+                      <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
+                    </>
+                  ) : objectPathIsFile ? (
+                    clickedObjectPath.split("/").pop()
+                  ) : (
+                    clickedObjectPath.split("/").pop() + "/"
+                  )}
+                </span>
+              </span>
+            </>
+          ) : (
+            "Commits"
+          )}
+        </>
+      }
       className="card"
       contentClassName="pb-6 flex flex-col gap-2"
       defaultOpen={false}
