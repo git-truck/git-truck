@@ -3,8 +3,10 @@ import clsx from "clsx"
 import type React from "react"
 import { useEffect, useMemo } from "react"
 import type { AnalysisStatus } from "~/server/Analysis"
-import truck from "~/assets/truck.png"
-import anitruck from "~/assets/truck.gif"
+import drivingTruck from "~/assets/drivingTruck_48x.gif"
+import loadingTruck from "~/assets/loadingTruck_48x.gif"
+import unloadingTruck from "~/assets/unloadingTruck_48x.gif"
+import crashedTruck from "~/assets/crashedTruck_48x.gif"
 import { cn } from "~/styling"
 import { viewSerializer } from "~/routes/view"
 import { useQueryState } from "nuqs"
@@ -56,39 +58,38 @@ export function LoadingIndicator({
     }
   }, [branch, fetchProgress, state, path, showProgress, data?.progressRevision, load, data?.analysisStatus])
 
-  const [progressText, progress] = useMemo<[string, number]>(() => {
-    if (!data) return ["Loading truck...", 0]
+  const [progressText, progress, gif] = useMemo<[string, number, string]>(() => {
+    if (!data) return ["Loading truck...", 0, loadingTruck]
     const { progress, analysisStatus: analyzationStatus } = data
 
     switch (analyzationStatus) {
       case "Initialized":
-        return ["Loading truck...", 0]
+        return ["Loading truck...", 0, loadingTruck]
       case "CommitHistoryProcessed":
-        return ["Unloading truck...", 0]
+        return ["Unloading truck...", 0, unloadingTruck]
       case "Aborted":
-        return ["Aborted", 0]
+        return ["Aborted", 0, crashedTruck]
       case "ProcessingCommitHistory":
-        return [progress < 100 ? "Driving to destination..." : "Parking truck...", progress]
+        return progress < 100
+          ? ["Driving to destination...", progress, drivingTruck]
+          : ["Unloading truck...", progress, unloadingTruck]
     }
   }, [data])
 
   return (
     <div className={clsx("grid h-full w-full place-items-center px-4", className)}>
       <div className="flex w-full max-w-[clamp(16rem,80vw,36rem)] flex-col gap-4 px-2 py-2">
-        <img
-          src={!showProgress || (progress > 0 && progress < 100) ? anitruck : truck}
-          alt="🚛"
-          className="pixelated aspect-square w-full"
-        />
+        <img src={showProgress ? gif : drivingTruck} alt="🚛" className="pixelated aspect-square w-full" />
         {showProgress ? <div className="text-center text-3xl font-bold">{progressText}</div> : null}
         {showProgress && data?.analysisStatus !== "Aborted" ? (
-          <div className="h-6 w-3/4 self-center rounded-2xl bg-gray-300">
+          <div
+            className={cn("h-6 w-3/4 self-center rounded-2xl bg-gray-300 transition-opacity", {
+              "opacity-0": !progress
+            })}
+          >
             <div
               className={cn(
-                "bg-blue-primary h-[calc(100%-4px)] min-w-[calc(var(--spacing)*6-4px)] translate-x-0.5 translate-y-0.5 rounded-2xl transition-[width] duration-1000 ease-in-out",
-                {
-                  "animate-skeet": !progress
-                }
+                "bg-blue-primary h-[calc(100%-4px)] min-w-[calc(var(--spacing)*6-4px)] translate-x-0.5 translate-y-0.5 rounded-2xl transition-[width] duration-1000 ease-in-out"
               )}
               style={{ width: progress ? `calc(${Math.min(progress, 100)}% - 4px)` : "40px" }}
             />
