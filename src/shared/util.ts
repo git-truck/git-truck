@@ -24,7 +24,7 @@ export function dateFormatISO(epochTimeMillis: number) {
 }
 
 export function dateTimeFormatShort(epochTimeMillis: number) {
-  return new Date(epochTimeMillis).toLocaleString("da-dk", {
+  return new Date(epochTimeMillis).toLocaleString("en-gb", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
