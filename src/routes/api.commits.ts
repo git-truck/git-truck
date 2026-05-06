@@ -12,15 +12,17 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const rawCount = new URL(request.url).searchParams.get("count")
   const parsedCount = rawCount ? Number(rawCount) : Number.NaN
   const count = Number.isFinite(parsedCount) && parsedCount > 0 ? Math.floor(parsedCount) : 10
+  // Get selected authors from query params (can be multiple)
+  const authors = new URL(request.url).searchParams.getAll("authors")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath, branch: branch })
 
   return {
     objectPath,
     currentCommitCount: count,
-    totalCommitCount: await instance.db.getCommitCountForPath(objectPath),
+    totalCommitCount: await instance.db.getCommitCountForPath(objectPath, authors),
     commitsPromise: (async () => {
-      const commitHashes = await instance.db.getCommitHashes(objectPath, count)
+      const commitHashes = await instance.db.getCommitHashes(objectPath, count, authors)
       if (commitHashes.length < 1) return []
       const gitLogResult = await instance.gitService.gitLogSpecificCommits(commitHashes)
       const fullCommits = await instance.getFullCommits(gitLogResult)
