@@ -12,12 +12,13 @@ import { useIsClient, useViewSubmit } from "~/hooks"
 export const CloseButton = ({
   className = "",
   absolute = true,
+  size = 1.25,
   ...props
-}: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean }) => (
+}: HTMLAttributes<HTMLButtonElement> & { absolute?: boolean; size?: number }) => (
   <button
     className={clsx(
       className,
-      "btn btn--text inline-grid bg-transparent text-lg leading-none hover:text-blue-500", // Explicitly set background to transparent
+      "btn btn--text text-secondary-text hover:text-blue-primary inline-grid bg-transparent text-lg leading-none", // Explicitly set background to transparent
       {
         "absolute top-2 right-2 z-10": absolute
       }
@@ -25,7 +26,7 @@ export const CloseButton = ({
     title="Close"
     {...props}
   >
-    <Icon path={mdiClose} size={1.25} />
+    <Icon path={mdiClose} size={size} />
   </button>
 )
 

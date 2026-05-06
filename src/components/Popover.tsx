@@ -33,11 +33,20 @@ export function Popover({
           {...popoverProps}
           arrowSize={10}
           arrowColor="currentColor"
-          arrowClassName="text-tertiary-bg dark:text-secondary-bg-dark z-30"
+          arrowClassName="text-border dark:text-border-dark z-30"
         >
-          <div className="bg-secondary-bg dark:bg-secondary-bg-dark relative z-30 max-w-lg rounded p-2 pr-10 opacity-100 shadow-2xl transition-opacity starting:opacity-0">
-            {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
-            {triggerOnHover ? null : <CloseButton onClick={onClose} />}
+          <div className="bg-secondary-bg dark:bg-secondary-bg-dark border-border dark:border-border-dark relative z-30 max-w-lg items-center rounded-lg border-2 p-2 pt-0 opacity-100 shadow-2xl transition-opacity starting:opacity-0">
+            <div className="flex flex-row items-center justify-between pb-1">
+              {popoverTitle ? <h2 className="card__title">{popoverTitle}</h2> : null}
+              {triggerOnHover ? null : (
+                <CloseButton
+                  size={1}
+                  className="text-border dark:text-border-dark m-0 p-0"
+                  absolute={false}
+                  onClick={onClose}
+                />
+              )}
+            </div>
             <div className="text-secondary-text dark:text-secondary-text-dark flex flex-col gap-1">{children}</div>
           </div>
         </ArrowContainer>
