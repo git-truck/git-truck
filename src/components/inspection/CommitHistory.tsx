@@ -20,7 +20,7 @@ function CommitDistFragment(props: { items: FullCommitDTO[]; count: number }) {
 function GenericEntry(props: { keyString: string; children: React.ReactNode }) {
   return (
     <>
-      <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
+      <div className="text-secondary-text dark:text-secondary-text-dark flex grow overflow-hidden text-sm font-bold text-ellipsis whitespace-pre">
         {props.keyString}
       </div>
       {props.children}
@@ -31,7 +31,7 @@ function GenericEntry(props: { keyString: string; children: React.ReactNode }) {
 function InfoEntry(props: { keyString: string; value: string }) {
   return (
     <>
-      <div className="flex grow overflow-hidden text-sm font-semibold text-ellipsis whitespace-pre">
+      <div className="text-secondary-text dark:text-secondary-text-dark flex grow overflow-hidden text-sm font-bold text-ellipsis whitespace-pre">
         {props.keyString}
       </div>
       <p className="text-sm text-ellipsis">{props.value}</p>
@@ -56,8 +56,12 @@ function FileChangesEntry(props: { fileChanges: FileChange[] }) {
                 className="flex grow flex-row overflow-hidden text-sm text-ellipsis whitespace-nowrap"
                 title={filechange.path}
               >
-                <p className="font-light">{filechange.path.split("/").slice(0, -1).join("/") + "/"}</p>
-                <p className="font-semibold">{filechange.path.split("/").pop()}</p>
+                <p className="text-tertiary-text dark:text-tertiary-text-dark">
+                  {filechange.path.split("/").slice(0, -1).join("/") + "/"}
+                </p>
+                <p className="text-secondary-text dark:text-secondary-text-dark font-semibold">
+                  {filechange.path.split("/").pop()}
+                </p>
               </div>
             </Fragment>
           )
@@ -143,26 +147,32 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
             </GenericEntry>
           ) : null}
           {props.value.committerTime === props.value.authorTime ? (
-            <InfoEntry
-              keyString="Date"
-              value={`${dateTimeFormatShort(props.value.committerTime * 1000)} (${dateFormatRelative(
-                props.value.committerTime
-              )})`}
-            />
+            <GenericEntry keyString="Date">
+              <div className="text-sm">
+                {dateTimeFormatShort(props.value.committerTime * 1000)}
+                <span className="text-tertiary-text dark:text-tertiary-text-dark">
+                  {" (" + dateFormatRelative(props.value.committerTime) + " ago)"}
+                </span>
+              </div>
+            </GenericEntry>
           ) : (
             <>
-              <InfoEntry
-                keyString="Date committed"
-                value={`${dateTimeFormatShort(props.value.committerTime * 1000)} (${dateFormatRelative(
-                  props.value.committerTime
-                )})`}
-              />
-              <InfoEntry
-                keyString="Date authored"
-                value={`${dateTimeFormatShort(props.value.authorTime * 1000)} (${dateFormatRelative(
-                  props.value.authorTime
-                )})`}
-              />
+              <GenericEntry keyString="Date committed">
+                <div className="text-sm">
+                  {dateTimeFormatShort(props.value.committerTime * 1000)}
+                  <span className="text-tertiary-text dark:text-tertiary-text-dark">
+                    {" (" + dateFormatRelative(props.value.committerTime) + " ago)"}
+                  </span>
+                </div>
+              </GenericEntry>
+              <GenericEntry keyString="Date authored">
+                <div className="text-sm">
+                  {dateTimeFormatShort(props.value.authorTime * 1000)}
+                  <span className="text-tertiary-text dark:text-tertiary-text-dark">
+                    {" (" + dateFormatRelative(props.value.authorTime) + " ago)"}
+                  </span>
+                </div>
+              </GenericEntry>
             </>
           )}
           <GenericEntry keyString="Message">
