@@ -103,26 +103,20 @@ export function CommitsInspection() {
         }
       }}
     >
-      {!data ? (
-        <div className="flex flex-col gap-2">
-          <h3>Loading...</h3>
-        </div>
-      ) : (
-        <Await resolve={data.commitsPromise}>
-          {(commits) => (
-            <CommitHistory
-              commits={commits}
-              loadedCommitCount={commitShowCount}
-              totalCommitCount={data?.totalCommitCount ?? 0}
-              isLoading={state !== "idle"}
-              onShowMoreCommits={() => {
-                if (!clickedObject) return
-                loadCommits(clickedObject.path, commitShowCount + COMMIT_STEP)
-              }}
-            />
-          )}
-        </Await>
-      )}
+      <Await resolve={data?.commitsPromise}>
+        {(commits) => (
+          <CommitHistory
+            commits={commits ?? []}
+            loadedCommitCount={commitShowCount}
+            totalCommitCount={data?.totalCommitCount ?? 0}
+            isLoading={state !== "idle"}
+            onShowMoreCommits={() => {
+              if (!clickedObject) return
+              loadCommits(clickedObject.path, commitShowCount + COMMIT_STEP)
+            }}
+          />
+        )}
+      </Await>
     </CollapsibleHeader>
   )
 }
