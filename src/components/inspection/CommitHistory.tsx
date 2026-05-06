@@ -107,16 +107,23 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
         </div>
       </div>
       <Popover
-        triggerClassName="min-w-0 truncate"
+        triggerClassName="flex min-w-0 w-full h-full items-center truncate hover:opacity-60"
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <button
-            className="w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold opacity-80 hover:opacity-70"
-            onClick={onClick}
-          >
-            {props.value.message}
-          </button>
+          <>
+            <button
+              className="h-full w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold"
+              onClick={onClick}
+            >
+              <div className="align-center flex flex-row items-center gap-1">
+                <p className="align-center text-secondary-text dark:text-secondary-text-dark text-xs">
+                  {dateFormatCalendar(props.value.committerTime * 1000)}
+                </p>
+                <p className="text-tertiary-text dark:text-tertiary-text-dark text-xs">{props.value.message}</p>
+              </div>
+            </button>
+          </>
         )}
       >
         <div className="grid max-w-lg grid-cols-[max-content_auto] gap-x-3 gap-y-1">
