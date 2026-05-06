@@ -1,21 +1,12 @@
 import type { FileChange, FullCommitDTO } from "~/shared/model"
 import { Fragment } from "react"
-import { dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
+import { dateFormatCalendar, dateFormatRelative, dateTimeFormatShort } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "~/components/Popover"
 import { MetricInspectionPanel } from "~/components/inspection/MetricInspectionPanel"
-
-function CommitDistFragment(props: { items: FullCommitDTO[]; count: number }) {
-  return (
-    <div className="grid grid-cols-[max-content_auto] items-center justify-start gap-x-1 gap-y-0.5">
-      {props.items.map((value) => (
-        <CommitListEntry key={value.hash + "--itemContentAccordion"} value={value} />
-      ))}
-    </div>
-  )
-}
+import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 
 function GenericEntry(props: { keyString: string; children: React.ReactNode }) {
   return (
@@ -218,7 +209,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
   )
 }
 
-export const COMMIT_STEP = 10
+export const COMMIT_STEP = 15
 
 export function CommitHistory({
   commits,
@@ -234,28 +225,32 @@ export function CommitHistory({
   onShowMoreCommits: () => void
 }) {
   const clickedObject = useClickedObject()
+  const totalPages = Math.ceil(totalCommitCount / COMMIT_STEP)
   return (
     <>
       <MetricInspectionPanel
+        className="mt-0"
         title={"Commit History"}
         metricMenuItems={[]}
-        description={"Shows the commit history for " + clickedObject.path}
+        description={"Shows the commit history for " + clickedObject.path + ". Click on a commit to see details."}
       >
-        {
-          <>
-            <CommitDistFragment items={commits ?? []} count={loadedCommitCount} />
-            {isLoading ? (
-              <h3>Loading...</h3>
-            ) : loadedCommitCount < totalCommitCount ? (
-              <button
-                className="text-xs font-medium whitespace-pre opacity-70 hover:cursor-pointer"
-                onClick={onShowMoreCommits}
-              >
-                Load more commits
-              </button>
-            ) : null}
-          </>
-        }
+        <PaginatedList
+          className={isLoading ? "opacity-60" : ""}
+          items={commits ?? []}
+          itemsPerPage={COMMIT_STEP}
+          totalPages={totalPages}
+          itemHeight={22}
+          headerHeight={55}
+          onNextFunc={loadedCommitCount < totalCommitCount ? onShowMoreCommits : undefined}
+        >
+          {(paginatedCommits) => (
+            <div className="grid grid-cols-[max-content_auto] items-center justify-start gap-x-1 gap-y-1">
+              {paginatedCommits.map((value) => (
+                <CommitListEntry key={value.hash + "--itemContentAccordion"} value={value} />
+              ))}
+            </div>
+          )}
+        </PaginatedList>
       </MetricInspectionPanel>
     </>
   )
