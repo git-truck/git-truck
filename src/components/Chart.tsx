@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
-import { type JSX, type DOMAttributes, useId } from "react"
+import { type JSX, useId } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
@@ -37,7 +37,7 @@ import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories }
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
-import { filterTree, flattenTree } from "~/shared/utils/tree"
+import { filterTree, flattenTree, flattenTreeIncludeTrees } from "~/shared/utils/tree"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -101,23 +101,27 @@ export function Chart() {
 
   const nodes = useMemo(() => {
     if (process.env["NODE_ENV"] === "development") {
-      console.time("Create and pack hiearchy")
+      // console.time("Create and pack hiearchy")
     }
     if (size.width === 0 || size.height === 0) return []
 
     const res = createPartitionedHiearchy({
       databaseInfo,
       tree: filetree,
-      size,
+      size: {
+        height: size.height,
+        width: size.width
+      },
       chartType,
       sizeMetricType: sizeMetric,
       renderCutOff
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
-      console.timeEnd("Create and pack hiearchy")
+      // console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+
   useEffect(() => {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
@@ -125,58 +129,6 @@ export function Chart() {
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
-
-  // TODO: This is very inefficient, as it forces all nodes to rerender each time. Instead, Nodes should manage their own handlers or, use delegate events on svg root
-  const createGroupHandlers: (d: CircleOrRectHiearchyNode | null) => DOMAttributes<SVGRectElement> = (d) => {
-    const onClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
-      // If clicking the same object, deselect
-
-      if (clickedObject && d && clickedObject.path === d.data.path) {
-        setClickedObject(null)
-        return
-      }
-
-      // Else, navigate to object details
-      setClickedObject(d ? d.data : null)
-    }
-    const onDoubleClick = (_evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
-      if (zoomPath && zoomPath === d?.data.path) {
-        setZoomPath("")
-        return
-      }
-      setZoomPath(d?.data.path ?? null)
-    }
-    return {
-      onClick: (evt) => {
-        evt.stopPropagation()
-
-        if (clickTimer.current) {
-          return
-        }
-        clickTimer.current = window.setTimeout(() => {
-          clickTimer.current = null
-
-          onClick(evt)
-        }, DOUBLE_CLICK_DELAY)
-      },
-      onDoubleClick(evt) {
-        evt.stopPropagation()
-
-        if (clickTimer.current) {
-          window.clearTimeout(clickTimer.current)
-          clickTimer.current = null
-          onDoubleClick(evt)
-        }
-      },
-      onMouseOver: (evt) => {
-        evt.stopPropagation()
-        if (d) setHoveredObject(d.data)
-      },
-      onMouseOut: () => {
-        return setHoveredObject(null)
-      }
-    }
-  }
 
   return (
     <div ref={ref} className="relative grid place-items-center">
@@ -186,9 +138,75 @@ export function Chart() {
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => (clickedObject ? setClickedObject(null) : null)}
-        onDoubleClick={() => {
+        onClick={(evt) => {
+          const hash = (evt.target as SVGElement).getAttribute("data-hash")
+          if (!hash) {
+            setClickedObject(null)
+            return
+          }
+
+          const newClickedObject = databaseInfo.objectMap[hash]
+
+          evt.stopPropagation()
+
+          if (clickTimer.current) {
+            return
+          }
+          clickTimer.current = window.setTimeout(() => {
+            clickTimer.current = null
+
+            if (newClickedObject && clickedObject.path === newClickedObject.path) {
+              setClickedObject(null)
+              return
+            }
+
+            if (!newClickedObject) {
+              throw new Error("Clicked object not found in databaseInfo.objectMap")
+            }
+            // Else, navigate to object details
+            setClickedObject(hash ? (newClickedObject ?? null) : null)
+          }, DOUBLE_CLICK_DELAY)
+        }}
+        onDoubleClick={(evt) => {
+          const hash = evt.currentTarget.getAttribute("data-hash")
+          if (!hash) {
+            setClickedObject(null)
+            return
+          }
           setZoomPath(null)
+
+          evt.stopPropagation()
+
+          const newClickedObject = databaseInfo.objectMap[hash]
+
+          if (!newClickedObject) {
+            throw new Error("Clicked object not found in databaseInfo.objectMap: " + hash)
+          }
+
+          if (clickTimer.current) {
+            window.clearTimeout(clickTimer.current)
+            clickTimer.current = null
+
+            if (zoomPath && zoomPath === newClickedObject.path) {
+              setZoomPath("")
+              return
+            }
+            setZoomPath(newClickedObject.path ?? null)
+          }
+        }}
+        onMouseOver={(evt) => {
+          const hash = (evt.target as SVGElement).getAttribute("data-hash")
+          if (!hash) {
+            return
+          }
+          evt.stopPropagation()
+
+          const newClickedObject = databaseInfo.objectMap[hash]
+
+          if (newClickedObject && hoveredObject?.hash !== newClickedObject.hash) setHoveredObject(newClickedObject)
+        }}
+        onMouseOut={() => {
+          return setHoveredObject(null)
         }}
         onWheel={(evt) => {
           // Accumulate delta
@@ -216,7 +234,6 @@ export function Chart() {
                 return resultPath.startsWith(`${d.data.path}/`)
               })
             : isSearchMatch
-          const eventHandlers = createGroupHandlers(d)
 
           const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
             const cats: Array<string> =
@@ -255,7 +272,6 @@ export function Chart() {
                   isTree(d.data) && !clickedObject,
                 "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
-              {...eventHandlers}
             >
               <Node d={d} />
               {labelsVisible ? (
@@ -363,6 +379,8 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       ) : null}
       <rect
         {...commonProps}
+        data-name={d.data.name}
+        data-hash={d.data.hash}
         className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
           "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
           "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
@@ -535,7 +553,7 @@ function createPartitionedHiearchy({
       const blob = d as GitBlobObject
       switch (sizeMetricType) {
         case "FILE_SIZE":
-          return blob.sizeInBytes ?? 1
+          return blob.byteSize ?? 1
         case "MOST_COMMITS":
           return databaseInfo.commitCounts[blob.path] ?? 1
         case "EQUAL_SIZE":

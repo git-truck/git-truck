@@ -118,7 +118,7 @@
 }
 
 @utility card__title {
-  @apply text-secondary-text dark:text-secondary-text-dark text-sm leading-relaxed font-bold tracking-wider uppercase opacity-70 select-none;
+  @apply text-tertiary-text dark:text-tertiary-text-dark text-sm leading-relaxed font-bold tracking-wider uppercase select-none;
 }
 
 @utility card__subtitle {

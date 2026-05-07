@@ -1,13 +1,13 @@
 import { mdiMenu } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, redirect, href, useNavigate, useFetcher, useNavigation, Link } from "react-router"
+import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
 import { createPortal } from "react-dom"
 import { GitService } from "~/server/git-service"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import type { DatabaseInfo, RepoData } from "~/shared/model"
+import { TimeUnitValues, type DatabaseInfo, type RepoData, type TimeUnit } from "~/shared/model"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
 import {
   getArgsWithDefaults,
@@ -33,27 +33,27 @@ import { ClientOnly } from "~/components/util"
 import { FullscreenButton } from "~/components/buttons/FullscreenButton"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { createLoader, createSerializer, parseAsString } from "nuqs/server"
+import { createLoader, createSerializer, parseAsString, parseAsStringLiteral } from "nuqs/server"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
-import { ResetTimeIntervalButton } from "~/components/buttons/ResetTimeIntervalButton"
-import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { invariant } from "~/shared/util"
+import { $inspect, invariant } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
+import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
 
 export const viewSearchParamsConfig = {
   path: parseAsString,
-  objectPath: parseAsString,
-  objectType: parseAsString,
+  objectPath: parseAsString.withOptions({ shallow: false }),
+  objectHash: parseAsString,
   zoomPath: parseAsString,
-  branch: parseAsString
+  branch: parseAsString,
+  timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues)
 }
 
 export const viewSerializer = createSerializer(viewSearchParamsConfig)
@@ -72,7 +72,8 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   const viewSearchParams = loadViewSearchParams(request)
 
-  let { path, zoomPath, branch } = viewSearchParams
+  let { path, zoomPath, branch, objectPath, objectHash } = viewSearchParams
+  const { timeUnit } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -81,8 +82,17 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     throw redirect(url)
   }
 
-  // Redirect to same page with required search params if they are missing
+  // Redirect to same page with required search params if any are missing
   if (!path || !branch || !zoomPath) {
+    log.warn(`At least one required parameter is missing, redirecting`)
+    log.warn({
+      path,
+      branch,
+      zoomPath,
+      objectPath,
+      objectHash
+    })
+
     const redirectUrl = new URL(request.url)
 
     path ??= argsRepositoryPath
@@ -92,18 +102,27 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     redirectUrl.search = viewSerializer({
       path,
       branch,
-      zoomPath
+      zoomPath,
+      objectPath,
+      objectHash
     })
-
-    log.warn(`At least one required parameter is missing, redirecting to ${redirectUrl}`)
 
     throw redirect(redirectUrl.toString())
   }
 
+  if (!objectPath || !objectHash) {
+    objectPath = getRepoNameFromPath(path)
+    objectHash = await GitService.getCommitHashOfBranchHead({ repositoryPath: path, branch })
+  }
   const parentDirectoryPath = getBaseDirFromPath(path)
 
   return {
-    dataPromise: analyze({ path, branch: branch! }),
+    dataPromise: analyze({
+      path,
+      branch: branch!,
+      objectPath: objectPath ?? undefined,
+      timeUnit: timeUnit ?? undefined
+    }),
     repositoryName: getRepoNameFromPath(path),
     parentDirectoryPath,
     versionInfo
@@ -202,8 +221,19 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
-async function analyze({ path, branch }: { path: string; branch: string }) {
+async function analyze({
+  path,
+  branch,
+  objectPath,
+  timeUnit
+}: {
+  path: string
+  branch: string
+  objectPath: string
+  timeUnit?: TimeUnit
+}) {
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
+  $inspect({ timeUnit })
 
   const repo = path.split("/").pop()!
   const isRepo = await GitService.isValidGitRepo(path)
@@ -217,9 +247,9 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
 
   // // to avoid double identical fetch at first load, which it does for some reason
   // // TODO: Fix this. This is due to react strict mode
-  if (instance.prevInvokeReason === "none" && instance.prevResult) {
-    return instance.prevResult
-  }
+  // if (instance.prevInvokeReason === "none" && instance.prevResult) {
+  //   return instance.prevResult
+  // }
   await instance.loadRepoData()
 
   const timerange = await instance.db.getOverallTimeRange()
@@ -235,13 +265,6 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   instance.prevInvokeReason = "unknown"
   const prevData = instance.prevResult
   const prevRes = prevData?.databaseInfo
-
-  log.time("fileTree")
-  const filetree =
-    prevRes && !shouldUpdate(reason, "fileTree")
-      ? { rootTree: prevRes.fileTree, fileCount: prevRes.fileCount }
-      : await instance.analyzeTree()
-  log.timeEnd("fileTree")
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
     log.time("rename")
@@ -286,9 +309,18 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
     prevRes && !shouldUpdate(reason, "groupedContributors")
       ? prevRes.contributorGroups
       : await instance.db.getAuthorUnions()
-  const { rootTree, fileCount } = filetree
   const hiddenFiles =
     prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+
+  log.time("fileTree")
+  const filetree =
+    prevRes && !shouldUpdate(reason, "fileTree")
+      ? { rootTree: prevRes.fileTree, objectMap: prevRes.objectMap, fileCount: prevRes.fileCount }
+      : await instance.analyzeTree({ hiddenFiles: prevRes?.hiddenFiles ?? [] })
+  log.timeEnd("fileTree")
+
+  const { rootTree, objectMap, fileCount } = filetree
+
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
@@ -304,7 +336,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
-      : await instance.db.getCommitCountPerTime(timerange)
+      : await instance.db.getCommitCountPerTime(timerange, timeUnit)
   const contribCounts =
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
       ? prevRes.contribSumPerFile
@@ -325,7 +357,29 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+  const selectedFileCommitTimestamps = objectPath ? await instance.db.getCommitTimestampsForPath(objectPath) : []
+
+  const isBlob = (await instance.db.getObjectType(objectPath)) === "blob"
+
+  const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
+
+  const clickedObject =
+    prevRes && !shouldUpdate(reason, "clickedObjectData")
+      ? prevRes.clickedObjectInfo
+      : {
+          path: objectPath,
+          existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, isBlob),
+          topContributor: topContributorData,
+          multiTopContributors:
+            topContributorData.length > 1 && topContributorData[0].contribs === topContributorData[1].contribs,
+          amountOfCommits: await instance.db.getCommitCountForPath(objectPath),
+          contributors: await instance.db.getUniqueContributorsForPath(objectPath),
+          contributions: await instance.db.getContributionsForPath(objectPath),
+          lastChanged: await instance.db.getLastChangedForPath(objectPath)
+        }
+
   const databaseInfo: DatabaseInfo = {
+    clickedObjectInfo: clickedObject,
     topContributors,
     commitCounts,
     fileSizes,
@@ -340,6 +394,7 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
     contributors: authors,
     contributorGroups: authorUnions,
     fileTree: rootTree,
+    objectMap: objectMap,
     fileCount,
     hiddenFiles,
     lastRunInfo: lastRunInfo ?? { time: 0, hash: "" },
@@ -355,7 +410,8 @@ async function analyze({ path, branch }: { path: string; branch: string }) {
     contribSumPerFile: contribCounts,
     contributorsForPath: contributorsForPath,
     maxMinContribCounts,
-    commitCount
+    commitCount,
+    selectedFileCommitTimestamps
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
@@ -381,8 +437,6 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
   const navigate = useNavigate()
 
   const fetcher = useFetcher<typeof loader>()
-  const navigation = useNavigation()
-  const isLoading = navigation.state !== "idle"
   const isAborting = fetcher.state !== "idle"
 
   const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
@@ -508,31 +562,20 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   </div>
                 </header>
 
-                <div className="grid">
+                <div className="relative grid">
                   <ClientOnly>
                     {() => (
                       <>
-                        <Suspense
-                          fallback={
-                            <div className="grid h-screen place-items-center">
-                              <LoadingIndicator showProgress />
-                            </div>
-                          }
-                        >
-                          <Await resolve={dataPromise}>{() => (isLoading ? <LoadingIndicator /> : <Chart />)}</Await>
-                        </Suspense>
+                        {/* {isLoading ? <LoadingIndicator className="pointer-events-none absolute inset-0" /> : null} */}
+                        <Chart />
                         {createPortal(<Tooltip />, document.body)}
                       </>
                     )}
                   </ClientOnly>
                 </div>
                 <div className="flex flex-col text-center select-none">
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="card__title">Commits per {data.databaseInfo.commitCountPerTimeIntervalUnit}</h2>
-                    {/* TODO: Add presets, like "Last 24 hours, last 7 days, last 30 days, last years etc." */}
-                    <ResetTimeIntervalButton />
-                  </div>
-                  <Timeline key={`${data.databaseInfo.selectedRange[0]}-${data.databaseInfo.selectedRange[1]}`} />
+                  <TimelineHeader />
+                  <Timeline />
                 </div>
               </main>
             </div>

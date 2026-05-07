@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { ChevronButton } from "~/components/ChevronButton"
 import { IconRadioGroup } from "~/components/EnumSelect"
@@ -13,6 +13,7 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import * as d3 from "d3"
 
 // Minimal mock RepoData for context providers
 const mockRepoData: RepoData = {
@@ -28,6 +29,16 @@ const mockRepoData: RepoData = {
     lastChanged: 0
   },
   databaseInfo: {
+    clickedObjectInfo: {
+      amountOfCommits: 0,
+      lastChanged: 0,
+      contributions: 0,
+      contributors: [],
+      existsInRange: true,
+      multiTopContributors: false,
+      path: "",
+      topContributor: []
+    },
     topContributors: {},
     commitCounts: {},
     fileSizes: {},
@@ -41,7 +52,8 @@ const mockRepoData: RepoData = {
     minFileSize: 0,
     contributors: [],
     contributorGroups: [],
-    fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [] },
+    fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [], byteSize: 0 },
+    objectMap: {},
     hiddenFiles: [],
     lastRunInfo: { time: 0, hash: "" },
     fileCount: 0,
@@ -57,7 +69,8 @@ const mockRepoData: RepoData = {
     analyzedRepos: [],
     contribSumPerFile: {},
     maxMinContribCounts: { max: 0, min: 0 },
-    commitCount: 0
+    commitCount: 0,
+    selectedFileCommitTimestamps: []
   }
 }
 
@@ -68,6 +81,9 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
   const handleRangeChange = (values: readonly number[]) => {
     setRange([values[0], values[1]] as [number, number])
   }
+  useEffect(() => {
+    window.d3 = d3
+  })
 
   return (
     <div className="space-y-4">
@@ -86,7 +102,7 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
         onUpdate={handleRangeChange}
         onChange={handleRangeChange}
       >
-        <Rail>{SliderRail}</Rail>
+        <Rail>{(railProps) => <SliderRail {...railProps} />}</Rail>
         <Handles>
           {({ handles, getHandleProps }) => (
             <div>

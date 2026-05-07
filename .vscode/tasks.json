@@ -38,6 +38,17 @@
       }
     },
     {
+      "label": "Build with bun (development)",
+      "type": "process",
+      "command": "bun",
+      "group": "build",
+      "args": ["run", "build:dev"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
       "label": "Typecheck with bun",
       "type": "shell",
       "command": "bun",

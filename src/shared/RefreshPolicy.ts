@@ -1,3 +1,5 @@
+import { log } from "~/server/log"
+
 type DataItem =
   | "cache"
   | "rename"
@@ -23,6 +25,7 @@ type DataItem =
   | "maxMinContribCounts"
   | "commitCount"
   | "analyzedRepos"
+  | "clickedObjectData"
 
 export type InvocationReason =
   | "refresh"
@@ -36,36 +39,16 @@ export type InvocationReason =
   | "contributorColor"
   | "unknown"
   | "none"
+  | "timeUnit"
+  | "clickedObject"
 
 // TODO: handle when start of range is increased, so renames do not need refresh
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
   refresh: [
-    "cache",
-    "analyzedRepos",
-    "commitCount",
-    "rename",
-    "topContributor",
-    "commitCounts",
-    "fileSizes",
-    "contribSumPerFile",
-    "contributorsForPath",
-    "lastChanged",
-    "contributorCounts",
-    "maxMinCommitCount",
-    "maxMinContribCounts",
-    "maxMinFileSize",
-    "newestOldestChangeDate",
-    "contributors",
-    "groupedContributors",
-    "fileTree",
-    "hiddenFiles",
-    "lastRunInfo",
-    "colorSeed",
-    "contributorColors",
-    "commitCountPerDay",
-    "loadRepoData"
+    // Will refresh everything
   ],
   show: [
+    "fileTree",
     "cache",
     "commitCount",
     "topContributor",
@@ -108,7 +91,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinContribCounts",
     "maxMinFileSize",
     "newestOldestChangeDate",
-    "contributors"
+    "contributors",
+    "clickedObjectData"
   ],
   timeseriesend: [
     "cache",
@@ -126,8 +110,11 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
-    "fileTree"
+    "fileTree",
+    "clickedObjectData"
   ],
+  timeUnit: ["commitCountPerDay"],
+  clickedObject: ["clickedObjectData"],
   contributorColor: ["contributorColors"],
   unknown: [
     "cache",
@@ -159,5 +146,13 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
 }
 
 export function shouldUpdate(reason: InvocationReason, item: DataItem) {
-  return refreshPolicy[reason].find((x) => x === item) !== undefined
+  // TODO: Re implement this caching behavior
+  // return true
+  const willUpdate = reason === "refresh" || refreshPolicy[reason].find((x) => x === item) !== undefined
+  if (willUpdate) {
+    log.warn(`Updating ${item} because of reason ${reason}`)
+  } else {
+    log.warn(`Not updating ${item} because of reason ${reason}`)
+  }
+  return willUpdate
 }
