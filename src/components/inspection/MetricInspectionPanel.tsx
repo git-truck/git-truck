@@ -45,44 +45,42 @@ export function MetricInspectionPanel({
   const [infoOpen, setInfoOpen] = useState(false)
 
   return (
-    <div className="mt-4">
-      <div className={cn("flex w-full flex-col gap-0", className)}>
-        <div className="flex w-full flex-row items-end justify-between align-bottom">
-          <button
-            className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
-            title={"Toggle " + title + " description"}
-            onClick={() => setInfoOpen(!infoOpen)}
-          >
-            {!infoOpen ? (
-              <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
-            ) : null}
-            <span className="text-sm font-bold">{title}</span>
-          </button>
-          <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
-            {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
-            {actions.clear ? <ClearSelectionButton /> : null}
-            <SettingsButton metricMenuItems={metricMenuItems} />
-          </div>
-        </div>
-        <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">
-          {infoOpen ? (
-            <div className="border-blue-primary bg-blue-secondary/30 w-full rounded-lg border-2 py-2">
-              <div className="flex h-full flex-row items-center">
-                <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark mx-2" />
-                <div className="h-full w-full items-center">
-                  <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-medium">{description}</p>
-                </div>
-                <button className="btn btn--text" onClick={() => setInfoOpen(false)}>
-                  <Icon path={mdiClose} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark" />
-                </button>
-              </div>
-            </div>
+    <div className={cn("mt-4 flex w-full flex-col gap-0", className)}>
+      <div className="flex w-full flex-row items-end justify-between align-bottom">
+        <button
+          className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
+          title={"Toggle " + title + " description"}
+          onClick={() => setInfoOpen(!infoOpen)}
+        >
+          {!infoOpen ? (
+            <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
           ) : null}
-          <div className="mt-2">
-            <MetricSearchContext value={{ searchValue: selectedSearch, onSearchChange: setSelectedSearch }}>
-              {children}
-            </MetricSearchContext>
+          <span className="text-sm font-bold">{title}</span>
+        </button>
+        <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
+          {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
+          {actions.clear ? <ClearSelectionButton /> : null}
+          <SettingsButton metricMenuItems={metricMenuItems} />
+        </div>
+      </div>
+      <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">
+        {infoOpen ? (
+          <div className="border-blue-primary bg-blue-secondary/30 w-full rounded-lg border-2 py-2">
+            <div className="flex h-full flex-row items-center">
+              <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark mx-2" />
+              <div className="h-full w-full items-center">
+                <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-medium">{description}</p>
+              </div>
+              <button className="btn btn--text" onClick={() => setInfoOpen(false)}>
+                <Icon path={mdiClose} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark" />
+              </button>
+            </div>
           </div>
+        ) : null}
+        <div className="mt-2">
+          <MetricSearchContext value={{ searchValue: selectedSearch, onSearchChange: setSelectedSearch }}>
+            {children}
+          </MetricSearchContext>
         </div>
       </div>
     </div>

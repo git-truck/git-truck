@@ -23,8 +23,16 @@ export function dateFormatISO(epochTimeMillis: number) {
   return new Date(epochTimeMillis).toISOString().split("T")[0]
 }
 
+export function dateFormatCalendar(epochTimeMillis: number) {
+  return new Date(epochTimeMillis).toLocaleString("en-gb", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit"
+  })
+}
+
 export function dateTimeFormatShort(epochTimeMillis: number) {
-  return new Date(epochTimeMillis).toLocaleString("da-dk", {
+  return new Date(epochTimeMillis).toLocaleString("en-gb", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
