@@ -573,7 +573,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     )}
                   </ClientOnly>
                 </div>
-                <div className="card flex flex-col text-center select-none">
+                <div className="flex flex-col text-center select-none">
                   <TimelineHeader />
                   <Timeline />
                 </div>

@@ -17,7 +17,7 @@ const BarChart = () => {
   const size = useDeferredValue(rawSize)
   const data = databaseInfo.commitCountPerTimeInterval.map((e) => ({ ...e, countLogged: Math.log10(e.count + 1) }))
   const [start, end] = databaseInfo.selectedRange
-  const height = 100
+  const height = 70
   const selectedFileTimestamps = databaseInfo.selectedFileCommitTimestamps
   const hasSelectedFile = selectedFileTimestamps.length > 0
 
