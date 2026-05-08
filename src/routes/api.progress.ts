@@ -1,7 +1,7 @@
 import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/api.progress"
-import { loadViewSearchParams } from "~/routes/view"
+import { loadViewSearchParams } from "~/routes/viewParams"
 import { AnalysisManager } from "~/server/AnalysisManager"
 import { parseAsInteger } from "nuqs"
 import { createLoader } from "nuqs/server"

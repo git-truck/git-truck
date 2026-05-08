@@ -1,7 +1,7 @@
 import { useQueryState } from "nuqs"
 import { useFetcher, href, Await } from "react-router"
 import type { loader } from "~/routes/api.commits"
-import { viewSerializer } from "~/routes/view"
+import { viewSerializer } from "~/routes/viewParams"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
 import { useCallback, useEffect, useMemo, useRef } from "react"
@@ -20,7 +20,7 @@ export function CommitsInspection() {
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
-  const clickedObjectPath = clickedObject.path
+  const clickedHash = clickedObject.hash
   const previousPathRef = useRef<string>("")
   const commitShowCountRef = useRef(commitShowCount)
 
@@ -40,49 +40,37 @@ export function CommitsInspection() {
 
   // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
-    (objectPath: string, count: number) => {
-      let url = href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`
-      selectedAuthors.forEach((author) => {
-        url += `&authors=${encodeURIComponent(author)}`
-      })
-      load(url)
-    },
-    [branch, load, path, selectedAuthors]
+    ({ objectHash, count }: { objectHash: string; count: number }) =>
+      load(href("/api/commits") + viewSerializer({ objectHash: objectHash, path, branch }) + `&count=${count}`),
+    [branch, load, path]
   )
 
   // Reload commits when clicked object or selected authors change
   useEffect(() => {
-    const pathToLoad = clickedObject.path
-
-    if (pathToLoad) {
-      // Check if this is a new path (using ref to avoid objectPath dependency)
-      const isNewPath = pathToLoad !== previousPathRef.current
-      if (isNewPath) {
-        previousPathRef.current = pathToLoad
-      }
-
-      loadCommits(pathToLoad, commitShowCountRef.current)
+    if (clickedHash && clickedHash !== clickedObject?.hash) {
+      reset()
+      loadCommits({ objectHash: clickedHash, count: commitShowCount })
     }
-  }, [clickedObject.path, loadCommits, reset])
+  }, [clickedObject.hash, commitShowCount, loadCommits, clickedHash, reset])
 
   return (
     <CollapsibleHeader
-      title={
+      title={() => (
         <>
-          {clickedObjectPath ? (
+          {clickedHash ? (
             <>
-              <span className="truncate" title={clickedObjectPath}>
+              <span className="truncate" title={clickedObject.path}>
                 {"Commits: "}
                 <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
                   {objectPathIsRepo ? (
                     <>
-                      {clickedObjectPath}{" "}
+                      {clickedObject.path}{" "}
                       <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
                     </>
                   ) : objectPathIsFile ? (
-                    clickedObjectPath.split("/").pop()
+                    clickedObject.path.split("/").pop()
                   ) : (
-                    clickedObjectPath.split("/").pop() + "/"
+                    clickedObject.path.split("/").pop() + "/"
                   )}
                 </span>
               </span>
@@ -91,34 +79,30 @@ export function CommitsInspection() {
             "Commits"
           )}
         </>
-      }
+      )}
       className="card"
       contentClassName="flex flex-col gap-2"
       defaultOpen={false}
       onToggle={(open) => {
         if (open) {
           if (!data && state === "idle") {
-            loadCommits(clickedObject.path, commitShowCount)
+            loadCommits({ objectHash: clickedObject.hash, count: commitShowCount })
           }
         } else {
           reset()
         }
       }}
     >
-      <Await resolve={data?.commitsPromise}>
-        {(commits) => (
-          <CommitHistory
-            commits={commits ?? []}
-            loadedCommitCount={commitShowCount}
-            totalCommitCount={data?.totalCommitCount ?? 0}
-            isLoading={state !== "idle"}
-            onShowMoreCommits={() => {
-              if (!clickedObject) return
-              loadCommits(clickedObject.path, commitShowCount + COMMIT_STEP)
-            }}
-          />
-        )}
-      </Await>
+      <CommitHistory
+        commits={data?.commits ?? []}
+        loadedCommitCount={commitShowCount}
+        totalCommitCount={data?.totalCommitCount ?? 0}
+        isLoading={state !== "idle"}
+        onShowMoreCommits={() => {
+          if (!clickedObject) return
+          loadCommits({ objectHash: clickedObject.hash, count: commitShowCount + COMMIT_STEP })
+        }}
+      />
     </CollapsibleHeader>
   )
 }

@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, HexColor } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, HexColor } from "~/shared/model"
 import type { GradientedMetric, MetricCache } from "~/metrics/metrics"
 import { getMinMaxValuesForMetric, SpectrumTranslater } from "~/metrics/metricUtils"
 import { hslToHex, formatLargeNumber } from "~/shared/util"
@@ -62,7 +62,7 @@ export const CommitsMetric: GradientedMetric = {
     return hslToHex(COMMITS_HUE, COMMITS_SATURATION, lightness) as HexColor
   },
   //GradientLegend specific function
-  getColorFromObject(_obj: GitObject, _dbi: DatabaseInfo, _cache: MetricCache) {
+  getColorFromObject(_obj, _dbi, _cache) {
     throw new Error("getColorFromObject should not be called for CommitsMetric, as commits don't stack across files")
   }
 }

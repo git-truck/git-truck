@@ -28,7 +28,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
     <Modal open={open} title="Settings" icon={mdiCog} onClose={onClose}>
       <div className="flex min-h-0 max-w-max flex-col items-start gap-3 overflow-y-auto p-2 pl-0">
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={Boolean(linkMetricAndSizeMetric)}
           title="Enable to sync size metric with color metric"
           onChange={(e) => {
@@ -42,7 +42,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <span className="flex-1">Link size and color option</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={transitionsEnabled}
           title="Disable to improve performance when zooming"
           onChange={(e) => setTransitionsEnabled(e.target.checked)}
@@ -51,7 +51,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <span className="flex-1">Transitions</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={labelsVisible}
           title="Disable to improve performance"
           onChange={(e) => setLabelsVisible(e.target.checked)}
@@ -60,7 +60,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <span className="flex-1">Labels</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={showFilesWithoutChanges}
           title="Show files that have had no changes in the selected time range"
           onChange={(e) => setShowFilesWithoutChanges(e.target.checked)}
@@ -69,7 +69,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <span className="flex-1">Show files with no activity</span>
         </CheckboxWithLabel>
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={hierarchyType === "FLAT"}
           title="Show all files on the same level, instead of as a file tree"
           onChange={() => {
@@ -93,7 +93,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
         Use dark theme
       </CheckboxWithLabel> */}
         <CheckboxWithLabel
-          className="group text-sm hover:text-blue-500 hover:opacity-100"
+          className="group w-full text-sm hover:text-blue-500 hover:opacity-100"
           checked={showOnlySearchMatches}
           title="When searching, hide files that do not match the search query"
           onChange={(e) => setShowOnlySearchMatches(e.target.checked)}

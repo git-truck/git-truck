@@ -1,26 +1,17 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitObject, GitBlobObject, GitTreeObject, RenameEntry } from "~/shared/model"
+import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
+import type { TimeUnit } from "~/shared/utils/time"
 import { getLuminance } from "a11y-contrast-color"
-
-export function dateFormatCalendarHeader(epochTime: number) {
-  return new Date(epochTime).toLocaleString("en-gb", {
-    month: "long",
-    year: "numeric"
-  })
-}
 
 export function dateFormatShort(epochTimeMillis: number, options: Intl.DateTimeFormatOptions = {}) {
   return new Date(epochTimeMillis).toLocaleString("en-gb", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
     ...options
   })
-}
-
-export function dateFormatISO(epochTimeMillis: number) {
-  return new Date(epochTimeMillis).toISOString().split("T")[0]
 }
 
 export function dateFormatCalendar(epochTimeMillis: number) {
@@ -37,7 +28,8 @@ export function dateTimeFormatShort(epochTimeMillis: number) {
     minute: "2-digit",
     day: "2-digit",
     month: "short",
-    year: "2-digit"
+    year: "2-digit",
+    timeZone: "UTC"
   })
 }
 
@@ -91,12 +83,12 @@ export const semverCompare = (a: string, b: string): number => {
   return compare(validA, validB)
 }
 
-const brightnessCalculationCache = new Map<`#${string}`, { isDark: boolean; luminance: number }>()
+const brightnessCalculationCache = new Map<`#${string}|${number}`, boolean>()
 
-export const isDarkColor = (color: `#${string}`): { isDark: boolean; luminance: number } => {
-  const cachedColor = brightnessCalculationCache.get(color)
-  if (cachedColor !== undefined) {
-    return cachedColor
+export const isDarkColor = (color: `#${string}`, threshold = 0.28): boolean => {
+  const cachedColorIsDark = brightnessCalculationCache.get((color + "|" + threshold) as `#${string}|${number}`)
+  if (cachedColorIsDark !== undefined) {
+    return cachedColorIsDark
   }
 
   // Verify that the color is a hex color
@@ -105,10 +97,10 @@ export const isDarkColor = (color: `#${string}`): { isDark: boolean; luminance: 
   }
 
   const luminance = getLuminance(colorConvert.hex.rgb(color))
-  const isDark = luminance < 0.5
-  brightnessCalculationCache.set(color, { isDark, luminance })
+  const isDark = luminance < threshold
+  brightnessCalculationCache.set((color + "|" + threshold) as `#${string}|${number}`, isDark)
 
-  return { isDark, luminance: luminance }
+  return isDark
 }
 
 const colorCache = new Map<string, `#${string}`>()
@@ -126,9 +118,9 @@ export function hslToHex(h: number, s: number, l: number): `#${string}` {
   return hex
 }
 
-export const isTree = (d: GitObject | null = null): d is GitTreeObject => d?.type === "tree"
-export const isBlob = (d: GitObject | null = null): d is GitBlobObject => d?.type === "blob"
-export const isRepositoryRoot = (d: GitObject | null = null): boolean => d?.path === d?.name
+export const isTree = (d: { type: "tree" | "blob" } | null = null): d is GitTreeObject => d?.type === "tree"
+export const isBlob = (d: { type: "tree" | "blob" } | null = null): d is GitBlobObject => d?.type === "blob"
+export const isRepositoryRoot = (d: RawGitObject | null = null): boolean => d?.path === d?.name
 
 export function generateVersionComparisonLink({
   currentVersion,
@@ -157,54 +149,71 @@ export function sleep(ms: number, { signal }: { signal?: AbortSignal } = {}): Pr
   })
 }
 
-function getWeek(date: Date): number {
-  const tempDate = new Date(date)
-  tempDate.setHours(0, 0, 0, 0)
-  tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7))
-  const yearStart = new Date(tempDate.getFullYear(), 0, 1)
-  const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
-  return weekNo
+type TimeInterval = {
+  label: string
+  lookup: string
+  timestamp: number
 }
 
-export function getTimeIntervals(
-  timeUnit: "day" | "week" | "month" | "year",
-  minTime: number,
-  maxTime: number
-): [string, number][] {
-  const intervals: [string, number][] = []
+export function getTimeIntervals(timeUnit: TimeUnit, minTime: number, maxTime: number): TimeInterval[] {
+  const intervals: TimeInterval[] = []
 
-  const startDate = new Date(minTime * 1000)
+  // Floor the initial date to the start of the day in UTC
+  const currentDate = new Date(minTime * 1000)
+  currentDate.setUTCHours(0, 0, 0, 0)
+
+  // Snap downward to the nearest boundary based on the timeUnit in UTC
+  if (timeUnit === "week") {
+    const day = currentDate.getUTCDay()
+    const diffToMonday = (day + 6) % 7
+    currentDate.setUTCDate(currentDate.getUTCDate() - diffToMonday)
+  } else if (timeUnit === "month") {
+    currentDate.setUTCDate(1) // Start of the month
+  } else if (timeUnit === "year") {
+    currentDate.setUTCMonth(0, 1) // Start of the year (Jan 1)
+  }
+
   const endDate = new Date(maxTime * 1000)
-
-  const currentDate = new Date(startDate)
 
   while (currentDate <= endDate) {
     const currTime = currentDate.getTime() / 1000
+    const lookup = currentDate.toISOString().split("T")[0]
     switch (timeUnit) {
       case "day": {
-        intervals.push([
-          currentDate
-            .toLocaleDateString("en-gb", { day: "numeric", month: "long", year: "numeric", weekday: "short" })
-            .replace(",", ""),
-          currTime
-        ])
-        currentDate.setDate(currentDate.getDate() + 1)
+        const dateStr = currentDate
+          .toLocaleDateString("en-gb", {
+            day: "numeric",
+            month: "numeric",
+            // year: "numeric",
+            // weekday: "short",
+            timeZone: "UTC"
+          })
+          .replace(",", "")
+        intervals.push({ label: dateStr, lookup, timestamp: currTime })
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1)
         break
       }
       case "week": {
-        const weekNum = getWeek(currentDate)
-        intervals.push([`Week ${weekNum < 10 ? "0" : ""}${weekNum} ${currentDate.getFullYear()}`, currTime])
-        currentDate.setDate(currentDate.getDate() + 7)
+        const tempDate = new Date(currentDate)
+        tempDate.setUTCDate(tempDate.getUTCDate() + 4 - (tempDate.getUTCDay() || 7))
+        const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1))
+        const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+        intervals.push({ label: `W${weekNo < 10 ? "0" : ""}${weekNo}`, lookup, timestamp: currTime })
+        currentDate.setUTCDate(currentDate.getUTCDate() + 7)
         break
       }
       case "year": {
-        intervals.push([currentDate.getFullYear().toString(), currTime])
-        currentDate.setFullYear(currentDate.getFullYear() + 1)
+        intervals.push({ label: currentDate.getUTCFullYear().toString(), lookup, timestamp: currTime })
+        currentDate.setUTCFullYear(currentDate.getUTCFullYear() + 1)
         break
       }
       case "month": {
-        intervals.push([currentDate.toLocaleString("en-gb", { month: "long", year: "numeric" }), currTime])
-        currentDate.setMonth(currentDate.getMonth() + 1)
+        intervals.push({
+          label: currentDate.toLocaleString("en-gb", { month: "short", timeZone: "UTC" }),
+          lookup,
+          timestamp: currTime
+        })
+        currentDate.setUTCMonth(currentDate.getUTCMonth() + 1)
         break
       }
       default:
@@ -289,7 +298,7 @@ export function resolveParentFolder(path: string) {
 /**
  * Identity function with a logging sideeffect used for quickly inspecting values without changing code behaviour
  * @public */
-export const $inspect = <T>(args: T, { trace = true, label = "INSPECT" } = {}): T => {
+export const $inspect = <T>(args: T, { trace = false, label = "$inspect" } = {}): T => {
   console[trace ? "trace" : "log"](`🔎 ${label}`, args)
   return args
 }

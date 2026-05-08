@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
-import { type JSX, type DOMAttributes, useId } from "react"
+import { type JSX, useId } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
@@ -38,6 +38,7 @@ import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-ob
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
 import { filterTree, flattenTree } from "~/shared/utils/tree"
+import { useGradient } from "~/hooks/svg"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -101,7 +102,7 @@ export function Chart() {
 
   const nodes = useMemo(() => {
     if (process.env["NODE_ENV"] === "development") {
-      console.time("Create and pack hiearchy")
+      // console.time("Create and pack hiearchy")
     }
     if (size.width === 0 || size.height === 0) return []
 
@@ -117,7 +118,7 @@ export function Chart() {
       renderCutOff
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
-      console.timeEnd("Create and pack hiearchy")
+      // console.timeEnd("Create and pack hiearchy")
     }
     return res
   }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
@@ -129,6 +130,8 @@ export function Chart() {
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
+  const getHashFromEventTarget = (target: EventTarget | null) =>
+    target instanceof Element ? target.closest<SVGElement>("[data-hash]")?.dataset.hash : undefined
 
   return (
     <div ref={ref} className="relative grid place-items-center">
@@ -138,9 +141,75 @@ export function Chart() {
         )}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={() => (clickedObject ? setClickedObject(null) : null)}
-        onDoubleClick={() => {
+        onClick={(evt) => {
+          const hash = getHashFromEventTarget(evt.target)
+          if (!hash) {
+            setClickedObject(null)
+            return
+          }
+
+          const newClickedObject = databaseInfo.objectHashMap[hash]
+
+          evt.stopPropagation()
+
+          if (clickTimer.current) {
+            return
+          }
+          clickTimer.current = window.setTimeout(() => {
+            clickTimer.current = null
+
+            if (newClickedObject && clickedObject.path === newClickedObject.path) {
+              setClickedObject(null)
+              return
+            }
+
+            if (!newClickedObject) {
+              throw new Error("Clicked object not found in databaseInfo.objectMap")
+            }
+            // Else, navigate to object details
+            setClickedObject(hash ? (newClickedObject ?? null) : null)
+          }, DOUBLE_CLICK_DELAY)
+        }}
+        onDoubleClick={(evt) => {
+          const hash = getHashFromEventTarget(evt.target)
+          if (!hash) {
+            setClickedObject(null)
+            return
+          }
           setZoomPath(null)
+
+          evt.stopPropagation()
+
+          const newClickedObject = databaseInfo.objectHashMap[hash]
+
+          if (!newClickedObject) {
+            throw new Error("Clicked object not found in databaseInfo.objectMap: " + hash)
+          }
+
+          if (clickTimer.current) {
+            window.clearTimeout(clickTimer.current)
+            clickTimer.current = null
+
+            if (zoomPath && zoomPath === newClickedObject.path) {
+              setZoomPath("")
+              return
+            }
+            setZoomPath(newClickedObject.path ?? null)
+          }
+        }}
+        onMouseOver={(evt) => {
+          const hash = getHashFromEventTarget(evt.target)
+          if (!hash) {
+            return
+          }
+          evt.stopPropagation()
+
+          const newClickedObject = databaseInfo.objectHashMap[hash]
+
+          if (newClickedObject && hoveredObject?.hash !== newClickedObject.hash) setHoveredObject(newClickedObject)
+        }}
+        onMouseOut={() => {
+          return setHoveredObject(null)
         }}
         onWheel={(evt) => {
           // Accumulate delta
@@ -200,51 +269,14 @@ export function Chart() {
           return (
             <g
               key={d.data.path}
+              data-name={d.data.name}
+              data-hash={d.data.hash}
               className={cn("cursor-pointer duration-400", {
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                   isTree(d.data) && !clickedObject,
                 "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
               })}
-              onClick={(evt) => {
-                evt.stopPropagation()
-
-                if (clickTimer.current) {
-                  return
-                }
-                clickTimer.current = window.setTimeout(() => {
-                  clickTimer.current = null
-
-                  if (clickedObject && d && clickedObject.path === d.data.path) {
-                    setClickedObject(null)
-                    return
-                  }
-
-                  // Else, navigate to object details
-                  setClickedObject(d ? d.data : null)
-                }, DOUBLE_CLICK_DELAY)
-              }}
-              onDoubleClick={(evt) => {
-                evt.stopPropagation()
-
-                if (clickTimer.current) {
-                  window.clearTimeout(clickTimer.current)
-                  clickTimer.current = null
-
-                  if (zoomPath && zoomPath === d?.data.path) {
-                    setZoomPath("")
-                    return
-                  }
-                  setZoomPath(d?.data.path ?? null)
-                }
-              }}
-              onMouseOver={(evt) => {
-                evt.stopPropagation()
-                if (d && hoveredObject?.hash !== d.data.hash) setHoveredObject(d.data)
-              }}
-              onMouseOut={() => {
-                return setHoveredObject(null)
-              }}
             >
               <Node d={d} />
               {labelsVisible ? (
@@ -293,12 +325,14 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   if ((colors?.length ?? 0) === 0 && isBlob(d.data)) {
     colors = [{ category: UNKNOWN_CATEGORY, color: missingInMapColor }]
   }
+
+  const { linearGradient, fill } = useGradient(colors.map((c) => c.color))
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: colors ? (multipleColors ? `url('#${gradientId}')` : colors[0].color) : missingInMapColor,
+          fill: colors ? (multipleColors ? fill : colors[0].color) : missingInMapColor,
           stroke: colors ? colors[0].color : noEntryColor
         }
       : {
@@ -331,27 +365,15 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, colors, multipleColors, gradientId, chartType])
+  }, [d, colors, multipleColors, fill, chartType])
 
   return (
     <>
-      {multipleColors ? (
-        <defs>
-          {/* <radialGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          {colors.map((color, i) => (
-            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
-          ))}
-        </radialGradient> */}
-          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%"> */}
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            {colors.map((color, i) => (
-              <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
-            ))}
-          </linearGradient>
-        </defs>
-      ) : null}
+      {multipleColors ? <defs>{linearGradient}</defs> : null}
       <rect
         {...commonProps}
+        data-name={d.data.name}
+        data-hash={d.data.hash}
         className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
           "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
           "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
@@ -524,7 +546,7 @@ function createPartitionedHiearchy({
       const blob = d as GitBlobObject
       switch (sizeMetricType) {
         case "FILE_SIZE":
-          return blob.sizeInBytes ?? 1
+          return blob.byteSize ?? 1
         case "MOST_COMMITS":
           return databaseInfo.commitCounts[blob.path] ?? 1
         case "EQUAL_SIZE":

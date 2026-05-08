@@ -1,7 +1,7 @@
 import type { Route } from "./+types/$path"
 import { GitService } from "~/server/git-service"
 import { href, redirect } from "react-router"
-import { loadViewSearchParams, viewSerializer } from "~/routes/view"
+import { loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
 import { browseSerializer } from "~/routes/browse"
 
 export async function loader({ request, params }: Route.LoaderArgs) {

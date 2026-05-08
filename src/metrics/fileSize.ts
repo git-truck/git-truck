@@ -2,14 +2,13 @@ import type { DatabaseInfo, GitBlobObject, GitObject } from "~/shared/model"
 import { type MetricCache, type SegmentedMetric } from "~/metrics/metrics"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiResize } from "@mdi/js"
-import { hslToHex, isBlob, isTree, rgbToHex } from "~/shared/util"
+import { hslToHex, isBlob, rgbToHex } from "~/shared/util"
 import { interpolateCool, scaleLog, scaleLinear } from "d3"
 import { SpectrumTranslater } from "~/metrics/metricUtils"
 import { feature_flags } from "~/feature_flags"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import byteSize from "byte-size"
-import { reduceTree } from "~/shared/utils/tree"
 
 function uniqueSorted(values: number[]): number[] {
   return values
@@ -50,7 +49,7 @@ export const FileSizeMetric: SegmentedMetric = {
       return "FileSizeMetric is only defined for blobs"
     }
     // const count = contributors.length || 0
-    const fileSizeInBytes = obj.sizeInBytes
+    const fileSizeInBytes = obj.byteSize
     if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
       return "Size unknown"
     }
@@ -62,12 +61,13 @@ export const FileSizeMetric: SegmentedMetric = {
   },
 
   getCategories(obj: GitObject, dbi: DatabaseInfo) {
-    const fileSize = isTree(obj) ? reduceTree(obj, (s, o) => s + o.sizeInBytes, 0 as number) : obj.sizeInBytes
     const categories = this.getBuckets(dbi)
     const lastIndex = categories.length - 1
 
     return categories
-      .filter((g, i) => (i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]))
+      .filter((g, i) =>
+        i === lastIndex ? obj.byteSize >= g.range[0] : obj.byteSize >= g.range[0] && obj.byteSize < g.range[1]
+      )
       ?.map((c) => c.text)
   },
 
@@ -147,12 +147,11 @@ export const FileSizeMetric: SegmentedMetric = {
     }))
   },
 
-  getBucketIndex(obj: GitObject, dbi: DatabaseInfo) {
-    const fileSize = isTree(obj) ? reduceTree(obj, (s, o) => s + o.sizeInBytes, 0 as number) : obj.sizeInBytes
+  getBucketIndex(obj, dbi) {
     const categories = this.getBuckets(dbi)
     const lastIndex = categories.length - 1
     return categories.findIndex((g, i) =>
-      i === lastIndex ? fileSize >= g.range[0] : fileSize >= g.range[0] && fileSize < g.range[1]
+      i === lastIndex ? obj.byteSize >= g.range[0] : obj.byteSize >= g.range[0] && obj.byteSize < g.range[1]
     )
   }
 } as const

@@ -11,6 +11,8 @@ export function CheckboxWithLabel({
   checkBoxClassName = "",
   checkedIcon = mdiCheckboxMarked,
   uncheckedIcon = mdiCheckboxBlankOutline,
+  unstyled = false,
+  reversed = false,
   ...props
 }: {
   children: React.ReactNode
@@ -20,9 +22,18 @@ export function CheckboxWithLabel({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   checkedIcon?: string
   uncheckedIcon?: string
+  unstyled?: boolean
+  reversed?: boolean
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
   return (
-    <label className={cn("label flex w-full items-center justify-start gap-2", className)} {...props}>
+    <label
+      className={cn(
+        "flex items-center justify-start gap-2",
+        { label: !unstyled, "flex-row-reverse": reversed },
+        className
+      )}
+      {...props}
+    >
       <input type="checkbox" checked={checked} className="peer hidden" onChange={onChange} />
       <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark contents items-center">
         {children}

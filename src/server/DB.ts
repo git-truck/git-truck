@@ -1,18 +1,19 @@
 import { DuckDBConnection, DuckDBAppender, DuckDBInstance } from "@duckdb/node-api"
 import type {
-  AbstractGitObject,
   CommitDTO,
   ContributorGroup,
   GitLogEntry,
   GitObject,
   Person,
   RawGitObject,
+  RawGitObjectType,
   RenameEntry,
   RenameInterval
 } from "~/shared/model"
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/server/log"
+import type { TimeUnit } from "~/shared/utils/time"
 
 export default class DB {
   private instance: DuckDBInstance
@@ -152,9 +153,10 @@ export default class DB {
       );
       CREATE TABLE IF NOT EXISTS files (
         path VARCHAR,
+        name VARCHAR,
         hash VARCHAR,
         type VARCHAR,
-        sizeInBytes UINTEGER
+        byteSize UINTEGER
       );
 
     `)
@@ -402,7 +404,7 @@ export default class DB {
   }
 
   public async getCommits(path: string, count: number) {
-    const isblob = (await this.getObjectType(path)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(path)) === "blob"
     const res: ReturnType<DuckDBResultReader["getRowObjects"]> = await this.usingPreparedStatement(
       isblob
         ? `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
@@ -441,7 +443,7 @@ export default class DB {
   }
 
   public async getCommitHashes(path: string, count: number, authors: string[] = []) {
-    const isblob = (await this.getObjectType(path)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(path)) === "blob"
     const authorPlaceholders = authors.map(() => "?").join(",")
 
     if (isblob) {
@@ -560,11 +562,13 @@ export default class DB {
   }
 
   public async getCommitCountForPath(path: string, authors: string[] = []) {
-    const isblob = (await this.getObjectType(path)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(path)) === "blob"
     const authorPlaceholders = authors.map(() => "?").join(",")
 
     if (isblob) {
-      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath = ?`
+      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached
+                         WHERE filePath = ?
+                         AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}`
 
       const query =
         authors.length > 0
@@ -658,16 +662,6 @@ export default class DB {
     }
   }
 
-  public async getCommitTimestampsForPath(objectPath: string): Promise<number[]> {
-    const statement = await this.prepare(
-      `SELECT DISTINCT committerTime FROM filechanges_commits_renamed_cached WHERE filepath = ? OR filepath GLOB ?;`
-    )
-    statement.bindVarchar(1, objectPath)
-    statement.bindVarchar(2, objectPath + "/*")
-    const result = await statement.runAndReadAll()
-    return result.getRowObjects().map((row) => Number(row["committerTime"]))
-  }
-
   public async getCommitCountPerFile() {
     const res = await this.query(`SELECT filePath, count(DISTINCT commitHash) AS count
       FROM fileChanges_commits_renamed_cached
@@ -681,6 +675,24 @@ export default class DB {
     })
 
     return result
+  }
+
+  public async getLastChangedForPath(objectPath: string): Promise<number> {
+    const res = await this.usingPreparedStatement(
+      `SELECT MAX(committerTime) AS lastChange
+       FROM fileChanges_commits_renamed_cached
+       WHERE filePath = ? OR filePath GLOB ?
+       AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
+      ;`,
+      async (statement) => {
+        statement.bindVarchar(1, objectPath)
+        statement.bindVarchar(2, objectPath + "/*")
+        return (await statement.runAndReadAll()).getRowObjects()
+      },
+      "getLastChangeForPath"
+    )
+
+    return res.length > 0 ? Number(res[0]["lastChange"]) : 0
   }
 
   public async getLastChangedPerFile(): Promise<Record<string, number>> {
@@ -741,7 +753,7 @@ export default class DB {
 
   public async getUniqueContributorsForPath(objectPath: string): Promise<string[]> {
     //Respects aliases for contributors through commits_unioned view
-    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isblob) {
@@ -807,6 +819,27 @@ export default class DB {
     }
 
     return res.map((row) => row["contributor"] as string)
+  }
+
+  public async getContributionsForPath(objectPath: string): Promise<number> {
+    const res = await this.usingPreparedStatement(
+      `SELECT SUM(insertions + deletions) AS totalContributions
+       FROM fileChanges_commits_renamed_cached
+       WHERE filePath = ? OR filePath GLOB ?
+       AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
+
+      `,
+      async (statement) => {
+        statement.bindVarchar(1, objectPath)
+        statement.bindVarchar(2, `${objectPath}/%`)
+        const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{
+          totalContributions: number | bigint
+        }>
+        return Number(results[0]?.totalContributions ?? 0)
+      },
+      "getContributionsForPath"
+    )
+    return res
   }
 
   public async getContributorContributionsForPath(): Promise<
@@ -941,9 +974,10 @@ export default class DB {
     await this.usingTableAppender("files", async (appender) => {
       for (const file of files) {
         appender.appendVarchar(file.path)
+        appender.appendVarchar(file.name)
         appender.appendVarchar(file.hash)
         appender.appendVarchar(file.type)
-        appender.appendUInteger(file.size ?? 0)
+        appender.appendUInteger(file.byteSize)
         appender.endRow()
       }
     })
@@ -954,7 +988,7 @@ export default class DB {
     return res.map((row) => row["path"] as string)
   }
 
-  public async getObjectType(objectPath: string): Promise<AbstractGitObject["type"] | null> {
+  public async getObjectTypeFromPath(objectPath: string): Promise<RawGitObjectType | null> {
     return this.usingPreparedStatement(
       `SELECT type FROM files WHERE path = ?`,
       async (statement) => {
@@ -963,6 +997,21 @@ export default class DB {
         return results[0]?.type ?? null
       },
       "getObjectType"
+    )
+  }
+  public async getObjectFromHash(objectHash: string): Promise<RawGitObject | null> {
+    return this.usingPreparedStatement(
+      `SELECT type, hash, path, name, byteSize FROM files WHERE hash = ?`,
+      async (statement) => {
+        statement.bindVarchar(1, objectHash)
+        const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<RawGitObject>
+        if (results.length === 0) {
+          return null
+        }
+        const { type, hash, path, name, byteSize } = results[0]
+        return { type, hash, path, name, byteSize }
+      },
+      "getObjectFromHash"
     )
   }
 
@@ -1020,24 +1069,24 @@ export default class DB {
 
   public async getMaxAndMinFileSize() {
     const res = await this.query(
-      `SELECT MAX(sizeInBytes) as max_size, MIN(sizeInBytes) as min_size FROM files WHERE type = 'blob';`
+      `SELECT MAX(byteSize) as max_size, MIN(byteSize) as min_size FROM files WHERE type = 'blob';`
     )
     return { maxFileSize: Number(res[0]["max_size"]), minFileSize: Number(res[0]["min_size"]) }
   }
 
   public async getFileSizePerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`SELECT path, sizeInBytes FROM files WHERE type = 'blob';`)
+    const res = await this.query(`SELECT path, byteSize FROM files WHERE type = 'blob';`)
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
-      result[row["path"] as string] = Number(row["sizeInBytes"])
+      result[row["path"] as string] = Number(row["byteSize"])
     })
 
     return result
   }
 
   public async getLineChangesSumForPath(objectPath: string): Promise<number> {
-    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
     let res: number
 
     if (isblob) {
@@ -1069,7 +1118,7 @@ export default class DB {
   }
 
   public async getContributorDistributionForPath(objectPath: string) {
-    const isblob = (await this.getObjectType(objectPath)) === "blob"
+    const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
     if (isblob) {
@@ -1083,6 +1132,7 @@ export default class DB {
           FROM fileChanges_commits_renamed_cached AS f
           INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
           WHERE f.filePath = ? AND co.trailerType = 'coauthor' AND co.name <> f.author
+          AND f.committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
         )
         SELECT contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
@@ -1107,7 +1157,10 @@ export default class DB {
           SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
           FROM fileChanges_commits_renamed_cached AS f
           INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
-          WHERE (f.filePath = ? OR starts_with(f.filePath, ?) = true) AND co.trailerType = 'coauthor' AND co.name <> f.author
+          WHERE (f.filePath = ? OR starts_with(f.filePath, ?) = true)
+          AND co.trailerType = 'coauthor'
+          AND co.name <> f.author
+          AND f.committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
         )
         SELECT contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
@@ -1188,39 +1241,129 @@ export default class DB {
     return existsValue === true || existsValue === 1 || existsValue === 1n || existsValue === "1"
   }
 
-  private getTimeStringFormat(timerange: [number, number]): [string, "day" | "week" | "month" | "year"] {
+  private getTimeStringFormat(timerange: [number, number]): TimeUnit {
     const durationDays = (timerange[1] - timerange[0]) / (60 * 60 * 24)
-    if (durationDays < 150) return ["%a %-d %B %Y", "day"]
-    if (durationDays < 1000) return ["Week %V %Y", "week"]
-    if (durationDays < 4000) return ["%B %Y", "month"]
-    return ["%Y", "year"]
+
+    if (durationDays < 150) return "day"
+    if (durationDays < 1000) return "week"
+    if (durationDays < 4000) return "month"
+    return "year"
+  }
+
+  private getTimeQueryFromTimeUnit(timeUnit: TimeUnit): string {
+    const map: Record<TimeUnit, string> = {
+      day: "%a %-d %B %Y",
+      week: "Week %V %Y",
+      month: "%B %Y",
+      year: "%Y"
+    }
+    return map[timeUnit]
   }
 
   public async getCommitCountPerTime(
-    timerange: [number, number]
-  ): Promise<[{ date: string; count: number; timestamp: number }[], "day" | "week" | "month" | "year"]> {
-    const [query, timeUnit] = this.getTimeStringFormat(timerange)
+    timerange: [number, number],
+    timeUnit = this.getTimeStringFormat(timerange)
+  ): Promise<[{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[], TimeUnit]> {
+    const query = this.getTimeQueryFromTimeUnit(timeUnit)
     const res = await this.query(
       `SELECT strftime(date, '${query}') as timestring,
+        strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
         count(*) AS count,
         MIN(committerTime) AS ct FROM (SELECT date_trunc('${timeUnit}',
         to_timestamp(committerTime)) AS date,
-        committerTime FROM commits)
-       GROUP BY date
+        COALESCE(cg.displayName, c.author) AS author,
+        c.committerTime FROM commits c
+        LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+        ON (c.author = cg.name AND c.authorEmail = cg.email))
+       GROUP BY date, author
        ORDER BY date ASC;`
     )
     const mapped = res.map((x) => {
-      return { date: x["timestring"] as string, count: Number(x["count"]), timestamp: Number(x["ct"]) }
+      return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
-    const final: { date: string; count: number; timestamp: number }[] = []
+    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
+    for (const { lookup, author, count } of mapped) {
+      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
+      const bucket = countsByLookup.get(lookup)!
+      bucket.count += count
+      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
+    }
+    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
     const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
-    for (const [dateString, timestamp] of allIntervals) {
-      const existing = mapped.find((x) => x.date === dateString)
-      if (existing) final.push(existing)
-      else final.push({ date: dateString, count: 0, timestamp })
+    for (const interval of allIntervals) {
+      const bucket = countsByLookup.get(interval.lookup)
+      final.push({
+        date: interval.label,
+        count: bucket?.count ?? 0,
+        timestamp: interval.timestamp,
+        contributors: bucket?.contributors ?? {}
+      })
     }
     const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
+
     return [sorted, timeUnit]
+  }
+
+  public async getCommitCountPerTimeForClickedObject({
+    timerange,
+    timeUnit = this.getTimeStringFormat(timerange),
+    objectPath
+  }: {
+    timerange: [number, number]
+    timeUnit?: "day" | "week" | "month" | "year"
+    objectPath: string
+  }): Promise<{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[]> {
+    const query = this.getTimeQueryFromTimeUnit(timeUnit)
+    const statement = await this.prepare(`SELECT strftime(date, ?) as timestring,
+        strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
+        count(DISTINCT commitHash) AS count,
+        MIN(committerTime) AS ct FROM (
+          SELECT date_trunc(?, to_timestamp(c.committerTime)) AS date,
+          c.committerTime, c.hash as commitHash, COALESCE(cg.displayName, c.author) AS author,
+          COALESCE(r.toName, f.filePath) as resolvedPath
+          FROM commits c
+          JOIN fileChanges f ON c.hash = f.commitHash
+          LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+          ON (c.author = cg.name AND c.authorEmail = cg.email)
+          LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
+            c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+          )
+        )
+        WHERE resolvedPath = ? OR resolvedPath LIKE ?
+       GROUP BY date, author
+       ORDER BY date ASC;`)
+    statement.bindVarchar(1, query)
+    statement.bindVarchar(2, timeUnit)
+    statement.bindVarchar(3, objectPath)
+    statement.bindVarchar(4, `${objectPath}/%`)
+
+    const res = (await statement.runAndReadAll()).getRowObjects()
+
+    const mapped = res.map((x) => {
+      return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
+    })
+    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
+    for (const { lookup, author, count } of mapped) {
+      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
+      const bucket = countsByLookup.get(lookup)!
+      bucket.count += count
+      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
+    }
+    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
+    const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
+    for (const interval of allIntervals) {
+      const bucket = countsByLookup.get(interval.lookup)
+      final.push({
+        date: interval.label,
+        count: bucket?.count ?? 0,
+        timestamp: interval.timestamp,
+        contributors: bucket?.contributors ?? {}
+      })
+    }
+    const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
+    return sorted
   }
 
   public async updateColorSeed(seed: string) {

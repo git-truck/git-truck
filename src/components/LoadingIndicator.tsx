@@ -8,7 +8,7 @@ import loadingTruck from "~/assets/loadingTruck_48x.gif"
 import unloadingTruck from "~/assets/unloadingTruck_48x.gif"
 import crashedTruck from "~/assets/crashedTruck_48x.gif"
 import { cn } from "~/styling"
-import { viewSerializer } from "~/routes/view"
+import { viewSerializer } from "~/routes/viewParams"
 import { useQueryState } from "nuqs"
 
 export type ProgressData = {

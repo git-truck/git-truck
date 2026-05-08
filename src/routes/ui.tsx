@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { ChevronButton } from "~/components/ChevronButton"
 import { IconRadioGroup } from "~/components/EnumSelect"
@@ -28,6 +28,16 @@ const mockRepoData: RepoData = {
     lastChanged: 0
   },
   databaseInfo: {
+    clickedObjectInfo: {
+      amountOfCommits: 0,
+      lastChanged: 0,
+      contributions: 0,
+      contributors: [],
+      existsInRange: true,
+      multiTopContributors: false,
+      path: "",
+      topContributor: []
+    },
     topContributors: {},
     commitCounts: {},
     fileSizes: {},
@@ -41,7 +51,11 @@ const mockRepoData: RepoData = {
     minFileSize: 0,
     contributors: [],
     contributorGroups: [],
-    fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [] },
+    commitCountPerTimeIntervalForClickedObject: [],
+    objectPathMap: {},
+    zoomPathName: "",
+    fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [], byteSize: 0 },
+    objectHashMap: {},
     hiddenFiles: [],
     lastRunInfo: { time: 0, hash: "" },
     fileCount: 0,
@@ -57,8 +71,7 @@ const mockRepoData: RepoData = {
     analyzedRepos: [],
     contribSumPerFile: {},
     maxMinContribCounts: { max: 0, min: 0 },
-    commitCount: 0,
-    selectedFileCommitTimestamps: []
+    commitCount: 0
   }
 }
 
@@ -87,7 +100,7 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
         onUpdate={handleRangeChange}
         onChange={handleRangeChange}
       >
-        <Rail>{SliderRail}</Rail>
+        <Rail>{(railProps) => <SliderRail {...railProps} />}</Rail>
         <Handles>
           {({ handles, getHandleProps }) => (
             <div>

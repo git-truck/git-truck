@@ -1,7 +1,7 @@
 import type { Route } from "./+types/$"
 import { GitService } from "~/server/git-service"
 import { href, redirect } from "react-router"
-import { loadViewSearchParams, viewSerializer } from "~/routes/view"
+import { loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
 import { browseSerializer } from "~/routes/browse"
 import { normalizeAndResolvePath } from "~/shared/util.server"
 
