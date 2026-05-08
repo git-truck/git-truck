@@ -5,27 +5,24 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isTree } from "~/shared/util"
+import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isDarkColor, isTree } from "~/shared/util"
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
-import { missingInMapColor } from "~/const"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { useHoveredObject } from "~/state/stores/hovered-object"
 import { Metrics } from "~/metrics/metrics"
+import { useObjectColor } from "~/state/stores/clicked-object"
 
 export function Tooltip({ className = "" }: { className?: string }) {
-  const hoveredObject = useHoveredObject()
+  const rawHoveredObject = useHoveredObject()
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { chartType, sizeMetric, metricType } = useOptions()
-  const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
-  const colors = hoveredObject
-    ? metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path)
-    : [missingInMapColor]
-  const color = Array.isArray(colors) && colors.length === 1 ? colors[0] : missingInMapColor
+  const hoveredObject = rawHoveredObject ? databaseInfo.objectHashMap[rawHoveredObject.hash] : null
+  const color = useObjectColor(rawHoveredObject)
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
   const top = useMemo(() => y < window.innerHeight / 2, [y])
@@ -46,13 +43,11 @@ export function Tooltip({ className = "" }: { className?: string }) {
           "rounded-xs": chartType === "TREE_MAP" || chartType === "PARTITION"
         },
         isBlob(hoveredObject) && color
-          ? // TODO: what to do for gradients?
-            // ? isDarkColor(color).luminance >= 0.5
-            // false
-            // ? "text-primary-text"
-            // :
-            "text-primary-text-dark"
-          : "dark:text-primary-text-dark text-primary-text"
+          ? // ? // TODO: what to do for gradients?
+            isDarkColor(color).luminance >= 0.5
+            ? "text-primary-text"
+            : "text-primary-text-dark"
+          : "text-primary-text-dark"
       )}
       style={{
         transform: visible ? `translateX(${xTransform}) translateY(${yTransform}) translateZ(0)` : "none",
@@ -114,7 +109,7 @@ function SizeMetricContent({
   hoveredObject: GitBlobObject | null
   databaseInfo: DatabaseInfo
 }) {
-  let icon: string = mdiCircleSmall
+  let icon: string | null = mdiCircleSmall
   let content = null
   if (!hoveredBlob) {
     return null
@@ -123,7 +118,7 @@ function SizeMetricContent({
   switch (sizeMetric) {
     case "FILE_SIZE": {
       icon = FileSizeMetric.icon
-      const fileSizeInBytes = hoveredBlob.sizeInBytes
+      const fileSizeInBytes = hoveredBlob.byteSize
       if (fileSizeInBytes === undefined || fileSizeInBytes === null) {
         content = "Size unknown"
       } else if (fileSizeInBytes < 1024) {
@@ -165,10 +160,14 @@ function SizeMetricContent({
       content = `${formatLargeNumber(contribs)} lines`
       break
     }
+    case "EQUAL_SIZE": {
+      icon = null
+      content = ""
+    }
   }
   return (
     <>
-      <Icon path={icon} color="currentColor" />
+      {icon ? <Icon path={icon} color="currentColor" /> : null}
       {content}
     </>
   )

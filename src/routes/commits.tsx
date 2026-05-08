@@ -1,7 +1,7 @@
 import { invariant } from "~/shared/util"
 import { AnalysisManager } from "~/server/AnalysisManager"
 import type { Route } from "./+types/commits"
-import { loadViewSearchParams } from "~/routes/view"
+import { loadViewSearchParams } from "~/routes/viewParams"
 import { parseAsInteger } from "nuqs"
 import { createLoader } from "nuqs/server"
 

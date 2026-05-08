@@ -1,3 +1,4 @@
+import type { TimeUnit } from "~/shared/utils/time"
 export type Repository = {
   /**
    * Relative path to the base directory that Git Truck was started in
@@ -49,18 +50,14 @@ export type Repository = {
 
 export type GitObject = GitBlobObject | GitTreeObject
 
-export interface AbstractGitObject {
-  type: "blob" | "tree" | "commit"
-  hash: string
-}
+export type RawGitObjectType = "blob" | "tree"
 
-type RawGitObjectType = "blob" | "tree" | "commit" | "tag"
 export type RawGitObject = {
-  hash: string
   type: RawGitObjectType
+  hash: string
   path: string
-  value?: string
-  size?: number
+  name: string
+  byteSize: number
 }
 
 export interface ArgsOptions {
@@ -74,18 +71,13 @@ type RefType = "Branches" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>
 
-export interface GitBlobObject extends AbstractGitObject {
+export type GitBlobObject = Omit<RawGitObject, "type"> & {
   type: "blob"
-  name: string
-  path: string
   extension: string
-  sizeInBytes: number
 }
 
-export interface GitTreeObject extends AbstractGitObject {
+export type GitTreeObject = Omit<RawGitObject, "type"> & {
   type: "tree"
-  name: string
-  path: string
   children: (GitTreeObject | GitBlobObject)[]
 }
 
@@ -150,6 +142,8 @@ export interface RenameInterval {
   timestampEnd: number
 }
 
+type Path = string
+
 export interface FileModification {
   path: string
   timestamp: number
@@ -163,6 +157,20 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
+  zoomPathName: string
+  clickedObjectInfo: {
+    path: string
+    existsInRange: boolean
+    topContributor: {
+      contributor: string
+      contribs: number
+    }[]
+    multiTopContributors: boolean
+    amountOfCommits: number
+    contributors: string[]
+    contributions: number
+    lastChanged: number
+  }
   topContributors: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>
   commitCounts: Record<string, number>
   fileSizes: Record<string, number>
@@ -177,6 +185,8 @@ export interface DatabaseInfo {
   contributors: Person[]
   contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
+  objectHashMap: Record<Hash, GitObject>
+  objectPathMap: Record<Path, GitObject>
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }
   fileCount: number
@@ -186,14 +196,14 @@ export interface DatabaseInfo {
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
   commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
-  commitCountPerTimeIntervalUnit: "day" | "week" | "month" | "year"
+  commitCountPerTimeIntervalForClickedObject: { date: string; count: number; timestamp: number }[]
+  commitCountPerTimeIntervalUnit: TimeUnit
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
   contributorsForPath: Record<string, { contributor: string; contribcount: number }[]>
   maxMinContribCounts: { max: number; min: number }
   commitCount: number
-  selectedFileCommitTimestamps: number[]
 }
 
 export type HexColor = `#${string}`

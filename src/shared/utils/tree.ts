@@ -2,11 +2,21 @@ import type { GitBlobObject, GitObject, GitTreeObject } from "~/shared/model"
 import { isTree } from "~/shared/util"
 
 export function reduceTree<T>(tree: GitTreeObject, reducer: (prev: T, curr: GitBlobObject) => T, defaultValue: T): T {
-  return tree.children.reduce((prev, curr) => {
-    if (isTree(curr)) {
-      return reduceTree(curr, reducer, prev)
+  return tree.children.reduce((prev, current) => {
+    if (isTree(current)) {
+      return reduceTree(current, reducer, prev)
     }
-    return reducer(prev, curr)
+    return reducer(prev, current)
+  }, defaultValue)
+}
+
+export function reduceTreeIncludeTrees<T>(
+  tree: GitTreeObject,
+  reducer: (prev: T, curr: GitTreeObject | GitBlobObject) => T,
+  defaultValue: T
+): T {
+  return flattenTreeIncludeTrees(tree).reduce((prev, current) => {
+    return reducer(prev, current)
   }, defaultValue)
 }
 
@@ -48,6 +58,18 @@ export function flattenTree(tree: GitTreeObject) {
       flattened.push(child)
     } else {
       flattened.push(...flattenTree(child))
+    }
+  }
+  return flattened
+}
+
+export function flattenTreeIncludeTrees(tree: GitTreeObject) {
+  const flattened: GitObject[] = [tree]
+  for (const child of tree.children) {
+    if (child.type === "blob") {
+      flattened.push(child)
+    } else {
+      flattened.push(...flattenTreeIncludeTrees(child))
     }
   }
   return flattened

@@ -36,6 +36,7 @@ const BUILD_ASSETS_PATH = path.join(__dirname, "build/client/assets")
 
 const SERVER_APP_PATH = "./src/server/app.ts"
 const DEVELOPMENT = process.env.NODE_ENV !== "production"
+
 let PORT: number
 let HMR_PORT: number | null = null
 
@@ -136,7 +137,9 @@ ${generateVersionComparisonLink({ currentVersion: pkg.version, latestVersion: la
 }
 
 async function stopHandler() {
-  const promise = AnalysisManager.closeAllDBInstances()
+  // TODO: When releasing v4, revert to just closing instead of clearing
+  // const promise = AnalysisManager.closeAllDBInstances()
+  const promise = AnalysisManager.clearAllCaches()
   log.info("Shutting down server")
   server.close(console.error)
   log.info("Web server shut down")

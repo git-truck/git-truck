@@ -1,15 +1,15 @@
 import { create } from "zustand"
-import type { GitObject } from "~/shared/model"
+import type { RawGitObject } from "~/shared/model"
 
 type HoveredObjectState = {
-  hoveredObject: GitObject | null
-  setHoveredObject: (hoveredObject: GitObject | null) => void
+  hoveredObject: RawGitObject | null
+  setHoveredObject: (hoveredObject: RawGitObject | null) => void
   resetHoveredObject: () => void
 }
 
 const useHoveredObjectStore = create<HoveredObjectState>()((set) => ({
   hoveredObject: null,
-  setHoveredObject: (hoveredObject: GitObject | null) => {
+  setHoveredObject: (hoveredObject: RawGitObject | null) => {
     return set({ hoveredObject })
   },
   resetHoveredObject: () => set({ hoveredObject: null })

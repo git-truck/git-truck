@@ -70,8 +70,19 @@ export const LegendDot = ({
   )
 }
 
-const Dot = ({ color, className = "", ...props }: { color: string; className?: string; onClick?: () => void }) => {
+export const Dot = ({
+  color,
+  shape,
+  className = "",
+  ...props
+}: {
+  color?: string
+  shape?: "circle" | "square"
+  className?: string
+  onClick?: () => void
+}) => {
   const { chartType } = useOptions()
+  shape = shape ?? (chartType === "BUBBLE_CHART" ? "circle" : "square")
 
   const Component = props.onClick ? "button" : "div"
   return (
@@ -79,7 +90,7 @@ const Dot = ({ color, className = "", ...props }: { color: string; className?: s
       {...props}
       className={cn(
         "aspect-square h-4 w-4 shadow-xs shadow-black transition-[border-radius] duration-[10s]",
-        chartType === "BUBBLE_CHART" ? "rounded-full" : "rounded-xs",
+        shape === "circle" ? "rounded-full" : "rounded-xs",
         className
       )}
       style={{ backgroundColor: color }}

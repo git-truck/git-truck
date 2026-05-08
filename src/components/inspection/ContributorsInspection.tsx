@@ -4,7 +4,7 @@ import { useFetcher, href } from "react-router"
 import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import { viewSerializer } from "~/routes/view"
+import { viewSerializer } from "~/routes/viewParams"
 import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
@@ -35,7 +35,7 @@ export function ContributorsInspection() {
     if (!clickedObject) {
       return
     }
-    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch }))
+    load(href("/api/contributor-distribution") + viewSerializer({ objectHash: clickedObject?.hash, path, branch }))
     return () => {
       reset()
     }

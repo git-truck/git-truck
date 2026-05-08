@@ -1,54 +1,66 @@
-import { useQueryState } from "nuqs"
-import { create } from "zustand"
+import { useQueryState, useQueryStates } from "nuqs"
+import { missingInMapColor } from "~/const"
+// import { create } from "zustand"
 import { useData, useDataNullable } from "~/contexts/DataContext"
-import type { GitObject } from "~/shared/model"
+import { useMetrics } from "~/contexts/MetricContext"
+import { useOptions } from "~/contexts/OptionsContext"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
+import type { GitObject, HexColor, RawGitObject } from "~/shared/model"
 
-type ClickedObjectState = {
-  clickedObject: GitObject | null
-  setClickedObject: (clickedObject: GitObject | null) => void
-  resetClickedObject: () => void
-}
+// type ClickedObjectState = object
+// {
+// clickedObject: GitObject | null
+// setClickedObject: (clickedObject: GitObject | null) => void
+// resetClickedObject: () => void
+// }
 
-const useClickedObjectStore = create<ClickedObjectState>()((set) => ({
-  clickedObject: null,
-  setClickedObject: (clickedObject: GitObject | null) => {
-    return set({ clickedObject })
-  },
-  resetClickedObject: () => set({ clickedObject: null })
-}))
+// const useClickedObjectStore = create<ClickedObjectState>()((set) => ({
+//   // clickedObject: null
+//   // setClickedObject: (clickedObject: GitObject | null) => {
+//   //   return set({ clickedObject })
+//   // },
+//   // resetClickedObject: () => set({ clickedObject: null })
+// }))
 
-export const useClickedObject = () => {
-  const repo = useData().databaseInfo.fileTree
-  return useClickedObjectStore((state) => state.clickedObject) ?? repo
+export const useClickedObject = (): GitObject => {
+  const data = useData()
+  const [qs] = useQueryStates(viewSearchParamsConfig, { shallow: false })
+
+  const clickedObjectState = qs.objectHash ? data.databaseInfo.objectHashMap[qs.objectHash] : undefined
+
+  const rootTree = useData().databaseInfo.fileTree
+  // const clickedObjectState = useClickedObjectStore((state) => state.clickedObject)
+
+  return clickedObjectState ?? rootTree
 }
 
 export const useClickedObjectNullable = () => {
-  const clickedObjectFromStore = useClickedObjectStore((state) => state.clickedObject)
   const data = useDataNullable()
+  const [objectHash] = useQueryState("objectHash", viewSearchParamsConfig.objectHash)
+
+  const clickedObjectState = data && objectHash ? data.databaseInfo.objectHashMap[objectHash] : undefined
 
   if (!data) {
     return null
   }
-  const repo = data.databaseInfo.fileTree
-  return clickedObjectFromStore ?? repo
+  const rootTree = data.databaseInfo.fileTree
+  return clickedObjectState ?? rootTree
 }
 
 export const useSetClickedObject = () => {
-  const [_, setObjectPath] = useQueryState("objectPath", { shallow: false })
-
-  // useSyncExternalStore(
-  //   (callback) => {
-  //     const unsub = useClickedObjectStore.subscribe(callback)
-  //     return unsub
-  //   },
-  //   () => useClickedObjectStore.getState().clickedObject,
-  //   () => useClickedObjectStore.getState().clickedObject
-  // )
-
-  useClickedObjectStore((state) => state.setClickedObject)
+  const [, setObjectHash] = useQueryState("objectHash", viewSearchParamsConfig.objectHash)
 
   return (clickedObject: GitObject | null) => {
-    setObjectPath(clickedObject?.path ?? null)
-    useClickedObjectStore.getState().setClickedObject(clickedObject)
+    setObjectHash(clickedObject?.hash ?? null)
   }
+}
+
+export function useObjectColor(obj: RawGitObject | null): HexColor | null {
+  const { metricType } = useOptions()
+  const [metricsData] = useMetrics()
+  const { databaseInfo } = useData()
+  const hoveredObject = obj ? databaseInfo.objectHashMap[obj.hash] : null
+  const colors = hoveredObject ? (metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path) ?? []) : []
+  const color: HexColor = colors.length === 1 ? colors[0].color : missingInMapColor
+  return color
 }

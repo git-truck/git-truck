@@ -1,7 +1,7 @@
 import { useCallback } from "react"
 import { useData } from "~/contexts/DataContext"
 import { useQueryStates } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/view"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 
 export function usePath(): {
   path: string

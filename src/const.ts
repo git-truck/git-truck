@@ -8,7 +8,7 @@ export const treemapPaddingTop = 21
 export const treemapTreeBorderRadius = 4
 export const treemapBlobBorderRadius = 2
 
-export const bubblePadding = 10
+export const bubblePadding = 5
 export const clipPathPadding = 10
 export const circleTreeTextOffsetY = letterHeightText - 1
 export const circleBlobTextOffsetY = letterHeightText + 0

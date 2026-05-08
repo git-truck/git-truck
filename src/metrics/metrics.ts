@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, HexColor, Person, RepoData } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, GitObject, RawGitObject, HexColor, Person, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import { type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -63,12 +63,12 @@ export type CategoricalMetric = Metric & {
 
 export type SegmentedMetric = CategoricalMetric & {
   getBuckets(dbi: DatabaseInfo): { text: string; range: [number, number]; color: HexColor }[]
-  getBucketIndex(obj: GitObject, dbi: DatabaseInfo): number
+  getBucketIndex(obj: RawGitObject, dbi: DatabaseInfo): number
 }
 
 export type GradientedMetric = Metric & {
   getColorFromValue: (value: number, dbi: DatabaseInfo, cache: MetricCache) => HexColor
-  getColorFromObject: (obj: GitObject, dbi: DatabaseInfo, cache: MetricCache) => HexColor
+  getColorFromObject: (obj: RawGitObject, dbi: DatabaseInfo, cache: MetricCache) => HexColor
 }
 
 //Metric Panel Types
