@@ -66,7 +66,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
   const [, contributorColors] = useMetrics()
   return (
     <>
-      <div className="w-min-content flex min-w-5.5 items-start">
+      <div className="flex w-min min-w-5.5 items-start">
         <div className="flex-end flex flex-row-reverse items-center">
           {props.value.coauthors.length > 0
             ? props.value.coauthors
@@ -107,8 +107,8 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
               className="h-full w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold"
               onClick={onClick}
             >
-              <div className="align-center flex flex-row items-center gap-1">
-                <p className="align-center text-secondary-text dark:text-secondary-text-dark text-xs">
+              <div className="flex flex-row items-center gap-1">
+                <p className="text-secondary-text dark:text-secondary-text-dark text-xs">
                   {dateFormatCalendar(props.value.committerTime * 1000)}
                 </p>
                 <p className="text-tertiary-text dark:text-tertiary-text-dark text-xs">{props.value.message}</p>
@@ -236,6 +236,7 @@ export function CommitHistory({
       >
         <PaginatedList
           className={isLoading ? "opacity-60" : ""}
+          navClassName={isLoading ? "pointer-events-none" : ""}
           items={commits ?? []}
           itemsPerPage={COMMIT_STEP}
           totalPages={totalPages}
