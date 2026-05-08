@@ -4,7 +4,7 @@ import type { loader } from "~/routes/api.commits"
 import { viewSerializer } from "~/routes/view"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { isBlob, isRepositoryRoot } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
@@ -20,19 +20,25 @@ export function CommitsInspection() {
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
-  const objectPath = data?.objectPath ?? ""
   const clickedObjectPath = clickedObject.path
+  const previousPathRef = useRef<string>("")
+  const commitShowCountRef = useRef(commitShowCount)
+
+  // Keep ref in sync with current value
+  useEffect(() => {
+    commitShowCountRef.current = commitShowCount
+  }, [commitShowCount])
 
   // Memoize selected authors to prevent unnecessary re-renders
   const selectedAuthors = useMemo(
     () =>
       metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
-        ? selectedCategories.map((selection) => selection.replace(`${metricType}:`, ""))
+        ? selectedCategories.map((sel) => sel.replace(`${metricType}:`, ""))
         : [],
     [metricType, selectedCategories]
   )
 
-  //Reload commits when selected authors change
+  // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
     (objectPath: string, count: number) => {
       let url = href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`
@@ -44,24 +50,20 @@ export function CommitsInspection() {
     [branch, load, path, selectedAuthors]
   )
 
-  // Reload commits when the clicked object changes
+  // Reload commits when clicked object or selected authors change
   useEffect(() => {
-    if (objectPath && objectPath !== clickedObject?.path) {
-      reset()
-      loadCommits(clickedObject.path, commitShowCount)
-    }
-  }, [clickedObject.path, commitShowCount, loadCommits, objectPath, reset])
+    const pathToLoad = clickedObject.path
 
-  // Reload commits when selected authors change
-  useEffect(() => {
-    if (objectPath) {
-      let url = href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${commitShowCount}`
-      selectedAuthors.forEach((author) => {
-        url += `&authors=${encodeURIComponent(author)}`
-      })
-      load(url)
+    if (pathToLoad) {
+      // Check if this is a new path (using ref to avoid objectPath dependency)
+      const isNewPath = pathToLoad !== previousPathRef.current
+      if (isNewPath) {
+        previousPathRef.current = pathToLoad
+      }
+
+      loadCommits(pathToLoad, commitShowCountRef.current)
     }
-  }, [objectPath, path, branch, commitShowCount, selectedAuthors, load])
+  }, [clickedObject.path, loadCommits, reset])
 
   return (
     <CollapsibleHeader
@@ -91,7 +93,7 @@ export function CommitsInspection() {
         </>
       }
       className="card"
-      contentClassName="pb-6 flex flex-col gap-2"
+      contentClassName="flex flex-col gap-2"
       defaultOpen={false}
       onToggle={(open) => {
         if (open) {
