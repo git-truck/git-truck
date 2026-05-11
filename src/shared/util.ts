@@ -1,6 +1,6 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model";
+import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
 import type { TimeUnit } from "~/shared/utils/time"
 import { getLuminance } from "a11y-contrast-color"
 

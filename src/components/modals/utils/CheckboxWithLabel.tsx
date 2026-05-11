@@ -26,7 +26,14 @@ export function CheckboxWithLabel({
   reversed?: boolean
 } & Omit<React.HTMLAttributes<HTMLLabelElement>, "onChange" | "checked">) {
   return (
-    <label className={cn("flex items-center justify-start gap-2", { label: !unstyled, "flex-row-reverse": reversed }, className)} {...props}>
+    <label
+      className={cn(
+        "flex items-center justify-start gap-2",
+        { label: !unstyled, "flex-row-reverse": reversed },
+        className
+      )}
+      {...props}
+    >
       <input type="checkbox" checked={checked} className="peer hidden" onChange={onChange} />
       <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark contents items-center">
         {children}

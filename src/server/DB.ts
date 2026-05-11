@@ -38,10 +38,6 @@ export default class DB {
   }
 
   public async query(query: string): Promise<ReturnType<DuckDBResultReader["getRowObjects"]>> {
-    console.log({
-      start: dateFormatShort(this.selectedRange[0] * 1000),
-      end: dateFormatShort(this.selectedRange[1] * 1000)
-    })
     log.debug("query:", query.trim().replaceAll(/\s+/g, " "))
     return (await this.connection.runAndReadAll(query)).getRowObjects()
   }

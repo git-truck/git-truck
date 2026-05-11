@@ -33,13 +33,6 @@ export function Timeline({ className }: { className?: string }) {
     end: viewSearchParamsConfig.end.withDefault(rangeMax)
   })
 
-  console.log({
-    low: dateFormatShort(low * 1000),
-    high: dateFormatShort(high * 1000),
-    rangeMin: dateFormatShort(rangeMin * 1000),
-    rangeMax: dateFormatShort(rangeMax * 1000)
-  })
-
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
   // const submit = useViewSubmit()
 

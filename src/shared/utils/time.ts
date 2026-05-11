@@ -2,7 +2,7 @@ import { $inspect } from "~/shared/util"
 
 export const TimeUnitValues = ["day", "week", "month", "year"] as const
 
-export const TimeUnitToPlural = {
+const TimeUnitToPlural = {
   day: "days",
   week: "weeks",
   month: "months",

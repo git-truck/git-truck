@@ -16,7 +16,7 @@ const presets = [
 
 export function TimeRangePresetButtons() {
   const data = useData()
-  const [,setQs] = useQueryStates(viewSearchParamsConfig)
+  const [, setQs] = useQueryStates(viewSearchParamsConfig)
   const { timerange, selectedRange } = data.databaseInfo
 
   const projectDuration = timerange[1] - timerange[0]
