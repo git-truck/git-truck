@@ -1263,29 +1263,41 @@ export default class DB {
   public async getCommitCountPerTime(
     timerange: [number, number],
     timeUnit = this.getTimeStringFormat(timerange)
-  ): Promise<[{ date: string; count: number; timestamp: number }[], TimeUnit]> {
+  ): Promise<[{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[], TimeUnit]> {
     const query = this.getTimeQueryFromTimeUnit(timeUnit)
     const res = await this.query(
       `SELECT strftime(date, '${query}') as timestring,
         strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
         count(*) AS count,
         MIN(committerTime) AS ct FROM (SELECT date_trunc('${timeUnit}',
         to_timestamp(committerTime)) AS date,
-        committerTime FROM commits)
-       GROUP BY date
+        COALESCE(cg.displayName, c.author) AS author,
+        c.committerTime FROM commits c
+        LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+        ON (c.author = cg.name AND c.authorEmail = cg.email))
+       GROUP BY date, author
        ORDER BY date ASC;`
     )
     const mapped = res.map((x) => {
-      return { lookup: x["bucket_lookup"] as string, count: Number(x["count"]) }
+      return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
-    const countsByLookup = new Map(mapped.map((x) => [x.lookup, x.count]))
-    const final: { date: string; count: number; timestamp: number }[] = []
+    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
+    for (const { lookup, author, count } of mapped) {
+      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
+      const bucket = countsByLookup.get(lookup)!
+      bucket.count += count
+      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
+    }
+    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
     const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
     for (const interval of allIntervals) {
+      const bucket = countsByLookup.get(interval.lookup)
       final.push({
         date: interval.label,
-        count: countsByLookup.get(interval.lookup) ?? 0,
-        timestamp: interval.timestamp
+        count: bucket?.count ?? 0,
+        timestamp: interval.timestamp,
+        contributors: bucket?.contributors ?? {}
       })
     }
     const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
@@ -1301,23 +1313,26 @@ export default class DB {
     timerange: [number, number]
     timeUnit?: "day" | "week" | "month" | "year"
     objectPath: string
-  }): Promise<{ date: string; count: number; timestamp: number }[]> {
+  }): Promise<{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[]> {
     const query = this.getTimeQueryFromTimeUnit(timeUnit)
     const statement = await this.prepare(`SELECT strftime(date, ?) as timestring,
         strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
         count(DISTINCT commitHash) AS count,
         MIN(committerTime) AS ct FROM (
           SELECT date_trunc(?, to_timestamp(c.committerTime)) AS date,
-          c.committerTime, c.hash as commitHash,
+          c.committerTime, c.hash as commitHash, COALESCE(cg.displayName, c.author) AS author,
           COALESCE(r.toName, f.filePath) as resolvedPath
           FROM commits c
           JOIN fileChanges f ON c.hash = f.commitHash
+          LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+          ON (c.author = cg.name AND c.authorEmail = cg.email)
           LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
             c.committerTime BETWEEN r.timestamp AND r.timestampEnd
           )
         )
         WHERE resolvedPath = ? OR resolvedPath LIKE ?
-       GROUP BY date
+       GROUP BY date, author
        ORDER BY date ASC;`)
     statement.bindVarchar(1, query)
     statement.bindVarchar(2, timeUnit)
@@ -1327,16 +1342,24 @@ export default class DB {
     const res = (await statement.runAndReadAll()).getRowObjects()
 
     const mapped = res.map((x) => {
-      return { lookup: x["bucket_lookup"] as string, count: Number(x["count"]) }
+      return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
-    const countsByLookup = new Map(mapped.map((x) => [x.lookup, x.count]))
-    const final: { date: string; count: number; timestamp: number }[] = []
+    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
+    for (const { lookup, author, count } of mapped) {
+      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
+      const bucket = countsByLookup.get(lookup)!
+      bucket.count += count
+      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
+    }
+    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
     const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
     for (const interval of allIntervals) {
+      const bucket = countsByLookup.get(interval.lookup)
       final.push({
         date: interval.label,
-        count: countsByLookup.get(interval.lookup) ?? 0,
-        timestamp: interval.timestamp
+        count: bucket?.count ?? 0,
+        timestamp: interval.timestamp,
+        contributors: bucket?.contributors ?? {}
       })
     }
     const sorted = final.sort((a, b) => a.timestamp - b.timestamp)

@@ -9,12 +9,17 @@ import { useSelectedCategories } from "~/state/stores/selection"
 import { useClickedObject, useObjectColor } from "~/state/stores/clicked-object"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { useOptions } from "~/contexts/OptionsContext"
+import { useMetrics } from "~/contexts/MetricContext"
 
 const barMargin = treemapPaddingInner
 
 const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: string }) => {
   const [, setQs] = useQueryStates(viewSearchParamsConfig)
-  const selected = useSelectedCategories()
+  const { metricType } = useOptions()
+  const selectedCategories = useSelectedCategories()
+  const selectedAuthors = new Set(selectedCategories.map((c) => c.slice(metricType.length + 1)))
+  const [, contributorColors] = useMetrics()
   const clickedObject = useClickedObject()
   const clickedObjectColor = useObjectColor(clickedObject)
   const clickecProps = clickedObjectColor ? { fill: clickedObjectColor } : { className: "bg-blue-primary" }
@@ -71,25 +76,40 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
               )
             : undefined
 
-          const hasFileActivity = clickedObjInterval ? clickedObjInterval.count > 0 : false
-          const clickedCountLogged = clickedObjInterval
-            ? scale === "log"
-              ? Math.log10(clickedObjInterval.count + 1)
-              : clickedObjInterval.count
-            : 0
+          const relevantData = clickedObjectIsRepo ? d : clickedObjInterval
+          const authorsToStack =
+            relevantData && selectedCategories.length > 0
+              ? Object.entries(relevantData?.contributors ?? {})
+                  .filter(([author]) => selectedAuthors.has(author))
+                  .sort((a, b) => b[1] - a[1]) // highest commits first
+              : []
+          const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
+          const displayedCount = selectedCategories.length > 0 ? selectedContributorCount : (relevantData?.count ?? 0)
+          const hasFileActivity = displayedCount > 0
+
+          const clickedCountLogged = scale === "log" ? Math.log10(displayedCount + 1) : displayedCount
           const clickedBarHeight = height - yScale(clickedCountLogged)
           const clickedBarY = yScale(clickedCountLogged)
-          const toTime =
-            unit !== "day"
-              ? ` - ${dateFormatShort(intervalEnd * 1000 - 1000, { weekday: "short" })}`
-              : // ? ` - ${dateFormatShort(d.timestamp * 1000 + TimeUnitDurationsMs[unit], { weekday: "short" })}`
-                ""
+          const toTime = unit !== "day" ? ` - ${dateFormatShort(intervalEnd * 1000 - 1000, { weekday: "short" })}` : ""
           const title = `${dateFormatShort(intervalStart * 1000, { weekday: "short" })}${toTime}\n${d.count.toLocaleString()} commit${d.count !== 1 ? "s" : ""}
                   ${
                     clickedObjInterval
                       ? `\n${clickedObjInterval.count.toLocaleString()} commit${clickedObjInterval.count !== 1 ? "s" : ""} on ${clickedObject.name}`
                       : ""
                   }`
+
+          let currentY = clickedBarY + clickedBarHeight
+          const stackedRects = authorsToStack.map(([author, authorCount]) => {
+            const fraction = authorCount / displayedCount
+            const sliceHeight = clickedBarHeight * fraction
+            const sliceY = currentY - sliceHeight
+            currentY = sliceY
+            return {
+              author,
+              y: sliceY,
+              height: sliceHeight
+            }
+          })
 
           return (
             <g key={i}>
@@ -108,7 +128,7 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
                   }
                 )}
               />
-              {hasFileActivity ? (
+              {hasFileActivity && !clickedObjectIsRepo && authorsToStack.length === 0 ? (
                 <rect
                   x={barX}
                   y={clickedBarY}
@@ -127,6 +147,30 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
                   style={clickecProps.fill ? { fill: clickecProps.fill } : {}}
                 />
               ) : null}
+              {authorsToStack.length > 0
+                ? stackedRects.map((rect, idx) => {
+                    const isBottom = idx === 0
+                    const isTop = idx === stackedRects.length - 1
+                    return (
+                      <rect
+                        key={rect.author}
+                        x={barX}
+                        y={rect.y}
+                        width={barWidth}
+                        height={rect.height}
+                        rx={isTop || isBottom ? treemapBlobBorderRadius : 0}
+                        ry={isTop || isBottom ? treemapBlobBorderRadius : 0}
+                        className={cn("opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
+                          "opacity-0": barX === 0,
+                          "opacity-50": !isInRange
+                        })}
+                        style={{
+                          fill: contributorColors.get(rect.author) ?? "grey"
+                        }}
+                      />
+                    )
+                  })
+                : null}
               {/* Outline */}
               <rect
                 x={barX}

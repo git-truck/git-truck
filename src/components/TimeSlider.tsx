@@ -46,7 +46,7 @@ export function Timeline({ className }: { className?: string }) {
   )
 
   return (
-    <div className="flex flex-col pb-4 text-center select-none">
+    <div className="flex flex-col text-center select-none">
       <TimelineHeader>
         <CheckboxWithLabel
           unstyled
@@ -191,8 +191,8 @@ function TimeSlider({
       className="grid-full relative"
       mode={3}
       step={1}
-      domain={$inspect([0, domainInUnits], { trace: false, label: "domain" })}
-      values={$inspect([startUnits, endUnits], { label: "values" })}
+      domain={[0, domainInUnits]}
+      values={[startUnits, endUnits]}
       disabled={disabled}
       // onUpdate={onUpdateSlider}
       onChange={onUpdateSlider}
@@ -305,7 +305,7 @@ function TimeSlider({
             {tracks.map(({ id, source, target }) => (
               <div
                 key={id}
-                className={cn("bg-blue-primary/10 absolute inset-0 cursor-pointer transition-[backdrop-filter]", {
+                className={cn("rounded pointer-events-none bg-blue-primary/10 absolute inset-0 cursor-pointer transition-[backdrop-filter]", {
                   "backdrop-blur-2xl": isPending
                 })}
                 style={{

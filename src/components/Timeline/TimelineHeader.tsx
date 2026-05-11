@@ -40,7 +40,7 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
       </div>
       <div className="flex items-center justify-end gap-1">
         {children}
-        <TimeRangePresetButtons />
+        <TimeRangePresetButtons unit={data.databaseInfo.commitCountPerTimeIntervalUnit} />
       </div>
     </div>
   )

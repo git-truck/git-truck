@@ -36,9 +36,7 @@ export function filterTree(tree: GitTreeObject, predicate: (node: GitObject) => 
         }
       }
       //Discard empty directories
-      return children.length === 0
-        ? null
-        : ({ type: "tree", name: node.name, path: node.path, children } as GitTreeObject)
+      return children.length === 0 ? null : { ...node, children }
     }
   }
 

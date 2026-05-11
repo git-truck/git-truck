@@ -37,7 +37,7 @@ import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories }
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
-import { filterTree, flattenTree, flattenTreeIncludeTrees } from "~/shared/utils/tree"
+import { filterTree, flattenTree } from "~/shared/utils/tree"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -129,6 +129,8 @@ export function Chart() {
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
+  const getHashFromEventTarget = (target: EventTarget | null) =>
+    target instanceof Element ? target.closest<SVGElement>("[data-hash]")?.dataset.hash : undefined
 
   return (
     <div ref={ref} className="relative grid place-items-center">
@@ -139,7 +141,7 @@ export function Chart() {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
         onClick={(evt) => {
-          const hash = (evt.target as SVGElement).getAttribute("data-hash")
+          const hash = getHashFromEventTarget(evt.target)
           if (!hash) {
             setClickedObject(null)
             return
@@ -168,7 +170,7 @@ export function Chart() {
           }, DOUBLE_CLICK_DELAY)
         }}
         onDoubleClick={(evt) => {
-          const hash = evt.currentTarget.getAttribute("data-hash")
+          const hash = getHashFromEventTarget(evt.target)
           if (!hash) {
             setClickedObject(null)
             return
@@ -195,7 +197,7 @@ export function Chart() {
           }
         }}
         onMouseOver={(evt) => {
-          const hash = (evt.target as SVGElement).getAttribute("data-hash")
+          const hash = getHashFromEventTarget(evt.target)
           if (!hash) {
             return
           }
@@ -266,6 +268,8 @@ export function Chart() {
           return (
             <g
               key={d.data.path}
+              data-name={d.data.name}
+              data-hash={d.data.hash}
               className={cn("cursor-pointer duration-400", {
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":

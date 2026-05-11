@@ -1,20 +1,61 @@
 import { useQueryStates } from "nuqs"
 import { useData } from "~/contexts/DataContext"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
+import type { TimeUnit } from "~/shared/utils/time"
 import { cn } from "~/styling"
 
-const presets = [
-  { label: "24H", durationSecs: 24 * 60 * 60, title: "24 hours" },
-  { label: "7D", durationSecs: 7 * 24 * 60 * 60, title: "7 days" },
-  { label: "30D", durationSecs: 30 * 24 * 60 * 60, title: "30 days" },
-  { label: "3MO", durationSecs: 90 * 24 * 60 * 60, title: "3 months" },
-  { label: "6MO", durationSecs: 180 * 24 * 60 * 60, title: "6 months" },
-  { label: "YTD", durationSecs: null }, // Special handling for Year To Date
-  { label: "1YR", durationSecs: 1 * 365 * 24 * 60 * 60, title: "" },
-  { label: "All", durationSecs: Infinity }
+const presets: Array<{
+  label: string
+  durationSecs: number | null // null for special handling (e.g. YTD)
+  title: string
+  visibleForUnits: TimeUnit[]
+}> = [
+  { label: "1D", durationSecs: 24 * 60 * 60, title: "24 hours", visibleForUnits: ["day"] },
+  {
+    label: "7D",
+    durationSecs: 7 * 24 * 60 * 60,
+    title: "7 days",
+    visibleForUnits: ["day", "week"]
+  },
+  {
+    label: "1MO",
+    durationSecs: 30 * 24 * 60 * 60,
+    title: "1 month",
+    visibleForUnits: ["day", "week", "month"]
+  },
+  {
+    label: "3MO",
+    durationSecs: 90 * 24 * 60 * 60,
+    title: "3 months",
+    visibleForUnits: ["day", "week", "month"]
+  },
+  {
+    label: "6MO",
+    durationSecs: 180 * 24 * 60 * 60,
+    title: "6 months",
+    visibleForUnits: ["day", "week", "month"]
+  },
+  {
+    label: "YTD",
+    durationSecs: null,
+    visibleForUnits: ["day", "week", "month"],
+    title: "Year to date (since Jan 1st of the current year)"
+  }, // Special handling for Year To Date
+  {
+    label: "1YR",
+    durationSecs: 1 * 365 * 24 * 60 * 60,
+    title: "1 year",
+    visibleForUnits: ["day", "week", "month", "year"]
+  },
+  {
+    label: "All",
+    durationSecs: Infinity,
+    title: "Entire project history",
+    visibleForUnits: ["day", "week", "month", "year"]
+  }
 ]
 
-export function TimeRangePresetButtons() {
+export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
   const data = useData()
   const [, setQs] = useQueryStates(viewSearchParamsConfig)
   const { timerange, selectedRange } = data.databaseInfo
@@ -25,6 +66,9 @@ export function TimeRangePresetButtons() {
   return (
     <div className="flex justify-end gap-0">
       {presets.map((preset) => {
+        if (!preset.visibleForUnits.includes(unit)) {
+          return null
+        }
         const isActive =
           (preset.durationSecs === Infinity && selectionDuration === projectDuration) ||
           selectionDuration === preset.durationSecs

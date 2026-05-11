@@ -195,8 +195,13 @@ export interface DatabaseInfo {
   timerange: [number, number]
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
-  commitCountPerTimeInterval: { date: string; count: number; timestamp: number }[]
-  commitCountPerTimeIntervalForClickedObject: { date: string; count: number; timestamp: number }[]
+  commitCountPerTimeInterval: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[]
+  commitCountPerTimeIntervalForClickedObject: {
+    date: string
+    count: number
+    timestamp: number
+    contributors: Record<string, number>
+  }[]
   commitCountPerTimeIntervalUnit: TimeUnit
   selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
