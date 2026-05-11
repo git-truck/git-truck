@@ -305,9 +305,12 @@ function TimeSlider({
             {tracks.map(({ id, source, target }) => (
               <div
                 key={id}
-                className={cn("rounded pointer-events-none bg-blue-primary/10 absolute inset-0 cursor-pointer transition-[backdrop-filter]", {
-                  "backdrop-blur-2xl": isPending
-                })}
+                className={cn(
+                  "bg-blue-primary/10 pointer-events-none absolute inset-0 cursor-pointer rounded transition-[backdrop-filter]",
+                  {
+                    "backdrop-blur-2xl": isPending
+                  }
+                )}
                 style={{
                   left: `${source.percent}%`,
                   width: `${target.percent - source.percent}%`
