@@ -1,13 +1,4 @@
-import { $inspect } from "~/shared/util"
-
 export const TimeUnitValues = ["day", "week", "month", "year"] as const
-
-const TimeUnitToPlural = {
-  day: "days",
-  week: "weeks",
-  month: "months",
-  year: "years"
-} as const satisfies Record<TimeUnit, string>
 
 export type TimeUnit = (typeof TimeUnitValues)[number]
 

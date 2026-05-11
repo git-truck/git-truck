@@ -10,7 +10,7 @@ import type {
   RenameEntry,
   RenameInterval
 } from "~/shared/model"
-import { dateFormatShort, getTimeIntervals } from "~/shared/util.ts"
+import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/server/log"
 import type { TimeUnit } from "~/shared/utils/time"

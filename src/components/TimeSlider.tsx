@@ -1,13 +1,10 @@
 import { useNavigation } from "react-router"
-import { Fragment, useCallback, useState, useTransition, type CSSProperties } from "react"
+import { Fragment, useCallback, useState, useTransition } from "react"
 import { Slider, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { $inspect, dateFormatCalendarHeader, dateFormatISO, dateFormatShort } from "~/shared/util"
-import DatePicker from "react-datepicker"
-import { Popover } from "~/components/Popover"
+import { $inspect } from "~/shared/util"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
-import { useViewSubmit } from "~/hooks"
 import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { mdiDotsVertical } from "@mdi/js"
@@ -155,7 +152,7 @@ function TimeSlider({
   // onChange: (range: [number, number]) => void
 }) {
   const [isPending, startTransition] = useTransition()
-  const [qs, setStartEnd] = useQueryStates({
+  const [, setStartEnd] = useQueryStates({
     start: viewSearchParamsConfig.start
       .withDefault(minMs / 1000)
       .withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } }),
@@ -204,7 +201,7 @@ function TimeSlider({
       <Handles>
         {({ handles, getHandleProps }) => (
           <Fragment>
-            {handles.map((handle, i) => {
+            {handles.map((handle) => {
               // const handlePointsToTheLeft = i === 1 || handle.percent > 10
               return (
                 <Fragment key={handle.id}>
