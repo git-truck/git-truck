@@ -2,7 +2,7 @@ import { useRef, useDeferredValue } from "react"
 import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
 import { useComponentSize } from "~/hooks"
-import { treemapBlobBorderRadius } from "~/const"
+import { treemapBlobBorderRadius, treemapPaddingInner } from "~/const"
 import { cn } from "~/styling"
 import { dateFormatShort, expandIntervalToRange } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
@@ -10,8 +10,7 @@ import { useClickedObject, useObjectColor } from "~/state/stores/clicked-object"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 
-// const barMargin = treemapPaddingInner
-const barMargin = 0
+const barMargin = treemapPaddingInner
 
 const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: string }) => {
   const [, setQs] = useQueryStates(viewSearchParamsConfig)
