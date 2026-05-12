@@ -41,7 +41,7 @@ import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { invariant, isBlob } from "~/shared/util"
+import { $inspect, invariant, isBlob } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
@@ -60,8 +60,8 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   const viewSearchParams = loadViewSearchParams(request)
 
-  let { path, zoomPath, branch } = viewSearchParams
-  const { timeUnit, objectHash, start, end } = viewSearchParams
+  let { path, zoomPath, branch, start, end } = viewSearchParams
+  const { timeUnit, objectHash } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -100,12 +100,22 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
 
+  if (!start || !end || !instance.db.selectedRange[0] || !instance.db.selectedRange[1]) {
+    const [min, max] = await instance.db.getOverallTimeRange()
+    console.log({ min, max })
+    start ||= min || 0
+    end ||= max || 1_000_000_000_000
+    instance.db.selectedRange = [start, end]
+  }
+
   let shouldUpdateTimeSeries = false
 
-  if (end && end !== instance.prevResult?.databaseInfo.selectedRange[1]) {
+  $inspect(instance.db.selectedRange, { label: "selectedRange" })
+
+  if (end && end !== instance.db.selectedRange[1]) {
     instance.prevInvokeReason = "timeseriesend"
     shouldUpdateTimeSeries = true
-  } else if (start && start !== instance.prevResult?.databaseInfo.selectedRange[0]) {
+  } else if (start && start !== instance.db.selectedRange[0]) {
     instance.prevInvokeReason = "timeseriesstart"
     shouldUpdateTimeSeries = true
   } else {
@@ -250,9 +260,10 @@ async function analyze({
 
   // // to avoid double identical fetch at first load, which it does for some reason
   // // TODO: Fix this. This is due to react strict mode
-  // if (instance.prevInvokeReason === "none" && instance.prevResult) {
-  //   return instance.prevResult
-  // }
+  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+    return instance.prevResult
+  }
+
   await instance.loadRepoData()
 
   const timerange = await instance.db.getOverallTimeRange()

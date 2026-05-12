@@ -175,7 +175,9 @@ export function MetricsInspection() {
     MOST_CONTRIBUTIONS: {
       description: "line changes",
       icon: LinesChangedMetric.icon,
-      data: isBlob ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString() : contributions,
+      data: isBlob
+        ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
+        : contributions.toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       colors: [
         LinesChangedMetric.getColorFromObject(
@@ -319,8 +321,11 @@ function InteractionButtons() {
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
-            <Form className="w-max" method="post" action={viewAction}
-            // onSubmit={() => setClickedObject(null)}
+            <Form
+              className="w-max"
+              method="post"
+              action={viewAction}
+              // onSubmit={() => setClickedObject(null)}
             >
               <input type="hidden" name="hide" value={`*.${extension}`} />
               <button className="btn" disabled={state !== "idle"} title={`Hide all files with .${extension} extension`}>

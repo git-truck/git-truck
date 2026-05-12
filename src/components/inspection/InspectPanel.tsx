@@ -35,7 +35,7 @@ export function InspectPanel() {
           )}
         </>
       )}
-      >
+    >
       {<MetricsInspection />}
     </CollapsibleHeader>
   )
