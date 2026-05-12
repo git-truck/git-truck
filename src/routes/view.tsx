@@ -263,7 +263,7 @@ async function analyze({
   if (instance.prevInvokeReason === "none" && instance.prevResult) {
     return instance.prevResult
   }
-  
+
   await instance.loadRepoData()
 
   const timerange = await instance.db.getOverallTimeRange()

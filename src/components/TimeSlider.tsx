@@ -202,10 +202,8 @@ function TimeSlider({
 }) {
   const [isPending, startTransition] = useTransition()
   const [, setStartEnd] = useQueryStates({
-    start: viewSearchParamsConfig.start
-      .withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } }),
-    end: viewSearchParamsConfig.end
-      .withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } })
+    start: viewSearchParamsConfig.start.withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } }),
+    end: viewSearchParamsConfig.end.withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } })
   })
 
   const onUpdateSlider = useCallback(

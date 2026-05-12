@@ -89,10 +89,7 @@ export const Dot = ({
   const Component = props.onClick ? "button" : "div"
   return (
     <Component
-      className={cn(
-        "size-4 ",
-        className
-      )}
+      className={cn("size-4", className)}
       // style={{ backgroundColor: color }}
       onClick={props.onClick}
     >
