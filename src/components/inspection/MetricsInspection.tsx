@@ -175,7 +175,7 @@ export function MetricsInspection() {
     MOST_CONTRIBUTIONS: {
       description: "line changes",
       icon: LinesChangedMetric.icon,
-      data: isBlob ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString() : contributions,
+      data: isBlob ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString() : contributions.toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels,
       colors: [
         LinesChangedMetric.getColorFromObject(

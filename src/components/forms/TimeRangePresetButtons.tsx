@@ -70,7 +70,7 @@ export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
           return null
         }
         const isActive =
-          (preset.durationSecs === Infinity && selectionDuration === projectDuration) ||
+          (preset.durationSecs === Infinity && selectionDuration >= projectDuration) ||
           selectionDuration === preset.durationSecs
         const ytd = new Date(timerange[1] * 1000)
         ytd.setMonth(0, 1)

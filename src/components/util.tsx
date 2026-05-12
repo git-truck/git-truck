@@ -93,7 +93,7 @@ export const Dot = ({
         "size-4 ",
         className
       )}
-      style={{ backgroundColor: color }}
+      // style={{ backgroundColor: color }}
       onClick={props.onClick}
     >
       <svg viewBox="0 0 16 16">

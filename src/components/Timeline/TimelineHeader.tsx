@@ -4,17 +4,14 @@ import { Dot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useGradient } from "~/hooks/svg"
 import { isTree } from "~/shared/util"
-import { useClickedObject, useObjectColor, useObjectColors } from "~/state/stores/clicked-object"
+import { useClickedObject, useObjectColors } from "~/state/stores/clicked-object"
 
 export function TimelineHeader({ children }: { children?: React.ReactNode }) {
   const clickedObject = useClickedObject()
   const data = useData()
-  const isMaxTimeRange =
-    data.databaseInfo.selectedRange[0] === data.databaseInfo.timerange[0] &&
-    data.databaseInfo.selectedRange[1] === data.databaseInfo.timerange[1]
 
   const colors = useObjectColors(clickedObject)
-  const { linearGradient, fill} = useGradient(colors)
+  const { linearGradient, fill } = useGradient(colors)
 
   const props = colors.length > 0 ? { fill } : { className: "fill-blue-primary" }
 
@@ -30,12 +27,12 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
         <TimeUnitForm />
       </h2>
       <div className="flex gap-1">
-
         {clickedObject.name !== zoomPathName ? (
           <div className="flex items-center gap-1">
             <Dot shape="square" {...props}>
               {linearGradient}
-              </Dot>
+            </Dot>
+            Commit activity for
             <span className="text-primary-text dark:text-primary-text-dark normal-case">{clickedObject.name}</span>
           </div>
         ) : null}{" "}

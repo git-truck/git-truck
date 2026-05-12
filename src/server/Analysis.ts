@@ -107,7 +107,6 @@ export class Analysis {
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
   public async analyzeTree({ hiddenFiles }: { hiddenFiles: string[] }) {
-    log.warn("ANALYZING TREE", hiddenFiles)
     const ig = ignore().add(hiddenFiles)
     this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
@@ -120,7 +119,6 @@ export class Analysis {
       .toArray()
       .flatMap((match) => {
         if (!match.groups || ig.ignores(match.groups.path)) {
-          log.warn("ignoring path: " + match.groups?.path)
           return []
         }
 

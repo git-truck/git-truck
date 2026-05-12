@@ -2,11 +2,11 @@ import { useRef, useDeferredValue } from "react"
 import * as d3 from "d3"
 import { useData } from "~/contexts/DataContext"
 import { useComponentSize } from "~/hooks"
-import { treemapBlobBorderRadius, treemapPaddingInner } from "~/const"
+import { missingInMapColor, treemapBlobBorderRadius, treemapPaddingInner } from "~/const"
 import { cn } from "~/styling"
 import { dateFormatShort, expandIntervalToRange } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
-import { useClickedObject, useObjectColor } from "~/state/stores/clicked-object"
+import { useClickedObject, useObjectColor, useObjectColors } from "~/state/stores/clicked-object"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -34,7 +34,6 @@ type BarNode = {
   title: string
   shouldDrawLabel: boolean
   isInRange: boolean
-  isFirstBar: boolean
   hasFileActivity: boolean
   clickedObjectIsRepo: boolean
   clickedClassName?: string
@@ -50,7 +49,12 @@ const TEXT_HEIGHT = 20
 const TEXT_WIDTH = 40
 
 export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
-  const [, setQs] = useQueryStates(viewSearchParamsConfig)
+  const { databaseInfo } = useData()
+  const [{ start, end }, setQs] = useQueryStates({
+    start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
+    end: viewSearchParamsConfig.end.withDefault(databaseInfo.selectedRange[1])
+  })
+
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
   const selectedAuthors = new Set(selectedCategories.map((c) => c.slice(metricType.length + 1)))
@@ -59,14 +63,13 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const clickedObjectColor = useObjectColor(clickedObject)
   const clickedProps = clickedObjectColor ? { fill: clickedObjectColor } : { className: "bg-blue-primary" }
   const svgRef = useRef<SVGSVGElement>(null)
-  const { databaseInfo } = useData()
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
   const data = databaseInfo.commitCountPerTimeInterval.map((e) => ({
     ...e,
     countLogged: scale === "log" ? Math.log10(e.count + 1) : e.count
   }))
-  const [start, end] = databaseInfo.selectedRange
+
   const width = size.width
 
   const commitCountPerTimeIntervalForClickedObject = databaseInfo.commitCountPerTimeIntervalForClickedObject
@@ -154,7 +157,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
               author,
               y: sliceY,
               height: sliceHeight,
-              fill: contributorColors.get(author) ?? "grey"
+              fill: contributorColors.get(author) ?? missingInMapColor
             }
           })
 
@@ -162,7 +165,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             relevantData && selectedCategories.length === 0
               ? Object.entries(relevantData.contributors ?? {})
                   .sort((a, b) => b[1] - a[1])
-                  .map(([author]) => contributorColors.get(author) ?? "grey")
+                  .map(([author]) => contributorColors.get(author) ?? missingInMapColor)
               : []
 
           const node: BarNode = {
@@ -177,7 +180,6 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             title,
             shouldDrawLabel,
             isInRange,
-            isFirstBar: barX === 0,
             hasFileActivity,
             clickedObjectIsRepo,
             clickedClassName: clickedProps.className,
@@ -195,6 +197,9 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 }
 
 function Bar({ node }: { node: BarNode }) {
+  const clickedObject = useClickedObject()
+  const colors = useObjectColors(clickedObject)
+  const { fill: clickedFill, linearGradient: clickedGradient } = useGradient(colors)
   const { fill, linearGradient } = useGradient(node.gradientColors)
 
   // Fallback to clickedFill or class if gradient logic doesn't apply
@@ -222,7 +227,6 @@ function Bar({ node }: { node: BarNode }) {
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
         className={cn("fill-gray-500/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
-          "opacity-0": node.isFirstBar,
           "opacity-40": !node.isInRange
         })}
       />
@@ -239,7 +243,7 @@ function Bar({ node }: { node: BarNode }) {
             "opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
             node.isInRange ? "fill-blue-primary" : "fill-blue-primary/50",
             {
-              "opacity-0": node.isFirstBar
+              "opacity-0": node.x === 0
             },
             clickClass
           )}
@@ -260,7 +264,6 @@ function Bar({ node }: { node: BarNode }) {
             rx={isTop || isBottom ? treemapBlobBorderRadius : 0}
             ry={isTop || isBottom ? treemapBlobBorderRadius : 0}
             className={cn("opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
-              "opacity-0": node.isFirstBar,
               "opacity-50": !node.isInRange
             })}
             style={{ fill: slice.fill }}
