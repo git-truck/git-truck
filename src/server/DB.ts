@@ -402,72 +402,309 @@ export default class DB {
   }
 
   public async getCommits(path: string, count: number) {
-    const res = await this.query(
-      `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
-       FROM fileChanges_commits_renamed_cached
-       WHERE filePath GLOB '${path}*'
-       ORDER BY committerTime DESC, commitHash
-       LIMIT ${count};
-    `
-    )
-    return res.map((row) => {
-      return {
-        author: {
-          name: String(row["author"]),
-          email: String(row["authorEmail"])
+    const isblob = (await this.getObjectType(path)) === "blob"
+
+    if (isblob) {
+      return this.usingPreparedStatement(
+        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+         FROM fileChanges_commits_renamed_cached
+         WHERE filePath = ?
+         ORDER BY committerTime DESC, commitHash
+         LIMIT ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, path)
+          statement.bindUInteger(2, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map(
+            (row) =>
+              ({
+                author: {
+                  name: String(row["author"]),
+                  email: String(row["authorEmail"])
+                },
+                committerTime: row["committerTime"],
+                authorTime: row["authorTime"],
+                body: row["body"],
+                hash: row["commitHash"],
+                message: row["message"]
+              }) as CommitDTO
+          )
         },
-        committerTime: row["committerTime"],
-        authorTime: row["authorTime"],
-        body: row["body"],
-        hash: row["commitHash"],
-        message: row["message"]
-      } as CommitDTO
-    })
+        "getCommits(blob)"
+      )
+    } else if (path) {
+      return this.usingPreparedStatement(
+        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+         FROM fileChanges_commits_renamed_cached
+         WHERE filePath LIKE ?
+         ORDER BY committerTime DESC, commitHash
+         LIMIT ?;`,
+        async (statement) => {
+          statement.bindVarchar(1, path + "/%")
+          statement.bindUInteger(2, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map(
+            (row) =>
+              ({
+                author: {
+                  name: String(row["author"]),
+                  email: String(row["authorEmail"])
+                },
+                committerTime: row["committerTime"],
+                authorTime: row["authorTime"],
+                body: row["body"],
+                hash: row["commitHash"],
+                message: row["message"]
+              }) as CommitDTO
+          )
+        },
+        "getCommits(tree)"
+      )
+    } else {
+      return this.usingPreparedStatement(
+        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+         FROM fileChanges_commits_renamed_cached
+         ORDER BY committerTime DESC, commitHash
+         LIMIT ?;`,
+        async (statement) => {
+          statement.bindUInteger(1, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map(
+            (row) =>
+              ({
+                author: {
+                  name: String(row["author"]),
+                  email: String(row["authorEmail"])
+                },
+                committerTime: row["committerTime"],
+                authorTime: row["authorTime"],
+                body: row["body"],
+                hash: row["commitHash"],
+                message: row["message"]
+              }) as CommitDTO
+          )
+        },
+        "getCommits(root)"
+      )
+    }
   }
 
   public async getCommitHashes(path: string, count: number, authors: string[] = []) {
-    let query = `SELECT distinct commitHash
-      FROM fileChanges_commits_renamed_cached
-      WHERE filePath GLOB '${path}*'`
+    const isblob = (await this.getObjectType(path)) === "blob"
+    const authorPlaceholders = authors.map(() => "?").join(",")
 
-    if (authors.length > 0) {
-      const authorList = authors.map((a) => `'${a.replace(/'/g, "''")}'`).join(",")
-      query += ` AND (
-        author IN (${authorList})
-        OR commitHash IN (
-          SELECT commitHash FROM commitTrailers_unioned
-          WHERE trailerType = 'coauthor' AND name IN (${authorList})
+    if (isblob) {
+      const baseQuery = `SELECT distinct commitHash
+        FROM fileChanges_commits_renamed_cached
+        WHERE filePath = ?`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` AND (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
         )
-      )`
+        ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+          : baseQuery +
+            ` ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          statement.bindVarchar(paramIndex++, path)
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          statement.bindUInteger(paramIndex++, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map((row) => row["commitHash"] as string)
+        },
+        "getCommitHashes(blob)"
+      )
+    } else if (path) {
+      const baseQuery = `SELECT distinct commitHash
+        FROM fileChanges_commits_renamed_cached
+        WHERE filePath LIKE ?`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` AND (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        )
+        ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+          : baseQuery +
+            ` ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          statement.bindVarchar(paramIndex++, path + "/%")
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          statement.bindUInteger(paramIndex++, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map((row) => row["commitHash"] as string)
+        },
+        "getCommitHashes(tree)"
+      )
+    } else {
+      const baseQuery = `SELECT distinct commitHash
+        FROM fileChanges_commits_renamed_cached`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` WHERE (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        )
+        ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+          : baseQuery +
+            ` ORDER BY committerTime DESC, commitHash
+        LIMIT ?;`
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          statement.bindUInteger(paramIndex++, count)
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return res.map((row) => row["commitHash"] as string)
+        },
+        "getCommitHashes(root)"
+      )
     }
-
-    query += ` ORDER BY committerTime DESC, commitHash
-      LIMIT ${count};`
-
-    const res = await this.query(query)
-    return res.map((row) => {
-      return row["commitHash"] as string
-    })
   }
 
   public async getCommitCountForPath(path: string, authors: string[] = []) {
-    let query = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath GLOB '${path}*'`
+    const isblob = (await this.getObjectType(path)) === "blob"
+    const authorPlaceholders = authors.map(() => "?").join(",")
 
-    if (authors.length > 0) {
-      const authorList = authors.map((a) => `'${a.replace(/'/g, "''")}'`).join(",")
-      query += ` AND (
-        author IN (${authorList})
-        OR commitHash IN (
-          SELECT commitHash FROM commitTrailers_unioned
-          WHERE trailerType = 'coauthor' AND name IN (${authorList})
-        )
-      )`
+    if (isblob) {
+      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath = ?`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` AND (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        );`
+          : baseQuery + ";"
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          statement.bindVarchar(paramIndex++, path)
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return Number(res[0]["count"])
+        },
+        "getCommitCountForPath(blob)"
+      )
+    } else if (path) {
+      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath LIKE ?`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` AND (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        );`
+          : baseQuery + ";"
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          statement.bindVarchar(paramIndex++, path + "/%")
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return Number(res[0]["count"])
+        },
+        "getCommitCountForPath(tree)"
+      )
+    } else {
+      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached`
+
+      const query =
+        authors.length > 0
+          ? baseQuery +
+            ` WHERE (
+          author IN (${authorPlaceholders})
+          OR commitHash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        );`
+          : baseQuery + ";"
+
+      return this.usingPreparedStatement(
+        query,
+        async (statement) => {
+          let paramIndex = 1
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          for (const author of authors) {
+            statement.bindVarchar(paramIndex++, author)
+          }
+          const res = (await statement.runAndReadAll()).getRowObjects()
+          return Number(res[0]["count"])
+        },
+        "getCommitCountForPath(root)"
+      )
     }
-
-    query += ";"
-
-    const res = await this.query(query)
-    return Number(res[0]["count"])
   }
 
   public async getCommitCountPerFile() {
