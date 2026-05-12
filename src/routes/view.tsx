@@ -74,6 +74,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   if (!path || !branch || !zoomPath) {
     log.warn(`At least one required parameter is missing, redirecting`)
     log.warn({
+      viewSearchParams,
       path,
       branch,
       zoomPath,
@@ -130,14 +131,10 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 }
 
 export const action = async ({ request }: Route.ActionArgs) => {
-  const {
-    path: repositoryPath,
-    branch,
-    start,
-    end
-  } = loadViewSearchParams(request, {
+  const viewSearchParams = loadViewSearchParams(request, {
     strict: true
   })
+  const { path: repositoryPath, branch } = viewSearchParams
   invariant(repositoryPath, "path is required")
   invariant(branch, "branch is required")
 
@@ -160,11 +157,10 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 
   if (hidePath && typeof hidePath === "string") {
-    log.info("Ignoring path: " + hidePath)
     instance.prevInvokeReason = "hide"
     await instance.db.addHiddenFile(hidePath)
-
-    return null
+    const { objectHash: _, ...params } = viewSearchParams
+    throw redirect(href("/view") + viewSerializer(params))
   }
 
   if (unhidePath && typeof unhidePath === "string") {
@@ -328,7 +324,7 @@ async function analyze({
           objectPathMap: prevRes.objectPathMap,
           fileCount: prevRes.fileCount
         }
-      : await instance.analyzeTree({ hiddenFiles: prevRes?.hiddenFiles ?? [] })
+      : await instance.analyzeTree({ hiddenFiles })
   log.timeEnd("fileTree")
 
   const { rootTree, objectHashMap, objectPathMap, fileCount } = filetree
@@ -512,7 +508,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Activity mode={leftExpanded ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "*:not-first:m-2 lg:transition-transform",
+                    "*:not-first:mx-2 *:not-first:my-6 lg:transition-transform",
                     leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
@@ -528,8 +524,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   </div>
                   <CollapsibleHeader
                     className="card"
-                    title={<>Visualization options</>}
-                    contentClassName="pb-6 flex flex-col gap-2"
+                    title={() => "Visualization options"}
+                    contentClassName="flex flex-col gap-2"
                   >
                     <Options />
                   </CollapsibleHeader>

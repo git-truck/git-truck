@@ -319,7 +319,9 @@ function InteractionButtons() {
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
-            <Form className="w-max" method="post" action={viewAction} onSubmit={() => setClickedObject(null)}>
+            <Form className="w-max" method="post" action={viewAction}
+            // onSubmit={() => setClickedObject(null)}
+            >
               <input type="hidden" name="hide" value={`*.${extension}`} />
               <button className="btn" disabled={state !== "idle"} title={`Hide all files with .${extension} extension`}>
                 <Icon path={mdiEyeOffOutline} />

@@ -10,8 +10,8 @@ export function InspectPanel() {
   const objectPathIsRepo = isRepositoryRoot(clickedObject)
   return (
     <CollapsibleHeader
-      className="card"
-      title={
+      className={"card"}
+      title={() => (
         <>
           {objectPath ? (
             <>
@@ -34,9 +34,8 @@ export function InspectPanel() {
             "Inspect"
           )}
         </>
-      }
-      contentClassName="pb-6"
-    >
+      )}
+      >
       {<MetricsInspection />}
     </CollapsibleHeader>
   )

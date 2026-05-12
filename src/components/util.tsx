@@ -74,11 +74,13 @@ export const Dot = ({
   color,
   shape,
   className = "",
+  children = null,
   ...props
 }: {
   color?: string
   shape?: "circle" | "square"
   className?: string
+  children?: ReactNode
   onClick?: () => void
 }) => {
   const { chartType } = useOptions()
@@ -87,14 +89,26 @@ export const Dot = ({
   const Component = props.onClick ? "button" : "div"
   return (
     <Component
-      {...props}
       className={cn(
-        "aspect-square h-4 w-4 shadow-xs shadow-black transition-[border-radius] duration-[10s]",
-        shape === "circle" ? "rounded-full" : "rounded-xs",
+        "size-4 ",
         className
       )}
       style={{ backgroundColor: color }}
-    />
+      onClick={props.onClick}
+    >
+      <svg viewBox="0 0 16 16">
+        <rect
+          className={cn("transition-all", className)}
+          width="16"
+          height="16"
+          rx={shape === "circle" ? 8 : 2}
+          ry={shape === "circle" ? 8 : 2}
+          fill={color}
+          {...props}
+        />
+        {children}
+      </svg>
+    </Component>
   )
 }
 

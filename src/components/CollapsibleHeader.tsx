@@ -4,18 +4,20 @@ import { ChevronButton } from "~/components/ChevronButton"
 import { cn } from "~/styling"
 
 export function CollapsibleHeader({
-  title,
+  title: Title,
   children,
   defaultOpen = true,
   className,
   contentClassName = "",
+  reversed = false,
   onToggle
 }: {
-  title: ReactNode
+  title: React.FC<{ open: boolean }>
   children: ReactNode
   defaultOpen?: boolean
   className?: string
   contentClassName?: string
+  reversed?: boolean
   onToggle?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -31,11 +33,11 @@ export function CollapsibleHeader({
       }}
     >
       <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start gap-2 text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
-        <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2">{title}</h2>
-        <ChevronButton aria-hidden as="span" open={open} />
+        <h2 className="flex min-w-0 flex-1 items-center justify-between gap-2"><Title open={open} /></h2>
+        <ChevronButton aria-hidden as="span" open={reversed ? !open : open} />
       </summary>
 
-      <div className={cn("px-2 pb-6", contentClassName)}>{children}</div>
+      <div className={cn("", contentClassName)}>{children}</div>
     </details>
   )
 }

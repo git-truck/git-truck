@@ -58,11 +58,16 @@ export const useSetClickedObject = () => {
 }
 
 export function useObjectColor(obj: RawGitObject | null): HexColor | null {
+  const colors = useObjectColors(obj)
+  const color = colors.length === 1 ? colors[0] : missingInMapColor
+  return color
+}
+
+export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
   const { metricType } = useOptions()
   const [metricsData] = useMetrics()
   const { databaseInfo } = useData()
   const hoveredObject = obj ? databaseInfo.objectHashMap[obj.hash] : null
   const colors = hoveredObject ? (metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path) ?? []) : []
-  const color: HexColor = colors.length === 1 ? colors[0].color : missingInMapColor
-  return color
+  return colors.map((c) => c.color)
 }

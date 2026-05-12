@@ -3,21 +3,71 @@ import { Fragment, useCallback, useState, useTransition } from "react"
 import { Slider, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
-import BarChart from "~/components/BarChart"
+import { BarChart } from "~/components/BarChart"
 import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { mdiDotsVertical } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 
-import { millisToUnit, unitToMillis, type TimeUnit } from "~/shared/utils/time"
+import type { TimeUnit } from "~/shared/utils/time"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { CollapsibleHeader } from "~/components/CollapsibleHeader"
+
+import { expandIntervalToRange } from "~/shared/util"
+
+type TimeIntervalRef = { timestamp: number }
+
+function timeToSliderUnit(
+  timestampSecs: number,
+  intervals: TimeIntervalRef[],
+  unit: TimeUnit,
+  handle: "start" | "end"
+) {
+  if (intervals.length === 0) return 0
+
+  for (let i = 0; i < intervals.length; i++) {
+    const [start, end] = expandIntervalToRange(intervals[i].timestamp, unit)
+
+    if (handle === "end") {
+      if (timestampSecs <= end) return i + 1
+    } else {
+      if (timestampSecs < end) return i
+    }
+  }
+
+  return intervals.length
+}
+
+function sliderUnitsToTimeRange({
+  startIndex,
+  endIndex,
+  intervals,
+  unit,
+  minSecs,
+  maxSecs
+}: {
+  startIndex: number
+  endIndex: number
+  intervals: TimeIntervalRef[]
+  unit: TimeUnit
+  minSecs: number
+  maxSecs: number
+}): [number, number] {
+  if (intervals.length === 0) return [minSecs, maxSecs]
+
+  const clampedStartIndex = Math.max(0, Math.min(startIndex, intervals.length - 1))
+  const clampedEndIndex = Math.max(0, Math.min(endIndex - 1, intervals.length - 1))
+  const [start] = expandIntervalToRange(intervals[clampedStartIndex].timestamp, unit)
+  const [, end] = expandIntervalToRange(intervals[clampedEndIndex].timestamp, unit)
+
+  return [Math.max(minSecs, start), Math.min(maxSecs, end)]
+}
 
 export function Timeline({ className }: { className?: string }) {
   const [commitCountScale, setCommitCountScale] = useState<"linear" | "log">("log")
   const { databaseInfo } = useData()
   const { timerange, selectedRange } = databaseInfo
-  const startTimeMillis = timerange[0] * 1000
   const [rangeMin, rangeMax] = timerange
   const [
     { start: low, end: high }
@@ -33,24 +83,29 @@ export function Timeline({ className }: { className?: string }) {
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
-  const selectedStartInUnit = Math.floor(millisToUnit({ startTimeMillis, millis: low * 1000, unit }))
-  const selectedEndInUnit = Math.ceil(millisToUnit({ startTimeMillis, millis: high * 1000, unit }))
   const domainInUnits = databaseInfo.commitCountPerTimeInterval.length
+  const selectedStartInUnit = timeToSliderUnit(low, databaseInfo.commitCountPerTimeInterval, unit, "start")
+  const selectedEndInUnit = timeToSliderUnit(high, databaseInfo.commitCountPerTimeInterval, unit, "end")
 
   return (
-    <div className="flex flex-col text-center select-none">
-      <TimelineHeader>
-        <CheckboxWithLabel
-          unstyled
-          reversed
-          className="gap w-max"
-          title="Use log scale for commit counts"
-          checked={commitCountScale === "log"}
-          onChange={(e) => setCommitCountScale(e.target.checked ? "log" : "linear")}
-        >
-          Log scale
-        </CheckboxWithLabel>
-      </TimelineHeader>
+    <CollapsibleHeader
+      reversed
+      className="card group/card flex flex-col text-center select-none"
+      title={() => (
+        <TimelineHeader>
+          <CheckboxWithLabel
+            unstyled
+            reversed
+            className="gap"
+            title="Use log scale for commit counts"
+            checked={commitCountScale === "log"}
+            onChange={(e) => setCommitCountScale(e.target.checked ? "log" : "linear")}
+          >
+            Log scale
+          </CheckboxWithLabel>
+        </TimelineHeader>
+      )}
+    >
       <div className={cn("group grid", className)}>
         <BarChart scale={commitCountScale} className="grid-full" />
         <TimeSlider
@@ -62,9 +117,10 @@ export function Timeline({ className }: { className?: string }) {
           unit={unit}
           domainInUnits={domainInUnits}
           disabled={disabled}
+          intervals={databaseInfo.commitCountPerTimeInterval}
         />
       </div>
-    </div>
+    </CollapsibleHeader>
   )
 }
 
@@ -132,7 +188,8 @@ function TimeSlider({
   maxMs,
   domainInUnits,
   unit,
-  disabled
+  disabled,
+  intervals
 }: {
   startUnits: number
   endUnits: number
@@ -141,7 +198,7 @@ function TimeSlider({
   unit: TimeUnit
   domainInUnits: number
   disabled: boolean
-  // onChange: (range: [number, number]) => void
+  intervals: TimeIntervalRef[]
 }) {
   const [isPending, startTransition] = useTransition()
   const [, setStartEnd] = useQueryStates({
@@ -153,34 +210,31 @@ function TimeSlider({
       .withOptions({ limitUrlUpdates: { method: "throttle", timeMs: 1000 } })
   })
 
-  // const units = [low, high].map((time) => millisToUnit({ startTimeMillis: min * 1000, millis: time * 1000, unit }))
-  const startTimeMillis = minMs
-
-  // const units = [qs.end, qs.end].map((time) =>
-  //   millisToUnit({ startTimeMillis, millis: time * 1000, unit })
-  // )
-  // const timerange: [number, number] = [minMs, maxMs]
-
   const onUpdateSlider = useCallback(
     (e: readonly number[]) => {
-      console.info("Slider updating with values", e)
       if (e[0] === 0 && e[1] === 0) return
 
       startTransition(() => {
-        const startTime = unitToMillis({ startTimeMillis, units: e[0], unit }) / 1000
-        const endTime = unitToMillis({ startTimeMillis, units: e[1], unit }) / 1000
+        const [startTime, endTime] = sliderUnitsToTimeRange({
+          startIndex: e[0],
+          endIndex: e[1],
+          intervals,
+          unit,
+          minSecs: minMs / 1000,
+          maxSecs: maxMs / 1000
+        })
         setStartEnd({
           start: startTime,
           end: endTime
         })
       })
     },
-    [setStartEnd, startTimeMillis, unit]
+    [intervals, maxMs, minMs, setStartEnd, unit]
   )
 
   return (
     <Slider
-      className="grid-full relative"
+      className="grid-full pointer-events-none relative"
       mode={3}
       step={1}
       domain={[0, domainInUnits]}
@@ -264,7 +318,7 @@ function TimeSlider({
                   <button
                     key={handle.id}
                     className={cn(
-                      "absolute top-4 bottom-4 z-10 flex size-5 -translate-x-1/2 -translate-y-1.5 place-content-center disabled:grayscale",
+                      "pointer-events-auto absolute bottom-0 z-10 flex h-6 -translate-x-1/2 place-content-center opacity-0 transition-opacity group-hover/card:opacity-100 disabled:grayscale",
                       {
                         "size-5 rounded-full": false
                       },
@@ -298,7 +352,7 @@ function TimeSlider({
               <div
                 key={id}
                 className={cn(
-                  "bg-blue-primary/10 pointer-events-none absolute inset-0 cursor-pointer rounded transition-[backdrop-filter]",
+                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded transition-[backdrop-filter]",
                   {
                     "backdrop-blur-2xl": isPending
                   }

@@ -65,6 +65,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "hiddenFiles"
   ],
   hide: [
+    "fileTree",
     "cache",
     "commitCount",
     "maxMinCommitCount",

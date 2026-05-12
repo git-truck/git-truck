@@ -49,13 +49,13 @@ export function CommitsInspection() {
   useEffect(() => {
     if (clickedHash && clickedHash !== clickedObject?.hash) {
       reset()
-      loadCommits({ objectHash: clickedObject.hash, count: commitShowCount })
+      loadCommits({ objectHash: clickedHash, count: commitShowCount })
     }
-  }, [clickedObject.path, commitShowCount, loadCommits, clickedHash, reset])
+  }, [clickedObject.hash, commitShowCount, loadCommits, clickedHash, reset])
 
   return (
     <CollapsibleHeader
-      title={
+      title={() => (
         <>
           {clickedHash ? (
             <>
@@ -79,7 +79,7 @@ export function CommitsInspection() {
             "Commits"
           )}
         </>
-      }
+      )}
       className="card"
       contentClassName="flex flex-col gap-2"
       defaultOpen={false}

@@ -38,6 +38,7 @@ import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-ob
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
 import { filterTree, flattenTree } from "~/shared/utils/tree"
+import { useGradient } from "~/hooks/svg"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -324,12 +325,14 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   if ((colors?.length ?? 0) === 0 && isBlob(d.data)) {
     colors = [{ category: UNKNOWN_CATEGORY, color: missingInMapColor }]
   }
+
+  const { linearGradient, fill } = useGradient(colors.map((c) => c.color))
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
   const commonProps = useMemo(() => {
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: colors ? (multipleColors ? `url('#${gradientId}')` : colors[0].color) : missingInMapColor,
+          fill: colors ? (multipleColors ? fill : colors[0].color) : missingInMapColor,
           stroke: colors ? colors[0].color : noEntryColor
         }
       : {
@@ -362,25 +365,11 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       }
     }
     return props
-  }, [d, colors, multipleColors, gradientId, chartType])
+  }, [d, colors, multipleColors, fill, chartType])
 
   return (
     <>
-      {multipleColors ? (
-        <defs>
-          {/* <radialGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          {colors.map((color, i) => (
-            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
-          ))}
-        </radialGradient> */}
-          {/* <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%"> */}
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            {colors.map((color, i) => (
-              <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color.color} />
-            ))}
-          </linearGradient>
-        </defs>
-      ) : null}
+      {multipleColors ? <defs>{linearGradient}</defs> : null}
       <rect
         {...commonProps}
         data-name={d.data.name}

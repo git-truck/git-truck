@@ -10,41 +10,41 @@ const presets: Array<{
   title: string
   visibleForUnits: TimeUnit[]
 }> = [
-  { label: "1D", durationSecs: 24 * 60 * 60, title: "24 hours", visibleForUnits: ["day"] },
+  { label: "1D", durationSecs: 24 * 60 * 60, title: "Last 24 hours", visibleForUnits: ["day"] },
   {
     label: "7D",
     durationSecs: 7 * 24 * 60 * 60,
-    title: "7 days",
+    title: "Last 7 days",
     visibleForUnits: ["day", "week"]
   },
   {
     label: "1MO",
     durationSecs: 30 * 24 * 60 * 60,
-    title: "1 month",
+    title: "Last 1 month",
     visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "3MO",
     durationSecs: 90 * 24 * 60 * 60,
-    title: "3 months",
+    title: "Last 3 months",
     visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "6MO",
     durationSecs: 180 * 24 * 60 * 60,
-    title: "6 months",
+    title: "Last 6 months",
     visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "YTD",
     durationSecs: null,
     visibleForUnits: ["day", "week", "month"],
-    title: "Year to date (since Jan 1st of the current year)"
+    title: "Year to last change date"
   }, // Special handling for Year To Date
   {
     label: "1YR",
     durationSecs: 1 * 365 * 24 * 60 * 60,
-    title: "1 year",
+    title: "Last 1 year",
     visibleForUnits: ["day", "week", "month", "year"]
   },
   {
@@ -86,6 +86,7 @@ export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
                 ? "text-primary-text dark:text-primary-text-dark"
                 : "text-tertiary-text dark:text-tertiary-text-dark"
             )}
+            title={preset.title}
             onClick={() => {
               const end = data.databaseInfo.timerange[1]
               const start = duration === Infinity ? timerange[0] : end - Math.floor(duration)
