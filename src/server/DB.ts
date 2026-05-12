@@ -825,7 +825,7 @@ export default class DB {
     const res = await this.usingPreparedStatement(
       `SELECT SUM(insertions + deletions) AS totalContributions
        FROM fileChanges_commits_renamed_cached
-       WHERE filePath = ? OR filePath GLOB ?
+       WHERE (filePath = ? OR filePath LIKE ?)
        AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
 
       `,
