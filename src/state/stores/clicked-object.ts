@@ -27,24 +27,26 @@ export const useClickedObject = (): GitObject => {
   const [qs] = useQueryStates(viewSearchParamsConfig, { shallow: false })
 
   const clickedObjectState = qs.objectHash ? data.databaseInfo.objectHashMap[qs.objectHash] : undefined
+  const zoomedObjectState = qs.zoomPath ? data.databaseInfo.objectPathMap[qs.zoomPath] : undefined
 
   const rootTree = useData().databaseInfo.fileTree
   // const clickedObjectState = useClickedObjectStore((state) => state.clickedObject)
 
-  return clickedObjectState ?? rootTree
+  return clickedObjectState ?? zoomedObjectState ?? rootTree
 }
 
 export const useClickedObjectNullable = () => {
   const data = useDataNullable()
-  const [objectHash] = useQueryState("objectHash", viewSearchParamsConfig.objectHash)
+  const [qs] = useQueryStates(viewSearchParamsConfig, { shallow: false })
 
-  const clickedObjectState = data && objectHash ? data.databaseInfo.objectHashMap[objectHash] : undefined
+  const clickedObjectState = data && qs.objectHash ? data.databaseInfo.objectHashMap[qs.objectHash] : undefined
+  const zoomedObjectState = data && qs.zoomPath ? data.databaseInfo.objectPathMap[qs.zoomPath] : undefined
 
   if (!data) {
     return null
   }
   const rootTree = data.databaseInfo.fileTree
-  return clickedObjectState ?? rootTree
+  return clickedObjectState ?? zoomedObjectState ?? rootTree
 }
 
 export const useSetClickedObject = () => {

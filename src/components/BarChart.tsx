@@ -24,7 +24,7 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
   const clickedObjectColor = useObjectColor(clickedObject)
   const clickecProps = clickedObjectColor ? { fill: clickedObjectColor } : { className: "bg-blue-primary" }
   const svgRef = useRef<SVGSVGElement>(null)
-  const { repo, databaseInfo } = useData()
+  const { databaseInfo } = useData()
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
   const data = databaseInfo.commitCountPerTimeInterval.map((e) => ({
@@ -39,7 +39,7 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
   const textWidth = 40
 
   const commitCountPerTimeIntervalForClickedObject = databaseInfo.commitCountPerTimeIntervalForClickedObject
-  const clickedObjectIsRepo = clickedObject.hash === repo.currentHead
+  const clickedObjectIsRepo = clickedObject.path === databaseInfo.fileTree.path
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
   const xScale = d3
@@ -124,7 +124,7 @@ const BarChart = ({ scale, className }: { scale: "linear" | "log"; className?: s
                   "fill-gray-500/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
                   {
                     "opacity-0": barX === 0,
-                    "opacity-20": !isInRange
+                    "opacity-40": !isInRange
                   }
                 )}
               />

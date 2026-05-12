@@ -369,6 +369,7 @@ async function analyze({
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
+  objectHash ??= objectPathMap[zoomPath]?.hash ?? objectPathMap[getRepoNameFromPath(path)].hash
   const objectPath = (objectHash ? objectHashMap[objectHash]?.path : null) ?? getRepoNameFromPath(path)
 
   const commitCountPerTimeIntervalForClickedObject =
@@ -378,7 +379,6 @@ async function analyze({
 
   const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
 
-  objectHash ??= objectPathMap[zoomPath].hash
   const objIsBlob = isBlob(await instance.db.getObjectFromHash(objectHash))
 
   const clickedObject =

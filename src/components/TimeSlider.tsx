@@ -2,7 +2,6 @@ import { useNavigation } from "react-router"
 import { Fragment, useCallback, useState, useTransition } from "react"
 import { Slider, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
-import { $inspect } from "~/shared/util"
 import { cn } from "~/styling"
 import BarChart from "~/components/BarChart"
 import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
@@ -10,8 +9,7 @@ import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import { mdiDotsVertical } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 
-import { Temporal } from "temporal-polyfill"
-import { millisToUnit, TimeUnitDurationsMs, unitToMillis, type TimeUnit } from "~/shared/utils/time"
+import { millisToUnit, unitToMillis, type TimeUnit } from "~/shared/utils/time"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 
@@ -20,7 +18,6 @@ export function Timeline({ className }: { className?: string }) {
   const { databaseInfo } = useData()
   const { timerange, selectedRange } = databaseInfo
   const startTimeMillis = timerange[0] * 1000
-  const endTimeMillis = timerange[1] * 1000
   const [rangeMin, rangeMax] = timerange
   const [
     { start: low, end: high }
@@ -38,12 +35,7 @@ export function Timeline({ className }: { className?: string }) {
 
   const selectedStartInUnit = Math.floor(millisToUnit({ startTimeMillis, millis: low * 1000, unit }))
   const selectedEndInUnit = Math.ceil(millisToUnit({ startTimeMillis, millis: high * 1000, unit }))
-
-  const dateStart = Temporal.Instant.fromEpochMilliseconds(startTimeMillis)
-  const dateEnd = Temporal.Instant.fromEpochMilliseconds(endTimeMillis)
-  const domainInUnits = Math.ceil(
-    dateStart.until(dateEnd, { largestUnit: "milliseconds" }).milliseconds / TimeUnitDurationsMs[unit]
-  )
+  const domainInUnits = databaseInfo.commitCountPerTimeInterval.length
 
   return (
     <div className="flex flex-col text-center select-none">
@@ -62,7 +54,7 @@ export function Timeline({ className }: { className?: string }) {
       <div className={cn("group grid", className)}>
         <BarChart scale={commitCountScale} className="grid-full" />
         <TimeSlider
-          key={$inspect([selectedRange].join("-"), { label: "timerange key" })}
+          key={[selectedRange].join("-")}
           startUnits={selectedStartInUnit}
           endUnits={selectedEndInUnit}
           minMs={rangeMin * 1000}
