@@ -555,10 +555,10 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     ) : null}
                     <Breadcrumb zoom />
                   </div>
+
+                  <SearchCard />
+
                   <div className="flex gap-2">
-                    <div className="relative">
-                      <SearchCard />
-                    </div>
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
                         key={data.databaseInfo.branch}
