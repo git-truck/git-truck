@@ -403,9 +403,9 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const isblob = (await this.getObjectType(path)) === "blob"
-
+    let res: ReturnType<DuckDBResultReader["getRowObjects"]> = []
     if (isblob) {
-      return this.usingPreparedStatement(
+      res = await this.usingPreparedStatement(
         `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          WHERE filePath = ?
@@ -415,53 +415,27 @@ export default class DB {
           statement.bindVarchar(1, path)
           statement.bindUInteger(2, count)
           const res = (await statement.runAndReadAll()).getRowObjects()
-          return res.map(
-            (row) =>
-              ({
-                author: {
-                  name: String(row["author"]),
-                  email: String(row["authorEmail"])
-                },
-                committerTime: row["committerTime"],
-                authorTime: row["authorTime"],
-                body: row["body"],
-                hash: row["commitHash"],
-                message: row["message"]
-              }) as CommitDTO
-          )
+          return res
         },
         "getCommits(blob)"
       )
     } else if (path) {
-      return this.usingPreparedStatement(
+      res = await this.usingPreparedStatement(
         `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
-         WHERE filePath LIKE ?
+         WHERE starts_with(filePath, ?) = true
          ORDER BY committerTime DESC, commitHash
          LIMIT ?;`,
         async (statement) => {
-          statement.bindVarchar(1, path + "/%")
+          statement.bindVarchar(1, path + "/")
           statement.bindUInteger(2, count)
           const res = (await statement.runAndReadAll()).getRowObjects()
-          return res.map(
-            (row) =>
-              ({
-                author: {
-                  name: String(row["author"]),
-                  email: String(row["authorEmail"])
-                },
-                committerTime: row["committerTime"],
-                authorTime: row["authorTime"],
-                body: row["body"],
-                hash: row["commitHash"],
-                message: row["message"]
-              }) as CommitDTO
-          )
+          return res
         },
         "getCommits(tree)"
       )
     } else {
-      return this.usingPreparedStatement(
+      res = await this.usingPreparedStatement(
         `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          ORDER BY committerTime DESC, commitHash
@@ -469,24 +443,25 @@ export default class DB {
         async (statement) => {
           statement.bindUInteger(1, count)
           const res = (await statement.runAndReadAll()).getRowObjects()
-          return res.map(
-            (row) =>
-              ({
-                author: {
-                  name: String(row["author"]),
-                  email: String(row["authorEmail"])
-                },
-                committerTime: row["committerTime"],
-                authorTime: row["authorTime"],
-                body: row["body"],
-                hash: row["commitHash"],
-                message: row["message"]
-              }) as CommitDTO
-          )
+          return res
         },
         "getCommits(root)"
       )
     }
+    return res.map(
+      (row) =>
+        ({
+          author: {
+            name: String(row["author"]),
+            email: String(row["authorEmail"])
+          },
+          committerTime: row["committerTime"],
+          authorTime: row["authorTime"],
+          body: row["body"],
+          hash: row["commitHash"],
+          message: row["message"]
+        }) as CommitDTO
+    )
   }
 
   public async getCommitHashes(path: string, count: number, authors: string[] = []) {
@@ -534,7 +509,7 @@ export default class DB {
     } else if (path) {
       const baseQuery = `SELECT distinct commitHash
         FROM fileChanges_commits_renamed_cached
-        WHERE filePath LIKE ?`
+        WHERE starts_with(filePath, ?) = true`
 
       const query =
         authors.length > 0
@@ -556,7 +531,7 @@ export default class DB {
         query,
         async (statement) => {
           let paramIndex = 1
-          statement.bindVarchar(paramIndex++, path + "/%")
+          statement.bindVarchar(paramIndex++, path + "/")
           for (const author of authors) {
             statement.bindVarchar(paramIndex++, author)
           }
@@ -644,7 +619,7 @@ export default class DB {
         "getCommitCountForPath(blob)"
       )
     } else if (path) {
-      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE filePath LIKE ?`
+      const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE starts_with(filePath, ?) = true`
 
       const query =
         authors.length > 0
@@ -662,7 +637,7 @@ export default class DB {
         query,
         async (statement) => {
           let paramIndex = 1
-          statement.bindVarchar(paramIndex++, path + "/%")
+          statement.bindVarchar(paramIndex++, path + "/")
           for (const author of authors) {
             statement.bindVarchar(paramIndex++, author)
           }
