@@ -20,7 +20,6 @@ import { dateFormatRelative, isRepositoryRoot, last, resolveParentFolder } from 
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
-import { usePath } from "~/contexts/PathContext"
 import type { HexColor } from "~/shared/model"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
@@ -37,6 +36,8 @@ import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
+import { useQueryState } from "nuqs"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 
 export function MetricsInspection() {
   // const fetcher = useFetcher<typeof loader>()
@@ -280,7 +281,7 @@ function InteractionButtons() {
   const setClickedObject = useSetClickedObject()
   const viewAction = useViewAction()
   const { state } = useNavigation()
-  const { setPath } = usePath()
+  const [, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
 
   if (!clickedObject) {
     return null
@@ -308,7 +309,7 @@ function InteractionButtons() {
         method="post"
         action={viewAction}
         onSubmit={() => {
-          if (!isBlob) setPath(resolveParentFolder(clickedObject.path))
+          if (!isBlob) setZoomPath(resolveParentFolder(clickedObject.path))
           setClickedObject(null)
         }}
       >
@@ -321,12 +322,7 @@ function InteractionButtons() {
       {isBlob ? (
         <>
           {clickedObject.name.includes(".") ? (
-            <Form
-              className="w-max"
-              method="post"
-              action={viewAction}
-              // onSubmit={() => setClickedObject(null)}
-            >
+            <Form className="w-max" method="post" action={viewAction}>
               <input type="hidden" name="hide" value={`*.${extension}`} />
               <button className="btn" disabled={state !== "idle"} title={`Hide all files with .${extension} extension`}>
                 <Icon path={mdiEyeOffOutline} />

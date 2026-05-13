@@ -222,6 +222,7 @@ export default class DB {
       LEFT JOIN hiddenFiles g ON
           (g.path LIKE '*.%' AND f.path GLOB g.path)
           OR (g.path NOT LIKE '*.%' AND f.path GLOB g.path || '*')
+          OR (g.path NOT LIKE '*.%' AND f.path GLOB '*/' || g.path || '*')
       WHERE g.path IS NULL;
 
 
@@ -999,11 +1000,12 @@ export default class DB {
       "getObjectType"
     )
   }
-  public async getObjectFromHash(objectHash: string): Promise<RawGitObject | null> {
+
+  public async getObjectFromPath(objectPath: string): Promise<RawGitObject | null> {
     return this.usingPreparedStatement(
-      `SELECT type, hash, path, name, byteSize FROM files WHERE hash = ?`,
+      `SELECT type, path, path, name, byteSize FROM files WHERE path = ?`,
       async (statement) => {
-        statement.bindVarchar(1, objectHash)
+        statement.bindVarchar(1, objectPath)
         const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<RawGitObject>
         if (results.length === 0) {
           return null
@@ -1011,7 +1013,7 @@ export default class DB {
         const { type, hash, path, name, byteSize } = results[0]
         return { type, hash, path, name, byteSize }
       },
-      "getObjectFromHash"
+      "getObjectFromPath"
     )
   }
 

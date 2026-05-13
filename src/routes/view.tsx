@@ -61,7 +61,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const viewSearchParams = loadViewSearchParams(request)
 
   let { path, zoomPath, branch, start, end } = viewSearchParams
-  const { timeUnit, objectHash } = viewSearchParams
+  const { timeUnit, objectPath } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -78,7 +78,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       path,
       branch,
       zoomPath,
-      objectHash
+      objectPath
     })
 
     const redirectUrl = new URL(request.url)
@@ -127,7 +127,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     dataPromise: analyze({
       path,
       branch: branch!,
-      objectHash: objectHash ?? undefined,
+      objectPath: objectPath ?? undefined,
       zoomPath,
       timeUnit: timeUnit ?? undefined
     }),
@@ -166,7 +166,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   if (hidePath && typeof hidePath === "string") {
     instance.prevInvokeReason = "hide"
     await instance.db.addHiddenFile(hidePath)
-    const { objectHash: _, ...params } = viewSearchParams
+    const { objectPath: _, ...params } = viewSearchParams
     throw redirect(href("/view") + viewSerializer(params))
   }
 
@@ -233,13 +233,13 @@ export const action = async ({ request }: Route.ActionArgs) => {
 async function analyze({
   path,
   branch,
-  objectHash,
+  objectPath,
   zoomPath,
   timeUnit
 }: {
   path: string
   branch: string
-  objectHash?: string
+  objectPath?: string
   zoomPath: string
   timeUnit?: TimeUnit
 }) {
@@ -291,14 +291,13 @@ async function analyze({
     prevRes && !shouldUpdate(reason, "fileTree")
       ? {
           rootTree: prevRes.fileTree,
-          objectHashMap: prevRes.objectHashMap,
           objectPathMap: prevRes.objectPathMap,
           fileCount: prevRes.fileCount
         }
       : await instance.analyzeTree({ hiddenFiles })
   log.timeEnd("fileTree")
 
-  const { rootTree, objectHashMap, objectPathMap, fileCount } = filetree
+  const { rootTree, objectPathMap, fileCount } = filetree
 
   log.time("updateCache")
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
@@ -373,8 +372,8 @@ async function analyze({
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
-  objectHash ??= objectPathMap[zoomPath]?.hash ?? objectPathMap[getRepoNameFromPath(path)].hash
-  const objectPath = (objectHash ? objectHashMap[objectHash]?.path : null) ?? getRepoNameFromPath(path)
+  objectPath ??= objectPathMap[zoomPath]?.path ?? objectPathMap[getRepoNameFromPath(path)].path
+  const objectHash = (objectPath ? objectPathMap[objectPath]?.hash : null) ?? getRepoNameFromPath(path)
 
   const commitCountPerTimeIntervalForClickedObject =
     objectHash && objectHash !== (await instance.gitService.revParse(instance.branch))
@@ -383,7 +382,7 @@ async function analyze({
 
   const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
 
-  const objIsBlob = isBlob(await instance.db.getObjectFromHash(objectHash))
+  const objIsBlob = (await instance.db.getObjectTypeFromPath(objectPath)) === "blob"
 
   const clickedObject =
     prevRes && !shouldUpdate(reason, "clickedObjectData")
@@ -417,7 +416,6 @@ async function analyze({
     contributors: authors,
     contributorGroups: authorUnions,
     fileTree: rootTree,
-    objectHashMap,
     objectPathMap,
     fileCount,
     hiddenFiles,

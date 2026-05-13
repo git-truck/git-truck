@@ -4,10 +4,10 @@ import type { Route } from "./+types/api.commits"
 import { AnalysisManager } from "~/server/AnalysisManager"
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { objectHash, path: repositoryPath, branch } = loadViewSearchParams(request)
+  const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request)
   invariant(repositoryPath, "path is required")
   invariant(branch, "branch is required")
-  invariant(objectHash, "objectHash is required")
+  invariant(objectPath, "objectPath is required")
 
   const rawCount = new URL(request.url).searchParams.get("count")
   const parsedCount = rawCount ? Number(rawCount) : Number.NaN
@@ -16,11 +16,6 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const authors = new URL(request.url).searchParams.getAll("authors")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath, branch: branch })
-
-  const obj = await instance.db.getObjectFromHash(objectHash)
-  invariant(obj, `Object ${objectHash} not found`)
-
-  const objectPath = obj?.path
 
   const getCommits = async () => {
     const commitHashes = await instance.db.getCommitHashes(objectPath, count, authors)
@@ -56,7 +51,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   }
 
   return {
-    objectHash: obj.hash,
+    objectPath: objectPath,
     currentCommitCount: count,
     totalCommitCount: await instance.db.getCommitCountForPath(objectPath, authors),
     commits: await getCommits()

@@ -130,8 +130,8 @@ export function Chart() {
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
-  const getHashFromEventTarget = (target: EventTarget | null) =>
-    target instanceof Element ? target.closest<SVGElement>("[data-hash]")?.dataset.hash : undefined
+  const getPathFromEventTarget = (target: EventTarget | null) =>
+    target instanceof Element ? target.closest<SVGElement>("[data-path]")?.dataset.path : undefined
 
   return (
     <div ref={ref} className="relative grid place-items-center">
@@ -142,13 +142,13 @@ export function Chart() {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${size.width} ${size.height}`}
         onClick={(evt) => {
-          const hash = getHashFromEventTarget(evt.target)
-          if (!hash) {
+          const path = getPathFromEventTarget(evt.target)
+          if (!path) {
             setClickedObject(null)
             return
           }
 
-          const newClickedObject = databaseInfo.objectHashMap[hash]
+          const newClickedObject = databaseInfo.objectPathMap[path]
 
           evt.stopPropagation()
 
@@ -167,12 +167,12 @@ export function Chart() {
               throw new Error("Clicked object not found in databaseInfo.objectMap")
             }
             // Else, navigate to object details
-            setClickedObject(hash ? (newClickedObject ?? null) : null)
+            setClickedObject(path ? (newClickedObject ?? null) : null)
           }, DOUBLE_CLICK_DELAY)
         }}
         onDoubleClick={(evt) => {
-          const hash = getHashFromEventTarget(evt.target)
-          if (!hash) {
+          const path = getPathFromEventTarget(evt.target)
+          if (!path) {
             setClickedObject(null)
             return
           }
@@ -180,10 +180,10 @@ export function Chart() {
 
           evt.stopPropagation()
 
-          const newClickedObject = databaseInfo.objectHashMap[hash]
+          const newClickedObject = databaseInfo.objectPathMap[path]
 
           if (!newClickedObject) {
-            throw new Error("Clicked object not found in databaseInfo.objectMap: " + hash)
+            throw new Error("Clicked object not found in databaseInfo.objectMap: " + path)
           }
 
           if (clickTimer.current) {
@@ -198,15 +198,15 @@ export function Chart() {
           }
         }}
         onMouseOver={(evt) => {
-          const hash = getHashFromEventTarget(evt.target)
-          if (!hash) {
+          const path = getPathFromEventTarget(evt.target)
+          if (!path) {
             return
           }
           evt.stopPropagation()
 
-          const newClickedObject = databaseInfo.objectHashMap[hash]
+          const newClickedObject = databaseInfo.objectPathMap[path]
 
-          if (newClickedObject && hoveredObject?.hash !== newClickedObject.hash) setHoveredObject(newClickedObject)
+          if (newClickedObject && hoveredObject?.path !== newClickedObject.path) setHoveredObject(newClickedObject)
         }}
         onMouseOut={() => {
           return setHoveredObject(null)
@@ -269,8 +269,7 @@ export function Chart() {
           return (
             <g
               key={d.data.path}
-              data-name={d.data.name}
-              data-hash={d.data.hash}
+              data-path={d.data.path}
               className={cn("cursor-pointer duration-400", {
                 "hover:opacity-80": isBlob(d.data) && !clickedObject,
                 "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
@@ -372,8 +371,7 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       {multipleColors ? <defs>{linearGradient}</defs> : null}
       <rect
         {...commonProps}
-        data-name={d.data.name}
-        data-hash={d.data.hash}
+        data-path={d.data.path}
         className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
           "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
           "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled

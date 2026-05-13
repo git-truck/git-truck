@@ -35,7 +35,7 @@ export function ContributorsInspection() {
     if (!clickedObject) {
       return
     }
-    load(href("/api/contributor-distribution") + viewSerializer({ objectHash: clickedObject?.hash, path, branch }))
+    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch }))
     return () => {
       reset()
     }

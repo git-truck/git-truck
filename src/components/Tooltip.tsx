@@ -21,7 +21,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { chartType, sizeMetric, metricType } = useOptions()
   const { databaseInfo } = useData()
-  const hoveredObject = rawHoveredObject ? databaseInfo.objectHashMap[rawHoveredObject.hash] : null
+  const hoveredObject = rawHoveredObject ? databaseInfo.objectPathMap[rawHoveredObject.path] : null
   const color = useObjectColor(rawHoveredObject)
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])

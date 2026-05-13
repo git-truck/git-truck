@@ -12,8 +12,7 @@ import type {
   RenameInterval,
   FullCommitDTO,
   RepoData,
-  GitObject,
-  Hash
+  DatabaseInfo
 } from "~/shared/model.ts"
 import { log } from "~/server/log"
 import { analyzeRenamedFile, isTree, promiseHelper } from "~/shared/util.ts"
@@ -107,7 +106,11 @@ export class Analysis {
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
   public async analyzeTree({ hiddenFiles }: { hiddenFiles: string[] }) {
-    const ig = ignore().add(hiddenFiles)
+    const hiddenFilePatterns = hiddenFiles.flatMap((path) => {
+      const repoPrefix = `${this.repositoryName}/`
+      return path.startsWith(repoPrefix) ? [path, path.slice(repoPrefix.length)] : [path]
+    })
+    const ig = ignore().add(hiddenFilePatterns)
     this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitService.lsTree(this.fileTreeAsOf)
@@ -214,18 +217,13 @@ export class Analysis {
     }
 
     this.treeCleanup(rootTree)
-    const objectHashMap: Record<Hash, GitObject> = reduceTreeIncludeTrees(
-      rootTree,
-      (acc, obj) => ({ ...acc, [obj.hash]: obj }),
-      {}
-    )
-    const objectPathMap: Record<Hash, GitObject> = reduceTreeIncludeTrees(
+    const objectPathMap: DatabaseInfo["objectPathMap"] = reduceTreeIncludeTrees(
       rootTree,
       (acc, obj) => ({ ...acc, [obj.path]: obj }),
       {}
     )
 
-    return { rootTree, objectHashMap, objectPathMap, fileCount }
+    return { rootTree, objectPathMap, fileCount }
   }
 
   private treeCleanup(tree: GitTreeObject) {

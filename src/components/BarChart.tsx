@@ -12,6 +12,7 @@ import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useGradient } from "~/hooks/svg"
+import { isContributorMetric } from "~/metrics/metrics"
 
 const barMargin = treemapPaddingInner
 
@@ -197,6 +198,8 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 }
 
 function Bar({ node }: { node: BarNode }) {
+  const { metricType } = useOptions()
+  const metricIsContributorMetric = isContributorMetric(metricType)
   const clickedObject = useClickedObject()
   const colors = useObjectColors(clickedObject)
   const { fill: clickedFill, linearGradient: clickedGradient } = useGradient(colors)
@@ -204,20 +207,23 @@ function Bar({ node }: { node: BarNode }) {
 
   // Fallback to clickedFill or class if gradient logic doesn't apply
   const hasGradient = node.gradientColors.length > 1
-  const clickStyle = hasGradient
-    ? { fill }
-    : node.gradientColors.length === 1
-      ? { fill: node.gradientColors[0] }
-      : node.clickedFill
-        ? { fill: node.clickedFill }
-        : {}
+  const clickStyle = metricIsContributorMetric
+    ? hasGradient
+      ? { fill }
+      : node.gradientColors.length === 1
+        ? { fill: node.gradientColors[0] }
+        : node.clickedFill
+          ? { fill: node.clickedFill }
+          : {}
+    : { fill: clickedFill }
   const clickClass = node.gradientColors.length > 0 ? "" : node.clickedClassName
 
   const shouldDrawClickedBar = node.hasFileActivity && !node.clickedObjectIsRepo && node.stackedSlices.length === 0
 
   return (
     <g>
-      {hasGradient && linearGradient}
+      {hasGradient ? linearGradient : null}
+      {!metricIsContributorMetric ? clickedGradient : null}
       {/* Root activity */}
       <rect
         x={node.x}

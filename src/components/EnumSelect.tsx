@@ -103,7 +103,7 @@ export function IconDropdownGroup<const G extends Record<string, string>>({
             <ListboxOption
               key={key}
               value={key}
-              className={({ focus, selected }) =>
+              className={({ focus }) =>
                 cn(
                   "flex cursor-pointer items-center justify-start gap-2 px-3 py-2 text-sm font-bold select-none",
                   "text-primary-text dark:text-primary-text-dark",
