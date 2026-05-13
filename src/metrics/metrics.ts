@@ -144,13 +144,15 @@ export interface MetricCache {
   categoriesMap: Map<string, Array<{ category: string; color: HexColor }>>
 }
 
+export const getCategoricalScheme = () => schemeTableau10
+
 function generateContributorColors(
   contributors: Person[],
   colorSeed: string | null,
   predefinedContributorColors: Record<string, HexColor>
 ): Record<string, HexColor> {
   const contributorColorMap: Record<string, HexColor> = {}
-  const colors = scaleOrdinal(schemeTableau10).range()
+  const colors = scaleOrdinal(getCategoricalScheme()).range()
 
   const sortedContributors = contributors
     .map((contributor) => contributor.name)
