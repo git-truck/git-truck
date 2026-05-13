@@ -17,7 +17,7 @@ export function TimeUnitForm() {
     <select
       className="uppercase"
       name="timeUnit"
-      defaultValue={timeUnit}
+      value={timeUnit}
       onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
     >
       {TimeUnitValues.map((unit) => (
