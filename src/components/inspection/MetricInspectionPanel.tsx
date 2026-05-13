@@ -42,7 +42,7 @@ export function MetricInspectionPanel({
   description: string
 }) {
   const [selectedSearch, setSelectedSearch] = useState("")
-  const [infoOpen, setInfoOpen] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(true)
 
   return (
     <div className={cn("mt-4 flex w-full flex-col gap-0", className)}>
