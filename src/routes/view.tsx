@@ -535,7 +535,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     title={() => "Visualization options"}
                     contentClassName="flex flex-col gap-2"
                   >
-                    <Options />
+                    <Options key={leftExpanded ? "expanded" : "collapsed"} />
                   </CollapsibleHeader>
                   <InspectPanel />
                   <CommitsInspection />
