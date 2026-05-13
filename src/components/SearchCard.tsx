@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState, useTransition, useId, createRef, useEffect } from "react"
+import { memo, useMemo, useRef, useState, useTransition, useId, createRef, useEffect, useCallback } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
@@ -12,6 +12,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useKey } from "~/hooks"
 import { useQueryState } from "nuqs"
+import { flushSync } from "react-dom"
 
 function findSearchResults(tree: GitTreeObject, searchString: string): SearchResults {
   const searchResults: Record<string, GitObject> = {}
@@ -28,6 +29,7 @@ function findSearchResults(tree: GitTreeObject, searchString: string): SearchRes
 }
 
 export const SearchCard = memo(function SearchCard() {
+  const searchRootRef = useRef<HTMLFormElement>(null)
   const searchFieldRef = useRef<HTMLInputElement>(null)
   const [zoomPath] = useQueryState("zoomPath")
   const [isTransitioning, startTransition] = useTransition()
@@ -48,6 +50,11 @@ export const SearchCard = memo(function SearchCard() {
 
   const resultRefs = Object.keys(searchResults).map(() => createRef<HTMLButtonElement>())
 
+  const closeSearch = useCallback(() => {
+    setSearchText("")
+    setSearchResults({})
+  }, [setSearchResults])
+
   useEffect(() => {
     startTransition(() => {
       if (searchText.trim() === "") {
@@ -63,6 +70,17 @@ export const SearchCard = memo(function SearchCard() {
     searchFieldRef.current?.focus()
   })
 
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !searchRootRef.current?.contains(event.target)) {
+        closeSearch()
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    return () => document.removeEventListener("pointerdown", handlePointerDown)
+  }, [closeSearch])
+
   function focusResultAtIndex(nextIndex: number) {
     resultRefs[nextIndex].current?.focus()
   }
@@ -72,11 +90,18 @@ export const SearchCard = memo(function SearchCard() {
   const helpText = `Search within ${zoomedFolderName}`
   return (
     <form
+      ref={searchRootRef}
       className="w-sidepanel not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute top-[calc(2*var(--spacing)+2px)] right-2 z-10 flex flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
       onSubmit={(event) => {
         event.preventDefault()
-        setSearchText("")
+        closeSearch()
         event.currentTarget.querySelector("input")?.blur()
+      }}
+      onBlur={(event) => {
+        if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) {
+          return
+        }
+        closeSearch()
       }}
     >
       <button className="hidden min-w-max cursor-pointer peer-placeholder-shown:hidden peer-focus:inline">
@@ -99,8 +124,7 @@ export const SearchCard = memo(function SearchCard() {
             }
             if (event.key === "Escape") {
               event.preventDefault()
-              setSearchText("")
-              setSearchResults({})
+              closeSearch()
               event.currentTarget.blur()
             }
             if (event.key === "ArrowDown") {
@@ -113,12 +137,6 @@ export const SearchCard = memo(function SearchCard() {
           onFocus={() => {
             if (clickedObject) {
               setClickedObject(null)
-            }
-          }}
-          onBlur={(event) => {
-            if (event.currentTarget.form?.[id].value.trim() === "") {
-              setSearchText("")
-              setSearchResults({})
             }
           }}
           onChange={(event) => {
@@ -170,7 +188,11 @@ export const SearchCard = memo(function SearchCard() {
                 }
               }}
               onClick={() => {
-                setClickedObject(object)
+                flushSync(() => {
+                  setClickedObject(object)
+                  setSearchResults({})
+                  setSearchText("")
+                })
               }}
             >
               {object.type === "tree" ? (
