@@ -72,7 +72,7 @@ export const SearchCard = memo(function SearchCard() {
   const helpText = `Search within ${zoomedFolderName}`
   return (
     <form
-      className="w-sidepanel not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute right-0 z-10 flex flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
+      className="w-sidepanel not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute top-[calc(2*var(--spacing)+2px)] right-2 z-10 flex flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
       onSubmit={(event) => {
         event.preventDefault()
         setSearchText("")
@@ -169,7 +169,9 @@ export const SearchCard = memo(function SearchCard() {
                   focusResultAtIndex(prevIndex)
                 }
               }}
-              onClick={() => setClickedObject(object)}
+              onClick={() => {
+                setClickedObject(object)
+              }}
             >
               {object.type === "tree" ? (
                 <Icon path={object.type === "tree" ? mdiFolder : mdiFileOutline} size={0.75} className="shrink-0" />
