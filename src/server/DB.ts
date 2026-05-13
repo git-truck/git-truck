@@ -403,51 +403,27 @@ export default class DB {
 
   public async getCommits(path: string, count: number) {
     const isblob = (await this.getObjectType(path)) === "blob"
-    let res: ReturnType<DuckDBResultReader["getRowObjects"]> = []
-    if (isblob) {
-      res = await this.usingPreparedStatement(
-        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+    const res: ReturnType<DuckDBResultReader["getRowObjects"]> = await this.usingPreparedStatement(
+      isblob
+        ? `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          WHERE filePath = ?
          ORDER BY committerTime DESC, commitHash
-         LIMIT ?;`,
-        async (statement) => {
-          statement.bindVarchar(1, path)
-          statement.bindUInteger(2, count)
-          const res = (await statement.runAndReadAll()).getRowObjects()
-          return res
-        },
-        "getCommits(blob)"
-      )
-    } else if (path) {
-      res = await this.usingPreparedStatement(
-        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+         LIMIT ?;`
+        : `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          WHERE starts_with(filePath, ?) = true
          ORDER BY committerTime DESC, commitHash
          LIMIT ?;`,
-        async (statement) => {
-          statement.bindVarchar(1, path + "/")
-          statement.bindUInteger(2, count)
-          const res = (await statement.runAndReadAll()).getRowObjects()
-          return res
-        },
-        "getCommits(tree)"
-      )
-    } else {
-      res = await this.usingPreparedStatement(
-        `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
-         FROM fileChanges_commits_renamed_cached
-         ORDER BY committerTime DESC, commitHash
-         LIMIT ?;`,
-        async (statement) => {
-          statement.bindUInteger(1, count)
-          const res = (await statement.runAndReadAll()).getRowObjects()
-          return res
-        },
-        "getCommits(root)"
-      )
-    }
+      async (statement) => {
+        statement.bindVarchar(1, isblob ? path : path + "/")
+        statement.bindUInteger(2, count)
+        const res = (await statement.runAndReadAll()).getRowObjects()
+        return res
+      },
+      "getCommits"
+    )
+
     return res.map(
       (row) =>
         ({
