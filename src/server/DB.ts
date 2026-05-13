@@ -682,7 +682,7 @@ export default class DB {
     const res = await this.usingPreparedStatement(
       `SELECT MAX(committerTime) AS lastChange
        FROM fileChanges_commits_renamed_cached
-       WHERE filePath = ? OR filePath GLOB ?
+       WHERE (filePath = ? OR filePath GLOB ?)
        AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
       ;`,
       async (statement) => {
