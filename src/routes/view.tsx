@@ -41,7 +41,7 @@ import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { $inspect, invariant, isBlob } from "~/shared/util"
+import { $inspect, dateFormatShort, invariant, isBlob } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
@@ -102,15 +102,12 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   if (!start || !end || !instance.db.selectedRange[0] || !instance.db.selectedRange[1]) {
     const [min, max] = await instance.db.getOverallTimeRange()
-    console.log({ min, max })
-    start ||= min || 0
-    end ||= max || 1_000_000_000_000
+    start ??= min ?? 0
+    end ??= max ?? 1_000_000_000_000
     instance.db.selectedRange = [start, end]
   }
 
   let shouldUpdateTimeSeries = false
-
-  $inspect(instance.db.selectedRange, { label: "selectedRange" })
 
   if (end && end !== instance.db.selectedRange[1]) {
     instance.prevInvokeReason = "timeseriesend"
@@ -286,6 +283,23 @@ async function analyze({
     log.timeEnd("rename")
   }
 
+  const hiddenFiles =
+    prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+
+  log.time("fileTree")
+  const filetree =
+    prevRes && !shouldUpdate(reason, "fileTree")
+      ? {
+          rootTree: prevRes.fileTree,
+          objectHashMap: prevRes.objectHashMap,
+          objectPathMap: prevRes.objectPathMap,
+          fileCount: prevRes.fileCount
+        }
+      : await instance.analyzeTree({ hiddenFiles })
+  log.timeEnd("fileTree")
+
+  const { rootTree, objectHashMap, objectPathMap, fileCount } = filetree
+
   log.time("updateCache")
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
   log.timeEnd("updateCache")
@@ -323,23 +337,6 @@ async function analyze({
     prevRes && !shouldUpdate(reason, "groupedContributors")
       ? prevRes.contributorGroups
       : await instance.db.getAuthorUnions()
-  const hiddenFiles =
-    prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
-
-  log.time("fileTree")
-  const filetree =
-    prevRes && !shouldUpdate(reason, "fileTree")
-      ? {
-          rootTree: prevRes.fileTree,
-          objectHashMap: prevRes.objectHashMap,
-          objectPathMap: prevRes.objectPathMap,
-          fileCount: prevRes.fileCount
-        }
-      : await instance.analyzeTree({ hiddenFiles })
-  log.timeEnd("fileTree")
-
-  const { rootTree, objectHashMap, objectPathMap, fileCount } = filetree
-
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
