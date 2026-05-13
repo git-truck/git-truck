@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState, useTransition, useId, createRef, useEffect, useCallback } from "react"
+import { useMemo, useRef, useState, useTransition, useId, createRef, useEffect, useCallback } from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
@@ -28,7 +28,7 @@ function findSearchResults(tree: GitTreeObject, searchString: string): SearchRes
   return searchResults
 }
 
-export const SearchCard = memo(function SearchCard() {
+export function SearchCard() {
   const searchRootRef = useRef<HTMLFormElement>(null)
   const searchFieldRef = useRef<HTMLInputElement>(null)
   const [zoomPath] = useQueryState("zoomPath")
@@ -214,4 +214,4 @@ export const SearchCard = memo(function SearchCard() {
       ) : null}
     </form>
   )
-})
+}

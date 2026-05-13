@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs"
-import { useFetcher, href, Await } from "react-router"
+import { useFetcher, href } from "react-router"
 import type { loader } from "~/routes/api.commits"
 import { viewSerializer } from "~/routes/viewParams"
 import { useClickedObject } from "~/state/stores/clicked-object"
@@ -9,6 +9,7 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { isBlob, isRepositoryRoot } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
+import { isContributorMetric } from "~/metrics/metrics"
 
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
@@ -20,7 +21,7 @@ export function CommitsInspection() {
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
-  const clickedHash = clickedObject.hash
+  const clickedObjectPath = clickedObject.path
   const previousPathRef = useRef<string>("")
   const commitShowCountRef = useRef(commitShowCount)
 
@@ -32,7 +33,7 @@ export function CommitsInspection() {
   // Memoize selected authors to prevent unnecessary re-renders
   const selectedAuthors = useMemo(
     () =>
-      metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
+      isContributorMetric(metricType)
         ? selectedCategories.map((sel) => sel.replace(`${metricType}:`, ""))
         : [],
     [metricType, selectedCategories]
@@ -40,37 +41,49 @@ export function CommitsInspection() {
 
   // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
-    ({ objectHash, count }: { objectHash: string; count: number }) =>
-      load(href("/api/commits") + viewSerializer({ objectHash: objectHash, path, branch }) + `&count=${count}`),
+    ({ objectPath, contributors, count }: { objectPath: string; contributors: string[]; count: number }) => {
+      let url = href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`
+      contributors.forEach((contributor) => {
+        url += `&contributors=${encodeURIComponent(contributor)}`
+      })
+      load(url)
+    },
     [branch, load, path]
   )
 
   // Reload commits when clicked object or selected authors change
   useEffect(() => {
-    if (clickedHash && clickedHash !== clickedObject?.hash) {
-      reset()
-      loadCommits({ objectHash: clickedHash, count: commitShowCount })
+    const pathToLoad = clickedObject.path
+
+    if (pathToLoad) {
+      // Check if this is a new path (using ref to avoid objectPath dependency)
+      const isNewPath = pathToLoad !== previousPathRef.current
+      if (isNewPath) {
+        previousPathRef.current = pathToLoad
+      }
+
+      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: commitShowCountRef.current })
     }
-  }, [clickedObject.hash, commitShowCount, loadCommits, clickedHash, reset])
+  }, [clickedObject.path, loadCommits, reset, selectedContributors])
 
   return (
     <CollapsibleHeader
       title={() => (
         <>
-          {clickedHash ? (
+          {clickedObjectPath ? (
             <>
-              <span className="truncate" title={clickedObject.path}>
+              <span className="truncate" title={clickedObjectPath}>
                 {"Commits: "}
                 <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
                   {objectPathIsRepo ? (
                     <>
-                      {clickedObject.path}{" "}
+                      {clickedObjectPath}{" "}
                       <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
                     </>
                   ) : objectPathIsFile ? (
-                    clickedObject.path.split("/").pop()
+                    clickedObjectPath.split("/").pop()
                   ) : (
-                    clickedObject.path.split("/").pop() + "/"
+                    clickedObjectPath.split("/").pop() + "/"
                   )}
                 </span>
               </span>
@@ -86,7 +99,7 @@ export function CommitsInspection() {
       onToggle={(open) => {
         if (open) {
           if (!data && state === "idle") {
-            loadCommits({ objectHash: clickedObject.hash, count: commitShowCount })
+            loadCommits({ objectPath: clickedObject.path, contributors: selectedContributors, count: commitShowCount })
           }
         } else {
           reset()
@@ -100,7 +113,11 @@ export function CommitsInspection() {
         isLoading={state !== "idle"}
         onShowMoreCommits={() => {
           if (!clickedObject) return
-          loadCommits({ objectHash: clickedObject.hash, count: commitShowCount + COMMIT_STEP })
+          loadCommits({
+            objectPath: clickedObject.path,
+            contributors: selectedContributors,
+            count: commitShowCount + COMMIT_STEP
+          })
         }}
       />
     </CollapsibleHeader>

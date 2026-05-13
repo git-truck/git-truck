@@ -57,6 +57,8 @@ type Metric = {
   ) => MetricFunction
 }
 
+export const isContributorMetric = (metricType: MetricType): boolean => metricType === "CONTRIBUTORS" || metricType === "TOP_CONTRIBUTOR"
+
 export type CategoricalMetric = Metric & {
   getCategories: (obj: GitObject, dbi: DatabaseInfo, options: { topContributorCutoff: number }) => string[]
 }

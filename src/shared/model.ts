@@ -185,7 +185,6 @@ export interface DatabaseInfo {
   contributors: Person[]
   contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
-  objectHashMap: Record<Hash, GitObject>
   objectPathMap: Record<Path, GitObject>
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }

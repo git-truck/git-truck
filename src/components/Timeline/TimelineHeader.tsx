@@ -28,12 +28,14 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
       </h2>
       <div className="flex gap-1">
         {clickedObject.name !== zoomPathName ? (
-          <div className="flex items-center gap-1">
-            {/* <Dot shape="square" {...props}>
-              {linearGradient}
-            </Dot> */}
+          <div className="flex items-center gap-4">
             Commit activity for
-            <span className="text-primary-text dark:text-primary-text-dark normal-case">{clickedObject.name}</span>
+            <div className="text-primary-text items-center dark:text-primary-text-dark flex gap-2 normal-case">
+              <Dot shape="square" {...props}>
+                {linearGradient}
+              </Dot>
+              {clickedObject.name}
+            </div>
           </div>
         ) : null}{" "}
       </div>
