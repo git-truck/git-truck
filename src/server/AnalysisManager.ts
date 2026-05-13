@@ -247,6 +247,7 @@ export class AnalysisManager {
     if (isFreshDB) {
       // Database is fresh, insert version and return
       await this.insertGitTruckVersion(connection)
+      await this.insertCommonIgnoredFiles(db)
     }
     return db
   }
@@ -262,5 +263,12 @@ export class AnalysisManager {
     }
 
     await connection.run(`INSERT INTO metadata (field, stringValue) VALUES ('version', '${pkg.version}');`)
+  }
+
+  private static async insertCommonIgnoredFiles(db: DB) {
+    await db.addHiddenFile("package-lock.json")
+    await db.addHiddenFile("bun.lock")
+    await db.addHiddenFile("bun.lockb")
+    await db.addHiddenFile("yarn.lock")
   }
 }
