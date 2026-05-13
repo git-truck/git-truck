@@ -16,8 +16,6 @@ import type { LayoutType } from "~/layouts/layouts"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
-  // TODO: Figure out why data is emty initially
-  // console.log(data)
   const [options, setOptions] = useState<Options>(() => {
     const savedOptions = typeof document !== "undefined" ? localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY) : null
     return {
@@ -31,18 +29,6 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
 
   const [zoomPath] = useQueryState("zoomPath")
-
-  // const filteredRootTree = useMemo(() => {
-  //   const ig = ignore()
-  //   ig.add(data.databaseInfo.hiddenFiles)
-  //   return filterTree(data.databaseInfo.fileTree, (node) => !ig.ignores(node.path))
-  // }, [data.databaseInfo.fileTree, data.databaseInfo.hiddenFiles])
-
-  // Database info representing the filtered repository root (used for building caches).
-  // const rootDatabaseInfo = useMemo(
-  //   () => ({ ...data.databaseInfo, fileTree: filteredRootTree }),
-  //   [data.databaseInfo, filteredRootTree]
-  // )
 
   const zoomedTree = useMemo(
     () => findSubTree(data.databaseInfo.fileTree, zoomPath ?? undefined),
