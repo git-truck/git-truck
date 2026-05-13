@@ -763,19 +763,19 @@ export default class DB {
       WITH file_contributors AS (
         SELECT f.filePath, f.author AS contributor
         FROM filechanges_commits_renamed_cached AS f
-        WHERE f.filePath LIKE ?
+        WHERE starts_with(f.filePath, ?) = true
         UNION
         SELECT f.filePath, ca.name AS contributor
         FROM filechanges_commits_renamed_cached AS f
         JOIN commitTrailers_unioned AS ca ON f.commitHash = ca.commitHash
-        WHERE ca.trailerType = 'coauthor' AND f.filePath LIKE ?
+        WHERE ca.trailerType = 'coauthor' AND starts_with(f.filePath, ?) = true
       )
       SELECT DISTINCT contributor
       FROM file_contributors;
     `,
         async (statement) => {
-          statement.bindVarchar(1, `${objectPath}/%`)
-          statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(1, `${objectPath}/`)
+          statement.bindVarchar(2, `${objectPath}/`)
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getUniqueContributorsForPath(tree)"
@@ -1042,9 +1042,9 @@ export default class DB {
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE filePath LIKE ?;`,
+        `SELECT SUM(insertions + deletions) AS lineChanges FROM fileChanges_commits_renamed_cached WHERE starts_with(filePath, ?) = true;`,
         async (statement) => {
-          statement.bindVarchar(1, `${objectPath}/%`)
+          statement.bindVarchar(1, objectPath + "/")
           const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<{ lineChanges: number | bigint }>
           return Number(results[0]?.lineChanges ?? 0)
         },
@@ -1088,15 +1088,16 @@ export default class DB {
       )
     } else if (objectPath) {
       res = await this.usingPreparedStatement(
-        `WITH commit_contributors AS (
+        /*sql*/ `
+          WITH commit_contributors AS (
           SELECT f.filePath, f.commitHash, f.author AS contributor, (f.insertions + f.deletions) AS lineChanges
           FROM fileChanges_commits_renamed_cached AS f
-          WHERE (f.filePath = ? OR f.filePath LIKE ?)
+          WHERE (f.filePath = ? OR starts_with(f.filePath, ?) = true)
           UNION
           SELECT f.filePath, f.commitHash, co.name AS contributor, (f.insertions + f.deletions) AS lineChanges
           FROM fileChanges_commits_renamed_cached AS f
           INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
-          WHERE (f.filePath = ? OR f.filePath LIKE ?) AND co.trailerType = 'coauthor' AND co.name <> f.author
+          WHERE (f.filePath = ? OR starts_with(f.filePath, ?) = true) AND co.trailerType = 'coauthor' AND co.name <> f.author
         )
         SELECT contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
@@ -1105,9 +1106,9 @@ export default class DB {
        `,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
-          statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(2, objectPath + "/")
           statement.bindVarchar(3, objectPath)
-          statement.bindVarchar(4, `${objectPath}/%`)
+          statement.bindVarchar(4, objectPath + "/")
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "getContributorDistributionForPath(tree)"
@@ -1157,11 +1158,11 @@ export default class DB {
         `SELECT EXISTS(
           SELECT 1
           FROM fileChanges_commits_renamed_cached
-          WHERE filePath = ? OR filePath LIKE ?
+          WHERE filePath = ? OR starts_with(filePath, ?) = true
         ) AS exists_in_range;`,
         async (statement) => {
           statement.bindVarchar(1, objectPath)
-          statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(2, objectPath + "/")
           return (await statement.runAndReadAll()).getRowObjects()
         },
         "pathExistsInSelectedRange(tree)"
