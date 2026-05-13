@@ -57,6 +57,16 @@ export const useSetClickedObject = () => {
   }
 }
 
+export const useClickedObjectIsZoomPath = () => {
+  const clickedObject = useClickedObject()
+  const data = useData()
+  const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
+
+  const zoomedObjectState = zoomPath ? data.databaseInfo.objectPathMap[zoomPath] : undefined
+
+  return clickedObject.path === zoomedObjectState?.path
+}
+
 export function useObjectColor(obj: RawGitObject | null): HexColor | null {
   const colors = useObjectColors(obj)
   const color = colors.length === 1 ? colors[0] : missingInMapColor
