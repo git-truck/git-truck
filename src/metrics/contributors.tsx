@@ -14,7 +14,7 @@ export const ContributorsMetric: CategoricalMetric = {
       title: "Contributors",
       content: PointLegend,
       description:
-        "Shows how many files a contributor has modified. Click on a contributor to isolate the files they have contributed to.",
+        "Shows how many files a contributor has modified. Select contributor(s) in the table below to isolate the files they have contributed to.",
       actions: { search: true, clear: true },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
