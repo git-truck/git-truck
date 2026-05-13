@@ -95,17 +95,19 @@ export function IconDropdownGroup<const G extends Record<string, string>>({
           <Icon path={mdiChevronDown} size="1.25rem" className="transition-transform group-data-open:rotate-180" />
         </ListboxButton>
 
-        <ListboxOptions className="border-blue-primary bg-primary-bg dark:bg-secondary-bg-dark absolute top-full z-30 max-h-60 w-full overflow-auto rounded-lg border-2 shadow-lg">
+        <ListboxOptions
+          anchor="bottom"
+          className="border-blue-primary bg-primary-bg dark:bg-secondary-bg-dark z-30 max-h-60 w-(--button-width) overflow-auto rounded-lg border-2 shadow-lg [--anchor-gap:--spacing(1)] focus:outline-none"
+        >
           {enumEntries.map(([key, label]) => (
             <ListboxOption
               key={key}
               value={key}
-              className={({ selected }) =>
+              className={({ focus, selected }) =>
                 cn(
-                  "btn btn--text flex cursor-pointer items-center justify-start gap-2 rounded-none px-3 py-2 text-sm transition-colors",
-                  selected
-                    ? "bg-secondary-bg dark:bg-primary-bg-dark text-blue-primary dark:text-blue-primary"
-                    : "text-primary-text dark:text-primary-text-dark"
+                  "flex cursor-pointer items-center justify-start gap-2 px-3 py-2 text-sm font-bold select-none",
+                  "text-primary-text dark:text-primary-text-dark",
+                  focus && "bg-blue-primary dark:bg-blue-primary text-primary-text-dark"
                 )
               }
               title={titleMap?.[key] ?? label}
