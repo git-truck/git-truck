@@ -29,9 +29,9 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
       <div className="flex gap-1">
         {clickedObject.name !== zoomPathName ? (
           <div className="flex items-center gap-1">
-            <Dot shape="square" {...props}>
+            {/* <Dot shape="square" {...props}>
               {linearGradient}
-            </Dot>
+            </Dot> */}
             Commit activity for
             <span className="text-primary-text dark:text-primary-text-dark normal-case">{clickedObject.name}</span>
           </div>
