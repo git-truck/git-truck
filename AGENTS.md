@@ -43,6 +43,11 @@ Git Truck is a tool for visualizing Git repositories. It consists of a CLI inter
 
 - **Task Execution**: Prefer using VS Code tasks (via `run_task`) for common operations like building, testing, or starting the server. Fall back to `bun` CLI commands in the terminal if no suitable task exists.
 - **Package Manager**: Use `bun` for all script execution and package management.
+- **Dependency Placement**: Keep published runtime dependencies as small as possible. The package is built as bundled artifacts: Vite bundles the React Router app/server build, and tsdown bundles the CLI. Dependencies that are only needed to build those artifacts should live in `devDependencies`, even if app or CLI source imports them at runtime before bundling.
+- **Runtime Dependency Exceptions**: Keep packages in `dependencies` only when the published `build/` output or `cli.mjs` intentionally loads them as external packages. DuckDB (`@duckdb/node-api` and its platform bindings) is intentionally external because it ships system-specific binaries and must remain a production dependency.
+- **Bundling Config**: When adding a package used by the CLI, make sure tsdown bundles it by default or add it to `tsdown.deps.alwaysBundle`. Do not add packages to `tsdown.deps.neverBundle` unless they truly must be installed by users at runtime.
+- **Dependency Verification**: After changing dependencies or bundling config, run `bun run build` and scan the published artifacts for bare package imports. Only Node built-ins and intentional externals such as `@duckdb/node-api` should appear:
+  `rg -n "^import .* from \"[^./]|^import \"[^./]" cli.mjs build/server -g '!node_modules'`
 - **Commit Messages**: Use Conventional Commits in the form `type: subject`. Keep the subject imperative, under 50 characters, with no trailing period. Prefer the most semantic type first; use `chore:` only when the change does not fit any of the categories below. Use these types in this order:
   - `feat:` - A new feature
   - `fix:` - A bug fix

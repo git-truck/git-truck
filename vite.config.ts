@@ -20,6 +20,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     }
   },
   ssr: {
+    noExternal: isSsrBuild ? true : undefined,
     external: [
       "@duckdb/node-api",
       "@duckdb/node-bindings-linux-arm64",
