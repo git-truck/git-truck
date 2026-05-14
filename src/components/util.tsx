@@ -35,7 +35,11 @@ export const LegendDot = ({
   dotColor,
   shape,
   contributorColorToChange = undefined
-}: { dotColor: string; contributorColorToChange?: string; shape?: "circle" | "square" } & HTMLAttributes<HTMLDivElement>) => {
+}: {
+  dotColor: string
+  contributorColorToChange?: string
+  shape?: "circle" | "square"
+} & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
   const submit = useViewSubmit()

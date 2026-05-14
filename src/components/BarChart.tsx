@@ -257,7 +257,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 
           return <Bar key={node.id} node={node} />
         })}
-        <path d={`M0,${BAR_HEIGHT +1} L${width},${BAR_HEIGHT+1}`} className="stroke-gray-500" strokeWidth={1} />
+        <path d={`M0,${BAR_HEIGHT + 1} L${width},${BAR_HEIGHT + 1}`} className="stroke-gray-500" strokeWidth={1} />
       </svg>
     </div>
   )
@@ -298,9 +298,12 @@ function Bar({ node }: { node: BarNode }) {
         height={node.height}
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
-        className={cn("fill-blue-primary/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
-          "opacity-40": !node.isInRange
-        })}
+        className={cn(
+          "fill-blue-primary/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
+          {
+            "opacity-40": !node.isInRange
+          }
+        )}
       />
       {/* Selection activity */}
       {shouldDrawClickedBar ? (

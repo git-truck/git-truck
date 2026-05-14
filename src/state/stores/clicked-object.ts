@@ -75,7 +75,6 @@ export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
 
   const clickedObjectInfo = data.databaseInfo.clickedObjectInfo
 
-
   if (isTree(obj)) {
     return [missingInMapColor]
   }
