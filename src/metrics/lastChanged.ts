@@ -23,7 +23,7 @@ const TIMEUNITS = {
 
 export const LastChangedMetric: SegmentedMetric = {
   name: "Last changed",
-  description: "Files are colored based on how long ago they were changed.",
+  description: "Files/folders are colored based on how long ago they were most recenly changed.",
   icon: mdiPulse,
   inspectionPanels: [
     {

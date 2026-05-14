@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LoadingIndicator } from "~/components/LoadingIndicator"
 import { ChevronButton } from "~/components/ChevronButton"
 import { IconRadioGroup } from "~/components/EnumSelect"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { SearchCard } from "~/components/SearchCard"
 import { Providers } from "~/components/Providers"
-import type { RepoData } from "~/shared/model"
+import type { HexColor, RepoData } from "~/shared/model"
 import { Tooltip } from "~/components/Tooltip"
 import { Icon } from "~/components/Icon"
 import { mdiCog, mdiHelpCircle, mdiPlus } from "@mdi/js"
@@ -13,6 +13,9 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import { getCategoricalScheme } from "~/metrics/metrics"
+import { cn } from "~/styling"
+import { isDarkColor } from "~/shared/util"
 
 // Minimal mock RepoData for context providers
 const mockRepoData: RepoData = {
@@ -380,8 +383,41 @@ export default function UI() {
               </div>
             </div>
           </div>
+          <div className="card">
+            <DarkColorTest />
+          </div>
         </div>
       </div>
     </Providers>
   )
+
+  function DarkColorTest() {
+    const [threshold, setThreshold] = useState(0.28)
+
+    return (
+      <>
+        {threshold}
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={threshold}
+          onChange={(e) => setThreshold(parseFloat(e.target.value))}
+        />
+        {(getCategoricalScheme() as Array<HexColor>).map((c) => (
+          <div
+            key={c}
+            className={cn("h-8 w-full", {
+              "text-primary-text": !isDarkColor(c, threshold),
+              "text-primary-text-dark": isDarkColor(c, threshold)
+            })}
+            style={{ backgroundColor: c }}
+          >
+            This is some text
+          </div>
+        ))}
+      </>
+    )
+  }
 }

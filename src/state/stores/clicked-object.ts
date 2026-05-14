@@ -4,23 +4,14 @@ import { missingInMapColor } from "~/const"
 import { useData, useDataNullable } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
+import { FileSizeMetric } from "~/metrics/fileSize"
+import { LastChangedMetric } from "~/metrics/lastChanged"
+import { LinesChangedMetric } from "~/metrics/linesChanged"
+import type { MetricCache } from "~/metrics/metrics"
+import { CommitsMetric } from "~/metrics/mostCommits"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import type { GitObject, HexColor, RawGitObject } from "~/shared/model"
-
-// type ClickedObjectState = object
-// {
-// clickedObject: GitObject | null
-// setClickedObject: (clickedObject: GitObject | null) => void
-// resetClickedObject: () => void
-// }
-
-// const useClickedObjectStore = create<ClickedObjectState>()((set) => ({
-//   // clickedObject: null
-//   // setClickedObject: (clickedObject: GitObject | null) => {
-//   //   return set({ clickedObject })
-//   // },
-//   // resetClickedObject: () => set({ clickedObject: null })
-// }))
+import { isTree } from "~/shared/util"
 
 export const useClickedObject = (): GitObject => {
   const data = useData()
@@ -74,10 +65,61 @@ export function useObjectColor(obj: RawGitObject | null): HexColor | null {
 }
 
 export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
+  const data = useDataNullable()
   const { metricType } = useOptions()
-  const [metricsData] = useMetrics()
-  const { databaseInfo } = useData()
-  const hoveredObject = obj ? databaseInfo.objectHashMap[obj.hash] : null
-  const colors = hoveredObject ? (metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path) ?? []) : []
-  return colors.map((c) => c.color)
+  const [metricsData, contributorColors] = useMetrics()
+
+  if (!obj || !data) {
+    return [missingInMapColor]
+  }
+
+  const clickedObjectInfo = data.databaseInfo.clickedObjectInfo
+
+
+  if (isTree(obj)) {
+    return [missingInMapColor]
+  }
+
+  const fileSizeBucketIndex = FileSizeMetric.getBucketIndex(obj, data.databaseInfo)
+  const commitCount = data.databaseInfo.clickedObjectInfo?.amountOfCommits
+
+  const colorMap = {
+    FILE_TYPE: () =>
+      metricsData
+        .get("FILE_TYPE")
+        ?.categoriesMap?.get(obj.path)
+        ?.map((c) => c.color) ?? [missingInMapColor],
+    FILE_SIZE: () => [FileSizeMetric.getBuckets(data.databaseInfo)[fileSizeBucketIndex].color ?? missingInMapColor],
+    MOST_COMMITS: () => [
+      CommitsMetric.getColorFromValue(
+        commitCount ?? 0,
+        data.databaseInfo,
+        metricsData.get("MOST_COMMITS") as MetricCache
+      )
+    ],
+    TOP_CONTRIBUTOR: () => [
+      clickedObjectInfo
+        ? clickedObjectInfo.multiTopContributors
+          ? missingInMapColor
+          : (contributorColors.get(clickedObjectInfo.topContributor[0].contributor) as HexColor)
+        : (missingInMapColor as HexColor)
+    ],
+    MOST_CONTRIBUTIONS: () => [
+      LinesChangedMetric.getColorFromObject(
+        obj,
+        data.databaseInfo,
+        metricsData.get("MOST_CONTRIBUTIONS") as MetricCache
+      )
+    ],
+    LAST_CHANGED: () => [
+      LastChangedMetric.getBuckets(data.databaseInfo)[LastChangedMetric.getBucketIndex(obj, data.databaseInfo)]
+        ?.color ?? missingInMapColor
+    ],
+    CONTRIBUTORS: () => [] as Array<HexColor>
+  } as const
+
+  return colorMap[metricType]()
+  // const hoveredObject = obj ? databaseInfo.objectPathMap[obj.path] : null
+  // const colors = hoveredObject ? (metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path) ?? []) : []
+  // return colors.map((c) => c.color)
 }

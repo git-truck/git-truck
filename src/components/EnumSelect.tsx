@@ -47,7 +47,7 @@ export function IconRadioGroup<const G extends Record<string, string>>({
           <Radio value={key} className="group" title={titleMap?.[key] ?? value}>
             <div
               className={cn(
-                "group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 hover:opacity-100! focus-visible:opacity-100!",
+                "group btn btn--text cursor-pointer gap-2 text-xs transition-all duration-200 focus-visible:opacity-100!",
                 {
                   "group-data-checked:bg-blue-primary group-data-checked:fill-primary-text-dark group-data-checked:text-primary-text-dark group-data-checked:border-blue-primary hover:fill-blue-primary hover:text-blue-primary hover:border-blue-primary h-auto flex-col place-items-center items-center rounded border border-transparent p-1":
                     large,
@@ -87,7 +87,7 @@ export function IconDropdownGroup<const G extends Record<string, string>>({
   return (
     <Listbox value={defaultValue} aria-label={ariaLabel} onChange={onChange}>
       <div className={cn("relative", className)}>
-        <ListboxButton className="btn--primary btn group relative flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm font-bold">
+        <ListboxButton className="btn btn--text text-secondary-text dark:text-secondary-text-dark group relative flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm font-bold">
           <div className="flex items-center gap-2">
             <Icon path={selectedIcon} size="1rem" />
             {selectedLabel}

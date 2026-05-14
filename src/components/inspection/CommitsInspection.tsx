@@ -9,7 +9,6 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { isBlob, isRepositoryRoot } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
-import { isContributorMetric } from "~/metrics/metrics"
 
 export function CommitsInspection() {
   const clickedObject = useClickedObject()
@@ -31,9 +30,9 @@ export function CommitsInspection() {
   }, [commitShowCount])
 
   // Memoize selected authors to prevent unnecessary re-renders
-  const selectedAuthors = useMemo(
+  const selectedContributors = useMemo(
     () =>
-      isContributorMetric(metricType)
+      metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
         ? selectedCategories.map((sel) => sel.replace(`${metricType}:`, ""))
         : [],
     [metricType, selectedCategories]

@@ -6,11 +6,12 @@ import { useQueryStates } from "nuqs"
 import { href, Link } from "react-router"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useDataNullable } from "~/contexts/DataContext"
-import { getSep } from "~/shared/util"
+import { getSep, isDarkColor } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
-import { useClickedObjectNullable, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectNullable, useObjectColor, useSetClickedObject } from "~/state/stores/clicked-object"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
+import { missingInMapColor } from "~/const"
 
 type Segment = {
   type: "browse" | "zoom" | "filler" | "clicked"
@@ -26,6 +27,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
   const clickedObject = useClickedObjectNullable()
+  const color = useObjectColor(clickedObject)
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
@@ -119,6 +121,9 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
               className="btn btn--primary truncate text-sm font-bold"
+              style={{
+                backgroundColor: missingInMapColor
+              }}
               onClick={() => setClickedObject(null)}
             >
               {content}
@@ -127,6 +132,9 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             <button
               title={title}
               className="btn btn--primary truncate text-sm font-bold"
+              style={{
+                backgroundColor: missingInMapColor
+              }}
               onClick={() => {
                 if (!data) {
                   throw Error("Attempting to access data when none is loaded")
@@ -149,7 +157,9 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       {clickedObject && clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
         <>
           <Icon path={mdiChevronDoubleRight} className="mx-1" size="1.25rem" />
-          <ClickedObjectButton />
+          <ClickedObjectButton
+            style={{ backgroundColor: color ?? undefined, color: color && isDarkColor(color).isDark ? "#fff" : "#000" }}
+          />
         </>
       ) : null}
     </div>

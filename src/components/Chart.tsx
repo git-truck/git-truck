@@ -1,7 +1,7 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
-import { type JSX, useId } from "react"
+import { type JSX } from "react"
 import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
@@ -15,7 +15,7 @@ import {
   noEntryColor,
   treemapPaddingInner,
   treemapPaddingOuter,
-  letterWidthForBlobText as letterWidthForBlobText,
+  letterWidthForBlobText,
   treemapTreeBorderRadius,
   letterHeightText,
   clipPathPadding,
@@ -50,9 +50,11 @@ export function Chart() {
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const [metricsData] = useMetrics()
-  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff } = useOptions()
+  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff,metricType, showFilesWithoutChanges, showOnlySearchMatches  } = useOptions()
   const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
+  const clickedObject = useClickedObject()
+  const setClickedObject = useSetClickedObject()
 
   const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
 
@@ -67,11 +69,6 @@ export function Chart() {
     const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
     setZoomPath(parentPath)
   }
-
-  const setClickedObject = useSetClickedObject()
-  const clickedObject = useClickedObject()
-
-  const { metricType, showFilesWithoutChanges, showOnlySearchMatches } = useOptions()
 
   useKey({ key: "Escape" }, () => {
     if (clickedObject) {
@@ -258,9 +255,11 @@ export function Chart() {
               : // or by default, if no categories are selected, everything should be considered selected
                 true
 
+          const isClickedObject = d.data.path === clickedObject.path
+
           const shouldColor = clickedObject
             ? // we are the clicked object, so should be highlighted
-              d.data.path === clickedObject.path ||
+              isClickedObject ||
               (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
             : isSelected
 
@@ -309,7 +308,6 @@ export function Chart() {
 }
 
 function Node({ d }: { d: CircleOrRectHiearchyNode }) {
-  const gradientId = useId()
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
   const selectedCategories = useSelectedCategories()
@@ -336,6 +334,9 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
         }
       : {
           // strokeWidth: "1px"
+          // // stroke: isClickedObject? (clickedObjectColor?? undefined
+
+          // ) : undefined
         }
 
     if (chartType === "BUBBLE_CHART") {
@@ -397,7 +398,7 @@ function NodeText({
   if (children === null) return null
 
   const colors = metricsData.get(metricType)?.categoriesMap.get(d.data.path) ?? []
-  const contrastResult = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0].color)
+  const isDark = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0].color)
 
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
@@ -510,8 +511,8 @@ function NodeText({
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
           "font-bold": isTree(d.data),
-          "fill-primary-text-dark": contrastResult.luminance < 0.5 && isBlob(d.data),
-          "fill-primary-text": contrastResult.luminance >= 0.5 && isBlob(d.data)
+          "fill-primary-text-dark": isDark && isBlob(d.data),
+          "fill-primary-text": !isDark && isBlob(d.data)
         })}
       >
         {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}

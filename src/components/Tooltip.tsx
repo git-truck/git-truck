@@ -44,9 +44,9 @@ export function Tooltip({ className = "" }: { className?: string }) {
         },
         isBlob(hoveredObject) && color
           ? // ? // TODO: what to do for gradients?
-            isDarkColor(color).luminance >= 0.5
-            ? "text-primary-text"
-            : "text-primary-text-dark"
+            isDarkColor(color)
+            ? "text-primary-text-dark"
+            : "text-primary-textbu"
           : "text-primary-text-dark"
       )}
       style={{
