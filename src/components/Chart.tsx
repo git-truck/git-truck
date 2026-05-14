@@ -50,7 +50,16 @@ export function Chart() {
   const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const [metricsData] = useMetrics()
-  const { chartType, sizeMetric, hierarchyType, labelsVisible, renderCutOff,metricType, showFilesWithoutChanges, showOnlySearchMatches  } = useOptions()
+  const {
+    chartType,
+    sizeMetric,
+    hierarchyType,
+    labelsVisible,
+    renderCutOff,
+    metricType,
+    showFilesWithoutChanges,
+    showOnlySearchMatches
+  } = useOptions()
   const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
   const clickedObject = useClickedObject()
@@ -288,8 +297,7 @@ export function Chart() {
           )
         })}
       </svg>
-      <div className="absolute bottom-2 left-2 flex gap-2">
-        <ZoomToSelectedObjectButton />
+      <div className="absolute top-2 left-2 flex gap-2">
         {zoomPath && zoomPath !== databaseInfo.repo ? (
           <>
             <button className="btn" onClick={() => setZoomPath(null)}>
@@ -302,6 +310,7 @@ export function Chart() {
             </button>
           </>
         ) : null}
+        <ZoomToSelectedObjectButton />
       </div>
     </div>
   )
@@ -335,7 +344,6 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       : {
           // strokeWidth: "1px"
           // // stroke: isClickedObject? (clickedObjectColor?? undefined
-
           // ) : undefined
         }
 
