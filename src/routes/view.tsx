@@ -41,7 +41,7 @@ import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { $inspect, dateFormatShort, invariant, isBlob } from "~/shared/util"
+import { $inspect, dateFormatShort, invariant } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
@@ -554,9 +554,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     <Breadcrumb zoom />
                   </div>
 
-                  <SearchCard />
-
                   <div className="flex gap-2">
+                    <SearchCard />
                     {data.repo.status === "Success" ? (
                       <RevisionSelect
                         key={data.databaseInfo.branch}

@@ -60,7 +60,7 @@ export function MetricInspectionPanel({
         <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
           {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
           {actions.clear ? <ClearSelectionButton /> : null}
-          <SettingsButton metricMenuItems={metricMenuItems} />
+          {metricMenuItems.length > 0 ? <SettingsButton metricMenuItems={metricMenuItems} /> : null}
         </div>
       </div>
       <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">

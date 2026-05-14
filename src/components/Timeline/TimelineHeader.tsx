@@ -25,20 +25,21 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
       >
         Commits per
         <TimeUnitForm />
-      </h2>
-      <div className="flex gap-1">
-        {clickedObject.name !== zoomPathName ? (
-          <div className="flex items-center gap-4">
-            Commit activity for
-            <div className="text-primary-text items-center dark:text-primary-text-dark flex gap-2 normal-case">
-              <Dot shape="square" {...props}>
-                {linearGradient}
-              </Dot>
-              {clickedObject.name}
+        <div className="flex gap-1">
+          {clickedObject.name !== zoomPathName ? (
+            <div className="flex items-center gap-4">
+              to
+              <div className="text-primary-text dark:text-primary-text-dark flex items-center gap-2 normal-case">
+                <Dot shape="square" {...props}>
+                  {linearGradient}
+                </Dot>
+                {clickedObject.name}
+              </div>
             </div>
-          </div>
-        ) : null}{" "}
-      </div>
+          ) : null}{" "}
+        </div>
+      </h2>
+      <div />
       <div className="flex items-center justify-end gap-1">
         {children}
         <TimeRangePresetButtons unit={data.databaseInfo.commitCountPerTimeIntervalUnit} />
