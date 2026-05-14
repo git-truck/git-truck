@@ -1,29 +1,18 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import type { GitBlobObject, GitObject, RepoData } from "~/shared/model"
+import type { GitObject, RepoData } from "~/shared/model"
 import { DataContext } from "~/contexts/DataContext"
 import { MetricsContext, type MetricsContextValue } from "~/contexts/MetricContext"
-import type { HierarchyType, Options, OptionsContextType } from "~/contexts/OptionsContext"
-import { getDefaultOptionsContextValue as getDefaultOptions, OptionsContext } from "~/contexts/OptionsContext"
+import { useOptions } from "~/contexts/OptionsContext"
 import { SearchContext } from "~/contexts/SearchContext"
-import type { MetricType } from "~/metrics/metrics"
 import { createMetricData } from "~/metrics/metrics"
 import { buildMetricsHierarchyCache } from "~/metrics/cache"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
-import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { findSubTree } from "~/shared/util"
 import { useQueryState } from "nuqs"
-import type { LayoutType } from "~/layouts/layouts"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
 export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
-  const [options, setOptions] = useState<Options>(() => {
-    const savedOptions = typeof document !== "undefined" ? localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY) : null
-    return {
-      ...getDefaultOptions(),
-      ...(savedOptions ? JSON.parse(savedOptions) : {}),
-      hasLoadedSavedOptions: !!savedOptions
-    }
-  })
+  const options = useOptions()
 
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
@@ -71,80 +60,6 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
     return { metricsData, hierarchyCache }
   }, [zoomPath, hierarchyCache, data, viewDatabaseInfo, options.topContributorCutoff])
 
-  const optionsValue = useMemo<OptionsContextType>(
-    () => ({
-      ...options,
-      setMetricType: (metric: MetricType) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          metricType: metric
-        })),
-      setChartType: (chartType: LayoutType) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          chartType
-        })),
-
-      setHierarchyType: (hierarchyType: HierarchyType) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          hierarchyType
-        })),
-      setCommitSearch: (commitSearch: string) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          commitSearch
-        })),
-      setSizeMetricType: (sizeMetric: SizeMetricType) => setOptions((prevOptions) => ({ ...prevOptions, sizeMetric })),
-      setHoveredBlob: (blob: GitBlobObject | null) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          hoveredBlob: blob
-        })),
-      setTransitionsEnabled: (enabled: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          transitionsEnabled: enabled
-        })),
-      setLabelsVisible: (visible: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          labelsVisible: visible
-        })),
-      setRenderCutOff: (renderCutOff: number) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          renderCutOff
-        })),
-      setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          showFilesWithoutChanges: showFilesWithoutChanges
-        })),
-      setTopContributorCutoff: (topContributorCutoff: number) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          topContributorCutoff
-        })),
-      setShowTopContributorSlider: (show: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          showTopContributorSlider: show
-        })),
-      setLinkMetricAndSizeMetric: (link: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          linkMetricAndSizeMetric: link
-        })),
-      setShowOnlySearchMatches: (showOnlySearchMatches: boolean) =>
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          showOnlySearchMatches: showOnlySearchMatches
-        }))
-    }),
-    [options]
-  )
-
   useEffect(() => {
     let canceled = false
     // Persist options to local storage
@@ -171,17 +86,15 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
       }}
     >
       <MetricsContext.Provider value={metricsContextValue}>
-        <OptionsContext.Provider value={optionsValue}>
-          <SearchContext.Provider
-            value={{
-              searchResults,
-              hasSearchResults,
-              setSearchResults
-            }}
-          >
-            {children}
-          </SearchContext.Provider>
-        </OptionsContext.Provider>
+        <SearchContext.Provider
+          value={{
+            searchResults,
+            hasSearchResults,
+            setSearchResults
+          }}
+        >
+          {children}
+        </SearchContext.Provider>
       </MetricsContext.Provider>
     </DataContext.Provider>
   )
