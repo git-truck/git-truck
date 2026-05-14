@@ -11,12 +11,19 @@ import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
-import { useHoveredObject } from "~/state/stores/hovered-object"
+import {
+  type HoveredBarTooltip,
+  getHoveredBarTooltipLines,
+  useHoveredBarTooltip,
+  useHoveredObject
+} from "~/state/stores/hovered-object"
 import { Metrics } from "~/metrics/metrics"
 import { useObjectColor } from "~/state/stores/clicked-object"
+import { LegendDot } from "~/components/util"
 
 export function Tooltip({ className = "" }: { className?: string }) {
   const rawHoveredObject = useHoveredObject()
+  const hoveredBarTooltip = useHoveredBarTooltip()
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
   const { chartType, sizeMetric, metricType } = useOptions()
@@ -28,7 +35,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const top = useMemo(() => y < window.innerHeight / 2, [y])
   const xTransform = useMemo(() => (right ? `calc(1rem + ${x}px)` : `calc(-0.5rem + ${x}px - 100%)`), [right, x])
   const yTransform = useMemo(() => (top ? `calc(1rem + ${y}px)` : `calc(-0.5rem + ${y}px - 100%)`), [top, y])
-  const visible = hoveredObject !== null
+  const visible = hoveredObject !== null || hoveredBarTooltip !== null
 
   return (
     <div
@@ -54,26 +61,65 @@ export function Tooltip({ className = "" }: { className?: string }) {
         ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
       }}
     >
-      <span className="flex w-max place-items-center gap-1">
-        {hoveredObject && isBlob(hoveredObject)
-          ? hoveredObject?.name
-          : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
-              <Fragment key={`segment-${index}${segment}`}>
-                {segment}
-                {segments.length > 1 && index < segments.length - 1 ? (
-                  <Icon path={mdiChevronRight} className="opacity-50" size={0.5} />
-                ) : null}
-              </Fragment>
-            ))}
-      </span>
-      {hoveredObject?.type === "blob" ? (
-        <div className="flex w-max flex-col gap-1">
-          <div className="flex gap-1">{hoveredObject ? <MetricContent hoveredObject={hoveredObject} /> : null}</div>
-          {metricType !== sizeMetric ? (
-            <div className="flex gap-1">
-              <SizeMetricContent sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredObject={hoveredObject} />
+      {hoveredBarTooltip ? (
+        <BarTooltipContent hoveredBarTooltip={hoveredBarTooltip} />
+      ) : (
+        <>
+          <span className="flex w-max place-items-center gap-1">
+            {hoveredObject && isBlob(hoveredObject)
+              ? hoveredObject?.name
+              : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
+                  <Fragment key={`segment-${index}${segment}`}>
+                    {segment}
+                    {segments.length > 1 && index < segments.length - 1 ? (
+                      <Icon path={mdiChevronRight} className="opacity-50" size={0.5} />
+                    ) : null}
+                  </Fragment>
+                ))}
+          </span>
+          {hoveredObject?.type === "blob" ? (
+            <div className="flex w-max flex-col gap-1">
+              <div className="flex gap-1">{hoveredObject ? <MetricContent hoveredObject={hoveredObject} /> : null}</div>
+              {metricType !== sizeMetric ? (
+                <div className="flex gap-1">
+                  <SizeMetricContent sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredObject={hoveredObject} />
+                </div>
+              ) : null}
             </div>
           ) : null}
+        </>
+      )}
+    </div>
+  )
+}
+
+function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBarTooltip }) {
+  const maxContributorsToShow = 5
+  const [label, totalCommitLine, clickedCommitLine] = getHoveredBarTooltipLines(hoveredBarTooltip)
+  const contributorsToShow = hoveredBarTooltip.contributors.slice(0, maxContributorsToShow)
+  const extraContributorCount = hoveredBarTooltip.contributors.length - maxContributorsToShow
+
+  return (
+    <div className="flex w-max flex-col gap-1">
+      <span className="font-bold">{label}</span>
+      <span className="flex items-center gap-1">
+        <Icon path={mdiSourceCommit} color="currentColor" />
+        {totalCommitLine}
+      </span>
+      {clickedCommitLine ? (
+        <span className="flex items-center gap-1">
+          <Icon path={mdiSourceCommit} color="currentColor" />
+          {clickedCommitLine}
+        </span>
+      ) : null}
+      {contributorsToShow.length > 0 ? (
+        <div className="flex flex-col gap-1">
+          {contributorsToShow.map((contributor) => (
+            <span key={contributor.name} className="flex items-center gap-1">
+              <LegendDot dotColor={contributor.color} /> {contributor.name}
+            </span>
+          ))}
+          {extraContributorCount > 0 ? `and ${extraContributorCount} more...` : null}
         </div>
       ) : null}
     </div>

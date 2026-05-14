@@ -13,6 +13,12 @@ import { useOptions } from "~/contexts/OptionsContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useGradient } from "~/hooks/svg"
 import { isContributorMetric } from "~/metrics/metrics"
+import {
+  getHoveredBarTooltipAriaLabel,
+  type HoveredBarTooltip,
+  useSetHoveredBarTooltip
+} from "~/state/stores/hovered-object"
+import type { TimeUnit } from "~/shared/utils/time"
 
 const barMargin = treemapPaddingInner
 
@@ -27,12 +33,14 @@ type BarNode = {
   id: string
   x: number
   y: number
+  hitX: number
   width: number
+  hitWidth: number
   height: number
   clickedY: number
   clickedHeight: number
   date: string
-  title: string
+  tooltip: HoveredBarTooltip
   shouldDrawLabel: boolean
   isInRange: boolean
   hasFileActivity: boolean
@@ -49,6 +57,32 @@ const TICK_HEIGHT = 10
 const TEXT_HEIGHT = 20
 const TEXT_WIDTH = 40
 
+function getWeekLabel(epochTimeSeconds: number) {
+  const date = new Date(epochTimeSeconds * 1000)
+  const thursday = new Date(date)
+  thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `Week ${weekNo < 10 ? "0" : ""}${weekNo}, ${thursday.getUTCFullYear()}`
+}
+
+function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
+  switch (unit) {
+    case "week":
+      return getWeekLabel(intervalStart)
+    case "month":
+      return new Date(intervalStart * 1000).toLocaleString("en-gb", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC"
+      })
+    case "year":
+      return new Date(intervalStart * 1000).getUTCFullYear().toString()
+    case "day":
+      return dateFormatShort(intervalStart * 1000, { weekday: "short" })
+  }
+}
+
 export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
   const { databaseInfo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
@@ -57,10 +91,12 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   })
 
   const { metricType } = useOptions()
+  const metricIsContributorMetric = isContributorMetric(metricType)
   const selectedCategories = useSelectedCategories()
   const selectedAuthors = new Set(selectedCategories.map((c) => c.slice(metricType.length + 1)))
   const [, contributorColors] = useMetrics()
   const clickedObject = useClickedObject()
+  const setHoveredBarTooltip = useSetHoveredBarTooltip()
   const clickedObjectColor = useObjectColor(clickedObject)
   const clickedProps = clickedObjectColor ? { fill: clickedObjectColor } : { className: "bg-blue-primary" }
   const svgRef = useRef<SVGSVGElement>(null)
@@ -97,6 +133,11 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const nodeIntervals = Object.fromEntries(
     data.map((d) => [d.timestamp.toString(), expandIntervalToRange(d.timestamp, unit)])
   )
+  const barTooltips = new Map<string, HoveredBarTooltip>()
+
+  function getBarIdFromEventTarget(target: EventTarget) {
+    return target instanceof SVGRectElement ? target.dataset.id : undefined
+  }
 
   return (
     <div ref={ref} className={cn("flex flex-col justify-center", className)}>
@@ -106,15 +147,24 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
         height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
         className="fill-transparent"
         onClick={(evt) => {
-          const id = evt.target instanceof SVGRectElement ? evt.target.dataset.id : undefined
+          const id = getBarIdFromEventTarget(evt.target)
           if (!id) return
           const [start, end] = nodeIntervals[id]
           updateTimeseries([start + 1, end - 1])
         }}
+        onMouseOver={(evt) => {
+          const id = getBarIdFromEventTarget(evt.target)
+          const tooltip = id ? barTooltips.get(id) : undefined
+          if (!tooltip) return
+          evt.stopPropagation()
+          setHoveredBarTooltip(tooltip)
+        }}
+        onMouseOut={() => setHoveredBarTooltip(null)}
       >
         {data.map((d, i) => {
           const shouldDrawLabel = i % textInterval === 0
-          const barX = (xScale(d.timestamp.toString()) ?? 0) + barMargin
+          const bandX = xScale(d.timestamp.toString()) ?? 0
+          const barX = bandX + barMargin
           const barHeight = BAR_HEIGHT - yScale(d.countLogged)
           const barY = yScale(d.countLogged)
           const [intervalStart, intervalEnd] = nodeIntervals[d.timestamp.toString()]
@@ -127,11 +177,10 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             : undefined
 
           const relevantData = clickedObjectIsRepo ? d : clickedObjInterval
+          const sortedContributors = Object.entries(relevantData?.contributors ?? {}).sort((a, b) => b[1] - a[1])
           const authorsToStack =
             relevantData && selectedCategories.length > 0
-              ? Object.entries(relevantData?.contributors ?? {})
-                  .filter(([author]) => selectedAuthors.has(author))
-                  .sort((a, b) => b[1] - a[1]) // highest commits first
+              ? sortedContributors.filter(([author]) => selectedAuthors.has(author))
               : []
           const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
           const displayedCount = selectedCategories.length > 0 ? selectedContributorCount : (relevantData?.count ?? 0)
@@ -140,13 +189,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           const clickedCountLogged = scale === "log" ? Math.log10(displayedCount + 1) : displayedCount
           const clickedBarHeight = BAR_HEIGHT - yScale(clickedCountLogged)
           const clickedBarY = yScale(clickedCountLogged)
-          const toTime = unit !== "day" ? ` - ${dateFormatShort(intervalEnd * 1000 - 1000, { weekday: "short" })}` : ""
-          const title = `${dateFormatShort(intervalStart * 1000, { weekday: "short" })}${toTime}\n${d.count.toLocaleString()} commit${d.count !== 1 ? "s" : ""}
-                  ${
-                    clickedObjInterval
-                      ? `\n${clickedObjInterval.count.toLocaleString()} commit${clickedObjInterval.count !== 1 ? "s" : ""} on ${clickedObject.name}`
-                      : ""
-                  }`
+          const tooltipLabel = getBarTooltipLabel(intervalStart, unit)
 
           let currentY = clickedBarY + clickedBarHeight
           const stackedSlices = authorsToStack.map(([author, authorCount]) => {
@@ -164,21 +207,36 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 
           const gradientColors =
             relevantData && selectedCategories.length === 0
-              ? Object.entries(relevantData.contributors ?? {})
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([author]) => contributorColors.get(author) ?? missingInMapColor)
+              ? sortedContributors.map(([author]) => contributorColors.get(author) ?? missingInMapColor)
               : []
+
+          const tooltipContributors = (selectedCategories.length > 0 ? authorsToStack : sortedContributors).map(
+            ([author]) => ({
+              name: author,
+              color: contributorColors.get(author) ?? missingInMapColor
+            })
+          )
+          const tooltip: HoveredBarTooltip = {
+            label: tooltipLabel,
+            totalCommitCount: d.count,
+            totalObjectName: databaseInfo.zoomPathName,
+            clickedObjectName: clickedObjectIsRepo ? null : clickedObject.name,
+            clickedCommitCount: clickedObjInterval?.count ?? null,
+            contributors: metricIsContributorMetric ? tooltipContributors : []
+          }
 
           const node: BarNode = {
             id: d.timestamp.toString(),
             x: barX,
             y: barY,
+            hitX: bandX,
             width: barWidth,
+            hitWidth: xScale.bandwidth(),
             height: barHeight,
             clickedY: clickedBarY,
             clickedHeight: clickedBarHeight,
             date: d.date,
-            title,
+            tooltip,
             shouldDrawLabel,
             isInRange,
             hasFileActivity,
@@ -189,6 +247,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             gradientColors,
             interval: [intervalStart, intervalEnd]
           }
+          barTooltips.set(node.id, node.tooltip)
 
           return <Bar key={node.id} node={node} />
         })}
@@ -278,14 +337,15 @@ function Bar({ node }: { node: BarNode }) {
       })}
       {/* Outline */}
       <rect
-        x={node.x}
+        x={node.hitX}
         y={0}
-        width={node.width}
+        width={node.hitWidth}
         height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
         className="hover:stroke-blue-primary fill-transparent stroke-transparent stroke-1"
         data-id={node.id}
+        aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
       />
       {/* Tick */}
       <path
@@ -310,7 +370,6 @@ function Bar({ node }: { node: BarNode }) {
           {node.date}
         </text>
       ) : null}
-      <title>{node.title}</title>
     </g>
   )
 }
