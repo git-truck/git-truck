@@ -27,7 +27,7 @@ function timeToSliderUnit(
   if (intervals.length === 0) return 0
 
   for (let i = 0; i < intervals.length; i++) {
-    const [start, end] = expandIntervalToRange(intervals[i].timestamp, unit)
+    const [, end] = expandIntervalToRange(intervals[i].timestamp, unit)
 
     if (handle === "end") {
       if (timestampSecs <= end) return i + 1
