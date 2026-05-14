@@ -10,7 +10,6 @@ import {
   useRouteError
 } from "react-router"
 
-import "react-datepicker/dist/react-datepicker.css"
 import "~/tailwind.css"
 import pkg from "../package.json" with { type: "json" }
 import type { Route } from "./+types/root"

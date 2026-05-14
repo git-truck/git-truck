@@ -69,16 +69,12 @@ export function Timeline({ className }: { className?: string }) {
   const { databaseInfo } = useData()
   const { timerange, selectedRange } = databaseInfo
   const [rangeMin, rangeMax] = timerange
-  const [
-    { start: low, end: high }
-    // setQs
-  ] = useQueryStates({
+  const [{ start: low, end: high }] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(rangeMin),
     end: viewSearchParamsConfig.end.withDefault(rangeMax)
   })
 
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
-  // const submit = useViewSubmit()
 
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
@@ -123,63 +119,6 @@ export function Timeline({ className }: { className?: string }) {
     </CollapsibleHeader>
   )
 }
-
-// function TimePicker({
-//   range,
-//   timerange,
-//   setsBeginning,
-//   onChange: onChange,
-//   disabled
-// }: {
-//   range: [number, number]
-//   timerange: [number, number]
-//   setsBeginning: boolean
-//   onChange(e: readonly number[]): void
-//   disabled: boolean
-// }) {
-//   return (
-//     <div className="z-30">
-//       <DatePicker
-//         inline
-//         fixedHeight
-//         renderCustomHeader={({
-//           date,
-//           decreaseMonth,
-//           increaseMonth,
-//           prevMonthButtonDisabled,
-//           nextMonthButtonDisabled
-//         }) => {
-//           return (
-//             <div className="m-2 flex justify-between">
-//               <button disabled={prevMonthButtonDisabled} onClick={decreaseMonth}>
-//                 {"<"}
-//               </button>
-//               <h2>{dateFormatCalendarHeader(date.getTime())}</h2>
-//               <button disabled={nextMonthButtonDisabled} onClick={increaseMonth}>
-//                 {">"}
-//               </button>
-//             </div>
-//           )
-//         }}
-//         disabled={disabled}
-//         selected={new Date(range[setsBeginning ? 0 : 1] * 1000)}
-//         minDate={new Date(setsBeginning ? timerange[0] * 1000 : Math.max(timerange[0] * 1000, range[0] * 1000))}
-//         maxDate={new Date(setsBeginning ? Math.min(timerange[1] * 1000, range[1] * 1000) : timerange[1] * 1000)}
-//         onChange={(x: Date | null) => {
-//           if (x) {
-//             let newRange: [number, number]
-//             if (setsBeginning) {
-//               newRange = [x.getTime() / 1000, range[1]]
-//             } else {
-//               newRange = [range[0], x.getTime() / 1000]
-//             }
-//             onChange(newRange)
-//           }
-//         }}
-//       />
-//     </div>
-//   )
-// }
 
 function TimeSlider({
   startUnits,
@@ -237,81 +176,14 @@ function TimeSlider({
       domain={[0, domainInUnits]}
       values={[startUnits, endUnits]}
       disabled={disabled}
-      // onUpdate={onUpdateSlider}
       onChange={onUpdateSlider}
     >
-      {/* <Rail>{(props) => <SliderRail {...props} />}</Rail> */}
       <Handles>
         {({ handles, getHandleProps }) => (
           <Fragment>
             {handles.map((handle) => {
-              // const handlePointsToTheLeft = i === 1 || handle.percent > 10
               return (
                 <Fragment key={handle.id}>
-                  {/* <div
-                    className={cn(
-                      "absolute bottom-0 left-(--left) w-max opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100",
-                      {
-                        "left-(--left)": i === 0,
-                        "right-[calc(100%-var(--left))] -translate-x-full": handlePointsToTheLeft
-                      }
-                    )}
-                    style={
-                      {
-                        "--left": `${handle.percent}%`
-                      } as CSSProperties
-                    }
-                  >
-                    <Popover
-                      key={handle.id}
-                      trigger={({ onClick }) => (
-                        <button
-                          className={cn(
-                            "bg-blue-primary text-primary-text-dark h-full cursor-pointer rounded-lg px-1 break-keep shadow",
-                            {
-                              "rounded-bl-none": !handlePointsToTheLeft,
-                              "rounded-br-none": handlePointsToTheLeft
-                            }
-                          )}
-                          onClick={onClick}
-                        >
-                          <time
-                            className="w-max text-xs"
-                            dateTime={dateFormatISO(
-                              unitToMillis({
-                                startTimeMillis,
-                                units: i === 0 ? units[0] : units[1],
-                                unit
-                              })
-                            )}
-                            title={`Click or drag to set the ${i === 0 ? "start" : "end"} of time range`}
-                          >
-                            {dateFormatShort(
-                              unitToMillis({
-                                startTimeMillis,
-                                units: i === 0 ? units[0] : units[1],
-                                unit
-                              })
-                            )}
-                          </time>
-                        </button>
-                      )}
-                    >
-                      <TimePicker
-                        setsBeginning={i === 0}
-                        range={units.map((units) => unitToMillis({ startTimeMillis, units, unit })) as [number, number]}
-                        timerange={timerange}
-                        onChange={(newRange) =>
-                          setStartEnd({
-                            start: newRange[0],
-                            end: newRange[1]
-                          })
-                        }
-                        disabled={disabled}
-                      />
-                    </Popover>
-                  </div> */}
-
                   <button
                     key={handle.id}
                     className={cn(
