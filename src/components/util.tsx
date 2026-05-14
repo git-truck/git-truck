@@ -33,13 +33,18 @@ export const CloseButton = ({
 export const LegendDot = ({
   className = "",
   dotColor,
+  shape,
   contributorColorToChange = undefined
-}: { dotColor: string; contributorColorToChange?: string } & HTMLAttributes<HTMLDivElement>) => {
+}: {
+  dotColor: string
+  contributorColorToChange?: string
+  shape?: "circle" | "square"
+} & HTMLAttributes<HTMLDivElement>) => {
   const [color, setColor] = useState(dotColor)
   const { databaseInfo } = useData()
   const submit = useViewSubmit()
 
-  if (!contributorColorToChange) return <Dot className={className} color={color} />
+  if (!contributorColorToChange) return <Dot className={className} color={color} shape={shape} />
 
   function updateColor(contributor: string, color: string) {
     const form = new FormData()
@@ -55,7 +60,9 @@ export const LegendDot = ({
       triggerClassName="flex gap-1 items-center"
       popoverTitle="Choose color"
       positions={["left", "bottom", "top", "right"]}
-      trigger={({ onClick }) => <Dot className={cn("cursor-pointer", className)} color={dotColor} onClick={onClick} />}
+      trigger={({ onClick }) => (
+        <Dot className={cn("cursor-pointer", className)} color={dotColor} shape={shape} onClick={onClick} />
+      )}
     >
       <HexColorPicker color={color} onChange={setColor} />
       <button className="btn" onClick={() => updateColor(contributorColorToChange, color)}>

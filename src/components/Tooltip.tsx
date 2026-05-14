@@ -13,6 +13,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import {
   type HoveredBarTooltip,
+  formatCommitCount,
   getHoveredBarTooltipLines,
   useHoveredBarTooltip,
   useHoveredObject
@@ -41,13 +42,11 @@ export function Tooltip({ className = "" }: { className?: string }) {
     <div
       ref={tooltipRef}
       className={cn(
-        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform select-none backface-hidden",
+        "secondary border-primary-bg dark:border-primary-bg-dark bg-primary-bg/50 dark:bg-primary-bg-dark/40 absolute top-0 left-0 z-50 flex w-min max-w-sm flex-wrap gap-0.5 rounded-xs border bg-none py-0.5 pr-2 pl-1 text-xs backdrop-blur will-change-transform select-none backface-hidden",
         className,
         {
           hidden: !visible,
-          "font-bold": isTree(hoveredObject),
-          "rounded-xl": chartType === "BUBBLE_CHART",
-          "rounded-xs": chartType === "TREE_MAP" || chartType === "PARTITION"
+          "font-bold": isTree(hoveredObject)
         },
         isBlob(hoveredObject) && color
           ? // ? // TODO: what to do for gradients?
@@ -82,7 +81,11 @@ export function Tooltip({ className = "" }: { className?: string }) {
               <div className="flex gap-1">{hoveredObject ? <MetricContent hoveredObject={hoveredObject} /> : null}</div>
               {metricType !== sizeMetric ? (
                 <div className="flex gap-1">
-                  <SizeMetricContent sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredObject={hoveredObject} />
+                  <SizeMetricContent
+                    sizeMetric={sizeMetric}
+                    databaseInfo={databaseInfo}
+                    hoveredObject={hoveredObject}
+                  />
                 </div>
               ) : null}
             </div>
@@ -116,7 +119,8 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
         <div className="flex flex-col gap-1">
           {contributorsToShow.map((contributor) => (
             <span key={contributor.name} className="flex items-center gap-1">
-              <LegendDot dotColor={contributor.color} /> {contributor.name}
+              <LegendDot dotColor={contributor.color} shape="square" /> {contributor.name} (
+              {formatCommitCount(contributor.commitCount)})
             </span>
           ))}
           {extraContributorCount > 0 ? `and ${extraContributorCount} more...` : null}
