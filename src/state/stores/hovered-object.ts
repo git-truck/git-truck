@@ -7,7 +7,7 @@ export type HoveredBarTooltip = {
   totalObjectName: string
   clickedObjectName: string | null
   clickedCommitCount: number | null
-  contributors: { name: string; color: string }[]
+  contributors: { name: string; color: string; commitCount: number }[]
 }
 
 export function formatCommitCount(count: number) {

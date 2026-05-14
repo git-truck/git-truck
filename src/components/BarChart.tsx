@@ -42,6 +42,7 @@ type BarNode = {
   date: string
   tooltip: HoveredBarTooltip
   shouldDrawLabel: boolean
+  shouldDrawTick: boolean
   isInRange: boolean
   hasFileActivity: boolean
   clickedObjectIsRepo: boolean
@@ -54,6 +55,7 @@ type BarNode = {
 
 const BAR_HEIGHT = 70
 const TICK_HEIGHT = 10
+const SECONDARY_TICK_HEIGHT = 7
 const TEXT_HEIGHT = 20
 const TEXT_WIDTH = 40
 
@@ -124,7 +126,8 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
     .range([BAR_HEIGHT, 0])
 
   const barWidth = Math.max(1, xScale.bandwidth() - barMargin * 2)
-  const textInterval = Math.max(1, Math.ceil(TEXT_WIDTH / xScale.step()))
+  const textInterval = Math.max(1, Math.ceil(TEXT_WIDTH / 2 / xScale.step())) * 2
+  const tickInterval = textInterval / 2
 
   function updateTimeseries(e: readonly number[]) {
     setQs((prev) => ({ ...prev, start: e[0], end: e[1] }))
@@ -163,6 +166,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
       >
         {data.map((d, i) => {
           const shouldDrawLabel = i % textInterval === 0
+          const shouldDrawTick = i % tickInterval === 0
           const bandX = xScale(d.timestamp.toString()) ?? 0
           const barX = bandX + barMargin
           const barHeight = BAR_HEIGHT - yScale(d.countLogged)
@@ -211,9 +215,10 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
               : []
 
           const tooltipContributors = (selectedCategories.length > 0 ? authorsToStack : sortedContributors).map(
-            ([author]) => ({
+            ([author, commitCount]) => ({
               name: author,
-              color: contributorColors.get(author) ?? missingInMapColor
+              color: contributorColors.get(author) ?? missingInMapColor,
+              commitCount
             })
           )
           const tooltip: HoveredBarTooltip = {
@@ -238,6 +243,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             date: d.date,
             tooltip,
             shouldDrawLabel,
+            shouldDrawTick,
             isInRange,
             hasFileActivity,
             clickedObjectIsRepo,
@@ -251,6 +257,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 
           return <Bar key={node.id} node={node} />
         })}
+        <path d={`M0,${BAR_HEIGHT +1} L${width},${BAR_HEIGHT+1}`} className="stroke-gray-500" strokeWidth={1} />
       </svg>
     </div>
   )
@@ -291,7 +298,7 @@ function Bar({ node }: { node: BarNode }) {
         height={node.height}
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
-        className={cn("fill-gray-500/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
+        className={cn("fill-blue-primary/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
           "opacity-40": !node.isInRange
         })}
       />
@@ -348,11 +355,13 @@ function Bar({ node }: { node: BarNode }) {
         aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
       />
       {/* Tick */}
-      <path
-        d={`M${node.x + node.width / 2},${BAR_HEIGHT + 1} L${node.x + node.width / 2},${BAR_HEIGHT + TICK_HEIGHT - 2}`}
-        className={node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"}
-        strokeWidth={1}
-      />
+      {node.shouldDrawTick ? (
+        <path
+          d={`M${node.x + node.width / 2},${BAR_HEIGHT + 1} L${node.x + node.width / 2},${BAR_HEIGHT + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) - 2}`}
+          className={node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"}
+          strokeWidth={1}
+        />
+      ) : null}
       {/* Tick Label */}
       {node.shouldDrawLabel ? (
         <text
