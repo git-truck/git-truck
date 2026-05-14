@@ -290,6 +290,18 @@ function Bar({ node }: { node: BarNode }) {
     <g>
       {hasGradient ? linearGradient : null}
       {!metricIsContributorMetric ? clickedGradient : null}
+      {/* Outline */}
+      <rect
+        x={node.hitX}
+        y={0}
+        width={node.hitWidth}
+        height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
+        rx={treemapBlobBorderRadius}
+        ry={treemapBlobBorderRadius}
+        className="peer cursor-pointer fill-transparent stroke-transparent stroke-1"
+        data-id={node.id}
+        aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
+      />
       {/* Root activity */}
       <rect
         x={node.x}
@@ -299,7 +311,7 @@ function Bar({ node }: { node: BarNode }) {
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
         className={cn(
-          "fill-blue-primary/30 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
+          "fill-blue-primary/30 peer-hover:fill-blue-primary pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
           {
             "opacity-40": !node.isInRange
           }
@@ -315,7 +327,7 @@ function Bar({ node }: { node: BarNode }) {
           rx={treemapBlobBorderRadius}
           ry={treemapBlobBorderRadius}
           className={cn(
-            "opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
+            "pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
             node.isInRange ? "fill-blue-primary" : "fill-blue-primary/50",
             {
               "opacity-0": node.x === 0
@@ -338,30 +350,24 @@ function Bar({ node }: { node: BarNode }) {
             height={slice.height}
             rx={isTop || isBottom ? treemapBlobBorderRadius : 0}
             ry={isTop || isBottom ? treemapBlobBorderRadius : 0}
-            className={cn("opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out", {
-              "opacity-50": !node.isInRange
-            })}
+            className={cn(
+              "pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
+              {
+                "opacity-50": !node.isInRange
+              }
+            )}
             style={{ fill: slice.fill }}
           />
         )
       })}
-      {/* Outline */}
-      <rect
-        x={node.hitX}
-        y={0}
-        width={node.hitWidth}
-        height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
-        rx={treemapBlobBorderRadius}
-        ry={treemapBlobBorderRadius}
-        className="hover:stroke-blue-primary fill-transparent stroke-transparent stroke-1"
-        data-id={node.id}
-        aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
-      />
       {/* Tick */}
       {node.shouldDrawTick ? (
         <path
           d={`M${node.x + node.width / 2},${BAR_HEIGHT + 1} L${node.x + node.width / 2},${BAR_HEIGHT + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) - 2}`}
-          className={node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"}
+          className={cn(
+            "peer-hover:stroke-blue-primary pointer-events-none",
+            node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"
+          )}
           strokeWidth={1}
         />
       ) : null}
@@ -373,7 +379,7 @@ function Bar({ node }: { node: BarNode }) {
           x={node.x + node.width / 2}
           y={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT / 2}
           className={cn(
-            "text-xs transition-[x]",
+            "peer-hover:fill-blue-primary pointer-events-none text-xs transition-[x]",
             node.isInRange
               ? "fill-primary-text dark:fill-primary-text-dark"
               : "fill-tertiary-text dark:fill-tertiary-text-dark"
