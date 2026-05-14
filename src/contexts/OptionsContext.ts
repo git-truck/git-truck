@@ -1,8 +1,9 @@
-import { createContext, useContext } from "react"
+import { create } from "zustand"
 import { Metrics, type MetricType } from "~/metrics/metrics"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { SizeMetric } from "~/metrics/sizeMetric"
 import { LayoutGroups, type LayoutType } from "~/layouts/layouts"
+import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 
 const Hierarchy = {
   NESTED: "Nested",
@@ -50,16 +51,6 @@ export type OptionsContextType = Options & {
   setShowOnlySearchMatches: (showOnlySearchMatches: boolean) => void
 }
 
-export const OptionsContext = createContext<OptionsContextType | undefined>(undefined)
-
-export function useOptions() {
-  const context = useContext(OptionsContext)
-  if (!context) {
-    throw new Error("useOptions must be used within an OptionsProvider")
-  }
-  return context
-}
-
 const defaultOptions: Options = {
   hasLoadedSavedOptions: false,
   metricType: Object.keys(Metrics)[0] as MetricType,
@@ -77,4 +68,58 @@ const defaultOptions: Options = {
   showOnlySearchMatches: false
 }
 
-export const getDefaultOptionsContextValue = (): Options => defaultOptions
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function getSavedOptions(): Partial<Options> {
+  if (typeof document === "undefined") {
+    return {}
+  }
+
+  const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
+  if (!savedOptions) {
+    return {}
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(savedOptions)
+    if (!isRecord(parsed)) {
+      return {}
+    }
+
+    return parsed as Partial<Options>
+  } catch {
+    return {}
+  }
+}
+
+function getInitialOptions(): Options {
+  const savedOptions = getSavedOptions()
+  return {
+    ...defaultOptions,
+    ...savedOptions,
+    hasLoadedSavedOptions: Object.keys(savedOptions).length > 0
+  }
+}
+
+const useOptionsStore = create<OptionsContextType>()((set) => ({
+  ...getInitialOptions(),
+  setMetricType: (metricType: MetricType) => set({ metricType }),
+  setChartType: (chartType: LayoutType) => set({ chartType }),
+  setSizeMetricType: (sizeMetric: SizeMetricType) => set({ sizeMetric }),
+  setTransitionsEnabled: (transitionsEnabled: boolean) => set({ transitionsEnabled }),
+  setLabelsVisible: (labelsVisible: boolean) => set({ labelsVisible }),
+  setHierarchyType: (hierarchyType: HierarchyType) => set({ hierarchyType }),
+  setCommitSearch: (commitSearch: string) => set({ commitSearch }),
+  setRenderCutOff: (renderCutOff: number) => set({ renderCutOff }),
+  setShowFilesWithoutChanges: (showFilesWithoutChanges: boolean) => set({ showFilesWithoutChanges }),
+  setTopContributorCutoff: (topContributorCutoff: number) => set({ topContributorCutoff }),
+  setLinkMetricAndSizeMetric: (linkMetricAndSizeMetric: boolean) => set({ linkMetricAndSizeMetric }),
+  setShowTopContributorSlider: (showTopContributorSlider: boolean) => set({ showTopContributorSlider }),
+  setShowOnlySearchMatches: (showOnlySearchMatches: boolean) => set({ showOnlySearchMatches })
+}))
+
+export const useOptions = () => useOptionsStore()
+
+export const getDefaultOptionsContextValue = (): Options => ({ ...defaultOptions })
