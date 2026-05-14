@@ -549,21 +549,21 @@ function createPartitionedHiearchy({
   renderCutOff: number
 }) {
   const hiearchy = hierarchy<GitObject>(tree)
-    .sum((d) => {
-      const blob = d as GitBlobObject
+    .sum((obj) => {
+      if (isTree(obj)) return 0
       switch (sizeMetricType) {
         case "FILE_SIZE":
-          return blob.byteSize ?? 1
+          return obj.byteSize ?? 1
         case "MOST_COMMITS":
-          return databaseInfo.commitCounts[blob.path] ?? 1
+          return databaseInfo.commitCounts[obj.path] ?? 1
         case "EQUAL_SIZE":
           return 1
         case "LAST_CHANGED":
           return (
-            (databaseInfo.lastChanged[blob.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
+            (databaseInfo.lastChanged[obj.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
           )
         case "MOST_CONTRIBUTIONS":
-          return databaseInfo.contribSumPerFile[blob.path] ?? 1
+          return databaseInfo.contribSumPerFile[obj.path] ?? 1
       }
     })
     .sort((a, b) => (b.value ?? 1) - (a.value ?? 1))
