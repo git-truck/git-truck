@@ -71,11 +71,11 @@ class CommitAmountTranslater {
   readonly translater: SpectrumTranslater
 
   constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(Math.log10(min + 1), Math.log10(max + 1), COMMITS_MIN_LIGHTNESS, COMMITS_MAX_LIGHTNESS)
+    this.translater = new SpectrumTranslater(min, max, COMMITS_MIN_LIGHTNESS, COMMITS_MAX_LIGHTNESS)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(COMMITS_HUE, COMMITS_SATURATION, this.translater.inverseTranslate(Math.log10(value + 1)))
+    return hslToHex(COMMITS_HUE, COMMITS_SATURATION, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, commitCountPerFile: Record<string, number>) {

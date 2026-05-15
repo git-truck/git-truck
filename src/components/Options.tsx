@@ -44,9 +44,7 @@ export function Options() {
 
   return (
     <div className="grid grid-flow-col grid-cols-3 grid-rows-[auto_auto] items-start gap-0">
-      {/* <div className="flex items-center justify-between gap-2"> */}
-      <h3 className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap">Layout</h3>
-      {/* <span className="bg-secondary-bg dark:bg-secondary-bg-dark h-0.75 flex-1 rounded-full" />{" "} */}
+      <label htmlFor="layout" className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap">Layout</label>
       <IconDropdownGroup
         group={LayoutGroups}
         defaultValue={chartType}
@@ -54,8 +52,6 @@ export function Options() {
         ariaLabel="Select layout"
         onChange={(chartType: LayoutType) => setChartType(chartType)}
       />
-      {/* </div> */}
-      {/* <div className="flex items-center justify-between gap-2"> */}
       <h3
         className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap"
         title="Select the metric used to size the visualization"
@@ -81,7 +77,6 @@ export function Options() {
       >
         Node Color
       </h3>
-      {/* <span className="bg-secondary-bg dark:bg-secondary-bg-dark h-0.75 flex-1 rounded-full" />{" "} */}
       <IconDropdownGroup
         titleMap={colorMetricDescriptions}
         group={

@@ -287,7 +287,7 @@ function Bar({ node }: { node: BarNode }) {
   const shouldDrawClickedBar = node.hasFileActivity && !node.clickedObjectIsRepo && node.stackedSlices.length === 0
 
   return (
-    <g className={!node.isInRange ? "opacity-50" : ""}>
+    <g className={!node.isInRange ? "opacity-30" : ""}>
       {hasGradient ? linearGradient : null}
       {!metricIsContributorMetric ? clickedGradient : null}
       {/* Outline */}
@@ -314,7 +314,7 @@ function Bar({ node }: { node: BarNode }) {
         className={cn(
           "peer-hover:stroke-black stroke-2 stroke-transparent pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
 
-          !node.clickedObjectIsRepo ? "opacity-60" : ""
+          !node.clickedObjectIsRepo ? "opacity-40" : ""
         )}
       />
       {/* Selection activity */}

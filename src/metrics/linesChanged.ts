@@ -53,7 +53,7 @@ export const LinesChangedMetric: GradientedMetric = {
     }
   },
   // GradientLegend specific function
-  getColorFromValue(value, dbi, cache) {
+  getColorFromValue(value, _dbi, cache) {
     const legend = cache.legend as GradLegendData
     if (!Number.isFinite(value) || value <= 0) return noEntryColor
     const cappedValue = Math.max(legend.minValue, Math.min(value, legend.maxValue))
@@ -80,11 +80,11 @@ class ContribAmountTranslater {
   readonly translater: SpectrumTranslater
 
   constructor(min: number, max: number) {
-    this.translater = new SpectrumTranslater(Math.log10(min + 1), Math.log10(max+ 1), LINES_CHANGED_MIN_LIGHTNESS, LINES_CHANGED_MAX_LIGHTNESS)
+    this.translater = new SpectrumTranslater(min, max, LINES_CHANGED_MIN_LIGHTNESS, LINES_CHANGED_MAX_LIGHTNESS)
   }
 
   getColor(value: number): `#${string}` {
-    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, this.translater.inverseTranslate(Math.log10(value+ 1)))
+    return hslToHex(LINES_CHANGED_HUE, LINES_CHANGED_SATURATION, this.translater.inverseTranslate(value))
   }
 
   setColor(blob: GitBlobObject, cache: MetricCache, contribCountPerFile: Record<string, number>) {

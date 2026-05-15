@@ -195,8 +195,8 @@ export function MetricsInspection() {
       </div>
       {inspectionPanels.map((Panel, i) => (
         <MetricInspectionPanel
-        className=""
           key={i}
+          className=""
           actions={Panel.actions}
           metricMenuItems={toPanelMenuItems(Panel.menuItems)}
           title={Panel.title ?? "default"}
@@ -262,7 +262,7 @@ export function InteractionButtons() {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap">
       <Form method="post" action={viewAction}>
         <input type="hidden" name="open" value={clickedObject.path} />
         <button

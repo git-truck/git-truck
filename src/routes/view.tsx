@@ -1,5 +1,5 @@
 import { viewSearchParamsConfig, loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
-import { mdiMenu, mdiMenuOpen, mdiPipe } from "@mdi/js"
+import { mdiMenu, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Await, redirect, href, useNavigate, useFetcher, Link, useNavigation } from "react-router"
 import clsx from "clsx"
@@ -35,7 +35,6 @@ import { ClientOnly } from "~/components/util"
 import { FullscreenButton } from "~/components/buttons/FullscreenButton"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
@@ -46,9 +45,9 @@ import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
-import { ZoomButtons } from "~/components/buttons/ZoomButtons"
 import { useMediaQuery } from "~/hooks"
 import { InteractionButtons, MetricsInspection } from "~/components/inspection/MetricsInspection"
+import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -512,7 +511,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
+                  `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-3 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
                 {
                   [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
                     leftExpanded && matchesLarge
@@ -544,8 +543,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <div />
                 )}
               </header>
-              <nav className="grid grid-cols-[max-content_1fr_max-content] items-center justify-between gap-2 [grid-area:rheader]">
-                <div className="flex items-center">
+              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader]">
+                <div className="flex items-center py-2">
                   {matchesLarge && !leftExpanded ? (
                     <>
                       <button
@@ -563,11 +562,16 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       />
                     </>
                   ) : null}
-
                   <Breadcrumb zoom />
                 </div>
 
-                <div className="flex justify-end">
+                {/* <CompactLoadingIndicator
+                  className={cn("transition-opacity", {
+                    "opacity-0": isLoading
+                  })}
+                /> */}
+
+                <div className="flex justify-end py-2">
                   <SearchCard />
                   <RefreshButton />
                   <HideFilesButton />
@@ -579,37 +583,44 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 lg:transition-transform",
-                    leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
+                    "grid grid-rows-[auto_1fr] flex-col gap-4 lg:transition-transform",
+                    leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
                   <div className="flex flex-col gap-2 px-2">
                     <h2 className="card__title">Visualization options</h2>
                     <Options key={leftExpanded ? "expanded" : "collapsed"} />
                   </div>
-                  <div className="card flex flex-col gap-1 px-2">
-                    <h2 className="card__title flex items-center gap-1">
-                      Inspecting <InspectPanel />
-                    </h2>
-                    <InteractionButtons />
-                    {/* <div className="card rounded-xl">
-                      <h3 className="card__title">Actions</h3>
-                    </div> */}
+                  <div className="hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto">
+                    <CollapsibleHeader
+                      title={() => (
+                        <>
+                          Actions <InspectPanel />
+                        </>
+                      )}
+                      className="card flex flex-col gap-1 px-2"
+                    >
+                      <InteractionButtons />
+                      {/* <div className="card rounded-xl">
+                        <h3 className="card__title">Actions</h3>
+                      </div> */}
+                    </CollapsibleHeader>
+                    <CollapsibleHeader
+                      className="card"
+                      title={() => (
+                        <>
+                          Metrics
+                          <InspectPanel />
+                        </>
+                      )}
+                    >
+                      <MetricsInspection />
+                    </CollapsibleHeader>
+                    <CommitsInspection className="card" />
                   </div>
-                  <CollapsibleHeader
-                    className="card"
-                    title={() => (
-                      <>
-                        Metrics for
-                        <InspectPanel />
-                      </>
-                    )}
-                  >
-                    <MetricsInspection />
-                  </CollapsibleHeader>
-                  <CommitsInspection className="card" />
                 </aside>
               </Activity>
+
               <div
                 className={cn(
                   "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] lg:transition-transform"
@@ -618,7 +629,6 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 <ClientOnly>
                   {() => (
                     <>
-                      {isLoading ? <LoadingIndicator className="pointer-events-none absolute inset-0" /> : null}
                       <Chart />
                       {createPortal(<Tooltip />, document.body)}
                     </>

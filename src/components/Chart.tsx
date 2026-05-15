@@ -25,7 +25,7 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import type { LayoutType } from "~/layouts/layouts"
 import { useOptions } from "~/contexts/OptionsContext"
-import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, trimFilenameFromPath, isRepositoryRoot } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -37,6 +37,7 @@ import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-ob
 import { filterTree, flattenTree } from "~/shared/utils/tree"
 import { useGradient } from "~/hooks/svg"
 import { LastChangedMetric } from "~/metrics/lastChanged"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -63,7 +64,7 @@ export function Chart() {
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObject()
 
-  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
 
   const setZoomPath = (value: string | null) => {
     return setZoomPathRaw(value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null)
@@ -131,6 +132,10 @@ export function Chart() {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
+
+
+  const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
+
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
@@ -146,7 +151,10 @@ export function Chart() {
       <div ref={ref} className="relative">
         <svg
           className={clsx(
-            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100"
+            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
+            {
+              "cursor-zoom-out": !zoomPathIsRepo
+            }
           )}
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${size.width} ${size.height}`}
