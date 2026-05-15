@@ -1,7 +1,7 @@
 import { viewSearchParamsConfig, loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
-import { mdiMenu } from "@mdi/js"
+import { mdiMenu, mdiMenuOpen, mdiPipe } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
+import { Await, redirect, href, useNavigate, useFetcher, Link, useNavigation } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
@@ -46,6 +46,9 @@ import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
+import { ZoomButtons } from "~/components/buttons/ZoomButtons"
+import { useMediaQuery } from "~/hooks"
+import { InteractionButtons, MetricsInspection } from "~/components/inspection/MetricsInspection"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -458,8 +461,10 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
   const navigate = useNavigate()
 
+  const navigation = useNavigation()
   const fetcher = useFetcher<typeof loader>()
   const isAborting = fetcher.state !== "idle"
+  const isLoading = navigation.state === "loading"
 
   const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
   const [params] = useQueryStates(viewSearchParamsConfig)
@@ -474,6 +479,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
       navigate(browseParent)
     })
   }, [isAborting, params.branch, params.path, fetcher, navigate, browseParent])
+
+  const matchesLarge = useMediaQuery("(min-width: var(--breakpoint-large))")
 
   return (
     <Suspense
@@ -505,97 +512,113 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"] lg:h-screen lg:grid-cols-[0_1fr] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main"]`,
+                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
                 {
-                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr]": leftExpanded
+                  [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
+                    leftExpanded && matchesLarge
                 }
               )}
             >
-              <Activity mode={leftExpanded ? "visible" : "hidden"}>
+              <header
+                className={cn(
+                  "bg-secondary-bg dark:bg-secondary-bg-dark flex grid-cols-3 items-center justify-between gap-2 pr-2 [grid-area:lheader]",
+                  {
+                    hidden: !leftExpanded
+                  }
+                )}
+              >
+                <GitTruckInfo
+                  installedVersion={versionInfo.installedVersion}
+                  latestVersion={versionInfo.latestVersion}
+                />
+
+                {matchesLarge && leftExpanded ? (
+                  <button
+                    title={leftExpanded ? "Hide left panel" : "Show left panel"}
+                    className="btn btn--text aspect-square"
+                    onClick={toggleLeft}
+                  >
+                    <Icon path={leftExpanded ? mdiMenuOpen : mdiMenu} size={1} />
+                  </button>
+                ) : (
+                  <div />
+                )}
+              </header>
+              <nav className="grid grid-cols-[max-content_1fr_max-content] items-center justify-between gap-2 [grid-area:rheader]">
+                <div className="flex items-center">
+                  {matchesLarge && !leftExpanded ? (
+                    <>
+                      <button
+                        title={leftExpanded ? "Hide left panel" : "Show left panel"}
+                        className="btn btn--text aspect-square"
+                        onClick={toggleLeft}
+                      >
+                        <Icon path={leftExpanded ? mdiMenuOpen : mdiMenu} size={1} />
+                      </button>
+                      <Icon
+                        aria-hidden
+                        path="M11,2 H13 V22 H11 Z"
+                        size={1}
+                        className="fill-primary-text dark:fill-primary-text-dark mx-0 align-middle opacity-20"
+                      />
+                    </>
+                  ) : null}
+
+                  <Breadcrumb zoom />
+                </div>
+
+                <div className="flex justify-end">
+                  <SearchCard />
+                  <RefreshButton />
+                  <HideFilesButton />
+                  <GroupAuthorsButton compact />
+                  <SettingsButton />
+                  <FullscreenButton />
+                </div>
+              </nav>
+              <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "*:not-first:mx-2 *:not-first:my-6 lg:transition-transform",
+                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 lg:transition-transform",
                     leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
-                  <div className="bg-primary-bg dark:bg-primary-bg-dark sticky top-0 z-10 flex justify-between p-2">
-                    <GitTruckInfo
-                      className=""
-                      installedVersion={versionInfo.installedVersion}
-                      latestVersion={versionInfo.latestVersion}
-                    />
-                    <button className="btn" title="Hide left panel" onClick={toggleLeft}>
-                      <Icon path={mdiMenu} size="1.5em" />
-                    </button>
-                  </div>
-                  <CollapsibleHeader
-                    className="card"
-                    title={() => "Visualization options"}
-                    contentClassName="flex flex-col gap-2"
-                  >
+                  <div className="flex flex-col gap-2 px-2">
+                    <h2 className="card__title">Visualization options</h2>
                     <Options key={leftExpanded ? "expanded" : "collapsed"} />
+                  </div>
+                  <div className="bg-primary-text dark:bg-primary-text-dark w-full" />
+                  <div className="px-2 flex flex-col gap-1">
+                    <h2 className="card__title gap- border-t-border flex items-center border-t pt-4">
+                      Inspecting <InspectPanel className="w-max text-sm" />
+                    </h2>
+                    <InteractionButtons />
+                    {/* <div className="card rounded-xl">
+                      <h3 className="card__title">Actions</h3>
+                    </div> */}
+                  </div>
+                  <CollapsibleHeader className="card" title={() => "Metrics"}>
+                    <MetricsInspection />
                   </CollapsibleHeader>
-                  <InspectPanel />
-                  <CommitsInspection />
+                  <CommitsInspection className="card" />
                 </aside>
               </Activity>
-              <main
+              <div
                 className={cn(
-                  "relative grid h-full min-h-screen min-w-25 grid-rows-[auto_1fr_auto] gap-2 p-2 [grid-area:main] lg:transition-transform"
+                  "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] lg:transition-transform"
                 )}
               >
-                <header className="grid grid-flow-col items-center justify-between gap-2">
-                  <div className="flex gap-2">
-                    {!leftExpanded ? (
-                      <button title="Show left panel" className="btn btn--text aspect-square" onClick={toggleLeft}>
-                        <Icon path={mdiMenu} size={1} />
-                      </button>
-                    ) : null}
-                    <Breadcrumb zoom />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <SearchCard />
-                    {data.repo.status === "Success" ? (
-                      <RevisionSelect
-                        key={data.databaseInfo.branch}
-                        className="max-w-32"
-                        title="Select branch"
-                        defaultValue={data.databaseInfo.branch}
-                        headGroups={data.repo.refs}
-                        analyzedBranches={data.databaseInfo.analyzedRepos.filter(
-                          (rep) => rep.repositoryPath === data.databaseInfo.repo
-                        )}
-                        onChange={(e) =>
-                          navigate(
-                            href("/view") + viewSerializer({ path: data.repo.repositoryPath, branch: e.target.value })
-                          )
-                        }
-                      />
-                    ) : (
-                      <div />
-                    )}
-                    <RefreshButton />
-                    <HideFilesButton />
-                    <GroupAuthorsButton compact />
-                    <SettingsButton />
-                    <FullscreenButton />
-                  </div>
-                </header>
-
-                <div className="relative grid">
-                  <ClientOnly>
-                    {() => (
-                      <>
-                        {/* {isLoading ? <LoadingIndicator className="pointer-events-none absolute inset-0" /> : null} */}
-                        <Chart />
-                        {createPortal(<Tooltip />, document.body)}
-                      </>
-                    )}
-                  </ClientOnly>
-                </div>
-                <Timeline />
-              </main>
+                <ClientOnly>
+                  {() => (
+                    <>
+                      {isLoading ? <LoadingIndicator className="pointer-events-none absolute inset-0" /> : null}
+                      <Chart />
+                      {createPortal(<Tooltip />, document.body)}
+                    </>
+                  )}
+                </ClientOnly>
+              </div>
+              <Timeline className="[grid-area:barchart]" />
             </div>
           </Providers>
         )}

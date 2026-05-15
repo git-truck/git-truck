@@ -105,3 +105,16 @@ export function useViewSubmit() {
     submit(target, { ...options, action: href("/view") + location.search })
   }
 }
+
+export const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(true)
+
+  useEffect(() => {
+    const mediaQueryList = window.matchMedia(query)
+    const listener = (event: MediaQueryListEvent) => setMatches(event.matches)
+    mediaQueryList.addEventListener("change", listener)
+    return () => mediaQueryList.removeEventListener("change", listener)
+  }, [query])
+
+  return matches
+}

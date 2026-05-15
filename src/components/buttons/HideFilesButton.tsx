@@ -8,7 +8,7 @@ export function HideFilesButton() {
 
   return (
     <>
-      <button className="btn btn--icon" title="Hidden files" aria-label="Hidden files" onClick={() => setOpen(true)}>
+      <button className="btn btn--icon btn--text" title="Hidden files" aria-label="Hidden files" onClick={() => setOpen(true)}>
         <Icon path={mdiEyeOff} />
       </button>
       <HideFilesModal open={open} onClose={() => setOpen(false)} />

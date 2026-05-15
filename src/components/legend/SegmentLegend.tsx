@@ -1,6 +1,5 @@
 import type { GitBlobObject } from "~/shared/model"
 import { useClickedObject } from "~/state/stores/clicked-object"
-import { LegendBarIndicator } from "~/components/util"
 import { isBlob } from "~/shared/util"
 import { useOptions } from "~/contexts/OptionsContext"
 import { cn } from "~/styling"
@@ -25,9 +24,9 @@ export function SegmentLegend() {
   const width = 100 / steps
 
   const clickedObject = useClickedObject()
-  const clickedArrowOffset = isBlob(clickedObject) ? width / 2 + width * offsetStepCalc(clickedObject) : null
-  const hoveredArrowOffset = isBlob(hoveredObject) ? width / 2 + width * offsetStepCalc(hoveredObject) : null
 
+  const hoveredSegmentIndex = isBlob(hoveredObject) ? offsetStepCalc(hoveredObject) : null
+  const clickedSegmentIndex = isBlob(clickedObject) ? offsetStepCalc(clickedObject) : null
   return (
     <>
       <div className="relative">
@@ -36,7 +35,11 @@ export function SegmentLegend() {
             return steps >= 4 ? (
               <MetricSegment
                 key={i}
-                className={i === 0 ? "rounded-l-sm" : i === steps - 1 ? "rounded-r-sm" : ""}
+                className={cn("transition-opacity", {
+                  "rounded-l-sm": i === 0,
+                  "rounded-r-sm": i === steps - 1,
+                  "opacity-30": (hoveredSegmentIndex !== null && i !== hoveredSegmentIndex) || (clickedSegmentIndex !== null && i !== clickedSegmentIndex)
+                })}
                 width={width}
                 color={colorGenerator(i)}
                 text={textGenerator(i)}
@@ -46,8 +49,6 @@ export function SegmentLegend() {
               <TopMetricSegment key={i} width={width} color={colorGenerator(i)} text={textGenerator(i)} />
             )
           })}
-          <LegendBarIndicator offset={hoveredArrowOffset ?? 0} visible={hoveredArrowOffset !== null} />
-          <LegendBarIndicator offset={clickedArrowOffset ?? 0} visible={clickedArrowOffset !== null} />
         </div>
       </div>
     </>

@@ -36,6 +36,7 @@ import { GroupContributorsModal } from "~/components/modals/GroupContributorsMod
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import type { HexColor } from "~/shared/model"
+import { ZoomButtons } from "~/components/buttons/ZoomButtons"
 
 export function MetricsInspection() {
   const submit = useSubmit()
@@ -174,7 +175,6 @@ export function MetricsInspection() {
   return (
     <>
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
-      <InteractionButtons />
       <div className="grid grid-cols-2 gap-2">
         {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
           ([metric, { icon, data, description }]) => (
@@ -195,6 +195,7 @@ export function MetricsInspection() {
       </div>
       {inspectionPanels.map((Panel, i) => (
         <MetricInspectionPanel
+        className=""
           key={i}
           actions={Panel.actions}
           metricMenuItems={toPanelMenuItems(Panel.menuItems)}
@@ -225,7 +226,7 @@ function MetricButton({
     <button
       type="button"
       className={cn(
-        "flex h-full w-full cursor-pointer flex-row items-center justify-between gap-5 rounded bg-[hsl(from_var(--color,var(--color-tertiary-bg))_h_s_l/var(--brightness))] px-2 py-1 transition-colors [--brightness:0.7] hover:[--brightness:1] dark:bg-[hsl(from_var(--color,var(--color-tertiary-bg-dark))_h_s_l/var(--brightness))]",
+        "border-border flex h-full w-full cursor-pointer flex-row items-center justify-between gap-5 rounded border bg-[hsl(from_var(--color,var(--color-secondary-bg))_h_s_l/var(--brightness))] px-2 py-1 shadow-sm transition-colors [--brightness:1] hover:[--brightness:0.6] dark:bg-[hsl(from_var(--color,var(--color-secondary-bg-dark))_h_s_l/var(--brightness))]",
         {
           "ring-primary ring-1": isCurrentMetric
         },
@@ -245,7 +246,7 @@ function MetricButton({
   )
 }
 
-function InteractionButtons() {
+export function InteractionButtons() {
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObject()
   const viewAction = useViewAction()
@@ -261,16 +262,20 @@ function InteractionButtons() {
   const extension = last(clickedObject.name.split("."))
 
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2">
       <Form method="post" action={viewAction}>
         <input type="hidden" name="open" value={clickedObject.path} />
         <button
           className="btn btn--text"
           disabled={state !== "idle"}
-          title={clickedObject.type === "blob" ? "Open file in default app" : "Browse folder in system explorer"}
+          title={
+            clickedObject.type === "blob"
+              ? `Open ${clickedObject.name} in default app`
+              : `Browse ${clickedObject.name} in system explorer`
+          }
         >
           <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
-          {clickedObject.type === "blob" ? "Open file" : "Browse"}
+          {clickedObject.type === "blob" ? "Open" : "Browse"}
         </button>
       </Form>
       <Form
@@ -283,10 +288,16 @@ function InteractionButtons() {
         }}
       >
         <input type="hidden" name="hide" value={clickedObject.path} />
-        <button className="btn btn--text" disabled={state !== "idle" || isRoot} title="Hide this file">
-          <Icon path={mdiEyeOffOutline} />
-          Hide
-        </button>
+        {!isRoot ? (
+          <button
+            className="btn btn--text"
+            disabled={state !== "idle"}
+            title={`Hide ${clickedObject.name} from visualization`}
+          >
+            <Icon path={mdiEyeOffOutline} />
+            Hide
+          </button>
+        ) : null}
       </Form>
       {isBlob ? (
         <>
@@ -305,6 +316,7 @@ function InteractionButtons() {
           ) : null}
         </>
       ) : null}
+      <ZoomButtons />
     </div>
   )
 }

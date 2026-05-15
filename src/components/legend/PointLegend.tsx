@@ -109,20 +109,18 @@ export function PointLegend() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div
-        className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2", {
-          hidden: !feature_flags.show_legend_highlight
-        })}
-      >
-        {items
-          .filter(([label]) => isCategorySelected(label))
-          .map(([label, info]) => (
-            <div key={label} title={label} className="flex items-center truncate text-sm">
-              <LegendDot dotColor={info.color} />
-              {label}
-            </div>
-          ))}
-      </div>
+      {feature_flags.show_legend_highlight ? (
+        <div className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2")}>
+          {items
+            .filter(([label]) => isCategorySelected(label))
+            .map(([label, info]) => (
+              <div key={label} title={label} className="flex items-center truncate text-sm">
+                <LegendDot dotColor={info.color} />
+                {label}
+              </div>
+            ))}
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2">
         {/* DISTBAR still uses summed weight of items, as it cannot distribute width when weight > 100% */}
         <PointLegendDistBar items={items} totalWeight={summedWeight} />

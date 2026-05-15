@@ -33,12 +33,12 @@ export function dateTimeFormatShort(epochTimeMillis: number) {
   })
 }
 
-export function dateFormatRelative(epochTime: number) {
+export function dateFormatRelative(epochTime: number): string | null {
   const now = Date.now()
   const hourMillis = 60 * 60 * 1000
   const dayMillis = 24 * hourMillis
   const difference = now - epochTime * 1000
-  if (difference < 0) return "Unknown time"
+  if (difference < 0) return null
   if (difference > dayMillis) {
     const days = Math.floor(difference / dayMillis)
     return `${days} day${days > 1 ? "s" : ""}`

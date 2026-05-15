@@ -14,6 +14,9 @@ import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/server/log"
 import type { TimeUnit } from "~/shared/utils/time"
+import { Temporal } from "temporal-polyfill"
+
+const nowInSeconds = () => Temporal.Now.instant().epochMilliseconds / 1000
 
 export default class DB {
   private instance: DuckDBInstance
@@ -22,14 +25,14 @@ export default class DB {
 
   public async init(): Promise<DB> {
     await this.initTables()
-    await this.initViews(0, 1_000_000_000_000)
+    await this.initViews(0, nowInSeconds())
     return this
   }
 
   constructor({ instance, connection }: { instance: DuckDBInstance; connection: DuckDBConnection }) {
     this.instance = instance
     this.connection = connection
-    this.selectedRange = [0, 1_000_000_000_000] as [number, number]
+    this.selectedRange = [0, nowInSeconds()] as [number, number]
   }
 
   public async close() {
@@ -258,7 +261,7 @@ export default class DB {
 
   public async updateTimeInterval(timeSeriesStart: number, timeSeriesEnd: number) {
     const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
-    const end = Number.isNaN(timeSeriesEnd) ? 1_000_000_000_000 : timeSeriesEnd
+    const end = Number.isNaN(timeSeriesEnd) ? nowInSeconds() : timeSeriesEnd
     this.selectedRange = [start, end]
     await this.initViews(start, end)
   }
