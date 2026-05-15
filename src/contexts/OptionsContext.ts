@@ -10,9 +10,9 @@ const Hierarchy = {
   FLAT: "Flat"
 } as const
 
-export type HierarchyType = keyof typeof Hierarchy
+type HierarchyType = keyof typeof Hierarchy
 
-export type Options = {
+type Options = {
   hasLoadedSavedOptions: boolean
   metricType: MetricType
   chartType: LayoutType
@@ -35,7 +35,7 @@ export type Options = {
   showOnlySearchMatches: boolean
 }
 
-export type OptionsContextType = Options & {
+type OptionsContextType = Options & {
   setMetricType: (metricType: MetricType) => void
   setChartType: (chartType: LayoutType) => void
   setSizeMetricType: (sizeMetricType: SizeMetricType) => void

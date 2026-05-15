@@ -13,7 +13,7 @@ export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
     <>
       <button
         className={cn("btn", {
-          "btn--icon": compact
+          "btn--icon btn--text": compact
         })}
         title={isGroupingContributors ? "Grouping contributors... " : "Group contributors"}
         aria-label="Group contributors"

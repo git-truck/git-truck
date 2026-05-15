@@ -86,7 +86,7 @@ export function Timeline({ className }: { className?: string }) {
   return (
     <CollapsibleHeader
       reversed
-      className="card group/card flex flex-col text-center select-none"
+      className={cn("group/card flex flex-col text-center select-none", className)}
       title={() => (
         <TimelineHeader>
           <CheckboxWithLabel
@@ -102,7 +102,7 @@ export function Timeline({ className }: { className?: string }) {
         </TimelineHeader>
       )}
     >
-      <div className={cn("group grid", className)}>
+      <div className="group grid">
         <BarChart scale={commitCountScale} className="grid-full" />
         <TimeSlider
           key={[selectedRange].join("-")}

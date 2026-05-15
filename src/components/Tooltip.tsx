@@ -27,7 +27,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const hoveredBarTooltip = useHoveredBarTooltip()
   const { x, y } = useMouse()
   const tooltipRef = useRef<HTMLDivElement>(null)
-  const { chartType, sizeMetric, metricType } = useOptions()
+  const { sizeMetric, metricType } = useOptions()
   const { databaseInfo } = useData()
   const hoveredObject = rawHoveredObject ? databaseInfo.objectPathMap[rawHoveredObject.path] : null
   const color = useObjectColor(rawHoveredObject)
@@ -52,7 +52,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
           ? // ? // TODO: what to do for gradients?
             isDarkColor(color)
             ? "text-primary-text-dark"
-            : "text-primary-textbu"
+            : "text-primary-text"
           : "text-primary-text-dark"
       )}
       style={{
@@ -197,7 +197,7 @@ function SizeMetricContent({
         content = "No activity in selected range"
         break
       }
-      content = dateFormatRelative(epoch)
+      content = dateFormatRelative(epoch) ? `${dateFormatRelative(epoch)} ago` : "Unknown"
       break
     }
     case "MOST_CONTRIBUTIONS": {

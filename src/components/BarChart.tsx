@@ -46,10 +46,10 @@ type BarNode = {
   isInRange: boolean
   hasFileActivity: boolean
   clickedObjectIsRepo: boolean
-  clickedClassName?: string
   clickedFill?: string
   stackedSlices: StackedBarSlice[]
   gradientColors: string[]
+  rootColor: string
   interval: readonly [number, number]
 }
 
@@ -86,7 +86,7 @@ function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
 }
 
 export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
-  const { databaseInfo } = useData()
+  const { databaseInfo, repo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
     end: viewSearchParamsConfig.end.withDefault(databaseInfo.selectedRange[1])
@@ -100,7 +100,8 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const clickedObject = useClickedObject()
   const setHoveredBarTooltip = useSetHoveredBarTooltip()
   const clickedObjectColor = useObjectColor(clickedObject)
-  const clickedProps = clickedObjectColor ? { fill: clickedObjectColor } : { className: "bg-blue-primary" }
+  const rootColor = useObjectColor(databaseInfo.fileTree) ?? missingInMapColor
+  const clickedProps = clickedObjectColor ? { fill: clickedObjectColor } : { fill: missingInMapColor }
   const svgRef = useRef<SVGSVGElement>(null)
   const [ref, rawSize] = useComponentSize()
   const size = useDeferredValue(rawSize)
@@ -112,7 +113,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const width = size.width
 
   const commitCountPerTimeIntervalForClickedObject = databaseInfo.commitCountPerTimeIntervalForClickedObject
-  const clickedObjectIsRepo = clickedObject.path === databaseInfo.fileTree.path
+  const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
   const xScale = d3
@@ -224,7 +225,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           const tooltip: HoveredBarTooltip = {
             label: tooltipLabel,
             totalCommitCount: d.count,
-            totalObjectName: databaseInfo.zoomPathName,
+            totalObjectName: databaseInfo.repo,
             clickedObjectName: clickedObjectIsRepo ? null : clickedObject.name,
             clickedCommitCount: clickedObjInterval?.count ?? null,
             contributors: metricIsContributorMetric ? tooltipContributors : []
@@ -247,10 +248,10 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
             isInRange,
             hasFileActivity,
             clickedObjectIsRepo,
-            clickedClassName: clickedProps.className,
             clickedFill: clickedProps.fill,
             stackedSlices,
             gradientColors,
+            rootColor,
             interval: [intervalStart, intervalEnd]
           }
           barTooltips.set(node.id, node.tooltip)
@@ -282,12 +283,11 @@ function Bar({ node }: { node: BarNode }) {
           ? { fill: node.clickedFill }
           : {}
     : { fill: clickedFill }
-  const clickClass = node.gradientColors.length > 0 ? "" : node.clickedClassName
 
   const shouldDrawClickedBar = node.hasFileActivity && !node.clickedObjectIsRepo && node.stackedSlices.length === 0
 
   return (
-    <g>
+    <g className={!node.isInRange ? "opacity-30" : ""}>
       {hasGradient ? linearGradient : null}
       {!metricIsContributorMetric ? clickedGradient : null}
       {/* Outline */}
@@ -310,11 +310,11 @@ function Bar({ node }: { node: BarNode }) {
         height={node.height}
         rx={treemapBlobBorderRadius}
         ry={treemapBlobBorderRadius}
+        fill={node.rootColor}
         className={cn(
-          "fill-blue-primary/30 peer-hover:fill-blue-primary pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
-          {
-            "opacity-40": !node.isInRange
-          }
+          "pointer-events-none stroke-transparent stroke-2 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out peer-hover:stroke-black",
+
+          !node.clickedObjectIsRepo ? "opacity-40" : ""
         )}
       />
       {/* Selection activity */}
@@ -331,8 +331,7 @@ function Bar({ node }: { node: BarNode }) {
             node.isInRange ? "fill-blue-primary" : "fill-blue-primary/50",
             {
               "opacity-0": node.x === 0
-            },
-            clickClass
+            }
           )}
           style={clickStyle}
         />

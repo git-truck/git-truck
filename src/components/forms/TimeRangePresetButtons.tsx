@@ -7,6 +7,7 @@ import { cn } from "~/styling"
 const presets: Array<{
   label: string
   durationSecs: number | null // null for special handling (e.g. YTD)
+  durationMonths?: number
   title: string
   visibleForUnits: TimeUnit[]
 }> = [
@@ -20,18 +21,21 @@ const presets: Array<{
   {
     label: "1MO",
     durationSecs: 30 * 24 * 60 * 60,
+    durationMonths: 1,
     title: "Last 1 month",
     visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "3MO",
     durationSecs: 90 * 24 * 60 * 60,
+    durationMonths: 3,
     title: "Last 3 months",
     visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "6MO",
     durationSecs: 180 * 24 * 60 * 60,
+    durationMonths: 6,
     title: "Last 6 months",
     visibleForUnits: ["day", "week", "month"]
   },
@@ -44,8 +48,9 @@ const presets: Array<{
   {
     label: "1YR",
     durationSecs: 1 * 365 * 24 * 60 * 60,
+    durationMonths: 12,
     title: "Last 1 year",
-    visibleForUnits: ["day", "week", "month", "year"]
+    visibleForUnits: ["day", "week", "month"]
   },
   {
     label: "All",
@@ -62,6 +67,14 @@ export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
 
   const projectDuration = timerange[1] - timerange[0]
   const selectionDuration = selectedRange[1] - selectedRange[0]
+
+  function getMonthPresetStart(end: number, durationMonths: number) {
+    const start = new Date(end * 1000)
+    start.setUTCDate(1)
+    start.setUTCHours(0, 0, 0, 0)
+    start.setUTCMonth(start.getUTCMonth() - durationMonths + 1)
+    return Math.floor(start.getTime() / 1000)
+  }
 
   return (
     <div className="flex justify-end gap-0">
@@ -89,7 +102,12 @@ export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
             title={preset.title}
             onClick={() => {
               const end = data.databaseInfo.timerange[1]
-              const start = duration === Infinity ? timerange[0] : end - Math.floor(duration)
+              const start =
+                unit === "month" && preset.durationMonths
+                  ? getMonthPresetStart(end, preset.durationMonths)
+                  : duration === Infinity
+                    ? timerange[0]
+                    : end - Math.floor(duration)
               setQs((prev) => ({ ...prev, start, end }))
             }}
           >
