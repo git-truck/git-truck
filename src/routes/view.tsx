@@ -511,7 +511,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                  `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-3 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
+                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
                 {
                   [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
                     leftExpanded && matchesLarge
@@ -544,7 +544,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 )}
               </header>
               <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader]">
-                <div className="flex items-center py-2">
+                <div className="flex items-center ">
                   {matchesLarge && !leftExpanded ? (
                     <>
                       <button
@@ -565,13 +565,13 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <Breadcrumb zoom />
                 </div>
 
-                {/* <CompactLoadingIndicator
+                <CompactLoadingIndicator
                   className={cn("transition-opacity", {
-                    "opacity-0": isLoading
+                    "opacity-0": !isLoading
                   })}
-                /> */}
+                />
 
-                <div className="flex justify-end py-2">
+                <div className="flex justify-end ">
                   <SearchCard />
                   <RefreshButton />
                   <HideFilesButton />

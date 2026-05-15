@@ -196,7 +196,6 @@ export function MetricsInspection() {
       {inspectionPanels.map((Panel, i) => (
         <MetricInspectionPanel
           key={i}
-          className=""
           actions={Panel.actions}
           metricMenuItems={toPanelMenuItems(Panel.menuItems)}
           title={Panel.title ?? "default"}

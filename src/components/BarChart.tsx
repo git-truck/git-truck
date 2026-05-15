@@ -86,7 +86,7 @@ function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
 }
 
 export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
-  const { databaseInfo } = useData()
+  const { databaseInfo, repo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
     end: viewSearchParamsConfig.end.withDefault(databaseInfo.selectedRange[1])
@@ -113,7 +113,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const width = size.width
 
   const commitCountPerTimeIntervalForClickedObject = databaseInfo.commitCountPerTimeIntervalForClickedObject
-  const clickedObjectIsRepo = clickedObject.path === databaseInfo.fileTree.path
+  const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
   const xScale = d3
@@ -225,7 +225,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           const tooltip: HoveredBarTooltip = {
             label: tooltipLabel,
             totalCommitCount: d.count,
-            totalObjectName: databaseInfo.zoomPathName,
+            totalObjectName: databaseInfo.repo,
             clickedObjectName: clickedObjectIsRepo ? null : clickedObject.name,
             clickedCommitCount: clickedObjInterval?.count ?? null,
             contributors: metricIsContributorMetric ? tooltipContributors : []

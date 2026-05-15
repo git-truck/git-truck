@@ -371,7 +371,7 @@ export default function UI() {
             <h2 className="card__title">Tooltip (Demo)</h2>
             <div className="flex flex-col items-start gap-2 p-4">
               <span>Hover over the button to show tooltip:</span>
-              <div className="">
+              <div>
                 <button
                   className="btn btn--icon"
                   onMouseEnter={() => setTooltipHovered(true)}
