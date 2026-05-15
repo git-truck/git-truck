@@ -32,7 +32,7 @@ export function CollapsibleHeader({
         onToggle?.(isOpen)
       }}
     >
-      <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark flex cursor-pointer list-none items-center justify-start text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none mbe-0">
+      <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark mbe-0 flex cursor-pointer list-none items-center justify-start text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
         <ChevronButton aria-hidden as="span" open={reversed ? !open : open} />
         <h2 className="card__title flex min-w-0 flex-1 items-center justify-between gap-2">
           <Title open={open} />

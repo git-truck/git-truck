@@ -6,5 +6,12 @@ export function InspectPanel() {
   const clickedObject = useClickedObject()
   const objectColor = useObjectColor(clickedObject)
 
-  return <ClickedObjectButton style={{ backgroundColor: objectColor ?? undefined, color: objectColor && isDarkColor(objectColor) ? "#fff" : "#000" }} />
+  return (
+    <ClickedObjectButton
+      style={{
+        backgroundColor: objectColor ?? undefined,
+        color: objectColor && isDarkColor(objectColor) ? "#fff" : "#000"
+      }}
+    />
+  )
 }

@@ -38,7 +38,9 @@ export function SegmentLegend() {
                 className={cn("transition-opacity", {
                   "rounded-l-sm": i === 0,
                   "rounded-r-sm": i === steps - 1,
-                  "opacity-30": (hoveredSegmentIndex !== null && i !== hoveredSegmentIndex) || (clickedSegmentIndex !== null && i !== clickedSegmentIndex)
+                  "opacity-30":
+                    (hoveredSegmentIndex !== null && i !== hoveredSegmentIndex) ||
+                    (clickedSegmentIndex !== null && i !== clickedSegmentIndex)
                 })}
                 width={width}
                 color={colorGenerator(i)}

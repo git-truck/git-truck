@@ -106,7 +106,7 @@
 }
 
 @utility card {
-  @apply primary shadow-md text-secondary-text dark:text-secondary-text-dark relative flex w-auto flex-col gap-2 rounded-xl p-2;
+  @apply primary text-secondary-text dark:text-secondary-text-dark relative flex w-auto flex-col gap-2 rounded-xl p-2 shadow-md;
 }
 
 @utility card__header {

@@ -312,7 +312,7 @@ function Bar({ node }: { node: BarNode }) {
         ry={treemapBlobBorderRadius}
         fill={node.rootColor}
         className={cn(
-          "peer-hover:stroke-black stroke-2 stroke-transparent pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
+          "pointer-events-none stroke-transparent stroke-2 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out peer-hover:stroke-black",
 
           !node.clickedObjectIsRepo ? "opacity-40" : ""
         )}

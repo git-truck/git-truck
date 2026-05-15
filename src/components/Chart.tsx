@@ -132,8 +132,6 @@ export function Chart() {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
-
-
   const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
 
   const scrollDeltaRef = useRef(0)
@@ -382,10 +380,15 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       <rect
         {...commonProps}
         data-path={d.data.path}
-        className={cn(isTree(d.data) && (chartType ==="BUBBLE_CHART" || !isRoot) ? "stroke-inherit" : "stroke-transparent stroke-0", {
-          "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
-          "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
-        })}
+        className={cn(
+          isTree(d.data) && (chartType === "BUBBLE_CHART" || !isRoot)
+            ? "stroke-inherit"
+            : "stroke-transparent stroke-0",
+          {
+            "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
+            "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
+          }
+        )}
       />
     </>
   )
@@ -476,7 +479,7 @@ function NodeText({
                 }
               : {
                   x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
-                  y: (d as HierarchyRectangularNode<GitObject>).y0 ,
+                  y: (d as HierarchyRectangularNode<GitObject>).y0,
                   width: Math.max(
                     (d as HierarchyRectangularNode<GitObject>).x1 -
                       (d as HierarchyRectangularNode<GitObject>).x0 -
@@ -519,7 +522,7 @@ function NodeText({
         y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
-          "font-bold ": isTree(d.data),
+          "font-bold": isTree(d.data),
           "fill-primary-text-dark": isDark && isBlob(d.data),
           "fill-primary-text": !isDark && isBlob(d.data)
         })}
@@ -559,9 +562,9 @@ function createPartitionedHiearchy({
           return databaseInfo.commitCounts[obj.path] ?? 1
         case "EQUAL_SIZE":
           return 1
-        case "LAST_CHANGED":{
+        case "LAST_CHANGED": {
           const maxIndex = LastChangedMetric.getBuckets(databaseInfo).length
-          return 2** (maxIndex - LastChangedMetric.getBucketIndex(obj, databaseInfo))
+          return 2 ** (maxIndex - LastChangedMetric.getBucketIndex(obj, databaseInfo))
         }
         // return (
         //   (databaseInfo.lastChanged[obj.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate

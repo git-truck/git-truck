@@ -197,7 +197,7 @@ function SizeMetricContent({
         content = "No activity in selected range"
         break
       }
-      content = dateFormatRelative(epoch) ? `${dateFormatRelative(epoch)} ago` :  "Unknown"
+      content = dateFormatRelative(epoch) ? `${dateFormatRelative(epoch)} ago` : "Unknown"
       break
     }
     case "MOST_CONTRIBUTIONS": {
