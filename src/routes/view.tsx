@@ -1,7 +1,7 @@
 import { viewSearchParamsConfig, loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
-import { mdiMenu } from "@mdi/js"
+import { mdiMenu, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
+import { Await, redirect, href, useNavigate, useFetcher, Link, useNavigation } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
@@ -35,7 +35,6 @@ import { ClientOnly } from "~/components/util"
 import { FullscreenButton } from "~/components/buttons/FullscreenButton"
 import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { RevisionSelect } from "~/components/RevisionSelect"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
@@ -46,6 +45,9 @@ import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
+import { useMediaQuery } from "~/hooks"
+import { InteractionButtons, MetricsInspection } from "~/components/inspection/MetricsInspection"
+import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -458,8 +460,10 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
   const navigate = useNavigate()
 
+  const navigation = useNavigation()
   const fetcher = useFetcher<typeof loader>()
   const isAborting = fetcher.state !== "idle"
+  const isLoading = navigation.state === "loading"
 
   const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
   const [params] = useQueryStates(viewSearchParamsConfig)
@@ -474,6 +478,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
       navigate(browseParent)
     })
   }, [isAborting, params.branch, params.path, fetcher, navigate, browseParent])
+
+  const matchesLarge = useMediaQuery("(min-width: var(--breakpoint-large))")
 
   return (
     <Suspense
@@ -505,97 +511,123 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data as RepoData}>
             <div
               className={cn(
-                `grid grid-cols-1 transition-all [grid-template-areas:"main"_"left"] lg:h-screen lg:grid-cols-[0_1fr] lg:grid-rows-[1fr] lg:overflow-hidden lg:[grid-template-areas:"left_main"]`,
+                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
                 {
-                  "lg:grid-cols-[var(--spacing-sidepanel)_1fr]": leftExpanded
+                  [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
+                    leftExpanded && matchesLarge
                 }
               )}
             >
-              <Activity mode={leftExpanded ? "visible" : "hidden"}>
-                <aside
-                  className={clsx(
-                    "*:not-first:mx-2 *:not-first:my-6 lg:transition-transform",
-                    leftExpanded ? "overflow-y-auto [grid-area:left]" : "lg:-translate-x-sidepanel"
-                  )}
-                >
-                  <div className="bg-primary-bg dark:bg-primary-bg-dark sticky top-0 z-10 flex justify-between p-2">
-                    <GitTruckInfo
-                      className=""
-                      installedVersion={versionInfo.installedVersion}
-                      latestVersion={versionInfo.latestVersion}
-                    />
-                    <button className="btn" title="Hide left panel" onClick={toggleLeft}>
-                      <Icon path={mdiMenu} size="1.5em" />
-                    </button>
-                  </div>
-                  <CollapsibleHeader
-                    className="card"
-                    title={() => "Visualization options"}
-                    contentClassName="flex flex-col gap-2"
-                  >
-                    <Options key={leftExpanded ? "expanded" : "collapsed"} />
-                  </CollapsibleHeader>
-                  <InspectPanel />
-                  <CommitsInspection />
-                </aside>
-              </Activity>
-              <main
+              <header
                 className={cn(
-                  "relative grid h-full min-h-screen min-w-25 grid-rows-[auto_1fr_auto] gap-2 p-2 [grid-area:main] lg:transition-transform"
+                  "bg-secondary-bg dark:bg-secondary-bg-dark flex grid-cols-3 items-center justify-between gap-2 pr-2 [grid-area:lheader]",
+                  {
+                    hidden: !leftExpanded
+                  }
                 )}
               >
-                <header className="grid grid-flow-col items-center justify-between gap-2">
-                  <div className="flex gap-2">
-                    {!leftExpanded ? (
-                      <button title="Show left panel" className="btn btn--text aspect-square" onClick={toggleLeft}>
+                <GitTruckInfo
+                  installedVersion={versionInfo.installedVersion}
+                  latestVersion={versionInfo.latestVersion}
+                />
+
+                {matchesLarge && leftExpanded ? (
+                  <button title={"Hide left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
+                    <Icon path={mdiMenuOpen} size={1} />
+                  </button>
+                ) : (
+                  <div />
+                )}
+              </header>
+              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader]">
+                <div className="flex items-center">
+                  {matchesLarge && !leftExpanded ? (
+                    <>
+                      <button title={"Show left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
                         <Icon path={mdiMenu} size={1} />
                       </button>
-                    ) : null}
-                    <Breadcrumb zoom />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <SearchCard />
-                    {data.repo.status === "Success" ? (
-                      <RevisionSelect
-                        key={data.databaseInfo.branch}
-                        className="max-w-32"
-                        title="Select branch"
-                        defaultValue={data.databaseInfo.branch}
-                        headGroups={data.repo.refs}
-                        analyzedBranches={data.databaseInfo.analyzedRepos.filter(
-                          (rep) => rep.repositoryPath === data.databaseInfo.repo
-                        )}
-                        onChange={(e) =>
-                          navigate(
-                            href("/view") + viewSerializer({ path: data.repo.repositoryPath, branch: e.target.value })
-                          )
-                        }
+                      <Icon
+                        aria-hidden
+                        path="M11,2 H13 V22 H11 Z"
+                        size={1}
+                        className="fill-primary-text dark:fill-primary-text-dark mx-0 align-middle opacity-20"
                       />
-                    ) : (
-                      <div />
-                    )}
-                    <RefreshButton />
-                    <HideFilesButton />
-                    <GroupAuthorsButton compact />
-                    <SettingsButton />
-                    <FullscreenButton />
-                  </div>
-                </header>
-
-                <div className="relative grid">
-                  <ClientOnly>
-                    {() => (
-                      <>
-                        {/* {isLoading ? <LoadingIndicator className="pointer-events-none absolute inset-0" /> : null} */}
-                        <Chart />
-                        {createPortal(<Tooltip />, document.body)}
-                      </>
-                    )}
-                  </ClientOnly>
+                    </>
+                  ) : null}
+                  <Breadcrumb zoom />
                 </div>
-                <Timeline />
-              </main>
+
+                <CompactLoadingIndicator
+                  className={cn("transition-opacity", {
+                    "opacity-0": !isLoading
+                  })}
+                />
+
+                <div className="flex justify-end">
+                  <SearchCard />
+                  <RefreshButton />
+                  <HideFilesButton />
+                  <GroupAuthorsButton compact />
+                  <SettingsButton />
+                  <FullscreenButton />
+                </div>
+              </nav>
+              <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
+                <aside
+                  className={clsx(
+                    "grid grid-rows-[auto_1fr] flex-col gap-4 lg:transition-transform",
+                    leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
+                  )}
+                >
+                  <div className="flex flex-col gap-2 px-2">
+                    <h2 className="card__title">Visualization options</h2>
+                    <Options key={leftExpanded ? "expanded" : "collapsed"} />
+                  </div>
+                  <div className="hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto">
+                    <CollapsibleHeader
+                      title={() => (
+                        <>
+                          Actions <InspectPanel />
+                        </>
+                      )}
+                      className="card flex flex-col gap-1 px-2"
+                    >
+                      <InteractionButtons />
+                      {/* <div className="card rounded-xl">
+                        <h3 className="card__title">Actions</h3>
+                      </div> */}
+                    </CollapsibleHeader>
+                    <CollapsibleHeader
+                      className="card"
+                      title={() => (
+                        <>
+                          Metrics
+                          <InspectPanel />
+                        </>
+                      )}
+                    >
+                      <MetricsInspection />
+                    </CollapsibleHeader>
+                    <CommitsInspection className="card" />
+                  </div>
+                </aside>
+              </Activity>
+
+              <div
+                className={cn(
+                  "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] lg:transition-transform"
+                )}
+              >
+                <ClientOnly>
+                  {() => (
+                    <>
+                      <Chart />
+                      {createPortal(<Tooltip />, document.body)}
+                    </>
+                  )}
+                </ClientOnly>
+              </div>
+              <Timeline className="[grid-area:barchart]" />
             </div>
           </Providers>
         )}

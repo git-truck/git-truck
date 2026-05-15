@@ -11,7 +11,6 @@ import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 import { useClickedObjectNullable, useObjectColor, useSetClickedObject } from "~/state/stores/clicked-object"
 import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
-import { missingInMapColor } from "~/const"
 
 type Segment = {
   type: "browse" | "zoom" | "filler" | "clicked"
@@ -49,12 +48,13 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       ? []
       : [
           // Parent folder
-          {
-            type: "browse",
-            segment: data.repo.parentDirName ?? "",
-            fullPath: data.repo.parentDirPath ?? "",
-            showAnalysisInfo: false
-          } as const,
+          // TODO: Reenable and fix browsing
+          // {
+          //   type: "browse",
+          //   segment: data.repo.parentDirName ?? "",
+          //   fullPath: data.repo.parentDirPath ?? "",
+          //   showAnalysisInfo: false
+          // } as const,
           // Repository root
           {
             type: "zoom",
@@ -120,10 +120,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             <Link
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
-              className="btn btn--primary truncate text-sm font-bold"
-              style={{
-                backgroundColor: missingInMapColor
-              }}
+              className="btn btn--text truncate text-sm"
               onClick={() => setClickedObject(null)}
             >
               {content}
@@ -131,10 +128,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           ) : (
             <button
               title={title}
-              className="btn btn--primary truncate text-sm font-bold"
-              style={{
-                backgroundColor: missingInMapColor
-              }}
+              className="btn btn--text cursor-pointer truncate text-sm"
               onClick={() => {
                 if (!data) {
                   throw Error("Attempting to access data when none is loaded")

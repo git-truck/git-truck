@@ -8,7 +8,7 @@ export function SettingsButton() {
 
   return (
     <>
-      <button className="btn btn--icon" title="Settings" aria-label="Settings" onClick={() => setOpen(true)}>
+      <button className="btn btn--icon btn--text" title="Settings" aria-label="Settings" onClick={() => setOpen(true)}>
         <Icon path={mdiCog} />
       </button>
       <SettingsModal open={open} onClose={() => setOpen(false)} />

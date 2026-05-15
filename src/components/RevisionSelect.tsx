@@ -1,4 +1,4 @@
-import type { SelectHTMLAttributes } from "react"
+import { useId, type SelectHTMLAttributes } from "react"
 import type { CompletedResult, GitRefs } from "~/shared/model"
 import { mdiSourceBranch } from "@mdi/js"
 import { Icon } from "~/components/Icon"
@@ -17,20 +17,30 @@ export function RevisionSelect({
   analyzedBranches,
   ...props
 }: GroupedBranchSelectProps & SelectHTMLAttributes<HTMLSelectElement>) {
+  const id = useId()
   const groupsEntries = Object.entries(headGroups)
 
   return (
-    <div title="Change branch" className={cn("input grid grid-cols-[auto_1fr] place-items-center", className)}>
-      <Icon path={mdiSourceBranch} size={0.75} />
-      <select className={cn("w-full", className)} {...props}>
+    <div
+      title="Change branch"
+      className={cn(
+        "hover:border-border dark:hover:border-border-dark hover:bg-primary-bg dark:hover:bg-primary-bg-dark flex w-min place-items-center gap-0 rounded-md border-2 border-transparent p-1 transition-colors not-hover:border-transparent not-hover:bg-transparent",
+        className
+      )}
+    >
+      <label htmlFor={id}>
+        <Icon path={mdiSourceBranch} size={0.75} />
+      </label>
+      <select className={cn("w-full")} {...props} id={id}>
         {groupsEntries.map(([group, heads]) =>
           Object.entries(heads).length > 0 ? (
-            <optgroup key={group} label={group}>
+            <optgroup key={group} label={group} className="bg-transparent">
               {Object.entries(heads).map(([headName]) => {
                 const isAnalyzed = analyzedBranches.find((rep) => rep.branch === headName)
                 return (
                   <option
                     key={headName}
+                    className="bg-transparent"
                     value={headName}
                     disabled={disabled}
                     title={isAnalyzed ? "Analyzed" : "Not analyzed"}

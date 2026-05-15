@@ -9,8 +9,9 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { isBlob, isRepositoryRoot } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
+import { InspectPanel } from "~/components/inspection/InspectPanel"
 
-export function CommitsInspection() {
+export function CommitsInspection({ className = "" }: { className?: string }) {
   const clickedObject = useClickedObject()
   const objectPathIsFile = isBlob(clickedObject)
   const objectPathIsRepo = isRepositoryRoot(clickedObject)
@@ -67,32 +68,13 @@ export function CommitsInspection() {
 
   return (
     <CollapsibleHeader
+      className={className}
       title={() => (
         <>
-          {clickedObjectPath ? (
-            <>
-              <span className="truncate" title={clickedObjectPath}>
-                {"Commits: "}
-                <span className="text-primary-text dark:text-primary-text-dark ml-1 font-bold normal-case">
-                  {objectPathIsRepo ? (
-                    <>
-                      {clickedObjectPath}{" "}
-                      <span className="text-tertiary-text dark:text-tertiary-text-dark">(repo)</span>
-                    </>
-                  ) : objectPathIsFile ? (
-                    clickedObjectPath.split("/").pop()
-                  ) : (
-                    clickedObjectPath.split("/").pop() + "/"
-                  )}
-                </span>
-              </span>
-            </>
-          ) : (
-            "Commits"
-          )}
+          Commits
+          <InspectPanel />
         </>
       )}
-      className="card"
       contentClassName="flex flex-col gap-2"
       defaultOpen={false}
       onToggle={(open) => {

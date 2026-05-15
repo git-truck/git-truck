@@ -77,7 +77,7 @@ export const LegendDot = ({
   )
 }
 
-export const Dot = ({
+const Dot = ({
   color,
   shape,
   className = "",

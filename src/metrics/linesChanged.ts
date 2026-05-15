@@ -53,7 +53,7 @@ export const LinesChangedMetric: GradientedMetric = {
     }
   },
   // GradientLegend specific function
-  getColorFromValue(value, dbi, cache) {
+  getColorFromValue(value, _dbi, cache) {
     const legend = cache.legend as GradLegendData
     if (!Number.isFinite(value) || value <= 0) return noEntryColor
     const cappedValue = Math.max(legend.minValue, Math.min(value, legend.maxValue))

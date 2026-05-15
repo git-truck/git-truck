@@ -2,7 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
 import { type JSX } from "react"
-import type { GitBlobObject, GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
+import type { GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
 import { useComponentSize, useKey } from "~/hooks"
 import {
   bubblePadding,
@@ -25,20 +25,19 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import type { LayoutType } from "~/layouts/layouts"
 import { useOptions } from "~/contexts/OptionsContext"
-import { isDarkColor, isBlob, isTree, trimFilenameFromPath } from "~/shared/util"
+import { isDarkColor, isBlob, isTree, trimFilenameFromPath, isRepositoryRoot } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
-import { mdiMagnifyMinus, mdiUndo } from "@mdi/js"
-import { Icon } from "~/components/Icon"
 import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
-import { ZoomToSelectedObjectButton } from "~/components/buttons/ZoomToSelectedObjectButton"
 import { filterTree, flattenTree } from "~/shared/utils/tree"
 import { useGradient } from "~/hooks/svg"
+import { LastChangedMetric } from "~/metrics/lastChanged"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -65,7 +64,7 @@ export function Chart() {
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObject()
 
-  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath")
+  const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
 
   const setZoomPath = (value: string | null) => {
     return setZoomPathRaw(value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null)
@@ -133,6 +132,8 @@ export function Chart() {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
+  const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
+
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
   const DOUBLE_CLICK_DELAY = 300
@@ -140,187 +141,182 @@ export function Chart() {
     target instanceof Element ? target.closest<SVGElement>("[data-path]")?.dataset.path : undefined
 
   return (
-    <div ref={ref} className="relative grid place-items-center">
-      <svg
-        className={clsx(
-          "stroke-border dark:stroke-border-dark absolute inset-0 grid h-full w-full place-items-center fill-gray-900 text-xs select-none dark:fill-gray-100"
-        )}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${size.width} ${size.height}`}
-        onClick={(evt) => {
-          const path = getPathFromEventTarget(evt.target)
-          if (!path) {
-            setClickedObject(null)
-            return
-          }
-
-          const newClickedObject = databaseInfo.objectPathMap[path]
-
-          evt.stopPropagation()
-
-          if (clickTimer.current) {
-            return
-          }
-          clickTimer.current = window.setTimeout(() => {
-            clickTimer.current = null
-
-            if (newClickedObject && clickedObject.path === newClickedObject.path) {
+    <div
+      className={cn("relative grid overflow-hidden", {
+        "pb-4": chartType === "BUBBLE_CHART"
+      })}
+    >
+      <div ref={ref} className="relative">
+        <svg
+          className={clsx(
+            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
+            {
+              "cursor-zoom-out": !zoomPathIsRepo
+            }
+          )}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${size.width} ${size.height}`}
+          onClick={(evt) => {
+            const path = getPathFromEventTarget(evt.target)
+            if (!path) {
               setClickedObject(null)
               return
             }
 
-            if (!newClickedObject) {
-              throw new Error("Clicked object not found in databaseInfo.objectMap")
-            }
-            // Else, navigate to object details
-            setClickedObject(path ? (newClickedObject ?? null) : null)
-          }, DOUBLE_CLICK_DELAY)
-        }}
-        onDoubleClick={(evt) => {
-          const path = getPathFromEventTarget(evt.target)
-          if (!path) {
-            setClickedObject(null)
-            return
-          }
-          setZoomPath(null)
+            const newClickedObject = databaseInfo.objectPathMap[path]
 
-          evt.stopPropagation()
+            evt.stopPropagation()
 
-          const newClickedObject = databaseInfo.objectPathMap[path]
-
-          if (!newClickedObject) {
-            throw new Error("Clicked object not found in databaseInfo.objectMap: " + path)
-          }
-
-          if (clickTimer.current) {
-            window.clearTimeout(clickTimer.current)
-            clickTimer.current = null
-
-            if (zoomPath && zoomPath === newClickedObject.path) {
-              setZoomPath("")
+            if (clickTimer.current) {
               return
             }
-            setZoomPath(newClickedObject.path ?? null)
-          }
-        }}
-        onMouseOver={(evt) => {
-          const path = getPathFromEventTarget(evt.target)
-          if (!path) {
-            return
-          }
-          evt.stopPropagation()
+            clickTimer.current = window.setTimeout(() => {
+              clickTimer.current = null
 
-          const newClickedObject = databaseInfo.objectPathMap[path]
+              if (newClickedObject && clickedObject.path === newClickedObject.path) {
+                setClickedObject(null)
+                return
+              }
 
-          if (newClickedObject && hoveredObject?.path !== newClickedObject.path) setHoveredObject(newClickedObject)
-        }}
-        onMouseOut={() => {
-          return setHoveredObject(null)
-        }}
-        onWheel={(evt) => {
-          // Accumulate delta
-          scrollDeltaRef.current += evt.deltaY
+              if (!newClickedObject) {
+                throw new Error("Clicked object not found in databaseInfo.objectMap")
+              }
+              // Else, navigate to object details
+              setClickedObject(path ? (newClickedObject ?? null) : null)
+            }, DOUBLE_CLICK_DELAY)
+          }}
+          onDoubleClick={(evt) => {
+            const path = getPathFromEventTarget(evt.target)
+            if (!path) {
+              setClickedObject(null)
+              return
+            }
+            setZoomPath(null)
 
-          const SCROLL_DELTA_THRESHOLD = 50
+            evt.stopPropagation()
 
-          if (scrollDeltaRef.current <= -SCROLL_DELTA_THRESHOLD && hoveredObject) {
-            startTransition(() => {
-              setZoomPath(hoveredObject.path)
-            })
-            scrollDeltaRef.current = 0
-          } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {
-            startTransition(() => {
-              zoomOneLevelOut()
-            })
-            scrollDeltaRef.current = 0
-          }
-        }}
-      >
-        {nodes.map((d) => {
-          const isSearchMatch = Boolean(searchResults[d.data.path])
-          const hasSearchMatches = isTree(d.data)
-            ? Object.keys(searchResults).some((resultPath) => {
-                return resultPath.startsWith(`${d.data.path}/`)
+            const newClickedObject = databaseInfo.objectPathMap[path]
+
+            if (!newClickedObject) {
+              throw new Error("Clicked object not found in databaseInfo.objectMap: " + path)
+            }
+
+            if (clickTimer.current) {
+              window.clearTimeout(clickTimer.current)
+              clickTimer.current = null
+
+              if (zoomPath && zoomPath === newClickedObject.path) {
+                setZoomPath("")
+                return
+              }
+              setZoomPath(newClickedObject.path ?? null)
+            }
+          }}
+          onMouseOver={(evt) => {
+            const path = getPathFromEventTarget(evt.target)
+            if (!path) {
+              return
+            }
+            evt.stopPropagation()
+
+            const newClickedObject = databaseInfo.objectPathMap[path]
+
+            if (newClickedObject && hoveredObject?.path !== newClickedObject.path) setHoveredObject(newClickedObject)
+          }}
+          onMouseOut={() => {
+            return setHoveredObject(null)
+          }}
+          onWheel={(evt) => {
+            // Accumulate delta
+            scrollDeltaRef.current += evt.deltaY
+
+            const SCROLL_DELTA_THRESHOLD = 50
+
+            if (scrollDeltaRef.current <= -SCROLL_DELTA_THRESHOLD && hoveredObject) {
+              startTransition(() => {
+                setZoomPath(hoveredObject.path)
               })
-            : isSearchMatch
+              scrollDeltaRef.current = 0
+            } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {
+              startTransition(() => {
+                zoomOneLevelOut()
+              })
+              scrollDeltaRef.current = 0
+            }
+          }}
+        >
+          {nodes.map((d, i) => {
+            const isSearchMatch = Boolean(searchResults[d.data.path])
+            const hasSearchMatches = isTree(d.data)
+              ? Object.keys(searchResults).some((resultPath) => {
+                  return resultPath.startsWith(`${d.data.path}/`)
+                })
+              : isSearchMatch
 
-          const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
-            const cats: Array<string> =
-              metricsData
-                .get(metricType)
-                ?.categoriesMap.get(node.path)
-                ?.map((c) => c.category) ?? []
-            return cats
-          }
+            const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
+              const cats: Array<string> =
+                metricsData
+                  .get(metricType)
+                  ?.categoriesMap.get(node.path)
+                  ?.map((c) => c.category) ?? []
+              return cats
+            }
 
-          const categories = getCategoriesFromNode(d.data)
-          const isSelected =
-            selectedCategories.length > 0
-              ? // do we have contain a selected category?
-                categories.some((c) => isCategorySelected(c)) ||
-                // or we have a child that has a selected category selected
-                (isTree(d.data) &&
-                  d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
-              : // or by default, if no categories are selected, everything should be considered selected
-                true
+            const categories = getCategoriesFromNode(d.data)
+            const isSelected =
+              selectedCategories.length > 0
+                ? // do we have contain a selected category?
+                  categories.some((c) => isCategorySelected(c)) ||
+                  // or we have a child that has a selected category selected
+                  (isTree(d.data) &&
+                    d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
+                : // or by default, if no categories are selected, everything should be considered selected
+                  true
 
-          const isClickedObject = d.data.path === clickedObject.path
+            const isClickedObject = d.data.path === clickedObject.path
 
-          const shouldColor = clickedObject
-            ? // we are the clicked object, so should be highlighted
-              isClickedObject ||
-              (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
-            : isSelected
+            const shouldColor = clickedObject
+              ? // we are the clicked object, so should be highlighted
+                isClickedObject ||
+                (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
+              : isSelected
 
-          const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
+            const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
 
-          return (
-            <g
-              key={d.data.path}
-              data-path={d.data.path}
-              className={cn("cursor-pointer duration-400", {
-                "hover:opacity-80": isBlob(d.data) && !clickedObject,
-                "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
-                  isTree(d.data) && !clickedObject,
-                "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
-              })}
-            >
-              <Node d={d} />
-              {labelsVisible ? (
-                <NodeText isSearchMatch={isSearchMatch} d={d}>
-                  {d.data.name}
-                  {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
-                  {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
-                </NodeText>
-              ) : null}
-            </g>
-          )
-        })}
-      </svg>
-      <div className="absolute top-2 left-2 flex gap-2">
-        {zoomPath && zoomPath !== databaseInfo.repo ? (
-          <>
-            <button className="btn" onClick={() => setZoomPath(null)}>
-              <Icon path={mdiUndo} />
-              Reset zoom
-            </button>
-            <button className="btn" onClick={zoomOneLevelOut}>
-              <Icon path={mdiMagnifyMinus} />
-              Zoom out
-            </button>
-          </>
-        ) : null}
-        <ZoomToSelectedObjectButton />
+            return (
+              <g
+                key={d.data.path}
+                data-path={d.data.path}
+                className={cn("cursor-pointer duration-400", {
+                  "hover:opacity-80": isBlob(d.data) && !clickedObject,
+                  "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
+                    isTree(d.data) && !clickedObject,
+                  "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
+                })}
+              >
+                <Node d={d} isRoot={i === 0} />
+                {labelsVisible ? (
+                  <NodeText isSearchMatch={isSearchMatch} d={d}>
+                    {d.data.name}
+                    {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
+                    {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
+                  </NodeText>
+                ) : null}
+              </g>
+            )
+          })}
+        </svg>
       </div>
     </div>
   )
 }
 
-function Node({ d }: { d: CircleOrRectHiearchyNode }) {
+function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const [metricsData] = useMetrics()
   const { chartType, metricType, transitionsEnabled } = useOptions()
   const selectedCategories = useSelectedCategories()
   const isSelected = useIsCategorySelected()
+  const clickedObject = useClickedObject()
 
   const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
 
@@ -335,14 +331,17 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
   const { linearGradient, fill } = useGradient(colors.map((c) => c.color))
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
+  const isClickedObject = d.data.path === clickedObject.path
+
   const commonProps = useMemo(() => {
+    const borderRadius = isRoot ? 12 : treemapTreeBorderRadius
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
           fill: colors ? (multipleColors ? fill : colors[0].color) : missingInMapColor,
           stroke: colors ? colors[0].color : noEntryColor
         }
       : {
-          // strokeWidth: "1px"
+          strokeWidth: isClickedObject ? "2px" : "1px"
           // // stroke: isClickedObject? (clickedObjectColor?? undefined
           // ) : undefined
         }
@@ -368,12 +367,12 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
         width: datum.x1 - datum.x0 - 1,
         height: datum.y1 - datum.y0 - 1,
         ...(isTree(d.data)
-          ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
+          ? { rx: borderRadius, ry: borderRadius }
           : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
       }
     }
     return props
-  }, [d, colors, multipleColors, fill, chartType])
+  }, [isRoot, d, colors, multipleColors, fill, isClickedObject, chartType])
 
   return (
     <>
@@ -381,10 +380,15 @@ function Node({ d }: { d: CircleOrRectHiearchyNode }) {
       <rect
         {...commonProps}
         data-path={d.data.path}
-        className={cn(isTree(d.data) ? "stroke-inherit" : "stroke-transparent stroke-0", {
-          "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
-          "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
-        })}
+        className={cn(
+          isTree(d.data) && (chartType === "BUBBLE_CHART" || !isRoot)
+            ? "stroke-inherit"
+            : "stroke-transparent stroke-0",
+          {
+            "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
+            "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
+          }
+        )}
       />
     </>
   )
@@ -475,7 +479,7 @@ function NodeText({
                 }
               : {
                   x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
-                  y: (d as HierarchyRectangularNode<GitObject>).y0 + clipPathPadding / 2,
+                  y: (d as HierarchyRectangularNode<GitObject>).y0,
                   width: Math.max(
                     (d as HierarchyRectangularNode<GitObject>).x1 -
                       (d as HierarchyRectangularNode<GitObject>).x0 -
@@ -558,10 +562,13 @@ function createPartitionedHiearchy({
           return databaseInfo.commitCounts[obj.path] ?? 1
         case "EQUAL_SIZE":
           return 1
-        case "LAST_CHANGED":
-          return (
-            (databaseInfo.lastChanged[obj.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
-          )
+        case "LAST_CHANGED": {
+          const maxIndex = LastChangedMetric.getBuckets(databaseInfo).length
+          return 2 ** (maxIndex - LastChangedMetric.getBucketIndex(obj, databaseInfo))
+        }
+        // return (
+        //   (databaseInfo.lastChanged[obj.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate
+        // )
         case "MOST_CONTRIBUTIONS":
           return databaseInfo.contribSumPerFile[obj.path] ?? 1
       }
@@ -580,7 +587,7 @@ function createPartitionedHiearchy({
             .paddingInner(treemapPaddingInner)
             .paddingOuter(treemapPaddingOuter)
             .paddingTop(treemapPaddingTop)
-        : partition<GitObject>().size([size.width, size.height]).padding(treemapPaddingInner)
+        : partition<GitObject>().size([size.width, size.height]).padding(0)
 
     const tmPartition = treeMapPartition(hiearchy)
 

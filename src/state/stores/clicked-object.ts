@@ -1,6 +1,5 @@
 import { useQueryState, useQueryStates } from "nuqs"
 import { missingInMapColor } from "~/const"
-// import { create } from "zustand"
 import { useData, useDataNullable } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -19,9 +18,7 @@ export const useClickedObject = (): GitObject => {
 
   const clickedObjectState = qs.objectPath ? data.databaseInfo.objectPathMap[qs.objectPath] : undefined
   const zoomedObjectState = qs.zoomPath ? data.databaseInfo.objectPathMap[qs.zoomPath] : undefined
-
-  const rootTree = useData().databaseInfo.fileTree
-  // const clickedObjectState = useClickedObjectStore((state) => state.clickedObject)
+  const rootTree = data.databaseInfo.fileTree
 
   return clickedObjectState ?? zoomedObjectState ?? rootTree
 }
@@ -118,7 +115,4 @@ export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
   } as const
 
   return colorMap[metricType]()
-  // const hoveredObject = obj ? databaseInfo.objectPathMap[obj.path] : null
-  // const colors = hoveredObject ? (metricsData.get(metricType)?.categoriesMap?.get(hoveredObject.path) ?? []) : []
-  // return colors.map((c) => c.color)
 }
