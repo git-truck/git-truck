@@ -4,7 +4,7 @@ import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-ob
 import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
-import { $inspect, isRepositoryRoot } from "~/shared/util"
+import { isRepositoryRoot } from "~/shared/util"
 
 export function ClickedObjectButton({ style = {} }: { style?: React.CSSProperties }) {
   const [zoomPath, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
@@ -13,12 +13,6 @@ export function ClickedObjectButton({ style = {} }: { style?: React.CSSPropertie
   const data = useData()
   const isRepoRoot = isRepositoryRoot(clickedObject)
   const isZoomPath = clickedObject.path === zoomPath && !isRepoRoot
-  $inspect({
-    "clickedObject.path": clickedObject?.path,
-    zoomPath,
-    isZoomPath,
-    isRepoRoot
-  })
 
   if (!clickedObject || !data) return null
 
