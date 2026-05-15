@@ -587,17 +587,24 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     <h2 className="card__title">Visualization options</h2>
                     <Options key={leftExpanded ? "expanded" : "collapsed"} />
                   </div>
-                  <div className="bg-primary-text dark:bg-primary-text-dark w-full" />
-                  <div className="px-2 flex flex-col gap-1">
-                    <h2 className="card__title gap- border-t-border flex items-center border-t pt-4">
-                      Inspecting <InspectPanel className="w-max text-sm" />
+                  <div className="card flex flex-col gap-1 px-2">
+                    <h2 className="card__title flex items-center gap-1">
+                      Inspecting <InspectPanel />
                     </h2>
                     <InteractionButtons />
                     {/* <div className="card rounded-xl">
                       <h3 className="card__title">Actions</h3>
                     </div> */}
                   </div>
-                  <CollapsibleHeader className="card" title={() => "Metrics"}>
+                  <CollapsibleHeader
+                    className="card"
+                    title={() => (
+                      <>
+                        Metrics for
+                        <InspectPanel />
+                      </>
+                    )}
+                  >
                     <MetricsInspection />
                   </CollapsibleHeader>
                   <CommitsInspection className="card" />

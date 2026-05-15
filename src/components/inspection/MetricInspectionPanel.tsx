@@ -35,7 +35,7 @@ export function MetricInspectionPanel({
   description = "Description not provided."
 }: {
   className?: string
-  title: string
+  title?: string
   children: ReactNode
   actions?: MetricPanelButton
   metricMenuItems: MetricPanelDropdownButton[]
@@ -46,24 +46,31 @@ export function MetricInspectionPanel({
 
   return (
     <div className={cn("mt-4 flex w-full flex-col gap-0", className)}>
-      <div className="flex w-full flex-row items-end justify-between align-bottom">
-        <button
-          className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
-          title={"Toggle " + title + " description"}
-          onClick={() => setInfoOpen(!infoOpen)}
-        >
-          {!infoOpen ? (
-            <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
-          ) : null}
-          <span className="text-sm font-bold">{title}</span>
-        </button>
-        <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
-          {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
-          {actions.clear ? <ClearSelectionButton /> : null}
-          {metricMenuItems.length > 0 ? <SettingsButton metricMenuItems={metricMenuItems} /> : null}
+      {title ? (
+        <div className="flex w-full flex-row items-end justify-between align-bottom">
+          <button
+            className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
+            title={"Toggle " + title + " description"}
+            onClick={() => setInfoOpen(!infoOpen)}
+          >
+            {!infoOpen ? (
+              <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
+            ) : null}
+            <span className="text-sm font-bold">{title}</span>
+          </button>
+
+          <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
+            {actions.search ? <SearchButton value={selectedSearch} onChange={setSelectedSearch} /> : null}
+            {actions.clear ? <ClearSelectionButton /> : null}
+            {metricMenuItems.length > 0 ? <SettingsButton metricMenuItems={metricMenuItems} /> : null}
+          </div>
         </div>
-      </div>
-      <div className="border-border dark:border-border-dark bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg border-2 p-2">
+      ) : null}
+      <div
+        className={cn("bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg", {
+          "border-border dark:border-border-dark border-2 p-2": title
+        })}
+      >
         {infoOpen ? (
           <div className="border-blue-primary bg-blue-secondary/30 w-full rounded-lg border-2 py-2">
             <div className="flex h-full flex-row items-center">

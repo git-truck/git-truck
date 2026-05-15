@@ -46,7 +46,7 @@ export function ZoomButtons() {
           </Link>
         ) : null}
         {zoomPath && zoomPath !== data.databaseInfo.repo ? (
-          <button className="btn btn--text" title="Zoom out to repository root" onClick={() => setZoomPath(null)}>
+          <button className="btn btn--text" title="Zoom out to repository root" onClick={() => setZoomPath(data.databaseInfo.repo)}>
             <Icon path={mdiMagnifyMinusOutline} />
             Zoom out
           </button>

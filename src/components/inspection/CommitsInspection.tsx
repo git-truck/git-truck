@@ -69,7 +69,8 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
   return (
     <CollapsibleHeader
       className={className}
-      title={() => "Commits"}
+      title={() => <>
+      Commits to <InspectPanel /></>}
       contentClassName="flex flex-col gap-2"
       defaultOpen={false}
       onToggle={(open) => {

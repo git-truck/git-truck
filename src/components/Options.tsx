@@ -45,7 +45,7 @@ export function Options() {
   return (
     <div className="grid grid-flow-col grid-cols-3 grid-rows-[auto_auto] items-start gap-0">
       {/* <div className="flex items-center justify-between gap-2"> */}
-      <h3 className="text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap">Layout</h3>
+      <h3 className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap">Layout</h3>
       {/* <span className="bg-secondary-bg dark:bg-secondary-bg-dark h-0.75 flex-1 rounded-full" />{" "} */}
       <IconDropdownGroup
         group={LayoutGroups}
@@ -57,7 +57,7 @@ export function Options() {
       {/* </div> */}
       {/* <div className="flex items-center justify-between gap-2"> */}
       <h3
-        className="text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap"
+        className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap"
         title="Select the metric used to size the visualization"
       >
         Node Size
@@ -76,7 +76,7 @@ export function Options() {
       {/* </div> */}
       {/* <div className="flex items-center justify-between gap-2"> */}
       <h3
-        className="text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap"
+        className="ml-8 text-tertiary-text dark:text-tertiary-text-dark text-xs font-bold whitespace-nowrap"
         title="Select the metric used to color the visualization"
       >
         Node Color

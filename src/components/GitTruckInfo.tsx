@@ -1,16 +1,12 @@
 import { semverCompare } from "~/shared/util"
 import { UpdateNotifier } from "~/components/UpdateNotifier"
-import { useNavigation } from "react-router"
-import { cn } from "~/styling"
 import { Icon } from "~/components/Icon"
 import { mdiCloudCheckOutline } from "@mdi/js"
 
 export function GitTruckInfo({
-  className = "",
   installedVersion,
   latestVersion
 }: {
-  className?: string
   installedVersion: string
   latestVersion: string | null
 }) {

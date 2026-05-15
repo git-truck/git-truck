@@ -17,7 +17,7 @@ export function InspectPanel({ className = "" }: { className?: string }) {
   return (
     <button
       className={cn(
-        "rounded-md w-full px-3 py-2 h-button text-primary-text dark:text-primary-text-dark ml-1 inline-flex items-center gap-1 font-bold",
+        "rounded-md text-sm px-3 py-2 h-button text-primary-text dark:text-primary-text-dark ml-1 inline-flex items-center gap-1 font-bold",
 
         { "text-primary-text-dark dark:text-primary-text": isDark },
         className

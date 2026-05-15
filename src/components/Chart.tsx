@@ -310,6 +310,7 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType, metricType, transitionsEnabled } = useOptions()
   const selectedCategories = useSelectedCategories()
   const isSelected = useIsCategorySelected()
+  const clickedObject = useClickedObject()
 
   const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
 
@@ -324,6 +325,8 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { linearGradient, fill } = useGradient(colors.map((c) => c.color))
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
+  const isClickedObject = d.data.path === clickedObject.path
+
   const commonProps = useMemo(() => {
     const borderRadius = isRoot ? 12 : treemapTreeBorderRadius
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
@@ -332,7 +335,7 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
           stroke: colors ? colors[0].color : noEntryColor
         }
       : {
-          // strokeWidth: "1px"
+          strokeWidth: isClickedObject ? "2px" : "1px"
           // // stroke: isClickedObject? (clickedObjectColor?? undefined
           // ) : undefined
         }
@@ -363,7 +366,7 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
       }
     }
     return props
-  }, [isRoot, d, colors, multipleColors, fill, chartType])
+  }, [isRoot, d, colors, multipleColors, fill, isClickedObject, chartType])
 
   return (
     <>
@@ -465,7 +468,7 @@ function NodeText({
                 }
               : {
                   x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
-                  y: (d as HierarchyRectangularNode<GitObject>).y0 + clipPathPadding / 2,
+                  y: (d as HierarchyRectangularNode<GitObject>).y0 ,
                   width: Math.max(
                     (d as HierarchyRectangularNode<GitObject>).x1 -
                       (d as HierarchyRectangularNode<GitObject>).x0 -
@@ -508,7 +511,7 @@ function NodeText({
         y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
-          "font-bold uppercase": isTree(d.data),
+          "font-bold ": isTree(d.data),
           "fill-primary-text-dark": isDark && isBlob(d.data),
           "fill-primary-text": !isDark && isBlob(d.data)
         })}

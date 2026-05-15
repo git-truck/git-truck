@@ -230,7 +230,7 @@ export function CommitHistory({
     <>
       <MetricInspectionPanel
         className="mt-0"
-        title={"Commit History"}
+        // title={"Commit History"}
         metricMenuItems={[]}
         description={"Shows the commit history for " + clickedObject.path + ". Click on a commit to see details."}
       >
