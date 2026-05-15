@@ -21,16 +21,6 @@ export function ZoomButtons() {
   const isSelectedObjectZoomPath = currentZoomPath === targetZoomPath
   const zoomLink = location.pathname + viewSerializer({ ...viewSearchParams, zoomPath: targetZoomPath ?? undefined })
 
-  // if (isSelectedObjectZoomPath) return null
-
-  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
-  const zoomOneLevelOut = () => {
-    if (!sep || !zoomPath) return
-    // Move up to parent
-    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
-    setZoomPath(parentPath)
-  }
-
   return (
     <>
       <div className="flex gap-2">
