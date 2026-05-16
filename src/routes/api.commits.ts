@@ -1,24 +1,34 @@
-import { loadViewSearchParams } from "~/routes/viewParams"
+import { loadViewSearchParams, viewSearchParamsConfig } from "~/routes/viewParams"
 import { invariant } from "~/shared/util"
 import type { Route } from "./+types/api.commits"
 import { AnalysisManager } from "~/server/AnalysisManager"
+import { createLoader, parseAsArrayOf, parseAsInteger, parseAsString } from "nuqs/server"
+import { createSerializer } from "nuqs"
+
+const commitsSearchParamsConfig = {
+  ...viewSearchParamsConfig,
+  count: parseAsInteger,
+  contributors: parseAsArrayOf(parseAsString).withDefault([])
+}
+
+const loadCommitsSearchParams = createLoader(commitsSearchParamsConfig)
+export const commitsSerializer = createSerializer(commitsSearchParamsConfig)
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request)
+  const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request, { strict: true })
+  const { count, contributors } = loadCommitsSearchParams(request, {
+    strict: true
+  })
+
+  invariant(count !== null, "count is required")
   invariant(repositoryPath, "path is required")
   invariant(branch, "branch is required")
   invariant(objectPath, "objectPath is required")
 
-  const rawCount = new URL(request.url).searchParams.get("count")
-  const parsedCount = rawCount ? Number(rawCount) : Number.NaN
-  const count = Number.isFinite(parsedCount) && parsedCount > 0 ? Math.floor(parsedCount) : 10
-  // Get selected authors from query params (can be multiple)
-  const authors = new URL(request.url).searchParams.getAll("authors")
-
   const instance = await AnalysisManager.getInstance({ repositoryPath, branch: branch })
 
   const getCommits = async () => {
-    const commitHashes = await instance.db.getCommitHashes(objectPath, count, authors)
+    const commitHashes = await instance.db.getCommitHashes(objectPath, count, contributors)
     if (commitHashes.length < 1) return []
     const gitLogResult = await instance.gitService.gitLogSpecificCommits(commitHashes)
     const fullCommits = await instance.getFullCommits(gitLogResult)
@@ -53,7 +63,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return {
     objectPath: objectPath,
     currentCommitCount: count,
-    totalCommitCount: await instance.db.getCommitCountForPath(objectPath, authors),
+    totalCommitCount: await instance.db.getCommitCountForPath(objectPath, contributors),
     commits: await getCommits()
   }
 }
