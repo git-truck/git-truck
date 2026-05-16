@@ -6,7 +6,7 @@ export const viewSearchParamsConfig = {
   objectPath: parseAsString.withOptions({ shallow: false }),
   zoomPath: parseAsString.withOptions({ shallow: false }),
   branch: parseAsString.withOptions({ shallow: false }),
-  timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues),
+  timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues).withOptions({ shallow: false }),
   start: parseAsInteger.withOptions({ shallow: false }),
   end: parseAsInteger.withOptions({ shallow: false })
 }
