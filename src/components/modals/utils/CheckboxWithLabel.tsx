@@ -28,7 +28,7 @@ export function CheckboxWithLabel({
   return (
     <label
       className={cn(
-        "flex items-center justify-start gap-2",
+        "flex items-center justify-start gap-1",
         { label: !unstyled, "flex-row-reverse": reversed },
         className
       )}
