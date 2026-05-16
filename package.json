@@ -131,6 +131,7 @@
     "sha1": "1.1.1",
     "tailwind-merge": "3.4.0",
     "tailwindcss": "^4.3.0",
+    "temporal-polyfill": "^0.3.2",
     "tsdown": "0.21.0",
     "tsx": "4.21.0",
     "typescript": "6.0.3",
