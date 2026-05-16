@@ -40,7 +40,7 @@ import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
-import { $inspect, dateFormatShort, invariant } from "~/shared/util"
+import { invariant } from "~/shared/util"
 import { browseSerializer } from "~/routes/browse"
 import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
