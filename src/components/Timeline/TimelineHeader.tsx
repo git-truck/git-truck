@@ -10,7 +10,7 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
   const data = useData()
 
   return (
-    <div className="card__title grid w-full grid-cols-[1fr_max-content_1fr] items-center justify-between gap-2">
+    <div className="card__title grid w-full grid-cols-[1fr_max-content_1fr] items-center justify-between gap-4">
       <h2
         className="flex items-center gap-2"
         title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}
@@ -19,7 +19,7 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
         <InspectPanel />
       </h2>
       <div />
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-end gap-4">
         <div className="flex items-start">
           Per
           <TimeUnitForm />
