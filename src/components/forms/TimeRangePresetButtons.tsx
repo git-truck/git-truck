@@ -1,4 +1,5 @@
 import { useQueryStates } from "nuqs"
+import { useOptimistic, useMemo, useTransition } from "react"
 import { useData } from "~/contexts/DataContext"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import type { TimeUnit } from "~/shared/utils/time"
@@ -11,29 +12,29 @@ const presets: Array<{
   title: string
   visibleForUnits: TimeUnit[]
 }> = [
-  { label: "1D", durationSecs: 24 * 60 * 60, title: "Last 24 hours", visibleForUnits: ["day"] },
+  { label: "1d", durationSecs: 24 * 60 * 60, title: "Last 24 hours", visibleForUnits: ["day"] },
   {
-    label: "7D",
+    label: "7d",
     durationSecs: 7 * 24 * 60 * 60,
     title: "Last 7 days",
     visibleForUnits: ["day", "week"]
   },
   {
-    label: "1MO",
+    label: "1m",
     durationSecs: 30 * 24 * 60 * 60,
     durationMonths: 1,
     title: "Last 1 month",
     visibleForUnits: ["day", "week", "month"]
   },
   {
-    label: "3MO",
+    label: "3m",
     durationSecs: 90 * 24 * 60 * 60,
     durationMonths: 3,
     title: "Last 3 months",
     visibleForUnits: ["day", "week", "month"]
   },
   {
-    label: "6MO",
+    label: "6m",
     durationSecs: 180 * 24 * 60 * 60,
     durationMonths: 6,
     title: "Last 6 months",
@@ -46,7 +47,7 @@ const presets: Array<{
     title: "Year to last change date"
   }, // Special handling for Year To Date
   {
-    label: "1YR",
+    label: "1yr",
     durationSecs: 1 * 365 * 24 * 60 * 60,
     durationMonths: 12,
     title: "Last 1 year",
@@ -62,11 +63,22 @@ const presets: Array<{
 
 export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
   const data = useData()
-  const [, setQs] = useQueryStates(viewSearchParamsConfig)
-  const { timerange, selectedRange } = data.databaseInfo
+  const { timerange } = data.databaseInfo
+  const [qs, setQs] = useQueryStates({
+    ...viewSearchParamsConfig,
+    start: viewSearchParamsConfig.start.withDefault(timerange[0]),
+    end: viewSearchParamsConfig.end.withDefault(timerange[1])
+  }, {
+    clearOnDefault: false
+  })
+  const [, startTransition] = useTransition()
+  const selectedRange = useMemo<[number, number]>(() => [qs.start, qs.end], [qs.start, qs.end])
+  const [optimisticTimerange, setOptimisticTimerange] = useOptimistic(
+    selectedRange,
+    (_currentRange, nextRange: [number, number]) => nextRange
+  )
 
   const projectDuration = timerange[1] - timerange[0]
-  const selectionDuration = selectedRange[1] - selectedRange[0]
 
   function getMonthPresetStart(end: number, durationMonths: number) {
     const start = new Date(end * 1000)
@@ -76,39 +88,54 @@ export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
     return Math.floor(start.getTime() / 1000)
   }
 
+  function getPresetRange({
+    duration,
+    durationMonths
+  }: {
+    duration: number
+    durationMonths?: number
+  }): [number, number] {
+    const end = timerange[1]
+    const start =
+      unit === "month" && durationMonths
+        ? getMonthPresetStart(end, durationMonths)
+        : duration === Infinity
+          ? timerange[0]
+          : end - Math.floor(duration)
+
+    return [start, end]
+  }
+
   return (
-    <div className="flex justify-end gap-0">
+    <div className="bg-primary-bg dark:bg-primary-bg-dark flex justify-end gap-0.5 rounded-full p-1">
       {presets.map((preset) => {
         if (!preset.visibleForUnits.includes(unit)) {
           return null
         }
-        const isActive =
-          (preset.durationSecs === Infinity && selectionDuration >= projectDuration) ||
-          selectionDuration === preset.durationSecs
         const ytd = new Date(timerange[1] * 1000)
         ytd.setMonth(0, 1)
 
         const duration = preset.durationSecs ?? timerange[1] - ytd.getTime() / 1000
+        const presetRange = getPresetRange({ duration, durationMonths: preset.durationMonths })
+        const isActive =
+          (preset.durationSecs === Infinity && optimisticTimerange[1] - optimisticTimerange[0] >= projectDuration) ||
+          (optimisticTimerange[0] === presetRange[0] && optimisticTimerange[1] === presetRange[1])
 
         return duration <= projectDuration || duration === Infinity ? (
           <button
             key={preset.label}
             className={cn(
-              "btn btn--text uppercase",
+              "cursor-pointer rounded-full p-1 text-sm transition-opacity hover:opacity-80",
               isActive
-                ? "text-primary-text dark:text-primary-text-dark"
+                ? "bg-secondary-bg dark:bg-secondary-bg-dark text-primary-text dark:text-primary-text-dark"
                 : "text-tertiary-text dark:text-tertiary-text-dark"
             )}
             title={preset.title}
             onClick={() => {
-              const end = data.databaseInfo.timerange[1]
-              const start =
-                unit === "month" && preset.durationMonths
-                  ? getMonthPresetStart(end, preset.durationMonths)
-                  : duration === Infinity
-                    ? timerange[0]
-                    : end - Math.floor(duration)
-              setQs((prev) => ({ ...prev, start, end }))
+              startTransition(async () => {
+                setOptimisticTimerange(presetRange)
+                await setQs((prev) => ({ ...prev, start: presetRange[0], end: presetRange[1] }))
+              })
             }}
           >
             {preset.label}
