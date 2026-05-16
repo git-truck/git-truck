@@ -8,9 +8,7 @@ export function TimeUnitForm() {
   const data = useData()
   const [timeUnit, setTimeUnit] = useQueryState(
     "timeUnit",
-    viewSearchParamsConfig.timeUnit
-      .withOptions({ shallow: false })
-      .withDefault(data.databaseInfo.commitCountPerTimeIntervalUnit)
+    viewSearchParamsConfig.timeUnit.withDefault(data.databaseInfo.commitCountPerTimeIntervalUnit)
   )
 
   return (
@@ -34,18 +32,5 @@ export function TimeUnitForm() {
         </option>
       ))}
     </select>
-    // return (
-    //   <div className="flex gap-1">
-    //     {TimeUnitValues.map((unit) => (
-    //       <button
-    //         key={unit}
-    //         className={cn("btn capitalize", timeUnit === unit ? "btn--outlined" : "btn--text")}
-    //         value={unit}
-    //         onClick={() => setTimeUnit(unit)}
-    //       >
-    //         {unit}
-    //       </button>
-    //     ))}
-    //   </div>
   )
 }
