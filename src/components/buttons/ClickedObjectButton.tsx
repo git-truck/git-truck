@@ -5,25 +5,19 @@ import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { isRepositoryRoot } from "~/shared/util"
+import { useZoomToParent } from "~/hooks"
 
 export function ClickedObjectButton({ style = {} }: { style?: React.CSSProperties }) {
-  const [zoomPath, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
+  const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObject()
   const data = useData()
   const isRepoRoot = isRepositoryRoot(clickedObject)
   const isZoomPath = clickedObject.path === zoomPath && !isRepoRoot
+  const zoomOneLevelOut = useZoomToParent()
 
   if (!clickedObject || !data) return null
 
-  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
-
-  const zoomOneLevelOut = () => {
-    if (!sep || !zoomPath) return
-    // Move up to parent
-    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
-    setZoomPath(parentPath)
-  }
 
   return (
     <button

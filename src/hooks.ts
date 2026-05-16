@@ -1,8 +1,10 @@
+import { useQueryState } from "nuqs"
 import type { RefObject } from "react"
-import { useState, useEffect, useMemo, useSyncExternalStore } from "react"
+import { useState, useEffect, useMemo, useSyncExternalStore, useCallback } from "react"
 import { href, useLocation, useSubmit } from "react-router"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { promiseHelper } from "~/shared/util"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
@@ -117,4 +119,17 @@ export const useMediaQuery = (query: string) => {
   }, [query])
 
   return matches
+}
+
+export const useZoomToParent = () => {
+  const [zoomPath, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
+
+  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
+
+  return useCallback(() => {
+    if (!sep || !zoomPath) return
+    // Move up to parent
+    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
+    setZoomPath(parentPath)
+  }, [sep, setZoomPath, zoomPath])
 }
