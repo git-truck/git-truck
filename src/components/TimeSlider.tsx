@@ -91,7 +91,6 @@ export function Timeline({ className }: { className?: string }) {
         <TimelineHeader>
           <CheckboxWithLabel
             unstyled
-            reversed
             className="gap"
             title="Use log scale for commit counts"
             checked={commitCountScale === "log"}
@@ -149,7 +148,7 @@ function TimeSlider({
     (e: readonly number[]) => {
       if (e[0] === 0 && e[1] === 0) return
 
-      startTransition(() => {
+      startTransition(async () => {
         const [startTime, endTime] = sliderUnitsToTimeRange({
           startIndex: e[0],
           endIndex: e[1],
@@ -158,7 +157,7 @@ function TimeSlider({
           minSecs: minMs / 1000,
           maxSecs: maxMs / 1000
         })
-        setStartEnd({
+        await setStartEnd({
           start: startTime,
           end: endTime
         })
