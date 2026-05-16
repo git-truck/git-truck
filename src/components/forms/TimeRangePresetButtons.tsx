@@ -64,13 +64,16 @@ const presets: Array<{
 export function TimeRangePresetButtons({ unit }: { unit: TimeUnit }) {
   const data = useData()
   const { timerange } = data.databaseInfo
-  const [qs, setQs] = useQueryStates({
-    ...viewSearchParamsConfig,
-    start: viewSearchParamsConfig.start.withDefault(timerange[0]),
-    end: viewSearchParamsConfig.end.withDefault(timerange[1])
-  }, {
-    clearOnDefault: false
-  })
+  const [qs, setQs] = useQueryStates(
+    {
+      ...viewSearchParamsConfig,
+      start: viewSearchParamsConfig.start.withDefault(timerange[0]),
+      end: viewSearchParamsConfig.end.withDefault(timerange[1])
+    },
+    {
+      clearOnDefault: false
+    }
+  )
   const [, startTransition] = useTransition()
   const selectedRange = useMemo<[number, number]>(() => [qs.start, qs.end], [qs.start, qs.end])
   const [optimisticTimerange, setOptimisticTimerange] = useOptimistic(
