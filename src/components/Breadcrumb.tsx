@@ -16,6 +16,7 @@ type Segment = {
   type: "browse" | "zoom" | "filler" | "clicked"
   segment: string
   fullPath: string
+  parentPath: string
   showAnalysisInfo: boolean
 }
 
@@ -26,6 +27,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
   const clickedObject = useClickedObjectNullable()
+  const clickedObjectIsZoomPath = clickedObject?.path === zoomPath
   const color = useObjectColor(clickedObject)
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
@@ -39,6 +41,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           type: "browse",
           segment: segment.length === 0 && i === 0 ? "/" : segment,
           fullPath: i === 0 ? fullPath + getSep(path) : fullPath,
+          parentPath: i === 0 ? "" : segments.slice(0, i).join("/"),
           showAnalysisInfo: false
         } satisfies Segment
       })
@@ -58,8 +61,9 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           // Repository root
           {
             type: "zoom",
-            segment: data.repo.repositoryName ?? "",
-            fullPath: data.repo.repositoryName ?? "",
+            segment: data.repo.repositoryName,
+            fullPath: data.repo.repositoryName,
+            parentPath: data.repo.repositoryName,
             showAnalysisInfo: true
           } as const,
           ...(zoomPath?.split(getSep(zoomPath)) ?? []).flatMap((segment, index, segments) => {
@@ -68,7 +72,8 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
               return []
             }
             const fullPath = segments.slice(0, index + 1).join("/")
-            return { type: "zoom", segment, fullPath, showAnalysisInfo: false } satisfies Segment
+            const parentPath = index > 0 ? segments.slice(0, index).join("/") : ""
+            return { type: "zoom", segment, fullPath, parentPath, showAnalysisInfo: false } satisfies Segment
           })
         ]
     const segments = zoom ? zoomSegments : pathSegments
@@ -77,7 +82,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       return [
         segments[0],
         segments[1],
-        { type: "filler", segment: "...", fullPath: "", showAnalysisInfo: false } satisfies Segment,
+        { type: "filler", segment: "...", fullPath: "", parentPath: "", showAnalysisInfo: false } satisfies Segment,
         segments[segments.length - 2],
         segments[segments.length - 1]
       ] satisfies Array<Segment>
@@ -89,18 +94,19 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   return (
     <div
       className={cn(
-        "text-secondary-text dark:text-secondary-text-dark flex items-center gap-0 overflow-x-auto",
+        "text-secondary-text dark:text-secondary-text-dark flex h-8 items-center justify-stretch gap-1 overflow-x-auto",
         className
       )}
     >
-      {breadcrumbSegments.map(({ type, segment, fullPath, showAnalysisInfo: isRepo }, i) => {
+      {breadcrumbSegments.map(({ type, segment, fullPath, parentPath, showAnalysisInfo: isRepo }, i) => {
         const title = isRepo
           ? "Reset zoom to repository root"
           : type === "browse"
             ? `Browse ${segment} directory`
-            : `Zoom to ${segment} directory`
+            : clickedObjectIsZoomPath
+              ? "Zoom to parent"
+              : `Zoom to ${segment} directory`
         const isFirst = i === 0
-        const isLast = breadcrumbSegments.length - 1 === i
 
         const content = (
           <>
@@ -109,18 +115,18 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           </>
         )
         const button =
-          isLast || type === "filler" ? (
-            <button
+          type === "filler" ? (
+            <div
               title={fullPath}
-              className="btn--text cursor-events-none flex flex-row items-center gap-2 truncate p-2 text-sm font-bold"
+              className="text-tertiary-text dark:text-tertiary-text-dark pointer-events-none flex w-max items-center gap-2 truncate text-sm font-bold opacity-80"
             >
               {content}
-            </button>
+            </div>
           ) : type === "browse" ? (
             <Link
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
-              className="btn btn--text truncate text-sm"
+              className="text-secondary-text dark:text-secondary-text-dark flex cursor-pointer items-center gap-1 truncate text-sm font-bold"
               onClick={() => setClickedObject(null)}
             >
               {content}
@@ -128,10 +134,19 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           ) : (
             <button
               title={title}
-              className="btn btn--text cursor-pointer truncate text-sm"
+              className="text-secondary-text dark:text-secondary-text-dark flex cursor-pointer items-center gap-1 truncate text-sm font-bold"
               onClick={() => {
                 if (!data) {
                   throw Error("Attempting to access data when none is loaded")
+                }
+                if (zoomPath === fullPath) {
+                  if (clickedObjectIsZoomPath) {
+                    setViewParams((prev) => ({ ...prev, zoomPath: parentPath }))
+                    return
+                  } else {
+                    setClickedObject(null)
+                    return
+                  }
                 }
                 setViewParams((prev) => ({ ...prev, zoomPath: fullPath }))
               }}
