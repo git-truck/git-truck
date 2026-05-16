@@ -2,7 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
 import { type JSX } from "react"
-import type { GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
+import type { GitObject, GitTreeObject, DatabaseInfo, HexColor } from "~/shared/model"
 import { useComponentSize, useKey, useZoomToParent } from "~/hooks"
 import {
   bubblePadding,
@@ -129,7 +129,6 @@ export function Chart() {
   const zoomPathIsClickedObject = zoomPath && zoomPath === clickedObject.path
   const clickedObjectIsZoomPath = clickedObject.path === zoomPath
   const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
-
 
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
@@ -315,23 +314,12 @@ export function Chart() {
 }
 
 function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
-  const [metricsData] = useMetrics()
-  const { chartType, metricType, transitionsEnabled } = useOptions()
-  const selectedCategories = useSelectedCategories()
-  const isSelected = useIsCategorySelected()
+  const { chartType, transitionsEnabled } = useOptions()
+
   const clickedObject = useClickedObject()
+  const colors = useNodeColors(d.data)
 
-  const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
-
-  let colors: { category: string; color: string }[] = [metricsData.get(metricType)].flatMap(
-    (c) => c?.categoriesMap?.get(d.data.path)?.filter((c) => isSelected(c.category) || noCategoriesSelected) ?? []
-  )
-
-  if ((colors?.length ?? 0) === 0 && isBlob(d.data)) {
-    colors = [{ category: UNKNOWN_CATEGORY, color: missingInMapColor }]
-  }
-
-  const { linearGradient, fill } = useGradient(colors.map((c) => c.color))
+  const { linearGradient, fill } = useGradient(colors)
   const multipleColors = Array.isArray(colors) && colors.length > 1
 
   const isClickedObject = d.data.path === clickedObject.path
@@ -340,8 +328,8 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
     const borderRadius = isRoot ? 12 : treemapTreeBorderRadius
     let props: JSX.IntrinsicElements["rect"] = isBlob(d.data)
       ? {
-          fill: colors ? (multipleColors ? fill : colors[0].color) : missingInMapColor,
-          stroke: colors ? colors[0].color : noEntryColor
+          fill: colors ? (multipleColors ? fill : colors[0]) : missingInMapColor,
+          stroke: colors ? colors[0] : noEntryColor
         }
       : {
           strokeWidth: isClickedObject ? "2px" : "1px"
@@ -406,14 +394,12 @@ function NodeText({
   isSearchMatch?: boolean
   children?: React.ReactNode
 }) {
-  const [metricsData] = useMetrics()
-  const { metricType } = useOptions()
   const isBubbleChart = isCircularNode(d)
+  const colors = useNodeColors(d.data)
 
   if (children === null) return null
 
-  const colors = metricsData.get(metricType)?.categoriesMap.get(d.data.path) ?? []
-  const isDark = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0].color)
+  const isDark = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0])
 
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
@@ -536,6 +522,22 @@ function NodeText({
   )
 }
 
+function useNodeColors(obj: GitObject): Array<HexColor> {
+  const selectedCategories = useSelectedCategories()
+  const isSelected = useIsCategorySelected()
+
+  const { metricType } = useOptions()
+  const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
+  const [metricsData] = useMetrics()
+  let colors: Array<{ category: string; color: HexColor }> = [metricsData.get(metricType)].flatMap(
+    (c) => c?.categoriesMap?.get(obj.path)?.filter((c) => isSelected(c.category) || noCategoriesSelected) ?? []
+  )
+
+  if ((colors?.length ?? 0) === 0 && isBlob(obj)) {
+    colors = [{ category: UNKNOWN_CATEGORY, color: missingInMapColor }]
+  }
+  return colors.map((c) => c.color)
+}
 function isCircularNode(d: CircleOrRectHiearchyNode): d is HierarchyCircularNode<GitObject> {
   return typeof (d as HierarchyCircularNode<GitObject>).r === "number"
 }
