@@ -86,7 +86,7 @@ function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
 }
 
 export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
-  const { databaseInfo, repo } = useData()
+  const { databaseInfo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
     end: viewSearchParamsConfig.end.withDefault(databaseInfo.selectedRange[1])
