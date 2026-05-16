@@ -5,7 +5,7 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isDarkColor, isTree } from "~/shared/util"
+import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isDarkColor, isRepositoryRoot, isTree } from "~/shared/util"
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
@@ -37,6 +37,12 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const xTransform = useMemo(() => (right ? `calc(1rem + ${x}px)` : `calc(-0.5rem + ${x}px - 100%)`), [right, x])
   const yTransform = useMemo(() => (top ? `calc(1rem + ${y}px)` : `calc(-0.5rem + ${y}px - 100%)`), [top, y])
   const visible = hoveredObject !== null || hoveredBarTooltip !== null
+
+  const isRepoRoot = isRepositoryRoot(rawHoveredObject)
+
+  if (isRepoRoot) {
+    return
+  }
 
   return (
     <div
