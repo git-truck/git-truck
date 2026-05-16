@@ -25,7 +25,7 @@ export const ContributorsMetric: CategoricalMetric = {
   getTooltipContent(obj, dbi, { contributorColors }) {
     const contributors = dbi.contributorsForPath[obj.path] ?? []
     if (contributors.length === 0) {
-      return "No contributors"
+      return "No contributors in selected range"
     }
     const maxToShow = 5
     return (

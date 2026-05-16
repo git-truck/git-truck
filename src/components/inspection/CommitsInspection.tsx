@@ -1,34 +1,24 @@
-import { useQueryState } from "nuqs"
+import { useQueryStates } from "nuqs"
 import { useFetcher, href } from "react-router"
-import type { loader } from "~/routes/api.commits"
-import { viewSerializer } from "~/routes/viewParams"
+import { commitsSerializer, type loader } from "~/routes/api.commits"
+import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useClickedObject } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { isBlob, isRepositoryRoot } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
   const clickedObject = useClickedObject()
-  const objectPathIsFile = isBlob(clickedObject)
-  const objectPathIsRepo = isRepositoryRoot(clickedObject)
   const { load, data, state, reset } = useFetcher<typeof loader>()
-  const [branch] = useQueryState("branch")
-  const [path] = useQueryState("path")
+  const [{path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
+
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
   const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
-  const clickedObjectPath = clickedObject.path
   const previousPathRef = useRef<string>("")
-  const commitShowCountRef = useRef(commitShowCount)
-
-  // Keep ref in sync with current value
-  useEffect(() => {
-    commitShowCountRef.current = commitShowCount
-  }, [commitShowCount])
 
   // Memoize selected authors to prevent unnecessary re-renders
   const selectedContributors = useMemo(
@@ -41,11 +31,9 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
-    ({ objectPath, contributors, count }: { objectPath: string; contributors: string[]; count: number }) => {
-      let url = href("/api/commits") + viewSerializer({ objectPath, path, branch }) + `&count=${count}`
-      contributors.forEach((contributor) => {
-        url += `&contributors=${encodeURIComponent(contributor)}`
-      })
+    ({ objectPath, contributors, count, start = null, end = null }: { objectPath: string; contributors: string[]; count: number; start?: number | null; end?: number | null }) => {
+      const url = href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
+
       load(url)
     },
     [branch, load, path]
@@ -62,9 +50,9 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
         previousPathRef.current = pathToLoad
       }
 
-      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: commitShowCountRef.current })
+      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: commitShowCount, start, end })
     }
-  }, [clickedObject.path, loadCommits, reset, selectedContributors])
+  }, [clickedObject.path, loadCommits, reset, selectedContributors, start, end, commitShowCount])
 
   return (
     <CollapsibleHeader
