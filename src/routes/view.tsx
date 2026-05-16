@@ -463,7 +463,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
   const navigation = useNavigation()
   const fetcher = useFetcher<typeof loader>()
   const isAborting = fetcher.state !== "idle"
-  const isLoading = navigation.state === "loading"
+  const isLoading = navigation.state !== "idle"
 
   const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
   const [params] = useQueryStates(viewSearchParamsConfig)
@@ -567,7 +567,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
                 <CompactLoadingIndicator
                   className={cn("transition-opacity", {
-                    "opacity-0": !isLoading
+                    "opacity-0": !isLoading,
                   })}
                 />
 
