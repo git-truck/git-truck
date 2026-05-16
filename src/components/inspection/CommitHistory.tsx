@@ -7,6 +7,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { Popover } from "~/components/Popover"
 import { MetricInspectionPanel } from "~/components/inspection/MetricInspectionPanel"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
+import { missingInMapColor } from "~/const"
 
 function GenericEntry(props: { keyString: string; children: React.ReactNode }) {
   return (
@@ -64,6 +65,7 @@ function FileChangesEntry(props: { fileChanges: FileChange[] }) {
 
 function CommitListEntry(props: { value: FullCommitDTO }) {
   const [, contributorColors] = useMetrics()
+  const authorColor = contributorColors.get(props.value.author.name) ?? missingInMapColor
   return (
     <>
       <div className="flex w-min min-w-5.5 items-start">
@@ -73,7 +75,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
                 .filter((coauthor) => coauthor.name != props.value.author.name)
                 .slice(0, 2)
                 .map((coauthor) => {
-                  const coauthorColor = contributorColors.get(coauthor.name) ?? "grey"
+                  const coauthorColor = contributorColors.get(coauthor.name) ?? missingInMapColor
                   return (
                     <LegendDot
                       key={props.value.hash + coauthor.email + coauthorColor}
@@ -84,37 +86,30 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
                   )
                 })
             : null}
-          {(() => {
-            const authorColor = contributorColors.get(props.value.author.name) ?? "grey"
-            return (
-              <LegendDot
-                key={props.value.hash + props.value.author.email + authorColor}
-                dotColor={authorColor}
-                title={props.value.author.name}
-                className="z-0"
-              />
-            )
-          })()}
+          <LegendDot
+            key={props.value.hash + props.value.author.email + authorColor}
+            dotColor={authorColor}
+            title={props.value.author.name}
+            className="z-0"
+          />
         </div>
       </div>
+
+      <p className="text-secondary-text dark:text-secondary-text-dark font-mono text-xs">
+        {dateFormatCalendar(props.value.committerTime * 1000)}
+      </p>
+
       <Popover
         triggerClassName="flex min-w-0 w-full h-full items-center truncate hover:opacity-60"
         positions={["right", "bottom", "top", "left"]}
         popoverTitle="Commit Details"
         trigger={({ onClick }) => (
-          <>
-            <button
-              className="h-full w-full min-w-0 cursor-pointer truncate text-start text-sm font-bold"
-              onClick={onClick}
-            >
-              <div className="flex flex-row items-center gap-1">
-                <p className="text-secondary-text dark:text-secondary-text-dark text-xs">
-                  {dateFormatCalendar(props.value.committerTime * 1000)}
-                </p>
-                <p className="text-tertiary-text dark:text-tertiary-text-dark text-xs">{props.value.message}</p>
-              </div>
-            </button>
-          </>
+          <button
+            className="text-tertiary-text dark:text-tertiary-text-dark h-full w-full min-w-0 cursor-pointer truncate pl-1.5 text-start text-xs font-bold"
+            onClick={onClick}
+          >
+            {props.value.message}
+          </button>
         )}
       >
         <div className="grid max-w-lg grid-cols-[max-content_auto] gap-x-3 gap-y-1">
@@ -245,9 +240,9 @@ export function CommitHistory({
           onNextFunc={loadedCommitCount < totalCommitCount ? onShowMoreCommits : undefined}
         >
           {(paginatedCommits) => (
-            <div className="grid grid-cols-[max-content_auto] items-center justify-start gap-x-1 gap-y-1">
+            <div className="grid grid-cols-[max-content_max-content_1fr] items-center justify-start gap-x-1 gap-y-1.5">
               {paginatedCommits.map((value) => (
-                <CommitListEntry key={value.hash + "--itemContentAccordion"} value={value} />
+                <CommitListEntry key={value.hash} value={value} />
               ))}
             </div>
           )}
