@@ -1,4 +1,4 @@
-import { mdiClose, mdiFile, mdiFolder, mdiMagnifyMinusOutline } from "@mdi/js"
+import { mdiClose, mdiFile, mdiFolder, mdiMagnifyMinusOutline, mdiSourceRepository } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
 import { useData } from "~/contexts/DataContext"
@@ -18,11 +18,16 @@ export function ClickedObjectButton({ style = {} }: { style?: React.CSSPropertie
 
   if (!clickedObject || !data) return null
 
-
   return (
     <button
       className="btn btn--primary"
-      title={isZoomPath ? `Deselect and zoom out of ${clickedObject.name}` : `Deselect ${clickedObject.name}`}
+      title={
+        isRepoRoot
+          ? clickedObject.name
+          : isZoomPath
+            ? `Deselect and zoom out of ${clickedObject.name}`
+            : `Deselect ${clickedObject.name}`
+      }
       style={style}
       onClick={() => {
         if (isZoomPath) {
@@ -32,7 +37,7 @@ export function ClickedObjectButton({ style = {} }: { style?: React.CSSPropertie
         setClickedObject(null)
       }}
     >
-      <Icon path={clickedObject.type === "tree" ? mdiFolder : mdiFile} />
+      <Icon path={isRepoRoot ? mdiSourceRepository : clickedObject.type === "tree" ? mdiFolder : mdiFile} />
       {clickedObject.name}
       {!isRepoRoot ? <Icon path={isZoomPath ? mdiMagnifyMinusOutline : mdiClose} /> : null}
     </button>
