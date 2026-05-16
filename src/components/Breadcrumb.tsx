@@ -6,11 +6,11 @@ import { useQueryStates } from "nuqs"
 import { href, Link } from "react-router"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useDataNullable } from "~/contexts/DataContext"
-import { getSep, isDarkColor } from "~/shared/util"
+import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
-import { useClickedObjectNullable, useObjectColor, useSetClickedObject } from "~/state/stores/clicked-object"
-import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
+import { useClickedObjectNullable, useSetClickedObject } from "~/state/stores/clicked-object"
+import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 type Segment = {
   type: "browse" | "zoom" | "filler" | "clicked"
@@ -28,7 +28,6 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   const data = useDataNullable()
   const clickedObject = useClickedObjectNullable()
   const clickedObjectIsZoomPath = clickedObject?.path === zoomPath
-  const color = useObjectColor(clickedObject)
 
   const breadcrumbSegments = useMemo<Array<Segment>>(() => {
     if (!path) return []
@@ -166,9 +165,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       {clickedObject && clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
         <>
           <Icon path={mdiChevronDoubleRight} className="mx-1" size="1.25rem" />
-          <ClickedObjectButton
-            style={{ backgroundColor: color ?? undefined, color: color && isDarkColor(color).isDark ? "#fff" : "#000" }}
-          />
+          <InspectPanel />
         </>
       ) : null}
     </div>
