@@ -567,7 +567,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
                 <CompactLoadingIndicator
                   className={cn("transition-opacity", {
-                    "opacity-0": !isLoading,
+                    "opacity-0": !isLoading
                   })}
                 />
 
