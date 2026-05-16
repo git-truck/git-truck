@@ -3,7 +3,7 @@ import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hiera
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
 import { type JSX } from "react"
 import type { GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
-import { useComponentSize, useKey } from "~/hooks"
+import { useComponentSize, useKey, useZoomToParent } from "~/hooks"
 import {
   bubblePadding,
   letterWidthForTreeText,
@@ -70,13 +70,7 @@ export function Chart() {
     return setZoomPathRaw(value && value !== databaseInfo.repo ? trimFilenameFromPath(value) : null)
   }
 
-  const sep = zoomPath ? (zoomPath?.includes("/") ? "/" : "\\") : null
-  const zoomOneLevelOut = () => {
-    if (!sep || !zoomPath) return
-    // Move up to parent
-    const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
-    setZoomPath(parentPath)
-  }
+  const zoomToParent = useZoomToParent()
 
   useKey({ key: "Escape" }, () => {
     if (clickedObject) {
@@ -132,7 +126,10 @@ export function Chart() {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
+  const zoomPathIsClickedObject = zoomPath && zoomPath === clickedObject.path
+  const clickedObjectIsZoomPath = clickedObject.path === zoomPath
   const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
+
 
   const scrollDeltaRef = useRef(0)
   const clickTimer = useRef<number | null>(null)
@@ -151,7 +148,7 @@ export function Chart() {
           className={clsx(
             "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
             {
-              "cursor-zoom-out": !zoomPathIsRepo
+              "cursor-zoom-out": zoomPathIsClickedObject && !zoomPathIsRepo
             }
           )}
           xmlns="http://www.w3.org/2000/svg"
@@ -159,7 +156,13 @@ export function Chart() {
           onClick={(evt) => {
             const path = getPathFromEventTarget(evt.target)
             if (!path) {
-              setClickedObject(null)
+              if (!clickedObjectIsZoomPath) {
+                setClickedObject(null)
+                return
+              }
+              if (zoomPathIsClickedObject && !zoomPathIsRepo) {
+                zoomToParent()
+              }
               return
             }
 
@@ -239,7 +242,7 @@ export function Chart() {
               scrollDeltaRef.current = 0
             } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {
               startTransition(() => {
-                zoomOneLevelOut()
+                zoomToParent()
               })
               scrollDeltaRef.current = 0
             }
