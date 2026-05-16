@@ -13,7 +13,7 @@ import { InspectPanel } from "~/components/inspection/InspectPanel"
 export function CommitsInspection({ className = "" }: { className?: string }) {
   const clickedObject = useClickedObject()
   const { load, data, state, reset } = useFetcher<typeof loader>()
-  const [{path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
+  const [{ path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
 
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
@@ -31,8 +31,21 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
-    ({ objectPath, contributors, count, start = null, end = null }: { objectPath: string; contributors: string[]; count: number; start?: number | null; end?: number | null }) => {
-      const url = href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
+    ({
+      objectPath,
+      contributors,
+      count,
+      start = null,
+      end = null
+    }: {
+      objectPath: string
+      contributors: string[]
+      count: number
+      start?: number | null
+      end?: number | null
+    }) => {
+      const url =
+        href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
 
       load(url)
     },

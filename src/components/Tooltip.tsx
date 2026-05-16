@@ -5,7 +5,15 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isDarkColor, isRepositoryRoot, isTree } from "~/shared/util"
+import {
+  allExceptFirst,
+  dateFormatRelative,
+  formatLargeNumber,
+  isBlob,
+  isDarkColor,
+  isRepositoryRoot,
+  isTree
+} from "~/shared/util"
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
