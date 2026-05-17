@@ -13,9 +13,10 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
-import { getCategoricalScheme } from "~/metrics/metrics"
+
 import { cn } from "~/styling"
 import { isDarkColor } from "~/shared/util"
+import { categoricalScheme } from "~/const"
 
 // Minimal mock RepoData for context providers
 const mockRepoData: RepoData = {
@@ -405,7 +406,7 @@ export default function UI() {
           value={threshold}
           onChange={(e) => setThreshold(parseFloat(e.target.value))}
         />
-        {(getCategoricalScheme() as Array<HexColor>).map((c) => (
+        {(categoricalScheme as Array<HexColor>).map((c) => (
           <div
             key={c}
             className={cn("h-8 w-full", {
