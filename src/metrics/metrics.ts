@@ -7,13 +7,14 @@ import { TypeMetric } from "~/metrics/fileExtension"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
-import { scaleOrdinal, schemeTableau10 } from "d3"
+import { scaleOrdinal } from "d3"
 import sha1 from "sha1"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "./contributors"
 import type { ReactNode } from "react"
 import type { MetricPanelButton } from "~/components/inspection/MetricInspectionPanel"
+import { categoricalScheme } from "~/const"
 
 /**
  * Defines the available metrics in the application
@@ -147,15 +148,13 @@ export interface MetricCache {
   categoriesMap: Map<string, Array<{ category: string; color: HexColor }>>
 }
 
-export const getCategoricalScheme = () => schemeTableau10
-
 function generateContributorColors(
   contributors: Person[],
   colorSeed: string | null,
   predefinedContributorColors: Record<string, HexColor>
 ): Record<string, HexColor> {
   const contributorColorMap: Record<string, HexColor> = {}
-  const colors = scaleOrdinal(getCategoricalScheme()).range()
+  const colors = scaleOrdinal(categoricalScheme).range()
 
   const sortedContributors = contributors
     .map((contributor) => contributor.name)
