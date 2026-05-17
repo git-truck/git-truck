@@ -17,7 +17,6 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
-  const commitShowCount = data?.currentCommitCount ?? COMMIT_STEP
   const previousPathRef = useRef<string>("")
 
   // Memoize selected authors to prevent unnecessary re-renders
@@ -63,9 +62,9 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
         previousPathRef.current = pathToLoad
       }
 
-      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: commitShowCount, start, end })
+      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: COMMIT_STEP, start, end })
     }
-  }, [clickedObject.path, loadCommits, reset, selectedContributors, start, end, commitShowCount])
+  }, [clickedObject.path, loadCommits, reset, selectedContributors, start, end])
 
   return (
     <CollapsibleHeader
@@ -81,7 +80,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       onToggle={(open) => {
         if (open) {
           if (!data && state === "idle") {
-            loadCommits({ objectPath: clickedObject.path, contributors: selectedContributors, count: commitShowCount })
+            loadCommits({ objectPath: clickedObject.path, contributors: selectedContributors, count: COMMIT_STEP })
           }
         } else {
           reset()
@@ -90,7 +89,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
     >
       <CommitHistory
         commits={data?.commits ?? []}
-        loadedCommitCount={commitShowCount}
+        loadedCommitCount={data?.currentCommitCount ?? COMMIT_STEP}
         totalCommitCount={data?.totalCommitCount ?? 0}
         isLoading={state !== "idle"}
         onShowMoreCommits={() => {
@@ -98,7 +97,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
           loadCommits({
             objectPath: clickedObject.path,
             contributors: selectedContributors,
-            count: commitShowCount + COMMIT_STEP
+            count: (data?.currentCommitCount ?? COMMIT_STEP) + COMMIT_STEP
           })
         }}
       />
