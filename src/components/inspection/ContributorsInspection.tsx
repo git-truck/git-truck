@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs"
-import { Fragment, useEffect } from "react"
+import { Fragment, useEffect, useMemo } from "react"
 import { useFetcher, href } from "react-router"
 import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
@@ -31,15 +31,21 @@ export function ContributorsInspection() {
   const [branch] = useQueryState("branch")
   const { databaseInfo } = useData()
 
+  // Memoize a stable string representation of contributorGroups to detect actual changes
+  const contributorGroupsKey = useMemo(
+    () => JSON.stringify(databaseInfo.contributorGroups),
+    [databaseInfo.contributorGroups]
+  )
+
   useEffect(() => {
-    if (!clickedObject) {
+    if (!clickedObject.path) {
       return
     }
-    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject?.path, path, branch }))
+    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject.path, path, branch }))
     return () => {
       reset()
     }
-  }, [clickedObject?.path, path, databaseInfo.contributorGroups, clickedObject, load, branch, reset])
+  }, [clickedObject.path, path, branch, contributorGroupsKey, load, reset])
 
   if (!data) {
     return (
