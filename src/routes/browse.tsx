@@ -268,9 +268,9 @@ export default function Index({
   }
 
   return (
-    <div className="mx-auto grid  max-w-(--breakpoint-2xl) gap-2 p-2 lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)]">
+    <div className="mx-auto grid max-w-(--breakpoint-2xl) gap-2 p-2 lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)]">
       <aside className="flex flex-col">
-        <div className="card sticky top-2 flex flex-row justify-between items-center">
+        <div className="card sticky top-2 flex flex-row items-center justify-between">
           <GitTruckInfo installedVersion={versionInfo.installedVersion} latestVersion={versionInfo.latestVersion} />
           <Icon path={mdiDotsVertical} className="invisible" />
         </div>
