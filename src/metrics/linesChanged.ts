@@ -20,7 +20,7 @@ export const LinesChangedMetric: GradientedMetric = {
     {
       title: "Lines Changed",
       content: GradientLegend,
-      description: "Files colored based on their accumulated number of line changes.",
+      description: "Files colored by total line changes.",
       actions: { search: false, clear: false }
     }
   ],
