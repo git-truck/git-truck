@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState, type ReactNode } from "react"
+import { startTransition, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { cn } from "~/styling"
 
 type PaginationInfo = {
@@ -26,7 +26,6 @@ export function PaginatedList<T>({
   itemsPerPage,
   children,
   navClassName = "",
-  originalItemsCount,
   itemHeight = 0,
   headerHeight = 0,
   totalPages: totalPagesOverride,
@@ -39,7 +38,7 @@ export function PaginatedList<T>({
   const calculatedTotalPages = Math.max(Math.ceil(items.length / itemsPerPage), 1)
   const totalPages = totalPagesOverride ?? calculatedTotalPages
   const safePage = Math.min(currentPage, totalPages - 1)
-  const minHeight = headerHeight + itemHeight * Math.min(itemsPerPage, originalItemsCount ?? 1)
+  const minHeight = headerHeight + itemHeight * itemsPerPage
 
   // Reset to first page when items change, unless we're loading more items
   useEffect(() => {
@@ -62,7 +61,7 @@ export function PaginatedList<T>({
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div style={minHeight ? { minHeight: `${minHeight}px` } : undefined} className="flex flex-col gap-2">
+      <div style={{ "--h": `${minHeight ?? 0}px` } as CSSProperties} className="flex min-h-(--h) flex-col gap-2">
         {children(shownItems, { currentPage: safePage, totalPages })}
       </div>
       <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
