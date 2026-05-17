@@ -29,7 +29,7 @@ export const LastChangedMetric: SegmentedMetric = {
     {
       title: "Last Changed",
       content: SegmentLegend,
-      description: "Files are colored based on how long ago they were changed (from latest commit).",
+      description: "Files colored by time since last change (from latest commit).",
       actions: { search: false, clear: false }
     }
   ],

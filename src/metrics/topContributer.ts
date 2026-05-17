@@ -16,7 +16,7 @@ export const TopContributorMetric: CategoricalMetric = {
       title: "Top Churner",
       content: PointLegend,
       description:
-        "Shows contributor with the most line-changes to a file. Click on the contributor to isolate the files they are the top churner for.",
+        "Files colored by contributor with the most line-changes. Select contributor(s) to highlight files where they are top-churner",
       actions: { search: true, clear: true },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
