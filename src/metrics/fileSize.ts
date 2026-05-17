@@ -28,7 +28,13 @@ function getPrettyThresholds(min: number, max: number, desiredBuckets = 7): numb
     ticks = scaleLinear().domain([min, max]).nice().ticks(desiredBuckets)
   }
 
-  return uniqueSorted(ticks).filter((t) => t > min && t < max)
+  // Cap to desiredBuckets to avoid overwhelming legends
+  const filtered = uniqueSorted(ticks).filter((t) => t > min && t < max)
+  if (filtered.length > desiredBuckets) {
+    const step = Math.ceil(filtered.length / desiredBuckets)
+    return filtered.filter((_, i) => i % step === 0)
+  }
+  return filtered
 }
 
 export const FileSizeMetric: SegmentedMetric = {
