@@ -25,7 +25,7 @@ import { mdiCheckboxIntermediate } from "@mdi/js"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
-const ITEMS_PER_PAGE = 8
+const ITEMS_PER_PAGE = 5
 
 export class PointInfo {
   public readonly color: `#${string}`
