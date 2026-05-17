@@ -19,7 +19,7 @@ export const CommitsMetric: GradientedMetric = {
     {
       title: "Commits",
       content: GradientLegend,
-      description: "Files colored based on the number of commits made to them.",
+      description: "Files colored by commit count.",
       actions: { search: false, clear: false }
     }
   ],

@@ -151,8 +151,7 @@ export function MetricsInspection() {
               {
                 title: "Top Cutoff",
                 content: PercentageSlider,
-                description:
-                  "Adjust percentage-threshold of line-changes needed to be considered top churner (otherwise 'Multiple Contributors').",
+                description: "Set line-change threshold for top-churner (else Multiple Contributors).",
                 menuItems: [
                   { icon: mdiScaleBalance, label: "Toggle Cutoff Slider", actionId: "toggle-top-contributor-slider" }
                 ] as MetricPanelDropdownButtonConfig[]

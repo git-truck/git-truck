@@ -39,7 +39,7 @@ export const FileSizeMetric: SegmentedMetric = {
     {
       title: "File Size",
       content: SegmentLegend,
-      description: "Files colored based on their file size in bytes.",
+      description: "Files colored by their file size in bytes.",
       actions: { search: false, clear: false }
     }
   ],

@@ -14,7 +14,7 @@ export const ContributorsMetric: CategoricalMetric = {
       title: "Contributors",
       content: PointLegend,
       description:
-        "Shows how many files a contributor has modified. Select contributor(s) in the table below to isolate the files they have contributed to.",
+        "Files colored by all contributing authors. Select contributor(s) to highlight files they have contributed to.",
       actions: { search: true, clear: true },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
@@ -65,12 +65,15 @@ export const ContributorsMetric: CategoricalMetric = {
           legend.entries.set(contributor, new PointInfo(color, 1))
         }
       }
+      //Don't include "Unknown" category for contributors
+      /*
       if (contributors.length === 0) {
         if (!legend.entries.has(UNKNOWN_CATEGORY)) {
           legend.entries.set(UNKNOWN_CATEGORY, new PointInfo(noEntryColor, 0))
         }
         legend.entries.get(UNKNOWN_CATEGORY)?.add(1)
       }
+        */
 
       const colors = contributors.map((c) => ({ category: c.contributor, color: contributorColors[c.contributor] }))
 

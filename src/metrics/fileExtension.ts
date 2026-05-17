@@ -16,7 +16,7 @@ export const TypeMetric: CategoricalMetric = {
     {
       title: "File Types",
       content: PointLegend,
-      description: "Files colored based on their file extension. Select a file type to isolate files of that type.",
+      description: "Files colored by their extension. Select file-type(s) to highlight matching files.",
       actions: { search: true, clear: true }
     }
   ],
