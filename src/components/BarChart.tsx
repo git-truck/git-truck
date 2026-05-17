@@ -112,8 +112,10 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 
   const width = size.width
 
-  const commitCountPerTimeIntervalForClickedObject = databaseInfo.commitCountPerTimeIntervalForClickedObject
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
+  const commitCountPerTimeIntervalForClickedObject = clickedObjectIsRepo
+    ? databaseInfo.commitCountPerTimeInterval
+    : databaseInfo.commitCountPerTimeIntervalForClickedObject
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
   const xScale = d3
@@ -175,20 +177,18 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           const [intervalStart, intervalEnd] = nodeIntervals[d.timestamp.toString()]
           const isInRange = intervalEnd > start && intervalStart < end
 
-          const clickedObjInterval = !clickedObjectIsRepo
-            ? commitCountPerTimeIntervalForClickedObject.find(
-                (t) => t.timestamp >= intervalStart && t.timestamp < intervalEnd
-              )
-            : undefined
+          const clickedObjInterval = commitCountPerTimeIntervalForClickedObject.find(
+            (t) => t.timestamp >= intervalStart && t.timestamp < intervalEnd
+          )
 
-          const relevantData = clickedObjectIsRepo ? d : clickedObjInterval
-          const sortedContributors = Object.entries(relevantData?.contributors ?? {}).sort((a, b) => b[1] - a[1])
+          const sortedContributors = Object.entries(clickedObjInterval?.contributors ?? {}).sort((a, b) => b[1] - a[1])
           const authorsToStack =
-            relevantData && selectedCategories.length > 0
+            clickedObjInterval && selectedCategories.length > 0
               ? sortedContributors.filter(([author]) => selectedAuthors.has(author))
               : []
           const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
-          const displayedCount = selectedCategories.length > 0 ? selectedContributorCount : (relevantData?.count ?? 0)
+          const displayedCount =
+            selectedCategories.length > 0 ? selectedContributorCount : (clickedObjInterval?.count ?? 0)
           const hasFileActivity = displayedCount > 0
 
           const clickedCountLogged = scale === "log" ? Math.log10(displayedCount + 1) : displayedCount
@@ -197,8 +197,8 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           const tooltipLabel = getBarTooltipLabel(intervalStart, unit)
 
           let currentY = clickedBarY + clickedBarHeight
-          const stackedSlices = authorsToStack.map(([author, authorCount]) => {
-            const fraction = authorCount / displayedCount
+          const stackedSlices = authorsToStack.map(([author, contributorCount]) => {
+            const fraction = contributorCount / displayedCount
             const sliceHeight = clickedBarHeight * fraction
             const sliceY = currentY - sliceHeight
             currentY = sliceY
@@ -211,7 +211,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
           })
 
           const gradientColors =
-            relevantData && selectedCategories.length === 0
+            clickedObjInterval && selectedCategories.length === 0
               ? sortedContributors.map(([author]) => contributorColors.get(author) ?? missingInMapColor)
               : []
 
@@ -284,7 +284,7 @@ function Bar({ node }: { node: BarNode }) {
           : {}
     : { fill: clickedFill }
 
-  const shouldDrawClickedBar = node.hasFileActivity && !node.clickedObjectIsRepo && node.stackedSlices.length === 0
+  const shouldDrawClickedBar = node.hasFileActivity && node.stackedSlices.length === 0
 
   return (
     <g className={!node.isInRange ? "opacity-30" : ""}>
