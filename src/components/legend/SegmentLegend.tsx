@@ -69,7 +69,7 @@ function MetricSegment({ className = "", width, color, text, top }: SegmentMetri
   if (top)
     return (
       <div className="flex flex-col" style={{ width: `${width}%` }}>
-        <div className="h-5 truncate text-left" title={text}>
+        <div className="h-5 text-left" title={text}>
           {text}
         </div>
         <Tick className="ml-1" />
@@ -84,7 +84,7 @@ function MetricSegment({ className = "", width, color, text, top }: SegmentMetri
         <Tick className="invisible" />
         <div className={cn("h-4", className)} style={{ backgroundColor: color }}></div>
         <Tick />
-        <div className="h-5 truncate text-left">{text}</div>
+        <div className="h-5 text-left">{text}</div>
       </div>
     )
 }
