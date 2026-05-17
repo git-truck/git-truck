@@ -119,7 +119,7 @@ function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
       )
     ],
     TOP_CONTRIBUTOR: () => [
-      clickedObjectInfo
+      clickedObjectInfo && clickedObjectInfo.topContributor.length > 0
         ? clickedObjectInfo.multiTopContributors
           ? missingInMapColor
           : (contributorColors.get(clickedObjectInfo.topContributor[0].contributor) as HexColor)
