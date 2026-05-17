@@ -59,7 +59,7 @@ export function ContributorsInspection() {
   )
 }
 
-const CONTRIBUTORS_PER_PAGE = 8
+const CONTRIBUTORS_PER_PAGE = 5
 
 function ContributorDistributionHeader() {
   return (
