@@ -125,13 +125,7 @@ export function PointLegend() {
         {/* DISTBAR still uses summed weight of items, as it cannot distribute width when weight > 100% */}
         <PointLegendDistBar items={items} totalWeight={summedWeight} />
       </div>
-      <PaginatedList
-        items={filteredItems}
-        itemsPerPage={ITEMS_PER_PAGE}
-        originalItemsCount={items.length}
-        itemHeight={22}
-        headerHeight={55}
-      >
+      <PaginatedList items={filteredItems} itemsPerPage={ITEMS_PER_PAGE} itemHeight={20} headerHeight={55}>
         {(shownItems, { totalPages }) => (
           <>
             <PointLegendTable

@@ -13,17 +13,6 @@ import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selec
 import { missingInMapColor } from "~/const"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
-function ContributorDistributionLabel({ htmlFor }: { htmlFor?: string }) {
-  return (
-    <label className="label grow" htmlFor={htmlFor}>
-      <h3 className="font-bold">Contributor distribution</h3>
-      <p className="text-secondary-text dark:text-secondary-text-dark text-xs font-normal">
-        Shows contributor&apos;s share of line changes to selected file or folder.
-      </p>
-    </label>
-  )
-}
-
 export function ContributorsInspection() {
   const clickedObject = useClickedObject()
   const { state, data, load, reset } = useFetcher<typeof loader>()
@@ -47,20 +36,12 @@ export function ContributorsInspection() {
     }
   }, [clickedObject.path, path, branch, contributorGroupsKey, load, reset])
 
-  if (!data) {
-    return (
-      <div className="flex flex-col gap-2">
-        <ContributorDistributionLabel />
-        <h3>Loading...</h3>
-      </div>
-    )
-  }
-
   return (
     <ContributorDistribution
       className={state !== "idle" ? "opacity-60" : ""}
-      contributorDistribution={data.contributorDistribution}
-      lineChangesSum={data.lineChangesSum}
+      contributorDistribution={data?.contributorDistribution ?? []}
+      lineChangesSum={data?.lineChangesSum ?? 0}
+      isLoading={state !== "idle"}
     />
   )
 }
@@ -80,40 +61,39 @@ function ContributorDistributionHeader() {
 function ContributorDistribution({
   className = "",
   contributorDistribution,
-  lineChangesSum
+  lineChangesSum,
+  isLoading = false
 }: {
   className?: string
   contributorDistribution: { contributor: string; contribs: number }[]
   lineChangesSum: number
+  isLoading: boolean
 }) {
   const contribSum = lineChangesSum ?? 0
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      {contributorDistribution.length === 0 ? (
-        <p>No contributors found</p>
-      ) : (
-        <PaginatedList
-          items={contributorDistribution}
-          itemsPerPage={CONTRIBUTORS_PER_PAGE}
-          originalItemsCount={contributorDistribution.length}
-          itemHeight={22}
-          headerHeight={55}
-        >
-          {(shownItems) => (
-            <>
-              <div
-                className={cn(
-                  "grid grid-cols-[max-content_1fr_max-content_minmax(calc(12*var(--spacing)),max-content)] items-center justify-between gap-x-2"
-                )}
-              >
-                <ContributorDistributionHeader />
-                <ContributorDistFragment items={shownItems} contribSum={contribSum} />
-              </div>
-            </>
-          )}
-        </PaginatedList>
-      )}
+      <PaginatedList
+        className={isLoading ? "opacity-60" : ""}
+        items={contributorDistribution}
+        itemsPerPage={CONTRIBUTORS_PER_PAGE}
+        navClassName={isLoading ? "pointer-events-none" : ""}
+        itemHeight={20}
+        headerHeight={55}
+      >
+        {(shownItems) => (
+          <>
+            <div
+              className={cn(
+                "grid grid-cols-[max-content_1fr_max-content_minmax(calc(12*var(--spacing)),max-content)] items-center justify-between gap-x-2"
+              )}
+            >
+              <ContributorDistributionHeader />
+              <ContributorDistFragment items={shownItems} contribSum={contribSum} />
+            </div>
+          </>
+        )}
+      </PaginatedList>
     </div>
   )
 }
