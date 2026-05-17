@@ -18,7 +18,7 @@ export function dateFormatCalendar(epochTimeMillis: number) {
   return new Date(epochTimeMillis).toLocaleString("en-gb", {
     day: "2-digit",
     month: "short",
-    year: "2-digit"
+    year: "numeric"
   })
 }
 

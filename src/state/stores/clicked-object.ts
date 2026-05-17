@@ -86,8 +86,8 @@ export function useBlobColors(obj: RawGitObject | null): Array<HexColor> {
   return colors
 }
 
-export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
-    const data = useDataNullable()
+function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
+  const data = useDataNullable()
   const { metricType } = useOptions()
   const [metricsData, contributorColors] = useMetrics()
 
@@ -140,7 +140,6 @@ export function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
   } as const
 
   return colorMap[metricType]()
-
 }
 
 export function useObjectColor(obj: RawGitObject | null): HexColor {
