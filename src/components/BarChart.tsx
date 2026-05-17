@@ -316,7 +316,7 @@ function Bar({ node }: { node: BarNode }) {
         className={cn(
           "pointer-events-none stroke-transparent stroke-2 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out peer-hover:stroke-black",
 
-          !node.clickedObjectIsRepo ? "opacity-40" : ""
+          !node.clickedObjectIsRepo || !shouldDrawClickedBar ? "opacity-40" : ""
         )}
       />
       {/* Selection activity */}
