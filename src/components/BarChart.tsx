@@ -6,7 +6,7 @@ import { missingInMapColor, treemapBlobBorderRadius, treemapPaddingInner } from 
 import { cn } from "~/styling"
 import { dateFormatShort, expandIntervalToRange } from "~/shared/util"
 import { useSelectedCategories } from "~/state/stores/selection"
-import { useClickedObject, useObjectColor, useObjectColors } from "~/state/stores/clicked-object"
+import { useClickedObject, useBlobColor, useBlobColors } from "~/state/stores/clicked-object"
 import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -99,8 +99,8 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const [, contributorColors] = useMetrics()
   const clickedObject = useClickedObject()
   const setHoveredBarTooltip = useSetHoveredBarTooltip()
-  const clickedObjectColor = useObjectColor(clickedObject)
-  const rootColor = useObjectColor(databaseInfo.fileTree) ?? missingInMapColor
+  const clickedObjectColor = useBlobColor(clickedObject)
+  const rootColor = useBlobColor(databaseInfo.fileTree) ?? missingInMapColor
   const clickedProps = clickedObjectColor ? { fill: clickedObjectColor } : { fill: missingInMapColor }
   const svgRef = useRef<SVGSVGElement>(null)
   const [ref, rawSize] = useComponentSize()
@@ -268,7 +268,7 @@ function Bar({ node }: { node: BarNode }) {
   const { metricType } = useOptions()
   const metricIsContributorMetric = isContributorMetric(metricType)
   const clickedObject = useClickedObject()
-  const colors = useObjectColors(clickedObject)
+  const colors = useBlobColors(clickedObject)
   const { fill: clickedFill, linearGradient: clickedGradient } = useGradient(colors)
   const { fill, linearGradient } = useGradient(node.gradientColors)
 

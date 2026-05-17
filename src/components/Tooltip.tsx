@@ -27,7 +27,7 @@ import {
   useHoveredObject
 } from "~/state/stores/hovered-object"
 import { Metrics } from "~/metrics/metrics"
-import { useObjectColor } from "~/state/stores/clicked-object"
+import { useBlobColor } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 
 export function Tooltip({ className = "" }: { className?: string }) {
@@ -38,7 +38,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const { sizeMetric, metricType } = useOptions()
   const { databaseInfo } = useData()
   const hoveredObject = rawHoveredObject ? databaseInfo.objectPathMap[rawHoveredObject.path] : null
-  const color = useObjectColor(rawHoveredObject)
+  const color = useBlobColor(rawHoveredObject)
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
   const top = useMemo(() => y < window.innerHeight / 2, [y])
@@ -71,7 +71,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
       )}
       style={{
         transform: visible ? `translateX(${xTransform}) translateY(${yTransform}) translateZ(0)` : "none",
-        ...(color ? { backgroundColor: `hsl(from ${color} h s l / 0.7)` } : {})
+        backgroundColor: color ? `hsl(from ${color} h s l / 0.7)` : undefined
       }}
     >
       {hoveredBarTooltip ? (
