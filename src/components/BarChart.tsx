@@ -183,12 +183,14 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
 
           const sortedContributors = Object.entries(clickedObjInterval?.contributors ?? {}).sort((a, b) => b[1] - a[1])
           const authorsToStack =
-            clickedObjInterval && selectedCategories.length > 0
+            clickedObjInterval && selectedCategories.length > 0 && metricIsContributorMetric
               ? sortedContributors.filter(([author]) => selectedAuthors.has(author))
               : []
           const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
           const displayedCount =
-            selectedCategories.length > 0 ? selectedContributorCount : (clickedObjInterval?.count ?? 0)
+            selectedCategories.length > 0 && metricIsContributorMetric
+              ? selectedContributorCount
+              : (clickedObjInterval?.count ?? 0)
           const hasFileActivity = displayedCount > 0
 
           const clickedCountLogged = scale === "log" ? Math.log10(displayedCount + 1) : displayedCount
@@ -215,13 +217,13 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
               ? sortedContributors.map(([author]) => contributorColors.get(author) ?? missingInMapColor)
               : []
 
-          const tooltipContributors = (selectedCategories.length > 0 ? authorsToStack : sortedContributors).map(
-            ([author, commitCount]) => ({
-              name: author,
-              color: contributorColors.get(author) ?? missingInMapColor,
-              commitCount
-            })
-          )
+          const tooltipContributors = (
+            selectedCategories.length > 0 && metricIsContributorMetric ? authorsToStack : sortedContributors
+          ).map(([author, commitCount]) => ({
+            name: author,
+            color: contributorColors.get(author) ?? missingInMapColor,
+            commitCount
+          }))
           const tooltip: HoveredBarTooltip = {
             label: tooltipLabel,
             totalCommitCount: d.count,
