@@ -26,7 +26,6 @@ export function PaginatedList<T>({
   itemsPerPage,
   children,
   navClassName = "",
-  originalItemsCount,
   itemHeight = 0,
   headerHeight = 0,
   totalPages: totalPagesOverride,
@@ -39,7 +38,7 @@ export function PaginatedList<T>({
   const calculatedTotalPages = Math.max(Math.ceil(items.length / itemsPerPage), 1)
   const totalPages = totalPagesOverride ?? calculatedTotalPages
   const safePage = Math.min(currentPage, totalPages - 1)
-  const minHeight = headerHeight + itemHeight * Math.min(itemsPerPage, originalItemsCount ?? 1)
+  const minHeight = headerHeight + itemHeight * Math.min(itemsPerPage, itemsPerPage ?? 1)
 
   // Reset to first page when items change, unless we're loading more items
   useEffect(() => {
