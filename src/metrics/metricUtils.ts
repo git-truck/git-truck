@@ -56,8 +56,10 @@ export class SpectrumTranslater {
   readonly offset: number
   readonly target_max: number
   readonly target_min: number
+  readonly isZeroRange: boolean
 
   constructor(input_min: number, input_max: number, target_min: number, target_max: number) {
+    this.isZeroRange = input_min === input_max
     this.scale = (target_max - target_min) / (input_max - input_min)
     this.offset = input_min * this.scale - target_min
     this.target_max = target_max
@@ -69,6 +71,10 @@ export class SpectrumTranslater {
   }
 
   inverseTranslate(input: number) {
+    // When min equals max, use the maximum (inverse) gradient value to avoid black
+    if (this.isZeroRange) {
+      return this.target_min
+    }
     return this.target_max - this.translate(input) + this.target_min
   }
 }
