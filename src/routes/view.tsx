@@ -232,6 +232,14 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
+let prevArgs: { path: string; branch: string; objectPath: string; zoomPath: string; timeUnit: TimeUnit } = {
+  path: ".",
+  branch: "HEAD",
+  objectPath: ".",
+  zoomPath: "",
+  timeUnit: "year"
+}
+
 async function analyze({
   path,
   branch,
@@ -274,10 +282,30 @@ async function analyze({
     throw Error("Error loading repo")
   }
 
-  const reason = instance.prevInvokeReason
+  let reason = instance.prevInvokeReason
   instance.prevInvokeReason = "unknown"
   const prevData = instance.prevResult
   const prevRes = prevData?.databaseInfo
+
+  if (prevArgs.zoomPath !== zoomPath) {
+    reason = "zoomPath"
+  }
+
+  if (prevArgs.timeUnit !== timeUnit) {
+    reason = "timeUnit"
+  }
+
+  if (prevArgs.objectPath !== (objectPath ?? "")) {
+    reason = "clickedObject"
+  }
+
+  prevArgs = {
+    path,
+    branch,
+    objectPath: objectPath ?? "",
+    zoomPath,
+    timeUnit: timeUnit ?? "year"
+  }
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
     log.time("rename")
@@ -378,9 +406,11 @@ async function analyze({
   const objectHash = (objectPath ? objectPathMap[objectPath]?.hash : null) ?? getRepoNameFromPath(path)
 
   const commitCountPerTimeIntervalForClickedObject =
-    objectHash && objectHash !== (await instance.gitService.revParse(instance.branch))
-      ? await instance.db.getCommitCountPerTimeForClickedObject({ timerange, timeUnit, objectPath })
-      : []
+    prevRes && !shouldUpdate(reason, "commitCountPerTimeIntervalForClickedObject")
+      ? prevRes.commitCountPerTimeIntervalForClickedObject
+      : objectHash && objectHash !== (await instance.gitService.revParse(instance.branch))
+        ? await instance.db.getCommitCountPerTimeForClickedObject({ timerange, timeUnit, objectPath })
+        : []
 
   const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
 
@@ -439,6 +469,12 @@ async function analyze({
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
+  // const objectPathMapSize = JSON.stringify(objectPathMap).length
+  // console.log(objectPathMapSize.toLocaleString())
+  // const fullDataSize = JSON.stringify(fullData).length
+  // console.log(fullDataSize.toLocaleString())
+  // console.log(((objectPathMapSize / fullDataSize) * 100).toFixed(2) + "% of full data is objectPathMap")
+
   return fullData
 }
 

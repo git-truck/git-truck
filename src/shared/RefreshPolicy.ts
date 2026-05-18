@@ -26,6 +26,7 @@ type DataItem =
   | "commitCount"
   | "analyzedRepos"
   | "clickedObjectData"
+  | "commitCountPerTimeIntervalForClickedObject"
 
 export type InvocationReason =
   | "refresh"
@@ -41,6 +42,7 @@ export type InvocationReason =
   | "none"
   | "timeUnit"
   | "clickedObject"
+  | "zoomPath"
 
 // TODO: handle when start of range is increased, so renames do not need refresh
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
@@ -115,7 +117,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "clickedObjectData"
   ],
   timeUnit: ["commitCountPerDay"],
-  clickedObject: ["clickedObjectData"],
+  clickedObject: ["clickedObjectData", "commitCountPerTimeIntervalForClickedObject"],
   contributorColor: ["contributorColors"],
   unknown: [
     "cache",
@@ -143,6 +145,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "loadRepoData",
     "maxMinFileSize"
   ],
+  zoomPath: ["fileTree", "clickedObjectData"],
   none: []
 }
 
