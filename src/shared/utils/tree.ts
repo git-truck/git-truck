@@ -1,4 +1,4 @@
-import type { GitBlobObject, GitObject, GitTreeObject } from "~/shared/model"
+import type { GitBlobObject, GitObject, GitTreeObject, ObjectPathMap } from "~/shared/model"
 import { isTree } from "~/shared/util"
 
 export function reduceTree<T>(tree: GitTreeObject, reducer: (prev: T, curr: GitBlobObject) => T, defaultValue: T): T {
@@ -15,9 +15,15 @@ export function reduceTreeIncludeTrees<T>(
   reducer: (prev: T, curr: GitTreeObject | GitBlobObject) => T,
   defaultValue: T
 ): T {
-  return flattenTreeIncludeTrees(tree).reduce((prev, current) => {
-    return reducer(prev, current)
-  }, defaultValue)
+  let result = reducer(defaultValue, tree)
+  for (const child of tree.children) {
+    if (isTree(child)) {
+      result = reduceTreeIncludeTrees(child, reducer, result)
+    } else {
+      result = reducer(result, child)
+    }
+  }
+  return result
 }
 
 export function filterTree(tree: GitTreeObject, predicate: (node: GitObject) => boolean): GitTreeObject {
@@ -71,4 +77,22 @@ export function flattenTreeIncludeTrees(tree: GitTreeObject) {
     }
   }
   return flattened
+}
+
+export function createObjectPathMap(tree: GitTreeObject): ObjectPathMap {
+  const objectPathMap: ObjectPathMap = {}
+  const stack: GitObject[] = [tree]
+
+  while (stack.length > 0) {
+    const current = stack.pop()
+    if (!current) continue
+
+    objectPathMap[current.path] = current
+
+    if (isTree(current)) {
+      stack.push(...current.children)
+    }
+  }
+
+  return objectPathMap
 }
