@@ -46,7 +46,6 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       const url =
         href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
 
-      console.log("LOADING COMMITS FOR" + contributors.join(", "))
       load(url)
     },
     [branch, load, path]
