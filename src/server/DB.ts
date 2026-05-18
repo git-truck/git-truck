@@ -356,7 +356,15 @@ export default class DB {
   public async getOverallTimeRange() {
     const res = await this.query(`SELECT MIN(committerTime) as min, MAX(committerTime) as max from commits;
     `)
-    return [Number(res[0]["min"]), Number(res[0]["max"])] as [number, number]
+    const min = res[0]["min"]
+    const max = res[0]["max"]
+
+    // Handle empty database case (no commits)
+    if (min === null || max === null) {
+      return [0, Math.floor(Date.now() / 1000)] as [number, number]
+    }
+
+    return [Number(min), Number(max)] as [number, number]
   }
 
   public async getCurrentRenameIntervals() {
