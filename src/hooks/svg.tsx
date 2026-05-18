@@ -7,16 +7,17 @@ export function useGradient(colors: Array<string>) {
   const fill = `url('#${gradientId}')`
 
   const linearGradient = useMemo(
-    () => (
-      <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-        {Array.from(new Set(colors))
-          .toSorted()
-          .slice(0, categoricalScheme.length)
-          .map((color, i, colors) => (
-            <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
-          ))}
-      </linearGradient>
-    ),
+    () =>
+      colors.length > 0 ? (
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          {Array.from(new Set(colors))
+            .toSorted()
+            .slice(0, categoricalScheme.length)
+            .map((color, i, colors) => (
+              <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+            ))}
+        </linearGradient>
+      ) : null,
     [colors, gradientId]
   )
 
