@@ -142,7 +142,8 @@ export interface RenameInterval {
   timestampEnd: number
 }
 
-type Path = string
+export type Path = string
+export type ObjectPathMap = Record<Path, GitObject>
 
 export interface FileModification {
   path: string
@@ -185,7 +186,7 @@ export interface DatabaseInfo {
   contributors: Person[]
   contributorGroups: ContributorGroup[]
   fileTree: GitTreeObject
-  objectPathMap: Record<Path, GitObject>
+  objectPathMap?: ObjectPathMap
   hiddenFiles: string[]
   lastRunInfo: { time: number; hash: string }
   fileCount: number

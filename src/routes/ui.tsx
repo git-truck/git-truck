@@ -56,7 +56,6 @@ const mockRepoData: RepoData = {
     contributors: [],
     contributorGroups: [],
     commitCountPerTimeIntervalForClickedObject: [],
-    objectPathMap: {},
     zoomPathName: "",
     fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [], byteSize: 0 },
     hiddenFiles: [],

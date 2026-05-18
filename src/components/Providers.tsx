@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react"
-import type { GitObject, RepoData } from "~/shared/model"
+import type { GitObject, GitTreeObject, ObjectPathMap, RepoData } from "~/shared/model"
 import { DataContext } from "~/contexts/DataContext"
 import { MetricsContext, type MetricsContextValue } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
@@ -8,26 +8,47 @@ import { createMetricData } from "~/metrics/metrics"
 import { buildMetricsHierarchyCache } from "~/metrics/cache"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
 import { findSubTree } from "~/shared/util"
+import { createObjectPathMap } from "~/shared/utils/tree"
 import { useQueryState } from "nuqs"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
-export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
+const objectPathMapCache = new Map<string, ObjectPathMap>()
+
+function getObjectPathMap(fileTree: GitTreeObject): ObjectPathMap {
+  const cachedObjectPathMap = objectPathMapCache.get(fileTree.hash)
+  if (cachedObjectPathMap) {
+    return cachedObjectPathMap
+  }
+
+  const objectPathMap = createObjectPathMap(fileTree)
+  objectPathMapCache.set(fileTree.hash, objectPathMap)
+  return objectPathMap
+}
+
+export function Providers({
+  children,
+  data
+}: {
+  children: ReactNode
+  data: RepoData
+}) {
   const options = useOptions()
 
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
 
   const [zoomPath] = useQueryState("zoomPath")
+  const objectPathMap = useMemo(() => getObjectPathMap(data.databaseInfo.fileTree), [data.databaseInfo.fileTree.hash])
 
   const zoomedTree = useMemo(
     () => findSubTree(data.databaseInfo.fileTree, zoomPath ?? undefined),
-    [data.databaseInfo.fileTree, zoomPath]
+    [data.databaseInfo.fileTree.hash, zoomPath]
   )
 
   // Database info representing the current view (filtered + zoomed)
   const viewDatabaseInfo = useMemo(
-    () => ({ ...data.databaseInfo, fileTree: zoomedTree }),
-    [data.databaseInfo, zoomedTree]
+    () => ({ ...data.databaseInfo, fileTree: zoomedTree, objectPathMap }),
+    [data.databaseInfo, objectPathMap, zoomedTree]
   )
 
   // Build the hierarchy cache from the filtered root (not the zoomed view)
