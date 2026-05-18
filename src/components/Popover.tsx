@@ -54,7 +54,7 @@ export function Popover({
       onClickOutside={onClose}
     >
       <div className={triggerClassName} {...(triggerOnHover ? { onMouseEnter: onOpen, onMouseLeave: onClose } : {})}>
-        <Trigger isOpen={isOpen} onOpen={onOpen} onClose={onClose} onClick={onClick} />
+        {Trigger({ isOpen, onOpen, onClose, onClick })}
       </div>
     </ReactPopower>
   )
