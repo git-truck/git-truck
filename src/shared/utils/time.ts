@@ -1,8 +1,9 @@
-export const TimeUnitValues = ["day", "week", "month", "year"] as const
+export const TimeUnitValues = ["hour", "day", "week", "month", "year"] as const
 
 export type TimeUnit = (typeof TimeUnitValues)[number]
 
 export const TimeUnitDurationsMs: Record<TimeUnit, number> = {
+  hour: 60 * 60 * 1000,
   day: 24 * 60 * 60 * 1000,
   week: 7 * 24 * 60 * 60 * 1000,
   month: 30 * 24 * 60 * 60 * 1000,

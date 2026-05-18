@@ -37,7 +37,6 @@ export function dateFormatRelative(epochTimeSecs: number, unit?: TimeUnit): stri
   const pluralS = (unit: "hour" | TimeUnit, amount: number) =>
     amount.toLocaleString() + " " + unit + (amount === 1 ? "" : "s")
   const now = Date.now()
-  const hourMillis = 60 * 60 * 1000
 
   const difference = now - epochTimeSecs * 1000
   if (difference < 0) return null
@@ -58,9 +57,9 @@ export function dateFormatRelative(epochTimeSecs: number, unit?: TimeUnit): stri
     const days = Math.floor(difference / TimeUnitDurationsMs.day)
     return pluralS("day", days)
   }
-  const hours = Math.floor(difference / hourMillis)
-  if (hours > 0) {
-    return pluralS("hour", hourMillis)
+  if (difference > TimeUnitDurationsMs.hour || unit === "hour") {
+    const hours = Math.floor(difference / TimeUnitDurationsMs.hour)
+    return pluralS("hour", hours)
   }
   return "<1 hour"
 }
