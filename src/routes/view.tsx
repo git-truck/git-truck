@@ -402,8 +402,9 @@ async function analyze({
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
 
-  objectPath ??= objectPathMap[zoomPath]?.path ?? objectPathMap[getRepoNameFromPath(path)].path
-  const objectHash = (objectPath ? objectPathMap[objectPath]?.hash : null) ?? getRepoNameFromPath(path)
+  objectPath ??= zoomPath || getRepoNameFromPath(path)
+  const object = await instance.db.getObjectFromPath(objectPath)
+  const objectHash = object?.hash ?? null
 
   const commitCountPerTimeIntervalForClickedObject =
     prevRes && !shouldUpdate(reason, "commitCountPerTimeIntervalForClickedObject")
@@ -448,7 +449,6 @@ async function analyze({
     contributors: authors,
     contributorGroups: authorUnions,
     fileTree: rootTree,
-    objectPathMap,
     fileCount,
     hiddenFiles,
     lastRunInfo: lastRunInfo ?? { time: 0, hash: "" },
@@ -544,7 +544,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
     >
       <Await resolve={dataPromise}>
         {(data) => (
-          <Providers data={data as RepoData}>
+          <Providers data={data}>
             <div
               className={cn(
                 `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
