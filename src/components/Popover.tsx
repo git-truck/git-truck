@@ -5,7 +5,7 @@ import { useState } from "react"
 export function Popover({
   popoverTitle,
   positions = ["top", "bottom", "left", "right"],
-  trigger: Trigger,
+  trigger,
   triggerOnHover = false,
   triggerClassName = "",
   children,
@@ -54,7 +54,7 @@ export function Popover({
       onClickOutside={onClose}
     >
       <div className={triggerClassName} {...(triggerOnHover ? { onMouseEnter: onOpen, onMouseLeave: onClose } : {})}>
-        <Trigger isOpen={isOpen} onOpen={onOpen} onClose={onClose} onClick={onClick} />
+        {trigger({ isOpen, onOpen, onClose, onClick })}
       </div>
     </ReactPopower>
   )
