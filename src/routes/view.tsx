@@ -469,11 +469,11 @@ async function analyze({
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
-  const objectPathMapSize = JSON.stringify(objectPathMap).length
-  console.log(objectPathMapSize.toLocaleString())
-  const fullDataSize = JSON.stringify(fullData).length
-  console.log(fullDataSize.toLocaleString())
-  console.log(((objectPathMapSize / fullDataSize) * 100).toFixed(2) + "% of full data is objectPathMap")
+  // const objectPathMapSize = JSON.stringify(objectPathMap).length
+  // console.log(objectPathMapSize.toLocaleString())
+  // const fullDataSize = JSON.stringify(fullData).length
+  // console.log(fullDataSize.toLocaleString())
+  // console.log(((objectPathMapSize / fullDataSize) * 100).toFixed(2) + "% of full data is objectPathMap")
 
   return fullData
 }
