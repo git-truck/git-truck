@@ -8,7 +8,7 @@ describe("unitToMillis", () => {
     const unit = "day" // Time unit
 
     const result = unitToMillis({ startTimeMillis: startTime, units, unit })
-    const expected = 2 * 24 * 60 * 60 * 1000 * units
+    const expected = 24 * 60 * 60 * 1000 * units
 
     expect(result).toStrictEqual(expected)
   })
