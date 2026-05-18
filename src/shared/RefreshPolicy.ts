@@ -1,5 +1,3 @@
-import { log } from "~/server/log"
-
 type DataItem =
   | "cache"
   | "rename"
@@ -50,8 +48,6 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     // Will refresh everything
   ],
   show: [
-    "fileTree",
-    "cache",
     "commitCount",
     "topContributor",
     "commitCounts",
@@ -62,22 +58,41 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
+    "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
-    "hiddenFiles"
+    "hiddenFiles",
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
   ],
   hide: [
-    "fileTree",
-    "cache",
     "commitCount",
+    "fileSizes",
+    "contribSumPerFile",
+    "contributorsForPath",
+    "lastChanged",
+    "contributorCounts",
     "maxMinCommitCount",
     "maxMinContribCounts",
+    "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
-    "hiddenFiles"
+    "hiddenFiles",
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
   ],
   open: [],
-  groupedContributors: ["cache", "topContributor", "contributorCounts", "contributors", "groupedContributors"],
+  groupedContributors: [
+    "cache",
+    "topContributor",
+    "contributorCounts",
+    "contributors",
+    "groupedContributors",
+    "contributorsForPath",
+    "commitCountPerDay",
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
+  ],
   rerollColors: ["colorSeed"],
   timeseriesstart: [
     "cache",
@@ -95,7 +110,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "maxMinFileSize",
     "newestOldestChangeDate",
     "contributors",
-    "clickedObjectData"
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
   ],
   timeseriesend: [
     "cache",
@@ -114,9 +130,10 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "newestOldestChangeDate",
     "contributors",
     "fileTree",
-    "clickedObjectData"
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
   ],
-  timeUnit: ["commitCountPerDay"],
+  timeUnit: ["commitCountPerDay", "commitCountPerTimeIntervalForClickedObject"],
   clickedObject: ["clickedObjectData", "commitCountPerTimeIntervalForClickedObject"],
   contributorColor: ["contributorColors"],
   unknown: [
@@ -143,20 +160,14 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "contributorColors",
     "commitCountPerDay",
     "loadRepoData",
-    "maxMinFileSize"
+    "maxMinFileSize",
+    "clickedObjectData",
+    "commitCountPerTimeIntervalForClickedObject"
   ],
-  zoomPath: ["fileTree", "clickedObjectData"],
+  zoomPath: ["clickedObjectData", "commitCountPerTimeIntervalForClickedObject"],
   none: []
 }
 
 export function shouldUpdate(reason: InvocationReason, item: DataItem) {
-  // TODO: Re implement this caching behavior
-  // return true
-  const willUpdate = reason === "refresh" || refreshPolicy[reason].find((x) => x === item) !== undefined
-  if (willUpdate) {
-    log.warn(`Updating ${item} because of reason ${reason}`)
-  } else {
-    log.warn(`Not updating ${item} because of reason ${reason}`)
-  }
-  return willUpdate
+  return reason === "refresh" || refreshPolicy[reason].includes(item)
 }
