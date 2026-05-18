@@ -1,7 +1,7 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
 import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
-import type { TimeUnit } from "~/shared/utils/time"
+import { TimeUnitDurationsMs, type TimeUnit } from "~/shared/utils/time"
 import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatShort(epochTimeMillis: number, options: Intl.DateTimeFormatOptions = {}) {
@@ -33,19 +33,35 @@ export function dateTimeFormatShort(epochTimeMillis: number) {
   })
 }
 
-export function dateFormatRelative(epochTime: number): string | null {
+export function dateFormatRelative(epochTimeSecs: number, unit?: TimeUnit): string | null {
+  const pluralS = (unit: "hour" | TimeUnit, amount: number) =>
+    amount.toLocaleString() + " " + unit + (amount === 1 ? "" : "s")
   const now = Date.now()
   const hourMillis = 60 * 60 * 1000
-  const dayMillis = 24 * hourMillis
-  const difference = now - epochTime * 1000
+
+  const difference = now - epochTimeSecs * 1000
   if (difference < 0) return null
-  if (difference > dayMillis) {
-    const days = Math.floor(difference / dayMillis)
-    return `${days} day${days > 1 ? "s" : ""}`
+
+  if (difference > TimeUnitDurationsMs.year || unit === "year") {
+    const years = Math.floor(difference / TimeUnitDurationsMs.year)
+    return pluralS("year", years)
+  }
+  if (difference > TimeUnitDurationsMs.month || unit === "month") {
+    const months = Math.floor(difference / TimeUnitDurationsMs.month)
+    return pluralS("month", months)
+  }
+  if (difference > TimeUnitDurationsMs.week || unit === "week") {
+    const weeks = Math.floor(difference / TimeUnitDurationsMs.week)
+    return pluralS("week", weeks)
+  }
+  if (difference > TimeUnitDurationsMs.day || unit === "day") {
+    const days = Math.floor(difference / TimeUnitDurationsMs.day)
+    return pluralS("day", days)
   }
   const hours = Math.floor(difference / hourMillis)
-  if (hours > 1) return `${hours} hours`
-  if (hours === 1) return "1 hour"
+  if (hours > 0) {
+    return pluralS("hour", hourMillis)
+  }
   return "<1 hour"
 }
 
