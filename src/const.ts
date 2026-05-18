@@ -18,9 +18,9 @@ export const circleBlobTextOffsetY = letterHeightText + 0
 
 export const categoricalScheme: Array<HexColor> = schemeTableau10.slice(0, -1) as Array<HexColor>
 
-// export const noEntryColor: HexColor = schemeTableau10.at(-1) as HexColor
-export const noEntryColor: HexColor = "#c0c0c0" as const
-export const missingInMapColor = noEntryColor
+export const noEntryColor: HexColor = schemeTableau10.at(-1) as HexColor
+// export const noEntryColor: HexColor = "#c0c0c0" as const
+export const missingInMapColor = "#c0c0c0" as const
 
 export const MULTIPLE_CONTRIBUTORS = "Multiple contributors" as const
 export const UNKNOWN_CATEGORY = "Unknown" as const
