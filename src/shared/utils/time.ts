@@ -2,7 +2,7 @@ export const TimeUnitValues = ["day", "week", "month", "year"] as const
 
 export type TimeUnit = (typeof TimeUnitValues)[number]
 
-const TimeUnitDurationsMs: Record<TimeUnit, number> = {
+export const TimeUnitDurationsMs: Record<TimeUnit, number> = {
   day: 24 * 60 * 60 * 1000,
   week: 7 * 24 * 60 * 60 * 1000,
   month: 30 * 24 * 60 * 60 * 1000,
