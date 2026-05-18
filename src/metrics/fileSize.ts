@@ -1,5 +1,5 @@
 import type { DatabaseInfo, GitBlobObject, GitObject } from "~/shared/model"
-import { type MetricCache, type SegmentedMetric } from "~/metrics/metrics"
+import { type MetricCache, type SegmentBucket, type SegmentedMetric } from "~/metrics/metrics"
 import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
 import { mdiResize } from "@mdi/js"
 import { hslToHex, isBlob, rgbToHex } from "~/shared/util"
@@ -9,7 +9,6 @@ import { feature_flags } from "~/feature_flags"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import byteSize from "byte-size"
-import type { SegmentBucket } from "~/metrics/segmentBuckets"
 
 function uniqueSorted(values: number[]): number[] {
   return values
