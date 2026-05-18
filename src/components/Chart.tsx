@@ -406,7 +406,7 @@ function NodeText({
     startOffset: isBubbleChart ? "50%" : undefined,
     dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
     textAnchor: isBubbleChart ? "middle" : "start",
-    href: `#path-${d.data.path}`,
+    href: `#path-${d.data.hash}`,
     className: "font-bold tracking-widest"
   } as const
   const textClipPathRadius = isCircularNode(d) ? d.r * 2 - bubblePadding / 2 : 0
@@ -451,10 +451,10 @@ function NodeText({
               ? circularPath(d.x, d.y + (isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY), d.r)
               : undefined
           }
-          id={`path-${d.data.path}`}
+          id={`path-${d.data.hash}`}
         />
         {/* // Clip path for blob text, so they don't exceed the blob boundaries */}
-        <clipPath id={`clip-path-${d.data.path}`}>
+        <clipPath id={`clip-path-${d.data.hash}`}>
           <rect
             stroke="red"
             fill="transparent"
@@ -501,7 +501,7 @@ function NodeText({
       <text
         textAnchor={textShouldBeCentered ? "middle" : undefined}
         alignmentBaseline="hanging"
-        {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.path})` } : {})}
+        {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.hash})` } : {})}
         x={
           isCircularNode(d)
             ? isTree(d.data)
