@@ -101,16 +101,23 @@ function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
     return [missingInMapColor]
   }
 
-  const fileSizeBucketIndex = FileSizeMetric.getBucketIndex(obj, data.databaseInfo)
   const commitCount = data.databaseInfo.clickedObjectInfo?.amountOfCommits
+  const getCachedColors = (cache: MetricCache | undefined): Array<HexColor> | null => {
+    const colors = cache?.categoriesMap.get(obj.path)?.map((c) => c.color)
+    return colors && colors.length > 0 ? colors : null
+  }
 
   const colorMap = {
-    FILE_TYPE: () =>
-      metricsData
-        .get("FILE_TYPE")
-        ?.categoriesMap?.get(obj.path)
-        ?.map((c) => c.color) ?? [missingInMapColor],
-    FILE_SIZE: () => [FileSizeMetric.getBuckets(data.databaseInfo)[fileSizeBucketIndex].color ?? missingInMapColor],
+    FILE_TYPE: () => getCachedColors(metricsData.get("FILE_TYPE")) ?? [missingInMapColor],
+    FILE_SIZE: () => {
+      const metricCache = metricsData.get("FILE_SIZE")
+      const cachedColors = getCachedColors(metricCache)
+      if (cachedColors) return cachedColors
+
+      const buckets = metricCache?.buckets ?? FileSizeMetric.getBuckets(data.databaseInfo)
+      const fileSizeBucketIndex = FileSizeMetric.getBucketIndex(obj, data.databaseInfo, buckets)
+      return [buckets[fileSizeBucketIndex]?.color ?? missingInMapColor]
+    },
     MOST_COMMITS: () => [
       CommitsMetric.getColorFromValue(
         commitCount ?? 0,
@@ -132,10 +139,14 @@ function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
         metricsData.get("MOST_CONTRIBUTIONS") as MetricCache
       )
     ],
-    LAST_CHANGED: () => [
-      LastChangedMetric.getBuckets(data.databaseInfo)[LastChangedMetric.getBucketIndex(obj, data.databaseInfo)]
-        ?.color ?? missingInMapColor
-    ],
+    LAST_CHANGED: () => {
+      const metricCache = metricsData.get("LAST_CHANGED")
+      const cachedColors = getCachedColors(metricCache)
+      if (cachedColors) return cachedColors
+
+      const buckets = metricCache?.buckets ?? LastChangedMetric.getBuckets(data.databaseInfo)
+      return [buckets[LastChangedMetric.getBucketIndex(obj, data.databaseInfo, buckets)]?.color ?? missingInMapColor]
+    },
     CONTRIBUTORS: () => [] as Array<HexColor>
   } as const
 

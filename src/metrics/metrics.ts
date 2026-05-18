@@ -66,8 +66,14 @@ export type CategoricalMetric = Metric & {
 }
 
 export type SegmentedMetric = CategoricalMetric & {
-  getBuckets(dbi: DatabaseInfo): { text: string; range: [number, number]; color: HexColor }[]
-  getBucketIndex(obj: RawGitObject, dbi: DatabaseInfo): number
+  getBuckets(dbi: DatabaseInfo): SegmentBucket[]
+  getBucketIndex(obj: RawGitObject, dbi: DatabaseInfo, buckets?: readonly SegmentBucket[]): number
+}
+
+export type SegmentBucket = {
+  text: string
+  range: [number, number]
+  color: HexColor
 }
 
 export type GradientedMetric = Metric & {
@@ -143,8 +149,9 @@ export const sizeMetricDescriptions: Record<SizeMetricType, string> = {
   MOST_CONTRIBUTIONS: "Files are sized based on how many line changes (additions and deletions) have been made to it."
 }
 
-export interface MetricCache {
+export type MetricCache = {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
+  buckets?: readonly SegmentBucket[]
   categoriesMap: Map<string, Array<{ category: string; color: HexColor }>>
 }
 

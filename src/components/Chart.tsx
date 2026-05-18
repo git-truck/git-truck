@@ -35,6 +35,7 @@ import { filterTree, flattenTree } from "~/shared/utils/tree"
 import { useGradient } from "~/hooks/svg"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
+import type { SegmentBucket } from "~/metrics/metrics"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
@@ -96,6 +97,8 @@ export function Chart() {
     showFilesWithoutChanges
   ])
 
+  const lastChangedBuckets = metricsData.get("LAST_CHANGED")?.buckets
+
   const nodes = useMemo(() => {
     if (process.env["NODE_ENV"] === "development") {
       // console.time("Create and pack hiearchy")
@@ -111,13 +114,14 @@ export function Chart() {
       },
       chartType,
       sizeMetricType: sizeMetric,
-      renderCutOff
+      renderCutOff,
+      lastChangedBuckets
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
       // console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree])
+  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree, lastChangedBuckets])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -529,7 +533,8 @@ function createPartitionedHiearchy({
   size,
   chartType,
   sizeMetricType,
-  renderCutOff
+  renderCutOff,
+  lastChangedBuckets
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
@@ -537,7 +542,11 @@ function createPartitionedHiearchy({
   chartType: LayoutType
   sizeMetricType: SizeMetricType
   renderCutOff: number
+  lastChangedBuckets?: readonly SegmentBucket[]
 }) {
+  const bucketsForLastChanged =
+    sizeMetricType === "LAST_CHANGED" ? (lastChangedBuckets ?? LastChangedMetric.getBuckets(databaseInfo)) : undefined
+
   const hiearchy = hierarchy<GitObject>(tree)
     .sum((obj) => {
       if (isTree(obj)) return 0
@@ -549,8 +558,8 @@ function createPartitionedHiearchy({
         case "EQUAL_SIZE":
           return 1
         case "LAST_CHANGED": {
-          const maxIndex = LastChangedMetric.getBuckets(databaseInfo).length
-          return 2 ** (maxIndex - LastChangedMetric.getBucketIndex(obj, databaseInfo))
+          const maxIndex = bucketsForLastChanged?.length ?? 0
+          return 2 ** (maxIndex - LastChangedMetric.getBucketIndex(obj, databaseInfo, bucketsForLastChanged))
         }
         // return (
         //   (databaseInfo.lastChanged[obj.path] ?? databaseInfo.oldestChangeDate + 1) - databaseInfo.oldestChangeDate

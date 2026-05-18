@@ -6,6 +6,7 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
 import { reduceTree } from "~/shared/utils/tree"
+import type { SegmentBucket } from "~/metrics/segmentBuckets"
 
 /**
  * Time thresholds for last changed groupings (in seconds)
@@ -68,13 +69,15 @@ export const LastChangedMetric: SegmentedMetric = {
     const buckets = LastChangedMetric.getBuckets(dbi)
 
     return (blob: GitBlobObject, cache: MetricCache) => {
+      cache.buckets ??= buckets
+
       if (!cache.legend) {
         cache.legend = {
           steps: buckets.length,
           textGenerator: (n) => buckets[n].text,
           colorGenerator: (n) => buckets[n].color,
           offsetStepCalc: (blob) => {
-            return LastChangedMetric.getBucketIndex(blob, dbi)
+            return LastChangedMetric.getBucketIndex(blob, dbi, buckets)
           }
         } satisfies SegmentLegendData
       }
@@ -85,7 +88,7 @@ export const LastChangedMetric: SegmentedMetric = {
         return
       }
 
-      const index = LastChangedMetric.getBucketIndex(blob, dbi)
+      const index = LastChangedMetric.getBucketIndex(blob, dbi, buckets)
       if (index < 0) {
         cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
         return
@@ -154,7 +157,7 @@ export const LastChangedMetric: SegmentedMetric = {
     return timeDifferences
   },
 
-  getBucketIndex(obj, dbi): number {
+  getBucketIndex(obj, dbi, buckets?: readonly SegmentBucket[]): number {
     const epoch = isTree(obj)
       ? reduceTree(obj, (s, o) => Math.max(s, dbi.lastChanged[o.path] ?? 0), 0 as number)
       : dbi.lastChanged[obj.path]
@@ -164,9 +167,9 @@ export const LastChangedMetric: SegmentedMetric = {
     }
 
     const timeDiff = dbi.newestChangeDate - epoch
-    const buckets = this.getBuckets(dbi)
-    const lastIndex = buckets.length - 1
-    return buckets.findIndex((g, i) =>
+    const categories = buckets ?? this.getBuckets(dbi)
+    const lastIndex = categories.length - 1
+    return categories.findIndex((g, i) =>
       i === lastIndex
         ? timeDiff >= g.range[0] && timeDiff <= g.range[1]
         : timeDiff >= g.range[0] && timeDiff < g.range[1]
