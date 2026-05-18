@@ -232,14 +232,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
-let prevArgs: { path: string; branch: string; objectPath: string; zoomPath: string; timeUnit: TimeUnit } = {
-  path: ".",
-  branch: "HEAD",
-  objectPath: ".",
-  zoomPath: "",
-  timeUnit: "year"
-}
-
 async function analyze({
   path,
   branch,
@@ -265,9 +257,26 @@ async function analyze({
     )
   }
 
+  const currentArgs = {
+    path,
+    branch,
+    objectPath: objectPath ?? "",
+    zoomPath,
+    timeUnit: timeUnit ?? null
+  }
+
   // // to avoid double identical fetch at first load, which it does for some reason
   // // TODO: Fix this. This is due to react strict mode
-  if (instance.prevInvokeReason === "none" && instance.prevResult) {
+  if (
+    instance.prevInvokeReason === "none" &&
+    instance.prevResult &&
+    instance.prevArgs &&
+    instance.prevArgs.path === currentArgs.path &&
+    instance.prevArgs.branch === currentArgs.branch &&
+    instance.prevArgs.objectPath === currentArgs.objectPath &&
+    instance.prevArgs.zoomPath === currentArgs.zoomPath &&
+    instance.prevArgs.timeUnit === currentArgs.timeUnit
+  ) {
     return instance.prevResult
   }
 
@@ -286,25 +295,19 @@ async function analyze({
   instance.prevInvokeReason = "unknown"
   const prevData = instance.prevResult
   const prevRes = prevData?.databaseInfo
+  const prevArgs = instance.prevArgs
+  const reasonAllowsArgInference = reason === "none" || reason === "unknown"
 
-  if (prevArgs.zoomPath !== zoomPath) {
+  if (reasonAllowsArgInference && prevArgs && prevArgs.zoomPath !== currentArgs.zoomPath) {
     reason = "zoomPath"
   }
 
-  if (prevArgs.timeUnit !== timeUnit) {
+  if (reasonAllowsArgInference && prevArgs && prevArgs.timeUnit !== currentArgs.timeUnit) {
     reason = "timeUnit"
   }
 
-  if (prevArgs.objectPath !== (objectPath ?? "")) {
+  if (reasonAllowsArgInference && prevArgs && prevArgs.objectPath !== currentArgs.objectPath) {
     reason = "clickedObject"
-  }
-
-  prevArgs = {
-    path,
-    branch,
-    objectPath: objectPath ?? "",
-    zoomPath,
-    timeUnit: timeUnit ?? "year"
   }
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
@@ -313,21 +316,24 @@ async function analyze({
     log.timeEnd("rename")
   }
 
-  const hiddenFiles =
-    prevRes && !shouldUpdate(reason, "hiddenFiles") ? prevRes.hiddenFiles : await instance.db.getHiddenFiles()
+  const shouldUpdateHiddenFiles = !prevRes || shouldUpdate(reason, "hiddenFiles")
+  const shouldUpdateSourceFileTree = !prevRes || shouldUpdate(reason, "fileTree")
+  const shouldUpdateVisibleFileTree = shouldUpdateHiddenFiles || shouldUpdateSourceFileTree
+
+  const hiddenFiles = shouldUpdateHiddenFiles ? await instance.db.getHiddenFiles() : prevRes.hiddenFiles
 
   log.time("fileTree")
+  const sourceFileTree = shouldUpdateSourceFileTree ? await instance.analyzeTree() : await instance.getFileTree()
   const filetree =
-    prevRes && !shouldUpdate(reason, "fileTree")
+    prevRes && !shouldUpdateVisibleFileTree
       ? {
           rootTree: prevRes.fileTree,
-          objectPathMap: prevRes.objectPathMap,
           fileCount: prevRes.fileCount
         }
-      : await instance.analyzeTree({ hiddenFiles })
+      : instance.filterHiddenFilesFromTree(sourceFileTree.rootTree, hiddenFiles)
   log.timeEnd("fileTree")
 
-  const { rootTree, objectPathMap, fileCount } = filetree
+  const { rootTree, fileCount } = filetree
 
   log.time("updateCache")
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
@@ -413,24 +419,26 @@ async function analyze({
         ? await instance.db.getCommitCountPerTimeForClickedObject({ timerange, timeUnit, objectPath })
         : []
 
-  const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
-
-  const objIsBlob = (await instance.db.getObjectTypeFromPath(objectPath)) === "blob"
+  const objIsBlob = object?.type === "blob"
 
   const clickedObject =
     prevRes && !shouldUpdate(reason, "clickedObjectData")
       ? prevRes.clickedObjectInfo
-      : {
-          path: objectPath,
-          existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, objIsBlob),
-          topContributor: topContributorData,
-          multiTopContributors:
-            topContributorData.length > 1 && topContributorData[0].contribs === topContributorData[1].contribs,
-          amountOfCommits: await instance.db.getCommitCountForPath(objectPath),
-          contributors: await instance.db.getUniqueContributorsForPath(objectPath),
-          contributions: await instance.db.getContributionsForPath(objectPath),
-          lastChanged: await instance.db.getLastChangedForPath(objectPath)
-        }
+      : await (async () => {
+          const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
+
+          return {
+            path: objectPath,
+            existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, objIsBlob),
+            topContributor: topContributorData,
+            multiTopContributors:
+              topContributorData.length > 1 && topContributorData[0].contribs === topContributorData[1].contribs,
+            amountOfCommits: await instance.db.getCommitCountForPath(objectPath),
+            contributors: await instance.db.getUniqueContributorsForPath(objectPath),
+            contributions: await instance.db.getContributionsForPath(objectPath),
+            lastChanged: await instance.db.getLastChangedForPath(objectPath)
+          }
+        })()
 
   const databaseInfo: DatabaseInfo = {
     zoomPathName: getRepoNameFromPath(zoomPath),
@@ -469,11 +477,8 @@ async function analyze({
   }
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
-  // const objectPathMapSize = JSON.stringify(objectPathMap).length
-  // console.log(objectPathMapSize.toLocaleString())
-  // const fullDataSize = JSON.stringify(fullData).length
-  // console.log(fullDataSize.toLocaleString())
-  // console.log(((objectPathMapSize / fullDataSize) * 100).toFixed(2) + "% of full data is objectPathMap")
+  instance.prevResult = fullData
+  instance.prevArgs = currentArgs
 
   return fullData
 }

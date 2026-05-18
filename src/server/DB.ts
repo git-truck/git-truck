@@ -229,12 +229,16 @@ export default class DB {
       WHERE g.path IS NULL;
 
 
-      CREATE OR REPLACE VIEW fileChanges_commits_renamed_files AS
-      SELECT * FROM fileChanges_commits_renamed f
+      CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cache_source AS
+      SELECT * FROM fileChanges_commits_renamed;
+
+      CREATE OR REPLACE TEMP VIEW fileChanges_commits_renamed_cached AS
+      SELECT f.*
+      FROM fileChanges_commits_renamed_cache_source f
       INNER JOIN filtered_files fi on fi.path = f.filePath;
 
-      CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
-      SELECT * FROM fileChanges_commits_renamed_files;
+      CREATE OR REPLACE TEMP VIEW fileChanges_commits_renamed_files AS
+      SELECT * FROM fileChanges_commits_renamed_cached;
 
       CREATE OR REPLACE VIEW relevant_renames AS
       SELECT fromName, toName, min(timestamp) AS timestamp, timestampAuthor FROM renames
@@ -253,7 +257,7 @@ export default class DB {
       ON (c.author = cg.name AND c.authorEMail = cg.email)
       JOIN fileChanges f ON f.commitHash = c.hash
       LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND c.committerTime BETWEEN r.timestamp AND r.timestampEnd
-      INNER JOIN files fi on fi.path = filePath
+      INNER JOIN filtered_files fi on fi.path = filePath
       WHERE c.committerTime BETWEEN ${start} AND ${end}
 
     `)
@@ -943,9 +947,8 @@ export default class DB {
   }
 
   public async updateCachedResult() {
-    // TODO: fix combined_result
-    await this.run(/*sql*/ `CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cached AS
-    SELECT * FROM fileChanges_commits_renamed_files;
+    await this.run(/*sql*/ `CREATE OR REPLACE TEMP TABLE fileChanges_commits_renamed_cache_source AS
+    SELECT * FROM fileChanges_commits_renamed;
     `)
   }
 
@@ -1006,7 +1009,7 @@ export default class DB {
 
   public async getObjectFromPath(objectPath: string): Promise<RawGitObject | null> {
     return this.usingPreparedStatement(
-      `SELECT type, path, path, name, byteSize FROM files WHERE path = ?`,
+      `SELECT type, hash, path, name, byteSize FROM files WHERE path = ?`,
       async (statement) => {
         statement.bindVarchar(1, objectPath)
         const results = (await statement.runAndReadAll()).getRowObjectsJS() as Array<RawGitObject>
@@ -1074,13 +1077,21 @@ export default class DB {
 
   public async getMaxAndMinFileSize() {
     const res = await this.query(
-      `SELECT MAX(byteSize) as max_size, MIN(byteSize) as min_size FROM files WHERE type = 'blob';`
+      `SELECT MAX(f.byteSize) as max_size, MIN(f.byteSize) as min_size
+       FROM files f
+       INNER JOIN filtered_files fi ON fi.path = f.path
+       WHERE f.type = 'blob';`
     )
     return { maxFileSize: Number(res[0]["max_size"]), minFileSize: Number(res[0]["min_size"]) }
   }
 
   public async getFileSizePerFile(): Promise<Record<string, number>> {
-    const res = await this.query(`SELECT path, byteSize FROM files WHERE type = 'blob';`)
+    const res = await this.query(
+      `SELECT f.path, f.byteSize
+       FROM files f
+       INNER JOIN filtered_files fi ON fi.path = f.path
+       WHERE f.type = 'blob';`
+    )
 
     const result: Record<string, number> = {}
     res.forEach((row) => {
