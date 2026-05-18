@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { flattenTreeIncludeTrees, reduceTree, reduceTreeIncludeTrees } from "./tree"
+import { createObjectPathMap, flattenTreeIncludeTrees, reduceTree, reduceTreeIncludeTrees } from "./tree"
 import type { GitTreeObject, GitBlobObject } from "~/shared/model"
 
 describe("reduceTree", () => {
@@ -91,5 +91,31 @@ describe("flattenTreeIncludeTrees", () => {
 
     expect(flattened[1].type).toBe("blob")
     expect(flattened[1].name).toBe("file1.txt")
+  })
+})
+
+describe("createObjectPathMap", () => {
+  it("should map tree and blob paths to their existing objects", () => {
+    const file: GitBlobObject = {
+      type: "blob",
+      hash: "file-hash",
+      name: "file.txt",
+      path: "root/file.txt",
+      extension: "txt",
+      byteSize: 10
+    }
+    const tree: GitTreeObject = {
+      type: "tree",
+      hash: "tree-hash",
+      name: "root",
+      path: "root",
+      byteSize: 10,
+      children: [file]
+    }
+
+    const pathMap = createObjectPathMap(tree)
+
+    expect(pathMap["root"]).toBe(tree)
+    expect(pathMap["root/file.txt"]).toBe(file)
   })
 })
