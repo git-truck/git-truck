@@ -3,6 +3,7 @@ import { getCoAuthors } from "~/server/coauthors"
 import { GitService } from "~/server/git-service"
 import type {
   GitBlobObject,
+  GitObject,
   GitTreeObject,
   RawGitObject,
   GitLogEntry,
@@ -15,14 +16,27 @@ import type {
   DatabaseInfo
 } from "~/shared/model.ts"
 import { log } from "~/server/log"
-import { analyzeRenamedFile, isTree, promiseHelper } from "~/shared/util.ts"
+import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 import ignore from "ignore"
-import { reduceTreeIncludeTrees } from "~/shared/utils/tree"
+import type { TimeUnit } from "~/shared/utils/time"
+
+type PreviousAnalyzeArgs = {
+  path: string
+  branch: string
+  objectPath: string
+  zoomPath: string
+  timeUnit: TimeUnit | null
+}
+
+type FileTreeResult = {
+  rootTree: GitTreeObject
+  fileCount: number
+}
 
 export type AnalysisStatus = "Initialized" | "ProcessingCommitHistory" | "CommitHistoryProcessed" | "Aborted"
 
@@ -34,7 +48,13 @@ export class Analysis {
   public totalCommitCount = 0
   public progressRevision = 0
   private fileTreeAsOf: string | null = null
-  public prevResult: RepoData | null = null
+  private fileTreeResult: FileTreeResult | null = null
+  public prevResult:
+    | (Omit<RepoData, "databaseInfo"> & {
+        databaseInfo: Omit<DatabaseInfo, "objectPathMap">
+      })
+    | null = null
+  public prevArgs: PreviousAnalyzeArgs | null = null
   public prevInvokeReason: InvocationReason = "unknown"
 
   public repositoryPath: string
@@ -100,88 +120,91 @@ export class Analysis {
 
   public async updateTimeInterval(start: number, end: number) {
     await this.db.updateTimeInterval(start, end)
+    const previousFileTreeAsOf = this.fileTreeAsOf
     this.fileTreeAsOf = await this.db.getLatestCommitHash(end)
+    if (previousFileTreeAsOf && previousFileTreeAsOf !== this.fileTreeAsOf) {
+      this.fileTreeResult = null
+    }
   }
 
   // TODO: handle breadcrumb when timeseries changes such that
   // currently zoomed folder no longer exists
-  public async analyzeTree({ hiddenFiles }: { hiddenFiles: string[] }) {
-    const hiddenFilePatterns = hiddenFiles.flatMap((path) => {
-      const repoPrefix = `${this.repositoryName}/`
-      return path.startsWith(repoPrefix) ? [path, path.slice(repoPrefix.length)] : [path]
-    })
-    const ig = ignore().add(hiddenFilePatterns)
+  public async analyzeTree() {
     this.throwIfAborted()
     if (!this.fileTreeAsOf) this.fileTreeAsOf = await this.db.getLatestCommitHash()
     const rawContent = await this.gitService.lsTree(this.fileTreeAsOf)
 
-    log.time("calculate tree sizes")
-
-    const matchGroups = rawContent
+    const gitEntries = rawContent
       .matchAll(treeRegex)
       .toArray()
       .flatMap((match) => {
-        if (!match.groups || ig.ignores(match.groups.path)) {
+        if (!match.groups) {
           return []
         }
 
         const groups = match.groups
 
         const entryName = groups["path"].split("/").at(-1)!
+        const byteSize = Number(groups["size"] === "-" ? 0 : groups["size"])
         return {
           type: groups["type"] as "blob" | "tree",
           hash: groups["hash"],
-          byteSize: Number(groups["size"] === "-" ? NaN : groups["size"]),
+          byteSize: Number.isFinite(byteSize) ? byteSize : 0,
           path: this.repositoryName + "/" + groups["path"],
           name: entryName
         }
       })
 
-    const lsTreeEntries: RawGitObject[] = [
-      {
-        type: "tree",
-        path: this.repositoryName,
-        name: this.repositoryName,
-        hash: this.fileTreeAsOf,
-        byteSize: NaN
-      } as const,
-      ...matchGroups
-    ].map((entry, i, entries) => ({
-      ...entry,
-      byteSize:
-        entry.type === "tree"
-          ? entries.reduce(
-              (acc, otherEntry) =>
-                otherEntry.type === "blob" && otherEntry.path.startsWith(entry.path + "/")
-                  ? acc + (otherEntry.byteSize ?? 0)
-                  : acc,
-              0
-            )
-          : entry.byteSize
-    }))
+    log.time("calculate tree sizes")
+    const treeSizes = new Map<string, number>([[this.repositoryName, 0]])
 
+    for (const entry of gitEntries) {
+      if (entry.type === "tree") {
+        treeSizes.set(entry.path, 0)
+      }
+    }
+
+    for (const entry of gitEntries) {
+      if (entry.type !== "blob") continue
+
+      let parentEnd = entry.path.lastIndexOf("/")
+      while (parentEnd !== -1) {
+        const parentPath = entry.path.slice(0, parentEnd)
+        treeSizes.set(parentPath, (treeSizes.get(parentPath) ?? 0) + entry.byteSize)
+        if (parentPath === this.repositoryName) break
+        parentEnd = parentPath.lastIndexOf("/")
+      }
+    }
     log.timeEnd("calculate tree sizes")
 
-    const fileCount = lsTreeEntries.filter((e) => e.type === "blob").length
+    const rootEntry: RawGitObject = {
+      type: "tree",
+      path: this.repositoryName,
+      name: this.repositoryName,
+      hash: this.fileTreeAsOf,
+      byteSize: treeSizes.get(this.repositoryName) ?? 0
+    }
 
-    const rootTree = { ...lsTreeEntries[0], children: [] } as GitTreeObject
+    const lsTreeEntries: RawGitObject[] = [
+      rootEntry,
+      ...gitEntries.map((entry) =>
+        entry.type === "tree" ? { ...entry, byteSize: treeSizes.get(entry.path) ?? 0 } : entry
+      )
+    ]
+
+    const fileCount = gitEntries.filter((e) => e.type === "blob").length
+
+    const rootTree = { ...rootEntry, children: [] } as GitTreeObject
 
     this.throwIfAborted()
     await this.db.replaceFiles(lsTreeEntries)
 
-    for (const child of lsTreeEntries) {
-      const prevTrees = child.path.split("/").slice(1)
-      const newName = prevTrees.pop() as string
+    const treeByPath = new Map<string, GitTreeObject>([[rootTree.path, rootTree]])
+    for (const child of gitEntries) {
       const newPath = `${child.path}`
-      let currTree = rootTree
-
-      for (const treePath of prevTrees) {
-        const foundTree: GitTreeObject = currTree.children.find(
-          (t) => t.name === treePath && isTree(t)
-        ) as GitTreeObject
-        if (!foundTree) continue
-        currTree = foundTree
-      }
+      const newName = newPath.slice(newPath.lastIndexOf("/") + 1)
+      const parentPath = newPath.slice(0, newPath.lastIndexOf("/"))
+      const currTree = treeByPath.get(parentPath) ?? rootTree
 
       switch (child.type) {
         case "tree": {
@@ -198,6 +221,7 @@ export class Analysis {
           }
 
           currTree.children.push(newTree)
+          treeByPath.set(newPath, newTree)
 
           break
         }
@@ -217,13 +241,62 @@ export class Analysis {
     }
 
     this.treeCleanup(rootTree)
-    const objectPathMap: DatabaseInfo["objectPathMap"] = reduceTreeIncludeTrees(
-      rootTree,
-      (acc, obj) => ({ ...acc, [obj.path]: obj }),
-      {}
-    )
+    this.fileTreeResult = { rootTree, fileCount }
+    return this.fileTreeResult
+  }
 
-    return { rootTree, objectPathMap, fileCount }
+  public async getFileTree() {
+    return this.fileTreeResult ?? (await this.analyzeTree())
+  }
+
+  public filterHiddenFilesFromTree(tree: GitTreeObject, hiddenFiles: string[]): FileTreeResult {
+    const hiddenFilePatterns = hiddenFiles.flatMap((path) => {
+      const repoPrefix = `${this.repositoryName}/`
+      return path.startsWith(repoPrefix) ? [path, path.slice(repoPrefix.length)] : [path]
+    })
+    const ig = ignore().add(hiddenFilePatterns)
+
+    const filterNode = (node: GitObject): GitObject | null => {
+      const relativePath = node.path === this.repositoryName ? "" : node.path.slice(this.repositoryName.length + 1)
+      if (relativePath && ig.ignores(relativePath)) return null
+
+      if (node.type === "blob") return node
+
+      let byteSize = 0
+      const children: GitObject[] = []
+      for (const child of node.children) {
+        const filteredChild = filterNode(child)
+        if (!filteredChild) continue
+
+        byteSize += filteredChild.byteSize
+        children.push(filteredChild)
+      }
+
+      if (children.length === 0 && node.path !== this.repositoryName) return null
+      return { ...node, byteSize, children }
+    }
+
+    const rootTree = filterNode(tree)
+    if (!rootTree || rootTree.type !== "tree") {
+      return { rootTree: { ...tree, byteSize: 0, children: [] }, fileCount: 0 }
+    }
+
+    return {
+      rootTree,
+      fileCount: this.countFiles(rootTree)
+    }
+  }
+
+  private countFiles(tree: GitTreeObject): number {
+    let fileCount = 0
+    for (const child of tree.children) {
+      if (child.type === "blob") {
+        fileCount += 1
+      } else {
+        fileCount += this.countFiles(child)
+      }
+    }
+    return fileCount
   }
 
   private treeCleanup(tree: GitTreeObject) {
