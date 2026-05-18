@@ -9,6 +9,7 @@ import { feature_flags } from "~/feature_flags"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import byteSize from "byte-size"
+import type { SegmentBucket } from "~/metrics/segmentBuckets"
 
 function uniqueSorted(values: number[]): number[] {
   return values
@@ -79,9 +80,12 @@ export const FileSizeMetric: SegmentedMetric = {
 
   //For now we don't use _root for calculation
   metricFunctionFactory({ databaseInfo: dbi }, _root) {
+    const fileSizeGroupings = this.getBuckets(dbi)
+    const fileSizeMapper = new FileSizeTranslater(dbi.minFileSize, dbi.maxFileSize)
+
     return (blob: GitBlobObject, cache: MetricCache) => {
-      const fileSizeGroupings = this.getBuckets(dbi)
-      const fileSizeMapper = new FileSizeTranslater(dbi.minFileSize, dbi.maxFileSize)
+      cache.buckets ??= fileSizeGroupings
+
       if (feature_flags.fileSizeAsGrad) {
         if (!cache.legend) {
           cache.legend = {
@@ -102,7 +106,7 @@ export const FileSizeMetric: SegmentedMetric = {
             colorGenerator: (n) => fileSizeGroupings[n].color,
             offsetStepCalc: (blob) => {
               const size = dbi.fileSizes[blob.path]
-              return size === undefined ? -1 : FileSizeMetric.getBucketIndex(blob, dbi)
+              return size === undefined ? -1 : FileSizeMetric.getBucketIndex(blob, dbi, fileSizeGroupings)
             }
           } satisfies SegmentLegendData
         }
@@ -112,7 +116,7 @@ export const FileSizeMetric: SegmentedMetric = {
           return
         }
 
-        const index = FileSizeMetric.getBucketIndex(blob, dbi)
+        const index = FileSizeMetric.getBucketIndex(blob, dbi, fileSizeGroupings)
         if (index < 0) {
           cache.categoriesMap.set(blob.path, [{ category: UNKNOWN_CATEGORY, color: noEntryColor }])
           return
@@ -153,8 +157,8 @@ export const FileSizeMetric: SegmentedMetric = {
     }))
   },
 
-  getBucketIndex(obj, dbi) {
-    const categories = this.getBuckets(dbi)
+  getBucketIndex(obj, dbi, buckets?: readonly SegmentBucket[]) {
+    const categories = buckets ?? this.getBuckets(dbi)
     const lastIndex = categories.length - 1
     return categories.findIndex((g, i) =>
       i === lastIndex ? obj.byteSize >= g.range[0] : obj.byteSize >= g.range[0] && obj.byteSize < g.range[1]
