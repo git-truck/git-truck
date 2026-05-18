@@ -25,13 +25,7 @@ function getObjectPathMap(fileTree: GitTreeObject): ObjectPathMap {
   return objectPathMap
 }
 
-export function Providers({
-  children,
-  data
-}: {
-  children: ReactNode
-  data: RepoData
-}) {
+export function Providers({ children, data }: { children: ReactNode; data: RepoData }) {
   const options = useOptions()
 
   const [searchResults, setSearchResults] = useState<Record<string, GitObject>>({})
