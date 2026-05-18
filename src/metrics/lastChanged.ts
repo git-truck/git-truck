@@ -1,12 +1,11 @@
 import { dateFormatRelative, dateFormatShort, isBlob, isTree, rgbToHex } from "~/shared/util"
 import { interpolateTurbo } from "d3"
-import type { MetricCache, SegmentedMetric } from "~/metrics/metrics"
+import type { MetricCache, SegmentBucket, SegmentedMetric } from "~/metrics/metrics"
 import { mdiPulse } from "@mdi/js"
 import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { SegmentLegend, type SegmentLegendData } from "~/components/legend/SegmentLegend"
 import { UNKNOWN_CATEGORY, noEntryColor } from "~/const"
 import { reduceTree } from "~/shared/utils/tree"
-import type { SegmentBucket } from "~/metrics/segmentBuckets"
 
 /**
  * Time thresholds for last changed groupings (in seconds)

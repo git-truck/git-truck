@@ -10,7 +10,7 @@ import { GitService } from "~/server/git-service"
 import { AnalysisManager } from "~/server/AnalysisManager"
 import { type DatabaseInfo, type RepoData } from "~/shared/model"
 import { type TimeUnit } from "~/shared/utils/time"
-import { shouldUpdate } from "~/shared/RefreshPolicy"
+import { getLoaderInvocationReason, shouldUpdate } from "~/shared/RefreshPolicy"
 import {
   getArgsWithDefaults,
   getBaseDirFromPath,
@@ -109,19 +109,17 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     instance.db.selectedRange = [start, end]
   }
 
-  let shouldUpdateTimeSeries = false
+  let timeRangeReason: "timeseriesend" | "timeseriesstart" | null = null
 
   if (end && end !== instance.db.selectedRange[1]) {
-    instance.prevInvokeReason = "timeseriesend"
-    shouldUpdateTimeSeries = true
+    timeRangeReason = "timeseriesend"
   } else if (start && start !== instance.db.selectedRange[0]) {
-    instance.prevInvokeReason = "timeseriesstart"
-    shouldUpdateTimeSeries = true
-  } else {
-    instance.prevInvokeReason = "none"
+    timeRangeReason = "timeseriesstart"
   }
 
-  if (shouldUpdateTimeSeries) {
+  instance.prevInvokeReason = getLoaderInvocationReason(instance.prevInvokeReason, timeRangeReason)
+
+  if (timeRangeReason) {
     await instance.updateTimeInterval(start!, end!)
   }
 
