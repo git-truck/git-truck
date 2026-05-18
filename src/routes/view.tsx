@@ -232,8 +232,13 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
-let prevArgs:  { path: string, branch: string, objectPath: string, zoomPath: string, timeUnit: TimeUnit }
- = { path: ".", branch: "HEAD", objectPath: ".", zoomPath: "", timeUnit: "year"}
+let prevArgs: { path: string; branch: string; objectPath: string; zoomPath: string; timeUnit: TimeUnit } = {
+  path: ".",
+  branch: "HEAD",
+  objectPath: ".",
+  zoomPath: "",
+  timeUnit: "year"
+}
 
 async function analyze({
   path,
@@ -294,15 +299,13 @@ async function analyze({
     reason = "clickedObject"
   }
 
-
   prevArgs = {
     path,
     branch,
     objectPath: objectPath ?? "",
     zoomPath,
     timeUnit: timeUnit ?? "year"
-   }
-
+  }
 
   if (!prevRes || shouldUpdate(reason, "rename")) {
     log.time("rename")
