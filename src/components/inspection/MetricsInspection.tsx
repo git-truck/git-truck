@@ -1,9 +1,4 @@
-import {
-  mdiFileOutline,
-  mdiFolderOutline,
-  mdiSourceRepository,
-  mdiScaleBalance
-} from "@mdi/js"
+import { mdiFileOutline, mdiFolderOutline, mdiSourceRepository, mdiScaleBalance } from "@mdi/js"
 import byteSize from "byte-size"
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
 import { href, useFetcher, useSubmit } from "react-router"
@@ -13,11 +8,7 @@ import { UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isDarkColor, isTree, last } from "~/shared/util"
-import {
-  useClickedObject,
-  useObjectColor,
-  useClickedObjectPath
-} from "~/state/stores/clicked-object"
+import { useClickedObject, useObjectColor, useClickedObjectPath } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { usePathIsRepositoryRoot, useViewAction } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
