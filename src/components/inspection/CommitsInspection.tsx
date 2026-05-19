@@ -2,22 +2,21 @@ import { useQueryStates } from "nuqs"
 import { useFetcher, href } from "react-router"
 import { commitsSerializer, type loader } from "~/routes/api.commits"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
-import { useClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
-  const clickedObject = useClickedObject()
+  const clickedObjectPath = useClickedObjectPath()
   const { load, data, state, reset } = useFetcher<typeof loader>()
   const [{ path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
 
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
-  const previousPathRef = useRef<string>("")
 
   // Memoize selected authors to prevent unnecessary re-renders
   const selectedContributors = useMemo(
@@ -53,18 +52,11 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   // Reload commits when clicked object or selected authors change
   useEffect(() => {
-    const pathToLoad = clickedObject.path
+    const pathToLoad = clickedObjectPath
 
-    if (pathToLoad) {
-      // Check if this is a new path (using ref to avoid objectPath dependency)
-      const isNewPath = pathToLoad !== previousPathRef.current
-      if (isNewPath) {
-        previousPathRef.current = pathToLoad
-      }
-
-      loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: COMMIT_STEP, start, end })
-    }
-  }, [clickedObject.path, loadCommits, reset, selectedContributors, start, end])
+    loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: COMMIT_STEP, start, end })
+    return () => reset()
+  }, [clickedObjectPath, end, loadCommits, reset, selectedContributors, start])
 
   return (
     <CollapsibleHeader
@@ -80,7 +72,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       onToggle={(open) => {
         if (open) {
           if (!data && state === "idle") {
-            loadCommits({ objectPath: clickedObject.path, contributors: selectedContributors, count: COMMIT_STEP })
+            loadCommits({ objectPath: clickedObjectPath, contributors: selectedContributors, count: COMMIT_STEP })
           }
         } else {
           reset()
@@ -93,9 +85,8 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
         totalCommitCount={data?.totalCommitCount ?? 0}
         isLoading={state !== "idle"}
         onShowMoreCommits={() => {
-          if (!clickedObject) return
           loadCommits({
-            objectPath: clickedObject.path,
+            objectPath: clickedObjectPath,
             contributors: selectedContributors,
             count: (data?.currentCommitCount ?? COMMIT_STEP) + COMMIT_STEP
           })
