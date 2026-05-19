@@ -24,6 +24,19 @@ export const useClickedObject = (): GitObject => {
   return clickedObjectState ?? zoomedObjectState ?? rootTree
 }
 
+export const useClickedObjectPath = (): string => {
+  const data = useData()
+  const [qs] = useQueryStates(
+    {
+      objectPath: viewSearchParamsConfig.objectPath,
+      zoomPath: viewSearchParamsConfig.zoomPath
+    },
+    { shallow: false }
+  )
+
+  return qs.objectPath ?? qs.zoomPath ?? data.databaseInfo.fileTree.name
+}
+
 export const useClickedObjectNullable = () => {
   const data = useDataNullable()
   const [qs] = useQueryStates(viewSearchParamsConfig, { shallow: false })
@@ -47,13 +60,9 @@ export const useSetClickedObject = () => {
 }
 
 export const useClickedObjectIsZoomPath = () => {
-  const clickedObject = useClickedObject()
-  const data = useData()
+  const clickedObjectPath = useClickedObjectPath()
   const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
-
-  const zoomedObjectState = zoomPath ? data.databaseInfo.objectPathMap[zoomPath] : undefined
-
-  return clickedObject.path === zoomedObjectState?.path
+  return clickedObjectPath === zoomPath
 }
 
 export function useBlobColor(obj: RawGitObject | null): HexColor | null {

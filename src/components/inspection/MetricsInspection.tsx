@@ -7,12 +7,11 @@ import {
   mdiScaleBalance
 } from "@mdi/js"
 import byteSize from "byte-size"
-import { useState, type CSSProperties, type ReactNode } from "react"
-import { Form, useNavigation, useSubmit } from "react-router"
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
+import { Form, href, useFetcher, useNavigation, useSubmit } from "react-router"
 import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { UNKNOWN_CATEGORY } from "~/const"
-import { useData } from "~/contexts/DataContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isDarkColor, isRepositoryRoot, isTree, last, resolveParentFolder } from "~/shared/util"
@@ -33,15 +32,17 @@ import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
-import { useQueryState } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { useQueryState, useQueryStates } from "nuqs"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/viewParams"
 import type { HexColor } from "~/shared/model"
 import { ZoomButtons } from "~/components/buttons/ZoomButtons"
+import type { loader } from "~/routes/api.metrics"
+import { useData } from "~/contexts/DataContext"
 
 export function MetricsInspection() {
   const submit = useSubmit()
   const clickedObject = useClickedObject()
-  const data = useData()
+  const { databaseInfo } = useData()
   const { metricType, setMetricType, showTopContributorSlider, setShowTopContributorSlider } = useOptions()
   const viewAction = useViewAction()
   const [modalOpen, setModalOpen] = useState(false)
@@ -50,14 +51,33 @@ export function MetricsInspection() {
   const isRepo = isRepositoryRoot(clickedObject)
   const objectColor = useObjectColor(clickedObject)
 
+  const { data, load, reset } = useFetcher<typeof loader>()
+
+  const [{ objectPath, path, branch }] = useQueryStates({
+    start: viewSearchParamsConfig.start,
+    end: viewSearchParamsConfig.end,
+    objectPath: viewSearchParamsConfig.objectPath,
+    path: viewSearchParamsConfig.path,
+    branch: viewSearchParamsConfig.branch
+  })
+
+  useEffect(() => {
+    load(href("/api/metrics") + viewSerializer({ objectPath, path: path, branch }))
+    return () => reset()
+  }, [branch, load, objectPath, path, reset])
+
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
   }
 
-  const currentFetcherData = data.databaseInfo.clickedObjectInfo
+  if (!data) {
+    return null
+  }
+
+  const currentFetcherData = data
 
   const objectHasChangesInSelectedRange = isBlob
-    ? Boolean(data.databaseInfo.commitCounts[clickedObject.path])
+    ? Boolean(databaseInfo.commitCounts[clickedObject.path])
     : currentFetcherData.existsInRange
 
   if (objectHasChangesInSelectedRange === false) {
@@ -65,17 +85,17 @@ export function MetricsInspection() {
   }
 
   const contributions = isBlob
-    ? data.databaseInfo.contribSumPerFile[clickedObject.path]
+    ? databaseInfo.contribSumPerFile[clickedObject.path]
     : (currentFetcherData?.contributions ?? null)
 
   const commitCount: number | null = isBlob
-    ? data.databaseInfo.commitCounts[clickedObject.path]
+    ? databaseInfo.commitCounts[clickedObject.path]
     : currentFetcherData
       ? currentFetcherData.amountOfCommits
       : null
 
   const lastChanged = isBlob
-    ? (dateFormatRelative(data.databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
+    ? (dateFormatRelative(databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
     : dateFormatRelative(currentFetcherData.lastChanged)
 
   const panelActionMap = {
@@ -124,7 +144,7 @@ export function MetricsInspection() {
       description: "Line Changes",
       icon: LinesChangedMetric.icon,
       data: isBlob
-        ? data.databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
+        ? databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
         : contributions.toLocaleString(),
       inspectionPanels: LinesChangedMetric.inspectionPanels
     },
