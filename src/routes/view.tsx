@@ -51,7 +51,8 @@ import { useQueryStates } from "nuqs"
 import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
 import { useMediaQuery } from "~/hooks"
-import { InteractionButtons, MetricsInspection } from "~/components/inspection/MetricsInspection"
+import { MetricsInspection } from "~/components/inspection/MetricsInspection"
+import { InteractionButtons } from "~/components/inspection/InteractionButtonts"
 import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [

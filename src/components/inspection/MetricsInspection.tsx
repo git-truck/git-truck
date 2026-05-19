@@ -1,23 +1,20 @@
 import {
   mdiFileOutline,
   mdiFolderOutline,
-  mdiEyeOffOutline,
   mdiSourceRepository,
-  mdiOpenInNew,
   mdiScaleBalance
 } from "@mdi/js"
 import byteSize from "byte-size"
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
-import { Form, href, useFetcher, useNavigation, useSubmit } from "react-router"
+import { href, useFetcher, useSubmit } from "react-router"
 import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
 import { UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
-import { dateFormatRelative, isDarkColor, isRepositoryRoot, isTree, last, resolveParentFolder } from "~/shared/util"
+import { dateFormatRelative, isDarkColor, isTree, last } from "~/shared/util"
 import {
   useClickedObject,
-  useSetClickedObjectPath,
   useObjectColor,
   useClickedObjectPath
 } from "~/state/stores/clicked-object"
@@ -37,10 +34,9 @@ import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
-import { useQueryState, useQueryStates } from "nuqs"
+import { useQueryStates } from "nuqs"
 import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
-import type { HexColor } from "~/shared/model"
-import { ZoomButtons } from "~/components/buttons/ZoomButtons"
+import type { ClickedObjectInfo, HexColor } from "~/shared/model"
 import type { loader } from "~/routes/api.metrics"
 import { useData } from "~/contexts/DataContext"
 
@@ -78,29 +74,18 @@ export function MetricsInspection() {
 
   const currentFetcherData = data
 
-  const objectHasChangesInSelectedRange = isBlob
-    ? Boolean(databaseInfo.commitCounts[clickedObject.path])
-    : currentFetcherData?.existsInRange
-
-  if (objectHasChangesInSelectedRange === false) {
-    return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
-  }
+  const selectedRangeMetricsLoaded = isBlob || currentFetcherData !== undefined
 
   const contributions = isBlob
-    ? databaseInfo.contribSumPerFile[clickedObject.path]
-    : (currentFetcherData?.contributions ?? null)
+    ? (databaseInfo.contribSumPerFile[clickedObject.path] ?? 0)
+    : currentFetcherData?.contributions
 
-  const commitCount: number | null = isBlob
-    ? databaseInfo.commitCounts[clickedObject.path]
-    : currentFetcherData
-      ? currentFetcherData.amountOfCommits
-      : null
+  const commitCount = isBlob
+    ? (databaseInfo.commitCounts[clickedObject.path] ?? 0)
+    : currentFetcherData?.amountOfCommits
 
-  const lastChanged = isBlob
-    ? (dateFormatRelative(databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
-    : currentFetcherData?.lastChanged
-      ? dateFormatRelative(currentFetcherData.lastChanged)
-      : null
+  const lastChanged = isBlob ? databaseInfo.lastChanged[clickedObject.path] : currentFetcherData?.lastChanged
+  const contributorCount = currentFetcherData?.contributors?.length
 
   const panelActionMap = {
     "group-contributors": () => setModalOpen(true),
@@ -139,37 +124,27 @@ export function MetricsInspection() {
       inspectionPanels: FileSizeMetric.inspectionPanels
     },
     MOST_COMMITS: {
-      description: commitCount && commitCount === 1 ? "Commit" : "Commits",
+      description: commitCount === 1 ? "Commit" : "Commits",
       icon: CommitsMetric.icon,
-      data: commitCount?.toLocaleString() ?? "loading...",
+      data: formatMetricCount(commitCount),
       inspectionPanels: CommitsMetric.inspectionPanels
     },
     MOST_CONTRIBUTIONS: {
       description: "Line Changes",
       icon: LinesChangedMetric.icon,
-      data: isBlob
-        ? databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
-        : contributions
-          ? contributions.toLocaleString()
-          : "loading",
+      data: formatMetricCount(contributions),
       inspectionPanels: LinesChangedMetric.inspectionPanels
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "Contributors",
-      data: currentFetcherData
-        ? (currentFetcherData.contributors?.length.toLocaleString() ?? UNKNOWN_CATEGORY)
-        : "loading...",
+      data: formatMetricCount(contributorCount),
       inspectionPanels: ContributorsMetric.inspectionPanels
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "Top Churners" : "Top Churner",
       icon: TopContributorMetric.icon,
-      data: currentFetcherData
-        ? currentFetcherData.multiTopContributors
-          ? "Multiple people"
-          : (currentFetcherData.topContributor[0].contributor ?? UNKNOWN_CATEGORY)
-        : "loading...",
+      data: formatTopContributorSummary(currentFetcherData),
       inspectionPanels: [
         //Inject top-contributor slider if toggled
         ...(showTopContributorSlider
@@ -190,7 +165,7 @@ export function MetricsInspection() {
     LAST_CHANGED: {
       description: "Last change",
       icon: LastChangedMetric.icon,
-      data: lastChanged ? lastChanged + " ago" : "loading...",
+      data: formatLastChangedSummary(lastChanged, selectedRangeMetricsLoaded),
       inspectionPanels: LastChangedMetric.inspectionPanels
     }
   } as const
@@ -270,77 +245,32 @@ function MetricButton({
   )
 }
 
-export function InteractionButtons() {
-  const clickedObject = useClickedObject()
-  const setClickedObjectPath = useSetClickedObjectPath()
-  const viewAction = useViewAction()
-  const { state } = useNavigation()
-  const [, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
+const LOADING_LABEL = "loading..."
+const NO_ACTIVITY_LABEL = "No activity"
 
-  if (!clickedObject) {
-    return null
+export function formatTopContributorSummary(
+  data: Pick<ClickedObjectInfo, "multiTopContributors" | "topContributor"> | null | undefined
+) {
+  if (!data) {
+    return LOADING_LABEL
   }
 
-  const isRoot = isRepositoryRoot(clickedObject)
-  const isBlob = clickedObject.type === "blob"
-  const extension = last(clickedObject.name.split("."))
+  if (data.multiTopContributors) {
+    return "Multiple people"
+  }
 
-  return (
-    <div className="flex flex-wrap">
-      <Form method="post" action={viewAction}>
-        <input type="hidden" name="open" value={clickedObject.path} />
-        <button
-          className="btn btn--text"
-          disabled={state !== "idle"}
-          title={
-            clickedObject.type === "blob"
-              ? `Open ${clickedObject.name} in default app`
-              : `Browse ${clickedObject.name} in system explorer`
-          }
-        >
-          <Icon path={mdiOpenInNew} size="1.25em" className="w-max" />
-          {clickedObject.type === "blob" ? "Open" : "Browse"}
-        </button>
-      </Form>
-      <Form
-        className="w-max"
-        method="post"
-        action={viewAction}
-        onSubmit={() => {
-          if (!isBlob) setZoomPath(resolveParentFolder(clickedObject.path))
-          setClickedObjectPath(null)
-        }}
-      >
-        <input type="hidden" name="hide" value={clickedObject.path} />
-        {!isRoot ? (
-          <button
-            className="btn btn--text"
-            disabled={state !== "idle"}
-            title={`Hide ${clickedObject.name} from visualization`}
-          >
-            <Icon path={mdiEyeOffOutline} />
-            Hide
-          </button>
-        ) : null}
-      </Form>
-      {isBlob ? (
-        <>
-          {clickedObject.name.includes(".") ? (
-            <Form className="w-max" method="post" action={viewAction}>
-              <input type="hidden" name="hide" value={`*.${extension}`} />
-              <button
-                className="btn btn--text"
-                disabled={state !== "idle"}
-                title={`Hide all files with .${extension} extension`}
-              >
-                <Icon path={mdiEyeOffOutline} />
-                <span>Hide *.{extension}</span>
-              </button>
-            </Form>
-          ) : null}
-        </>
-      ) : null}
-      <ZoomButtons />
-    </div>
-  )
+  return data.topContributor[0]?.contributor ?? "No contributors"
+}
+
+export function formatMetricCount(value: number | null | undefined) {
+  return value == null ? LOADING_LABEL : value.toLocaleString()
+}
+
+export function formatLastChangedSummary(epochTimeSecs: number | null | undefined, dataLoaded: boolean) {
+  if (epochTimeSecs === undefined || epochTimeSecs === null || epochTimeSecs <= 0) {
+    return dataLoaded ? NO_ACTIVITY_LABEL : LOADING_LABEL
+  }
+
+  const relativeDate = dateFormatRelative(epochTimeSecs)
+  return relativeDate ? `${relativeDate} ago` : UNKNOWN_CATEGORY
 }
