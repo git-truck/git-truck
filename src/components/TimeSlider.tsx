@@ -1,5 +1,5 @@
-import { useNavigation } from "react-router"
-import { Fragment, useCallback, useState, useTransition } from "react"
+import { useFetcher, useNavigation, href } from "react-router"
+import { Fragment, useCallback, useEffect, useState, useTransition } from "react"
 import { Slider, Handles, Tracks } from "react-compound-slider"
 import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
@@ -11,10 +11,11 @@ import { Icon } from "~/components/Icon"
 
 import type { TimeUnit } from "~/shared/utils/time"
 import { useQueryStates } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/viewParams"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 import { expandIntervalToRange } from "~/shared/util"
+import type { loader } from "~/routes/api.commit-intervals"
 
 type TimeIntervalRef = { timestamp: number }
 
@@ -79,6 +80,30 @@ export function Timeline({ className }: { className?: string }) {
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
+  const { data, load, reset } = useFetcher<typeof loader>()
+
+  const [{ objectPath, path, branch, start, end }] = useQueryStates({
+    start: viewSearchParamsConfig.start,
+    end: viewSearchParamsConfig.end,
+    objectPath: viewSearchParamsConfig.objectPath,
+    path: viewSearchParamsConfig.path,
+    branch: viewSearchParamsConfig.branch
+  })
+
+  useEffect(() => {
+    load(
+      href("/api/commit-intervals") +
+        viewSerializer({
+          objectPath,
+          path: path,
+          branch,
+          start: start ?? rangeMin,
+          end: end ?? rangeMax,
+          timeUnit: unit
+        })
+    )
+  }, [branch, end, load, objectPath, path, rangeMax, rangeMin, reset, start, unit])
+
   const domainInUnits = databaseInfo.commitCountPerTimeInterval.length
   const selectedStartInUnit = timeToSliderUnit(low, databaseInfo.commitCountPerTimeInterval, unit, "start")
   const selectedEndInUnit = timeToSliderUnit(high, databaseInfo.commitCountPerTimeInterval, unit, "end")
@@ -102,7 +127,11 @@ export function Timeline({ className }: { className?: string }) {
       )}
     >
       <div className="group grid">
-        <BarChart scale={commitCountScale} className="grid-full" />
+        <BarChart
+          scale={commitCountScale}
+          className="grid-full"
+          intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
+        />
         <TimeSlider
           key={[selectedRange].join("-")}
           startUnits={selectedStartInUnit}
@@ -112,7 +141,7 @@ export function Timeline({ className }: { className?: string }) {
           unit={unit}
           domainInUnits={domainInUnits}
           disabled={disabled}
-          intervals={databaseInfo.commitCountPerTimeInterval}
+          intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
         />
       </div>
     </CollapsibleHeader>

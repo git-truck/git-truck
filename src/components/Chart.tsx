@@ -29,7 +29,12 @@ import { useSearch } from "~/contexts/SearchContext"
 import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
 import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
-import { useClickedObject, useBlobColors, useSetClickedObject } from "~/state/stores/clicked-object"
+import {
+  useBlobColors,
+  useSetClickedObject,
+  useClickedObjectPath,
+  useClickedObjectIsZoomPath
+} from "~/state/stores/clicked-object"
 import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-object"
 import { filterTree, flattenTree } from "~/shared/utils/tree"
 import { useGradient } from "~/hooks/svg"
@@ -59,8 +64,10 @@ export function Chart() {
   } = useOptions()
   const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
-  const clickedObject = useClickedObject()
+  const clickedObjectPath = useClickedObjectPath()
   const setClickedObject = useSetClickedObject()
+
+  const clickedObjectIsZoomPath = useClickedObjectIsZoomPath()
 
   const [zoomPath, setZoomPathRaw] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
 
@@ -71,7 +78,7 @@ export function Chart() {
   const zoomToParent = useZoomToParent()
 
   useKey({ key: "Escape" }, () => {
-    if (clickedObject) {
+    if (clickedObjectPath) {
       setClickedObject(null)
     }
   })
@@ -97,7 +104,7 @@ export function Chart() {
     showFilesWithoutChanges
   ])
 
-  const lastChangedBuckets = metricsData.get("LAST_CHANGED")?.buckets
+  const lastChangedBuckets = useMemo(() => metricsData.get("LAST_CHANGED")?.buckets, [metricsData])
 
   const nodes = useMemo(() => {
     if (process.env["NODE_ENV"] === "development") {
@@ -127,8 +134,6 @@ export function Chart() {
     setHoveredObject(null)
   }, [chartType, size, setHoveredObject])
 
-  const zoomPathIsClickedObject = zoomPath && zoomPath === clickedObject.path
-  const clickedObjectIsZoomPath = clickedObject.path === zoomPath
   const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
 
   const scrollDeltaRef = useRef(0)
@@ -148,7 +153,7 @@ export function Chart() {
           className={clsx(
             "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
             {
-              "cursor-zoom-out": zoomPathIsClickedObject && !zoomPathIsRepo
+              "cursor-zoom-out": clickedObjectIsZoomPath && !zoomPathIsRepo
             }
           )}
           xmlns="http://www.w3.org/2000/svg"
@@ -160,7 +165,7 @@ export function Chart() {
                 setClickedObject(null)
                 return
               }
-              if (zoomPathIsClickedObject && !zoomPathIsRepo) {
+              if (clickedObjectIsZoomPath && !zoomPathIsRepo) {
                 zoomToParent()
               }
               return
@@ -176,7 +181,7 @@ export function Chart() {
             clickTimer.current = window.setTimeout(() => {
               clickTimer.current = null
 
-              if (newClickedObject && clickedObject.path === newClickedObject.path) {
+              if (newClickedObject && clickedObjectPath === newClickedObject.path) {
                 setClickedObject(null)
                 return
               }
@@ -276,12 +281,11 @@ export function Chart() {
                 : // or by default, if no categories are selected, everything should be considered selected
                   true
 
-            const isClickedObject = d.data.path === clickedObject.path
+            const isClickedObject = d.data.path === clickedObjectPath
 
-            const shouldColor = clickedObject
+            const shouldColor = clickedObjectPath
               ? // we are the clicked object, so should be highlighted
-                isClickedObject ||
-                (isTree(clickedObject) && d.data.path.startsWith(clickedObject.path + "/") && isSelected) // or we are a child of a clicked tree object
+                isClickedObject || (d.data.path.startsWith(clickedObjectPath + "/") && isSelected) // or we are a child of a clicked tree object
               : isSelected
 
             const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
@@ -291,9 +295,9 @@ export function Chart() {
                 key={d.data.path}
                 data-path={d.data.path}
                 className={cn("cursor-pointer duration-400", {
-                  "hover:opacity-80": isBlob(d.data) && !clickedObject,
+                  "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
-                    isTree(d.data) && !clickedObject,
+                    isTree(d.data) && !clickedObjectPath,
                   "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
                 })}
               >
@@ -317,13 +321,13 @@ export function Chart() {
 function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
   const { chartType, transitionsEnabled } = useOptions()
 
-  const clickedObject = useClickedObject()
+  const clickedObjectPath = useClickedObjectPath()
   const colors = useBlobColors(d.data)
 
   const { linearGradient, fill } = useGradient(colors)
   const multipleColors = colors.length > 1
 
-  const isClickedObject = d.data.path === clickedObject.path
+  const isClickedObject = d.data.path === clickedObjectPath
 
   const commonProps = useMemo(() => {
     const borderRadius = isRoot ? 12 : treemapTreeBorderRadius

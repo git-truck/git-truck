@@ -596,11 +596,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <Breadcrumb zoom />
                 </div>
 
-                <CompactLoadingIndicator
-                  className={cn("transition-opacity", {
-                    "opacity-0": !isLoading
-                  })}
-                />
+                <CompactLoadingIndicator />
 
                 <div className="flex justify-end">
                   <SearchCard />

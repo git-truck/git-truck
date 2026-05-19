@@ -19,6 +19,7 @@ import {
   useSetHoveredBarTooltip
 } from "~/state/stores/hovered-object"
 import type { TimeUnit } from "~/shared/utils/time"
+import type { loader } from "~/routes/api.commit-intervals"
 
 const barMargin = treemapPaddingInner
 
@@ -85,7 +86,15 @@ function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
   }
 }
 
-export function BarChart({ scale, className }: { scale: "linear" | "log"; className?: string }) {
+export function BarChart({
+  scale,
+  intervals,
+  className
+}: {
+  scale: "linear" | "log"
+  className?: string
+  intervals: Awaited<ReturnType<typeof loader>>["commitCountPerTimeIntervalForClickedObject"]
+}) {
   const { databaseInfo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
@@ -115,7 +124,7 @@ export function BarChart({ scale, className }: { scale: "linear" | "log"; classN
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
   const commitCountPerTimeIntervalForClickedObject = clickedObjectIsRepo
     ? databaseInfo.commitCountPerTimeInterval
-    : databaseInfo.commitCountPerTimeIntervalForClickedObject
+    : intervals
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
   const xScale = d3
