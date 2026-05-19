@@ -1,10 +1,10 @@
-import { useQueryState } from "nuqs"
+import { useQueryStates } from "nuqs"
 import { Fragment, useEffect, useMemo } from "react"
 import { useFetcher, href } from "react-router"
 import { LegendDot } from "~/components/util"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
-import { viewSerializer } from "~/routes/viewParams"
+import { viewSearchParamsConfig, viewSerializer } from "~/routes/viewParams"
 import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
@@ -14,12 +14,12 @@ import { missingInMapColor } from "~/const"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
 export function ContributorsInspection() {
+  const [params] = useQueryStates(viewSearchParamsConfig)
   const clickedObjectPath = useClickedObjectPath()
 
-  const { state, data, load, reset } = useFetcher<typeof loader>()
-  const [path] = useQueryState("path")
-  const [branch] = useQueryState("branch")
+  const { state, data, load } = useFetcher<typeof loader>()
   const { databaseInfo } = useData()
+  const [rangeStart, rangeEnd] = databaseInfo.timerange
 
   // Memoize a stable string representation of contributorGroups to detect actual changes
   const contributorGroupsKey = useMemo(
@@ -28,8 +28,16 @@ export function ContributorsInspection() {
   )
 
   useEffect(() => {
-    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObjectPath, path, branch }))
-  }, [clickedObjectPath, path, branch, contributorGroupsKey, load, reset])
+    load(
+      href("/api/contributor-distribution") +
+        viewSerializer({
+          ...params,
+          objectPath: clickedObjectPath,
+          start: params.start ?? rangeStart,
+          end: params.end ?? rangeEnd
+        })
+    )
+  }, [clickedObjectPath, contributorGroupsKey, load, params, rangeEnd, rangeStart])
 
   return (
     <ContributorDistribution

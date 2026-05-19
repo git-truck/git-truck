@@ -13,15 +13,11 @@ import type {
 import { getTimeIntervals } from "~/shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/server/log"
-import type { TimeUnit } from "~/shared/utils/time"
-import { Temporal } from "temporal-polyfill"
-
-const nowInSeconds = () => Temporal.Now.instant().epochMilliseconds / 1000
+import { nowInSeconds, type TimeUnit } from "~/shared/utils/time"
 
 export default class DB {
   private instance: DuckDBInstance
   private connection: DuckDBConnection
-  public selectedRange: [number, number]
 
   public async init(): Promise<DB> {
     await this.initTables()
@@ -32,7 +28,6 @@ export default class DB {
   constructor({ instance, connection }: { instance: DuckDBInstance; connection: DuckDBConnection }) {
     this.instance = instance
     this.connection = connection
-    this.selectedRange = [0, nowInSeconds()] as [number, number]
   }
 
   public async close() {
@@ -266,7 +261,6 @@ export default class DB {
   public async updateTimeInterval(timeSeriesStart: number, timeSeriesEnd: number) {
     const start = Number.isNaN(timeSeriesStart) ? 0 : timeSeriesStart
     const end = Number.isNaN(timeSeriesEnd) ? nowInSeconds() : timeSeriesEnd
-    this.selectedRange = [start, end]
     await this.initViews(start, end)
   }
 
@@ -577,17 +571,27 @@ export default class DB {
     }
   }
 
-  public async getCommitCountForPath(path: string, authors: string[] = []) {
-    const isblob = (await this.getObjectTypeFromPath(path)) === "blob"
-    const authorPlaceholders = authors.map(() => "?").join(",")
+  public async getCommitCountForPath({
+    objectPath,
+    startSecs,
+    endSecs,
+    contributors = []
+  }: {
+    objectPath: string
+    startSecs: number
+    endSecs: number
+    contributors?: string[]
+  }) {
+    const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
+    const authorPlaceholders = contributors.map(() => "?").join(",")
 
     if (isblob) {
       const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached
                          WHERE filePath = ?
-                         AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}`
+                         AND committerTime BETWEEN ? AND ?`
 
       const query =
-        authors.length > 0
+        contributors.length > 0
           ? baseQuery +
             ` AND (
           author IN (${authorPlaceholders})
@@ -602,11 +606,14 @@ export default class DB {
         query,
         async (statement) => {
           let paramIndex = 1
-          statement.bindVarchar(paramIndex++, path)
-          for (const author of authors) {
+          statement.bindVarchar(paramIndex++, objectPath)
+          statement.bindVarchar(paramIndex++, startSecs.toString())
+          statement.bindVarchar(paramIndex++, endSecs.toString())
+
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
-          for (const author of authors) {
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
           const res = (await statement.runAndReadAll()).getRowObjects()
@@ -614,11 +621,11 @@ export default class DB {
         },
         "getCommitCountForPath(blob)"
       )
-    } else if (path) {
+    } else if (objectPath) {
       const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached WHERE starts_with(filePath, ?) = true`
 
       const query =
-        authors.length > 0
+        contributors.length > 0
           ? baseQuery +
             ` AND (
           author IN (${authorPlaceholders})
@@ -633,11 +640,11 @@ export default class DB {
         query,
         async (statement) => {
           let paramIndex = 1
-          statement.bindVarchar(paramIndex++, path + "/")
-          for (const author of authors) {
+          statement.bindVarchar(paramIndex++, objectPath + "/")
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
-          for (const author of authors) {
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
           const res = (await statement.runAndReadAll()).getRowObjects()
@@ -649,7 +656,7 @@ export default class DB {
       const baseQuery = `SELECT COUNT(DISTINCT commitHash) AS count from fileChanges_commits_renamed_cached`
 
       const query =
-        authors.length > 0
+        contributors.length > 0
           ? baseQuery +
             ` WHERE (
           author IN (${authorPlaceholders})
@@ -664,10 +671,10 @@ export default class DB {
         query,
         async (statement) => {
           let paramIndex = 1
-          for (const author of authors) {
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
-          for (const author of authors) {
+          for (const author of contributors) {
             statement.bindVarchar(paramIndex++, author)
           }
           const res = (await statement.runAndReadAll()).getRowObjects()
@@ -693,13 +700,20 @@ export default class DB {
     return result
   }
 
-  public async getLastChangedForPath(objectPath: string): Promise<number> {
+  public async getLastChangedForPath({
+    objectPath,
+    startSecs,
+    endSecs
+  }: {
+    objectPath: string
+    startSecs: number
+    endSecs: number
+  }): Promise<number> {
     const res = await this.usingPreparedStatement(
       `SELECT MAX(committerTime) AS lastChange
        FROM fileChanges_commits_renamed_cached
        WHERE (filePath = ? OR filePath GLOB ?)
-       AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
-      ;`,
+       AND committerTime BETWEEN ${startSecs} AND ${endSecs};`,
       async (statement) => {
         statement.bindVarchar(1, objectPath)
         statement.bindVarchar(2, objectPath + "/*")
@@ -837,14 +851,20 @@ export default class DB {
     return res.map((row) => row["contributor"] as string)
   }
 
-  public async getContributionsForPath(objectPath: string): Promise<number> {
+  public async getContributionsForPath({
+    objectPath,
+    startSecs,
+    endSecs
+  }: {
+    objectPath: string
+    startSecs: number
+    endSecs: number
+  }): Promise<number> {
     const res = await this.usingPreparedStatement(
       `SELECT SUM(insertions + deletions) AS totalContributions
        FROM fileChanges_commits_renamed_cached
        WHERE (filePath = ? OR filePath LIKE ?)
-       AND committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
-
-      `,
+       AND committerTime BETWEEN ${startSecs} AND ${endSecs}`,
       async (statement) => {
         statement.bindVarchar(1, objectPath)
         statement.bindVarchar(2, `${objectPath}/%`)
@@ -1141,7 +1161,7 @@ export default class DB {
     return res
   }
 
-  public async getContributorDistributionForPath(objectPath: string) {
+  public async getContributorDistributionForPath({ objectPath, startSecs, endSecs }: { objectPath: string; startSecs: number; endSecs: number }) {
     const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
@@ -1156,7 +1176,7 @@ export default class DB {
           FROM fileChanges_commits_renamed_cached AS f
           INNER JOIN commitTrailers_unioned AS co ON f.commitHash = co.commitHash
           WHERE f.filePath = ? AND co.trailerType = 'coauthor' AND co.name <> f.author
-          AND f.committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
+          AND f.committerTime BETWEEN ${startSecs} AND ${endSecs}
         )
         SELECT contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
@@ -1184,7 +1204,7 @@ export default class DB {
           WHERE (f.filePath = ? OR starts_with(f.filePath, ?) = true)
           AND co.trailerType = 'coauthor'
           AND co.name <> f.author
-          AND f.committerTime BETWEEN ${this.selectedRange[0]} AND ${this.selectedRange[1]}
+          AND f.committerTime BETWEEN ${startSecs} AND ${endSecs}
         )
         SELECT contributor, SUM(lineChanges) AS totalContribCount
         FROM commit_contributors
@@ -1288,7 +1308,7 @@ export default class DB {
     timerange: [number, number],
     timeUnit = this.getTimeStringFormat(timerange)
   ): Promise<[{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[], TimeUnit]> {
-    const query = this.getTimeQueryFromTimeUnit(timeUnit)
+    const query = this.getTimeQueryFromTimeUnit(timeUnit ?? this.getTimeStringFormat(timerange) )
     const res = await this.query(
       `SELECT strftime(date, '${query}') as timestring,
         strftime(date, '%Y-%m-%d') AS bucket_lookup,

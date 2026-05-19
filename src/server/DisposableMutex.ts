@@ -1,5 +1,7 @@
 import { Mutex } from "async-mutex"
 
+type LockSetup = () => Promise<void>
+
 export class DisposableMutex {
   private mutex: Mutex
   constructor() {
@@ -12,18 +14,24 @@ export class DisposableMutex {
 
   /**
    * Acquires the mutex and returns a disposable that releases it when disposed.
-   * If the mutex is not released within the specified timeout, it will be automatically released and an error will be thrown.
-   * @param timeout The maximum time (in milliseconds) to hold the mutex before it is automatically released. Default is 10 seconds.
+   * If setup is provided, it runs after the mutex is acquired and before the disposable is returned.
    * @returns A disposable that releases the mutex when disposed
    * @example
    * ```ts
    *
    * const disposableMutex = new DisposableMutex()
-   * using _ = this.mutex.withDisposable()
+   * using _ = await this.mutex.withDisposable()
    * // The mutex is now locked and will be released when the block is exited
    */
-  public async withDisposable(): Promise<Disposable> {
+  public async withDisposable(setup?: LockSetup): Promise<Disposable> {
     const releaser = await this.mutex.acquire()
+
+    try {
+      await setup?.()
+    } catch (error) {
+      releaser()
+      throw error
+    }
 
     return {
       [Symbol.dispose]: () => {

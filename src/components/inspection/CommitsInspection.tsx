@@ -9,12 +9,17 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { useData } from "~/contexts/DataContext"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false)
   const clickedObjectPath = useClickedObjectPath()
   const { load, data, state, reset } = useFetcher<typeof loader>()
   const [{ path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
+  const { databaseInfo } = useData()
+  const [rangeStart, rangeEnd] = databaseInfo.timerange
+  const resolvedStart = start ?? rangeStart
+  const resolvedEnd = end ?? rangeEnd
 
   const { metricType } = useOptions()
   const selectedCategories = useSelectedCategories()
@@ -33,33 +38,38 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
     ({
       objectPath,
       contributors,
-      count,
-      start = null,
-      end = null
+      count
     }: {
       objectPath: string
       contributors: string[]
       count: number
-      start?: number | null
-      end?: number | null
     }) => {
       const url =
-        href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
+        href("/api/commits") +
+        commitsSerializer({
+          objectPath,
+          path,
+          branch,
+          count,
+          contributors,
+          start: resolvedStart,
+          end: resolvedEnd
+        })
 
       if (open) {
         load(url)
       }
     },
-    [branch, load, open, path]
+    [branch, load, open, path, resolvedEnd, resolvedStart]
   )
 
   // Reload commits when clicked object or selected authors change
   useEffect(() => {
     const pathToLoad = clickedObjectPath
 
-    loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: COMMIT_STEP, start, end })
+    loadCommits({ objectPath: pathToLoad, contributors: selectedContributors, count: COMMIT_STEP })
     return () => reset()
-  }, [clickedObjectPath, end, loadCommits, reset, selectedContributors, start])
+  }, [clickedObjectPath, loadCommits, reset, selectedContributors])
 
   return (
     <CollapsibleHeader

@@ -23,15 +23,8 @@ import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 import ignore from "ignore"
-import type { TimeUnit } from "~/shared/utils/time"
-
-type PreviousAnalyzeArgs = {
-  path: string
-  branch: string
-  objectPath: string
-  zoomPath: string
-  timeUnit: TimeUnit | null
-}
+import { type ViewSearchParams } from "~/routes/viewParams"
+import { DisposableMutex } from "~/server/DisposableMutex"
 
 type FileTreeResult = {
   rootTree: GitTreeObject
@@ -49,12 +42,14 @@ export class Analysis {
   public progressRevision = 0
   private fileTreeAsOf: string | null = null
   private fileTreeResult: FileTreeResult | null = null
+  private timeIntervalMutex = new DisposableMutex()
+  private currentTimeInterval: { start: number; end: number } | null = null
   public prevResult:
     | (Omit<RepoData, "databaseInfo"> & {
         databaseInfo: Omit<DatabaseInfo, "objectPathMap">
       })
     | null = null
-  public prevArgs: PreviousAnalyzeArgs | null = null
+  public prevArgs: ViewSearchParams | null = null
   public prevInvokeReason: InvocationReason = "unknown"
 
   public repositoryPath: string
@@ -119,12 +114,25 @@ export class Analysis {
   }
 
   public async updateTimeInterval(start: number, end: number) {
+    if (this.currentTimeInterval?.start === start && this.currentTimeInterval.end === end) {
+      return
+    }
+
     await this.db.updateTimeInterval(start, end)
     const previousFileTreeAsOf = this.fileTreeAsOf
     this.fileTreeAsOf = await this.db.getLatestCommitHash(end)
     if (previousFileTreeAsOf && previousFileTreeAsOf !== this.fileTreeAsOf) {
       this.fileTreeResult = null
     }
+    this.currentTimeInterval = { start, end }
+  }
+
+  public invalidateTimeInterval() {
+    this.currentTimeInterval = null
+  }
+
+  public async withTimeInterval(start: number, end: number): Promise<Disposable> {
+    return await this.timeIntervalMutex.withDisposable(() => this.updateTimeInterval(start, end))
   }
 
   // TODO: handle breadcrumb when timeseries changes such that
@@ -616,6 +624,7 @@ export class Analysis {
       { repositoryPath: this.repositoryPath, branch: this.branch },
       await this.db.getLatestCommitHash()
     )
+    this.invalidateTimeInterval()
     this.setAnalyzationStatus("CommitHistoryProcessed")
   }
 }

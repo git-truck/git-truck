@@ -8,8 +8,8 @@ import loadingTruck from "~/assets/loadingTruck_48x.gif"
 import unloadingTruck from "~/assets/unloadingTruck_48x.gif"
 import crashedTruck from "~/assets/crashedTruck_48x.gif"
 import { cn } from "~/styling"
-import { viewSerializer } from "~/routes/viewParams"
 import { useQueryState } from "nuqs"
+import { progressSerializer } from "~/routes/api.progress"
 
 export type ProgressData = {
   progress: number
@@ -48,9 +48,7 @@ export function LoadingIndicator({
       return
 
     const timeoutId = window.setTimeout(() => {
-      const params = new URLSearchParams(viewSerializer({ path, branch }).replace(/^\?/, ""))
-      params.set("lastSeenRevision", String(data?.progressRevision ?? -1))
-      load(`${href("/api/progress")}?${params.toString()}`)
+      load(href("/api/progress") + progressSerializer({ path, branch, lastSeenRevision: data?.progressRevision ?? -1 }))
     }, PROGRESS_POLL_INTERVAL_MS)
 
     return () => {

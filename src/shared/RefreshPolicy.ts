@@ -171,12 +171,3 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
 export function shouldUpdate(reason: InvocationReason, item: DataItem) {
   return reason === "refresh" || refreshPolicy[reason].includes(item)
 }
-
-export function getLoaderInvocationReason(
-  currentReason: InvocationReason,
-  timeRangeReason: "timeseriesstart" | "timeseriesend" | null
-): InvocationReason {
-  if (timeRangeReason) return timeRangeReason
-  if (currentReason === "unknown" || currentReason === "none") return "none"
-  return currentReason
-}

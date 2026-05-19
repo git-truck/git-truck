@@ -1,17 +1,21 @@
 import { invariant, sleep } from "~/shared/util"
 import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/api.progress"
-import { loadViewSearchParams } from "~/routes/viewParams"
+import { loadViewSearchParams, viewSearchParamsConfig } from "~/routes/viewParams"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import { parseAsInteger } from "nuqs"
+import { createSerializer, parseAsInteger } from "nuqs"
 import { createLoader } from "nuqs/server"
 
 const POLLING_RATE = 1000
 const LONG_POLL_TIMEOUT = 30000
 
 const progressSearchParamsConfig = {
+  path: viewSearchParamsConfig.path,
+  branch: viewSearchParamsConfig.branch,
   lastSeenRevision: parseAsInteger.withDefault(-1)
 }
+
+export const progressSerializer = createSerializer(progressSearchParamsConfig)
 
 const loadProgressSearchParams = createLoader(progressSearchParamsConfig)
 

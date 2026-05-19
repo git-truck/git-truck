@@ -6,6 +6,7 @@ import { href, useLocation, useSubmit } from "react-router"
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { promiseHelper } from "~/shared/util"
+import { useData } from "~/contexts/DataContext"
 
 type RefAndSize<T> = [RefObject<T>, { width: number; height: number }]
 
@@ -133,4 +134,9 @@ export const useZoomToParent = () => {
     const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
     setZoomPath(parentPath)
   }, [sep, setZoomPath, zoomPath])
+}
+
+export const usePathIsRepositoryRoot = (path: string | null = null): boolean => {
+  const data = useData()
+  return path === data.repo.repositoryName
 }
