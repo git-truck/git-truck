@@ -13,18 +13,13 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
     contributors: Record<string, number>
   }[]
 }> {
-  const {
-    start,
-    end,
-    timeUnit,
-    objectPath,
-    path: repositoryPath,
-    branch
-  } = loadViewSearchParams(request, {
+  const viewParams = loadViewSearchParams(request, {
     strict: true
   })
+  const { start, end, timeUnit, path: repositoryPath, branch } = viewParams
 
-  invariant(objectPath, "opbjectPath is required")
+  let { objectPath } = viewParams
+
   invariant(repositoryPath, "repositoryPath is required")
   invariant(branch, "branch is required")
   invariant(start, "start is required")
@@ -32,6 +27,9 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
   invariant(timeUnit, "timeUnit is required")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: repositoryPath, branch })
+
+  objectPath ??= instance.repositoryName
+
   const commitCountPerTimeIntervalForClickedObject = await instance.db.getCommitCountPerTimeForClickedObject({
     timerange: [start, end],
     timeUnit,
