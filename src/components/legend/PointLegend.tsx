@@ -19,11 +19,12 @@ import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
 import { createMetricDataForNode, Metrics, type MetricCache, type MetricType } from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
-import { useClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
 import { mdiCheckboxIntermediate } from "@mdi/js"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
+import { findSubTree } from "~/shared/utils/tree"
 
 const ITEMS_PER_PAGE = 5
 
@@ -60,7 +61,7 @@ export function PointLegend() {
   const data = useData()
 
   const { metricType, topContributorCutoff } = useOptions()
-  const clickedObject = useClickedObject()
+  const clickedObjectPath = useClickedObjectPath()
   const hierarchyCache = useMetricsHierarchyCache()
   const isCategorySelected = useIsCategorySelected()
   const [path] = useQueryState("path")
@@ -71,7 +72,13 @@ export function PointLegend() {
   }, [path, resetSelection])
 
   const metricCache = useMemo<MetricCache>(() => {
-    const cacheKey = clickedObject.path
+    const cacheKey = clickedObjectPath
+
+    const subtree = findSubTree(data.databaseInfo.fileTree, clickedObjectPath)
+
+    if (!subtree) {
+      throw new Error(`Clicked object with path ${clickedObjectPath} not found in file tree`)
+    }
 
     return (
       // Try to get from hierarchy cache first
@@ -79,13 +86,13 @@ export function PointLegend() {
       // Fallback to creating metric data for the clicked object
       createMetricDataForNode(
         data,
-        clickedObject,
+        subtree,
         data.databaseInfo.colorSeed,
         data.databaseInfo.contributorColors,
         topContributorCutoff
       ).caches.get(metricType)!
     )
-  }, [clickedObject, data, metricType, topContributorCutoff, hierarchyCache])
+  }, [clickedObjectPath, data, metricType, topContributorCutoff, hierarchyCache])
 
   if (metricCache === undefined) throw new Error("Metric cache is undefined")
 

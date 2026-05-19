@@ -7,8 +7,7 @@ import { SearchContext } from "~/contexts/SearchContext"
 import { createMetricData } from "~/metrics/metrics"
 import { buildMetricsHierarchyCache } from "~/metrics/cache"
 import { OPTIONS_LOCAL_STORAGE_KEY } from "~/shared/constants"
-import { findSubTree } from "~/shared/util"
-import { createObjectPathMap } from "~/shared/utils/tree"
+import { findSubTree, createObjectPathMap } from "~/shared/utils/tree"
 import { useQueryState } from "nuqs"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
@@ -22,6 +21,7 @@ function getObjectPathMap(fileTree: GitTreeObject): ObjectPathMap {
 
   const objectPathMap = createObjectPathMap(fileTree)
   objectPathMapCache.set(fileTree.hash, objectPathMap)
+
   return objectPathMap
 }
 

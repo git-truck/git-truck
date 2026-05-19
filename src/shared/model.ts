@@ -49,6 +49,7 @@ export type Repository = {
 )
 
 export type GitObject = GitBlobObject | GitTreeObject
+export type GitObjectNoChildren = Omit<GitObject, "children">
 
 export type RawGitObjectType = "blob" | "tree"
 
@@ -143,7 +144,7 @@ export interface RenameInterval {
 }
 
 export type Path = string
-export type ObjectPathMap = Record<Path, GitObject>
+export type ObjectPathMap = Record<Path, GitObjectNoChildren>
 
 export interface FileModification {
   path: string
