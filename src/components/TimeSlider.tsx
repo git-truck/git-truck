@@ -69,7 +69,7 @@ function sliderUnitsToTimeRange({
 export function Timeline({ className }: { className?: string }) {
   const [commitCountScale, setCommitCountScale] = useState<"linear" | "log">("log")
   const { databaseInfo } = useData()
-  const { timerange, selectedRange } = databaseInfo
+  const { timerange } = databaseInfo
   const [rangeMin, rangeMax] = timerange
   const [{ start: low, end: high }] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(rangeMin),
@@ -107,9 +107,10 @@ export function Timeline({ className }: { className?: string }) {
     )
   }, [branch, clickedObjectPath, end, load, path, rangeMax, rangeMin, start, unit])
 
-  const domainInUnits = databaseInfo.commitCountPerTimeInterval.length
-  const selectedStartInUnit = timeToSliderUnit(low, databaseInfo.commitCountPerTimeInterval, unit, "start")
-  const selectedEndInUnit = timeToSliderUnit(high, databaseInfo.commitCountPerTimeInterval, unit, "end")
+  const timelineIntervals = databaseInfo.commitCountPerTimeInterval
+  const domainInUnits = timelineIntervals.length
+  const selectedStartInUnit = timeToSliderUnit(low, timelineIntervals, unit, "start")
+  const selectedEndInUnit = timeToSliderUnit(high, timelineIntervals, unit, "end")
 
   return (
     <CollapsibleHeader
@@ -136,7 +137,7 @@ export function Timeline({ className }: { className?: string }) {
           intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
         />
         <TimeSlider
-          key={[selectedRange].join("-")}
+          key={[low, high].join("-")}
           startUnits={selectedStartInUnit}
           endUnits={selectedEndInUnit}
           minMs={rangeMin * 1000}
@@ -144,7 +145,7 @@ export function Timeline({ className }: { className?: string }) {
           unit={unit}
           domainInUnits={domainInUnits}
           disabled={disabled}
-          intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
+          intervals={timelineIntervals}
         />
       </div>
     </CollapsibleHeader>
@@ -193,7 +194,6 @@ function TimeSlider({
           start: startTime,
           end: endTime
         })
-        console.warn(startTime, endTime, "SLIDER VALUES")
       })
     },
     [intervals, maxMs, minMs, setStartEnd, unit]

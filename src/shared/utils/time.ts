@@ -1,3 +1,5 @@
+import { Temporal } from "temporal-polyfill"
+
 export const TimeUnitValues = ["day", "week", "month", "year"] as const
 
 export type TimeUnit = (typeof TimeUnitValues)[number]
@@ -28,3 +30,4 @@ export const millisToUnit = ({
   millis: number
   unit: TimeUnit
 }) => (millis - startTimeMillis) / TimeUnitDurationsMs[unit]
+export const nowInSeconds = () => Temporal.Now.instant().epochMilliseconds / 1000

@@ -159,20 +159,6 @@ export interface RepoData {
 }
 
 export interface DatabaseInfo {
-  zoomPathName: string
-  clickedObjectInfo: {
-    path: string
-    existsInRange: boolean
-    topContributor: {
-      contributor: string
-      contribs: number
-    }[]
-    multiTopContributors: boolean
-    amountOfCommits: number
-    contributors: string[]
-    contributions: number
-    lastChanged: number
-  }
   topContributors: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>
   commitCounts: Record<string, number>
   fileSizes: Record<string, number>
@@ -197,14 +183,7 @@ export interface DatabaseInfo {
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
   commitCountPerTimeInterval: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[]
-  commitCountPerTimeIntervalForClickedObject: {
-    date: string
-    count: number
-    timestamp: number
-    contributors: Record<string, number>
-  }[]
   commitCountPerTimeIntervalUnit: TimeUnit
-  selectedRange: [number, number]
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
   contributorsForPath: Record<string, { contributor: string; contribcount: number }[]>
@@ -212,4 +191,23 @@ export interface DatabaseInfo {
   commitCount: number
 }
 
+export type ClickedObjectInfo = {
+  path: string
+  existsInRange: boolean
+  topContributor: {
+    contributor: string
+    contribs: number
+  }[]
+  multiTopContributors: boolean
+  amountOfCommits: number
+  contributors: string[]
+  contributions: number
+  lastChanged: number
+}
 export type HexColor = `#${string}`
+
+export type RequiredNotNull<T> = {
+  [P in keyof T]: NonNullable<T[P]>
+}
+
+export type Ensure<T, K extends keyof T> = T & RequiredNotNull<Pick<T, K>>

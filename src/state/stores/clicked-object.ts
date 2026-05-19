@@ -9,7 +9,7 @@ import { LinesChangedMetric } from "~/metrics/linesChanged"
 import type { MetricCache } from "~/metrics/metrics"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
-import type { GitObjectNoChildren, HexColor, RawGitObject } from "~/shared/model"
+import type { ClickedObjectInfo, GitObjectNoChildren, HexColor, RawGitObject } from "~/shared/model"
 import { isTree } from "~/shared/util"
 import { useSelectedCategories, useIsCategorySelected } from "~/state/stores/selection"
 
@@ -95,7 +95,7 @@ export function useBlobColors(obj: RawGitObject | null): Array<HexColor> {
   return colors
 }
 
-function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
+function useObjectColors(obj: RawGitObject | null, clickedObjectInfo: ClickedObjectInfo | null): Array<HexColor> {
   const data = useDataNullable()
   const { metricType } = useOptions()
   const [metricsData, contributorColors] = useMetrics()
@@ -104,13 +104,11 @@ function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
     return [missingInMapColor]
   }
 
-  const clickedObjectInfo = data.databaseInfo.clickedObjectInfo
-
   if (isTree(obj)) {
     return [missingInMapColor]
   }
 
-  const commitCount = data.databaseInfo.clickedObjectInfo?.amountOfCommits
+  const commitCount = clickedObjectInfo?.amountOfCommits
   const getCachedColors = (cache: MetricCache | undefined): Array<HexColor> | null => {
     const colors = cache?.categoriesMap.get(obj.path)?.map((c) => c.color)
     return colors && colors.length > 0 ? colors : null
@@ -162,8 +160,8 @@ function useObjectColors(obj: RawGitObject | null): Array<HexColor> {
   return colorMap[metricType]()
 }
 
-export function useObjectColor(obj: RawGitObject | null): HexColor {
-  const colors = useObjectColors(obj)
+export function useObjectColor(obj: RawGitObject | null, coi: ClickedObjectInfo | null): HexColor {
+  const colors = useObjectColors(obj, coi)
   const color = colors.length === 1 ? colors[0] : missingInMapColor
   return color
 }

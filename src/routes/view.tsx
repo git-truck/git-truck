@@ -1,4 +1,9 @@
-import { viewSearchParamsConfig, loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
+import {
+  viewSearchParamsConfig,
+  loadViewSearchParams,
+  viewSerializer,
+  type ViewSearchParams
+} from "~/routes/viewParams"
 import { mdiMenu, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
@@ -8,9 +13,9 @@ import { Activity, startTransition, Suspense, useCallback, useReducer } from "re
 import { createPortal } from "react-dom"
 import { GitService } from "~/server/git-service"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import { type DatabaseInfo, type RepoData } from "~/shared/model"
-import { type TimeUnit } from "~/shared/utils/time"
-import { getLoaderInvocationReason, shouldUpdate } from "~/shared/RefreshPolicy"
+import { type DatabaseInfo, type Ensure, type RepoData } from "~/shared/model"
+import { nowInSeconds } from "~/shared/utils/time"
+import { shouldUpdate } from "~/shared/RefreshPolicy"
 import {
   getArgsWithDefaults,
   getBaseDirFromPath,
@@ -62,8 +67,8 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
   const viewSearchParams = loadViewSearchParams(request)
 
-  let { path, zoomPath, branch, start, end } = viewSearchParams
-  const { timeUnit, objectPath } = viewSearchParams
+  let { path, zoomPath, objectPath, branch, start, end } = viewSearchParams
+  const { timeUnit } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -73,7 +78,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   }
 
   // Redirect to same page with required search params if any are missing
-  if (!path || !branch || !zoomPath) {
+  if (!path || !branch || !zoomPath || start === null || end === null) {
     log.warn(`At least one required parameter is missing, redirecting`)
     log.warn({
       viewSearchParams,
@@ -88,48 +93,38 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     path ??= argsRepositoryPath
     branch ??= await GitService._getRepositoryHead(path)
     zoomPath ??= getRepoNameFromPath(path)
+    objectPath ??= getRepoNameFromPath(path)
+    start ??= 0
+    end ??= nowInSeconds()
 
     redirectUrl.search = viewSerializer({
       path,
       branch,
-      zoomPath
+      zoomPath,
+      start,
+      end
     })
 
     throw redirect(redirectUrl.toString())
   }
 
+  invariant(path, "path is required")
+  invariant(branch, "branch is required")
+  invariant(zoomPath, "zoomPath is required")
+  invariant(start !== null, "start is required")
+  invariant(end !== null, "end is required")
+
   const parentDirectoryPath = getBaseDirFromPath(path)
-
-  const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
-
-  if (!start || !end || !instance.db.selectedRange[0] || !instance.db.selectedRange[1]) {
-    const [min, max] = await instance.db.getOverallTimeRange()
-    start ??= min ?? 0
-    end ??= max ?? 1_000_000_000_000
-    instance.db.selectedRange = [start, end]
-  }
-
-  let timeRangeReason: "timeseriesend" | "timeseriesstart" | null = null
-
-  if (end && end !== instance.db.selectedRange[1]) {
-    timeRangeReason = "timeseriesend"
-  } else if (start && start !== instance.db.selectedRange[0]) {
-    timeRangeReason = "timeseriesstart"
-  }
-
-  instance.prevInvokeReason = getLoaderInvocationReason(instance.prevInvokeReason, timeRangeReason)
-
-  if (timeRangeReason) {
-    await instance.updateTimeInterval(start!, end!)
-  }
 
   return {
     dataPromise: analyze({
       path,
-      branch: branch!,
-      objectPath: objectPath ?? undefined,
+      branch,
       zoomPath,
-      timeUnit: timeUnit ?? undefined
+      objectPath,
+      start,
+      end,
+      timeUnit
     }),
     repositoryName: getRepoNameFromPath(path),
     parentDirectoryPath,
@@ -192,6 +187,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     instance.prevInvokeReason = "groupedContributors"
     const groups = JSON.parse(groupedContributors)
     await instance.db.replaceContributorGroups(groups)
+    instance.invalidateTimeInterval()
     return null
   }
 
@@ -201,24 +197,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     await instance.db.updateColorSeed(newSeed)
     return null
   }
-
-  // let shouldUpdateTimeSeries = false
-
-  // if (end && end !== instance.prevResult?.databaseInfo.selectedRange[1]) {
-  //   instance.prevInvokeReason = "timeseriesend"
-  //   shouldUpdateTimeSeries = true
-  // } else if (start && start !== instance.prevResult?.databaseInfo.selectedRange[0]) {
-  //   instance.prevInvokeReason = "timeseriesstart"
-  //   shouldUpdateTimeSeries = true
-  // } else {
-  //   instance.prevInvokeReason = "none"
-  //   return null
-  // }
-
-  // if (shouldUpdateTimeSeries) {
-  //   await instance.updateTimeInterval(start!, end!)
-  //   return null
-  // }
 
   if (typeof contributorName === "string") {
     instance.prevInvokeReason = "contributorColor"
@@ -230,19 +208,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return null
 }
 
-async function analyze({
-  path,
-  branch,
-  objectPath,
-  zoomPath,
-  timeUnit
-}: {
-  path: string
-  branch: string
-  objectPath?: string
-  zoomPath: string
-  timeUnit?: TimeUnit
-}) {
+async function analyze(
+  params: Ensure<ViewSearchParams, "path" | "branch" | "zoomPath" | "start" | "end">
+): Promise<RepoData> {
+  const { path, branch, zoomPath, timeUnit } = params
+  let { objectPath } = params
+
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
 
   const repo = path.split("/").pop()!
@@ -255,25 +226,20 @@ async function analyze({
     )
   }
 
-  const currentArgs = {
-    path,
-    branch,
-    objectPath: objectPath ?? "",
-    zoomPath,
-    timeUnit: timeUnit ?? null
-  }
-
   // // to avoid double identical fetch at first load, which it does for some reason
   // // TODO: Fix this. This is due to react strict mode
+
   if (
     instance.prevInvokeReason === "none" &&
     instance.prevResult &&
     instance.prevArgs &&
-    instance.prevArgs.path === currentArgs.path &&
-    instance.prevArgs.branch === currentArgs.branch &&
-    instance.prevArgs.objectPath === currentArgs.objectPath &&
-    instance.prevArgs.zoomPath === currentArgs.zoomPath &&
-    instance.prevArgs.timeUnit === currentArgs.timeUnit
+    instance.prevArgs.path === params.path &&
+    instance.prevArgs.branch === params.branch &&
+    instance.prevArgs.objectPath === params.objectPath &&
+    instance.prevArgs.zoomPath === params.zoomPath &&
+    instance.prevArgs.timeUnit === params.timeUnit &&
+    instance.prevArgs.start === params.start &&
+    instance.prevArgs.end === params.end
   ) {
     return instance.prevResult
   }
@@ -281,7 +247,6 @@ async function analyze({
   await instance.loadRepoData()
 
   const timerange = await instance.db.getOverallTimeRange()
-  const selectedRange = instance.db.selectedRange
 
   const repositoryMetadata = await GitService.getRepoMetadata(path)
 
@@ -294,26 +259,28 @@ async function analyze({
   const prevData = instance.prevResult
   const prevRes = prevData?.databaseInfo
   const prevArgs = instance.prevArgs
-  const reasonAllowsArgInference = reason === "none" || reason === "unknown"
 
-  if (reasonAllowsArgInference && prevArgs && prevArgs.zoomPath !== currentArgs.zoomPath) {
-    reason = "zoomPath"
+  if (prevArgs && (reason === "none" || reason === "unknown")) {
+    if (prevArgs.zoomPath !== params.zoomPath) {
+      reason = "zoomPath"
+    }
+
+    if (prevArgs.timeUnit !== params.timeUnit) {
+      reason = "timeUnit"
+    }
+
+    if (prevArgs.objectPath !== params.objectPath) {
+      reason = "clickedObject"
+    }
+
+    if (params.end !== null && params.end !== instance.prevArgs?.end) {
+      reason = "timeseriesend"
+    } else if (params.start !== null && params.start !== instance.prevArgs?.start) {
+      reason = "timeseriesstart"
+    }
   }
 
-  if (reasonAllowsArgInference && prevArgs && prevArgs.timeUnit !== currentArgs.timeUnit) {
-    reason = "timeUnit"
-  }
-
-  if (reasonAllowsArgInference && prevArgs && prevArgs.objectPath !== currentArgs.objectPath) {
-    reason = "clickedObject"
-  }
-
-  if (!prevRes || shouldUpdate(reason, "rename")) {
-    log.time("rename")
-    await instance.updateRenames()
-    log.timeEnd("rename")
-  }
-
+  using _timeInterval = await instance.withTimeInterval(params.start, params.end)
   const shouldUpdateHiddenFiles = !prevRes || shouldUpdate(reason, "hiddenFiles")
   const shouldUpdateSourceFileTree = !prevRes || shouldUpdate(reason, "fileTree")
   const shouldUpdateVisibleFileTree = shouldUpdateHiddenFiles || shouldUpdateSourceFileTree
@@ -332,6 +299,12 @@ async function analyze({
   log.timeEnd("fileTree")
 
   const { rootTree, fileCount } = filetree
+
+  if (!prevRes || shouldUpdate(reason, "rename")) {
+    log.time("rename")
+    await instance.updateRenames()
+    log.timeEnd("rename")
+  }
 
   log.time("updateCache")
   if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
@@ -385,7 +358,7 @@ async function analyze({
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
-      : await instance.db.getCommitCountPerTime(timerange, timeUnit)
+      : await instance.db.getCommitCountPerTime(timerange, timeUnit ?? undefined)
   const contribCounts =
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
       ? prevRes.contribSumPerFile
@@ -407,40 +380,8 @@ async function analyze({
   log.timeEnd("dbQueries")
 
   objectPath ??= zoomPath || getRepoNameFromPath(path)
-  const object = await instance.db.getObjectFromPath(objectPath)
-  const objectHash = object?.hash ?? null
-
-  const commitCountPerTimeIntervalForClickedObject =
-    prevRes && !shouldUpdate(reason, "commitCountPerTimeIntervalForClickedObject")
-      ? prevRes.commitCountPerTimeIntervalForClickedObject
-      : objectHash && objectHash !== (await instance.gitService.revParse(instance.branch))
-        ? await instance.db.getCommitCountPerTimeForClickedObject({ timerange, timeUnit, objectPath })
-        : []
-
-  const objIsBlob = object?.type === "blob"
-
-  const clickedObject =
-    prevRes && !shouldUpdate(reason, "clickedObjectData")
-      ? prevRes.clickedObjectInfo
-      : await (async () => {
-          const topContributorData = await instance.db.getContributorDistributionForPath(objectPath)
-
-          return {
-            path: objectPath,
-            existsInRange: await instance.db.pathExistsInSelectedRange(objectPath, objIsBlob),
-            topContributor: topContributorData,
-            multiTopContributors:
-              topContributorData.length > 1 && topContributorData[0].contribs === topContributorData[1].contribs,
-            amountOfCommits: await instance.db.getCommitCountForPath(objectPath),
-            contributors: await instance.db.getUniqueContributorsForPath(objectPath),
-            contributions: await instance.db.getContributionsForPath(objectPath),
-            lastChanged: await instance.db.getLastChangedForPath(objectPath)
-          }
-        })()
 
   const databaseInfo: DatabaseInfo = {
-    zoomPathName: getRepoNameFromPath(zoomPath),
-    clickedObjectInfo: clickedObject,
     topContributors,
     commitCounts,
     fileSizes,
@@ -462,10 +403,8 @@ async function analyze({
     branch,
     timerange,
     colorSeed,
-    selectedRange,
     contributorColors: contributorColors,
     commitCountPerTimeInterval,
-    commitCountPerTimeIntervalForClickedObject,
     commitCountPerTimeIntervalUnit,
     analyzedRepos,
     contribSumPerFile: contribCounts,
@@ -476,7 +415,7 @@ async function analyze({
 
   const fullData: RepoData = { repo: repositoryMetadata, databaseInfo: databaseInfo }
   instance.prevResult = fullData
-  instance.prevArgs = currentArgs
+  instance.prevArgs = params
 
   return fullData
 }

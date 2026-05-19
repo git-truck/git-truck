@@ -15,7 +15,7 @@ const loadCommitsSearchParams = createLoader(commitsSearchParamsConfig)
 export const commitsSerializer = createSerializer(commitsSearchParamsConfig)
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
-  const { objectPath, path: repositoryPath, branch } = loadViewSearchParams(request, { strict: true })
+  const { objectPath, path: repositoryPath, branch, start, end } = loadViewSearchParams(request, { strict: true })
   const { count, contributors } = loadCommitsSearchParams(request, {
     strict: true
   })
@@ -24,8 +24,12 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   invariant(repositoryPath, "path is required")
   invariant(branch, "branch is required")
   invariant(objectPath, "objectPath is required")
+  invariant(start !== null, "start is required")
+  invariant(end !== null, "end is required")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath, branch: branch })
+
+  using _timeInterval = await instance.withTimeInterval(start, end)
 
   const getCommits = async () => {
     const commitHashes = await instance.db.getCommitHashes(objectPath, count, contributors)
@@ -63,7 +67,12 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return {
     objectPath: objectPath,
     currentCommitCount: count,
-    totalCommitCount: await instance.db.getCommitCountForPath(objectPath, contributors),
+    totalCommitCount: await instance.db.getCommitCountForPath({
+      objectPath,
+      startSecs: start,
+      endSecs: end,
+      contributors
+    }),
     commits: await getCommits()
   }
 }

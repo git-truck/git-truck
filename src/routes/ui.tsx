@@ -32,16 +32,6 @@ const mockRepoData: RepoData = {
     lastChanged: 0
   },
   databaseInfo: {
-    clickedObjectInfo: {
-      amountOfCommits: 0,
-      lastChanged: 0,
-      contributions: 0,
-      contributors: [],
-      existsInRange: true,
-      multiTopContributors: false,
-      path: "",
-      topContributor: []
-    },
     topContributors: {},
     commitCounts: {},
     fileSizes: {},
@@ -55,8 +45,6 @@ const mockRepoData: RepoData = {
     minFileSize: 0,
     contributors: [],
     contributorGroups: [],
-    commitCountPerTimeIntervalForClickedObject: [],
-    zoomPathName: "",
     fileTree: { type: "tree" as const, name: "root", path: "", hash: "", children: [], byteSize: 0 },
     hiddenFiles: [],
     lastRunInfo: { time: 0, hash: "" },
@@ -69,7 +57,6 @@ const mockRepoData: RepoData = {
     commitCountPerTimeInterval: [],
     contributorsForPath: {},
     commitCountPerTimeIntervalUnit: "day",
-    selectedRange: [0, 0],
     analyzedRepos: [],
     contribSumPerFile: {},
     maxMinContribCounts: { max: 0, min: 0 },

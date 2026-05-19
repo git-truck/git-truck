@@ -18,26 +18,28 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
   })
   const { start, end, timeUnit, path: repositoryPath, branch } = viewParams
 
-  let { objectPath } = viewParams
+  const { objectPath } = viewParams
 
   invariant(repositoryPath, "repositoryPath is required")
   invariant(branch, "branch is required")
-  invariant(start, "start is required")
-  invariant(end, "end is required")
+  invariant(start !== null, "start is required")
+  invariant(end !== null, "end is required")
   invariant(timeUnit, "timeUnit is required")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: repositoryPath, branch })
 
-  objectPath ??= instance.repositoryName
+  const selectedObjectPath = objectPath ?? instance.repositoryName
+
+  using _timeInterval = await instance.withTimeInterval(start, end)
 
   const commitCountPerTimeIntervalForClickedObject = await instance.db.getCommitCountPerTimeForClickedObject({
     timerange: [start, end],
     timeUnit,
-    objectPath
+    objectPath: selectedObjectPath
   })
 
   return {
-    clickedObjectPath: objectPath,
+    clickedObjectPath: selectedObjectPath,
     commitCountPerTimeIntervalForClickedObject
   }
 }

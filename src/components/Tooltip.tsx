@@ -38,6 +38,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
   const { sizeMetric, metricType } = useOptions()
   const { databaseInfo } = useData()
   const hoveredObject = rawHoveredObject ? databaseInfo.objectPathMap[rawHoveredObject.path] : null
+  const hoveredBlob = isBlob(hoveredObject) ? hoveredObject : null
   const color = useBlobColor(rawHoveredObject)
 
   const right = useMemo(() => x < window.innerWidth / 2, [x])
@@ -62,7 +63,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
           hidden: !visible,
           "font-bold": isTree(hoveredObject)
         },
-        isBlob(hoveredObject) && color
+        hoveredBlob && color
           ? // ? // TODO: what to do for gradients?
             isDarkColor(color)
             ? "text-primary-text-dark"
@@ -79,8 +80,8 @@ export function Tooltip({ className = "" }: { className?: string }) {
       ) : (
         <>
           <span className="flex w-max place-items-center gap-1">
-            {hoveredObject && isBlob(hoveredObject)
-              ? hoveredObject?.name
+            {hoveredBlob
+              ? hoveredBlob.name
               : allExceptFirst(hoveredObject?.path.split("/") ?? []).map((segment, index, segments) => (
                   <Fragment key={`segment-${index}${segment}`}>
                     {segment}
@@ -90,15 +91,17 @@ export function Tooltip({ className = "" }: { className?: string }) {
                   </Fragment>
                 ))}
           </span>
-          {hoveredObject?.type === "blob" ? (
+          {hoveredBlob ? (
             <div className="flex w-max flex-col gap-1">
-              <div className="flex gap-1">{hoveredObject ? <MetricContent hoveredObject={hoveredObject} /> : null}</div>
+              <div className="flex gap-1">
+                <MetricContent hoveredObject={hoveredBlob} />
+              </div>
               {metricType !== sizeMetric ? (
                 <div className="flex gap-1">
                   <SizeMetricContent
                     sizeMetric={sizeMetric}
                     databaseInfo={databaseInfo}
-                    hoveredObject={hoveredObject}
+                    hoveredObject={hoveredBlob}
                   />
                 </div>
               ) : null}

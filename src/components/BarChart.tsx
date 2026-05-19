@@ -97,8 +97,8 @@ export function BarChart({
 }) {
   const { databaseInfo } = useData()
   const [{ start, end }, setQs] = useQueryStates({
-    start: viewSearchParamsConfig.start.withDefault(databaseInfo.selectedRange[0]),
-    end: viewSearchParamsConfig.end.withDefault(databaseInfo.selectedRange[1])
+    start: viewSearchParamsConfig.start.withDefault(databaseInfo.timerange[0]),
+    end: viewSearchParamsConfig.end.withDefault(databaseInfo.timerange[1])
   })
 
   const { metricType } = useOptions()

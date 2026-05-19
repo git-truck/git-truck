@@ -22,7 +22,7 @@ import {
   useClickedObjectPath
 } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
-import { useViewAction } from "~/hooks"
+import { usePathIsRepositoryRoot, useViewAction } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
 import type {
@@ -53,29 +53,28 @@ export function MetricsInspection() {
   const [modalOpen, setModalOpen] = useState(false)
 
   const isBlob = clickedObject?.type === "blob"
-  const isRepo = isRepositoryRoot(clickedObject)
-  const objectColor = useObjectColor(clickedObject)
 
   const { data, load, reset } = useFetcher<typeof loader>()
 
-  const clickedObjectPath = useClickedObjectPath()
+  const objectColor = useObjectColor(clickedObject, data ?? null)
 
-  const [{ path, branch }] = useQueryStates({
-    start: viewSearchParamsConfig.start,
-    end: viewSearchParamsConfig.end,
-    objectPath: viewSearchParamsConfig.objectPath,
-    path: viewSearchParamsConfig.path,
-    branch: viewSearchParamsConfig.branch
-  })
+  const clickedObjectPath = useClickedObjectPath()
+  const isRepo = usePathIsRepositoryRoot(clickedObjectPath)
+  const [params] = useQueryStates(viewSearchParamsConfig)
+  const [rangeStart, rangeEnd] = databaseInfo.timerange
 
   useEffect(() => {
-    load(href("/api/metrics") + viewSerializer({ objectPath: clickedObjectPath, path: path, branch }))
+    load(
+      href("/api/metrics") +
+        viewSerializer({
+          ...params,
+          objectPath: clickedObjectPath,
+          start: params.start ?? rangeStart,
+          end: params.end ?? rangeEnd
+        })
+    )
     return () => reset()
-  }, [branch, clickedObjectPath, load, path, reset])
-
-  if (!clickedObject) {
-    return <p className="p-4">No file or folder selected</p>
-  }
+  }, [clickedObjectPath, load, params, rangeEnd, rangeStart, reset])
 
   const currentFetcherData = data
 
