@@ -4,13 +4,14 @@ import { commitsSerializer, type loader } from "~/routes/api.commits"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
+  const [open, setOpen] = useState(false)
   const clickedObjectPath = useClickedObjectPath()
   const { load, data, state, reset } = useFetcher<typeof loader>()
   const [{ path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
@@ -45,9 +46,11 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       const url =
         href("/api/commits") + commitsSerializer({ objectPath, path, branch, count, contributors, start, end })
 
-      load(url)
+      if (open) {
+        load(url)
+      }
     },
-    [branch, load, path]
+    [branch, load, open, path]
   )
 
   // Reload commits when clicked object or selected authors change
@@ -69,9 +72,11 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       )}
       contentClassName="flex flex-col gap-2"
       defaultOpen={false}
+      open={open}
       onToggle={(open) => {
+        setOpen(open)
         if (open) {
-          if (!data && state === "idle") {
+          if (state === "idle") {
             loadCommits({ objectPath: clickedObjectPath, contributors: selectedContributors, count: COMMIT_STEP })
           }
         } else {

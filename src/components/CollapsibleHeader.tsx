@@ -10,6 +10,7 @@ export function CollapsibleHeader({
   className,
   contentClassName = "",
   reversed = false,
+  open: controlledOpen = false,
   onToggle
 }: {
   title: React.FC<{ open: boolean }>
@@ -18,9 +19,12 @@ export function CollapsibleHeader({
   className?: string
   contentClassName?: string
   reversed?: boolean
+  open?: boolean
   onToggle?: (open: boolean) => void
 }) {
-  const [open, setOpen] = useState(defaultOpen)
+  const [ownOpen, setOpen] = useState(defaultOpen)
+
+  const open = onToggle ? controlledOpen : ownOpen
 
   return (
     <details
@@ -28,8 +32,11 @@ export function CollapsibleHeader({
       open={open}
       onToggle={(event) => {
         const isOpen = event.currentTarget.open
-        setOpen(isOpen)
-        onToggle?.(isOpen)
+        if (onToggle) {
+          onToggle(isOpen)
+        } else {
+          setOpen(isOpen)
+        }
       }}
     >
       <summary className="dark:text-secondary-text-dark hover:text-primary-text dark:hover:text-primary-text-dark mbe-0 flex cursor-pointer list-none items-center justify-start text-sm leading-relaxed font-bold tracking-wider text-inherit uppercase select-none">
