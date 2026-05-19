@@ -6,7 +6,7 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { viewSerializer } from "~/routes/viewParams"
 import type { loader } from "~/routes/api.contributor-distribution"
-import { useClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
@@ -14,7 +14,8 @@ import { missingInMapColor } from "~/const"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
 export function ContributorsInspection() {
-  const clickedObject = useClickedObject()
+  const clickedObjectPath = useClickedObjectPath()
+
   const { state, data, load, reset } = useFetcher<typeof loader>()
   const [path] = useQueryState("path")
   const [branch] = useQueryState("branch")
@@ -27,14 +28,8 @@ export function ContributorsInspection() {
   )
 
   useEffect(() => {
-    if (!clickedObject.path) {
-      return
-    }
-    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObject.path, path, branch }))
-    return () => {
-      reset()
-    }
-  }, [clickedObject.path, path, branch, contributorGroupsKey, load, reset])
+    load(href("/api/contributor-distribution") + viewSerializer({ objectPath: clickedObjectPath, path, branch }))
+  }, [clickedObjectPath, path, branch, contributorGroupsKey, load, reset])
 
   return (
     <ContributorDistribution
