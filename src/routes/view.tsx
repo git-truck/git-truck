@@ -3,7 +3,7 @@ import {
   loadViewSearchParams,
   viewSerializer,
   type ViewSearchParams
-} from "~/routes/viewParams"
+} from "~/shared/viewParams"
 import { mdiMenu, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"

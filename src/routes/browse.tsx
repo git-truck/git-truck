@@ -31,7 +31,7 @@ import { createLoader, parseAsInteger, parseAsString, parseAsStringLiteral } fro
 import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates, type inferParserType } from "nuqs"
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
-import { viewSerializer } from "~/routes/viewParams"
+import { viewSerializer } from "~/shared/viewParams"
 import { ClearCacheForm } from "~/routes/clear-cache"
 
 const DEFAULT_COUNT = 10

@@ -39,7 +39,7 @@ import { useHoveredObject, useSetHoveredObject } from "~/state/stores/hovered-ob
 import { filterTree, flattenTree } from "~/shared/utils/tree"
 import { useGradient } from "~/hooks/svg"
 import { LastChangedMetric } from "~/metrics/lastChanged"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import type { SegmentBucket } from "~/metrics/metrics"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>

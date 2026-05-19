@@ -1,6 +1,6 @@
 import { useQueryState } from "nuqs"
 import { useData } from "~/contexts/DataContext"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import { TimeUnitValues, type TimeUnit } from "~/shared/utils/time"
 
 export function TimeUnitForm() {
