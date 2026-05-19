@@ -1,5 +1,5 @@
 import type { GitBlobObject, GitObject, GitTreeObject, ObjectPathMap } from "~/shared/model"
-import { isTree } from "~/shared/util"
+import { getSep, isTree, normalizePath } from "~/shared/util"
 
 export function reduceTree<T>(tree: GitTreeObject, reducer: (prev: T, curr: GitBlobObject) => T, defaultValue: T): T {
   return tree.children.reduce((prev, current) => {
@@ -85,9 +85,17 @@ export function createObjectPathMap(tree: GitTreeObject): ObjectPathMap {
 
   while (stack.length > 0) {
     const current = stack.pop()
+
     if (!current) continue
 
-    objectPathMap[current.path] = current
+    let newCurrent: Omit<GitObject, "children"> = current
+
+    if (isTree(newCurrent)) {
+      const { children: _, ...currentWithoutChildren } = newCurrent
+      newCurrent = currentWithoutChildren
+    }
+
+    objectPathMap[current.path] = newCurrent
 
     if (isTree(current)) {
       stack.push(...current.children)
@@ -95,4 +103,45 @@ export function createObjectPathMap(tree: GitTreeObject): ObjectPathMap {
   }
 
   return objectPathMap
+}
+
+export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
+  if (!path) return tree
+
+  const hasRootPrefix = path === tree.name || path.startsWith(`${tree.name}/`)
+  if (!hasRootPrefix) return tree
+
+  let relativePath = path.length === tree.name.length ? "" : path.substring(tree.name.length + 1)
+  if (!relativePath) return tree
+
+  relativePath = normalizePath(relativePath)
+
+  let currentTree: GitTreeObject = tree
+  const separator = getSep(relativePath)
+  const steps = relativePath.split(separator)
+
+  for (let i = 0; i < steps.length; i++) {
+    let foundStep = false
+
+    for (const child of currentTree.children) {
+      if (child.type === "tree") {
+        const childSteps = child.name.split(separator)
+
+        if (childSteps[0] === steps[i]) {
+          currentTree = child
+          i += childSteps.length - 1
+          foundStep = true
+          break
+        }
+      }
+    }
+
+    // If a step is not found, abort and return root tree
+    if (!foundStep) {
+      console.warn(`Could not find step ${steps[i]} in subtree ${currentTree.name}`)
+      return tree
+    }
+  }
+
+  return currentTree
 }

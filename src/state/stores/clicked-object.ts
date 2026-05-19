@@ -9,11 +9,11 @@ import { LinesChangedMetric } from "~/metrics/linesChanged"
 import type { MetricCache } from "~/metrics/metrics"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
-import type { GitObject, HexColor, RawGitObject } from "~/shared/model"
+import type { GitObjectNoChildren, HexColor, RawGitObject } from "~/shared/model"
 import { isTree } from "~/shared/util"
 import { useSelectedCategories, useIsCategorySelected } from "~/state/stores/selection"
 
-export const useClickedObject = (): GitObject => {
+export const useClickedObject = (): GitObjectNoChildren => {
   const data = useData()
   const [qs] = useQueryStates(viewSearchParamsConfig, { shallow: false })
 
