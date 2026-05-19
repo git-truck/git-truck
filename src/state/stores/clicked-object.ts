@@ -34,7 +34,7 @@ export const useClickedObjectPath = (): string => {
     { shallow: false }
   )
 
-  return qs.objectPath ?? qs.zoomPath ?? data.databaseInfo.fileTree.name
+  return qs.objectPath ?? qs.zoomPath ?? data.databaseInfo.repo
 }
 
 export const useClickedObjectNullable = () => {
