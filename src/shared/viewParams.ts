@@ -1,4 +1,11 @@
-import { createLoader, createSerializer, parseAsInteger, parseAsString, parseAsStringLiteral, type inferParserType } from "nuqs/server"
+import {
+  createLoader,
+  createSerializer,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  type inferParserType
+} from "nuqs/server"
 import { TimeUnitValues, type TimeUnit } from "~/shared/utils/time"
 
 export const viewSearchParamsConfig = {

@@ -19,6 +19,7 @@ import { cn } from "~/styling"
 import { getLatestVersion } from "~/shared/util.server"
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
 import { ErrorPage } from "~/components/ErrorPage"
+import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -106,16 +107,18 @@ export const ErrorBoundary = () => {
               Go back
             </Link>
           ) : null}
+          {!mainProcessClosed ? <ClearCacheForm redirectPath={pathname + search} /> : null}
         </div>
-        {!mainProcessClosed ? <ClearCacheForm redirectPath={pathname + search} /> : null}
+        {!mainProcessClosed ? (
+          <div className="mx-auto w-2xl space-y-2">
+            <CollapsibleHeader className="card" title={() => "Error"} defaultOpen={false}>
+              <Code className="overflow-x-auto border-0 text-left whitespace-pre">
+                {error instanceof Error ? error.stack : "No stack trace available"}
+              </Code>
+            </CollapsibleHeader>
+          </div>
+        ) : null}
       </ErrorPage>
-      {!mainProcessClosed ? (
-        <div className="mx-auto max-w-xl space-y-2">
-          <Code className="overflow-x-auto text-left whitespace-pre">
-            {error instanceof Error ? error.stack : "No stack trace available"}
-          </Code>
-        </div>
-      ) : null}
     </Shell>
   )
 }

@@ -98,11 +98,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
               </div>
               {metricType !== sizeMetric ? (
                 <div className="flex gap-1">
-                  <SizeMetricContent
-                    sizeMetric={sizeMetric}
-                    databaseInfo={databaseInfo}
-                    hoveredObject={hoveredBlob}
-                  />
+                  <SizeMetricContent sizeMetric={sizeMetric} databaseInfo={databaseInfo} hoveredObject={hoveredBlob} />
                 </div>
               ) : null}
             </div>

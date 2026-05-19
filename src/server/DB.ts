@@ -1161,7 +1161,15 @@ export default class DB {
     return res
   }
 
-  public async getContributorDistributionForPath({ objectPath, startSecs, endSecs }: { objectPath: string; startSecs: number; endSecs: number }) {
+  public async getContributorDistributionForPath({
+    objectPath,
+    startSecs,
+    endSecs
+  }: {
+    objectPath: string
+    startSecs: number
+    endSecs: number
+  }) {
     const isblob = (await this.getObjectTypeFromPath(objectPath)) === "blob"
     let res: ReturnType<DuckDBResultReader["getRowObjects"]>
 
@@ -1308,7 +1316,7 @@ export default class DB {
     timerange: [number, number],
     timeUnit = this.getTimeStringFormat(timerange)
   ): Promise<[{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[], TimeUnit]> {
-    const query = this.getTimeQueryFromTimeUnit(timeUnit ?? this.getTimeStringFormat(timerange) )
+    const query = this.getTimeQueryFromTimeUnit(timeUnit ?? this.getTimeStringFormat(timerange))
     const res = await this.query(
       `SELECT strftime(date, '${query}') as timestring,
         strftime(date, '%Y-%m-%d') AS bucket_lookup,
