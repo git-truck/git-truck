@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useSyncExternalStore, useCallback } from 
 import { href, useLocation, useSubmit } from "react-router"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import { promiseHelper } from "~/shared/util"
 import { useData } from "~/contexts/DataContext"
 

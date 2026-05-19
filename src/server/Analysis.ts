@@ -23,7 +23,7 @@ import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
 import MetadataDB from "~/server/MetadataDB"
 import { getRepoNameFromPath } from "~/shared/util.server.ts"
 import ignore from "ignore"
-import { type ViewSearchParams } from "~/routes/viewParams"
+import { type ViewSearchParams } from "~/shared/viewParams"
 import { DisposableMutex } from "~/server/DisposableMutex"
 
 type FileTreeResult = {

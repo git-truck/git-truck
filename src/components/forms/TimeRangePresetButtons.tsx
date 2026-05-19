@@ -1,7 +1,7 @@
 import { useQueryStates } from "nuqs"
 import { useOptimistic, useMemo, useTransition } from "react"
 import { useData } from "~/contexts/DataContext"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import type { TimeUnit } from "~/shared/utils/time"
 import { cn } from "~/styling"
 

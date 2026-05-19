@@ -11,7 +11,7 @@ import { Icon } from "~/components/Icon"
 
 import type { TimeUnit } from "~/shared/utils/time"
 import { useQueryStates } from "nuqs"
-import { viewSearchParamsConfig, viewSerializer } from "~/routes/viewParams"
+import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 import { expandIntervalToRange } from "~/shared/util"

@@ -1,7 +1,7 @@
 import { useQueryStates } from "nuqs"
 import { useFetcher, href } from "react-router"
 import { commitsSerializer, type loader } from "~/routes/api.commits"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { COMMIT_STEP, CommitHistory } from "~/components/inspection/CommitHistory"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -35,15 +35,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   // Memoize loadCommits to use in callbacks and pagination
   const loadCommits = useCallback(
-    ({
-      objectPath,
-      contributors,
-      count
-    }: {
-      objectPath: string
-      contributors: string[]
-      count: number
-    }) => {
+    ({ objectPath, contributors, count }: { objectPath: string; contributors: string[]; count: number }) => {
       const url =
         href("/api/commits") +
         commitsSerializer({

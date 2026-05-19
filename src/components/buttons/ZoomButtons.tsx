@@ -3,7 +3,7 @@ import { useQueryState, useQueryStates } from "nuqs"
 import { Link, useLocation } from "react-router"
 import { Icon } from "~/components/Icon"
 import { useData } from "~/contexts/DataContext"
-import { viewSearchParamsConfig, viewSerializer } from "~/routes/viewParams"
+import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
 import { resolveParentFolder } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
 

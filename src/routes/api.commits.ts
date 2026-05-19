@@ -1,4 +1,4 @@
-import { loadViewSearchParams, viewSearchParamsConfig } from "~/routes/viewParams"
+import { loadViewSearchParams, viewSearchParamsConfig } from "~/shared/viewParams"
 import { invariant } from "~/shared/util"
 import type { Route } from "./+types/api.commits"
 import { AnalysisManager } from "~/server/AnalysisManager"

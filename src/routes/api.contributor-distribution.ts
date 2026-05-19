@@ -1,5 +1,5 @@
 import { invariant, isBlob } from "~/shared/util"
-import { loadViewSearchParams } from "~/routes/viewParams"
+import { loadViewSearchParams } from "~/shared/viewParams"
 import type { Route } from "./+types/api.contributor-distribution"
 import { AnalysisManager } from "~/server/AnalysisManager"
 

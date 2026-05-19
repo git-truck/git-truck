@@ -3,7 +3,7 @@ import { Icon } from "~/components/Icon"
 import { useClickedObject, useSetClickedObjectPath } from "~/state/stores/clicked-object"
 import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
-import { viewSearchParamsConfig } from "~/routes/viewParams"
+import { viewSearchParamsConfig } from "~/shared/viewParams"
 import { isRepositoryRoot } from "~/shared/util"
 import { useZoomToParent } from "~/hooks"
 
