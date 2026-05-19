@@ -121,6 +121,7 @@ export const useMediaQuery = (query: string) => {
   return matches
 }
 
+//TODO - this is broken when paths are concatenated, it should zoom to nearest ancestor with children.
 export const useZoomToParent = () => {
   const [zoomPath, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
 
