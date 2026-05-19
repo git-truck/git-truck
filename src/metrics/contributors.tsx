@@ -1,5 +1,5 @@
 import { type CategoricalMetric } from "./metrics"
-import { noEntryColor, UNKNOWN_CATEGORY } from "~/const"
+import { noEntryColor } from "~/const"
 import { mdiAccountGroup, mdiAccountMultiple, mdiDice5 } from "@mdi/js"
 import { PointInfo, PointLegend, type PointLegendData } from "~/components/legend/PointLegend"
 import { LegendDot } from "~/components/util"

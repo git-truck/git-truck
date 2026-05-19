@@ -1,7 +1,7 @@
 import { viewSearchParamsConfig, loadViewSearchParams, viewSerializer } from "~/routes/viewParams"
 import { mdiMenu, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { Await, redirect, href, useNavigate, useFetcher, Link, useNavigation } from "react-router"
+import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
 import clsx from "clsx"
 import randomstring from "randomstring"
 import { Activity, startTransition, Suspense, useCallback, useReducer } from "react"
@@ -499,10 +499,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
   const navigate = useNavigate()
 
-  const navigation = useNavigation()
   const fetcher = useFetcher<typeof loader>()
   const isAborting = fetcher.state !== "idle"
-  const isLoading = navigation.state !== "idle"
 
   const browseParent = href("/browse") + browseSerializer({ path: parentDirectoryPath })
   const [params] = useQueryStates(viewSearchParamsConfig)
