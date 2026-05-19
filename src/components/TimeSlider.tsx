@@ -16,6 +16,7 @@ import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 import { expandIntervalToRange } from "~/shared/util"
 import type { loader } from "~/routes/api.commit-intervals"
+import { useClickedObjectPath } from "~/state/stores/clicked-object"
 
 type TimeIntervalRef = { timestamp: number }
 
@@ -80,9 +81,11 @@ export function Timeline({ className }: { className?: string }) {
   const navigationData = useNavigation()
   const disabled = navigationData.state !== "idle"
 
-  const { data, load, reset } = useFetcher<typeof loader>()
+  const { data, load } = useFetcher<typeof loader>()
 
-  const [{ objectPath, path, branch, start, end }] = useQueryStates({
+  const clickedObjectPath = useClickedObjectPath()
+
+  const [{ path, branch, start, end }] = useQueryStates({
     start: viewSearchParamsConfig.start,
     end: viewSearchParamsConfig.end,
     objectPath: viewSearchParamsConfig.objectPath,
@@ -94,7 +97,7 @@ export function Timeline({ className }: { className?: string }) {
     load(
       href("/api/commit-intervals") +
         viewSerializer({
-          objectPath,
+          objectPath: clickedObjectPath,
           path: path,
           branch,
           start: start ?? rangeMin,
@@ -102,7 +105,7 @@ export function Timeline({ className }: { className?: string }) {
           timeUnit: unit
         })
     )
-  }, [branch, end, load, objectPath, path, rangeMax, rangeMin, reset, start, unit])
+  }, [branch, clickedObjectPath, end, load, path, rangeMax, rangeMin, start, unit])
 
   const domainInUnits = databaseInfo.commitCountPerTimeInterval.length
   const selectedStartInUnit = timeToSliderUnit(low, databaseInfo.commitCountPerTimeInterval, unit, "start")
