@@ -191,7 +191,7 @@ export function MetricsInspection() {
     LAST_CHANGED: {
       description: "Last change",
       icon: LastChangedMetric.icon,
-      data: lastChanged ? lastChanged + " ago" : "",
+      data: lastChanged ? lastChanged + " ago" : "loading...",
       inspectionPanels: LastChangedMetric.inspectionPanels
     }
   } as const
