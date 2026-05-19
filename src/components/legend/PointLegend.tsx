@@ -24,7 +24,7 @@ import { Icon } from "~/components/Icon"
 import { mdiCheckboxIntermediate } from "@mdi/js"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
-import { findSubTree } from "~/shared/utils/tree"
+import { findInTree } from "~/shared/utils/tree"
 
 const ITEMS_PER_PAGE = 5
 
@@ -74,7 +74,7 @@ export function PointLegend() {
   const metricCache = useMemo<MetricCache>(() => {
     const cacheKey = clickedObjectPath
 
-    const subtree = findSubTree(data.databaseInfo.fileTree, clickedObjectPath)
+    const subtree = findInTree(data.databaseInfo.fileTree, (node) => node.path === clickedObjectPath)
 
     if (!subtree) {
       throw new Error(`Clicked object with path ${clickedObjectPath} not found in file tree`)

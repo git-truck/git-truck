@@ -105,6 +105,25 @@ export function createObjectPathMap(tree: GitTreeObject): ObjectPathMap {
   return objectPathMap
 }
 
+export function findInTree(tree: GitTreeObject, predicate: (node: GitObject) => boolean): GitObject | null {
+  if (predicate(tree)) {
+    return tree
+  }
+
+  for (const child of tree.children) {
+    if (predicate(child)) {
+      return child
+    }
+    if (child.type === "tree") {
+      const found = findInTree(child, predicate)
+      if (found) {
+        return found
+      }
+    }
+  }
+  return tree
+}
+
 export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
   if (!path) return tree
 
