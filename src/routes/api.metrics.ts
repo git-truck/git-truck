@@ -4,19 +4,19 @@ import { invariant, isBlob } from "~/shared/util"
 import type { Route } from "../+types/root"
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const {
-    objectPath,
-    path: repositoryPath,
-    branch
-  } = loadViewSearchParams(request, {
+  const viewParams = loadViewSearchParams(request, {
     strict: true
   })
+  const { path: repositoryPath, branch } = viewParams
 
-  invariant(objectPath, "opbjectPath is required")
+  let { objectPath } = viewParams
+
   invariant(repositoryPath, "repositoryPath is required")
   invariant(branch, "branch is required")
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: repositoryPath, branch })
+
+  objectPath ??= instance.repositoryName
 
   const objIsBlob = isBlob(await instance.db.getObjectFromPath(objectPath))
 
