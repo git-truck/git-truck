@@ -70,15 +70,11 @@ export function MetricsInspection() {
     return <p className="p-4">No file or folder selected</p>
   }
 
-  if (!data) {
-    return null
-  }
-
   const currentFetcherData = data
 
   const objectHasChangesInSelectedRange = isBlob
     ? Boolean(databaseInfo.commitCounts[clickedObject.path])
-    : currentFetcherData.existsInRange
+    : currentFetcherData?.existsInRange
 
   if (objectHasChangesInSelectedRange === false) {
     return <p className="p-4">{isBlob ? "File" : "Folder"} does not exist in selected time range</p>
@@ -96,7 +92,9 @@ export function MetricsInspection() {
 
   const lastChanged = isBlob
     ? (dateFormatRelative(databaseInfo.lastChanged[clickedObject.path]) ?? "unknown")
-    : dateFormatRelative(currentFetcherData.lastChanged)
+    : currentFetcherData?.lastChanged
+      ? dateFormatRelative(currentFetcherData.lastChanged)
+      : null
 
   const panelActionMap = {
     "group-contributors": () => setModalOpen(true),
@@ -145,7 +143,9 @@ export function MetricsInspection() {
       icon: LinesChangedMetric.icon,
       data: isBlob
         ? databaseInfo.contribSumPerFile[clickedObject.path].toLocaleString()
-        : contributions.toLocaleString(),
+        : contributions
+          ? contributions.toLocaleString()
+          : "loading",
       inspectionPanels: LinesChangedMetric.inspectionPanels
     },
     CONTRIBUTORS: {
