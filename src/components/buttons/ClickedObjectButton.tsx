@@ -1,6 +1,6 @@
 import { mdiClose, mdiFile, mdiFolder, mdiMagnifyMinusOutline, mdiSourceRepository } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useClickedObject, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObject, useSetClickedObjectPath } from "~/state/stores/clicked-object"
 import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/routes/viewParams"
@@ -10,7 +10,7 @@ import { useZoomToParent } from "~/hooks"
 export function ClickedObjectButton({ style = {} }: { style?: React.CSSProperties }) {
   const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
   const clickedObject = useClickedObject()
-  const setClickedObject = useSetClickedObject()
+  const setClickedObject = useSetClickedObjectPath()
   const data = useData()
   const isRepoRoot = isRepositoryRoot(clickedObject)
   const isZoomPath = clickedObject.path === zoomPath && !isRepoRoot

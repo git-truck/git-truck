@@ -4,7 +4,7 @@ import { useSearch } from "~/contexts/SearchContext"
 
 import type { GitObject, GitTreeObject } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
-import { useClickedObjectIsZoomPath, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectIsZoomPath, useSetClickedObjectPath } from "~/state/stores/clicked-object"
 import { getSeparator } from "~/shared/util"
 import { Icon } from "~/components/Icon"
 import { mdiFolder, mdiFileOutline, mdiMagnify, mdiClose, mdiFile } from "@mdi/js"
@@ -35,7 +35,7 @@ export function SearchCard() {
   const [isTransitioning, startTransition] = useTransition()
   const [searchText, setSearchText] = useState("")
   const clickedObjectIsZoomPath = useClickedObjectIsZoomPath()
-  const setClickedObject = useSetClickedObject()
+  const setClickedObject = useSetClickedObjectPath()
   const { searchResults, setSearchResults } = useSearch()
   const searchResultsArray = useMemo(() => Object.values(searchResults), [searchResults])
   const id = useId()
@@ -189,7 +189,7 @@ export function SearchCard() {
               }}
               onClick={() => {
                 flushSync(() => {
-                  setClickedObject(object)
+                  setClickedObject(object.path)
                   setSearchResults({})
                   setSearchText("")
                 })

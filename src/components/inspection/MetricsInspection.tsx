@@ -17,7 +17,7 @@ import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isDarkColor, isRepositoryRoot, isTree, last, resolveParentFolder } from "~/shared/util"
 import {
   useClickedObject,
-  useSetClickedObject,
+  useSetClickedObjectPath,
   useObjectColor,
   useClickedObjectPath
 } from "~/state/stores/clicked-object"
@@ -273,7 +273,7 @@ function MetricButton({
 
 export function InteractionButtons() {
   const clickedObject = useClickedObject()
-  const setClickedObject = useSetClickedObject()
+  const setClickedObjectPath = useSetClickedObjectPath()
   const viewAction = useViewAction()
   const { state } = useNavigation()
   const [, setZoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
@@ -309,7 +309,7 @@ export function InteractionButtons() {
         action={viewAction}
         onSubmit={() => {
           if (!isBlob) setZoomPath(resolveParentFolder(clickedObject.path))
-          setClickedObject(null)
+          setClickedObjectPath(null)
         }}
       >
         <input type="hidden" name="hide" value={clickedObject.path} />
