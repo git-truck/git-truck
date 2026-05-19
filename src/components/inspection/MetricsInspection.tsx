@@ -15,7 +15,12 @@ import { UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isDarkColor, isRepositoryRoot, isTree, last, resolveParentFolder } from "~/shared/util"
-import { useClickedObject, useSetClickedObject, useObjectColor } from "~/state/stores/clicked-object"
+import {
+  useClickedObject,
+  useSetClickedObject,
+  useObjectColor,
+  useClickedObjectPath
+} from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { useViewAction } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
@@ -53,7 +58,9 @@ export function MetricsInspection() {
 
   const { data, load, reset } = useFetcher<typeof loader>()
 
-  const [{ objectPath, path, branch }] = useQueryStates({
+  const clickedObjectPath = useClickedObjectPath()
+
+  const [{ path, branch }] = useQueryStates({
     start: viewSearchParamsConfig.start,
     end: viewSearchParamsConfig.end,
     objectPath: viewSearchParamsConfig.objectPath,
@@ -62,9 +69,9 @@ export function MetricsInspection() {
   })
 
   useEffect(() => {
-    load(href("/api/metrics") + viewSerializer({ objectPath, path: path, branch }))
+    load(href("/api/metrics") + viewSerializer({ objectPath: clickedObjectPath, path: path, branch }))
     return () => reset()
-  }, [branch, load, objectPath, path, reset])
+  }, [branch, clickedObjectPath, load, path, reset])
 
   if (!clickedObject) {
     return <p className="p-4">No file or folder selected</p>
