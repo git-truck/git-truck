@@ -9,7 +9,7 @@ import { useDataNullable } from "~/contexts/DataContext"
 import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
-import { useClickedObjectNullable, useSetClickedObject } from "~/state/stores/clicked-object"
+import { useClickedObjectNullable, useSetClickedObjectPath } from "~/state/stores/clicked-object"
 import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 type Segment = {
@@ -23,7 +23,7 @@ type Segment = {
 export function Breadcrumb({ className = "", zoom = false }: { className?: string; zoom?: boolean }) {
   const [browseParams] = useQueryStates(browseSearchParamsConfig)
   const [viewParams, setViewParams] = useQueryStates(viewSearchParamsConfig)
-  const setClickedObject = useSetClickedObject()
+  const setClickedObjectPath = useSetClickedObjectPath()
   const { path, zoomPath } = viewParams
   const data = useDataNullable()
   const clickedObject = useClickedObjectNullable()
@@ -126,7 +126,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
               className="text-secondary-text dark:text-secondary-text-dark flex cursor-pointer items-center gap-1 truncate text-sm font-bold"
-              onClick={() => setClickedObject(null)}
+              onClick={() => setClickedObjectPath(null)}
             >
               {content}
             </Link>
@@ -143,7 +143,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
                     setViewParams((prev) => ({ ...prev, zoomPath: parentPath }))
                     return
                   } else {
-                    setClickedObject(null)
+                    setClickedObjectPath(null)
                     return
                   }
                 }

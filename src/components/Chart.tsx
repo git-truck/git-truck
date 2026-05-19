@@ -31,7 +31,7 @@ import { useQueryState } from "nuqs"
 import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
 import {
   useBlobColors,
-  useSetClickedObject,
+  useSetClickedObjectPath,
   useClickedObjectPath,
   useClickedObjectIsZoomPath
 } from "~/state/stores/clicked-object"
@@ -65,7 +65,7 @@ export function Chart() {
   const selectedCategories = useSelectedCategories()
   const isCategorySelected = useIsCategorySelected()
   const clickedObjectPath = useClickedObjectPath()
-  const setClickedObject = useSetClickedObject()
+  const setClickedObjectPath = useSetClickedObjectPath()
 
   const clickedObjectIsZoomPath = useClickedObjectIsZoomPath()
 
@@ -78,9 +78,7 @@ export function Chart() {
   const zoomToParent = useZoomToParent()
 
   useKey({ key: "Escape" }, () => {
-    if (clickedObjectPath) {
-      setClickedObject(null)
-    }
+    setClickedObjectPath(null)
   })
 
   const filetree = useMemo(() => {
@@ -162,7 +160,7 @@ export function Chart() {
             const path = getPathFromEventTarget(evt.target)
             if (!path) {
               if (!clickedObjectIsZoomPath) {
-                setClickedObject(null)
+                setClickedObjectPath(null)
                 return
               }
               if (clickedObjectIsZoomPath && !zoomPathIsRepo) {
@@ -170,8 +168,6 @@ export function Chart() {
               }
               return
             }
-
-            const newClickedObject = databaseInfo.objectPathMap[path]
 
             evt.stopPropagation()
 
@@ -181,43 +177,37 @@ export function Chart() {
             clickTimer.current = window.setTimeout(() => {
               clickTimer.current = null
 
-              if (newClickedObject && clickedObjectPath === newClickedObject.path) {
-                setClickedObject(null)
+              if (path && clickedObjectPath === path) {
+                setClickedObjectPath(null)
                 return
               }
 
-              if (!newClickedObject) {
-                throw new Error("Clicked object not found in databaseInfo.objectMap")
+              if (!path) {
+                throw new Error("Clicked object not found on node")
               }
               // Else, navigate to object details
-              setClickedObject(path ? (newClickedObject ?? null) : null)
+              setClickedObjectPath(path)
             }, DOUBLE_CLICK_DELAY)
           }}
           onDoubleClick={(evt) => {
             const path = getPathFromEventTarget(evt.target)
             if (!path) {
-              setClickedObject(null)
+              setClickedObjectPath(null)
               return
             }
             setZoomPath(null)
 
             evt.stopPropagation()
 
-            const newClickedObject = databaseInfo.objectPathMap[path]
-
-            if (!newClickedObject) {
-              throw new Error("Clicked object not found in databaseInfo.objectMap: " + path)
-            }
-
             if (clickTimer.current) {
               window.clearTimeout(clickTimer.current)
               clickTimer.current = null
 
-              if (zoomPath && zoomPath === newClickedObject.path) {
+              if (zoomPath && zoomPath === path) {
                 setZoomPath("")
                 return
               }
-              setZoomPath(newClickedObject.path ?? null)
+              setZoomPath(path ?? null)
             }
           }}
           onMouseOver={(evt) => {

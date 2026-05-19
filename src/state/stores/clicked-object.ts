@@ -51,11 +51,11 @@ export const useClickedObjectNullable = () => {
   return clickedObjectState ?? zoomedObjectState ?? rootTree
 }
 
-export const useSetClickedObject = () => {
+export const useSetClickedObjectPath = () => {
   const [, setObjectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
 
-  return (clickedObject: GitObject | null) => {
-    setObjectPath(clickedObject?.path ?? null)
+  return (clickedObjecPath: string | null) => {
+    setObjectPath(clickedObjecPath ?? null)
   }
 }
 
