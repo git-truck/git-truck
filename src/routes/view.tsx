@@ -148,10 +148,11 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const rerollColors = formData.get("rerollColors")
   const contributorName = formData.get("contributorName")
   const contributorColor = formData.get("contributorColor")
-  const hidePath = formData.get("hide") as string | null
-  const unhidePath = formData.get("show") as string | null
-  const unhideAll = formData.get("unhideAll") as string | null
-  const openPath = formData.get("open") as string | null
+  const hidePath = formData.get("hide")
+  const replaceHiddenFiles = formData.get("replaceHiddenFiles")
+  const unhidePath = formData.get("show")
+  const unhideAll = formData.get("unhideAll")
+  const openPath = formData.get("open")
 
   instance.prevInvokeReason = "unknown"
   if (refresh) {
@@ -159,20 +160,33 @@ export const action = async ({ request }: Route.ActionArgs) => {
     return null
   }
 
-  if (hidePath && typeof hidePath === "string") {
+  if (typeof replaceHiddenFiles === "string") {
+    const hidePaths = formData
+      .getAll("hidePath")
+      .filter((path): path is string => typeof path === "string" && path.length > 0)
+
+    instance.prevInvokeReason = "hide"
+    await instance.db.clearHiddenFiles()
+    for (const path of [...hidePaths].reverse()) {
+      await instance.db.addHiddenFile(path)
+    }
+    return null
+  }
+
+  if (typeof hidePath === "string" && hidePath.length > 0) {
     instance.prevInvokeReason = "hide"
     await instance.db.addHiddenFile(hidePath)
     const { objectPath: _, ...params } = viewSearchParams
     throw redirect(href("/view") + viewSerializer(params))
   }
 
-  if (unhidePath && typeof unhidePath === "string") {
+  if (typeof unhidePath === "string" && unhidePath.length > 0) {
     instance.prevInvokeReason = "show"
     await instance.db.removeHiddenFile(unhidePath)
     return null
   }
 
-  if (unhideAll && typeof unhideAll === "string") {
+  if (typeof unhideAll === "string") {
     instance.prevInvokeReason = "hide"
     await instance.db.clearHiddenFiles()
     return null
