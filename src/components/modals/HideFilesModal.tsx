@@ -1,4 +1,4 @@
-import { mdiEyeOff, mdiEye } from "@mdi/js"
+import { mdiEyeOff, mdiDelete, mdiDeleteEmpty } from "@mdi/js"
 import { useNavigation, Form } from "react-router"
 import { useData } from "~/contexts/DataContext"
 import { Icon } from "~/components/Icon"
@@ -95,24 +95,24 @@ export function HideFilesModal({ open, onClose }: { open: boolean; onClose: () =
               return (
                 <div
                   key={hidden}
-                  className="primary grid grid-cols-[auto_1fr] items-center gap-2 rounded-md px-2 py-1 text-sm"
+                  className="secondary grid grid-cols-[1fr_auto] items-center gap-x-2 gap-y-0 rounded-md px-2 py-1 text-sm"
                   style={{ opacity: isOptimistic ? 0.6 : isPendingRemoval ? 0.4 : 1 }}
                   title={hidden}
                 >
-                  <Form action={viewAction} className="w-4" method="post">
-                    <input type="hidden" name="show" value={hidden} />
-                    <button
-                      className="btn btn--text btn--hover-swap h-4"
-                      title="Show file"
-                      disabled={navigationState.state !== "idle" || isOptimistic}
-                    >
-                      <Icon path={mdiEyeOff} className="inline-block h-full" />
-                      <Icon path={mdiEye} className="hover-swap inline-block h-full" />
-                    </button>
-                  </Form>
                   <span className="truncate text-sm" title={hidden}>
                     {hiddenFileFormat(hidden)}
                   </span>
+                  <Form action={viewAction} className="w-4" method="post">
+                    <input type="hidden" name="show" value={hidden} />
+                    <button
+                      className="btn btn--text btn--hover-swap h-6"
+                      title={`Unhide ${hidden}`}
+                      disabled={navigationState.state !== "idle" || isOptimistic}
+                    >
+                      <Icon path={mdiDelete} className="inline-block h-full" />
+                      <Icon path={mdiDeleteEmpty} className="hover-swap inline-block h-full" />
+                    </button>
+                  </Form>
                 </div>
               )
             })
