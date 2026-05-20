@@ -11,16 +11,16 @@ import { findSubTree, createObjectPathMap } from "~/shared/utils/tree"
 import { useQueryState } from "nuqs"
 import { METRICS_HIERARCHY_CACHE_DEPTH } from "~/const"
 
-const objectPathMapCache = new Map<string, ObjectPathMap>()
+const objectPathMapCache = new WeakMap<GitTreeObject, ObjectPathMap>()
 
 function getObjectPathMap(fileTree: GitTreeObject): ObjectPathMap {
-  const cachedObjectPathMap = objectPathMapCache.get(fileTree.hash)
+  const cachedObjectPathMap = objectPathMapCache.get(fileTree)
   if (cachedObjectPathMap) {
     return cachedObjectPathMap
   }
 
   const objectPathMap = createObjectPathMap(fileTree)
-  objectPathMapCache.set(fileTree.hash, objectPathMap)
+  objectPathMapCache.set(fileTree, objectPathMap)
 
   return objectPathMap
 }
@@ -32,11 +32,11 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
   const hasSearchResults = useMemo(() => Object.values(searchResults).length > 0, [searchResults])
 
   const [zoomPath] = useQueryState("zoomPath")
-  const objectPathMap = useMemo(() => getObjectPathMap(data.databaseInfo.fileTree), [data.databaseInfo.fileTree.hash])
+  const objectPathMap = useMemo(() => getObjectPathMap(data.databaseInfo.fileTree), [data.databaseInfo.fileTree])
 
   const zoomedTree = useMemo(
     () => findSubTree(data.databaseInfo.fileTree, zoomPath ?? undefined),
-    [data.databaseInfo.fileTree.hash, zoomPath]
+    [data.databaseInfo.fileTree, zoomPath]
   )
 
   // Database info representing the current view (filtered + zoomed)
