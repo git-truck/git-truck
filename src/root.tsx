@@ -20,6 +20,8 @@ import { getLatestVersion } from "~/shared/util.server"
 import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
 import { ErrorPage } from "~/components/ErrorPage"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
+import { mdiAlertOutline } from "@mdi/js"
+import { Icon } from "~/components/Icon"
 
 export const meta = () => {
   return [{ title: "Git Truck" }]
@@ -95,6 +97,12 @@ export const ErrorBoundary = () => {
     ? "Git Truck is not running, please start it and try again."
     : "Oh no, the Git Truck crashed!"
 
+  const url = new URL("https://github.com/git-truck/git-truck/issues/new?template=bug.yml")
+  url.searchParams.append("title", "crash: " + (error instanceof Error ? error.message : "Unknown error"))
+  url.searchParams.append("os", navigator.platform)
+  url.searchParams.append("version", pkg.version)
+  if (error && error instanceof Error) url.searchParams.append("description", `\n\n\`\`\`\n${error.stack}\n\`\`\``)
+
   return (
     <Shell>
       <ErrorPage className="min-h-screen" message={message} truck={mainProcessClosed ? "parked" : "crashed"}>
@@ -103,11 +111,17 @@ export const ErrorBoundary = () => {
             Retry
           </Link>
           {!mainProcessClosed ? (
-            <Link className="btn btn--primary" to="..">
-              Go back
-            </Link>
+            <>
+              <Link className="btn btn--primary" to="..">
+                Go back
+              </Link>
+              <ClearCacheForm redirectPath={pathname + search} />
+              <a href={url.toString()} target="_blank" rel="noopener noreferrer" className="btn btn--secondary">
+                <Icon path={mdiAlertOutline} />
+                Report issue
+              </a>
+            </>
           ) : null}
-          {!mainProcessClosed ? <ClearCacheForm redirectPath={pathname + search} /> : null}
         </div>
         {!mainProcessClosed ? (
           <div className="mx-auto w-2xl space-y-2">
