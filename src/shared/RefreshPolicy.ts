@@ -67,6 +67,8 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
   ],
   hide: [
     "commitCount",
+    "topContributor",
+    "commitCounts",
     "fileSizes",
     "contribSumPerFile",
     "contributorsForPath",
