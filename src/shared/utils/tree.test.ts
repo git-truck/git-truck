@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { createObjectPathMap, flattenTreeIncludeTrees, reduceTree, reduceTreeIncludeTrees } from "./tree"
+import { createObjectPathMap, findInTree, flattenTreeIncludeTrees, reduceTree, reduceTreeIncludeTrees } from "./tree"
 import type { GitTreeObject, GitBlobObject } from "~/shared/model"
 
 describe("reduceTree", () => {
@@ -94,8 +94,35 @@ describe("flattenTreeIncludeTrees", () => {
   })
 })
 
+describe("findInTree", () => {
+  const file: GitBlobObject = {
+    type: "blob",
+    hash: "file-hash",
+    name: "file.txt",
+    path: "root/file.txt",
+    extension: "txt",
+    byteSize: 10
+  }
+  const tree: GitTreeObject = {
+    type: "tree",
+    hash: "tree-hash",
+    name: "root",
+    path: "root",
+    byteSize: 10,
+    children: [file]
+  }
+
+  it("should find a matching node", () => {
+    expect(findInTree(tree, (node) => node.path === "root/file.txt")).toBe(file)
+  })
+
+  it("should return null when no node matches", () => {
+    expect(findInTree(tree, (node) => node.path === "missing.txt")).toBeNull()
+  })
+})
+
 describe("createObjectPathMap", () => {
-  it("should map tree and blob paths to their existing objects", () => {
+  it("should map tree and blob paths to their object summaries", () => {
     const file: GitBlobObject = {
       type: "blob",
       hash: "file-hash",
@@ -115,7 +142,13 @@ describe("createObjectPathMap", () => {
 
     const pathMap = createObjectPathMap(tree)
 
-    expect(pathMap["root"]).toBe(tree)
+    expect(pathMap["root"]).toEqual({
+      type: "tree",
+      hash: "tree-hash",
+      name: "root",
+      path: "root",
+      byteSize: 10
+    })
     expect(pathMap["root/file.txt"]).toBe(file)
   })
 })

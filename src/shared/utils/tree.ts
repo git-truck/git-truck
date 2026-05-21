@@ -121,7 +121,7 @@ export function findInTree(tree: GitTreeObject, predicate: (node: GitObject) => 
       }
     }
   }
-  return tree
+  return null
 }
 
 export function findSubTree(tree: GitTreeObject, path?: string): GitTreeObject {
