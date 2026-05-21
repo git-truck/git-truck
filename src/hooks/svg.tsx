@@ -14,7 +14,7 @@ export function useGradient(colors: Array<string>) {
             .toSorted()
             .slice(0, categoricalScheme.length)
             .map((color, i, colors) => (
-              <stop key={i} offset={`${(i / (colors.length - 1)) * 100}%`} stopColor={color} />
+              <stop key={i} offset={`${(i / Math.max(colors.length - 1, 1)) * 100}%`} stopColor={color} />
             ))}
         </linearGradient>
       ) : null,
