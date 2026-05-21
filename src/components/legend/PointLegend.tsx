@@ -71,13 +71,13 @@ export function PointLegend() {
     resetSelection()
   }, [path, resetSelection])
 
-  const metricCache = useMemo<MetricCache>(() => {
+  const metricCache = useMemo<MetricCache | undefined>(() => {
     const cacheKey = clickedObjectPath
 
     const subtree = findInTree(data.databaseInfo.fileTree, (node) => node.path === clickedObjectPath)
 
     if (!subtree) {
-      throw new Error(`Clicked object with path ${clickedObjectPath} not found in file tree`)
+      return undefined
     }
 
     return (
@@ -94,7 +94,7 @@ export function PointLegend() {
     )
   }, [clickedObjectPath, data, metricType, topContributorCutoff, hierarchyCache])
 
-  if (metricCache === undefined) throw new Error("Metric cache is undefined")
+  if (!metricCache?.legend) return null
 
   const legendData = metricCache.legend as PointLegendData
 
