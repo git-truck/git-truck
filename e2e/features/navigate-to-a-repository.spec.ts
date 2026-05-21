@@ -1,24 +1,23 @@
-import { test, expect } from "@playwright/test"
+import { expect, test } from "vitest"
+import { app } from "../browser"
 
-test("navigate to a repository", async ({ page }) => {
-  await page.goto("/")
+test("navigate to a repository", async () => {
+  await app.goto("/")
 
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Git Truck/)
+  expect(await app.title()).toMatch(/Git Truck/)
 
   // Expect the status of the git-truck repository to be "Not analyzed".
-  const gitTruckStatus = await page.getByTestId("status-git-truck").textContent()
+  const gitTruckStatus = await app.textByTestId("status-git-truck")
   expect(gitTruckStatus === "Not analyzed" || gitTruckStatus === "Analyzed").toBeTruthy()
 
   // Select an option from a <select> dropdown.
-  await page.getByTestId("revision-select-git-truck").selectOption("main")
+  await app.selectByTestId("revision-select-git-truck", "main")
   // Click the analyze button.
-  await page
-    .getByTitle("View git-truck", {
-      exact: true
-    })
-    .click()
+  await app.clickByTitle("View git-truck", {
+    exact: true
+  })
 
-  await page.waitForURL("/git-truck/main")
-  await page.waitForSelector("text=More repositories")
+  await app.waitForUrl("/git-truck/main")
+  await app.waitForSelector("text=More repositories")
 })
