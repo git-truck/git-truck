@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Browser E2E Tests
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
         with:
           bun-version: ${{ matrix.bun-version }}
 
-      - name: Get installed Playwright version
+      - name: Get installed browser provider version
         id: playwright-version
         run: bun scripts/get-playwright-version.mjs
 
@@ -48,20 +48,20 @@ jobs:
         run: bun run build
 
       - name: Install Playwright Browsers
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps --no-shell chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
-      - name: Run Playwright tests
+      - name: Run Vitest browser tests
         run: bun test:e2e
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.pw-browsers
 
-      - name: Upload Playwright report
+      - name: Upload browser test artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-${{ matrix.os }}-node-${{ matrix.node }}
-          path: playwright-report/
+          name: browser-test-artifacts-${{ matrix.os }}-node-${{ matrix.node }}
+          path: test-results/
           retention-days: 30

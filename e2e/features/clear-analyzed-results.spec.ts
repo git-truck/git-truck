@@ -1,19 +1,18 @@
-import { test, expect } from "@playwright/test"
+import { expect, test } from "vitest"
+import { app } from "../browser"
 
-test("navigate to a repository", async ({ page }) => {
-  await page.goto("/")
+test("clear analyzed results", async () => {
+  await app.goto("/")
 
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Git Truck/)
-  await page
-    .getByTitle("Click here if you are experiencing issues", {
-      exact: true
-    })
-    .click()
+  expect(await app.title()).toMatch(/Git Truck/)
+  await app.clickByTitle("Click here if you are experiencing issues", {
+    exact: true
+  })
 
-  await page.waitForLoadState("networkidle")
+  await app.waitForLoadState("networkidle")
 
   // Expect the status of the git-truck repository to be "Not analyzed".
-  const gitTruckStatus = await page.getByTestId("status-git-truck").textContent()
+  const gitTruckStatus = await app.textByTestId("status-git-truck")
   expect(gitTruckStatus).toBe("Not analyzed")
 })
