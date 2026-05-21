@@ -96,8 +96,8 @@ const Dot = ({
   const Component = props.onClick ? "button" : "div"
   return (
     <Component
+      {...(props.onClick ? { type: "button" } : {})}
       className={cn("size-4", className)}
-      // style={{ backgroundColor: color }}
       onClick={props.onClick}
     >
       <svg viewBox="0 0 16 16">
