@@ -50,7 +50,7 @@ export function InteractionButtons() {
         }}
       >
         <input type="hidden" name="hide" value={clickedObject.path} />
-        {!isRoot ? (
+        {!isRoot && isBlob ? (
           <button
             className="btn btn--text"
             disabled={state !== "idle"}
