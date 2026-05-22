@@ -93,7 +93,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
 
     path ??= argsRepositoryPath
     branch ??= await GitService._getRepositoryHead(path)
-    zoomPath ??= getRepoNameFromPath(path)
+    zoomPath ||= getRepoNameFromPath(path)
     objectPath ??= getRepoNameFromPath(path)
     start ??= 0
     end ??= nowInSeconds()
@@ -102,6 +102,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       path,
       branch,
       zoomPath,
+      objectPath,
       start,
       end
     })
