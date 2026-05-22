@@ -89,9 +89,7 @@ export function getLastChangedBucketIndex(
   const categories = buckets ?? getLastChangedBuckets(dbi)
   const lastIndex = categories.length - 1
   return categories.findIndex((g, i) =>
-    i === lastIndex
-      ? timeDiff >= g.range[0] && timeDiff <= g.range[1]
-      : timeDiff >= g.range[0] && timeDiff < g.range[1]
+    i === lastIndex ? timeDiff >= g.range[0] && timeDiff <= g.range[1] : timeDiff >= g.range[0] && timeDiff < g.range[1]
   )
 }
 

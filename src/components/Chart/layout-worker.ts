@@ -10,11 +10,7 @@ import {
 } from "d3-hierarchy"
 import { treemapPaddingInner, treemapPaddingOuter, treemapPaddingTop, letterHeightText, bubblePadding } from "~/const"
 import type { LayoutType } from "~/layouts/layouts"
-import {
-  getLastChangedBucketIndex,
-  getLastChangedBuckets,
-  type LastChangedBucket
-} from "~/metrics/lastChangedBuckets"
+import { getLastChangedBucketIndex, getLastChangedBuckets, type LastChangedBucket } from "~/metrics/lastChangedBuckets"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import type { DatabaseInfo, GitTreeObject, GitObject } from "~/shared/model"
 import { isTree } from "~/shared/util"
