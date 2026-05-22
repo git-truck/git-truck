@@ -72,7 +72,7 @@ function Shell({ children, className = "" }: { children: React.ReactNode; classN
       </head>
       <body
         className={cn(
-          "bg-secondary-bg dark:bg-secondary-bg-dark text-primary-text dark:text-primary-text-dark",
+          "bg-secondary-bg dark:bg-secondary-bg-dark text-primary-text dark:text-primary-text-dark print:bg-white",
           // { dark: !prefersLightMode },
           className
         )}

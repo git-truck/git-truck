@@ -232,6 +232,13 @@
   grid-area: 1 / 1 / -1 / -1;
 }
 
+@media print {
+  [data-testid="react-router-devtools-trigger"],
+  [data-testid="react-router-devtools-main-panel"] {
+    display: none !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-gray-300 dark:border-gray-700;

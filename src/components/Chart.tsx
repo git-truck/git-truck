@@ -1,9 +1,9 @@
 import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } from "d3-hierarchy"
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
-import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
+import { useEffect, useMemo, startTransition, useRef } from "react"
 import { type JSX } from "react"
 import type { GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
-import { useComponentSize, useKey, useZoomToParent } from "~/hooks"
+import { useComponentSize, useIsPrinting, useKey, useZoomToParent } from "~/hooks"
 import {
   bubblePadding,
   letterWidthForTreeText,
@@ -43,13 +43,21 @@ import { viewSearchParamsConfig } from "~/shared/viewParams"
 import type { SegmentBucket } from "~/metrics/metrics"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
+type NodeTextLayer = "defs" | "borderMask" | "label"
+const chartEdgeInset = 2
+const cssPixelsPerMillimeter = 96 / 25.4
+const printChartSize = {
+  width: 210 * cssPixelsPerMillimeter,
+  height: 297 * cssPixelsPerMillimeter
+} as const
 
 export function Chart() {
   const hoveredObject = useHoveredObject()
   const setHoveredObject = useSetHoveredObject()
-  const [ref, rawSize] = useComponentSize()
+  const [ref, measuredSize] = useComponentSize()
+  const isPrinting = useIsPrinting()
+  const size = isPrinting ? printChartSize : measuredSize
   const { searchResults, hasSearchResults } = useSearch()
-  const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const [metricsData] = useMetrics()
   const {
@@ -104,19 +112,24 @@ export function Chart() {
 
   const lastChangedBuckets = useMemo(() => metricsData.get("LAST_CHANGED")?.buckets, [metricsData])
 
+  const layoutSize = useMemo(
+    () => ({
+      width: Math.max(size.width - chartEdgeInset * 2, 0),
+      height: Math.max(size.height - chartEdgeInset * 2, 0)
+    }),
+    [size.height, size.width]
+  )
+
   const nodes = useMemo(() => {
     if (process.env["NODE_ENV"] === "development") {
       // console.time("Create and pack hiearchy")
     }
-    if (size.width === 0 || size.height === 0) return []
+    if (layoutSize.width === 0 || layoutSize.height === 0) return []
 
     const res = createPartitionedHiearchy({
       databaseInfo,
       tree: filetree,
-      size: {
-        height: size.height,
-        width: size.width
-      },
+      size: layoutSize,
       chartType,
       sizeMetricType: sizeMetric,
       renderCutOff,
@@ -126,7 +139,7 @@ export function Chart() {
       // console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree, lastChangedBuckets])
+  }, [layoutSize, chartType, sizeMetric, renderCutOff, databaseInfo, filetree, lastChangedBuckets])
 
   useEffect(() => {
     setHoveredObject(null)
@@ -140,6 +153,84 @@ export function Chart() {
   const getPathFromEventTarget = (target: EventTarget | null) =>
     target instanceof Element ? target.closest<SVGElement>("[data-path]")?.dataset.path : undefined
 
+  const getCategoriesFromNode = (node: GitObject): string[] => {
+    return (
+      metricsData
+        .get(metricType)
+        ?.categoriesMap.get(node.path)
+        ?.map((categoryEntry) => categoryEntry.category) ?? []
+    )
+  }
+
+  const getNodeRenderState = (d: CircleOrRectHiearchyNode) => {
+    const isSearchMatch = Boolean(searchResults[d.data.path])
+    const hasSearchMatches = isTree(d.data)
+      ? Object.keys(searchResults).some((resultPath) => {
+          return resultPath.startsWith(`${d.data.path}/`)
+        })
+      : isSearchMatch
+
+    const categories = getCategoriesFromNode(d.data)
+    const isSelected =
+      selectedCategories.length > 0
+        ? // do we have contain a selected category?
+          categories.some((c) => isCategorySelected(c)) ||
+          // or we have a child that has a selected category selected
+          (isTree(d.data) &&
+            d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
+        : // or by default, if no categories are selected, everything should be considered selected
+          true
+
+    const isClickedObject = d.data.path === clickedObjectPath
+
+    const shouldColor = clickedObjectPath
+      ? // we are the clicked object, so should be highlighted
+        isClickedObject || (d.data.path.startsWith(clickedObjectPath + "/") && isSelected) // or we are a child of a clicked tree object
+      : isSelected
+
+    return {
+      isSearchMatch,
+      shouldNotColor: (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
+    }
+  }
+
+  const renderNode = (d: CircleOrRectHiearchyNode, i: number) => {
+    const { shouldNotColor } = getNodeRenderState(d)
+
+    return (
+      <g
+        key={d.data.path}
+        data-path={d.data.path}
+        className={cn("cursor-pointer duration-400", {
+          "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
+          "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark": isTree(d.data) && !clickedObjectPath,
+          "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
+        })}
+      >
+        <Node d={d} isRoot={i === 0} />
+      </g>
+    )
+  }
+
+  const renderNodeText = (d: CircleOrRectHiearchyNode, layer: NodeTextLayer) => {
+    const { isSearchMatch, shouldNotColor } = getNodeRenderState(d)
+
+    return (
+      <g
+        key={`${d.data.path}-${layer}`}
+        data-path={d.data.path}
+        className={cn("duration-400", {
+          "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
+        })}
+      >
+        <NodeText layer={layer} isSearchMatch={isSearchMatch} d={d}>
+          {d.data.name}
+          {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
+        </NodeText>
+      </g>
+    )
+  }
+
   return (
     <div
       className={cn("relative grid overflow-hidden", {
@@ -149,7 +240,7 @@ export function Chart() {
       <div ref={ref} className="relative">
         <svg
           className={clsx(
-            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
+            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100 print:fill-gray-900! print:stroke-gray-400!",
             {
               "cursor-zoom-out": clickedObjectIsZoomPath && !zoomPathIsRepo
             }
@@ -243,65 +334,13 @@ export function Chart() {
             }
           }}
         >
-          {nodes.map((d, i) => {
-            const isSearchMatch = Boolean(searchResults[d.data.path])
-            const hasSearchMatches = isTree(d.data)
-              ? Object.keys(searchResults).some((resultPath) => {
-                  return resultPath.startsWith(`${d.data.path}/`)
-                })
-              : isSearchMatch
-
-            const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
-              const cats: Array<string> =
-                metricsData
-                  .get(metricType)
-                  ?.categoriesMap.get(node.path)
-                  ?.map((c) => c.category) ?? []
-              return cats
-            }
-
-            const categories = getCategoriesFromNode(d.data)
-            const isSelected =
-              selectedCategories.length > 0
-                ? // do we have contain a selected category?
-                  categories.some((c) => isCategorySelected(c)) ||
-                  // or we have a child that has a selected category selected
-                  (isTree(d.data) &&
-                    d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
-                : // or by default, if no categories are selected, everything should be considered selected
-                  true
-
-            const isClickedObject = d.data.path === clickedObjectPath
-
-            const shouldColor = clickedObjectPath
-              ? // we are the clicked object, so should be highlighted
-                isClickedObject || (d.data.path.startsWith(clickedObjectPath + "/") && isSelected) // or we are a child of a clicked tree object
-              : isSelected
-
-            const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
-
-            return (
-              <g
-                key={d.data.path}
-                data-path={d.data.path}
-                className={cn("cursor-pointer duration-400", {
-                  "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
-                  "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
-                    isTree(d.data) && !clickedObjectPath,
-                  "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
-                })}
-              >
-                <Node d={d} isRoot={i === 0} />
-                {labelsVisible ? (
-                  <NodeText isSearchMatch={isSearchMatch} d={d}>
-                    {d.data.name}
-                    {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
-                    {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
-                  </NodeText>
-                ) : null}
-              </g>
-            )
-          })}
+          <g transform={`translate(${chartEdgeInset} ${chartEdgeInset})`}>
+            {labelsVisible ? nodes.map((d) => renderNodeText(d, "defs")) : null}
+            {nodes.map((d, i) => (isTree(d.data) ? renderNode(d, i) : null))}
+            {labelsVisible ? nodes.map((d) => (isTree(d.data) ? renderNodeText(d, "borderMask") : null)) : null}
+            {nodes.map((d, i) => (isBlob(d.data) ? renderNode(d, i) : null))}
+            {labelsVisible ? nodes.map((d) => renderNodeText(d, "label")) : null}
+          </g>
         </svg>
       </div>
     </div>
@@ -371,7 +410,7 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
             ? "stroke-inherit"
             : "stroke-transparent stroke-0",
           {
-            "fill-primary-bg dark:fill-primary-bg-dark": isTree(d.data),
+            "fill-primary-bg dark:fill-primary-bg-dark print:fill-transparent": isTree(d.data),
             "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
           }
         )}
@@ -382,10 +421,12 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
 
 function NodeText({
   d,
+  layer,
   isSearchMatch,
   children = null
 }: {
   d: CircleOrRectHiearchyNode
+  layer: NodeTextLayer
   isSearchMatch?: boolean
   children?: React.ReactNode
 }) {
@@ -437,82 +478,91 @@ function NodeText({
 
   return (
     <g>
-      {/* Text path for circular tree labels */}
-      <defs>
-        <path
-          d={
-            isCircularNode(d)
-              ? circularPath(d.x, d.y + (isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY), d.r)
-              : undefined
-          }
-          id={`path-${d.data.hash}`}
-        />
-        {/* // Clip path for blob text, so they don't exceed the blob boundaries */}
-        <clipPath id={`clip-path-${d.data.hash}`}>
-          <rect
-            stroke="red"
-            fill="transparent"
-            {...(isCircularNode(d)
-              ? {
-                  x: d.x - d.r + clipPathPadding / 4 + 0.5,
-                  y: d.y - d.r + letterHeightText - 1 + clipPathPadding / 4 + 0.5,
-                  width: Math.max(textClipPathRadius - 1, 0),
-                  height: Math.max(d.r * 2 - clipPathPadding / 2 - 1, 0),
-                  rx: d.r,
-                  ry: d.r
-                }
-              : {
-                  x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
-                  y: (d as HierarchyRectangularNode<GitObject>).y0,
-                  width: Math.max(
-                    (d as HierarchyRectangularNode<GitObject>).x1 -
-                      (d as HierarchyRectangularNode<GitObject>).x0 -
-                      clipPathPadding,
-                    0
-                  ),
-                  height: Math.max(
-                    (d as HierarchyRectangularNode<GitObject>).y1 -
-                      (d as HierarchyRectangularNode<GitObject>).y0 -
-                      clipPathPadding,
-                    0
-                  ),
-                  ...(isTree(d.data)
-                    ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
-                    : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
-                })}
+      {layer === "defs" ? (
+        <defs>
+          <path
+            d={
+              isCircularNode(d)
+                ? circularPath(d.x, d.y + (isTree(d.data) ? circleTreeTextOffsetY : circleBlobTextOffsetY), d.r)
+                : undefined
+            }
+            id={`path-${d.data.hash}`}
           />
-        </clipPath>
-      </defs>
-      {/* For circle packing layout, tree nodes get a text node that has a stroke */}
-      {isTree(d.data) && isCircularNode(d) ? (
+          {/* // Clip path for blob text, so they don't exceed the blob boundaries */}
+          <clipPath id={`clip-path-${d.data.hash}`}>
+            <rect
+              stroke="red"
+              fill="transparent"
+              {...(isCircularNode(d)
+                ? {
+                    x: d.x - d.r + clipPathPadding / 4 + 0.5,
+                    y: d.y - d.r + letterHeightText - 1 + clipPathPadding / 4 + 0.5,
+                    width: Math.max(textClipPathRadius - 1, 0),
+                    height: Math.max(d.r * 2 - clipPathPadding / 2 - 1, 0),
+                    rx: d.r,
+                    ry: d.r
+                  }
+                : {
+                    x: (d as HierarchyRectangularNode<GitObject>).x0 + clipPathPadding / 2,
+                    y: (d as HierarchyRectangularNode<GitObject>).y0,
+                    width: Math.max(
+                      (d as HierarchyRectangularNode<GitObject>).x1 -
+                        (d as HierarchyRectangularNode<GitObject>).x0 -
+                        clipPathPadding,
+                      0
+                    ),
+                    height: Math.max(
+                      (d as HierarchyRectangularNode<GitObject>).y1 -
+                        (d as HierarchyRectangularNode<GitObject>).y0 -
+                        clipPathPadding,
+                      0
+                    ),
+                    ...(isTree(d.data)
+                      ? { rx: treemapTreeBorderRadius, ry: treemapTreeBorderRadius }
+                      : { rx: treemapBlobBorderRadius, ry: treemapBlobBorderRadius })
+                  })}
+            />
+          </clipPath>
+        </defs>
+      ) : null}
+      {/* Mask circular tree borders behind labels, like a fieldset/legend gap. */}
+      {layer === "borderMask" && isTree(d.data) && isCircularNode(d) ? (
         <text
-          className={cn("stroke-primary-bg dark:stroke-primary-bg-dark pointer-events-none fill-none stroke-5")}
+          className={cn(
+            "stroke-primary-bg dark:stroke-primary-bg-dark pointer-events-none fill-none stroke-5 print:stroke-white"
+          )}
           strokeLinecap="round"
         >
           <textPath {...textPathProps}>{children}</textPath>
         </text>
       ) : null}
-      <text
-        textAnchor={textShouldBeCentered ? "middle" : undefined}
-        alignmentBaseline="hanging"
-        {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.hash})` } : {})}
-        x={
-          isCircularNode(d)
-            ? isTree(d.data)
-              ? 0
-              : d.x - (textShouldBeCentered ? 0 : d.r - bubblePadding / 2)
-            : d.x0 + clipPathPadding / 2
-        }
-        y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
-        className={cn("pointer-events-none stroke-none transition-all", {
-          "font-bold underline": isSearchMatch,
-          "font-bold": isTree(d.data),
-          "fill-primary-text-dark": isDark && isBlob(d.data),
-          "fill-primary-text": !isDark && isBlob(d.data)
-        })}
-      >
-        {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}
-      </text>
+      {layer === "label" ? (
+        <text
+          textAnchor={textShouldBeCentered ? "middle" : undefined}
+          alignmentBaseline="hanging"
+          {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.hash})` } : {})}
+          x={
+            isCircularNode(d)
+              ? isTree(d.data)
+                ? 0
+                : d.x - (textShouldBeCentered ? 0 : d.r - bubblePadding / 2)
+              : d.x0 + clipPathPadding / 2
+          }
+          y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
+          className={cn(
+            "pointer-events-none stroke-none transition-all",
+            {
+              "font-bold underline": isSearchMatch,
+              "font-bold": isTree(d.data),
+              "fill-primary-text-dark": isDark && isBlob(d.data),
+              "fill-primary-text": !isDark && isBlob(d.data)
+            },
+            "print:fill-gray-900! print:stroke-transparent!"
+          )}
+        >
+          {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}
+        </text>
+      ) : null}
     </g>
   )
 }

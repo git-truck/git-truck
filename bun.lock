@@ -74,7 +74,6 @@
         "react-router": "7.15.0",
         "react-router-devtools": "6.2.0",
         "react-tiny-popover": "8.1.6",
-        "react-use-size": "5.0.1",
         "semver": "7.7.4",
         "sha1": "1.1.1",
         "tailwind-merge": "3.4.0",
@@ -1823,8 +1822,6 @@
     "react-tiny-popover": ["react-tiny-popover@8.1.6", "", { "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-jeZnGqHxb5TX7pCzpqLoVJned7DTVnLrLoCQQGFTyvlxXB/QUaet7O0krG22t5FReMBH035SLnzThKvk8tIfsg=="],
 
     "react-tooltip": ["react-tooltip@5.30.0", "", { "dependencies": { "@floating-ui/dom": "^1.6.1", "classnames": "^2.3.0" }, "peerDependencies": { "react": ">=16.14.0", "react-dom": ">=16.14.0" } }, "sha512-Yn8PfbgQ/wmqnL7oBpz1QiDaLKrzZMdSUUdk7nVeGTwzbxCAJiJzR4VSYW+eIO42F1INt57sPUmpgKv0KwJKtg=="],
-
-    "react-use-size": ["react-use-size@5.0.1", "", { "peerDependencies": { "react": "^19.0.0" } }, "sha512-3yus9/3o4A5kdpGtEXuUcgR2LWoTEpVIWeygewS4zH3rqeeQwOZrV3vfLGhbVNzsQyxaVpKlzGsLxErx9pACJA=="],
 
     "read-yaml-file": ["read-yaml-file@1.1.0", "", { "dependencies": { "graceful-fs": "^4.1.5", "js-yaml": "^3.6.1", "pify": "^4.0.1", "strip-bom": "^3.0.0" } }, "sha512-VIMnQi/Z4HT2Fxuwg5KrY174U1VdUIASQVWXXyqtNRtxSr9IYkn1rsI6Tb6HsrHCmB7gVpNwX6JxPTHcH6IoTA=="],
 

@@ -503,7 +503,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data}>
             <div
               className={cn(
-                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
+                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] not-print:transition-all lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"] print:absolute print:inset-0 print:grid-cols-1! print:grid-rows-1! print:overflow-visible! print:p-0! print:pr-0! print:[grid-template-areas:"chart"]!`,
                 {
                   [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
                     leftExpanded && matchesLarge
@@ -512,7 +512,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
             >
               <header
                 className={cn(
-                  "bg-secondary-bg dark:bg-secondary-bg-dark flex grid-cols-3 items-center justify-between gap-2 pr-2 [grid-area:lheader]",
+                  "bg-secondary-bg dark:bg-secondary-bg-dark flex grid-cols-3 items-center justify-between gap-2 pr-2 [grid-area:lheader] print:hidden",
                   {
                     hidden: !leftExpanded
                   }
@@ -535,7 +535,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <div />
                 )}
               </header>
-              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader]">
+              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader] print:hidden">
                 <div className="flex items-center">
                   {matchesLarge && !leftExpanded ? (
                     <>
@@ -571,7 +571,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "grid grid-rows-[auto_1fr] flex-col gap-4 lg:transition-transform",
+                    "grid grid-rows-[auto_1fr] flex-col gap-4 not-print:lg:transition-transform print:hidden",
                     leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
@@ -611,7 +611,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
               <div
                 className={cn(
-                  "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] lg:transition-transform"
+                  "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] not-print:lg:transition-transform print:h-[297mm] print:w-[210mm] print:rounded-none print:bg-white print:shadow-none"
                 )}
               >
                 <ClientOnly>
@@ -623,7 +623,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   )}
                 </ClientOnly>
               </div>
-              <Timeline className="[grid-area:barchart]" />
+              <Timeline className="[grid-area:barchart] print:hidden" />
             </div>
           </Providers>
         )}
