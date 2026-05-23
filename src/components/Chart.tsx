@@ -410,12 +410,12 @@ function NodeText({
   if (isCircularNode(d)) {
     // Hide curved text for small nodes
     if (isBlob(d.data)) {
-      if (d.r * 2 - bubblePadding > d.data.name.length * letterWidthForBlobText) {
+      if (textClipPathRadius > d.data.name.length * letterWidthForBlobText) {
         textShouldBeCentered = true
       }
 
       // For blobs in circular layout with straight text, check if text fits within blob height, as the rest is clipped
-      if (d.r * 2 - bubblePadding < letterHeightText) {
+      if (textClipPathRadius < letterHeightText) {
         return null
       }
     } else if (
