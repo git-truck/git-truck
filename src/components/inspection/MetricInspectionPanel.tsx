@@ -45,7 +45,7 @@ export function MetricInspectionPanel({
   const [infoOpen, setInfoOpen] = useState(true)
 
   return (
-    <div className={cn("mt-4 flex w-full flex-col gap-0", className)}>
+    <div className={cn("flex w-full flex-col gap-0", className)}>
       {title ? (
         <div className="flex w-full flex-row items-end justify-between align-bottom">
           <button

@@ -30,6 +30,8 @@ import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
 import type { ClickedObjectInfo, HexColor } from "~/shared/model"
 import type { loader } from "~/routes/api.metrics"
 import { useData } from "~/contexts/DataContext"
+import { CollapsibleHeader } from "~/components/CollapsibleHeader"
+import { InspectPanel } from "~/components/inspection/InspectPanel"
 
 export function MetricsInspection() {
   const submit = useSubmit()
@@ -166,35 +168,55 @@ export function MetricsInspection() {
   return (
     <>
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
-      <div className="grid grid-cols-2 gap-2">
-        {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
-          ([metric, { icon, data, description }]) => (
-            <MetricButton
-              key={metric}
-              icon={icon}
-              isCurrentMetric={metric === metricType}
-              color={objectColor && metric === metricType ? objectColor : undefined}
-              onClick={() => void setMetricType(metric)}
-            >
-              <p className="truncate text-xs font-normal opacity-70">{description}</p>
-              <p className="w-full truncate text-sm font-bold" title={data}>
-                {data}
-              </p>
-            </MetricButton>
-          )
+      <CollapsibleHeader
+        className="card"
+        title={() => (
+          <>
+            Metrics
+            <InspectPanel />
+          </>
         )}
-      </div>
-      {inspectionPanels.map((Panel, i) => (
-        <MetricInspectionPanel
-          key={i}
-          actions={Panel.actions}
-          metricMenuItems={toPanelMenuItems(Panel.menuItems)}
-          title={Panel.title ?? "default"}
-          description={Panel.description ?? "Description not provided."}
-        >
-          <Panel.content />
-        </MetricInspectionPanel>
-      ))}
+      >
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
+            ([metric, { icon, data, description }]) => (
+              <MetricButton
+                key={metric}
+                icon={icon}
+                isCurrentMetric={metric === metricType}
+                color={objectColor && metric === metricType ? objectColor : undefined}
+                onClick={() => void setMetricType(metric)}
+              >
+                <p className="truncate text-xs font-normal opacity-70">{description}</p>
+                <p className="w-full truncate text-sm font-bold" title={data}>
+                  {data}
+                </p>
+              </MetricButton>
+            )
+          )}
+        </div>
+      </CollapsibleHeader>
+      <CollapsibleHeader
+        className="card"
+        title={() => (
+          <>
+            Legend
+            <InspectPanel />
+          </>
+        )}
+      >
+        {inspectionPanels.map((Panel, i) => (
+          <MetricInspectionPanel
+            key={i}
+            actions={Panel.actions}
+            metricMenuItems={toPanelMenuItems(Panel.menuItems)}
+            title={Panel.title ?? "default"}
+            description={Panel.description ?? "Description not provided."}
+          >
+            <Panel.content />
+          </MetricInspectionPanel>
+        ))}
+      </CollapsibleHeader>
     </>
   )
 }
