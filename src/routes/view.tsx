@@ -557,41 +557,25 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "grid grid-rows-[auto_1fr] flex-col gap-4 lg:transition-transform",
+                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto px-2 lg:transition-transform",
                     leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
-                  <div className="flex flex-col gap-2 px-2">
-                    <h2 className="card__title">Visualization options</h2>
+                  <CollapsibleHeader className="card" title={() => "Visualization options"}>
                     <Options key={leftExpanded ? "expanded" : "collapsed"} />
-                  </div>
-                  <div className="hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto">
-                    <CollapsibleHeader
-                      title={() => (
-                        <>
-                          Actions <InspectPanel />
-                        </>
-                      )}
-                      className="card flex flex-col gap-1 px-2"
-                    >
-                      <InteractionButtons />
-                      {/* <div className="card rounded-xl">
-                        <h3 className="card__title">Actions</h3>
-                      </div> */}
-                    </CollapsibleHeader>
-                    <CollapsibleHeader
-                      className="card"
-                      title={() => (
-                        <>
-                          Metrics
-                          <InspectPanel />
-                        </>
-                      )}
-                    >
-                      <MetricsInspection />
-                    </CollapsibleHeader>
-                    <CommitsInspection className="card" />
-                  </div>
+                  </CollapsibleHeader>
+                  <CollapsibleHeader
+                    title={() => (
+                      <>
+                        Actions <InspectPanel />
+                      </>
+                    )}
+                    className="card"
+                  >
+                    <InteractionButtons />
+                  </CollapsibleHeader>
+                  <MetricsInspection />
+                  <CommitsInspection className="card" />
                 </aside>
               </Activity>
 

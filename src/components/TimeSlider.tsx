@@ -235,7 +235,11 @@ function TimeSlider({
                     }}
                     {...getHandleProps(handle.id)}
                   >
-                    <div className={cn("btn--primary flex h-full w-min items-center")}>
+                    <div
+                      className={cn(
+                        "bg-blue-primary text-primary-text-dark flex h-full w-min items-center rounded-full"
+                      )}
+                    >
                       <Icon path={mdiDotsVertical} size={0.5} />
                     </div>
                   </button>
