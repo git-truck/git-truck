@@ -110,12 +110,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     throw redirect(redirectUrl.toString())
   }
 
-  invariant(path, "path is required")
-  invariant(branch, "branch is required")
-  invariant(zoomPath, "zoomPath is required")
-  invariant(start !== null, "start is required")
-  invariant(end !== null, "end is required")
-
   const parentDirectoryPath = getBaseDirFromPath(path)
 
   return {
