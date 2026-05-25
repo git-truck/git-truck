@@ -137,9 +137,7 @@ ${generateVersionComparisonLink({ currentVersion: pkg.version, latestVersion: la
 }
 
 async function stopHandler() {
-  // TODO: When releasing v4, revert to just closing instead of clearing
-  // const promise = AnalysisManager.closeAllDBInstances()
-  const promise = AnalysisManager.clearAllCaches()
+  const promise = AnalysisManager.closeAllDBInstances()
   log.info("Shutting down server")
   server.close(console.error)
   log.info("Web server shut down")
