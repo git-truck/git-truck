@@ -52,7 +52,7 @@ import { abortSerializer } from "~/routes/api.abort"
 import MetadataDB from "~/server/MetadataDB"
 import { useMediaQuery } from "~/hooks"
 import { MetricsInspection } from "~/components/inspection/MetricsInspection"
-import { InteractionButtons } from "~/components/inspection/InteractionButtonts"
+import { InteractionButtons } from "~/components/inspection/InteractionButtons"
 import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
