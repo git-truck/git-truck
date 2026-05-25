@@ -27,6 +27,7 @@ export const LastChangedMetric: SegmentedMetric = {
   icon: mdiPulse,
   inspectionPanels: [
     {
+      id: "last-changed-panel",
       title: "Last Changed",
       content: SegmentLegend,
       description: "Files colored by time since last change (from latest commit).",

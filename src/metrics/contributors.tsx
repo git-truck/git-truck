@@ -11,6 +11,7 @@ export const ContributorsMetric: CategoricalMetric = {
   icon: mdiAccountGroup,
   inspectionPanels: [
     {
+      id: "contributors-panel",
       title: "Contributors",
       content: PointLegend,
       description:

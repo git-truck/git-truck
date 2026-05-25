@@ -143,6 +143,7 @@ export function MetricsInspection() {
         ...(showTopContributorSlider
           ? [
               {
+                id: "top-contributor-slider",
                 title: "Top Cutoff",
                 content: PercentageSlider,
                 description: "Set line-change threshold for top-churner (else Multiple Contributors).",
@@ -207,7 +208,7 @@ export function MetricsInspection() {
       >
         {inspectionPanels.map((Panel, i) => (
           <MetricInspectionPanel
-            key={i}
+            key={Panel.id ?? `panel-${i}`}
             actions={Panel.actions}
             metricMenuItems={toPanelMenuItems(Panel.menuItems)}
             title={Panel.title ?? "default"}

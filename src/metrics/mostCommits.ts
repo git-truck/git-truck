@@ -17,6 +17,7 @@ export const CommitsMetric: GradientedMetric = {
   description: "Files are colored based on the number of commits in the selected time range.",
   inspectionPanels: [
     {
+      id: "commits-panel",
       title: "Commits",
       content: GradientLegend,
       description: "Files colored by commit count.",

@@ -91,6 +91,7 @@ export type MetricPanelDropdownButtonConfig = {
 }
 
 export type MetricPanelConfig = {
+  id: string
   title: string
   content: React.ComponentType
   description: string

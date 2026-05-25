@@ -18,6 +18,7 @@ export const LinesChangedMetric: GradientedMetric = {
   description: "Files are colored based on how many line changes (additions and deletions) have been made to it.",
   inspectionPanels: [
     {
+      id: "lines-changed-panel",
       title: "Lines Changed",
       content: GradientLegend,
       description: "Files colored by total line changes.",
