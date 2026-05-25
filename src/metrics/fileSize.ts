@@ -43,6 +43,7 @@ export const FileSizeMetric: SegmentedMetric = {
   icon: mdiResize,
   inspectionPanels: [
     {
+      id: "file-size-panel",
       title: "File Size",
       content: SegmentLegend,
       description: "Files colored by their file size in bytes.",

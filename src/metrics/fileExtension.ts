@@ -14,6 +14,7 @@ export const TypeMetric: CategoricalMetric = {
   icon: mdiFileOutline,
   inspectionPanels: [
     {
+      id: "file-types-panel",
       title: "File Types",
       content: PointLegend,
       description: "Files colored by their extension. Select file-type(s) to highlight matching files.",

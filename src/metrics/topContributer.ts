@@ -13,6 +13,7 @@ export const TopContributorMetric: CategoricalMetric = {
   icon: mdiPodiumGold,
   inspectionPanels: [
     {
+      id: "top-contributor-panel",
       title: "Top Churner",
       content: PointLegend,
       description:
@@ -25,6 +26,7 @@ export const TopContributorMetric: CategoricalMetric = {
       ]
     },
     {
+      id: "churn-distribution-panel",
       title: "Churn Distribution",
       content: ContributorsInspection,
       description: "Shows the distribution of line-changes among contributors.",
