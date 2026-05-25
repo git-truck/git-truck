@@ -97,7 +97,7 @@
     "cz-conventional-changelog": "3.3.0",
     "d3": "7.9.0",
     "d3-hierarchy": "3.1.2",
-    "dotenv": "17.2.4",
+    "dotenv": "17.4.2",
     "eslint": "9.39.2",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
