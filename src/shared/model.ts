@@ -61,13 +61,6 @@ export type RawGitObject = {
   byteSize: number
 }
 
-export interface ArgsOptions {
-  log?: string
-  out?: string
-  branch?: string
-  path: string
-}
-
 type RefType = "Branches" | "Tags"
 
 export type GitRefs = Record<RefType, Record<string, string>>

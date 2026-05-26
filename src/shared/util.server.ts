@@ -4,10 +4,8 @@ import { exec, spawn } from "node:child_process"
 import path from "node:path"
 import { performance } from "node:perf_hooks"
 import { getLogLevel, log, LOG_LEVEL } from "~/server/log"
-import type { ArgsOptions } from "~/shared/model"
 import { Analysis } from "~/server/Analysis"
 import { formatMs, invariant, normalizePath, promiseHelper } from "~/shared/util.ts"
-import yargsParser from "yargs-parser"
 
 export function runProcess(dir: string, command: string, args: string[], serverInstance?: Analysis, index?: number) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
@@ -162,24 +160,6 @@ export async function getLatestVersion() {
   return latestVersion
 }
 
-export function parseArgs(rawArgs: string[] = process.argv.slice(2)) {
-  return yargsParser(rawArgs, {
-    configuration: {
-      "duplicate-arguments-array": false
-    }
-  })
-}
-
-export function getArgsWithDefaults(): ArgsOptions {
-  const cwd = process.cwd()
-  const args = parseArgs()
-  const tempArgs = {
-    path: cwd,
-    ...args
-  }
-
-  return tempArgs
-}
 export const getBaseDirFromPath = (repositoryPath: string) => normalizeAndResolvePath(path.dirname(repositoryPath))
 export const getRepoNameFromPath = (repositoryPath: string) => {
   const resolvedPath = path.resolve(repositoryPath)
