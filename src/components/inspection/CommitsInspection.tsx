@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { useSelectedCategories } from "~/state/stores/selection"
 import { useOptions } from "~/contexts/OptionsContext"
-import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { useData } from "~/contexts/DataContext"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
@@ -69,7 +69,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
       title={() => (
         <>
           Commits
-          <InspectPanel />
+          <ClickedObjectButton />
         </>
       )}
       contentClassName="flex flex-col gap-2"

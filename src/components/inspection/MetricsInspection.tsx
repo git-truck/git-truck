@@ -31,7 +31,7 @@ import type { ClickedObjectInfo, HexColor } from "~/shared/model"
 import type { loader } from "~/routes/api.metrics"
 import { useData } from "~/contexts/DataContext"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 export function MetricsInspection() {
   const submit = useSubmit()
@@ -174,7 +174,7 @@ export function MetricsInspection() {
         title={() => (
           <>
             Metrics
-            <InspectPanel />
+            <ClickedObjectButton />
           </>
         )}
       >
@@ -202,7 +202,7 @@ export function MetricsInspection() {
         title={() => (
           <>
             Legend
-            <InspectPanel />
+            <ClickedObjectButton />
           </>
         )}
       >

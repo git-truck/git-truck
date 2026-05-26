@@ -42,7 +42,7 @@ import { versionContext } from "~/root"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { SettingsButton } from "~/components/buttons/SettingsButton"
 import { GroupAuthorsButton } from "~/components/buttons/GroupContributorsButton"
-import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { Tooltip } from "~/components/Tooltip"
 import { CommitsInspection } from "~/components/inspection/CommitsInspection"
 import { invariant } from "~/shared/util"
@@ -567,7 +567,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <CollapsibleHeader
                     title={() => (
                       <>
-                        Actions <InspectPanel />
+                        Actions <ClickedObjectButton />
                       </>
                     )}
                     className="card"
