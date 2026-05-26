@@ -251,25 +251,24 @@ export function Chart() {
                 })
               : isSearchMatch
 
-            const getCategoriesFromNode: (go: GitObject) => string[] = (node: GitObject) => {
-              const cats: Array<string> =
+            const getCategoriesFromNode = (node: GitObject): string[] => {
+              return (
                 metricsData
                   .get(metricType)
                   ?.categoriesMap.get(node.path)
                   ?.map((c) => c.category) ?? []
-              return cats
+              )
             }
 
-            const categories = getCategoriesFromNode(d.data)
-            const isSelected =
-              selectedCategories.length > 0
-                ? // do we have contain a selected category?
-                  categories.some((c) => isCategorySelected(c)) ||
-                  // or we have a child that has a selected category selected
-                  (isTree(d.data) &&
-                    d.data.children.some((node) => getCategoriesFromNode(node).some((c) => isCategorySelected(c))))
-                : // or by default, if no categories are selected, everything should be considered selected
-                  true
+            const nodeMatchesSelectedCategory = (node: GitObject): boolean => {
+              if (getCategoriesFromNode(node).some((category) => isCategorySelected(category))) {
+                return true
+              }
+
+              return isTree(node) && node.children.some(nodeMatchesSelectedCategory)
+            }
+
+            const isSelected = selectedCategories.length === 0 || nodeMatchesSelectedCategory(d.data)
 
             const isClickedObject = d.data.path === clickedObjectPath
 
