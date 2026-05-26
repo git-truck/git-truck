@@ -47,7 +47,8 @@ export const getUsageText = () => {
   ])
 
   const longestArgLength = Object.entries(getArgOptions()).reduce((max, [name, opts]) => {
-    const argLength = `  ${"short" in opts ? `-${opts.short}, ` : ``}--${name}${name === "log" ? " <level>" : ""}`.length
+    const argLength = `  ${"short" in opts ? `-${opts.short}, ` : ``}--${name}${name === "log" ? " <level>" : ""}`
+      .length
     return Math.max(max, argLength)
   }, 0)
 
