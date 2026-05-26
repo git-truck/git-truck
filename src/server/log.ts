@@ -9,6 +9,14 @@ export const LOG_LEVEL = {
   DEBUG: 4
 } as const
 
+export const stringToLevelMap: Record<string, LOG_LEVEL> = {
+  SILENT: LOG_LEVEL.SILENT,
+  ERROR: LOG_LEVEL.ERROR,
+  WARN: LOG_LEVEL.WARN,
+  INFO: LOG_LEVEL.INFO,
+  DEBUG: LOG_LEVEL.DEBUG
+}
+
 type LOG_LEVEL_KEY = keyof typeof LOG_LEVEL
 export type LOG_LEVEL = (typeof LOG_LEVEL)[LOG_LEVEL_KEY]
 
@@ -23,14 +31,6 @@ const LOG_LEVEL_LABEL = {
 type LOG_LEVEL_LABEL = (typeof LOG_LEVEL_LABEL)[keyof typeof LOG_LEVEL_LABEL]
 
 const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
-
-const stringToLevelMap: Record<string, LOG_LEVEL> = {
-  SILENT: LOG_LEVEL.SILENT,
-  ERROR: LOG_LEVEL.ERROR,
-  WARN: LOG_LEVEL.WARN,
-  INFO: LOG_LEVEL.INFO,
-  DEBUG: LOG_LEVEL.DEBUG
-}
 
 function setIntialLogLevel() {
   const args = parseArgsWithDefaults()
