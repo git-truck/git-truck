@@ -73,8 +73,9 @@ export function PointLegend() {
 
   const metricCache = useMemo<MetricCache | undefined>(() => {
     const cacheKey = clickedObjectPath
+    const rootTree = data.databaseInfo.rootFileTree ?? data.databaseInfo.fileTree
 
-    const subtree = findInTree(data.databaseInfo.fileTree, (node) => node.path === clickedObjectPath)
+    const subtree = findInTree(rootTree, (node) => node.path === clickedObjectPath)
 
     if (!subtree) {
       return undefined

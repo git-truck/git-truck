@@ -41,7 +41,12 @@ export function Providers({ children, data }: { children: ReactNode; data: RepoD
 
   // Database info representing the current view (filtered + zoomed)
   const viewDatabaseInfo = useMemo(
-    () => ({ ...data.databaseInfo, fileTree: zoomedTree, objectPathMap }),
+    () => ({
+      ...data.databaseInfo,
+      fileTree: zoomedTree,
+      rootFileTree: data.databaseInfo.fileTree,
+      objectPathMap
+    }),
     [data.databaseInfo, objectPathMap, zoomedTree]
   )
 
