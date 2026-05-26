@@ -3,7 +3,7 @@ import type { ProgressData } from "~/components/LoadingIndicator"
 import type { Route } from "./+types/api.progress"
 import { loadViewSearchParams, viewSearchParamsConfig } from "~/shared/viewParams"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import { createSerializer, parseAsInteger , createLoader } from "nuqs/server"
+import { createSerializer, parseAsInteger, createLoader } from "nuqs/server"
 
 const POLLING_RATE = 1000
 const LONG_POLL_TIMEOUT = 30000
