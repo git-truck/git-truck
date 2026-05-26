@@ -8,6 +8,7 @@
     "src/cli.ts",
     "vite.config.ts",
     "react-router.config.ts",
+    "playwright.config.ts"
   ],
   "compilerOptions": {
     "composite": true,
