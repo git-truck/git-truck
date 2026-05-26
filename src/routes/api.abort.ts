@@ -1,4 +1,4 @@
-import { createSerializer, parseAsString , createLoader } from "nuqs/server"
+import { createSerializer, parseAsString, createLoader } from "nuqs/server"
 import type { Route } from "./+types/api.abort"
 import { AnalysisManager } from "~/server/AnalysisManager"
 
