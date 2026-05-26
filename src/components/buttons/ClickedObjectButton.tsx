@@ -1,13 +1,13 @@
 import { mdiClose, mdiFile, mdiFolder, mdiMagnifyMinusOutline, mdiSourceRepository } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { useClickedObject, useSetClickedObjectPath } from "~/state/stores/clicked-object"
+import { useBlobColor, useClickedObject, useSetClickedObjectPath } from "~/state/stores/clicked-object"
 import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/shared/viewParams"
-import { isRepositoryRoot } from "~/shared/util"
+import { isDarkColor, isRepositoryRoot } from "~/shared/util"
 import { useZoomToParent } from "~/hooks"
 
-export function ClickedObjectButton({ style = {} }: { style?: React.CSSProperties }) {
+export function ClickedObjectButton() {
   const [zoomPath] = useQueryState("zoomPath", viewSearchParamsConfig.zoomPath)
   const clickedObject = useClickedObject()
   const setClickedObject = useSetClickedObjectPath()
@@ -15,6 +15,7 @@ export function ClickedObjectButton({ style = {} }: { style?: React.CSSPropertie
   const isRepoRoot = isRepositoryRoot(clickedObject)
   const isZoomPath = clickedObject.path === zoomPath && !isRepoRoot
   const zoomOneLevelOut = useZoomToParent()
+  const objectColor = useBlobColor(clickedObject)
 
   if (!clickedObject || !data) return null
 
@@ -28,7 +29,10 @@ export function ClickedObjectButton({ style = {} }: { style?: React.CSSPropertie
             ? `Deselect and zoom out of ${clickedObject.name}`
             : `Deselect ${clickedObject.name}`
       }
-      style={style}
+      style={{
+        backgroundColor: objectColor ?? undefined,
+        color: objectColor && isDarkColor(objectColor) ? "#fff" : "#000"
+      }}
       onClick={() => {
         if (isZoomPath) {
           zoomOneLevelOut()

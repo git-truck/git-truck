@@ -1,6 +1,6 @@
 import { TimeRangePresetButtons } from "~/components/forms/TimeRangePresetButtons"
 import { TimeUnitForm } from "~/components/forms/TimeUnitForm"
-import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { useData } from "~/contexts/DataContext"
 import { isTree } from "~/shared/util"
 import { useClickedObject } from "~/state/stores/clicked-object"
@@ -16,7 +16,7 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
         title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}
       >
         Commit activity for
-        <InspectPanel />
+        <ClickedObjectButton />
       </h2>
       <div />
       <div className="flex items-center justify-end gap-4">

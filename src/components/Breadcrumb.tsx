@@ -10,7 +10,7 @@ import { getSep } from "~/shared/util"
 import { AnalysisInfo } from "~/components/GlobalInfo"
 import { browseSearchParamsConfig, browseSerializer } from "~/routes/browse"
 import { useClickedObjectNullable, useSetClickedObjectPath } from "~/state/stores/clicked-object"
-import { InspectPanel } from "~/components/inspection/InspectPanel"
+import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 type Segment = {
   type: "browse" | "zoom" | "filler" | "clicked"
@@ -165,7 +165,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       {clickedObject && clickedObject.path !== zoomPath && clickedObject.path !== data?.repo.repositoryName ? (
         <>
           <Icon path={mdiChevronDoubleRight} className="mx-1" size="1.25rem" />
-          <InspectPanel />
+          <ClickedObjectButton />
         </>
       ) : null}
     </div>
