@@ -21,6 +21,7 @@ export function ClickedObjectButton() {
 
   return (
     <button
+      type="button"
       className="btn btn--primary"
       title={
         isRepoRoot
@@ -33,7 +34,9 @@ export function ClickedObjectButton() {
         backgroundColor: objectColor ?? undefined,
         color: objectColor ? `contrast-color(${objectColor})` : undefined
       }}
-      onClick={() => {
+      onClick={(e) => {
+        e.preventDefault()
+
         if (isZoomPath) {
           zoomOneLevelOut()
           return
