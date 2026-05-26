@@ -16,13 +16,7 @@ import { AnalysisManager } from "~/server/AnalysisManager"
 import { type DatabaseInfo, type Ensure, type RepoData } from "~/shared/model"
 import { nowInSeconds } from "~/shared/utils/time"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
-import {
-  getArgsWithDefaults,
-  getBaseDirFromPath,
-  getRepoNameFromPath,
-  normalizeAndResolvePath,
-  openFile
-} from "~/shared/util.server"
+import { getBaseDirFromPath, getRepoNameFromPath, normalizeAndResolvePath, openFile } from "~/shared/util.server"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { Chart } from "~/components/Chart"
 import { HideFilesButton } from "~/components/buttons/HideFilesButton"
@@ -54,6 +48,7 @@ import { useMediaQuery } from "~/hooks"
 import { MetricsInspection } from "~/components/inspection/MetricsInspection"
 import { InteractionButtons } from "~/components/inspection/InteractionButtons"
 import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
+import { parseArgsWithDefaults } from "~/shared/utils/args"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -62,7 +57,7 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
 ]
 
 export const loader = async ({ request, context }: Route.LoaderArgs) => {
-  const argsRepositoryPath = normalizeAndResolvePath(getArgsWithDefaults().path)
+  const argsRepositoryPath = normalizeAndResolvePath(parseArgsWithDefaults().path)
 
   const versionInfo = context.get(versionContext)
 

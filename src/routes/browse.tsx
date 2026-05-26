@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { Suspense, Fragment, useRef, startTransition } from "react"
 import { cn } from "~/styling"
 import { join } from "node:path"
-import { getArgsWithDefaults, getRepoNameFromPath, normalizeAndResolvePath } from "~/shared/util.server.ts"
+import { getRepoNameFromPath, normalizeAndResolvePath } from "~/shared/util.server.ts"
 import { Icon } from "~/components/Icon"
 import {
   mdiSortAscending,
@@ -33,6 +33,7 @@ import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
 import { viewSerializer } from "~/shared/viewParams"
 import { ClearCacheForm } from "~/routes/clear-cache"
+import { parseArgsWithDefaults } from "~/shared/utils/args"
 
 const DEFAULT_COUNT = 10
 const DEFAULT_OFFSET = 0
@@ -73,7 +74,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
 
   let shouldRedirect = false
   const params = (
-    [["path", { param: rawPath, fallback: getArgsWithDefaults().path }]] as const
+    [["path", { param: rawPath, fallback: parseArgsWithDefaults().path }]] as const
   ).reduce<BrowseSearchParams>((params, [paramName, { param, fallback }]) => {
     if (!param) {
       shouldRedirect = true

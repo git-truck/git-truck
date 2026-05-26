@@ -5,22 +5,19 @@ import { fileURLToPath, pathToFileURL } from "url"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
-import { parseArgs, describeAsyncJob, getLatestVersion } from "~/shared/util.server.ts"
+import { describeAsyncJob, getLatestVersion } from "~/shared/util.server.ts"
 import { generateVersionComparisonLink, semverCompare, promiseHelper } from "~/shared/util.ts"
-
-import { log, setLogLevel } from "~/server/log"
+import { log } from "~/server/log"
 import { AnalysisManager } from "~/server/AnalysisManager"
+import { parseArgsWithDefaults } from "~/shared/utils/args"
 
-const args = parseArgs()
-if (args?.log) {
-  setLogLevel(args.log as string)
-}
+const args = parseArgsWithDefaults()
 
 // Soft clear the console
 process.stdout.write("\u001b[2J\u001b[0;0H")
 console.log()
 
-if (args.h || args.help) {
+if (args.help) {
   console.log()
   console.log(`See ${pkg.homepage} for usage instructions.`)
   console.log()
@@ -152,24 +149,24 @@ async function stopHandler() {
 
 async function onListen() {
   const url = `http://localhost:${PORT}`
-  const publicURL = process.env.PORTLESS_URL || url
+  const publicURL = new URL(process.env.PORTLESS_URL || url)
 
-  if (!args.headless && process.env.NODE_ENV === "development") {
+  publicURL.searchParams.set("path", args.path)
+  publicURL.pathname = "/view"
+
+  if (args.headless === undefined && process.env.NODE_ENV === "development") {
     args.headless = true
   }
 
   console.log(`Application available at ${publicURL}`)
 
   if (!args.headless) {
-    const openURL = publicURL
-    // + (extension && isValidURI(extension) ? extension : "")
-
-    log.debug(`Opening ${openURL}`)
+    log.debug(`Opening ${publicURL.toString()}`)
     await describeAsyncJob({
-      job: () => open(openURL),
+      job: () => open(publicURL.toString()),
       beforeMsg: "Opening Git Truck in your browser",
       afterMsg: "Opened Git Truck in your browser",
-      errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${openURL}\n`
+      errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${publicURL}\n`
     })
   }
 }
