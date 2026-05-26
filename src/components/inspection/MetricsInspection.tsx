@@ -7,7 +7,7 @@ import { Icon } from "~/components/Icon"
 import { UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
-import { dateFormatRelative, isDarkColor, isTree, last } from "~/shared/util"
+import { dateFormatRelative, isTree, last } from "~/shared/util"
 import { useClickedObject, useObjectColor, useClickedObjectPath } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { usePathIsRepositoryRoot, useViewAction } from "~/hooks"
@@ -235,20 +235,22 @@ function MetricButton({
   color?: HexColor
   onClick?: () => void
 }) {
+  const fadedColor = `hsl(from var(--color, var(--metric-button-bg)) h s l / var(--brightness))`
+
   return (
     <button
       type="button"
       className={cn(
-        "border-border flex h-full w-full cursor-pointer flex-row items-center justify-between gap-5 rounded border bg-[hsl(from_var(--color,var(--color-secondary-bg))_h_s_l/var(--brightness))] px-2 py-1 shadow-sm transition-colors [--brightness:1] hover:[--brightness:0.6] dark:bg-[hsl(from_var(--color,var(--color-secondary-bg-dark))_h_s_l/var(--brightness))]",
+        "border-border flex h-full w-full cursor-pointer flex-row items-center justify-between gap-5 rounded border bg-(--bg) px-2 py-1 shadow-sm transition-colors [--brightness:1] [--metric-button-bg:var(--color-secondary-bg)] hover:[--brightness:0.6] dark:[--metric-button-bg:var(--color-secondary-bg-dark)]",
         {
           "ring-primary ring-1": isCurrentMetric
-        },
-        color ? (isDarkColor(color) ? "text-white" : "text-black") : undefined
+        }
       )}
       style={
         {
-          // backgroundColor: color ? `hsl(from ${color} h s l / 0.7)` : undefined,
-          "--color": color
+          "--color": color,
+          "--bg": fadedColor,
+          color: `contrast-color(var(--bg))`
         } as CSSProperties
       }
       onClick={onClick}

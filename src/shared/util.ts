@@ -2,7 +2,6 @@ import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
 import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
 import { TimeUnitDurationsMs, type TimeUnit } from "~/shared/utils/time"
-import { getLuminance } from "a11y-contrast-color"
 
 export function dateFormatShort(epochTimeMillis: number, options: Intl.DateTimeFormatOptions = {}) {
   return new Date(epochTimeMillis).toLocaleString("en-gb", {
@@ -97,26 +96,6 @@ export const semverCompare = (a: string, b: string): number => {
   }
 
   return compare(validA, validB)
-}
-
-const brightnessCalculationCache = new Map<`#${string}|${number}`, boolean>()
-
-export const isDarkColor = (color: `#${string}`, threshold = 0.28): boolean => {
-  const cachedColorIsDark = brightnessCalculationCache.get((color + "|" + threshold) as `#${string}|${number}`)
-  if (cachedColorIsDark !== undefined) {
-    return cachedColorIsDark
-  }
-
-  // Verify that the color is a hex color
-  if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-    throw new Error(`Invalid hex color: ${color}`)
-  }
-
-  const luminance = getLuminance(colorConvert.hex.rgb(color))
-  const isDark = luminance < threshold
-  brightnessCalculationCache.set((color + "|" + threshold) as `#${string}|${number}`, isDark)
-
-  return isDark
 }
 
 const colorCache = new Map<string, `#${string}`>()

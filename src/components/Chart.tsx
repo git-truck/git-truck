@@ -22,7 +22,7 @@ import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import type { LayoutType } from "~/layouts/layouts"
 import { useOptions } from "~/contexts/OptionsContext"
-import { isDarkColor, isBlob, isTree, trimFilenameFromPath, isRepositoryRoot } from "~/shared/util"
+import { isBlob, isTree, trimFilenameFromPath, isRepositoryRoot } from "~/shared/util"
 import clsx from "clsx"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
@@ -394,8 +394,6 @@ function NodeText({
 
   if (children === null) return null
 
-  const isDark = isDarkColor(colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0])
-
   const textPathProps = {
     startOffset: isBubbleChart ? "50%" : undefined,
     dominantBaseline: isBubbleChart ? (isTree(d.data) ? "central" : "hanging") : "hanging",
@@ -506,10 +504,15 @@ function NodeText({
         y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
-          "font-bold": isTree(d.data),
-          "fill-primary-text-dark": isDark && isBlob(d.data),
-          "fill-primary-text": !isDark && isBlob(d.data)
+          "font-bold": isTree(d.data)
         })}
+        style={
+          isBlob(d.data)
+            ? {
+                fill: `contrast-color(${colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0]})`
+              }
+            : undefined
+        }
       >
         {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}
       </text>

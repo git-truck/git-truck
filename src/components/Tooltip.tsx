@@ -5,15 +5,7 @@ import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
-import {
-  allExceptFirst,
-  dateFormatRelative,
-  formatLargeNumber,
-  isBlob,
-  isDarkColor,
-  isRepositoryRoot,
-  isTree
-} from "~/shared/util"
+import { allExceptFirst, dateFormatRelative, formatLargeNumber, isBlob, isRepositoryRoot, isTree } from "~/shared/util"
 
 import { useMouse } from "~/hooks"
 import { cn } from "~/styling"
@@ -62,17 +54,12 @@ export function Tooltip({ className = "" }: { className?: string }) {
         {
           hidden: !visible,
           "font-bold": isTree(hoveredObject)
-        },
-        hoveredBlob && color
-          ? // ? // TODO: what to do for gradients?
-            isDarkColor(color)
-            ? "text-primary-text-dark"
-            : "text-primary-text"
-          : "text-primary-text-dark"
+        }
       )}
       style={{
         transform: visible ? `translateX(${xTransform}) translateY(${yTransform}) translateZ(0)` : "none",
-        backgroundColor: color ? `hsl(from ${color} h s l / 0.7)` : undefined
+        backgroundColor: color ? `hsl(from ${color} h s l / 0.7)` : undefined,
+        color: color ? `contrast-color(${color})` : undefined
       }}
     >
       {hoveredBarTooltip ? (

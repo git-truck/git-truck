@@ -4,7 +4,7 @@ import { useBlobColor, useClickedObject, useSetClickedObjectPath } from "~/state
 import { useData } from "~/contexts/DataContext"
 import { useQueryState } from "nuqs"
 import { viewSearchParamsConfig } from "~/shared/viewParams"
-import { isDarkColor, isRepositoryRoot } from "~/shared/util"
+import { isRepositoryRoot } from "~/shared/util"
 import { useZoomToParent } from "~/hooks"
 
 export function ClickedObjectButton() {
@@ -31,7 +31,7 @@ export function ClickedObjectButton() {
       }
       style={{
         backgroundColor: objectColor ?? undefined,
-        color: objectColor && isDarkColor(objectColor) ? "#fff" : "#000"
+        color: objectColor ? `contrast-color(${objectColor})` : undefined
       }}
       onClick={() => {
         if (isZoomPath) {
