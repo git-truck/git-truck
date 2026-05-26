@@ -1,4 +1,4 @@
-import { mdiChevronDoubleRight, mdiChevronRight, mdiSourceRepository } from "@mdi/js"
+import { mdiChevronDoubleRight, mdiChevronRight, mdiSourceRepository, mdiSourceRepositoryMultiple } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { useMemo, Fragment } from "react"
 import { cn } from "~/styling"
@@ -50,11 +50,11 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       ? []
       : [
           // Parent folder
-          // TODO: Reenable and fix browsing
           // {
           //   type: "browse",
           //   segment: data.repo.parentDirName ?? "",
           //   fullPath: data.repo.parentDirPath ?? "",
+          //   parentPath: "",
           //   showAnalysisInfo: false
           // } as const,
           // Repository root
@@ -109,7 +109,11 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
 
         const content = (
           <>
-            {isRepo ? <Icon path={mdiSourceRepository} /> : null}
+            {isRepo ? (
+              <Icon path={mdiSourceRepository} />
+            ) : zoom && type === "browse" ? (
+              <Icon path={mdiSourceRepositoryMultiple} />
+            ) : null}
             {segment}
           </>
         )
