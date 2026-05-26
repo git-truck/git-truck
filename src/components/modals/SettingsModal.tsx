@@ -5,6 +5,7 @@ import { mdiClockEdit, mdiCog, mdiContentCut, mdiFileTree, mdiFilter, mdiLabel, 
 import { useState, useTransition } from "react"
 import { relatedSizeMetric } from "~/components/Options"
 import { Modal } from "~/components/modals/Modal"
+import { ClearCacheForm } from "~/routes/clear-cache"
 
 export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const {
@@ -102,6 +103,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           Show only search matches
         </CheckboxWithLabel>
         <RenderCutOff />
+        <ClearCacheForm />
       </div>
     </Modal>
   )
