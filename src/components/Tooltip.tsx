@@ -1,4 +1,13 @@
-import { mdiChevronRight, mdiCircleSmall, mdiPlusMinusVariant, mdiPulse, mdiSourceCommit } from "@mdi/js"
+import {
+  mdiChevronRight,
+  mdiCircleSmall,
+  mdiFileOutline,
+  mdiFolderOutline,
+  mdiPlusMinusVariant,
+  mdiPulse,
+  mdiSourceCommit,
+  mdiSourceRepository
+} from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Fragment, useMemo, useRef } from "react"
 import type { GitBlobObject, DatabaseInfo } from "~/shared/model"
@@ -19,7 +28,7 @@ import {
   useHoveredObject
 } from "~/state/stores/hovered-object"
 import { Metrics } from "~/metrics/metrics"
-import { useBlobColor } from "~/state/stores/clicked-object"
+import { useBlobColor, useClickedObject } from "~/state/stores/clicked-object"
 import { LegendDot } from "~/components/util"
 
 export function Tooltip({ className = "" }: { className?: string }) {
@@ -97,6 +106,7 @@ export function Tooltip({ className = "" }: { className?: string }) {
 }
 
 function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBarTooltip }) {
+  const clickedObject = useClickedObject()
   const maxContributorsToShow = 5
   const [label, totalCommitLine, clickedCommitLine] = getHoveredBarTooltipLines(hoveredBarTooltip)
   const contributorsToShow = hoveredBarTooltip.contributors.slice(0, maxContributorsToShow)
@@ -106,17 +116,18 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
     <div className="flex w-max flex-col gap-1">
       <span className="font-bold">{label}</span>
       <span className="flex items-center gap-1">
-        <Icon path={mdiSourceCommit} color="currentColor" />
+        <Icon path={mdiSourceRepository} color="currentColor" />
         {totalCommitLine}
       </span>
       {clickedCommitLine ? (
         <span className="flex items-center gap-1">
-          <Icon path={mdiSourceCommit} color="currentColor" />
+          <Icon path={isBlob(clickedObject) ? mdiFileOutline : mdiFolderOutline} color="currentColor" />
           {clickedCommitLine}
         </span>
       ) : null}
       {contributorsToShow.length > 0 ? (
-        <div className="flex flex-col gap-1">
+        <div className="mt-2 flex flex-col gap-1">
+          <span className="font-bold opacity-80">Committers</span>
           {contributorsToShow.map((contributor) => (
             <span key={contributor.name} className="flex items-center gap-1">
               <LegendDot dotColor={contributor.color} shape="square" /> {contributor.name} (
