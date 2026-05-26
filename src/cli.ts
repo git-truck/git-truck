@@ -5,26 +5,25 @@ import { fileURLToPath, pathToFileURL } from "url"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
-import { describeAsyncJob, getLatestVersion } from "~/shared/util.server.ts"
+import { describeAsyncJob, getLatestVersion, normalizeAndResolvePath } from "~/shared/util.server.ts"
 import { generateVersionComparisonLink, semverCompare, promiseHelper } from "~/shared/util.ts"
 import { log } from "~/server/log"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import { parseArgsWithDefaults } from "~/shared/utils/args"
+import { getUsageText, parseArgsWithDefaults } from "~/shared/utils/args"
+import { GitService } from "~/server/git-service"
 
 const args = parseArgsWithDefaults()
 
-// Soft clear the console
-process.stdout.write("\u001b[2J\u001b[0;0H")
-console.log()
-
 if (args.help) {
-  console.log()
-  console.log(`See ${pkg.homepage} for usage instructions.`)
-  console.log()
+  console.log(getUsageText())
   process.exit(0)
 }
 
 console.log(`Git Truck version ${pkg.version}${await getUpdateMessage()}\n`)
+
+if (args.version) {
+  process.exit(0)
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BUILD_PATH = path.join(__dirname, "build/server/index.js")
@@ -152,7 +151,7 @@ async function onListen() {
   const publicURL = new URL(process.env.PORTLESS_URL || url)
 
   publicURL.searchParams.set("path", args.path)
-  publicURL.pathname = "/view"
+  publicURL.pathname = (await GitService.isValidGitRepo(normalizeAndResolvePath(args.path))) ? "/view" : "/browse"
 
   if (args.headless === undefined && process.env.NODE_ENV === "development") {
     args.headless = true
