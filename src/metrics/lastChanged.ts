@@ -44,7 +44,7 @@ export const LastChangedMetric: SegmentedMetric = {
     if (!epoch) {
       return "No activity in selected range"
     }
-    return dateFormatRelative(epoch)
+    return `${dateFormatRelative(epoch)} ago`
   },
 
   getCategories(obj, dbi) {
