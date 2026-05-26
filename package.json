@@ -139,7 +139,7 @@
     "vite": "8.0.14",
     "vitest": "4.1.7",
     "yargs-parser": "22.0.0",
-    "zustand": "5.0.11"
+    "zustand": "5.0.13"
   },
   "tsdown": {
     "entry": "./src/cli.ts",
