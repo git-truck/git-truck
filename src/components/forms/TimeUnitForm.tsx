@@ -19,7 +19,7 @@ export function TimeUnitForm() {
     >
       {TimeUnitValues.map((unit) => (
         <option key={unit} value={unit}>
-          {unit}
+          Per {unit}
         </option>
       ))}
     </select>
