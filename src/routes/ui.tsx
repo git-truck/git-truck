@@ -13,9 +13,6 @@ import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
 import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
 import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
-
-import { cn } from "~/styling"
-import { isDarkColor } from "~/shared/util"
 import { categoricalScheme } from "~/const"
 
 // Minimal mock RepoData for context providers
@@ -392,15 +389,8 @@ export default function UI() {
           value={threshold}
           onChange={(e) => setThreshold(parseFloat(e.target.value))}
         />
-        {(categoricalScheme as Array<HexColor>).map((c) => (
-          <div
-            key={c}
-            className={cn("h-8 w-full", {
-              "text-primary-text": !isDarkColor(c, threshold),
-              "text-primary-text-dark": isDarkColor(c, threshold)
-            })}
-            style={{ backgroundColor: c }}
-          >
+        {([...categoricalScheme, "#fff", "#000"] as Array<HexColor>).map((c) => (
+          <div key={c} className="h-8 w-full" style={{ backgroundColor: c, color: `contrast-color(${c})` }}>
             This is some text
           </div>
         ))}

@@ -33,7 +33,6 @@
         "@types/sha1": "1.1.5",
         "@types/yargs-parser": "21.0.3",
         "@vitejs/plugin-react": "6.0.2",
-        "a11y-contrast-color": "1.1.0",
         "ansi-colors": "4.1.3",
         "async-mutex": "0.5.0",
         "babel-plugin-react-compiler": "1.0.0",
@@ -909,8 +908,6 @@
     "@vitest/spy": ["@vitest/spy@4.1.7", "", {}, "sha512-kbkI5LMWakyuTIvs6fUJ5qdIVb1XVKsYJAT4OJ938cHMROYMSfmoQdZy0aaAnjbbc8F61vkoTqz/Az+/HiIu5Q=="],
 
     "@vitest/utils": ["@vitest/utils@4.1.7", "", { "dependencies": { "@vitest/pretty-format": "4.1.7", "convert-source-map": "^2.0.0", "tinyrainbow": "^3.1.0" } }, "sha512-T532WBu791cBxJlCl6SO+J14l81DQx6uQHm1bQbmCDY7nqlEIgkza/UFnSBNaUtSf41unldDFjdOBYEQC4b5Hw=="],
-
-    "a11y-contrast-color": ["a11y-contrast-color@1.1.0", "", {}, "sha512-u12+mM43bzVqwP/6LEdXi4JxAcOpj+9F2jO75jZuhD2iX9S3MOXM6XPFJxpzst2jFIMhQARa+hQUzPGxEW5oIQ=="],
 
     "accepts": ["accepts@2.0.0", "", { "dependencies": { "mime-types": "^3.0.0", "negotiator": "^1.0.0" } }, "sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng=="],
 
