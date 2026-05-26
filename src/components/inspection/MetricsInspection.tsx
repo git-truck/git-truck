@@ -199,6 +199,7 @@ export function MetricsInspection() {
       </CollapsibleHeader>
       <CollapsibleHeader
         className="card"
+        contentClassName="flex flex-col gap-2"
         title={() => (
           <>
             Legend
