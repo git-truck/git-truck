@@ -1,54 +1,60 @@
-# Git Truck 🚛 &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/git-truck/git-truck/blob/main/LICENSE) [![Git Truck on NPM](https://img.shields.io/npm/v/git-truck)](https://www.npmjs.com/git-truck)
+# Git Truck 🚛
 
-Git Truck is a tool that provides you with a truckload of visualizations of your git repository.
+[![Git Truck on NPMX](https://img.shields.io/npm/v/git-truck)](https://www.npmx.dev/git-truck)
 
-With Git Truck you can:
+Git Truck is a local, interactive visualization workspace for Git repositories, built for inspecting a codebase through structure, commit activity, authorship, and history.
 
-- See who worked on different parts of the project
-- Get an overview of the file structure
-- See where there is the most activity in your project
-- See how your project has looked at different points in time
+- Browse and zoom into the repository structure
+- See _who_ worked _where_, _when_ and _what_ they worked on
+- Spot active areas of the codebase
+- Explore how the codebase changed over time
 
-|                                                                                           |                                                                                               |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| <img src="./teaser-images/readme1.png" alt="Where has the most work been done recently?"> | <img src="./teaser-images/readme2.png" alt="Who worked on different subsystems in the past?"> |
+<p>
+  <img src="./teaser-images/readme1.png" alt="Where has the most work been done recently?" width="49%">
+  <img src="./teaser-images/readme2.png" alt="Who worked on different subsystems in the past?" width="49%">
+</p>
 
-You can read more about the features in the [feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser), [in papers about Git Truck](https://github.com/git-truck/papers/blob/master/README.md), or just try it and start exploring your projects!
+## Why Git Truck?
 
-## [Get started](#get-started)
+- Runs locally: no tracking, cloud storage, remote servers, ads, or subscription
+- Works offline
+- Works with any Git repository
 
-1. In your terminal, navigate to a git repository or a folder containing several repositories
+## Install
 
-2. Run the command `npm install -g git-truck@latest` to install or update Git Truck.
+Requires [Node.js](https://nodejs.org/en/) and [Git](https://git-scm.com/downloads).
 
-3. Now you can run Git Truck using the command `git truck`
+```sh
+npm install -g git-truck@latest
+```
 
-4. The application will now open in your default browser. Happy trucking!
+## Usage
 
-> [!NOTE]
-> To use Git Truck, you will need to have the following programs installed:
->
-> - [Node.js](https://nodejs.org/en/) 22.0.0 or newer and npm 10.0 or newer
-> - [git](https://git-scm.com/downloads) 2.29 or newer
->
-> Check your installed versions using `node --version`, `npm --version` and `git --version`.
+Open a repository:
 
-## [What makes Git Truck different?](#what-makes-git-truck-different)
+```sh
+cd path/to/repository
+git truck
+```
 
-🔒 Private by design
+Or pass a path directly:
 
-🏝️ Works offline
+```sh
+git truck path/to/repository
+git truck path/to/folder-with-repositories
+```
 
-🤷 Git provider agnostic - works with any git repository
+When the path contains multiple repositories, Git Truck opens a repository browser. Otherwise, it opens the visualization in your default browser.
 
-😊 No tracking, no ads, no cloud, no servers, no subscription
+Run `git truck --help` for advanced options.
 
-## Star History
+## Troubleshooting
 
-<a href="https://www.star-history.com/?repos=git-truck%2Fgit-truck&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=git-truck/git-truck&type=date&legend=top-left" />
- </picture>
-</a>
+- If the browser does not open automatically, copy or click the URL from the terminal.
+- Large repositories can take a little while to analyze the first time and may feel slow to navigate and interact with.
+
+## Learn more
+
+- [Feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser)
+- [Research papers](https://github.com/git-truck/papers/blob/master/README.md)
+- [Issue tracker](https://github.com/git-truck/git-truck/issues)
