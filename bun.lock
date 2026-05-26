@@ -14,10 +14,10 @@
         "@headlessui/react": "2.2.9",
         "@mdi/js": "7.4.47",
         "@playwright/test": "1.58.2",
-        "@react-router/dev": "7.15.0",
-        "@react-router/express": "7.15.0",
-        "@react-router/fs-routes": "7.15.0",
-        "@react-router/node": "7.15.0",
+        "@react-router/dev": "7.15.1",
+        "@react-router/express": "7.15.1",
+        "@react-router/fs-routes": "7.15.1",
+        "@react-router/node": "7.15.1",
         "@rolldown/plugin-babel": "0.2.2",
         "@tailwindcss/vite": "^4.3.0",
         "@types/bun": "1.3.10",
@@ -71,7 +71,7 @@
         "react-colorful": "5.6.1",
         "react-compound-slider": "3.4.0",
         "react-dom": "19.2.6",
-        "react-router": "7.15.0",
+        "react-router": "7.15.1",
         "react-router-devtools": "6.2.0",
         "react-tiny-popover": "8.1.6",
         "react-use-size": "5.0.1",
@@ -554,13 +554,13 @@
 
     "@react-aria/utils": ["@react-aria/utils@3.33.1", "", { "dependencies": { "@react-aria/ssr": "^3.9.10", "@react-stately/flags": "^3.1.2", "@react-stately/utils": "^3.11.0", "@react-types/shared": "^3.33.1", "@swc/helpers": "^0.5.0", "clsx": "^2.0.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1", "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1" } }, "sha512-kIx1Sj6bbAT0pdqCegHuPanR9zrLn5zMRiM7LN12rgRf55S19ptd9g3ncahArifYTRkfEU9VIn+q0HjfMqS9/w=="],
 
-    "@react-router/dev": ["@react-router/dev@7.15.0", "", { "dependencies": { "@babel/core": "^7.27.7", "@babel/generator": "^7.27.5", "@babel/parser": "^7.27.7", "@babel/plugin-syntax-jsx": "^7.27.1", "@babel/preset-typescript": "^7.27.1", "@babel/traverse": "^7.27.7", "@babel/types": "^7.27.7", "@react-router/node": "7.15.0", "@remix-run/node-fetch-server": "^0.13.0", "arg": "^5.0.1", "babel-dead-code-elimination": "^1.0.6", "chokidar": "^4.0.0", "dedent": "^1.5.3", "es-module-lexer": "^1.3.1", "exit-hook": "2.2.1", "isbot": "^5.1.11", "jsesc": "3.0.2", "lodash": "^4.17.21", "p-map": "^7.0.3", "pathe": "^1.1.2", "picocolors": "^1.1.1", "pkg-types": "^2.3.0", "prettier": "^3.6.2", "react-refresh": "^0.14.0", "semver": "^7.3.7", "tinyglobby": "^0.2.14", "valibot": "^1.2.0", "vite-node": "^3.2.2" }, "peerDependencies": { "@react-router/serve": "^7.15.0", "@vitejs/plugin-rsc": "~0.5.21", "react-router": "^7.15.0", "react-server-dom-webpack": "^19.2.3", "typescript": "^5.1.0 || ^6.0.0", "vite": "^5.1.0 || ^6.0.0 || ^7.0.0 || ^8.0.0", "wrangler": "^3.28.2 || ^4.0.0" }, "optionalPeers": ["@react-router/serve", "@vitejs/plugin-rsc", "react-server-dom-webpack", "typescript", "wrangler"], "bin": { "react-router": "bin.js" } }, "sha512-ZwUQu4KNZrViFqdeFWqh00Bk/QbLNvoWRDfjsqOp3oyuG3jSRLYnqRD3VAMK/FYMpL+s37ByT7XqqLXaF7Nw1g=="],
+    "@react-router/dev": ["@react-router/dev@7.15.1", "", { "dependencies": { "@babel/core": "^7.27.7", "@babel/generator": "^7.27.5", "@babel/parser": "^7.27.7", "@babel/plugin-syntax-jsx": "^7.27.1", "@babel/preset-typescript": "^7.27.1", "@babel/traverse": "^7.27.7", "@babel/types": "^7.27.7", "@react-router/node": "7.15.1", "@remix-run/node-fetch-server": "^0.13.0", "arg": "^5.0.1", "babel-dead-code-elimination": "^1.0.6", "chokidar": "^4.0.0", "dedent": "^1.5.3", "es-module-lexer": "^1.3.1", "exit-hook": "2.2.1", "isbot": "^5.1.11", "jsesc": "3.0.2", "lodash": "^4.17.21", "p-map": "^7.0.3", "pathe": "^1.1.2", "picocolors": "^1.1.1", "pkg-types": "^2.3.0", "prettier": "^3.6.2", "react-refresh": "^0.14.0", "semver": "^7.3.7", "tinyglobby": "^0.2.14", "valibot": "^1.2.0", "vite-node": "^3.2.2" }, "peerDependencies": { "@react-router/serve": "^7.15.1", "@vitejs/plugin-rsc": "~0.5.21", "react-router": "^7.15.1", "react-server-dom-webpack": "^19.2.3", "typescript": "^5.1.0 || ^6.0.0", "vite": "^5.1.0 || ^6.0.0 || ^7.0.0 || ^8.0.0", "wrangler": "^3.28.2 || ^4.0.0" }, "optionalPeers": ["@react-router/serve", "@vitejs/plugin-rsc", "react-server-dom-webpack", "typescript", "wrangler"], "bin": { "react-router": "bin.js" } }, "sha512-BlFEU7SjPQHJDfYuw5qJU3+p4wMPEvKpf5Kj64/rRzQQjncXzhzkIJ0xreAQSYgGwJWjIXIK9swOaeE2czhulw=="],
 
-    "@react-router/express": ["@react-router/express@7.15.0", "", { "dependencies": { "@react-router/node": "7.15.0" }, "peerDependencies": { "express": "^4.17.1 || ^5", "react-router": "7.15.0", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-WldQrI5FxbsTLztOqx0+c7248m8IDUchCUUX177I+qz9OMuLR9ueIqz53zBKCVQ+Zf7k6FyatwpoLmr/Wovalg=="],
+    "@react-router/express": ["@react-router/express@7.15.1", "", { "dependencies": { "@react-router/node": "7.15.1" }, "peerDependencies": { "express": "^4.17.1 || ^5", "react-router": "7.15.1", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-JDTaYp9Jcd6mNFdNT/ynNhT5wpMArJmXjlkIl5ZfjxsoX07x36pz+o+EUv818ya5hcq21MPozlqj0q04ApxODw=="],
 
-    "@react-router/fs-routes": ["@react-router/fs-routes@7.15.0", "", { "dependencies": { "minimatch": "^9.0.0" }, "peerDependencies": { "@react-router/dev": "^7.15.0", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-Bn0PvYQCpFm547UBc2hP6bI9Rv6i5ewHiVG+hZsPxkYH/txvTWwwF7b4lle7TaO/UeHA7J5rhlB2a8C4ubXO7w=="],
+    "@react-router/fs-routes": ["@react-router/fs-routes@7.15.1", "", { "dependencies": { "minimatch": "^9.0.0" }, "peerDependencies": { "@react-router/dev": "^7.15.1", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-rKRszgD0h9O4UrLJl3jWBBke3RghHxZp6Bc+JRc6nsuBt7hF0sT4V7Af3EoBLtUSo2hn75Vr4T++yJL4ADBNCA=="],
 
-    "@react-router/node": ["@react-router/node@7.15.0", "", { "dependencies": { "@mjackson/node-fetch-server": "^0.2.0" }, "peerDependencies": { "react-router": "7.15.0", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-SgvWaWF1n3u+bpXXZUW9BSd2p/NwkIYLz4SSeDYqoX5RkYX5rcI4cHHuNJXszPu+Dm9QIri4J9g/4EV3KfgiXQ=="],
+    "@react-router/node": ["@react-router/node@7.15.1", "", { "dependencies": { "@mjackson/node-fetch-server": "^0.2.0" }, "peerDependencies": { "react-router": "7.15.1", "typescript": "^5.1.0 || ^6.0.0" }, "optionalPeers": ["typescript"] }, "sha512-lv68RaqmIa/ZRlIrGcl79HimaqpU3yV1CFKnmItU+xqI+xn9g5fqsh2Vj2LdNjnlzJgVsRMEpnv00t/6RgDrgw=="],
 
     "@react-stately/flags": ["@react-stately/flags@3.1.2", "", { "dependencies": { "@swc/helpers": "^0.5.0" } }, "sha512-2HjFcZx1MyQXoPqcBGALwWWmgFVUk2TuKVIQxCbRq7fPyWXIl6VHcakCLurdtYC2Iks7zizvz0Idv48MQ38DWg=="],
 
@@ -1814,7 +1814,7 @@
 
     "react-remove-scroll-bar": ["react-remove-scroll-bar@2.3.8", "", { "dependencies": { "react-style-singleton": "^2.2.2", "tslib": "^2.0.0" }, "peerDependencies": { "@types/react": "*", "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q=="],
 
-    "react-router": ["react-router@7.15.0", "", { "dependencies": { "cookie": "^1.0.1", "set-cookie-parser": "^2.6.0" }, "peerDependencies": { "react": ">=18", "react-dom": ">=18" }, "optionalPeers": ["react-dom"] }, "sha512-HW9vYwuM8f4yx66Izy8xfrzCM+SBJluoZcCbww9A1TySax11S5Vgw6fi3ZjMONw9J4gQwngL7PzkyIpJJpJ7RQ=="],
+    "react-router": ["react-router@7.15.1", "", { "dependencies": { "cookie": "^1.0.1", "set-cookie-parser": "^2.6.0" }, "peerDependencies": { "react": ">=18", "react-dom": ">=18" }, "optionalPeers": ["react-dom"] }, "sha512-R8rl9HhgikFYoPJymnUtPXWbnDb3oget6lQnfIoupbt61aT9aOhRkDsY2XRhZRyX1Z/8a5sL74fXmFNm3NRK5A=="],
 
     "react-router-devtools": ["react-router-devtools@6.2.0", "", { "dependencies": { "@babel/core": "^7.28.5", "@babel/generator": "^7.28.5", "@babel/parser": "^7.28.5", "@babel/traverse": "^7.28.5", "@babel/types": "^7.28.5", "@radix-ui/react-accordion": "^1.2.12", "@tanstack/devtools-client": "^0.0.5", "@tanstack/devtools-event-client": "^0.4.0", "@tanstack/devtools-vite": "^0.4.1", "@tanstack/react-devtools": "^0.9.1", "chalk": "5.6.2", "clsx": "2.1.1", "framer-motion": "^12.23.24", "goober": "^2.1.18", "react-d3-tree": "^3.6.6", "react-hotkeys-hook": "^5.2.1", "react-tooltip": "^5.30.0" }, "optionalDependencies": { "@biomejs/cli-darwin-arm64": "^2.3.5", "@rollup/rollup-darwin-arm64": "^4.53.2", "@rollup/rollup-linux-x64-gnu": "^4.53.2" }, "peerDependencies": { "@types/react": ">=17", "@types/react-dom": ">=17", "react": ">=17", "react-dom": ">=17", "react-router": ">=7.0.0", "vite": ">=5.0.0 || >=6.0.0" } }, "sha512-YzaFAyKZEtTmWzBF/moKuMtEa8Hd/xhTtUCKarrhAbZMyR8S0OpCpN0pyKrNGNz7ueOc4jvvKdE9S6Q3UTotDg=="],
 
