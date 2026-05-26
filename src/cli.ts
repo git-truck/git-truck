@@ -147,6 +147,7 @@ async function stopHandler() {
     afterMsg: "Successfully stopped Git Truck",
     errorMsg: "Failed to stop Git Truck"
   })
+  process.exit(0)
 }
 
 async function onListen() {
