@@ -1,6 +1,6 @@
 import { mdiDeleteForever } from "@mdi/js"
 import { Icon } from "~/components/Icon"
-import { href, redirect, useFetcher, useLocation } from "react-router"
+import { Form, href, redirect, useLocation } from "react-router"
 import { AnalysisManager } from "~/server/AnalysisManager"
 import type { Route } from "./+types/clear-cache"
 import { cn } from "~/styling"
@@ -29,19 +29,12 @@ export function ClearCacheForm({ redirectPath, className = "" }: { redirectPath?
       redirect: redirectPath ?? location.pathname + location.search
     }).toString()
 
-  const fetcher = useFetcher()
-  const isTransitioning = fetcher.state !== "idle"
-
   return (
-    <fetcher.Form action={formAction} method="post">
-      <button
-        disabled={isTransitioning}
-        className={cn("btn btn--danger", className)}
-        title="Click here if you are experiencing issues"
-      >
+    <Form reloadDocument action={formAction} method="post">
+      <button className={cn("btn btn--danger", className)} title="Click here if you are experiencing issues">
         <Icon path={mdiDeleteForever} className="hover-swap inline-block h-full" />
-        {isTransitioning ? "Clearing..." : "Clear cache"}
+        Clear cache
       </button>
-    </fetcher.Form>
+    </Form>
   )
 }
