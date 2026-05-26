@@ -5,12 +5,12 @@ import { fileURLToPath, pathToFileURL } from "url"
 import pkg from "../package.json" with { type: "json" }
 import getPort, { portNumbers } from "get-port"
 import open from "open"
-import { describeAsyncJob, getLatestVersion, normalizeAndResolvePath } from "~/shared/util.server.ts"
-import { generateVersionComparisonLink, semverCompare, promiseHelper } from "~/shared/util.ts"
-import { log } from "~/server/log"
-import { AnalysisManager } from "~/server/AnalysisManager"
-import { getUsageText, parseArgsWithDefaults } from "~/shared/utils/args"
-import { GitService } from "~/server/git-service"
+import { describeAsyncJob, getLatestVersion, normalizeAndResolvePath } from "./shared/util.server.ts"
+import { generateVersionComparisonLink, semverCompare, promiseHelper } from "./shared/util.ts"
+import { log } from "./server/log.ts"
+import { AnalysisManager } from "./server/AnalysisManager.ts"
+import { getUsageText, parseArgsWithDefaults } from "./shared/utils/args.ts"
+import { GitService } from "./server/git-service.ts"
 
 const args = parseArgsWithDefaults()
 

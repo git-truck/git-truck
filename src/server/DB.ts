@@ -9,11 +9,11 @@ import type {
   RawGitObjectType,
   RenameEntry,
   RenameInterval
-} from "~/shared/model"
-import { getTimeIntervals } from "~/shared/util.ts"
+} from "../shared/model"
+import { getTimeIntervals } from "../shared/util.ts"
 import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
-import { log } from "~/server/log"
-import { nowInSeconds, type TimeUnit } from "~/shared/utils/time"
+  import { log } from "../server/log.ts"
+import { nowInSeconds, type TimeUnit } from "../shared/utils/time.ts"
 
 export default class DB {
   private instance: DuckDBInstance

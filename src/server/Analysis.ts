@@ -1,6 +1,6 @@
-import DB from "~/server/DB"
-import { getCoAuthors } from "~/server/coauthors"
-import { GitService } from "~/server/git-service"
+import DB from "../server/DB.ts"
+import { getCoAuthors } from "../server/coauthors.ts"
+import { GitService } from "../server/git-service.ts"
 import type {
   GitBlobObject,
   GitObject,
@@ -14,17 +14,17 @@ import type {
   FullCommitDTO,
   RepoData,
   DatabaseInfo
-} from "~/shared/model.ts"
-import { log } from "~/server/log"
-import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
-import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
+} from "../shared/model.ts"
+import { log } from "../server/log.ts"
+import { analyzeRenamedFile, promiseHelper } from "../shared/util.ts"
+import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "../shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
-import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
-import MetadataDB from "~/server/MetadataDB"
-import { getRepoNameFromPath } from "~/shared/util.server.ts"
+import type { InvocationReason } from "../shared/RefreshPolicy.ts"
+  import MetadataDB from "../server/MetadataDB.ts"
+import { getRepoNameFromPath } from "../shared/util.server.ts"
 import ignore from "ignore"
-import { type ViewSearchParams } from "~/shared/viewParams"
-import { DisposableMutex } from "~/server/DisposableMutex"
+import { type ViewSearchParams } from "../shared/viewParams.ts"
+import { DisposableMutex } from "../server/DisposableMutex.ts"
 
 type FileTreeResult = {
   rootTree: GitTreeObject

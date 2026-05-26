@@ -2,15 +2,15 @@ import { DuckDBConnection, DuckDBInstance } from "@duckdb/node-api"
 import { existsSync } from "fs"
 import { dirname, resolve } from "path"
 import { diff } from "semver"
-import { log } from "~/server/log"
-import MetadataDB from "~/server/MetadataDB"
-import { Analysis, type AnalysisStatus } from "~/server/Analysis"
+import { log } from "../server/log.ts"
+import MetadataDB from "../server/MetadataDB.ts"
+import { Analysis, type AnalysisStatus } from "../server/Analysis.ts"
 import pkg from "../../package.json" with { type: "json" }
 import os from "os"
-import { GitService } from "~/server/git-service"
-import DB from "~/server/DB"
+import { GitService } from "../server/git-service.ts"
+import DB from "../server/DB.ts"
 import fs from "fs/promises"
-import { DisposableMutex } from "~/server/DisposableMutex"
+import { DisposableMutex } from "../server/DisposableMutex.ts"
 
 export class AnalysisManager {
   private static CACHE_FOLDER = resolve(os.tmpdir(), "git-truck-cache")

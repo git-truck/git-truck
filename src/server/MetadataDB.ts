@@ -1,8 +1,8 @@
 import { dirname, resolve } from "path"
 import os from "os"
 import { promises as fs } from "fs"
-import type { CompletedResult } from "~/shared/model"
-import { DisposableMutex } from "~/server/DisposableMutex"
+import type { CompletedResult } from "../shared/model.ts"
+import { DisposableMutex } from "../server/DisposableMutex.ts"
 
 type MetadataCompletion = {
   hash: string

@@ -27,8 +27,17 @@ import { GitService } from "~/server/git-service"
 import { versionContext } from "~/root"
 import { Breadcrumb } from "~/components/Breadcrumb"
 import { useKey } from "~/hooks"
-import { createLoader, parseAsInteger, parseAsString, parseAsStringLiteral } from "nuqs/server"
-import { createSerializer, parseAsBoolean, parseAsNumberLiteral, useQueryStates, type inferParserType } from "nuqs"
+import {
+  createLoader,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  createSerializer,
+  parseAsBoolean,
+  parseAsNumberLiteral,
+  type inferParserType
+} from "nuqs/server"
+import { useQueryStates } from "nuqs"
 import { readdir } from "node:fs/promises"
 import { iconToURL, normalizePath, promiseHelper } from "~/shared/util"
 import { viewSerializer } from "~/shared/viewParams"

@@ -1,5 +1,5 @@
 import { parseArgs, type ParseArgsConfig } from "node:util"
-import { stringToLevelMap } from "~/server/log"
+import { stringToLevelMap } from "../../server/log.ts"
 
 const getArgOptions = () =>
   ({

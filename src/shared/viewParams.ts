@@ -6,7 +6,7 @@ import {
   parseAsStringLiteral,
   type inferParserType
 } from "nuqs/server"
-import { TimeUnitValues, type TimeUnit } from "~/shared/utils/time"
+import { TimeUnitValues, type TimeUnit } from "../shared/utils/time.ts"
 
 export const viewSearchParamsConfig = {
   path: parseAsString.withOptions({ shallow: false }),

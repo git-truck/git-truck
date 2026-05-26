@@ -1,7 +1,7 @@
 import { compare, valid, clean } from "semver"
 import colorConvert from "color-convert"
-import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "~/shared/model"
-import { TimeUnitDurationsMs, type TimeUnit } from "~/shared/utils/time"
+import type { GitBlobObject, GitTreeObject, RenameEntry, RawGitObject } from "../shared/model.ts"
+import { TimeUnitDurationsMs, type TimeUnit } from "../shared/utils/time.ts"
 
 export function dateFormatShort(epochTimeMillis: number, options: Intl.DateTimeFormatOptions = {}) {
   return new Date(epochTimeMillis).toLocaleString("en-gb", {

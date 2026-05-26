@@ -1,5 +1,5 @@
 import c from "ansi-colors"
-import { parseArgsWithDefaults } from "~/shared/utils/args"
+import { parseArgsWithDefaults } from "../shared/utils/args.ts"
 
 export const LOG_LEVEL = {
   SILENT: 0,

@@ -3,9 +3,9 @@ import { createSpinner } from "nanospinner"
 import { exec, spawn } from "node:child_process"
 import path from "node:path"
 import { performance } from "node:perf_hooks"
-import { getLogLevel, log, LOG_LEVEL } from "~/server/log"
-import { Analysis } from "~/server/Analysis"
-import { formatMs, invariant, normalizePath, promiseHelper } from "~/shared/util.ts"
+import { getLogLevel, log, LOG_LEVEL } from "../server/log.ts"
+import { Analysis } from "../server/Analysis.ts"
+import { formatMs, invariant, normalizePath, promiseHelper } from "../shared/util.ts"
 
 export function runProcess(dir: string, command: string, args: string[], serverInstance?: Analysis, index?: number) {
   log.debug(`exec ${dir} $ ${command} ${args.join(" ")}`)
