@@ -4,11 +4,11 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
 import { href, useFetcher, useSubmit } from "react-router"
 import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { Icon } from "~/components/Icon"
-import { UNKNOWN_CATEGORY } from "~/const"
+import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
 import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isTree, last } from "~/shared/util"
-import { useClickedObject, useObjectColor, useClickedObjectPath } from "~/state/stores/clicked-object"
+import { useClickedObject, useClickedObjectPath, useBlobColor } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { usePathIsRepositoryRoot, useViewAction } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
@@ -45,7 +45,7 @@ export function MetricsInspection() {
 
   const { data, load, reset } = useFetcher<typeof loader>()
 
-  const objectColor = useObjectColor(clickedObject, data ?? null)
+  const objectColor = useBlobColor(clickedObject) ?? missingInMapColor
 
   const clickedObjectPath = useClickedObjectPath()
   const isRepo = usePathIsRepositoryRoot(clickedObjectPath)
