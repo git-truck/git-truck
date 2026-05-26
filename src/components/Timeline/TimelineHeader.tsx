@@ -10,20 +10,18 @@ export function TimelineHeader({ children }: { children?: React.ReactNode }) {
   const data = useData()
 
   return (
-    <div className="card__title grid w-full grid-cols-[1fr_max-content_1fr] items-center justify-between gap-4">
+    <div className="card__title flex w-full items-center justify-between gap-4">
       <h2
         className="flex items-center gap-2"
         title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}
       >
-        Commit activity for
-        <ClickedObjectButton />
+        <div className="truncate">Commit activity</div>
       </h2>
-      <div />
+      <ClickedObjectButton />
+
       <div className="flex items-center justify-end gap-4">
-        <div className="flex items-start">
-          Per
-          <TimeUnitForm />
-        </div>
+        <TimeUnitForm />
+
         {children}
         <TimeRangePresetButtons unit={data.databaseInfo.commitCountPerTimeIntervalUnit} />
       </div>
