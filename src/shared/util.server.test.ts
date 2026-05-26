@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import path from "node:path"
-import { getBaseDirFromPath, getRepoNameFromPath, parseArgs, getArgsWithDefaults } from "~/shared/util.server"
+import { getBaseDirFromPath, getRepoNameFromPath } from "~/shared/util.server"
+import { parseArgsWithDefaults } from "./utils/args"
 
 describe("getBaseDirFromPath", () => {
   it("should return parent directory of repository path", () => {
@@ -34,11 +35,10 @@ describe("getRepoNameFromPath", () => {
 
 describe("parseArgs", () => {
   it("should parse a provided args array", () => {
-    const parsed = parseArgs(["--path", "some/repo", "--flag", "value", "positional"])
+    const parsed = parseArgsWithDefaults(["--headless", "--log", "value", "some/repo"])
+    expect(parsed.headless).toBe(true)
+    expect(parsed.log).toBe("value")
     expect(parsed.path).toBe("some/repo")
-    expect(parsed.flag).toBe("value")
-    expect(Array.isArray(parsed._)).toBe(true)
-    expect(parsed._[0]).toBe("positional")
   })
 })
 
@@ -48,7 +48,7 @@ describe("getArgsWithDefaults", () => {
     try {
       // simulate invocation with no extra args
       process.argv = [process.argv[0], process.argv[1]]
-      const args = getArgsWithDefaults()
+      const args = parseArgsWithDefaults()
       expect(args.path).toBe(process.cwd())
     } finally {
       process.argv = originalArgv

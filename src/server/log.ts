@@ -1,4 +1,5 @@
 import c from "ansi-colors"
+import { parseArgsWithDefaults } from "~/shared/utils/args"
 
 export const LOG_LEVEL = {
   SILENT: 0,
@@ -31,22 +32,9 @@ const stringToLevelMap: Record<string, LOG_LEVEL> = {
   DEBUG: LOG_LEVEL.DEBUG
 }
 
-// const { ERROR, WARN, INFO, DEBUG } = LOG_LEVEL_LABEL
-
 function setIntialLogLevel() {
-  if (typeof process.env.LOG_LEVEL === "string") {
-    setTimeout(() => {
-      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
-    })
-    return stringToLevelMap[process.env.LOG_LEVEL.toUpperCase()]
-  }
-  if (typeof process.env.LOG_LEVEL === "number") {
-    setTimeout(() => {
-      log.debug(`Setting log level to ${process.env.LOG_LEVEL} from environment variable`)
-    })
-    return process.env.LOG_LEVEL
-  }
-  return null
+  const args = parseArgsWithDefaults()
+  return args.log ? (stringToLevelMap[args.log.toUpperCase()] ?? null) : null
 }
 
 let logLevel: LOG_LEVEL | null = setIntialLogLevel()
