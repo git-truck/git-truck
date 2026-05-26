@@ -28,7 +28,7 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
-import { useIsCategorySelected as useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
+import { useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
 import {
   useBlobColors,
   useSetClickedObjectPath,
@@ -139,6 +139,33 @@ export function Chart() {
   const DOUBLE_CLICK_DELAY = 300
   const getPathFromEventTarget = (target: EventTarget | null) =>
     target instanceof Element ? target.closest<SVGElement>("[data-path]")?.dataset.path : undefined
+
+  const matchingPaths = useMemo(() => {
+    const matches = new Set<string>()
+    const categoryMap = metricsData.get(metricType)?.categoriesMap
+
+    if (selectedCategories.length === 0 || !categoryMap) return matches
+
+    const visit = (node: GitObject): boolean => {
+      const selfMatches = categoryMap.get(node.path)?.some(({ category }) => isCategorySelected(category)) ?? false
+      let childMatches = false
+
+      if (isTree(node)) {
+        for (const child of node.children) {
+          if (visit(child)) childMatches = true
+        }
+      }
+
+      const nodeMatches = selfMatches || childMatches
+
+      if (nodeMatches) matches.add(node.path)
+
+      return nodeMatches
+    }
+
+    visit(filetree)
+    return matches
+  }, [filetree, metricsData, metricType, selectedCategories, isCategorySelected])
 
   return (
     <div
@@ -251,24 +278,7 @@ export function Chart() {
                 })
               : isSearchMatch
 
-            const getCategoriesFromNode = (node: GitObject): string[] => {
-              return (
-                metricsData
-                  .get(metricType)
-                  ?.categoriesMap.get(node.path)
-                  ?.map((c) => c.category) ?? []
-              )
-            }
-
-            const nodeMatchesSelectedCategory = (node: GitObject): boolean => {
-              if (getCategoriesFromNode(node).some((category) => isCategorySelected(category))) {
-                return true
-              }
-
-              return isTree(node) && node.children.some(nodeMatchesSelectedCategory)
-            }
-
-            const isSelected = selectedCategories.length === 0 || nodeMatchesSelectedCategory(d.data)
+            const isSelected = selectedCategories.length === 0 || matchingPaths.has(d.data.path)
 
             const isClickedObject = d.data.path === clickedObjectPath
 
