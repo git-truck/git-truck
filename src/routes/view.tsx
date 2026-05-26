@@ -431,16 +431,21 @@ async function analyze(
 }
 
 export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, dataPromise } }: Route.ComponentProps) {
-  const [{ leftExpanded }, dispatch] = useReducer(
+  const [{ leftExpanded, optionsRevision }, dispatch] = useReducer(
     (prevState, action: "toggleLeft") => {
       switch (action) {
         case "toggleLeft": {
-          return { leftExpanded: !prevState.leftExpanded }
+          const leftExpanded = !prevState.leftExpanded
+          return {
+            leftExpanded,
+            optionsRevision: leftExpanded ? prevState.optionsRevision + 1 : prevState.optionsRevision
+          }
         }
       }
     },
     {
-      leftExpanded: true
+      leftExpanded: true,
+      optionsRevision: 0
     }
   )
 
@@ -562,7 +567,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   )}
                 >
                   <CollapsibleHeader className="card" title={() => "Visualization options"}>
-                    <Options key={leftExpanded ? "expanded" : "collapsed"} />
+                    <Options key={optionsRevision} />
                   </CollapsibleHeader>
                   <CollapsibleHeader
                     title={() => (
