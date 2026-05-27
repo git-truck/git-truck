@@ -57,7 +57,7 @@
     "release": "bun run build && bunx @changesets/cli publish"
   },
   "dependencies": {
-    "@duckdb/node-api": "1.5.1-r.1"
+    "@duckdb/node-api": "1.5.1-r.2"
   },
   "devDependencies": {
     "@babel/core": "7.29.0",
