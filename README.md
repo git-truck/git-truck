@@ -9,10 +9,13 @@ Git Truck is a local, interactive visualization workspace for Git repositories, 
 - Spot active areas of the codebase
 - Explore how the codebase changed over time
 
-<p>
-  <img src="./teaser-images/readme1.png" alt="Where has the most work been done recently?" width="49%">
-  <img src="./teaser-images/readme2.png" alt="Who worked on different subsystems in the past?" width="49%">
-</p>
+Git Truck can assist you in quickly answering questions like:
+
+| _How is the repository structured?_                                                       | _Where has the project been active recently?_                                                          |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| ![Example of file type visualization](./docs/examples/npmx%20-%20file%20type.png)         | ![Example of most changed files recently](./docs/examples/npmx%20-%20commits%20-%20last%20changed.png) |
+| _**Who has changed the most lines per file?**_                                            | _**Where and when have specific contributors worked?**_                                                |
+| ![Inspecting specific contributor activity](./docs/examples/npmx%20-%20top%20churner.png) | ![Example of the contributors metric](./docs/examples/npmx%20-%20specific%20contributors.png)          |
 
 ## Why Git Truck?
 
@@ -55,6 +58,6 @@ Run `git truck --help` for advanced options.
 
 ## Learn more
 
-- [Feature overview](https://git-truck.github.io/git-truck/GitTruckTeaser)
+- [Feature overview](https://git-truck.github.io/git-truck/docs)
 - [Research papers](https://github.com/git-truck/papers/blob/master/README.md)
 - [Issue tracker](https://github.com/git-truck/git-truck/issues)
