@@ -40,7 +40,8 @@ jobs:
       - name: Auto format
         run: bun --bun run format:write
 
-      - name: Commit and push changes
+      - name: Commit changes
+        id: commit_changes
         shell: bash
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
@@ -48,7 +49,15 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -A
             git commit -m "style: auto-fix formatting and lint"
-            git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changes to commit"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
           fi
+      - name: Verify checks and push
+        if: steps.commit_changes.outputs.committed == 'true'
+        shell: bash
+        run: |
+          bun --bun run check
+          bun --bun run build
+          git push
