@@ -100,7 +100,7 @@ const Dot = ({
       className={cn("size-4", className)}
       onClick={props.onClick}
     >
-      <svg viewBox="0 0 16 16">
+      <svg viewBox="0 0 16 16" className="size-4">
         <rect
           className={cn("transition-all", className)}
           width="16"

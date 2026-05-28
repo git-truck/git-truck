@@ -1,12 +1,9 @@
-import { useFetchers, useNavigation } from "react-router"
 import drivingTruckGif from "~/assets/drivingTruck_32x.gif"
+import { useIsLoading } from "~/hooks"
 import { cn } from "~/styling"
 
 export function CompactLoadingIndicator() {
-  const fetchers = useFetchers()
-
-  const navigation = useNavigation()
-  const isLoading = [navigation, ...fetchers].some((fetcher) => fetcher.state !== "idle")
+  const isLoading = useIsLoading()
 
   return (
     <div

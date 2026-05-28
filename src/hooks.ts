@@ -1,7 +1,7 @@
 import { useQueryState } from "nuqs"
 import type { RefObject } from "react"
 import { useState, useEffect, useMemo, useSyncExternalStore, useCallback } from "react"
-import { href, useLocation, useSubmit } from "react-router"
+import { href, useFetchers, useLocation, useNavigation, useSubmit } from "react-router"
 
 import { useComponentSize as useCompSize } from "react-use-size/src/useComponentSize"
 import { viewSearchParamsConfig } from "~/shared/viewParams"
@@ -139,4 +139,13 @@ export const useZoomToParent = () => {
 export const usePathIsRepositoryRoot = (path: string | null = null): boolean => {
   const data = useData()
   return path === data.repo.repositoryName
+}
+
+export const useIsLoading = () => {
+  const fetchers = useFetchers()
+  const navigation = useNavigation()
+
+  const isLoading = [navigation, ...fetchers].some((fetcher) => fetcher.state !== "idle")
+
+  return isLoading
 }

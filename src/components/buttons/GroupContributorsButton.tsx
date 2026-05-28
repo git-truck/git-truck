@@ -3,12 +3,15 @@ import { useState } from "react"
 import { useNavigation } from "react-router"
 import { Icon } from "~/components/Icon"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
+import { useIsLoading } from "~/hooks"
 import { cn } from "~/styling"
 
 export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
+  const isLoading = useIsLoading()
   const [open, setOpen] = useState(false)
   const { formData } = useNavigation()
   const isGroupingContributors = formData?.has("contributorGroups") === true
+
   return (
     <>
       <button
@@ -17,7 +20,7 @@ export function GroupAuthorsButton({ compact = false }: { compact?: boolean }) {
         })}
         title={isGroupingContributors ? "Grouping contributors... " : "Group contributors"}
         aria-label="Group contributors"
-        disabled={isGroupingContributors}
+        disabled={isGroupingContributors || isLoading}
         onClick={() => setOpen(true)}
       >
         <Icon path={mdiAccountMultiple} />
