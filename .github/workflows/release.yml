@@ -1,40 +1,57 @@
 name: Release
-
+permissions: {}
 on:
   push:
     branches:
       - main
-
-concurrency: ${{ github.workflow }}-${{ github.ref }}
-
-permissions:
-  contents: write
-  id-token: write
-  pull-requests: write
-
 jobs:
-  release:
-    name: Release
+  test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v6
-
-      - name: Setup Bun and install dependencies
-        uses: ./.github/actions/setup-bun-install
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
-          node-version: 22
-
-      - name: Create Release Pull Request or publish to npm
-        uses: changesets/action@v1
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979
         with:
-          version: bunx @changesets/cli version
-          publish: bun run release
-          title: Version packages
-          commit: Version packages
+          bun-version: latest
+      - name: Install dependencies
+        run: bun ci --ignore-scripts
+      - name: Run tests
+        run: bun test src
+  publish:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979
+        with:
+          bun-version: latest
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 24
+      - name: Update NPM
+        run: npm install -g npm@11.16.0
+      - name: Install dependencies
+        run: bun ci --ignore-scripts
+      - run: bun run build
+      - name: Create Release or Publish
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
+        with:
+          # publish: bunx changeset publish
+          publish: npm stage publish --provenance --access public
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          NPM_TOKEN: ""
+    environment: npm
