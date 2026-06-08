@@ -1,6 +1,6 @@
 import { PointInfo } from "~/components/legend/PointLegend"
 import { missingInMapColor } from "~/const"
-import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
+import { useHasSelection, useSelectedCategory } from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { Tick } from "~/components/sliderUtils"
 
@@ -8,9 +8,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
   const { isSelected: selected, select, deselect } = useSelectedCategory()
   //If percentage is below this cutoff, it will be grouped into "Rest" segment. This is to avoid having too many thin segments that are hard to interact with. The cutoff is a tradeoff between accuracy and usability.
   const CUTOFF = 2
-
-  const selectedCategories = useSelectedCategories()
-  const noSelectedCategories = selectedCategories.length === 0
+  const hasSelection = useHasSelection()
 
   // Calculate segments above cutoff and group the rest
   const mapped = items.map(([label, info]) => {
@@ -80,8 +78,8 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
               tabIndex={0}
               aria-pressed={isSel}
               className={cn("flex h-full w-full cursor-pointer outline-none hover:opacity-80", {
-                "opacity-15 grayscale-100 hover:grayscale-0": !noSelectedCategories && !isSel,
-                "opacity-100": noSelectedCategories || isSel,
+                "opacity-15 grayscale-100 hover:grayscale-0": hasSelection && !isSel,
+                "opacity-100": !hasSelection || isSel,
                 "rounded-l-sm": isFirst,
                 "rounded-r-sm": isLast
               })}
@@ -107,7 +105,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                         {
                           "ml-1": isFirst,
                           "opacity-0": !showTick,
-                          "opacity-15": !noSelectedCategories && !isSel && showTick,
+                          "opacity-15": hasSelection && !isSel && showTick,
                           "text-secondary-text dark:text-primary-text-dark": isSel,
                           "text-tertiary-text dark:text-tertiary-text-dark": !isSel
                         },
@@ -120,7 +118,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                     <Tick
                       className={cn({
                         "ml-1": isFirst,
-                        "opacity-15": !noSelectedCategories && !isSel
+                        "opacity-15": hasSelection && !isSel
                       })}
                     />
                   </div>
@@ -132,7 +130,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                     <Tick
                       className={cn({
                         "ml-1": isFirst,
-                        "opacity-15": !noSelectedCategories && !isSel
+                        "opacity-15": hasSelection && !isSel
                       })}
                     />
                     <span
@@ -142,7 +140,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
                           "opacity-0": !showTick,
                           "text-secondary-text dark:text-primary-text-dark": isSel,
                           "text-tertiary-text dark:text-tertiary-text-dark": !isSel,
-                          "opacity-15": !noSelectedCategories && !isSel && showTick
+                          "opacity-15": hasSelection && !isSel && showTick
                         },
                         "pointer-events-none text-xs font-semibold whitespace-nowrap"
                       )}

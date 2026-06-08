@@ -5,7 +5,7 @@ import { useMetrics } from "~/contexts/MetricContext"
 import { useOptions } from "~/contexts/OptionsContext"
 import { viewSearchParamsConfig } from "~/shared/viewParams"
 import type { GitObjectNoChildren, HexColor, RawGitObject } from "~/shared/model"
-import { useSelectedCategories, useIsCategorySelected } from "~/state/stores/selection"
+import { useIsCategorySelected, useHasSelection } from "~/state/stores/selection"
 
 export const useClickedObject = (): GitObjectNoChildren => {
   const data = useData()
@@ -66,11 +66,10 @@ export function useBlobColor(obj: RawGitObject | null): HexColor | null {
 }
 
 export function useBlobColors(obj: RawGitObject | null): Array<HexColor> {
-  const selectedCategories = useSelectedCategories()
+  const hasSelection = useHasSelection()
   const isSelected = useIsCategorySelected()
 
   const { metricType } = useOptions()
-  const noCategoriesSelected = selectedCategories.filter((c) => c.startsWith(`${metricType}:`)).length === 0
   const [metricsData] = useMetrics()
 
   if (!obj) {
@@ -78,9 +77,7 @@ export function useBlobColors(obj: RawGitObject | null): Array<HexColor> {
   }
 
   const colors: Array<HexColor> = [metricsData.get(metricType)]
-    .flatMap(
-      (c) => c?.categoriesMap?.get(obj.path)?.filter((c) => isSelected(c.category) || noCategoriesSelected) ?? []
-    )
+    .flatMap((c) => c?.categoriesMap?.get(obj.path)?.filter((c) => isSelected(c.category) || !hasSelection) ?? [])
     .map((c) => c.color)
 
   if (!colors || colors.length === 0) {

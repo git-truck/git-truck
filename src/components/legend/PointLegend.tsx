@@ -5,12 +5,12 @@ import { useData } from "~/contexts/DataContext"
 import { useMetricsHierarchyCache } from "~/contexts/MetricContext"
 import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
 import {
-  useSelectedCategory,
   useSelectedCategories,
   useIsCategorySelected,
   useSelectCategories,
   useDeselectCategories,
-  useResetSelection
+  useResetSelection,
+  useHasSelection
 } from "~/state/stores/selection"
 import { cn } from "~/styling"
 import { feature_flags } from "~/feature_flags"
@@ -196,14 +196,14 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   const isContributorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
 
   const selectedCategories = useSelectedCategories()
+  const hasSelection = useHasSelection()
 
   const selectCategories = useSelectCategories()
   const deselectCategories = useDeselectCategories()
 
-  const { isSelected } = useSelectedCategory()
+  const isSelected = useIsCategorySelected()
 
   const isOnlySelectedCategory = isSelected(label) && selectedCategories.length === 1
-  const noSelectedCategories = selectedCategories.length === 0
 
   const labelIsSelected = isSelected(label)
   const dotColor = info.color
@@ -214,12 +214,12 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         key={String(labelIsSelected)}
         className="contents"
         checkBoxClassName={cn("ml-auto transition-opacity duration-200 group-hover/pointentry:opacity-100", {
-          "opacity-15": !noSelectedCategories && !labelIsSelected
+          "opacity-15": hasSelection && !labelIsSelected
         })}
-        intermediate={noSelectedCategories}
+        intermediate={!hasSelection}
         checked={labelIsSelected}
         onChange={(evt) => {
-          if (evt.target.checked) {
+          if (!hasSelection || evt.target.checked) {
             selectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
           } else {
             deselectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
@@ -232,7 +232,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
             dotColor={dotColor}
             contributorColorToChange={label}
             className={cn("transition-opacity duration-50 group-hover/pointentry:opacity-100", {
-              "opacity-15": !noSelectedCategories && !labelIsSelected
+              "opacity-15": hasSelection && !labelIsSelected
             })}
           />
         ) : (
@@ -240,7 +240,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
             key={dotColor}
             dotColor={dotColor}
             className={cn("transition-opacity duration-50 group-hover/pointentry:opacity-100", {
-              "opacity-15": !noSelectedCategories && !labelIsSelected
+              "opacity-15": hasSelection && !labelIsSelected
             })}
           />
         )}
@@ -249,12 +249,12 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
             "group-hover/pointentry:text-blue-primary truncate font-bold transition-opacity duration-200 group-hover/pointentry:opacity-100",
             {
               "text-secondary-text dark:text-secondary-text-dark": !labelIsSelected,
-              "opacity-15": !noSelectedCategories && !labelIsSelected,
+              "opacity-15": hasSelection && !labelIsSelected,
               "italic underline": label === "Other" || label === MULTIPLE_CONTRIBUTORS
             }
           )}
           title={
-            noSelectedCategories
+            !hasSelection
               ? `Highlight ${label} exclusively`
               : isOnlySelectedCategory
                 ? "Highlight all categories"
@@ -269,7 +269,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           className={cn(
             "text-tertiary-text dark:text-tertiary-text-dark text-right text-xs transition-opacity duration-200 group-hover/pointentry:opacity-100",
             {
-              "opacity-15": !noSelectedCategories && !labelIsSelected
+              "opacity-15": hasSelection && !labelIsSelected
             }
           )}
         >
@@ -279,7 +279,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
           className={cn(
             "text-tertiary-text dark:text-tertiary-text-dark min-w-12 text-right text-xs transition-opacity duration-50 group-hover/pointentry:opacity-100",
             {
-              "opacity-15": !noSelectedCategories && !labelIsSelected
+              "opacity-15": hasSelection && !labelIsSelected
             }
           )}
         >

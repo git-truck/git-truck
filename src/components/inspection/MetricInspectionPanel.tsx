@@ -3,7 +3,7 @@ import { mdiClose, mdiDotsVertical, mdiInformation, mdiMagnify } from "@mdi/js"
 import { useState, useRef, type ReactNode, createContext, use } from "react"
 import { ExpandingPanelButton } from "~/components/buttons/ExpandingPanelButton"
 import { Icon } from "~/components/Icon"
-import { useResetSelection, useSelectedCategories } from "~/state/stores/selection"
+import { useHasSelection, useResetSelection } from "~/state/stores/selection"
 import { cn } from "~/styling"
 
 const MetricSearchContext = createContext<{ searchValue: string; onSearchChange: (value: string) => void }>({
@@ -96,8 +96,7 @@ export function MetricInspectionPanel({
 
 function ClearSelectionButton() {
   const resetSelection = useResetSelection()
-  const selectedCategories = useSelectedCategories()
-  const hasSelection = selectedCategories.length > 0
+  const hasSelection = useHasSelection()
 
   return (
     <ExpandingPanelButton

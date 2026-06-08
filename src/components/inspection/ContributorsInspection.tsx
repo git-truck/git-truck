@@ -9,7 +9,7 @@ import type { loader } from "~/routes/api.contributor-distribution"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
-import { useSelectedCategories, useSelectedCategory } from "~/state/stores/selection"
+import { useIsCategorySelected, useHasSelection } from "~/state/stores/selection"
 import { missingInMapColor } from "~/const"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 
@@ -103,9 +103,9 @@ function ContributorDistribution({
 
 function ContributorDistFragment(props: { items: { contributor: string; contribs: number }[]; contribSum: number }) {
   const [, contributorColors] = useMetrics()
-  const selectedCategories = useSelectedCategories()
+  const hasSelection = useHasSelection()
 
-  const { isSelected } = useSelectedCategory()
+  const isSelected = useIsCategorySelected()
 
   return (
     <>
@@ -118,7 +118,7 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
           maximumFractionDigits: 1
         })
 
-        const hasNoSelectedCategories = selectedCategories.length === 0
+        const hasNoSelectedCategories = !hasSelection
         const labelIsSelected = isSelected(contributor)
         return (
           <Fragment key={contributor + contrib}>

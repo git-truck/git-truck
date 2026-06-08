@@ -2,7 +2,7 @@ import type { HierarchyCircularNode, HierarchyNode, HierarchyRectangularNode } f
 import { hierarchy, pack, partition, treemap, treemapResquarify } from "d3-hierarchy"
 import { useDeferredValue, useEffect, useMemo, startTransition, useRef } from "react"
 import { type JSX } from "react"
-import type { GitObject, GitTreeObject, DatabaseInfo } from "~/shared/model"
+import type { GitObject, GitTreeObject, DatabaseInfo, HexColor } from "~/shared/model"
 import { useComponentSize, useKey, useZoomToParent } from "~/hooks"
 import {
   bubblePadding,
@@ -16,7 +16,8 @@ import {
   letterWidthForBlobText,
   treemapTreeBorderRadius,
   letterHeightText,
-  clipPathPadding
+  clipPathPadding,
+  missingInMapColor
 } from "~/const"
 import { useData } from "~/contexts/DataContext"
 import { useMetrics } from "~/contexts/MetricContext"
@@ -28,9 +29,8 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { useSearch } from "~/contexts/SearchContext"
 import { cn } from "~/styling"
 import { useQueryState } from "nuqs"
-import { useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
+import { useHasSelection, useIsCategorySelected, useSelectedCategories } from "~/state/stores/selection"
 import {
-  useBlobColors,
   useSetClickedObjectPath,
   useClickedObjectPath,
   useClickedObjectIsZoomPath
@@ -63,7 +63,12 @@ export function Chart() {
     showOnlySearchMatches
   } = useOptions()
   const selectedCategories = useSelectedCategories()
+  const hasSelection = useHasSelection()
   const isCategorySelected = useIsCategorySelected()
+  const selectedCategoryNames = useMemo(
+    () => new Set(selectedCategories.map((category) => category.slice(metricType.length + 1))),
+    [metricType, selectedCategories]
+  )
   const clickedObjectPath = useClickedObjectPath()
   const setClickedObjectPath = useSetClickedObjectPath()
 
@@ -144,7 +149,7 @@ export function Chart() {
     const matches = new Set<string>()
     const categoryMap = metricsData.get(metricType)?.categoriesMap
 
-    if (selectedCategories.length === 0 || !categoryMap) return matches
+    if (!hasSelection || !categoryMap) return matches
 
     const visit = (node: GitObject): boolean => {
       const selfMatches = categoryMap.get(node.path)?.some(({ category }) => isCategorySelected(category)) ?? false
@@ -165,7 +170,22 @@ export function Chart() {
 
     visit(filetree)
     return matches
-  }, [filetree, metricsData, metricType, selectedCategories, isCategorySelected])
+  }, [metricsData, metricType, hasSelection, filetree, isCategorySelected])
+
+  const colorsByPath = useMemo(() => {
+    const colors = new Map<string, HexColor[]>()
+    const categoryMap = metricsData.get(metricType)?.categoriesMap
+    const noCategoriesSelected = selectedCategoryNames.size === 0
+
+    for (const node of nodes) {
+      colors.set(
+        node.data.path,
+        getColorsForObject(node.data, categoryMap, selectedCategoryNames, noCategoriesSelected)
+      )
+    }
+
+    return colors
+  }, [metricType, metricsData, nodes, selectedCategoryNames])
 
   return (
     <div
@@ -300,9 +320,18 @@ export function Chart() {
                   "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
                 })}
               >
-                <Node d={d} isRoot={i === 0} />
+                <Node
+                  d={d}
+                  isRoot={i === 0}
+                  colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
+                  clickedObjectPath={clickedObjectPath}
+                />
                 {labelsVisible ? (
-                  <NodeText isSearchMatch={isSearchMatch} d={d}>
+                  <NodeText
+                    isSearchMatch={isSearchMatch}
+                    d={d}
+                    colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
+                  >
                     {d.data.name}
                     {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
                     {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
@@ -317,11 +346,18 @@ export function Chart() {
   )
 }
 
-function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
+function Node({
+  d,
+  isRoot,
+  colors,
+  clickedObjectPath
+}: {
+  d: CircleOrRectHiearchyNode
+  isRoot: boolean
+  colors: HexColor[]
+  clickedObjectPath: string | null
+}) {
   const { chartType, transitionsEnabled } = useOptions()
-
-  const clickedObjectPath = useClickedObjectPath()
-  const colors = useBlobColors(d.data)
 
   const { linearGradient, fill } = useGradient(colors)
   const multipleColors = colors.length > 1
@@ -392,14 +428,15 @@ function Node({ d, isRoot }: { d: CircleOrRectHiearchyNode; isRoot: boolean }) {
 function NodeText({
   d,
   isSearchMatch,
+  colors,
   children = null
 }: {
   d: CircleOrRectHiearchyNode
   isSearchMatch?: boolean
+  colors: HexColor[]
   children?: React.ReactNode
 }) {
   const isBubbleChart = isCircularNode(d)
-  const colors = useBlobColors(d.data)
 
   if (children === null) return null
 
@@ -531,6 +568,21 @@ function NodeText({
 
 function isCircularNode(d: CircleOrRectHiearchyNode): d is HierarchyCircularNode<GitObject> {
   return typeof (d as HierarchyCircularNode<GitObject>).r === "number"
+}
+
+function getColorsForObject(
+  obj: GitObject,
+  categoryMap: Map<string, Array<{ category: string; color: HexColor }>> | undefined,
+  selectedCategoryNames: ReadonlySet<string>,
+  noCategoriesSelected: boolean
+): HexColor[] {
+  const colors =
+    categoryMap
+      ?.get(obj.path)
+      ?.filter(({ category }) => noCategoriesSelected || selectedCategoryNames.has(category))
+      .map(({ color }) => color) ?? []
+
+  return colors.length > 0 ? colors : [missingInMapColor]
 }
 
 function createPartitionedHiearchy({
