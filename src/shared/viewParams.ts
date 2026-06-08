@@ -1,6 +1,7 @@
 import {
   createLoader,
   createSerializer,
+  parseAsBoolean,
   parseAsInteger,
   parseAsString,
   parseAsStringLiteral,
@@ -15,7 +16,8 @@ export const viewSearchParamsConfig = {
   branch: parseAsString.withOptions({ shallow: false }),
   timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues).withOptions({ shallow: false }),
   start: parseAsInteger.withOptions({ shallow: false }),
-  end: parseAsInteger.withOptions({ shallow: false })
+  end: parseAsInteger.withOptions({ shallow: false }),
+  includeCoauthors: parseAsBoolean.withDefault(false).withOptions({ shallow: false })
 }
 
 export const viewSerializer = createSerializer(viewSearchParamsConfig)

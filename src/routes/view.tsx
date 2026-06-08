@@ -65,7 +65,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
   const viewSearchParams = loadViewSearchParams(request)
 
   let { path, zoomPath, objectPath, branch, start, end } = viewSearchParams
-  const { timeUnit } = viewSearchParams
+  const { includeCoauthors, timeUnit } = viewSearchParams
 
   // Redirect to browse if not a git repo
   if (path && !(await GitService.isValidGitRepo(path))) {
@@ -100,7 +100,8 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       zoomPath,
       objectPath,
       start,
-      end
+      end,
+      includeCoauthors
     })
 
     throw redirect(redirectUrl.toString())
@@ -116,6 +117,7 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       objectPath,
       start,
       end,
+      includeCoauthors,
       timeUnit
     }),
     repositoryName: getRepoNameFromPath(path),
@@ -217,7 +219,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 async function analyze(
   params: Ensure<ViewSearchParams, "path" | "branch" | "zoomPath" | "start" | "end">
 ): Promise<RepoData> {
-  const { path, branch, zoomPath, timeUnit } = params
+  const { path, branch, zoomPath, includeCoauthors, timeUnit } = params
   let { objectPath } = params
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
@@ -244,6 +246,7 @@ async function analyze(
     instance.prevArgs.objectPath === params.objectPath &&
     instance.prevArgs.zoomPath === params.zoomPath &&
     instance.prevArgs.timeUnit === params.timeUnit &&
+    instance.prevArgs.includeCoauthors === params.includeCoauthors &&
     instance.prevArgs.start === params.start &&
     instance.prevArgs.end === params.end
   ) {
@@ -273,6 +276,10 @@ async function analyze(
 
     if (prevArgs.timeUnit !== params.timeUnit) {
       reason = "timeUnit"
+    }
+
+    if (prevArgs.includeCoauthors !== params.includeCoauthors) {
+      reason = "includeCoAuthors"
     }
 
     if (prevArgs.objectPath !== params.objectPath) {
@@ -364,7 +371,7 @@ async function analyze(
   const [commitCountPerTimeInterval, commitCountPerTimeIntervalUnit] =
     prevRes && !shouldUpdate(reason, "commitCountPerDay")
       ? ([prevRes.commitCountPerTimeInterval, prevRes.commitCountPerTimeIntervalUnit] as const)
-      : await instance.db.getCommitCountPerTime(timerange, timeUnit ?? undefined)
+      : await instance.db.getCommitCountPerTime(timerange, timeUnit ?? undefined, { includeCoauthors })
   const contribCounts =
     prevRes && !shouldUpdate(reason, "contribSumPerFile")
       ? prevRes.contribSumPerFile

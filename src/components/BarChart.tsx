@@ -122,8 +122,9 @@ export function BarChart({
   const width = size.width
 
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
+  const fetchedIntervals = intervals.length > 0 ? intervals : null
   const commitCountPerTimeIntervalForClickedObject = clickedObjectIsRepo
-    ? databaseInfo.commitCountPerTimeInterval
+    ? (fetchedIntervals ?? databaseInfo.commitCountPerTimeInterval)
     : intervals
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
 
