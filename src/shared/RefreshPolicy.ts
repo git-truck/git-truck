@@ -41,6 +41,7 @@ export type InvocationReason =
   | "timeUnit"
   | "clickedObject"
   | "zoomPath"
+  | "includeCoAuthors"
 
 // TODO: handle when start of range is increased, so renames do not need refresh
 const refreshPolicy: Record<InvocationReason, DataItem[]> = {
@@ -136,6 +137,7 @@ const refreshPolicy: Record<InvocationReason, DataItem[]> = {
     "commitCountPerTimeIntervalForClickedObject"
   ],
   timeUnit: ["commitCountPerDay", "commitCountPerTimeIntervalForClickedObject"],
+  includeCoAuthors: ["commitCountPerDay", "commitCountPerTimeIntervalForClickedObject"],
   clickedObject: ["clickedObjectData", "commitCountPerTimeIntervalForClickedObject"],
   contributorColor: ["contributorColors"],
   unknown: [

@@ -15,6 +15,23 @@ import { DuckDBResultReader } from "@duckdb/node-api/lib/DuckDBResultReader.js"
 import { log } from "~/server/log"
 import { nowInSeconds, type TimeUnit } from "~/shared/utils/time"
 
+type CommitCountInterval = {
+  date: string
+  count: number
+  timestamp: number
+  contributors: Record<string, number>
+}
+
+type CommitCountRow = {
+  lookup: string
+  author: string
+  count: number
+}
+
+type CommitCountOptions = {
+  includeCoauthors?: boolean
+}
+
 export default class DB {
   private instance: DuckDBInstance
   private connection: DuckDBConnection
@@ -1312,13 +1329,74 @@ export default class DB {
     return map[timeUnit]
   }
 
+  private mapCommitCountRowsToIntervals(
+    rows: CommitCountRow[],
+    timerange: [number, number],
+    timeUnit: TimeUnit
+  ): CommitCountInterval[] {
+    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
+    for (const { lookup, author, count } of rows) {
+      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
+      const bucket = countsByLookup.get(lookup)!
+      bucket.count += count
+      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
+    }
+    const final: CommitCountInterval[] = []
+    const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
+    for (const interval of allIntervals) {
+      const bucket = countsByLookup.get(interval.lookup)
+      final.push({
+        date: interval.label,
+        count: bucket?.count ?? 0,
+        timestamp: interval.timestamp,
+        contributors: bucket?.contributors ?? {}
+      })
+    }
+    return final.sort((a, b) => a.timestamp - b.timestamp)
+  }
+
   public async getCommitCountPerTime(
     timerange: [number, number],
-    timeUnit = this.getTimeStringFormat(timerange)
-  ): Promise<[{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[], TimeUnit]> {
+    timeUnit = this.getTimeStringFormat(timerange),
+    options: CommitCountOptions = {}
+  ): Promise<[CommitCountInterval[], TimeUnit]> {
     const query = this.getTimeQueryFromTimeUnit(timeUnit ?? this.getTimeStringFormat(timerange))
-    const res = await this.query(
-      `SELECT strftime(date, '${query}') as timestring,
+    const res = options.includeCoauthors
+      ? await this.query(
+          `WITH authored_commits AS (
+            SELECT c.hash, c.committerTime, COALESCE(cg.displayName, c.author) AS author
+            FROM commits c
+            LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+            ON (c.author = cg.name AND c.authorEmail = cg.email)
+            WHERE c.committerTime BETWEEN ${timerange[0]} AND ${timerange[1]}
+          ),
+          commit_people AS (
+            SELECT hash, committerTime, author
+            FROM authored_commits
+            UNION
+            SELECT c.hash, c.committerTime, co.name AS author
+            FROM authored_commits c
+            JOIN commitTrailers_unioned co ON c.hash = co.commitHash
+            WHERE co.trailerType = 'coauthor'
+          ),
+          commit_shares AS (
+            SELECT date_trunc('${timeUnit}', to_timestamp(committerTime)) AS date,
+              author,
+              1.0 / COUNT(*) OVER (PARTITION BY hash) AS commitShare,
+              committerTime
+            FROM commit_people
+          )
+          SELECT strftime(date, '${query}') as timestring,
+            strftime(date, '%Y-%m-%d') AS bucket_lookup,
+            author,
+            SUM(commitShare) AS count,
+            MIN(committerTime) AS ct
+          FROM commit_shares
+          GROUP BY date, author
+          ORDER BY date ASC;`
+        )
+      : await this.query(
+          `SELECT strftime(date, '${query}') as timestring,
         strftime(date, '%Y-%m-%d') AS bucket_lookup,
         author,
         count(*) AS count,
@@ -1327,95 +1405,117 @@ export default class DB {
         COALESCE(cg.displayName, c.author) AS author,
         c.committerTime FROM commits c
         LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
-        ON (c.author = cg.name AND c.authorEmail = cg.email))
+        ON (c.author = cg.name AND c.authorEmail = cg.email)
+        WHERE c.committerTime BETWEEN ${timerange[0]} AND ${timerange[1]})
        GROUP BY date, author
        ORDER BY date ASC;`
-    )
-    const mapped = res.map((x) => {
+        )
+    const mapped: CommitCountRow[] = res.map((x) => {
       return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
-    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
-    for (const { lookup, author, count } of mapped) {
-      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
-      const bucket = countsByLookup.get(lookup)!
-      bucket.count += count
-      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
-    }
-    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
-    const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
-    for (const interval of allIntervals) {
-      const bucket = countsByLookup.get(interval.lookup)
-      final.push({
-        date: interval.label,
-        count: bucket?.count ?? 0,
-        timestamp: interval.timestamp,
-        contributors: bucket?.contributors ?? {}
-      })
-    }
-    const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
 
-    return [sorted, timeUnit]
+    return [this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit), timeUnit]
   }
 
   public async getCommitCountPerTimeForClickedObject({
     timerange,
     timeUnit = this.getTimeStringFormat(timerange),
-    objectPath
+    objectPath,
+    includeCoauthors = false
   }: {
     timerange: [number, number]
     timeUnit?: "day" | "week" | "month" | "year"
     objectPath: string
-  }): Promise<{ date: string; count: number; timestamp: number; contributors: Record<string, number> }[]> {
+    includeCoauthors?: boolean
+  }): Promise<CommitCountInterval[]> {
     const query = this.getTimeQueryFromTimeUnit(timeUnit)
-    const statement = await this.prepare(`SELECT strftime(date, ?) as timestring,
-        strftime(date, '%Y-%m-%d') AS bucket_lookup,
-        author,
-        count(DISTINCT commitHash) AS count,
-        MIN(committerTime) AS ct FROM (
-          SELECT date_trunc(?, to_timestamp(c.committerTime)) AS date,
-          c.committerTime, c.hash as commitHash, COALESCE(cg.displayName, c.author) AS author,
-          COALESCE(r.toName, f.filePath) as resolvedPath
-          FROM commits c
-          JOIN fileChanges f ON c.hash = f.commitHash
-          LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
-          ON (c.author = cg.name AND c.authorEmail = cg.email)
-          LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
-            c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+    const sql = includeCoauthors
+      ? `WITH object_commits AS (
+          SELECT DISTINCT commitHash, committerTime, author
+          FROM (
+            SELECT c.hash AS commitHash,
+              c.committerTime,
+              COALESCE(cg.displayName, c.author) AS author,
+              COALESCE(r.toName, f.filePath) AS resolvedPath
+            FROM commits c
+            JOIN fileChanges f ON c.hash = f.commitHash
+            LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+            ON (c.author = cg.name AND c.authorEmail = cg.email)
+            LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
+              c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+            )
           )
+          WHERE resolvedPath = ? OR resolvedPath LIKE ?
+        ),
+        commit_people AS (
+          SELECT commitHash, committerTime, author
+          FROM object_commits
+          UNION
+          SELECT oc.commitHash, oc.committerTime, co.name AS author
+          FROM object_commits oc
+          JOIN commitTrailers_unioned co ON oc.commitHash = co.commitHash
+          WHERE co.trailerType = 'coauthor'
+        ),
+        commit_shares AS (
+          SELECT date_trunc(?, to_timestamp(committerTime)) AS date,
+            author,
+            1.0 / COUNT(*) OVER (PARTITION BY commitHash) AS commitShare,
+            committerTime
+          FROM commit_people
         )
-        WHERE resolvedPath = ? OR resolvedPath LIKE ?
-       GROUP BY date, author
-       ORDER BY date ASC;`)
-    statement.bindVarchar(1, query)
-    statement.bindVarchar(2, timeUnit)
-    statement.bindVarchar(3, objectPath)
-    statement.bindVarchar(4, `${objectPath}/%`)
+        SELECT strftime(date, ?) as timestring,
+          strftime(date, '%Y-%m-%d') AS bucket_lookup,
+          author,
+          SUM(commitShare) AS count,
+          MIN(committerTime) AS ct
+        FROM commit_shares
+        GROUP BY date, author
+        ORDER BY date ASC;`
+      : `SELECT strftime(date, ?) as timestring,
+          strftime(date, '%Y-%m-%d') AS bucket_lookup,
+          author,
+          count(DISTINCT commitHash) AS count,
+          MIN(committerTime) AS ct FROM (
+            SELECT date_trunc(?, to_timestamp(c.committerTime)) AS date,
+            c.committerTime, c.hash as commitHash, COALESCE(cg.displayName, c.author) AS author,
+            COALESCE(r.toName, f.filePath) as resolvedPath
+            FROM commits c
+            JOIN fileChanges f ON c.hash = f.commitHash
+            LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+            ON (c.author = cg.name AND c.authorEmail = cg.email)
+            LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
+              c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+            )
+          )
+          WHERE resolvedPath = ? OR resolvedPath LIKE ?
+         GROUP BY date, author
+         ORDER BY date ASC;`
 
-    const res = (await statement.runAndReadAll()).getRowObjects()
+    const res = await this.usingPreparedStatement(
+      sql,
+      async (statement) => {
+        if (includeCoauthors) {
+          statement.bindVarchar(1, objectPath)
+          statement.bindVarchar(2, `${objectPath}/%`)
+          statement.bindVarchar(3, timeUnit)
+          statement.bindVarchar(4, query)
+        } else {
+          statement.bindVarchar(1, query)
+          statement.bindVarchar(2, timeUnit)
+          statement.bindVarchar(3, objectPath)
+          statement.bindVarchar(4, `${objectPath}/%`)
+        }
 
-    const mapped = res.map((x) => {
+        return (await statement.runAndReadAll()).getRowObjects()
+      },
+      "getCommitCountPerTimeForClickedObject"
+    )
+
+    const mapped: CommitCountRow[] = res.map((x) => {
       return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
-    const countsByLookup = new Map<string, { count: number; contributors: Record<string, number> }>()
-    for (const { lookup, author, count } of mapped) {
-      if (!countsByLookup.has(lookup)) countsByLookup.set(lookup, { count: 0, contributors: {} })
-      const bucket = countsByLookup.get(lookup)!
-      bucket.count += count
-      bucket.contributors[author] = (bucket.contributors[author] || 0) + count
-    }
-    const final: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[] = []
-    const allIntervals = getTimeIntervals(timeUnit, timerange[0], timerange[1])
-    for (const interval of allIntervals) {
-      const bucket = countsByLookup.get(interval.lookup)
-      final.push({
-        date: interval.label,
-        count: bucket?.count ?? 0,
-        timestamp: interval.timestamp,
-        contributors: bucket?.contributors ?? {}
-      })
-    }
-    const sorted = final.sort((a, b) => a.timestamp - b.timestamp)
-    return sorted
+
+    return this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit)
   }
 
   public async updateColorSeed(seed: string) {

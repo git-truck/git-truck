@@ -16,7 +16,7 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
   const viewParams = loadViewSearchParams(request, {
     strict: true
   })
-  const { start, end, timeUnit, path: repositoryPath, branch } = viewParams
+  const { start, end, timeUnit, path: repositoryPath, branch, includeCoauthors } = viewParams
 
   const { objectPath } = viewParams
 
@@ -35,7 +35,8 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
   const commitCountPerTimeIntervalForClickedObject = await instance.db.getCommitCountPerTimeForClickedObject({
     timerange: [start, end],
     timeUnit,
-    objectPath: selectedObjectPath
+    objectPath: selectedObjectPath,
+    includeCoauthors
   })
 
   return {

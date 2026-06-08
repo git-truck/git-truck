@@ -5,14 +5,12 @@ import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
 import { BarChart } from "~/components/BarChart"
 import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
-import { CheckboxWithLabel } from "~/components/modals/utils/CheckboxWithLabel"
-import { mdiDotsVertical } from "@mdi/js"
+import { mdiAccountMultiple, mdiCheckboxBlank, mdiCheckboxMarked, mdiDotsVertical, mdiMathLog } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 
 import type { TimeUnit } from "~/shared/utils/time"
-import { useQueryStates } from "nuqs"
+import { useQueryState, useQueryStates } from "nuqs"
 import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
-import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 
 import { expandIntervalToRange } from "~/shared/util"
 import type { loader } from "~/routes/api.commit-intervals"
@@ -67,6 +65,10 @@ function sliderUnitsToTimeRange({
 }
 
 export function Timeline({ className }: { className?: string }) {
+  const [includeCoAuthors, setIncludeCoAuthors] = useQueryState(
+    "includeCoauthors",
+    viewSearchParamsConfig.includeCoauthors
+  )
   const [commitCountScale, setCommitCountScale] = useState<"linear" | "log">("log")
   const { databaseInfo } = useData()
   const { timerange } = databaseInfo
@@ -102,10 +104,11 @@ export function Timeline({ className }: { className?: string }) {
           branch,
           start: start ?? rangeMin,
           end: end ?? rangeMax,
-          timeUnit: unit
+          timeUnit: unit,
+          includeCoauthors: includeCoAuthors
         })
     )
-  }, [branch, clickedObjectPath, end, load, path, rangeMax, rangeMin, start, unit])
+  }, [branch, clickedObjectPath, end, includeCoAuthors, load, path, rangeMax, rangeMin, start, unit])
 
   const timelineIntervals = databaseInfo.commitCountPerTimeInterval
   const domainInUnits = timelineIntervals.length
@@ -113,23 +116,30 @@ export function Timeline({ className }: { className?: string }) {
   const selectedEndInUnit = timeToSliderUnit(high, timelineIntervals, unit, "end")
 
   return (
-    <CollapsibleHeader
-      reversed
-      className={cn("group/card flex flex-col text-center select-none", className)}
-      title={() => (
-        <TimelineHeader>
-          <CheckboxWithLabel
-            unstyled
-            className="gap"
-            title="Use log scale for commit counts"
-            checked={commitCountScale === "log"}
-            onChange={(e) => setCommitCountScale(e.target.checked ? "log" : "linear")}
-          >
-            Log scale
-          </CheckboxWithLabel>
-        </TimelineHeader>
-      )}
-    >
+    <div className={cn("card group/card flex flex-col px-4 text-center select-none", className)}>
+      <TimelineHeader
+        dropdownButtons={[
+          {
+            icon: mdiMathLog,
+            label: (
+              <div className="flex w-full items-center justify-between gap-2">
+                Use log scale
+                <Icon path={commitCountScale === "log" ? mdiCheckboxMarked : mdiCheckboxBlank} />
+              </div>
+            ),
+            onClick: () => setCommitCountScale((prev) => (prev === "log" ? "linear" : "log"))
+          },
+          {
+            icon: mdiAccountMultiple,
+            label: (
+              <div className="flex w-full items-center justify-between gap-2">
+                Include co-authors <Icon path={includeCoAuthors ? mdiCheckboxMarked : mdiCheckboxBlank} />
+              </div>
+            ),
+            onClick: () => setIncludeCoAuthors((prev) => !prev)
+          }
+        ]}
+      />
       <div className="group grid">
         <BarChart
           scale={commitCountScale}
@@ -148,7 +158,7 @@ export function Timeline({ className }: { className?: string }) {
           intervals={timelineIntervals}
         />
       </div>
-    </CollapsibleHeader>
+    </div>
   )
 }
 
@@ -256,7 +266,7 @@ function TimeSlider({
               <div
                 key={id}
                 className={cn(
-                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded transition-[backdrop-filter]",
+                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded opacity-0 transition-[backdrop-filter]",
                   {
                     "backdrop-blur-2xl": isPending
                   }
