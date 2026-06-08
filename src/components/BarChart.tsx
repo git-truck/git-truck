@@ -104,7 +104,7 @@ export function BarChart({
   const { metricType } = useOptions()
   const metricIsContributorMetric = isContributorMetric(metricType)
   const selectedCategories = useSelectedCategories()
-  const selectedAuthors = new Set(selectedCategories.map((c) => c.slice(metricType.length + 1)))
+  const selectedContributors = new Set(selectedCategories)
   const [, contributorColors] = useMetrics()
   const clickedObject = useClickedObject()
   const setHoveredBarTooltip = useSetHoveredBarTooltip()
@@ -194,7 +194,7 @@ export function BarChart({
           const sortedContributors = Object.entries(clickedObjInterval?.contributors ?? {}).sort((a, b) => b[1] - a[1])
           const authorsToStack =
             clickedObjInterval && selectedCategories.length > 0 && metricIsContributorMetric
-              ? sortedContributors.filter(([author]) => selectedAuthors.has(author))
+              ? sortedContributors.filter(([author]) => selectedContributors.has(author))
               : []
           const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
           const displayedCount =

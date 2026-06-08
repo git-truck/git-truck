@@ -26,10 +26,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
 
   // Memoize selected authors to prevent unnecessary re-renders
   const selectedContributors = useMemo(
-    () =>
-      metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
-        ? selectedCategories.map((sel) => sel.replace(`${metricType}:`, ""))
-        : [],
+    () => (metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS" ? selectedCategories : []),
     [metricType, selectedCategories]
   )
 
