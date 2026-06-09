@@ -337,10 +337,13 @@ export class Analysis {
   ) {
     const matches = gitLogResult.matchAll(gitLogRegexSimple)
     const FileModifications: FileModification[] = []
+
     for (const match of matches) {
       this.throwIfAborted()
 
       const groups = match.groups ?? {}
+      const parents = groups.parents.split(" ").filter((p) => p !== "")
+
       const contributorName = groups.author
       const authorEmail = groups.authorEmail
       const committerTime = Number(groups.dateCommitter)
@@ -393,7 +396,9 @@ export class Analysis {
         authorTime,
         hash,
         coauthors,
-        fileChanges
+        fileChanges,
+        parentHash: parents[0] ?? "",
+        secondaryParentHash: parents[1] ?? null
       })
     }
 
@@ -424,6 +429,7 @@ export class Analysis {
       this.throwIfAborted()
 
       const groups = match.groups ?? {}
+      const parents = groups.parents.split(" ").filter((p) => p !== "")
       const name = groups.author
       const authorEmail = groups.authorEmail
       const message = groups.message
@@ -455,9 +461,12 @@ export class Analysis {
         fileChanges,
         message,
         body,
-        coauthors
+        coauthors,
+        parentHash: parents[0] ?? "",
+        secondaryParentHash: parents[1] ?? null
       })
     }
+
     return commits
   }
 

@@ -1,6 +1,6 @@
 import { DuckDBConnection, DuckDBAppender, DuckDBInstance } from "@duckdb/node-api"
 import type {
-  CommitDTO,
+  MediumCommitDTO,
   ContributorGroup,
   GitLogEntry,
   GitObject,
@@ -119,59 +119,61 @@ export default class DB {
   private async initTables() {
     await this.connection.run(/*sql*/ `
       CREATE TABLE IF NOT EXISTS commits (
-        hash VARCHAR,
-        author VARCHAR,
-        authorEmail VARCHAR,
-        committerTime UINTEGER,
-        authorTime UINTEGER
+        hash VARCHAR NOT NULL,
+        author VARCHAR NOT NULL,
+        authorEmail VARCHAR NOT NULL,
+        committerTime UINTEGER NOT NULL,
+        authorTime UINTEGER NOT NULL,
+        parentHash VARCHAR NOT NULL,
+        secondaryParentHash VARCHAR,
       );
       CREATE TABLE IF NOT EXISTS fileChanges (
-        commitHash VARCHAR,
-        insertions UINTEGER,
-        deletions UINTEGER,
-        filePath VARCHAR,
+        commitHash VARCHAR NOT NULL,
+        insertions UINTEGER NOT NULL,
+        deletions UINTEGER NOT NULL,
+        filePath VARCHAR NOT NULL,
       );
       CREATE TABLE IF NOT EXISTS commitTrailers (
-        commitHash VARCHAR,
-        name VARCHAR,
-        email VARCHAR,
-        trailerType VARCHAR
+        commitHash VARCHAR NOT NULL,
+        name VARCHAR NOT NULL,
+        email VARCHAR NOT NULL,
+        trailerType VARCHAR NOT NULL
       );
       CREATE TABLE IF NOT EXISTS contributorGroups (
-        displayName VARCHAR,
-        email VARCHAR,
-        name VARCHAR
+        displayName VARCHAR NOT NULL,
+        email VARCHAR NOT NULL,
+        name VARCHAR NOT NULL
       );
       CREATE TABLE IF NOT EXISTS renames (
         fromName VARCHAR,
         toName VARCHAR,
-        timestamp UINTEGER,
-        timestampAuthor UINTEGER
+        timestamp UINTEGER NOT NULL,
+        timestampAuthor UINTEGER NOT NULL
       );
 
       CREATE SEQUENCE IF NOT EXISTS hiddenFiles_id_sequence START 1;
 
       CREATE TABLE IF NOT EXISTS hiddenFiles (
-        id INTEGER DEFAULT nextval('hiddenFiles_id_sequence'),
-        path VARCHAR
+        id INTEGER NOT NULL DEFAULT nextval('hiddenFiles_id_sequence'),
+        path VARCHAR NOT NULL
       );
       CREATE TABLE IF NOT EXISTS metadata (
-        field VARCHAR,
+        field VARCHAR NOT NULL,
         intValue UBIGINT,
         stringValue VARCHAR
       );
       CREATE TABLE IF NOT EXISTS temporaryRenames (
         fromName VARCHAR,
         toName VARCHAR,
-        timestamp UINTEGER,
-        timestampEnd UINTEGER
+        timestamp UINTEGER NOT NULL,
+        timestampEnd UINTEGER NOT NULL
       );
       CREATE TABLE IF NOT EXISTS files (
-        path VARCHAR,
-        name VARCHAR,
-        hash VARCHAR,
-        type VARCHAR,
-        byteSize UINTEGER
+        path VARCHAR NOT NULL,
+        name VARCHAR NOT NULL,
+        hash VARCHAR NOT NULL,
+        type VARCHAR NOT NULL,
+        byteSize UINTEGER NOT NULL
       );
 
     `)
@@ -203,13 +205,15 @@ export default class DB {
   private async initViews(start: number, end: number) {
     await this.connection.run(/*sql*/ `
       CREATE OR REPLACE VIEW commits_unioned AS
-      SELECT c.hash, CASE WHEN cg.displayName IS NOT NULL THEN cg.displayName ELSE c.author END AS author, c.authorEmail, c.committerTime, c.authorTime FROM
+      SELECT c.hash, CASE WHEN cg.displayName IS NOT NULL THEN cg.displayName ELSE c.author END AS author, c.authorEmail,
+        c.committerTime, c.authorTime, c.parentHash, c.secondaryParentHash FROM
       commits c LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
       ON (c.author = cg.name AND c.authorEmail = cg.email)
       WHERE c.committerTime BETWEEN ${start} AND ${end};
 
       CREATE OR REPLACE VIEW fileChanges_commits AS
-      SELECT f.commitHash, f.insertions, f.deletions, f.filePath, author, c.authorEmail, c.committerTime, c.authorTime FROM
+      SELECT f.commitHash, f.insertions, f.deletions, f.filePath, author, c.authorEmail, c.committerTime, c.authorTime,
+        c.parentHash, c.secondaryParentHash FROM
       fileChanges f JOIN commits_unioned c on f.commitHash = c.hash;
 
       CREATE OR REPLACE VIEW commitTrailers_unioned AS
@@ -219,6 +223,7 @@ export default class DB {
 
       CREATE OR REPLACE VIEW fileChanges_commits_renamed AS
       SELECT f.commitHash, f.insertions, f.deletions, f.author, f.authorEmail, f.committerTime, f.authorTime,
+          f.parentHash, f.secondaryParentHash,
           CASE
               WHEN r.toName IS NOT NULL THEN r.toName
               ELSE f.filePath
@@ -434,12 +439,12 @@ export default class DB {
     const isblob = (await this.getObjectTypeFromPath(path)) === "blob"
     const res: ReturnType<DuckDBResultReader["getRowObjects"]> = await this.usingPreparedStatement(
       isblob
-        ? `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+        ? `SELECT distinct parentHash, secondaryParentHash, commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          WHERE filePath = ?
          ORDER BY committerTime DESC, commitHash
          LIMIT ?;`
-        : `SELECT distinct commitHash, author, authorEmail, committerTime, authorTime, message, body
+        : `SELECT distinct parentHash, secondaryParentHash, commitHash, author, authorEmail, committerTime, authorTime, message, body
          FROM fileChanges_commits_renamed_cached
          WHERE starts_with(filePath, ?) = true
          ORDER BY committerTime DESC, commitHash
@@ -460,12 +465,14 @@ export default class DB {
             name: String(row["author"]),
             email: String(row["authorEmail"])
           },
-          committerTime: row["committerTime"],
-          authorTime: row["authorTime"],
-          body: row["body"],
-          hash: row["commitHash"],
-          message: row["message"]
-        }) as CommitDTO
+          committerTime: row["committerTime"] as number,
+          authorTime: row["authorTime"] as number,
+          body: row["body"] as string,
+          hash: row["commitHash"] as string,
+          message: row["message"] as string,
+          parentHash: String(row["parentHash"] ?? ""),
+          secondaryParentHash: typeof row["secondaryParentHash"] === "string" ? row["secondaryParentHash"] : null
+        }) satisfies MediumCommitDTO
     )
   }
 
@@ -588,6 +595,45 @@ export default class DB {
     }
   }
 
+  public async getCommitHashesForRepo(count: number, authors: string[] = []) {
+    const authorPlaceholders = authors.map(() => "?").join(",")
+    const baseQuery = `SELECT DISTINCT hash
+      FROM commits_unioned`
+
+    const query =
+      authors.length > 0
+        ? baseQuery +
+          ` WHERE (
+          author IN (${authorPlaceholders})
+          OR hash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        )
+        ORDER BY committerTime DESC, hash
+        LIMIT ?;`
+        : baseQuery +
+          ` ORDER BY committerTime DESC, hash
+        LIMIT ?;`
+
+    return this.usingPreparedStatement(
+      query,
+      async (statement) => {
+        let paramIndex = 1
+        for (const author of authors) {
+          statement.bindVarchar(paramIndex++, author)
+        }
+        for (const author of authors) {
+          statement.bindVarchar(paramIndex++, author)
+        }
+        statement.bindUInteger(paramIndex++, count)
+        const res = (await statement.runAndReadAll()).getRowObjects()
+        return res.map((row) => row["hash"] as string)
+      },
+      "getCommitHashesForRepo"
+    )
+  }
+
   public async getCommitCountForPath({
     objectPath,
     startSecs,
@@ -700,6 +746,39 @@ export default class DB {
         "getCommitCountForPath(root)"
       )
     }
+  }
+
+  public async getCommitCountForRepo(contributors: string[] = []) {
+    const authorPlaceholders = contributors.map(() => "?").join(",")
+    const baseQuery = `SELECT COUNT(DISTINCT hash) AS count FROM commits_unioned`
+
+    const query =
+      contributors.length > 0
+        ? baseQuery +
+          ` WHERE (
+          author IN (${authorPlaceholders})
+          OR hash IN (
+            SELECT commitHash FROM commitTrailers_unioned
+            WHERE trailerType = 'coauthor' AND name IN (${authorPlaceholders})
+          )
+        );`
+        : baseQuery + ";"
+
+    return this.usingPreparedStatement(
+      query,
+      async (statement) => {
+        let paramIndex = 1
+        for (const contributor of contributors) {
+          statement.bindVarchar(paramIndex++, contributor)
+        }
+        for (const contributor of contributors) {
+          statement.bindVarchar(paramIndex++, contributor)
+        }
+        const res = (await statement.runAndReadAll()).getRowObjects()
+        return Number(res[0]["count"])
+      },
+      "getCommitCountForRepo"
+    )
   }
 
   public async getCommitCountPerFile() {
@@ -864,6 +943,23 @@ export default class DB {
       FROM file_contributors;
     `)
     }
+
+    return res.map((row) => row["contributor"] as string)
+  }
+
+  public async getUniqueContributorsForRepo(): Promise<string[]> {
+    const res = await this.query(/*sql*/ `
+      SELECT DISTINCT contributor
+      FROM (
+        SELECT author AS contributor
+        FROM commits_unioned
+        UNION
+        SELECT name AS contributor
+        FROM commitTrailers_unioned
+        WHERE trailerType = 'coauthor'
+        AND commitHash IN (SELECT hash FROM commits_unioned)
+      );
+    `)
 
     return res.map((row) => row["contributor"] as string)
   }
@@ -1108,7 +1204,7 @@ export default class DB {
   }
 
   public async getCommitCount() {
-    const res = await this.query(`SELECT count(distinct commitHash) AS count FROM fileChanges_commits_renamed_cached;
+    const res = await this.query(`SELECT count(distinct hash) AS count FROM commits_unioned;
     `)
     return Number(res[0]["count"])
   }
@@ -1308,6 +1404,24 @@ export default class DB {
 
     const existsValue = res[0]?.["exists_in_range"]
     return existsValue === true || existsValue === 1 || existsValue === 1n || existsValue === "1"
+  }
+
+  public async repoHasCommitsInSelectedRange(): Promise<boolean> {
+    const res = await this.query(/*sql*/ `
+      SELECT EXISTS(SELECT 1 FROM commits_unioned) AS exists_in_range;
+    `)
+
+    const existsValue = res[0]?.["exists_in_range"]
+    return existsValue === true || existsValue === 1 || existsValue === 1n || existsValue === "1"
+  }
+
+  public async getLastCommitTimeForRepo(): Promise<number> {
+    const res = await this.query(/*sql*/ `
+      SELECT MAX(committerTime) AS lastChange
+      FROM commits_unioned;
+    `)
+
+    return Number(res[0]?.["lastChange"] ?? 0)
   }
 
   private getTimeStringFormat(timerange: [number, number]): TimeUnit {
@@ -1554,19 +1668,23 @@ export default class DB {
   public async addCommits(commits: Map<string, GitLogEntry>) {
     await this.usingTableAppender("commits", async (appender) => {
       for (const [hash, commit] of commits) {
-        if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         appender.appendVarchar(hash)
         appender.appendVarchar(commit.author.name)
         appender.appendVarchar(commit.author.email)
         appender.appendUInteger(commit.committerTime)
         appender.appendUInteger(commit.authorTime)
+        appender.appendVarchar(commit.parentHash)
+        if (commit.secondaryParentHash !== null) {
+          appender.appendVarchar(commit.secondaryParentHash)
+        } else {
+          appender.appendNull()
+        }
         appender.endRow()
       }
     })
 
     await this.usingTableAppender("commitTrailers", async (appender) => {
       for (const [hash, commit] of commits) {
-        if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         for (const coauthor of commit.coauthors) {
           appender.appendVarchar(hash)
           appender.appendVarchar(coauthor.name)
@@ -1579,9 +1697,8 @@ export default class DB {
 
     await this.usingTableAppender("fileChanges", async (appender) => {
       for (const [hash, commit] of commits) {
-        if (!commit) throw new Error(`Commit with hash ${hash} is undefined`)
         for (const change of commit.fileChanges) {
-          appender.appendVarchar(commit.hash)
+          appender.appendVarchar(hash)
           appender.appendUInteger(change.insertions)
           appender.appendUInteger(change.deletions)
           appender.appendVarchar(change.path)

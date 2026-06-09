@@ -100,6 +100,19 @@ export interface CommitDTO {
   committerTime: number
   authorTime: number
   hash: string
+  parentHash: string
+  secondaryParentHash: string | null
+}
+
+export interface MediumCommitDTO {
+  author: Person
+  committerTime: number
+  authorTime: number
+  body: string
+  message: string
+  hash: string
+  parentHash: string
+  secondaryParentHash: string | null
 }
 
 export interface CompletedResult {

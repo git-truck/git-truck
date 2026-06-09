@@ -82,7 +82,7 @@ export class GitService {
       "log",
       "--no-walk",
       "--numstat",
-      '--format="author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
+      '--format="parents <|%P|> author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"',
       ...commits
     ]
 
@@ -264,7 +264,7 @@ export class GitService {
       "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
+      '--format="parents <|%P|> author <|%aN|> email <|%aE|> date <|%ct %at|> message <|%s|> body <|%b|> hash <|%H|>"'
     ]
 
     const result = (await runProcess(this.repositoryPath, "git", args)) as string
@@ -280,7 +280,7 @@ export class GitService {
       "--summary",
       "--numstat",
       // "--cc", // include file changes for merge commits
-      '--format="<|%aN|><|%aE|><|%ct %at|><|%(trailers)|><|%H|>"'
+      '--format="<|%P|><|%aN|><|%aE|><|%ct %at|><|%(trailers)|><|%H|>"'
     ]
 
     const result = (await runProcess(this.repositoryPath, "git", args, instance, index)) as string

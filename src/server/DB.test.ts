@@ -75,6 +75,8 @@ async function insertCommits(db: DB, commits: CommitFixture[]) {
       appender.appendVarchar(commit.author.email)
       appender.appendUInteger(commit.committerTime)
       appender.appendUInteger(commit.committerTime)
+      appender.appendVarchar(`${commit.hash}-parent`)
+      appender.appendNull()
       appender.endRow()
     }
   })

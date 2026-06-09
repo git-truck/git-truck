@@ -17,7 +17,14 @@ import { feature_flags } from "~/feature_flags"
 import { PointLegendDistBar } from "~/components/legend/PointLegendDistBar"
 import { MULTIPLE_CONTRIBUTORS } from "~/const"
 import { useQueryState } from "nuqs"
-import { createMetricDataForNode, Metrics, type MetricCache, type MetricType } from "~/metrics/metrics"
+import {
+  createMetricDataForNode,
+  mapMetricToCategoryNoun,
+  Metrics,
+  type CategoricalMetricType,
+  type MetricCache,
+  type MetricType
+} from "~/metrics/metrics"
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
@@ -113,8 +120,6 @@ export function PointLegend() {
 
   const filteredItems = searchValue.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
 
-  if (items.length === 0) return null
-
   return (
     <div className="flex flex-col gap-2">
       {feature_flags.show_legend_highlight ? (
@@ -179,7 +184,7 @@ function PointLegendTable({
 
         {items.length === 0 ? (
           <div className="text-tertiary-text dark:text-tertiary-text-dark col-span-full flex items-center justify-center text-sm">
-            No items matched your search
+            No {mapMetricToCategoryNoun[metricType as CategoricalMetricType]} match your current filters{" "}
           </div>
         ) : (
           items.map(([label, info]) => (

@@ -32,6 +32,14 @@ export const Metrics = {
   CONTRIBUTORS: ContributorsMetric
 } as const satisfies Record<string, Metric>
 
+export type CategoricalMetricType = "FILE_TYPE" | "TOP_CONTRIBUTOR" | "CONTRIBUTORS"
+
+export const mapMetricToCategoryNoun: Record<CategoricalMetricType, string> = {
+  CONTRIBUTORS: "contributors",
+  TOP_CONTRIBUTOR: "contributors",
+  FILE_TYPE: "file types"
+}
+
 type Metric = {
   name: string
   description: string
