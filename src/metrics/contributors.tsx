@@ -7,7 +7,7 @@ import { countLeafNodes } from "~/metrics/metricUtils"
 
 export const ContributorsMetric: CategoricalMetric = {
   name: "Contributors",
-  description: "Files are colored based on which contributors have contributed to it.",
+  description: "Files are colored based on which contributors have committed to it in the selected time range.",
   icon: mdiAccountGroup,
   inspectionPanels: [
     {
@@ -15,7 +15,7 @@ export const ContributorsMetric: CategoricalMetric = {
       title: "Contributors",
       content: PointLegend,
       description:
-        "Files colored by all contributing authors. Select contributor(s) to highlight files they have contributed to.",
+        "Files are colored based on their committers. Select contributor(s) to highlight files they have committed to.",
       actions: { search: true, clear: true },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },

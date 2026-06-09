@@ -1,11 +1,12 @@
 import type { GitBlobObject } from "~/shared/model"
 import type { PointLegendData } from "~/components/legend/PointLegend"
 import { PointInfo, PointLegend } from "~/components/legend/PointLegend"
-import type { CategoricalMetric, MetricCache } from "~/metrics/metrics"
+import type { CategoricalMetric, MetricCache, MetricPanelDropdownButtonConfig } from "~/metrics/metrics"
 import { MULTIPLE_CONTRIBUTORS, noEntryColor } from "~/const"
 import { mdiPodiumGold, mdiAccountMultiple, mdiDice5, mdiScaleBalance } from "@mdi/js"
 import { ContributorsInspection } from "~/components/inspection/ContributorsInspection"
 import { countLeafNodes } from "~/metrics/metricUtils"
+import { PercentageSlider } from "~/components/PercentageSlider"
 
 export const TopContributorMetric: CategoricalMetric = {
   name: "Top churner",
@@ -17,7 +18,7 @@ export const TopContributorMetric: CategoricalMetric = {
       title: "Top Churner",
       content: PointLegend,
       description:
-        "Files colored by contributor with the most line-changes. Select contributor(s) to highlight files where they are top-churner",
+        "Files are colored by contributor with the most line-changes. Select contributor(s) to highlight files where they are top-churner",
       actions: { search: true, clear: true },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
@@ -26,11 +27,18 @@ export const TopContributorMetric: CategoricalMetric = {
       ]
     },
     {
+      id: "top-contributor-slider",
+      title: "Top Cutoff",
+      content: PercentageSlider,
+      description: "Set threshold for the minimum percentage share of line-change for a person to be Top Churner",
+      menuItems: [] satisfies MetricPanelDropdownButtonConfig[]
+    },
+    {
       id: "churn-distribution-panel",
       title: "Churn Distribution",
       content: ContributorsInspection,
       description: "Shows the distribution of line-changes among contributors.",
-      actions: { search: false, clear: true },
+      actions: { search: false, clear: false },
       menuItems: [
         { icon: mdiAccountMultiple, label: "Group Contributors", actionId: "group-contributors" },
         { icon: mdiDice5, label: "Shuffle Colors", actionId: "shuffle-colors" }

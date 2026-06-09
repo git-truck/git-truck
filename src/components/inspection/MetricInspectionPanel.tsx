@@ -50,13 +50,13 @@ export function MetricInspectionPanel({
         <div className="flex w-full flex-row items-end justify-between align-bottom">
           <button
             className="btn btn--primary border-border dark:border-border-dark flex shrink-0 flex-row items-center gap-2 rounded-t-lg rounded-b-none border-2 p-2"
-            title={"Toggle " + title + " description"}
+            title={"Toggle description"}
             onClick={() => setInfoOpen(!infoOpen)}
           >
+            <span className="text-sm font-bold">{title}</span>
             {!infoOpen ? (
               <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark ml-auto" />
             ) : null}
-            <span className="text-sm font-bold">{title}</span>
           </button>
 
           <div className="flex h-full flex-row gap-1 justify-self-end align-bottom">
@@ -68,11 +68,11 @@ export function MetricInspectionPanel({
       ) : null}
       <div
         className={cn("bg-primary-bg dark:bg-primary-bg-dark -mt-0.5 rounded-b-lg", {
-          "border-border dark:border-border-dark border-2 p-2": title
+          "border-border dark:border-border-dark space-y-4 border-2 p-2": title
         })}
       >
         {infoOpen ? (
-          <div className="border-blue-primary bg-blue-secondary/30 w-full rounded-lg border-2 py-2">
+          <div className="border-blue-primary bg-blue-secondary/30 mt-2 w-full rounded-lg border-2 py-2">
             <div className="flex h-full flex-row items-center">
               <Icon path={mdiInformation} size="1.25em" className="fill-bg-primary dark:fill-bg-primary-dark mx-2" />
               <div className="h-full w-full items-center">

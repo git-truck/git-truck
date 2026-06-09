@@ -46,7 +46,7 @@ export const FileSizeMetric: SegmentedMetric = {
       id: "file-size-panel",
       title: "File Size",
       content: SegmentLegend,
-      description: "Files colored by their file size in bytes.",
+      description: "Files are colored based on their file size in bytes.",
       actions: { search: false, clear: false }
     }
   ],

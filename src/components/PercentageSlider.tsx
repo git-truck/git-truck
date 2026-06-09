@@ -55,9 +55,9 @@ export function PercentageSlider({ className = "" }: { className?: string }) {
           </Tracks>
           <LabeledTicks
             valueMap={{
-              0: "Top contributor",
-              50: "Majority contributor",
-              100: "Single contributor"
+              0: "Top churner",
+              50: "Majority churner",
+              100: "Single churner"
             }}
           />
         </Slider>

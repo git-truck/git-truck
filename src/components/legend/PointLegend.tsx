@@ -26,7 +26,7 @@ import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 import { findInTree } from "~/shared/utils/tree"
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = 7
 
 export class PointInfo {
   public readonly color: `#${string}`

@@ -11,9 +11,7 @@ import { cn } from "~/styling"
 import { usePathIsRepositoryRoot } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
-import type {
-  MetricType
-} from "~/metrics/metrics"
+import type { MetricType } from "~/metrics/metrics"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
@@ -81,65 +79,63 @@ export function MetricsInspection() {
     FILE_TYPE: {
       description: isTree(clickedObject) ? "Folder type" : "File type",
       icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
-      data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
+      data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory"
     },
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "Folder size" : "File size",
       icon: FileSizeMetric.icon,
       data: (() => {
         return byteSize(clickedObject.byteSize).value + " " + byteSize(clickedObject.byteSize).unit
-      })(),
+      })()
     },
     MOST_COMMITS: {
       description: commitCount === 1 ? "Commit" : "Commits",
       icon: CommitsMetric.icon,
-      data: formatMetricCount(commitCount),
+      data: formatMetricCount(commitCount)
     },
     MOST_CONTRIBUTIONS: {
       description: "Line Changes",
       icon: LinesChangedMetric.icon,
-      data: formatMetricCount(contributions),
+      data: formatMetricCount(contributions)
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "Contributors",
-      data: formatMetricCount(contributorCount),
+      data: formatMetricCount(contributorCount)
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "Top Churners" : "Top Churner",
       icon: TopContributorMetric.icon,
-      data: formatTopContributorSummary(currentFetcherData),
-
+      data: formatTopContributorSummary(currentFetcherData)
     },
     LAST_CHANGED: {
       description: "Last change",
       icon: LastChangedMetric.icon,
-      data: formatLastChangedSummary(lastChanged, selectedRangeMetricsLoaded),
+      data: formatLastChangedSummary(lastChanged, selectedRangeMetricsLoaded)
     }
   } as const
-
 
   return (
     <>
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
-            ([metric, { icon, data, description }]) => (
-              <MetricButton
-                key={metric}
-                icon={icon}
-                isCurrentMetric={metric === metricType}
-                color={objectColor && metric === metricType ? objectColor : undefined}
-                onClick={() => void setMetricType(metric)}
-              >
-                <p className="truncate text-xs font-normal opacity-70">{description}</p>
-                <p className="w-full truncate text-sm font-bold" title={data}>
-                  {data}
-                </p>
-              </MetricButton>
-            )
-          )}
-        </div>
+      <div className="grid grid-cols-2 gap-2">
+        {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
+          ([metric, { icon, data, description }]) => (
+            <MetricButton
+              key={metric}
+              icon={icon}
+              isCurrentMetric={metric === metricType}
+              color={objectColor && metric === metricType ? objectColor : undefined}
+              onClick={() => void setMetricType(metric)}
+            >
+              <p className="truncate text-xs font-normal opacity-70">{description}</p>
+              <p className="w-full truncate text-sm font-bold" title={data}>
+                {data}
+              </p>
+            </MetricButton>
+          )
+        )}
+      </div>
     </>
   )
 }
