@@ -21,7 +21,7 @@ export const LinesChangedMetric: GradientedMetric = {
       id: "lines-changed-panel",
       title: "Lines Changed",
       content: GradientLegend,
-      description: "Files colored by total line changes.",
+      description: "Files are colored by total line changes.",
       actions: { search: false, clear: false }
     }
   ],
