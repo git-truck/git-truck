@@ -135,14 +135,12 @@ export function PointLegend() {
       </div>
       <PaginatedList items={filteredItems} itemsPerPage={ITEMS_PER_PAGE} itemHeight={20} headerHeight={55}>
         {(shownItems, { totalPages }) => (
-          <>
-            <PointLegendTable
-              items={shownItems}
-              totalWeight={totalWeight}
-              metricType={metricType}
-              maxTotalPages={totalPages}
-            />
-          </>
+          <PointLegendTable
+            items={shownItems}
+            totalWeight={totalWeight}
+            metricType={metricType}
+            maxTotalPages={totalPages}
+          />
         )}
       </PaginatedList>
     </div>

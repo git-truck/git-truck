@@ -1,25 +1,19 @@
-import { mdiFileOutline, mdiFolderOutline, mdiSourceRepository, mdiScaleBalance } from "@mdi/js"
+import { mdiFileOutline, mdiFolderOutline, mdiSourceRepository } from "@mdi/js"
 import byteSize from "byte-size"
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
-import { href, useFetcher, useSubmit } from "react-router"
-import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
+import { href, useFetcher } from "react-router"
 import { Icon } from "~/components/Icon"
 import { missingInMapColor, UNKNOWN_CATEGORY } from "~/const"
 import { useOptions } from "~/contexts/OptionsContext"
-import { PercentageSlider } from "~/components/PercentageSlider"
 import { dateFormatRelative, isTree, last } from "~/shared/util"
 import { useClickedObject, useClickedObjectPath, useBlobColor } from "~/state/stores/clicked-object"
 import { cn } from "~/styling"
-import { usePathIsRepositoryRoot, useViewAction } from "~/hooks"
+import { usePathIsRepositoryRoot } from "~/hooks"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "~/metrics/contributors"
 import type {
-  MetricPanelActionId,
-  MetricPanelConfig,
-  MetricPanelDropdownButtonConfig,
   MetricType
 } from "~/metrics/metrics"
-import { TypeMetric } from "~/metrics/fileExtension"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { TopContributorMetric } from "~/metrics/topContributer"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
@@ -30,15 +24,11 @@ import { viewSearchParamsConfig, viewSerializer } from "~/shared/viewParams"
 import type { ClickedObjectInfo, HexColor } from "~/shared/model"
 import type { loader } from "~/routes/api.metrics"
 import { useData } from "~/contexts/DataContext"
-import { CollapsibleHeader } from "~/components/CollapsibleHeader"
-import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 
 export function MetricsInspection() {
-  const submit = useSubmit()
   const clickedObject = useClickedObject()
   const { databaseInfo } = useData()
-  const { metricType, setMetricType, showTopContributorSlider, setShowTopContributorSlider } = useOptions()
-  const viewAction = useViewAction()
+  const { metricType, setMetricType } = useOptions()
   const [modalOpen, setModalOpen] = useState(false)
 
   const isBlob = clickedObject?.type === "blob"
@@ -80,33 +70,18 @@ export function MetricsInspection() {
   const lastChanged = isBlob ? databaseInfo.lastChanged[clickedObject.path] : currentFetcherData?.lastChanged
   const contributorCount = currentFetcherData?.contributors?.length
 
-  const panelActionMap = {
-    "group-contributors": () => setModalOpen(true),
-    "shuffle-colors": () => submit({ rerollColors: "" }, { method: "post", action: viewAction }),
-    "toggle-top-contributor-slider": () => setShowTopContributorSlider(!showTopContributorSlider)
-  } satisfies Record<MetricPanelActionId, () => void>
-
-  const toPanelMenuItems = (menuItems: MetricPanelDropdownButtonConfig[] = []): MetricPanelDropdownButton[] =>
-    menuItems.map((item) => ({
-      icon: item.icon,
-      label: item.label,
-      onClick: panelActionMap[item.actionId]
-    }))
-
   const metrics: Record<
     MetricType,
     {
       description: string
       icon: string
       data: string
-      inspectionPanels: MetricPanelConfig[]
     }
   > = {
     FILE_TYPE: {
       description: isTree(clickedObject) ? "Folder type" : "File type",
       icon: isRepo ? mdiSourceRepository : isBlob ? mdiFileOutline : mdiFolderOutline,
       data: isRepo ? "Repository" : isBlob ? "." + last(clickedObject.name.split(".")) : "Directory",
-      inspectionPanels: TypeMetric.inspectionPanels
     },
     FILE_SIZE: {
       description: clickedObject.type === "tree" ? "Folder size" : "File size",
@@ -114,70 +89,39 @@ export function MetricsInspection() {
       data: (() => {
         return byteSize(clickedObject.byteSize).value + " " + byteSize(clickedObject.byteSize).unit
       })(),
-      inspectionPanels: FileSizeMetric.inspectionPanels
     },
     MOST_COMMITS: {
       description: commitCount === 1 ? "Commit" : "Commits",
       icon: CommitsMetric.icon,
       data: formatMetricCount(commitCount),
-      inspectionPanels: CommitsMetric.inspectionPanels
     },
     MOST_CONTRIBUTIONS: {
       description: "Line Changes",
       icon: LinesChangedMetric.icon,
       data: formatMetricCount(contributions),
-      inspectionPanels: LinesChangedMetric.inspectionPanels
     },
     CONTRIBUTORS: {
       icon: ContributorsMetric.icon,
       description: "Contributors",
       data: formatMetricCount(contributorCount),
-      inspectionPanels: ContributorsMetric.inspectionPanels
     },
     TOP_CONTRIBUTOR: {
       description: currentFetcherData?.multiTopContributors ? "Top Churners" : "Top Churner",
       icon: TopContributorMetric.icon,
       data: formatTopContributorSummary(currentFetcherData),
-      inspectionPanels: [
-        //Inject top-contributor slider if toggled
-        ...(showTopContributorSlider
-          ? [
-              {
-                id: "top-contributor-slider",
-                title: "Top Cutoff",
-                content: PercentageSlider,
-                description: "Set line-change threshold for top-churner (else Multiple Contributors).",
-                menuItems: [
-                  { icon: mdiScaleBalance, label: "Toggle Cutoff Slider", actionId: "toggle-top-contributor-slider" }
-                ] as MetricPanelDropdownButtonConfig[]
-              }
-            ]
-          : []),
-        ...TopContributorMetric.inspectionPanels
-      ]
+
     },
     LAST_CHANGED: {
       description: "Last change",
       icon: LastChangedMetric.icon,
       data: formatLastChangedSummary(lastChanged, selectedRangeMetricsLoaded),
-      inspectionPanels: LastChangedMetric.inspectionPanels
     }
   } as const
 
-  const { inspectionPanels } = metrics[metricType]
 
   return (
     <>
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
-      <CollapsibleHeader
-        className="card"
-        title={() => (
-          <>
-            Metrics
-            <ClickedObjectButton />
-          </>
-        )}
-      >
         <div className="grid grid-cols-2 gap-2">
           {(Object.entries(metrics) as Array<[MetricType, (typeof metrics)[MetricType]]>).map(
             ([metric, { icon, data, description }]) => (
@@ -196,29 +140,6 @@ export function MetricsInspection() {
             )
           )}
         </div>
-      </CollapsibleHeader>
-      <CollapsibleHeader
-        className="card"
-        contentClassName="flex flex-col gap-2"
-        title={() => (
-          <>
-            Legend
-            <ClickedObjectButton />
-          </>
-        )}
-      >
-        {inspectionPanels.map((Panel, i) => (
-          <MetricInspectionPanel
-            key={Panel.id ?? `panel-${i}`}
-            actions={Panel.actions}
-            metricMenuItems={toPanelMenuItems(Panel.menuItems)}
-            title={Panel.title ?? "default"}
-            description={Panel.description ?? "Description not provided."}
-          >
-            <Panel.content />
-          </MetricInspectionPanel>
-        ))}
-      </CollapsibleHeader>
     </>
   )
 }

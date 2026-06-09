@@ -4,7 +4,7 @@ import {
   viewSerializer,
   type ViewSearchParams
 } from "~/shared/viewParams"
-import { mdiMenu, mdiMenuOpen } from "@mdi/js"
+import { mdiMenu, mdiMenuClose, mdiMenuOpen } from "@mdi/js"
 import { Icon } from "~/components/Icon"
 import { Await, redirect, href, useNavigate, useFetcher, Link } from "react-router"
 import clsx from "clsx"
@@ -49,6 +49,7 @@ import { MetricsInspection } from "~/components/inspection/MetricsInspection"
 import { InteractionButtons } from "~/components/inspection/InteractionButtons"
 import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 import { parseArgsWithDefaults } from "~/shared/utils/args"
+import { Legend } from "~/components/inspection/Legend"
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -426,25 +427,36 @@ async function analyze(
 }
 
 export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, dataPromise } }: Route.ComponentProps) {
-  const [{ leftExpanded, optionsRevision }, dispatch] = useReducer(
-    (prevState, action: "toggleLeft") => {
+  const [{ leftExpanded, rightExpanded, optionsRevision }, dispatch] = useReducer(
+    (prevState, action: "toggleLeft" | "toggleRight") => {
       switch (action) {
         case "toggleLeft": {
           const leftExpanded = !prevState.leftExpanded
           return {
             leftExpanded,
-            optionsRevision: leftExpanded ? prevState.optionsRevision + 1 : prevState.optionsRevision
+            rightExpanded: prevState.rightExpanded,
+            optionsRevision: prevState.optionsRevision + 1
+          }
+        }
+        case "toggleRight": {
+          const rightExpanded = !prevState.rightExpanded
+          return {
+            leftExpanded: prevState.leftExpanded,
+            rightExpanded,
+            optionsRevision: prevState.optionsRevision + 1
           }
         }
       }
     },
     {
       leftExpanded: true,
+      rightExpanded: true,
       optionsRevision: 0
     }
   )
 
   const toggleLeft = () => dispatch("toggleLeft")
+  const toggleRight = () => dispatch("toggleRight")
 
   const navigate = useNavigate()
 
@@ -497,10 +509,16 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
           <Providers data={data}>
             <div
               className={cn(
-                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_rheader"_"left_left"_"chart_chart"_"barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
+                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_cheader_rheader"_"left_left_left"_"chart_chart_chart"_"barchart_barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
                 {
-                  [`lg:[grid-template-areas:"lheader_rheader"_"left_chart"_"left_barchart"]`]:
-                    leftExpanded && matchesLarge
+                  [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_chart"_"left_barchart_barchart"]`]:
+                    leftExpanded && !rightExpanded,
+                  [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_right"_"barchart_barchart_right"]`]:
+                    rightExpanded && !leftExpanded,
+                  [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_right"_"left_barchart_right"]`]:
+                    leftExpanded && rightExpanded,
+                  [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_chart"_"barchart_barchart_barchart"]`]:
+                    !leftExpanded && !rightExpanded
                 }
               )}
             >
@@ -512,21 +530,27 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   }
                 )}
               >
-                <GitTruckInfo
-                  installedVersion={versionInfo.installedVersion}
-                  latestVersion={versionInfo.latestVersion}
-                />
-
-                {matchesLarge && leftExpanded ? (
+                {matchesLarge ? (
                   <button title={"Hide left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
                     <Icon path={mdiMenuOpen} size={1} />
                   </button>
                 ) : (
                   <div />
                 )}
+                <div
+                  className={cn("flex items-end gap-2", {
+                    hidden: !leftExpanded
+                  })}
+                >
+                  <GitTruckInfo
+                    installedVersion={versionInfo.installedVersion}
+                    latestVersion={versionInfo.latestVersion}
+                  />
+                </div>
+                <div />
               </header>
-              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:rheader]">
-                <div className="flex items-center">
+              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:cheader]">
+                <div className={cn("flex items-center")}>
                   {matchesLarge && !leftExpanded ? (
                     <>
                       <button title={"Show left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
@@ -544,38 +568,52 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 </div>
 
                 <CompactLoadingIndicator />
-
-                <div className="flex justify-end">
-                  <SearchCard />
-                  <RefreshButton />
-                  <HideFilesButton />
-                  <GroupAuthorsButton compact />
-                  <SettingsButton />
-                  <FullscreenButton />
-                </div>
               </nav>
+              <div className="flex justify-end [grid-area:rheader]">
+                <SearchCard />
+                <RefreshButton />
+                <HideFilesButton />
+                <GroupAuthorsButton compact />
+                <SettingsButton />
+                <FullscreenButton />
+                {matchesLarge && !rightExpanded ? (
+                  <button title={"Show Right panel"} className="btn btn--text aspect-square" onClick={toggleRight}>
+                    <Icon path={mdiMenu} size={1} />
+                  </button>
+                ) : null}
+                {matchesLarge && rightExpanded ? (
+                  <div className="flex items-center">
+                    <button title={"Hide right panel"} className="btn btn--text aspect-square" onClick={toggleRight}>
+                      <Icon path={mdiMenuClose} size={1} />
+                    </button>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
               <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
                 <aside
                   className={clsx(
-                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto px-2 lg:transition-transform",
+                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto lg:transition-transform",
                     leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
                   )}
                 >
                   <CollapsibleHeader className="card" title={() => "Visualization options"}>
                     <Options key={optionsRevision} />
                   </CollapsibleHeader>
+
                   <CollapsibleHeader
+                    className="card"
+                    contentClassName="flex flex-col gap-8"
                     title={() => (
                       <>
-                        Actions <ClickedObjectButton />
+                        Legend
+                        <ClickedObjectButton />
                       </>
                     )}
-                    className="card"
                   >
-                    <InteractionButtons />
+                    <Legend />
                   </CollapsibleHeader>
-                  <MetricsInspection />
-                  <CommitsInspection className="card" />
                 </aside>
               </Activity>
 
@@ -593,7 +631,40 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   )}
                 </ClientOnly>
               </div>
+
               <Timeline className="[grid-area:barchart]" />
+
+              <Activity mode={rightExpanded || !matchesLarge ? "visible" : "hidden"}>
+                <aside
+                  className={clsx(
+                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto pl-2 lg:transition-transform",
+                    rightExpanded ? "[grid-area:right]" : "lg:translate-x-sidepanel"
+                  )}
+                >
+                  <CollapsibleHeader
+                    title={() => (
+                      <>
+                        Actions <ClickedObjectButton />
+                      </>
+                    )}
+                    className="card"
+                  >
+                    <InteractionButtons />
+                  </CollapsibleHeader>
+                  <CollapsibleHeader
+                    className="card"
+                    title={() => (
+                      <>
+                        Details
+                        <ClickedObjectButton />
+                      </>
+                    )}
+                  >
+                    <MetricsInspection />
+                  </CollapsibleHeader>
+                  <CommitsInspection className="card" />
+                </aside>
+              </Activity>
             </div>
           </Providers>
         )}

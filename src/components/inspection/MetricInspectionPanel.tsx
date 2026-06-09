@@ -35,7 +35,7 @@ export function MetricInspectionPanel({
   description = "Description not provided."
 }: {
   className?: string
-  title?: string
+  title?: ReactNode
   children: ReactNode
   actions?: MetricPanelButton
   metricMenuItems: MetricPanelDropdownButton[]
