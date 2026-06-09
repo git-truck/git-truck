@@ -50,13 +50,13 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
       ? []
       : [
           // Parent folder
-          // {
-          //   type: "browse",
-          //   segment: data.repo.parentDirName ?? "",
-          //   fullPath: data.repo.parentDirPath ?? "",
-          //   parentPath: "",
-          //   showAnalysisInfo: false
-          // } as const,
+          {
+            type: "browse",
+            segment: data.repo.parentDirName ?? "",
+            fullPath: data.repo.parentDirPath ?? "",
+            parentPath: "",
+            showAnalysisInfo: false
+          } as const,
           // Repository root
           {
             type: "zoom",

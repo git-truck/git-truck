@@ -14,16 +14,6 @@ export function GitTruckInfo({
 
   return (
     <>
-      {updateAvailable ? (
-        <UpdateNotifier installedVersion={installedVersion} latestVersion={latestVersion} />
-      ) : (
-        <div
-          className="relative aspect-square self-center rounded-full p-1"
-          title={`Git Truck v${installedVersion} (latest)`}
-        >
-          <Icon path={mdiCloudCheckOutline} size="1.25em" />
-        </div>
-      )}
       <h1 className="ml-1" title={updateAvailable ? "" : `Git Truck v${installedVersion} (latest) - View on GitHub`}>
         <a
           href="https://github.com/git-truck/git-truck"
@@ -34,6 +24,16 @@ export function GitTruckInfo({
           Git Truck
         </a>
       </h1>
+      {updateAvailable ? (
+        <UpdateNotifier installedVersion={installedVersion} latestVersion={latestVersion} />
+      ) : (
+        <div
+          className="relative aspect-square self-center rounded-full p-1"
+          title={`Git Truck v${installedVersion} (latest)`}
+        >
+          <Icon path={mdiCloudCheckOutline} size="1.25em" />
+        </div>
+      )}
     </>
   )
 }

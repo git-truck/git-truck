@@ -12,7 +12,7 @@ import { ClickedObjectButton } from "~/components/buttons/ClickedObjectButton"
 import { useData } from "~/contexts/DataContext"
 
 export function CommitsInspection({ className = "" }: { className?: string }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   const clickedObjectPath = useClickedObjectPath()
   const { load, data, state, reset } = useFetcher<typeof loader>()
   const [{ path, branch, start, end }] = useQueryStates(viewSearchParamsConfig)
@@ -73,7 +73,6 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
         </>
       )}
       contentClassName="flex flex-col gap-2"
-      defaultOpen={false}
       open={open}
       onToggle={(open) => {
         setOpen(open)
