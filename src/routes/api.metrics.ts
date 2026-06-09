@@ -22,7 +22,16 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   using _timeInterval = await instance.withTimeInterval(start, end)
 
+  const isRepoRoot = selectedObjectPath === instance.repositoryName
   const objIsBlob = isBlob(await instance.db.getObjectFromPath(selectedObjectPath))
+  const amountOfCommits = isRepoRoot
+    ? await instance.db.getCommitCountForRepo()
+    : await instance.db.getCommitCountForPath({
+        objectPath: selectedObjectPath,
+        startSecs: start,
+        endSecs: end,
+        contributors: []
+      })
 
   const topContributorData = await instance.db.getContributorDistributionForPath({
     objectPath: selectedObjectPath,
@@ -32,26 +41,27 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   return {
     path: selectedObjectPath,
-    existsInRange: await instance.db.pathExistsInSelectedRange(selectedObjectPath, objIsBlob),
+    existsInRange: isRepoRoot
+      ? await instance.db.repoHasCommitsInSelectedRange()
+      : await instance.db.pathExistsInSelectedRange(selectedObjectPath, objIsBlob),
     topContributor: topContributorData,
     multiTopContributors:
       topContributorData.length > 1 && topContributorData[0].contribs === topContributorData[1].contribs,
-    amountOfCommits: await instance.db.getCommitCountForPath({
-      objectPath: selectedObjectPath,
-      startSecs: start,
-      endSecs: end,
-      contributors: []
-    }),
-    contributors: await instance.db.getUniqueContributorsForPath(selectedObjectPath),
+    amountOfCommits,
+    contributors: isRepoRoot
+      ? await instance.db.getUniqueContributorsForRepo()
+      : await instance.db.getUniqueContributorsForPath(selectedObjectPath),
     contributions: await instance.db.getContributionsForPath({
       objectPath: selectedObjectPath,
       startSecs: start,
       endSecs: end
     }),
-    lastChanged: await instance.db.getLastChangedForPath({
-      objectPath: selectedObjectPath,
-      startSecs: start,
-      endSecs: end
-    })
+    lastChanged: isRepoRoot
+      ? await instance.db.getLastCommitTimeForRepo()
+      : await instance.db.getLastChangedForPath({
+          objectPath: selectedObjectPath,
+          startSecs: start,
+          endSecs: end
+        })
   }
 }

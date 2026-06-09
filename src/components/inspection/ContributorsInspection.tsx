@@ -92,7 +92,13 @@ function ContributorDistribution({
               )}
             >
               <ContributorDistributionHeader />
-              <ContributorDistFragment items={shownItems} contribSum={contribSum} />
+              {shownItems.length > 0 ? (
+                <ContributorDistFragment items={shownItems} contribSum={contribSum} />
+              ) : (
+                <span className="text-tertiary-text dark:text-tertiary-text-dark col-span-full flex items-center justify-center text-sm">
+                  No contributors match your current filters
+                </span>
+              )}
             </div>
           </>
         )}

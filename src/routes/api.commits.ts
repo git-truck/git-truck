@@ -31,8 +31,12 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   using _timeInterval = await instance.withTimeInterval(start, end)
 
+  const isRepoRoot = objectPath === instance.repositoryName
+
   const getCommits = async () => {
-    const commitHashes = await instance.db.getCommitHashes(objectPath, count, contributors)
+    const commitHashes = isRepoRoot
+      ? await instance.db.getCommitHashesForRepo(count, contributors)
+      : await instance.db.getCommitHashes(objectPath, count, contributors)
     if (commitHashes.length < 1) return []
     const gitLogResult = await instance.gitService.gitLogSpecificCommits(commitHashes)
     const fullCommits = await instance.getFullCommits(gitLogResult)
@@ -67,12 +71,14 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   return {
     objectPath: objectPath,
     currentCommitCount: count,
-    totalCommitCount: await instance.db.getCommitCountForPath({
-      objectPath,
-      startSecs: start,
-      endSecs: end,
-      contributors
-    }),
+    totalCommitCount: isRepoRoot
+      ? await instance.db.getCommitCountForRepo(contributors)
+      : await instance.db.getCommitCountForPath({
+          objectPath,
+          startSecs: start,
+          endSecs: end,
+          contributors
+        }),
     commits: await getCommits()
   }
 }

@@ -32,12 +32,19 @@ export async function loader({ request }: Route.LoaderArgs): Promise<{
 
   using _timeInterval = await instance.withTimeInterval(start, end)
 
-  const commitCountPerTimeIntervalForClickedObject = await instance.db.getCommitCountPerTimeForClickedObject({
-    timerange: [start, end],
-    timeUnit,
-    objectPath: selectedObjectPath,
-    includeCoauthors
-  })
+  const commitCountPerTimeIntervalForClickedObject =
+    selectedObjectPath === instance.repositoryName
+      ? (
+          await instance.db.getCommitCountPerTime([start, end], timeUnit, {
+            includeCoauthors
+          })
+        )[0]
+      : await instance.db.getCommitCountPerTimeForClickedObject({
+          timerange: [start, end],
+          timeUnit,
+          objectPath: selectedObjectPath,
+          includeCoauthors
+        })
 
   return {
     clickedObjectPath: selectedObjectPath,
