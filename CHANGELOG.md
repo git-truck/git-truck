@@ -1,5 +1,12 @@
 # git-truck
 
+## 4.1.0
+
+### Minor Changes
+
+- dc924f4: Add right sidebar
+- 7b5cdd9: Add support for showing co-authors on the timeline
+
 ## 4.0.0
 
 ### Major Changes
