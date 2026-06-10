@@ -3,10 +3,7 @@ import { useSubmit } from "react-router"
 import { MetricInspectionPanel, type MetricPanelDropdownButton } from "~/components/inspection/MetricInspectionPanel"
 import { useOptions } from "~/contexts/OptionsContext"
 import { useViewAction } from "~/hooks"
-import {
-  Metrics,
-  type MetricPanelActionId,
-  type MetricPanelDropdownButtonConfig} from "~/metrics/metrics"
+import { Metrics, type MetricPanelActionId, type MetricPanelDropdownButtonConfig } from "~/metrics/metrics"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
 import { Icon } from "~/components/Icon"
 
