@@ -22,7 +22,7 @@ export function ClickedObjectButton() {
   return (
     <button
       type="button"
-      className="btn btn--primary min-w-0"
+      className="btn btn--primary max-w-max min-w-0"
       title={
         isRepoRoot
           ? clickedObject.name

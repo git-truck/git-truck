@@ -5,15 +5,28 @@ import { useIsClient } from "~/hooks"
 import { Popover } from "~/components/Popover"
 import { cn } from "~/styling"
 
-export function AnalysisInfo({ className = "", trigger: trigger }: { className?: string; trigger: React.ReactNode }) {
+export function AnalysisInfo({
+  className = "",
+  trigger,
+  triggerClassName = ""
+}: {
+  className?: string
+  trigger: React.ReactNode
+  triggerClassName?: string
+}) {
   const client = useIsClient()
   const { databaseInfo } = useData()
 
   const isoString = new Date(databaseInfo.lastRunInfo.time).toISOString()
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="relative flex w-full items-center justify-between gap-2">
-        <Popover triggerOnHover popoverTitle="Analysis details" trigger={() => trigger}>
+      <div className="relative flex w-full min-w-0 items-center justify-between gap-2">
+        <Popover
+          triggerOnHover
+          popoverTitle="Analysis details"
+          trigger={() => trigger}
+          triggerClassName={triggerClassName}
+        >
           <div className="text-secondary-text dark:text-secondary-text-dark grid auto-rows-fr grid-cols-2 items-center gap-0 text-sm">
             <span className="font-bold">Time analyzed</span>
             <time className="text-right" dateTime={isoString} title={isoString}>
