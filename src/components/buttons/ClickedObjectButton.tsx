@@ -22,7 +22,7 @@ export function ClickedObjectButton() {
   return (
     <button
       type="button"
-      className="btn btn--primary"
+      className="btn btn--primary min-w-0"
       title={
         isRepoRoot
           ? clickedObject.name
@@ -45,7 +45,7 @@ export function ClickedObjectButton() {
       }}
     >
       <Icon path={isRepoRoot ? mdiSourceRepository : clickedObject.type === "tree" ? mdiFolder : mdiFile} />
-      {clickedObject.name}
+      <div className="truncate">{clickedObject.name}</div>
       {!isRepoRoot ? <Icon path={isZoomPath ? mdiMagnifyMinusOutline : mdiClose} /> : null}
     </button>
   )
