@@ -65,10 +65,7 @@ export function Chart() {
   const selectedCategories = useSelectedCategories()
   const hasSelection = useHasSelection()
   const isCategorySelected = useIsCategorySelected()
-  const selectedCategoryNames = useMemo(
-    () => new Set(selectedCategories.map((category) => category.slice(metricType.length + 1))),
-    [metricType, selectedCategories]
-  )
+
   const clickedObjectPath = useClickedObjectPath()
   const setClickedObjectPath = useSetClickedObjectPath()
 
@@ -175,17 +172,13 @@ export function Chart() {
   const colorsByPath = useMemo(() => {
     const colors = new Map<string, HexColor[]>()
     const categoryMap = metricsData.get(metricType)?.categoriesMap
-    const noCategoriesSelected = selectedCategoryNames.size === 0
 
     for (const node of nodes) {
-      colors.set(
-        node.data.path,
-        getColorsForObject(node.data, categoryMap, selectedCategoryNames, noCategoriesSelected)
-      )
+      colors.set(node.data.path, getColorsForObject(node.data, categoryMap, selectedCategories, hasSelection))
     }
 
     return colors
-  }, [metricType, metricsData, nodes, selectedCategoryNames])
+  }, [hasSelection, metricType, metricsData, nodes, selectedCategories])
 
   return (
     <div
@@ -573,13 +566,13 @@ function isCircularNode(d: CircleOrRectHiearchyNode): d is HierarchyCircularNode
 function getColorsForObject(
   obj: GitObject,
   categoryMap: Map<string, Array<{ category: string; color: HexColor }>> | undefined,
-  selectedCategoryNames: ReadonlySet<string>,
-  noCategoriesSelected: boolean
+  selectedCategoryNames: Array<string>,
+  hasSelection: boolean
 ): HexColor[] {
   const colors =
     categoryMap
       ?.get(obj.path)
-      ?.filter(({ category }) => noCategoriesSelected || selectedCategoryNames.has(category))
+      ?.filter(({ category }) => !hasSelection || selectedCategoryNames.includes(category))
       .map(({ color }) => color) ?? []
 
   return colors.length > 0 ? colors : [missingInMapColor]
