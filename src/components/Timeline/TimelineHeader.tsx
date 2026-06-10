@@ -15,16 +15,16 @@ export function TimelineHeader({ dropdownButtons }: { dropdownButtons: Array<Dro
   const data = useData()
 
   return (
-    <div className="card__title flex w-full items-center justify-between gap-4">
+    <div className="card__title grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
       <h2
-        className="flex items-center gap-2"
+        className="flex min-w-0 items-center gap-2"
         title={isTree(clickedObject) ? "Commits that changed this folder" : "Commits that changed this file"}
       >
         <div className="truncate">Commit activity</div>
-        <ClickedObjectButton />
       </h2>
+      <ClickedObjectButton />
 
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex shrink-0 items-center justify-end gap-2">
         <TimeUnitForm />
 
         <TimeRangePresetButtons unit={data.databaseInfo.commitCountPerTimeIntervalUnit} />
@@ -51,7 +51,7 @@ function SettingsButton({ metricMenuItems }: { metricMenuItems: Array<DropdownBu
             title="Panel options"
             className="btn btn--text btn--icon flex items-center"
           >
-            <Icon path={mdiDotsVertical} size="1em" />
+            <Icon path={mdiDotsVertical} size={1} />
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content

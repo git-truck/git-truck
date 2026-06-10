@@ -556,8 +556,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 </div>
                 <div />
               </header>
-              <nav className="grid grid-cols-[1fr_auto_1fr] items-center justify-between gap-2 [grid-area:cheader]">
-                <div className={cn("flex items-center")}>
+              <nav className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 [grid-area:cheader]">
+                <div className={cn("flex min-w-0 items-center")}>
                   {matchesLarge && !leftExpanded ? (
                     <>
                       <button title={"Show left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
@@ -571,7 +571,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       />
                     </>
                   ) : null}
-                  <Breadcrumb zoom />
+                  <Breadcrumb zoom className="flex-1" />
                 </div>
 
                 <CompactLoadingIndicator />

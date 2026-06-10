@@ -93,7 +93,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
   return (
     <div
       className={cn(
-        "text-secondary-text dark:text-secondary-text-dark flex h-8 items-center justify-stretch gap-1 overflow-x-auto",
+        "text-secondary-text dark:text-secondary-text-dark flex h-8 min-w-0 items-center justify-stretch gap-1 overflow-x-auto",
         className
       )}
     >
@@ -114,14 +114,14 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             ) : zoom && type === "browse" ? (
               <Icon path={mdiSourceRepositoryMultiple} />
             ) : null}
-            {segment}
+            <span className="min-w-0 truncate">{segment}</span>
           </>
         )
         const button =
           type === "filler" ? (
             <div
               title={fullPath}
-              className="text-tertiary-text dark:text-tertiary-text-dark pointer-events-none flex w-max items-center gap-2 truncate text-sm font-bold opacity-80"
+              className="text-tertiary-text dark:text-tertiary-text-dark pointer-events-none flex w-max items-center gap-2 overflow-hidden text-sm font-bold opacity-80"
             >
               {content}
             </div>
@@ -129,7 +129,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             <Link
               to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
               title={title}
-              className="text-secondary-text dark:text-secondary-text-dark flex cursor-pointer items-center gap-1 truncate text-sm font-bold"
+              className="text-secondary-text dark:text-secondary-text-dark flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden text-sm font-bold"
               onClick={() => setClickedObjectPath(null)}
             >
               {content}
@@ -137,7 +137,7 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
           ) : (
             <button
               title={title}
-              className="text-secondary-text dark:text-secondary-text-dark flex cursor-pointer items-center gap-1 truncate text-sm font-bold"
+              className="text-secondary-text dark:text-secondary-text-dark flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden text-sm font-bold"
               onClick={() => {
                 if (!data) {
                   throw Error("Attempting to access data when none is loaded")
@@ -161,7 +161,11 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
         return (
           <Fragment key={fullPath}>
             {!isFirst ? <Icon path={mdiChevronRight} size="1.25rem" /> : null}
-            {isRepo ? <AnalysisInfo trigger={button} /> : button}
+            {isRepo ? (
+              <AnalysisInfo className="min-w-0" trigger={button} triggerClassName="min-w-0 overflow-hidden" />
+            ) : (
+              button
+            )}
           </Fragment>
         )
       })}
