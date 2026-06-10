@@ -66,25 +66,30 @@ function FileChangesEntry(props: { fileChanges: FileChange[] }) {
 function CommitListEntry(props: { value: FullCommitDTO }) {
   const [, contributorColors] = useMetrics()
   const authorColor = contributorColors.get(props.value.author.name) ?? missingInMapColor
+
+  const uniqueCoAuthors = props.value.coauthors.filter(
+    (coauthor, i, all) =>
+      coauthor.name != props.value.author.name &&
+      coauthor.email != props.value.author.email &&
+      all.findIndex((c) => c.name === coauthor.name && c.email === coauthor.email) === i
+  )
+
   return (
     <>
       <div className="flex w-min min-w-5.5 items-start">
         <div className="flex-end flex flex-row-reverse items-center">
           {props.value.coauthors.length > 0
-            ? props.value.coauthors
-                .filter((coauthor) => coauthor.name != props.value.author.name)
-                .slice(0, 2)
-                .map((coauthor) => {
-                  const coauthorColor = contributorColors.get(coauthor.name) ?? missingInMapColor
-                  return (
-                    <LegendDot
-                      key={props.value.hash + coauthor.email + coauthorColor}
-                      title={coauthor.name}
-                      dotColor={coauthorColor}
-                      className="z-0 -ml-2.5"
-                    />
-                  )
-                })
+            ? uniqueCoAuthors.slice(0, 2).map((coauthor) => {
+                const coauthorColor = contributorColors.get(coauthor.name) ?? missingInMapColor
+                return (
+                  <LegendDot
+                    key={props.value.hash + coauthor.email + coauthorColor}
+                    title={coauthor.name}
+                    dotColor={coauthorColor}
+                    className="z-0 -ml-2.5"
+                  />
+                )
+              })
             : null}
           <LegendDot
             key={props.value.hash + props.value.author.email + authorColor}
@@ -125,10 +130,10 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
               </span>
             </div>
           </GenericEntry>
-          {props.value.coauthors.length > 0 ? (
+          {uniqueCoAuthors.length > 0 ? (
             <GenericEntry keyString="Co-authors">
               <div className="flex flex-col gap-y-1">
-                {props.value.coauthors.map((coauthor) => (
+                {uniqueCoAuthors.map((coauthor) => (
                   <div
                     key={coauthor.email}
                     className="grid grid-cols-[max-content_max-content_auto] items-center gap-1 text-sm"
