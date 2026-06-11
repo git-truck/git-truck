@@ -18,14 +18,24 @@ import { nowInSeconds, type TimeUnit } from "~/shared/utils/time"
 type CommitCountInterval = {
   date: string
   count: number
+  authoredCommitCount: number
+  coauthoredCommitCount?: number
   timestamp: number
   contributors: Record<string, number>
+  contributorRoleCounts: Record<string, { authoredCommitCount: number; coauthoredCommitCount: number }>
 }
 
 type CommitCountRow = {
   lookup: string
   author: string
   count: number
+}
+
+type CommitRoleCountRow = {
+  lookup: string
+  author?: string
+  authoredCommitCount: number
+  coauthoredCommitCount: number
 }
 
 type CommitCountOptions = {
@@ -1462,11 +1472,70 @@ export default class DB {
       final.push({
         date: interval.label,
         count: bucket?.count ?? 0,
+        authoredCommitCount: bucket?.count ?? 0,
         timestamp: interval.timestamp,
-        contributors: bucket?.contributors ?? {}
+        contributors: bucket?.contributors ?? {},
+        contributorRoleCounts: Object.fromEntries(
+          Object.entries(bucket?.contributors ?? {}).map(([author, count]) => [
+            author,
+            { authoredCommitCount: count, coauthoredCommitCount: 0 }
+          ])
+        )
       })
     }
     return final.sort((a, b) => a.timestamp - b.timestamp)
+  }
+
+  private mapCommitRoleCountsToIntervals({
+    intervals,
+    rows,
+    timerange,
+    timeUnit
+  }: {
+    intervals: CommitCountInterval[]
+    rows: CommitRoleCountRow[]
+    timerange: [number, number]
+    timeUnit: TimeUnit
+  }): CommitCountInterval[] {
+    const roleCountsByLookup = new Map(
+      rows
+        .filter((row) => !row.author)
+        .map((row) => [
+          row.lookup,
+          {
+            authoredCommitCount: row.authoredCommitCount,
+            coauthoredCommitCount: row.coauthoredCommitCount
+          }
+        ])
+    )
+    const lookupByTimestamp = new Map(
+      getTimeIntervals(timeUnit, timerange[0], timerange[1]).map((interval) => [interval.timestamp, interval.lookup])
+    )
+
+    return intervals.map((interval) => {
+      const lookup = lookupByTimestamp.get(interval.timestamp)
+      const intervalRoleCounts = lookup ? rows.filter((row) => row.lookup === lookup) : []
+      const roleCounts = lookup ? roleCountsByLookup.get(lookup) : undefined
+      const contributorRoleCounts = Object.fromEntries(
+        intervalRoleCounts
+          .filter((row) => row.author)
+          .map((row) => [
+            row.author!,
+            {
+              authoredCommitCount: row.authoredCommitCount,
+              coauthoredCommitCount: row.coauthoredCommitCount
+            }
+          ])
+      )
+
+      return {
+        ...interval,
+        authoredCommitCount: roleCounts?.authoredCommitCount ?? interval.authoredCommitCount,
+        coauthoredCommitCount: roleCounts?.coauthoredCommitCount ?? 0,
+        contributorRoleCounts:
+          Object.keys(contributorRoleCounts).length > 0 ? contributorRoleCounts : interval.contributorRoleCounts
+      }
+    })
   }
 
   public async getCommitCountPerTime(
@@ -1528,7 +1597,79 @@ export default class DB {
       return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
 
-    return [this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit), timeUnit]
+    const intervals = this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit)
+
+    if (!options.includeCoauthors) {
+      return [intervals, timeUnit]
+    }
+
+    const roleCountRows = await this.query(/*sql*/ `
+      SELECT strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        COUNT(DISTINCT hash) AS authoredCommitCount,
+        COUNT(DISTINCT coauthoredCommitHash) AS coauthoredCommitCount
+      FROM (
+        SELECT date_trunc('${timeUnit}', to_timestamp(c.committerTime)) AS date,
+          c.hash,
+          co.commitHash AS coauthoredCommitHash
+        FROM commits c
+        LEFT JOIN commitTrailers_unioned co ON c.hash = co.commitHash AND co.trailerType = 'coauthor'
+        WHERE c.committerTime BETWEEN ${timerange[0]} AND ${timerange[1]}
+      )
+      GROUP BY date
+      ORDER BY date ASC;`)
+    const roleCounts: CommitRoleCountRow[] = roleCountRows.map((row) => ({
+      lookup: row["bucket_lookup"] as string,
+      authoredCommitCount: Number(row["authoredCommitCount"]),
+      coauthoredCommitCount: Number(row["coauthoredCommitCount"])
+    }))
+    const contributorRoleCountRows = await this.query(/*sql*/ `
+      WITH authored_commits AS (
+        SELECT c.hash, c.committerTime, COALESCE(cg.displayName, c.author) AS author
+        FROM commits c
+        LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+        ON (c.author = cg.name AND c.authorEmail = cg.email)
+        WHERE c.committerTime BETWEEN ${timerange[0]} AND ${timerange[1]}
+      ),
+      contributor_roles AS (
+        SELECT date_trunc('${timeUnit}', to_timestamp(committerTime)) AS date,
+          author,
+          COUNT(DISTINCT hash) AS authoredCommitCount,
+          0 AS coauthoredCommitCount
+        FROM authored_commits
+        GROUP BY date, author
+        UNION ALL
+        SELECT date_trunc('${timeUnit}', to_timestamp(c.committerTime)) AS date,
+          co.name AS author,
+          0 AS authoredCommitCount,
+          COUNT(DISTINCT c.hash) AS coauthoredCommitCount
+        FROM authored_commits c
+        JOIN commitTrailers_unioned co ON c.hash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND co.name <> c.author
+        GROUP BY date, co.name
+      )
+      SELECT strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
+        SUM(authoredCommitCount) AS authoredCommitCount,
+        SUM(coauthoredCommitCount) AS coauthoredCommitCount
+      FROM contributor_roles
+      GROUP BY date, author
+      ORDER BY date ASC;`)
+    const contributorRoleCounts: CommitRoleCountRow[] = contributorRoleCountRows.map((row) => ({
+      lookup: row["bucket_lookup"] as string,
+      author: row["author"] as string,
+      authoredCommitCount: Number(row["authoredCommitCount"]),
+      coauthoredCommitCount: Number(row["coauthoredCommitCount"])
+    }))
+
+    return [
+      this.mapCommitRoleCountsToIntervals({
+        intervals,
+        rows: [...roleCounts, ...contributorRoleCounts],
+        timerange,
+        timeUnit
+      }),
+      timeUnit
+    ]
   }
 
   public async getCommitCountPerTimeForClickedObject({
@@ -1629,7 +1770,126 @@ export default class DB {
       return { lookup: x["bucket_lookup"] as string, author: x["author"] as string, count: Number(x["count"]) }
     })
 
-    return this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit)
+    const intervals = this.mapCommitCountRowsToIntervals(mapped, timerange, timeUnit)
+
+    if (!includeCoauthors) {
+      return intervals
+    }
+
+    const roleCountSql = /*sql*/ `WITH object_commits AS (
+        SELECT DISTINCT commitHash, committerTime
+        FROM (
+          SELECT c.hash AS commitHash,
+            c.committerTime,
+            COALESCE(r.toName, f.filePath) AS resolvedPath
+          FROM commits c
+          JOIN fileChanges f ON c.hash = f.commitHash
+          LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
+            c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+          )
+        )
+        WHERE resolvedPath = ? OR resolvedPath LIKE ?
+      )
+      SELECT strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        COUNT(DISTINCT commitHash) AS authoredCommitCount,
+        COUNT(DISTINCT coauthoredCommitHash) AS coauthoredCommitCount
+      FROM (
+        SELECT date_trunc(?, to_timestamp(oc.committerTime)) AS date,
+          oc.commitHash,
+          co.commitHash AS coauthoredCommitHash
+        FROM object_commits oc
+        LEFT JOIN commitTrailers_unioned co ON oc.commitHash = co.commitHash AND co.trailerType = 'coauthor'
+      )
+      GROUP BY date
+      ORDER BY date ASC;`
+
+    const roleCountRows = await this.usingPreparedStatement(
+      roleCountSql,
+      async (statement) => {
+        statement.bindVarchar(1, objectPath)
+        statement.bindVarchar(2, `${objectPath}/%`)
+        statement.bindVarchar(3, timeUnit)
+
+        return (await statement.runAndReadAll()).getRowObjects()
+      },
+      "getCommitCountPerTimeForClickedObjectRoleCounts"
+    )
+
+    const roleCounts: CommitRoleCountRow[] = roleCountRows.map((row) => {
+      return {
+        lookup: row["bucket_lookup"] as string,
+        authoredCommitCount: Number(row["authoredCommitCount"]),
+        coauthoredCommitCount: Number(row["coauthoredCommitCount"])
+      }
+    })
+    const contributorRoleCountSql = /*sql*/ `WITH object_commits AS (
+        SELECT DISTINCT commitHash, committerTime, author
+        FROM (
+          SELECT c.hash AS commitHash,
+            c.committerTime,
+            COALESCE(cg.displayName, c.author) AS author,
+            COALESCE(r.toName, f.filePath) AS resolvedPath
+          FROM commits c
+          JOIN fileChanges f ON c.hash = f.commitHash
+          LEFT JOIN (SELECT displayName, email, name FROM contributorGroups) cg
+          ON (c.author = cg.name AND c.authorEmail = cg.email)
+          LEFT JOIN temporaryRenames r ON f.filePath = r.fromName AND (
+            c.committerTime BETWEEN r.timestamp AND r.timestampEnd
+          )
+        )
+        WHERE resolvedPath = ? OR resolvedPath LIKE ?
+      ),
+      contributor_roles AS (
+        SELECT date_trunc(?, to_timestamp(committerTime)) AS date,
+          author,
+          COUNT(DISTINCT commitHash) AS authoredCommitCount,
+          0 AS coauthoredCommitCount
+        FROM object_commits
+        GROUP BY date, author
+        UNION ALL
+        SELECT date_trunc(?, to_timestamp(oc.committerTime)) AS date,
+          co.name AS author,
+          0 AS authoredCommitCount,
+          COUNT(DISTINCT oc.commitHash) AS coauthoredCommitCount
+        FROM object_commits oc
+        JOIN commitTrailers_unioned co ON oc.commitHash = co.commitHash
+        WHERE co.trailerType = 'coauthor' AND co.name <> oc.author
+        GROUP BY date, co.name
+      )
+      SELECT strftime(date, '%Y-%m-%d') AS bucket_lookup,
+        author,
+        SUM(authoredCommitCount) AS authoredCommitCount,
+        SUM(coauthoredCommitCount) AS coauthoredCommitCount
+      FROM contributor_roles
+      GROUP BY date, author
+      ORDER BY date ASC;`
+    const contributorRoleCountRows = await this.usingPreparedStatement(
+      contributorRoleCountSql,
+      async (statement) => {
+        statement.bindVarchar(1, objectPath)
+        statement.bindVarchar(2, `${objectPath}/%`)
+        statement.bindVarchar(3, timeUnit)
+        statement.bindVarchar(4, timeUnit)
+
+        return (await statement.runAndReadAll()).getRowObjects()
+      },
+      "getCommitCountPerTimeForClickedObjectContributorRoleCounts"
+    )
+    const contributorRoleCounts: CommitRoleCountRow[] = contributorRoleCountRows.map((row) => {
+      return {
+        lookup: row["bucket_lookup"] as string,
+        author: row["author"] as string,
+        authoredCommitCount: Number(row["authoredCommitCount"]),
+        coauthoredCommitCount: Number(row["coauthoredCommitCount"])
+      }
+    })
+
+    return this.mapCommitRoleCountsToIntervals({
+      intervals,
+      rows: [...roleCounts, ...contributorRoleCounts],
+      timerange,
+      timeUnit
+    })
   }
 
   public async updateColorSeed(seed: string) {

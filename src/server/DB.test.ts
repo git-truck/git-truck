@@ -120,12 +120,25 @@ describe("getCommitCountPerTime", () => {
       })
 
       expect(primaryAuthorIntervals[0].count).toBe(200)
+      expect(primaryAuthorIntervals[0].authoredCommitCount).toBe(200)
+      expect(primaryAuthorIntervals[0].coauthoredCommitCount).toBeUndefined()
       expect(primaryAuthorIntervals[0].contributors).toEqual({
         "Author A": 100,
         "Author B": 100
       })
+      expect(primaryAuthorIntervals[0].contributorRoleCounts).toEqual({
+        "Author A": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author B": { authoredCommitCount: 100, coauthoredCommitCount: 0 }
+      })
 
       expect(commitShareIntervals[0].count).toBeCloseTo(200)
+      expect(commitShareIntervals[0].authoredCommitCount).toBe(200)
+      expect(commitShareIntervals[0].coauthoredCommitCount).toBe(100)
+      expect(commitShareIntervals[0].contributorRoleCounts).toEqual({
+        "Author A": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author B": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author C": { authoredCommitCount: 0, coauthoredCommitCount: 100 }
+      })
       expect(commitShareIntervals[0].contributors["Author A"]).toBeCloseTo(75)
       expect(commitShareIntervals[0].contributors["Author B"]).toBeCloseTo(75)
       expect(commitShareIntervals[0].contributors["Author C"]).toBeCloseTo(50)
@@ -156,12 +169,25 @@ describe("getCommitCountPerTime", () => {
       })
 
       expect(primaryAuthorIntervals[0].count).toBe(200)
+      expect(primaryAuthorIntervals[0].authoredCommitCount).toBe(200)
+      expect(primaryAuthorIntervals[0].coauthoredCommitCount).toBeUndefined()
       expect(primaryAuthorIntervals[0].contributors).toEqual({
         "Author A": 100,
         "Author B": 100
       })
+      expect(primaryAuthorIntervals[0].contributorRoleCounts).toEqual({
+        "Author A": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author B": { authoredCommitCount: 100, coauthoredCommitCount: 0 }
+      })
 
       expect(commitShareIntervals[0].count).toBeCloseTo(200)
+      expect(commitShareIntervals[0].authoredCommitCount).toBe(200)
+      expect(commitShareIntervals[0].coauthoredCommitCount).toBe(100)
+      expect(commitShareIntervals[0].contributorRoleCounts).toEqual({
+        "Author A": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author B": { authoredCommitCount: 100, coauthoredCommitCount: 0 },
+        "Author C": { authoredCommitCount: 0, coauthoredCommitCount: 100 }
+      })
       expect(commitShareIntervals[0].contributors["Author A"]).toBeCloseTo(75)
       expect(commitShareIntervals[0].contributors["Author B"]).toBeCloseTo(75)
       expect(commitShareIntervals[0].contributors["Author C"]).toBeCloseTo(50)

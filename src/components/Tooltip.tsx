@@ -1,4 +1,5 @@
 import {
+  mdiAccount,
   mdiChevronRight,
   mdiCircleSmall,
   mdiFileOutline,
@@ -22,7 +23,6 @@ import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import {
   type HoveredBarTooltip,
-  formatCommitCount,
   getHoveredBarTooltipLines,
   useHoveredBarTooltip,
   useHoveredObject
@@ -111,6 +111,9 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
   const [label, totalCommitLine, clickedCommitLine] = getHoveredBarTooltipLines(hoveredBarTooltip)
   const contributorsToShow = hoveredBarTooltip.contributors.slice(0, maxContributorsToShow)
   const extraContributorCount = hoveredBarTooltip.contributors.length - maxContributorsToShow
+  const shouldShowCoauthoredColumn = contributorsToShow.some(
+    (contributor) => contributor.coauthoredCommitCount !== null
+  )
 
   return (
     <div className="flex w-max flex-col gap-1">
@@ -126,14 +129,33 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
         </span>
       ) : null}
       {contributorsToShow.length > 0 ? (
-        <div className="mt-2 flex flex-col gap-1">
-          <span className="font-bold opacity-80">Committers</span>
-          {contributorsToShow.map((contributor) => (
-            <span key={contributor.name} className="flex items-center gap-1">
-              <LegendDot dotColor={contributor.color} shape="square" /> {contributor.name} (
-              {formatCommitCount(contributor.commitCount)})
-            </span>
-          ))}
+        <div className="mt-2">
+          <span className="text-sm font-bold opacity-80">Commit distribution</span>
+          <div
+            className={cn(
+              "mt-2 grid grid-flow-row gap-x-2 gap-y-1 text-left",
+              shouldShowCoauthoredColumn ? "grid-cols-[auto_auto_auto_auto]" : "grid-cols-[auto_auto_auto]"
+            )}
+          >
+            <Icon path={mdiAccount} />
+            <div className="pr-2 font-bold opacity-80">Contributor</div>
+            <div className="text-right font-bold opacity-80">Authored</div>
+            {shouldShowCoauthoredColumn ? <div className="text-right font-bold opacity-80">Co-authored</div> : null}
+            {contributorsToShow.map((contributor) => (
+              <Fragment key={contributor.name}>
+                <LegendDot dotColor={contributor.color} shape="square" />
+                <span className="truncate" title={contributor.name}>
+                  {contributor.name}
+                </span>
+                <div className="text-right tabular-nums">{contributor.authoredCommitCount.toLocaleString()}</div>
+                {shouldShowCoauthoredColumn ? (
+                  <div className="text-right tabular-nums">
+                    {(contributor.coauthoredCommitCount ?? 0).toLocaleString()}
+                  </div>
+                ) : null}
+              </Fragment>
+            ))}
+          </div>
           {extraContributorCount > 0 ? `and ${extraContributorCount} more...` : null}
         </div>
       ) : null}

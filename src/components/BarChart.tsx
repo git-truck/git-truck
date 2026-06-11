@@ -20,6 +20,7 @@ import {
 } from "~/state/stores/hovered-object"
 import type { TimeUnit } from "~/shared/utils/time"
 import type { loader } from "~/routes/api.commit-intervals"
+import type { CommitCountInterval } from "~/shared/model"
 
 const barMargin = treemapPaddingInner
 
@@ -96,9 +97,10 @@ export function BarChart({
   intervals: Awaited<ReturnType<typeof loader>>["commitCountPerTimeIntervalForClickedObject"]
 }) {
   const { databaseInfo } = useData()
-  const [{ start, end }, setQs] = useQueryStates({
+  const [{ start, end, includeCoauthors }, setQs] = useQueryStates({
     start: viewSearchParamsConfig.start.withDefault(databaseInfo.timerange[0]),
-    end: viewSearchParamsConfig.end.withDefault(databaseInfo.timerange[1])
+    end: viewSearchParamsConfig.end.withDefault(databaseInfo.timerange[1]),
+    includeCoauthors: viewSearchParamsConfig.includeCoauthors
   })
 
   const { metricType } = useOptions()
@@ -123,7 +125,7 @@ export function BarChart({
 
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
   const fetchedIntervals = intervals.length > 0 ? intervals : null
-  const commitCountPerTimeIntervalForClickedObject = clickedObjectIsRepo
+  const commitCountPerTimeIntervalForClickedObject: CommitCountInterval[] = clickedObjectIsRepo
     ? (fetchedIntervals ?? databaseInfo.commitCountPerTimeInterval)
     : intervals
   const unit = databaseInfo.commitCountPerTimeIntervalUnit
@@ -229,11 +231,17 @@ export function BarChart({
 
           const tooltipContributors = (
             selectedCategories.length > 0 && metricIsContributorMetric ? authorsToStack : sortedContributors
-          ).map(([author, commitCount]) => ({
-            name: author,
-            color: contributorColors.get(author) ?? missingInMapColor,
-            commitCount
-          }))
+          ).map(([author, commitCount]) => {
+            const roleCounts = clickedObjInterval?.contributorRoleCounts[author]
+
+            return {
+              name: author,
+              color: contributorColors.get(author) ?? missingInMapColor,
+              commitCount,
+              authoredCommitCount: roleCounts?.authoredCommitCount ?? commitCount,
+              coauthoredCommitCount: includeCoauthors ? (roleCounts?.coauthoredCommitCount ?? 0) : null
+            }
+          })
           const tooltip: HoveredBarTooltip = {
             label: tooltipLabel,
             totalCommitCount: d.count,

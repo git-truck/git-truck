@@ -17,7 +17,7 @@ export const viewSearchParamsConfig = {
   timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues).withOptions({ shallow: false }),
   start: parseAsInteger.withOptions({ shallow: false }),
   end: parseAsInteger.withOptions({ shallow: false }),
-  includeCoauthors: parseAsBoolean.withDefault(false).withOptions({ shallow: false })
+  includeCoauthors: parseAsBoolean.withDefault(true).withOptions({ shallow: false })
 }
 
 export const viewSerializer = createSerializer(viewSearchParamsConfig)
