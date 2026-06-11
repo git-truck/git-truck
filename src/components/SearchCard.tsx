@@ -91,7 +91,7 @@ export function SearchCard() {
   return (
     <form
       ref={searchRootRef}
-      className="w-[calc(var(--spacing-sidepanel)-4*var(--spacing))] not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute top-[calc(2*var(--spacing)+2px)] right-4 z-10 flex flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
+      className="not-focus-within:has-placeholder-shown:w-button pointer-events-none absolute top-[calc(2*var(--spacing)+2px)] right-4 z-10 flex w-[calc(var(--spacing-sidepanel)-4*var(--spacing))] flex-col gap-2 transition-[left,width,translate] duration-75 **:pointer-events-auto not-focus-within:has-placeholder-shown:static not-focus-within:has-placeholder-shown:translate-x-0"
       onSubmit={(event) => {
         event.preventDefault()
         closeSearch()
