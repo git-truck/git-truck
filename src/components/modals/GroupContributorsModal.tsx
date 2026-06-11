@@ -141,88 +141,86 @@ function GroupContributorsModalContent({
     )
   })
 
-  const groupedContributorsEntries = localContributorGroups
-    .toSorted((a, b) => a.displayName.localeCompare(b.displayName))
-    .map(({ displayName, members }, aliasGroupIndex) => {
-      const color = getColorFromDisplayName(displayName)
+  const groupedContributorsEntries = localContributorGroups.map(({ displayName, members }, aliasGroupIndex) => {
+    const color = getColorFromDisplayName(displayName)
 
-      return (
-        <div
-          key={aliasGroupIndex}
-          className="card bg-primary-bg dark:bg-primary-bg-dark group m-0 flex h-full flex-col justify-between p-2"
-          title={displayName}
-        >
-          <div className="flex w-full flex-col gap-2">
-            <div className="flex w-full justify-between gap-0">
-              <div className="bg-primary-bg dark:bg-primary-bg-dark hover:bg-secondary-bg focus-within:bg-secondary-bg focus-within:dark:bg-secondary-bg-dark hover:dark:bg-secondary-bg-dark focus-within:ring-blue-primary flex items-center gap-1 rounded-md px-2 py-1 transition-colors focus-within:ring-2">
-                <LegendDot dotColor={color} />
-                <select
-                  className="input h-fit w-full truncate border-0 bg-transparent px-0 text-sm font-bold ring-0!"
-                  value={displayName}
-                  onChange={(e) => makePrimaryAlias(e.target.value, aliasGroupIndex)}
-                >
-                  {Array.from(new Set([displayName, ...members.map((member) => member.name)])).map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                className="btn btn--text hover:btn--danger transition-colors"
-                title="Ungroup"
-                aria-label="Ungroup"
-                onClick={() => setLocalContributorGroups((prev) => prev.filter((_, i) => i !== aliasGroupIndex))}
+    return (
+      <div
+        key={aliasGroupIndex}
+        className="card bg-primary-bg dark:bg-primary-bg-dark group m-0 flex h-full flex-col justify-between p-2"
+        title={displayName}
+      >
+        <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full justify-between gap-0">
+            <div className="bg-primary-bg dark:bg-primary-bg-dark hover:bg-secondary-bg focus-within:bg-secondary-bg focus-within:dark:bg-secondary-bg-dark hover:dark:bg-secondary-bg-dark focus-within:ring-blue-primary flex items-center gap-1 rounded-md px-2 py-1 transition-colors focus-within:ring-2">
+              <LegendDot dotColor={color} />
+              <select
+                className="input h-fit w-full truncate border-0 bg-transparent px-0 text-sm font-bold ring-0!"
+                value={displayName}
+                onChange={(e) => makePrimaryAlias(e.target.value, aliasGroupIndex)}
               >
-                <Icon path={mdiAccountMultipleRemove} size={1} />
-              </button>
-            </div>
-            <ul className="list-disc pl-6">
-              {members
-                .filter((value, index, array) => array.map((v) => v.email).indexOf(value.email) === index)
-                .map((contributor) => (
-                  <AliasEntry
-                    key={uniqueId(contributor)}
-                    contributor={contributor}
-                    onClick={() =>
-                      setLocalContributorGroups((prev) =>
-                        prev.flatMap((group, i) => {
-                          if (i !== aliasGroupIndex) return [group]
-                          const remainingMembers = group.members.filter((member) => member.email !== contributor.email)
-                          return remainingMembers.length > 0 ? [{ ...group, members: remainingMembers }] : []
-                        })
-                      )
-                    }
-                  />
+                {Array.from(new Set([displayName, ...members.map((member) => member.name)])).map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
-            </ul>
-          </div>
-          <div
-            className={cn(
-              "relative flex h-full w-full origin-top items-end justify-end transition-all delay-50 duration-100",
-              selectedContributors.length === 0 ? "max-h-0 scale-y-0 opacity-0" : "max-h-10 scale-y-100 opacity-100"
-            )}
-          >
+              </select>
+            </div>
             <button
-              className="btn btn--primary right bottom absolute h-fit w-fit px-2 py-1 text-xs shadow-lg"
-              title="Add selected contributors to this group"
-              disabled={selectedContributors.length === 0}
-              onClick={() => {
-                setLocalContributorGroups((prev) => {
-                  return prev.map((group, i) =>
-                    i === aliasGroupIndex ? { ...group, members: group.members.concat(selectedContributors) } : group
-                  )
-                })
-                setSelectedContributors([])
-              }}
+              className="btn btn--text hover:btn--danger transition-colors"
+              title="Ungroup"
+              aria-label="Ungroup"
+              onClick={() => setLocalContributorGroups((prev) => prev.filter((_, i) => i !== aliasGroupIndex))}
             >
-              <Icon path={mdiAccountMultiplePlus} size={0.75} />
-              Add contributor
+              <Icon path={mdiAccountMultipleRemove} size={1} />
             </button>
           </div>
+          <ul className="list-disc pl-6">
+            {members
+              .filter((value, index, array) => array.map((v) => v.email).indexOf(value.email) === index)
+              .map((contributor) => (
+                <AliasEntry
+                  key={uniqueId(contributor)}
+                  contributor={contributor}
+                  onClick={() =>
+                    setLocalContributorGroups((prev) =>
+                      prev.flatMap((group, i) => {
+                        if (i !== aliasGroupIndex) return [group]
+                        const remainingMembers = group.members.filter((member) => member.email !== contributor.email)
+                        return remainingMembers.length > 0 ? [{ ...group, members: remainingMembers }] : []
+                      })
+                    )
+                  }
+                />
+              ))}
+          </ul>
         </div>
-      )
-    })
+        <div
+          className={cn(
+            "relative flex h-full w-full origin-top items-end justify-end transition-all delay-50 duration-100",
+            selectedContributors.length === 0 ? "max-h-0 scale-y-0 opacity-0" : "max-h-10 scale-y-100 opacity-100"
+          )}
+        >
+          <button
+            className="btn btn--primary right bottom absolute h-fit w-fit px-2 py-1 text-xs shadow-lg"
+            title="Add selected contributors to this group"
+            disabled={selectedContributors.length === 0}
+            onClick={() => {
+              setLocalContributorGroups((prev) => {
+                return prev.map((group, i) =>
+                  i === aliasGroupIndex ? { ...group, members: group.members.concat(selectedContributors) } : group
+                )
+              })
+              setSelectedContributors([])
+            }}
+          >
+            <Icon path={mdiAccountMultiplePlus} size={0.75} />
+            Add contributor
+          </button>
+        </div>
+      </div>
+    )
+  })
 
   return (
     <Modal
