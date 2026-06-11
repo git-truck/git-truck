@@ -67,4 +67,5 @@ export function autoBuildContributorGroups(ungroupedContributors: Person[]): Con
       displayName: pickContributorGroupDisplayName(members),
       members
     }))
+    .toSorted((a, b) => a.displayName.localeCompare(b.displayName))
 }
