@@ -78,7 +78,7 @@ function CommitListEntry(props: { value: FullCommitDTO }) {
     <>
       <div className="flex w-min min-w-5.5 items-start">
         <div className="flex-end flex flex-row-reverse items-center">
-          {props.value.coauthors.length > 0
+          {uniqueCoAuthors.length > 0
             ? uniqueCoAuthors.slice(0, 2).map((coauthor) => {
                 const coauthorColor = contributorColors.get(coauthor.name) ?? missingInMapColor
                 return (
