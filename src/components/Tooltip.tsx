@@ -133,7 +133,7 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
           <span className="text-center text-sm font-bold opacity-80">Commit distribution</span>
           <div
             className={cn(
-              "grid grid-flow-row gap-x-2 gap-y-1 text-left",
+              "grid grid-flow-row gap-x-2 gap-y-1 text-left max-w-2xs",
               shouldShowCoauthoredColumn ? "grid-cols-[auto_auto_auto_auto]" : "grid-cols-[auto_auto_auto]"
             )}
           >
@@ -144,9 +144,9 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
             {contributorsToShow.map((contributor) => (
               <Fragment key={contributor.name}>
                 <LegendDot dotColor={contributor.color} shape="square" />
-                <span className="truncate" title={contributor.name}>
+                <div className="truncate min-w-0" title={contributor.name}>
                   {contributor.name}
-                </span>
+                </div>
                 <div className="text-right tabular-nums">{contributor.authoredCommitCount.toLocaleString()}</div>
                 {shouldShowCoauthoredColumn ? (
                   <div className="text-right tabular-nums">
