@@ -164,6 +164,16 @@ export interface RepoData {
   databaseInfo: DatabaseInfo
 }
 
+export type CommitCountInterval = {
+  date: string
+  count: number
+  authoredCommitCount: number
+  coauthoredCommitCount?: number
+  timestamp: number
+  contributors: Record<string, number>
+  contributorRoleCounts: Record<string, { authoredCommitCount: number; coauthoredCommitCount: number }>
+}
+
 export interface DatabaseInfo {
   topContributors: Record<string, { contributor: string; contribcount: number; hasTie: boolean }>
   commitCounts: Record<string, number>
@@ -189,7 +199,7 @@ export interface DatabaseInfo {
   timerange: [number, number]
   colorSeed: string | null
   contributorColors: Record<string, `#${string}`>
-  commitCountPerTimeInterval: { date: string; count: number; timestamp: number; contributors: Record<string, number> }[]
+  commitCountPerTimeInterval: CommitCountInterval[]
   commitCountPerTimeIntervalUnit: TimeUnit
   analyzedRepos: CompletedResult[]
   contribSumPerFile: Record<string, number>
