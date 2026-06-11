@@ -8,7 +8,7 @@ export function CompactLoadingIndicator() {
   return (
     <div
       className={cn(
-        "flex gap-2",
+        "flex gap-2 pr-1",
 
         "transition-opacity",
         {

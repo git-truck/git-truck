@@ -1,17 +1,13 @@
 import { loadViewSearchParams } from "~/shared/viewParams"
 import { AnalysisManager } from "~/server/AnalysisManager"
 import { invariant } from "~/shared/util"
+import type { CommitCountInterval } from "~/shared/model"
 import type { Route } from "./+types/api.commit-intervals"
 
 export async function loader({ request }: Route.LoaderArgs): Promise<{
   clickedObjectPath: string
 
-  commitCountPerTimeIntervalForClickedObject: {
-    date: string
-    count: number
-    timestamp: number
-    contributors: Record<string, number>
-  }[]
+  commitCountPerTimeIntervalForClickedObject: CommitCountInterval[]
 }> {
   const viewParams = loadViewSearchParams(request, {
     strict: true

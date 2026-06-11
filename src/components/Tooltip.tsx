@@ -130,10 +130,10 @@ function BarTooltipContent({ hoveredBarTooltip }: { hoveredBarTooltip: HoveredBa
       ) : null}
       {contributorsToShow.length > 0 ? (
         <div className="mt-2">
-          <span className="text-sm font-bold opacity-80">Commit distribution</span>
+          <span className="text-center text-sm font-bold opacity-80">Commit distribution</span>
           <div
             className={cn(
-              "mt-2 grid grid-flow-row gap-x-2 gap-y-1 text-left",
+              "grid grid-flow-row gap-x-2 gap-y-1 text-left",
               shouldShowCoauthoredColumn ? "grid-cols-[auto_auto_auto_auto]" : "grid-cols-[auto_auto_auto]"
             )}
           >

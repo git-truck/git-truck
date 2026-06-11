@@ -5,7 +5,13 @@ import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
 import { BarChart } from "~/components/BarChart"
 import { TimelineHeader } from "~/components/Timeline/TimelineHeader"
-import { mdiAccountMultiple, mdiCheckboxBlank, mdiCheckboxMarked, mdiDotsVertical, mdiMathLog } from "@mdi/js"
+import {
+  mdiAccountMultiple,
+  mdiCheckboxBlankOutline,
+  mdiCheckboxMarkedOutline,
+  mdiDotsVertical,
+  mdiMathLog
+} from "@mdi/js"
 import { Icon } from "~/components/Icon"
 
 import type { TimeUnit } from "~/shared/utils/time"
@@ -124,7 +130,7 @@ export function Timeline({ className }: { className?: string }) {
             label: (
               <div className="flex w-full items-center justify-between gap-2">
                 Use log scale
-                <Icon path={commitCountScale === "log" ? mdiCheckboxMarked : mdiCheckboxBlank} />
+                <Icon path={commitCountScale === "log" ? mdiCheckboxMarkedOutline : mdiCheckboxBlankOutline} />
               </div>
             ),
             onClick: () => setCommitCountScale((prev) => (prev === "log" ? "linear" : "log"))
@@ -133,7 +139,7 @@ export function Timeline({ className }: { className?: string }) {
             icon: mdiAccountMultiple,
             label: (
               <div className="flex w-full items-center justify-between gap-2">
-                Include co-authors <Icon path={includeCoAuthors ? mdiCheckboxMarked : mdiCheckboxBlank} />
+                Include co-authors <Icon path={includeCoAuthors ? mdiCheckboxMarkedOutline : mdiCheckboxBlankOutline} />
               </div>
             ),
             onClick: () => setIncludeCoAuthors((prev) => !prev)
