@@ -34,7 +34,7 @@ export function CheckboxWithLabel({
       )}
       {...props}
     >
-      <input type="checkbox" checked={checked} className="peer hidden" onChange={onChange} />
+      <input type="checkbox" checked={checked} className="peer sr-only" onChange={onChange} />
       <div className="text-secondary-text hover:text-blue-primary dark:text-secondary-text-dark contents items-center">
         {children}
       </div>
