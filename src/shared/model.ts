@@ -95,7 +95,7 @@ export interface FileChange {
   mode: ModeType
 }
 
-export interface CommitDTO {
+interface CommitDTO {
   author: Person
   committerTime: number
   authorTime: number
