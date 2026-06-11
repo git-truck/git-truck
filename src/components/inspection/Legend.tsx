@@ -35,7 +35,7 @@ export function Legend() {
         .filter((p) => !(p.id === "top-contributor-slider" && !showTopContributorSlider))
         .map((Panel, i) => (
           <MetricInspectionPanel
-            key={Panel.id ?? `panel-${i}`}
+            key={`${metricType}:${Panel.id}`}
             actions={Panel.actions}
             metricMenuItems={toPanelMenuItems(Panel.menuItems)}
             title={
