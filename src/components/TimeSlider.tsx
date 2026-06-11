@@ -266,7 +266,7 @@ function TimeSlider({
               <div
                 key={id}
                 className={cn(
-                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded opacity-0 transition-[backdrop-filter]",
+                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded transition-[backdrop-filter]",
                   {
                     "backdrop-blur-2xl": isPending
                   }
