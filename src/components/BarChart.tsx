@@ -194,25 +194,28 @@ export function BarChart({
           )
 
           const sortedContributors = Object.entries(clickedObjInterval?.contributors ?? {}).sort((a, b) => b[1] - a[1])
-          const authorsToStack =
+          const stackedContributors =
             clickedObjInterval && selectedCategories.length > 0 && metricIsContributorMetric
               ? sortedContributors.filter(([author]) => selectedContributors.has(author))
               : []
-          const selectedContributorCount = authorsToStack.reduce((total, [, authorCount]) => total + authorCount, 0)
-          const displayedCount =
+          const selectedContributorCount = stackedContributors.reduce(
+            (total, [, authorCount]) => total + authorCount,
+            0
+          )
+          const selectedCount =
             selectedCategories.length > 0 && metricIsContributorMetric
               ? selectedContributorCount
               : (clickedObjInterval?.count ?? 0)
-          const hasFileActivity = displayedCount > 0
+          const hasFileActivity = selectedCount > 0
 
-          const clickedCountLogged = scale === "log" ? Math.log10(displayedCount + 1) : displayedCount
+          const clickedCountLogged = scale === "log" ? Math.log10(selectedCount + 1) : selectedCount
           const clickedBarHeight = BAR_HEIGHT - yScale(clickedCountLogged)
           const clickedBarY = yScale(clickedCountLogged)
           const tooltipLabel = getBarTooltipLabel(intervalStart, unit)
 
           let currentY = clickedBarY + clickedBarHeight
-          const stackedSlices = authorsToStack.map(([author, contributorCount]) => {
-            const fraction = contributorCount / displayedCount
+          const stackedSlices = stackedContributors.map(([author, contributorCount]) => {
+            const fraction = contributorCount / selectedCount
             const sliceHeight = clickedBarHeight * fraction
             const sliceY = currentY - sliceHeight
             currentY = sliceY
@@ -230,7 +233,7 @@ export function BarChart({
               : []
 
           const tooltipContributors = (
-            selectedCategories.length > 0 && metricIsContributorMetric ? authorsToStack : sortedContributors
+            selectedCategories.length > 0 && metricIsContributorMetric ? stackedContributors : sortedContributors
           ).map(([author, commitCount]) => {
             const roleCounts = clickedObjInterval?.contributorRoleCounts[author]
 

@@ -7,11 +7,35 @@ export type HoveredBarTooltip = {
   totalObjectName: string
   clickedObjectName: string | null
   clickedCommitCount: number | null
-  contributors: { name: string; color: string; commitCount: number }[]
+  contributors: {
+    name: string
+    color: string
+    commitCount: number
+    authoredCommitCount: number
+    coauthoredCommitCount: number | null
+  }[]
 }
 
-export function formatCommitCount(count: number) {
+function formatCommitCount(count: number) {
   return `${count.toLocaleString()} commit${count !== 1 ? "s" : ""}`
+}
+
+export function formatCommitRoleCount({
+  authoredCommitCount,
+  coauthoredCommitCount
+}: {
+  authoredCommitCount: number
+  coauthoredCommitCount: number | null
+}) {
+  const authoredText = `${authoredCommitCount.toLocaleString()} authored`
+
+  if (coauthoredCommitCount === null) {
+    return `(${authoredText} commit${authoredCommitCount !== 1 ? "s" : ""})`
+  }
+
+  return `(${authoredText}, ${coauthoredCommitCount.toLocaleString()} co-authored commit${
+    coauthoredCommitCount !== 1 ? "s" : ""
+  })`
 }
 
 export function getHoveredBarTooltipLines(tooltip: HoveredBarTooltip) {
