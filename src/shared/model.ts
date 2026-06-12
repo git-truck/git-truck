@@ -95,7 +95,7 @@ export interface FileChange {
   mode: ModeType
 }
 
-export interface CommitDTO {
+interface CommitDTO {
   author: Person
   committerTime: number
   authorTime: number
@@ -149,7 +149,7 @@ export interface RenameInterval {
   timestampEnd: number
 }
 
-export type Path = string
+type Path = string
 export type ObjectPathMap = Record<Path, GitObjectNoChildren>
 
 export interface FileModification {
@@ -223,7 +223,7 @@ export type ClickedObjectInfo = {
 }
 export type HexColor = `#${string}`
 
-export type RequiredNotNull<T> = {
+type RequiredNotNull<T> = {
   [P in keyof T]: NonNullable<T[P]>
 }
 
