@@ -126,7 +126,7 @@
     "react-use-size": "5.0.1",
     "semver": "7.7.4",
     "sha1": "1.1.1",
-    "tailwind-merge": "3.4.0",
+    "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.1",
     "temporal-polyfill": "0.3.2",
     "tsdown": "0.22.0",
