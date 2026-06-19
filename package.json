@@ -60,7 +60,7 @@
     "@duckdb/node-api": "1.5.1-r.2"
   },
   "devDependencies": {
-    "@babel/core": "7.29.0",
+    "@babel/core": "8.0.1",
     "@changesets/cli": "2.30.0",
     "@eslint/js": "9.39.2",
     "@headlessui/react": "2.2.9",
