@@ -13,9 +13,15 @@ export function useGradient(colors: Array<string>) {
           {Array.from(new Set(colors))
             .toSorted()
             .slice(0, categoricalScheme.length)
-            .map((color, i, colors) => (
-              <stop key={i} offset={`${(i / Math.max(colors.length - 1, 1)) * 100}%`} stopColor={color} />
-            ))}
+            .flatMap((color, i, uniqueColors) => {
+              const start = (i / uniqueColors.length) * 100
+              const end = ((i + 1) / uniqueColors.length) * 100
+
+              return [
+                <stop key={`${color}-start-${i}`} offset={`${start}%`} stopColor={color} />,
+                <stop key={`${color}-end-${i}`} offset={`${end}%`} stopColor={color} />
+              ]
+            })}
         </linearGradient>
       ) : null,
     [colors, gradientId]
