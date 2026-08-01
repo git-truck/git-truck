@@ -25,6 +25,7 @@ updates:
         patterns:
           - "react-router"
           - "@react-router/*"
+          - "react-router-devtools"
       vite:
         patterns:
           - "vite"
