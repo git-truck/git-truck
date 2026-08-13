@@ -26,6 +26,7 @@ updates:
           - "react-router"
           - "@react-router/*"
           - "react-router-devtools"
+          - "nuqs"
       vite:
         patterns:
           - "vite"
