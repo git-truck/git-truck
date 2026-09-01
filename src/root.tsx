@@ -101,7 +101,8 @@ export const ErrorBoundary = () => {
   url.searchParams.append("title", "crash: " + (error instanceof Error ? error.message : "Unknown error"))
   url.searchParams.append("os", navigator.platform)
   url.searchParams.append("version", pkg.version)
-  if (error && error instanceof Error) url.searchParams.append("description", `\n\n\`\`\`\n${error.stack}\n\`\`\``)
+  if (error && error instanceof Error)
+    url.searchParams.append("description", `\n\n\`\`\`\n${error.stack?.split("\n").slice(0, 20).join("\n")}\n\`\`\``)
 
   return (
     <Shell>
