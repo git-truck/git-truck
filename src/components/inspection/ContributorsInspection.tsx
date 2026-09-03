@@ -142,7 +142,7 @@ function ContributorDistFragment(props: { items: { contributor: string; contribs
                 dotColor={contributorColors.get(contributor) ?? missingInMapColor}
               />
               <span className="text-secondary-text dark:text-secondary-text-dark truncate text-sm font-bold">
-                {contributor}
+                {contributor.split(" ").at(0)}
               </span>
               <span className="text-right text-xs">{contrib.toLocaleString()}</span>
               <span className="min-w-12 text-right text-xs">{contribPercentage}%</span>

@@ -59,7 +59,7 @@ const BAR_HEIGHT = 70
 const TICK_HEIGHT = 10
 const SECONDARY_TICK_HEIGHT = 7
 const TEXT_HEIGHT = 20
-const TEXT_WIDTH = 40
+const TEXT_WIDTH = 45
 
 function getWeekLabel(epochTimeSeconds: number) {
   const date = new Date(epochTimeSeconds * 1000)
@@ -164,6 +164,9 @@ export function BarChart({
         width="100%"
         height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
         className="fill-transparent"
+        style={{
+          fill: "transparent"
+        }}
         onClick={(evt) => {
           const id = getBarIdFromEventTarget(evt.target)
           if (!id) return
@@ -281,7 +284,14 @@ export function BarChart({
 
           return <Bar key={node.id} node={node} />
         })}
-        <path d={`M0,${BAR_HEIGHT + 1} L${width},${BAR_HEIGHT + 1}`} className="stroke-gray-500" strokeWidth={1} />
+        <path
+          d={`M0,${BAR_HEIGHT + 1} L${width},${BAR_HEIGHT + 1}`}
+          className="stroke-gray-500"
+          strokeWidth={1}
+          style={{
+            stroke: "#6a7282"
+          }}
+        />
       </svg>
     </div>
   )
@@ -319,8 +329,8 @@ function Bar({ node }: { node: BarNode }) {
         y={0}
         width={node.hitWidth}
         height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
-        rx={treemapBlobBorderRadius}
-        ry={treemapBlobBorderRadius}
+        rx={Math.min(treemapBlobBorderRadius, node.hitWidth / 2)}
+        ry={Math.min(treemapBlobBorderRadius, node.hitWidth / 2)}
         className="peer cursor-pointer fill-transparent stroke-transparent stroke-1"
         data-id={node.id}
         aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
@@ -390,6 +400,9 @@ function Bar({ node }: { node: BarNode }) {
             "peer-hover:stroke-blue-primary pointer-events-none",
             node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"
           )}
+          style={{
+            stroke: "#6a7282"
+          }}
           strokeWidth={1}
         />
       ) : null}
@@ -400,6 +413,9 @@ function Bar({ node }: { node: BarNode }) {
           dominantBaseline="central"
           x={node.x + node.width / 2}
           y={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT / 2}
+          style={{
+            fill: "#101828"
+          }}
           className={cn(
             "peer-hover:fill-blue-primary pointer-events-none text-xs transition-[x]",
             node.isInRange

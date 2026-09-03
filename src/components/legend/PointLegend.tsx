@@ -33,7 +33,7 @@ import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 import { findInTree } from "~/shared/utils/tree"
 
-const ITEMS_PER_PAGE = 7
+const ITEMS_PER_PAGE = 20
 
 export class PointInfo {
   public readonly color: `#${string}`
@@ -129,7 +129,7 @@ export function PointLegend() {
             .map(([label, info]) => (
               <div key={label} title={label} className="flex items-center truncate text-sm">
                 <LegendDot dotColor={info.color} />
-                {label}
+                {label.split(" ").at(0)}
               </div>
             ))}
         </div>
@@ -268,7 +268,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
                   : `Add ${label} to filter`
           }
         >
-          {label}
+          {label.split(" ").at(0)}
         </span>
         <span
           className={cn(

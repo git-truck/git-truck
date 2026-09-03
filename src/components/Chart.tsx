@@ -188,6 +188,7 @@ export function Chart() {
     >
       <div ref={ref} className="relative">
         <svg
+          fontFamily="monospace"
           className={clsx(
             "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
             {
@@ -310,8 +311,16 @@ export function Chart() {
                   "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
                     isTree(d.data) && !clickedObjectPath,
-                  "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
+                  // "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
                 })}
+                style={
+                  shouldNotColor
+                    ? {
+                        opacity: 0.3,
+                        filter: "grayscale(100%)"
+                      }
+                    : undefined
+                }
               >
                 <Node
                   d={d}
@@ -413,6 +422,7 @@ function Node({
             "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
           }
         )}
+        style={isTree(d.data) ? { fill: "transparent", stroke: "#99a1af" } : undefined}
       />
     </>
   )
@@ -525,6 +535,10 @@ function NodeText({
         <text
           className={cn("stroke-primary-bg dark:stroke-primary-bg-dark pointer-events-none fill-none stroke-5")}
           strokeLinecap="round"
+          style={{
+            strokeWidth: 5,
+            stroke: "#f9fafb"
+          }}
         >
           <textPath {...textPathProps}>{children}</textPath>
         </text>

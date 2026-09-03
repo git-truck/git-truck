@@ -63,7 +63,7 @@ export const TopContributorMetric: CategoricalMetric = {
       // TODO show how many contributors if no top contributor
       return MULTIPLE_CONTRIBUTORS
     }
-    return `${top.contributor} ${contributorPercentage}%`
+    return `${top.contributor.split(" ").at(0)} ${contributorPercentage}%`
   },
   getCategories(obj, dbi, { topContributorCutoff }) {
     const top = dbi.topContributors[obj.path]

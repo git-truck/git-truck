@@ -84,7 +84,6 @@ const useDeselectStoredCategory = () => {
 }
 
 export const useSelectCategories = () => {
-  const { metricType } = useOptions()
   const setCategories = useUpdateCategories()
 
   return useCallback(
@@ -92,16 +91,15 @@ export const useSelectCategories = () => {
       setCategories((state) => {
         const newSet = new Set(state)
         for (const label of labels) {
-          newSet.add(`${metricType}:${label}`)
+          newSet.add(label)
         }
         return Array.from(newSet)
       }),
-    [metricType, setCategories]
+    [setCategories]
   )
 }
 
 export const useDeselectCategories = () => {
-  const { metricType } = useOptions()
   const setCategories = useUpdateCategories()
 
   return useCallback(
@@ -109,28 +107,23 @@ export const useDeselectCategories = () => {
       setCategories((state) => {
         const newSet = new Set(state)
         for (const label of labels) {
-          newSet.delete(`${metricType}:${label}`)
+          newSet.delete(label)
         }
         return Array.from(newSet)
       }),
-    [metricType, setCategories]
+    [setCategories]
   )
 }
 
 export const useResetSelection = () => {
-  const { metricType } = useOptions()
   const setCategories = useUpdateCategories()
-  return useCallback(
-    () => setCategories((state) => state.filter((category) => !category.startsWith(`${metricType}:`))),
-    [metricType, setCategories]
-  )
+  return useCallback(() => setCategories([]), [setCategories])
 }
 
 export const useSelectedCategories = () => {
   const [categories] = useQueryState("categories", categoriesConfig)
-  const { metricType } = useOptions()
 
-  return categories.filter((c) => c.startsWith(metricType + ":")).map((sel) => sel.replace(`${metricType}:`, ""))
+  return categories
 }
 
 export const useSelectedCategory = () => {
@@ -142,9 +135,9 @@ export const useSelectedCategory = () => {
   const deselectCategory = useDeselectStoredCategory()
   const selectedCategories = categories.filter((c) => c.startsWith(metricType + ":"))
 
-  const isSelected = (category: string) => selectedCategories.includes(`${metricType}:${category}`)
-  const select = (category: string) => selectCategory(`${metricType}:${category}`)
-  const deselect = (category: string) => deselectCategory(`${metricType}:${category}`)
+  const isSelected = (category: string) => selectedCategories.includes(category)
+  const select = (category: string) => selectCategory(category)
+  const deselect = (category: string) => deselectCategory(category)
   return {
     isSelected,
     select,
@@ -155,12 +148,9 @@ export const useSelectedCategory = () => {
 export const useIsCategorySelected = () => {
   const [categories] = useQueryState("categories", categoriesConfig)
 
-  const { metricType } = useOptions()
+  const selectedCategories = categories
 
-  const selectedCategories = categories.filter((c) => c.startsWith(metricType + ":"))
-
-  return (category: string) =>
-    selectedCategories.includes(`${metricType}:${category}`) || selectedCategories.length === 0
+  return (category: string) => selectedCategories.includes(category) || selectedCategories.length === 0
 }
 
 export const useHasSelection = () => {

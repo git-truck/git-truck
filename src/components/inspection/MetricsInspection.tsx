@@ -193,7 +193,7 @@ export function formatTopContributorSummary(
     return "Multiple people"
   }
 
-  return data.topContributor[0]?.contributor ?? "No contributors"
+  return data.topContributor[0]?.contributor?.split(" ").at(0) ?? "No contributors"
 }
 
 export function formatMetricCount(value: number | null | undefined) {

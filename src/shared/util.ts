@@ -204,7 +204,9 @@ export function getTimeIntervals(timeUnit: TimeUnit, minTime: number, maxTime: n
       }
       case "month": {
         intervals.push({
-          label: currentDate.toLocaleString("en-gb", { month: "short", timeZone: "UTC" }),
+          label: `${currentDate.toLocaleString("en-gb", { month: "short", timeZone: "UTC" })} '${String(
+            currentDate.getUTCFullYear()
+          ).slice(-2)}`,
           lookup,
           timestamp: currTime
         })
