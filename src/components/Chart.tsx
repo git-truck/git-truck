@@ -310,7 +310,7 @@ export function Chart() {
                 className={cn("cursor-pointer duration-400", {
                   "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
-                    isTree(d.data) && !clickedObjectPath,
+                    isTree(d.data) && !clickedObjectPath
                   // "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
                 })}
                 style={
