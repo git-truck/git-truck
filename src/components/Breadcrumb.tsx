@@ -127,7 +127,10 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
             </div>
           ) : type === "browse" ? (
             <Link
-              to={href("/browse") + browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })}
+              to={{
+                pathname: href("/browse"),
+                search: browseSerializer({ ...browseParams, offset: 0, search: null, path: fullPath })
+              }}
               title={title}
               className="text-secondary-text dark:text-secondary-text-dark flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden text-sm font-bold"
               onClick={() => setClickedObjectPath(null)}

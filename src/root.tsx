@@ -17,7 +17,7 @@ import { Code } from "~/components/util"
 import { ClearCacheForm } from "~/routes/clear-cache"
 import { cn } from "~/styling"
 import { getLatestVersion } from "~/shared/util.server"
-import { NuqsAdapter } from "nuqs/adapters/react-router/v7"
+import { NuqsAdapter } from "nuqs/adapters/react-router/v8"
 import { ErrorPage } from "~/components/ErrorPage"
 import { CollapsibleHeader } from "~/components/CollapsibleHeader"
 import { mdiAlertOutline } from "@mdi/js"
@@ -101,7 +101,8 @@ export const ErrorBoundary = () => {
   url.searchParams.append("title", "crash: " + (error instanceof Error ? error.message : "Unknown error"))
   url.searchParams.append("os", navigator.platform)
   url.searchParams.append("version", pkg.version)
-  if (error && error instanceof Error) url.searchParams.append("description", `\n\n\`\`\`\n${error.stack}\n\`\`\``)
+  if (error && error instanceof Error)
+    url.searchParams.append("description", `\n\n\`\`\`\n${error.stack?.split("\n").slice(0, 20).join("\n")}\n\`\`\``)
 
   return (
     <Shell>
