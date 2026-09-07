@@ -582,7 +582,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               </header>
 
               <div
-                className="absolute top-[1799px] left-[213px] z-10 w-[5544px]"
+                className="absolute top-[1649px] left-[213px] z-10 w-[5544px]"
                 aria-label="Git-Truck@Pluck: Exploring where and when developers collaborate"
               >
                 <div
@@ -631,9 +631,14 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Timeline poster className="poster-timeline" />
 
               <footer
-                className="grid shrink-0 grid-cols-4 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
+                className="relative grid shrink-0 grid-cols-4 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
                 style={{ height: 3200 }}
               >
+                <img
+                  src={qrCode}
+                  alt="Scan to learn more about Git-Truck@Pluck"
+                  className="absolute top-[120px] right-[155px] h-[900px] w-[900px]"
+                />
                 <section className="col-span-4">
                   <h2 className="montserrat-500 m-0 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
                     Git-Truck@Pluck – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
