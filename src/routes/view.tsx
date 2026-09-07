@@ -568,11 +568,12 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     height: 760
                   }}
                 />
-                {/* <div className="px-[160px] text-[#374151]" style={{ maxWidth: 6500 }}>
-                  <h1 className="montserrat-500 m-0 leading-[1.37]" style={{ fontSize: 250 }}>
-                    Git-Truck@Pluck –
-                  </h1>
-                </div> */}
+                <div
+                  className="absolute top-[430px] left-[1100px] z-10 text-[#374151]"
+                  style={{ fontSize: 250, lineHeight: 1.15 }}
+                >
+                  <h1 className="montserrat-500 m-0">Git-Truck@Pluck</h1>
+                </div>
                 <div
                   className="absolute top-[220px] right-[220px] flex w-[3227px] flex-col items-end text-right text-[#7d7d7d]"
                   style={{ fontSize: 200 }}
@@ -583,17 +584,17 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
               <div
                 className="absolute top-[1649px] left-[213px] z-10 w-[5544px]"
-                aria-label="Git-Truck@Pluck: Exploring where and when developers collaborate"
+                aria-label="Exploring where and when developers collaborate"
               >
                 <div
                   aria-hidden="true"
                   className="montserrat-500 absolute inset-0 m-0 text-white"
                   style={{ fontSize: 390, lineHeight: 1.15, letterSpacing: "-14px" }}
                 >
-                  Git-Truck@Pluck: Exploring <em>where</em> and <em>when</em> developers collaborate
+                  Exploring <em>where</em> and <em>when</em> developers collaborate
                 </div>
                 <h1 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
-                  Git-Truck@Pluck: Exploring <em className="montserrat-500">where</em> and{" "}
+                  Exploring <em className="montserrat-500">where</em> and{" "}
                   <em className="montserrat-500">when</em> developers collaborate
                 </h1>
               </div>
