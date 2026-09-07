@@ -29,7 +29,7 @@ export const Metrics = {
   FILE_SIZE: FileSizeMetric,
   MOST_COMMITS: CommitsMetric,
   MOST_CONTRIBUTIONS: LinesChangedMetric,
-  TOP_CONTRIBUTOR: TopContributorMetric,
+  TOP_CONTRIBUTOR: TopContributorMetric
 } as const satisfies Record<string, Metric>
 
 export type CategoricalMetricType = "FILE_TYPE" | "TOP_CONTRIBUTOR" | "CONTRIBUTORS"
