@@ -124,10 +124,10 @@ export function Timeline({ className, poster = false }: { className?: string; po
   if (poster) {
     return (
       <BarChart
+        poster
         scale={commitCountScale}
         className={className}
         intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
-        poster
       />
     )
   }
