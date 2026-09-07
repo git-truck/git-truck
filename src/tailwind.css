@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+@media print {
+  @page {
+    size: A0 portrait;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .poster-canvas {
+    zoom: 0.32;
+  }
+
+  .poster-timeline > svg {
+    transform: scale(4);
+    transform-origin: center;
+  }
+}
+
+.poster-legend .poster-distribution-bar {
+  display: none !important;
+}
+
+.poster-legend .poster-more-contributors {
+  display: block !important;
+}
+
 /* @custom-variant dark (&:where(.dark, .dark *)); */
 
 @theme {
@@ -261,5 +289,68 @@
 
   code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  }
+
+  .montserrat-100 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 100;
+    font-style: normal;
+  }
+
+  .montserrat-200 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 200;
+    font-style: normal;
+  }
+
+  .montserrat-300 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+  }
+
+  .montserrat-400 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .montserrat-500 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+  }
+
+  .montserrat-600 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  .montserrat-700 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  .montserrat-800 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 800;
+    font-style: normal;
+  }
+
+  .montserrat-900 {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 900;
+    font-style: normal;
   }
 }

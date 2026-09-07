@@ -13,7 +13,7 @@ import { Activity, startTransition, Suspense, useCallback, useReducer } from "re
 import { createPortal } from "react-dom"
 import { GitService } from "~/server/git-service"
 import { AnalysisManager } from "~/server/AnalysisManager"
-import { type DatabaseInfo, type Ensure, type RepoData } from "~/shared/model"
+import { type ContributorGroup, type DatabaseInfo, type Ensure, type RepoData, type Person } from "~/shared/model"
 import { nowInSeconds } from "~/shared/utils/time"
 import { shouldUpdate } from "~/shared/RefreshPolicy"
 import { getBaseDirFromPath, getRepoNameFromPath, normalizeAndResolvePath, openFile } from "~/shared/util.server"
@@ -50,7 +50,9 @@ import { InteractionButtons } from "~/components/inspection/InteractionButtons"
 import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 import { parseArgsWithDefaults } from "~/shared/utils/args"
 import { Legend } from "~/components/inspection/Legend"
-
+import parkedTruck from "~/assets/parkedTruck_48x.png"
+import ituLogo from "~/assets/itu.svg"
+import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
     title: `${loaderData.repositoryName} - Git Truck`
@@ -352,10 +354,11 @@ async function analyze(
       : await instance.db.getMaxAndMinFileSize()
   const authors =
     prevRes && !shouldUpdate(reason, "contributors") ? prevRes.contributors : await instance.db.getAuthors()
-  const authorUnions =
+  const storedAuthorUnions =
     prevRes && !shouldUpdate(reason, "groupedContributors")
       ? prevRes.contributorGroups
       : await instance.db.getAuthorUnions()
+  const authorUnions = autoGroupRemainingContributors(authors, storedAuthorUnions)
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
@@ -433,6 +436,17 @@ async function analyze(
   return fullData
 }
 
+function autoGroupRemainingContributors(authors: Person[], storedGroups: ContributorGroup[]): ContributorGroup[] {
+  const groupedContributorIds = new Set(
+    storedGroups.flatMap((group) => group.members).map((person) => `${person.name}\u0000${person.email ?? ""}`)
+  )
+  const ungroupedAuthors = authors.filter(
+    (person) => !groupedContributorIds.has(`${person.name}\u0000${person.email ?? ""}`)
+  )
+
+  return [...storedGroups, ...autoBuildContributorGroups(ungroupedAuthors)]
+}
+
 export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, dataPromise } }: Route.ComponentProps) {
   const [{ leftExpanded, rightExpanded, optionsRevision }, dispatch] = useReducer(
     (prevState, action: "toggleLeft" | "toggleRight") => {
@@ -489,7 +503,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
   return (
     <Suspense
       fallback={
-        <div className="grid h-screen place-items-center bg-slate-200 dark:bg-stone-800">
+        <div className="grid place-items-center bg-slate-200 dark:bg-stone-800">
           <LoadingIndicator
             showProgress={!isAborting}
             loadingText={({ status }) => (
@@ -515,163 +529,167 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
         {(data) => (
           <Providers data={data}>
             <div
-              className={cn(
-                `min-h-100dvh bg-secondary-bg dark:bg-secondary-bg-dark grid grid-cols-2 grid-rows-[auto_100dvh_auto_auto] gap-x-1 gap-y-2 p-2 transition-all [grid-template-areas:"lheader_cheader_rheader"_"left_left_left"_"chart_chart_chart"_"barchart_barchart_barchart"] lg:h-screen lg:grid-cols-[var(--spacing-sidepanel)_1fr_var(--spacing-sidepanel)] lg:grid-rows-[auto_1fr_auto] lg:overflow-hidden lg:pr-2 lg:[grid-template-areas:"rheader_rheader"_"chart_chart"_"barchart_barchart"]`,
-                {
-                  [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_chart"_"left_barchart_barchart"]`]:
-                    leftExpanded && !rightExpanded,
-                  [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_right"_"barchart_barchart_right"]`]:
-                    rightExpanded && !leftExpanded,
-                  [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_right"_"left_barchart_right"]`]:
-                    leftExpanded && rightExpanded,
-                  [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_chart"_"barchart_barchart_barchart"]`]:
-                    !leftExpanded && !rightExpanded
-                }
-              )}
+              className={cn("poster-canvas relative flex flex-col overflow-hidden bg-white", {
+                [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_chart"_"left_barchart_barchart"]`]:
+                  leftExpanded && !rightExpanded,
+                [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_right"_"barchart_barchart_right"]`]:
+                  rightExpanded && !leftExpanded,
+                [`lg:[grid-template-areas:"lheader_cheader_rheader"_"left_chart_right"_"left_barchart_right"]`]:
+                  leftExpanded && rightExpanded,
+                [`lg:[grid-template-areas:"cheader_cheader_rheader"_"chart_chart_chart"_"barchart_barchart_barchart"]`]:
+                  !leftExpanded && !rightExpanded
+              })}
+              style={{
+                width: 9_933,
+                height: 14_043
+              }}
             >
               <header
-                className={cn(
-                  "bg-secondary-bg dark:bg-secondary-bg-dark flex grid-cols-3 items-center justify-between gap-2 pr-2 [grid-area:lheader]",
-                  {
-                    hidden: !leftExpanded
-                  }
-                )}
+                className="grid shrink-0 grid-cols-[760px_1fr_3227px] items-start bg-white px-[210px] pt-[220px]"
+                style={{ height: 2264 }}
               >
-                {matchesLarge ? (
-                  <button title={"Hide left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
-                    <Icon path={mdiMenuOpen} size={1} />
-                  </button>
-                ) : (
-                  <div />
-                )}
-                <div
-                  className={cn("flex items-end gap-2", {
-                    hidden: !leftExpanded
-                  })}
-                >
-                  <GitTruckInfo
-                    installedVersion={versionInfo.installedVersion}
-                    latestVersion={versionInfo.latestVersion}
+                <img
+                  src={parkedTruck}
+                  alt=""
+                  className="pixelated shrink-0"
+                  style={{
+                    width: 760,
+                    height: 760
+                  }}
+                />
+                <div className="px-[160px] text-[#374151]" style={{ maxWidth: 6500 }}>
+                  <h1 className="montserrat-500 m-0 leading-[1.37]" style={{ fontSize: 250 }}>
+                    Git-Truck@Pluck –
+                  </h1>
+                </div>
+                <div className="flex w-[3227px] flex-col items-end text-right text-[#7d7d7d]" style={{ fontSize: 200 }}>
+                  <img src={ituLogo} alt="IT University of Copenhagen" className="mb-[180px] h-[260px] w-[2371px]" />
+                  <img
+                    src={parkedTruck}
+                    alt="QR code placeholder"
+                    className="pixelated mt-[120px] h-[600px] w-[600px]"
                   />
                 </div>
-                <div />
               </header>
-              <nav className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 [grid-area:cheader]">
-                <div className={cn("flex min-w-0 items-center")}>
-                  {matchesLarge && !leftExpanded ? (
-                    <>
-                      <button title={"Show left panel"} className="btn btn--text aspect-square" onClick={toggleLeft}>
-                        <Icon path={mdiMenu} size={1} />
-                      </button>
-                      <Icon
-                        aria-hidden
-                        path="M11,2 H13 V22 H11 Z"
-                        size={1}
-                        className="fill-primary-text dark:fill-primary-text-dark mx-0 align-middle opacity-20"
-                      />
-                    </>
-                  ) : null}
-                  <Breadcrumb zoom className="flex-1" />
-                </div>
-
-                <CompactLoadingIndicator />
-              </nav>
-              <div className="flex justify-end [grid-area:rheader]">
-                <SearchCard />
-                <RefreshButton />
-                <HideFilesButton />
-                <GroupAuthorsButton compact />
-                <SettingsButton />
-                <FullscreenButton />
-                {matchesLarge && !rightExpanded ? (
-                  <button title={"Show Right panel"} className="btn btn--text aspect-square" onClick={toggleRight}>
-                    <Icon path={mdiMenu} size={1} />
-                  </button>
-                ) : null}
-                {matchesLarge && rightExpanded ? (
-                  <div className="flex items-center">
-                    <button title={"Hide right panel"} className="btn btn--text aspect-square" onClick={toggleRight}>
-                      <Icon path={mdiMenuClose} size={1} />
-                    </button>
-                  </div>
-                ) : (
-                  <div />
-                )}
-              </div>
-              <Activity mode={leftExpanded || !matchesLarge ? "visible" : "hidden"}>
-                <aside
-                  className={clsx(
-                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto lg:transition-transform",
-                    leftExpanded ? "[grid-area:left]" : "lg:-translate-x-sidepanel"
-                  )}
-                >
-                  <CollapsibleHeader className="card" title={() => "Visualization options"}>
-                    <Options key={optionsRevision} />
-                  </CollapsibleHeader>
-
-                  <CollapsibleHeader
-                    className="card"
-                    contentClassName="flex flex-col gap-8"
-                    title={() => (
-                      <>
-                        Legend
-                        <ClickedObjectButton />
-                      </>
-                    )}
-                  >
-                    <Legend />
-                  </CollapsibleHeader>
-                </aside>
-              </Activity>
 
               <div
-                className={cn(
-                  "bg-primary-bg dark:bg-primary-bg-dark relative grid h-full rounded-xl shadow-md [grid-area:chart] lg:transition-transform"
-                )}
+                className="absolute top-[1799px] left-[213px] z-10 w-[5544px]"
+                aria-label="Git-Truck@Pluck: Exploring where and when developers collaborate"
               >
+                <div
+                  aria-hidden="true"
+                  className="montserrat-500 absolute inset-0 m-0 text-white"
+                  style={{ fontSize: 390, lineHeight: 1.15, letterSpacing: "-14px" }}
+                >
+                  Git-Truck@Pluck: Exploring <em>where</em> and <em>when</em> developers collaborate
+                </div>
+                <h2 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
+                  Git-Truck@Pluck: Exploring <em className="montserrat-500">where</em> and{" "}
+                  <em className="montserrat-500">when</em> developers collaborate
+                </h2>
+              </div>
+
+              <div className={cn("relative min-h-0 flex-1 overflow-hidden bg-white")}>
                 <ClientOnly>
                   {() => (
-                    <>
-                      <Chart />
-                      {createPortal(<Tooltip />, document.body)}
-                    </>
+                    <div className="absolute inset-x-[200px] -top-[300px] bottom-0 overflow-hidden">
+                      <div className="origin-top-left scale-[0.95]">
+                        <Chart poster />
+                      </div>
+
+                      <div
+                        className="absolute top-[1800px] left-[900px] z-10 max-w-[1800px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-[#374151]"
+                        style={{ fontSize: 150 }}
+                      >
+                        <strong className="montserrat-500">Benedict owns this subsystem alone</strong>
+                      </div>
+                      <div
+                        className="absolute top-[4300px] right-[900px] z-10 max-w-[1800px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-[#374151]"
+                        style={{ fontSize: 150 }}
+                      >
+                        <strong className="montserrat-500">Here, two contributors work together</strong>
+                      </div>
+
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[900px] bg-linear-to-t from-white via-white/90 to-transparent" />
+                      <div className="absolute right-[250px] bottom-[250px] z-10 w-[450px] origin-bottom-right scale-[6]">
+                        <Legend simplified />
+                      </div>
+                    </div>
                   )}
                 </ClientOnly>
               </div>
 
-              <Timeline className="[grid-area:barchart]" />
+              <Timeline poster className="poster-timeline" />
 
-              <Activity mode={rightExpanded || !matchesLarge ? "visible" : "hidden"}>
-                <aside
-                  className={clsx(
-                    "hover:scrollbar-thumb-primary-bg-dark/50 hover:dark:scrollbar-thumb-primary-bg/50 flex scrollbar-thin scrollbar-thumb-transparent scrollbar-track-transparent scrollbar-gutter-stable flex-col gap-4 overflow-y-auto pl-2 lg:transition-transform",
-                    rightExpanded ? "[grid-area:right]" : "lg:translate-x-sidepanel"
-                  )}
-                >
-                  <CollapsibleHeader
-                    title={() => (
-                      <>
-                        Actions <ClickedObjectButton />
-                      </>
-                    )}
-                    className="card"
-                  >
-                    <InteractionButtons />
-                  </CollapsibleHeader>
-                  <CollapsibleHeader
-                    className="card"
-                    title={() => (
-                      <>
-                        Details
-                        <ClickedObjectButton />
-                      </>
-                    )}
-                  >
-                    <MetricsInspection />
-                  </CollapsibleHeader>
-                  <CommitsInspection className="card" />
-                </aside>
-              </Activity>
+              <footer
+                className="grid shrink-0 grid-cols-3 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
+                style={{ height: 3200 }}
+              >
+                <section className="col-span-3">
+                  <h2 className="montserrat-500 m-0 max-w-[7600px]" style={{ fontSize: 180, lineHeight: 1.15 }}>
+                    Git-Truck@Pluck – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
+                    Repository Evolution
+                  </h2>
+                  <div className="mt-[70px] flex items-center gap-[140px]" style={{ fontSize: 100 }}>
+                    <figure className="m-0 flex items-center gap-[60px]">
+                      <img
+                        src={parkedTruck}
+                        alt="Gustav Müller Christoffersen"
+                        className="pixelated h-[280px] w-[280px]"
+                      />
+                      <figcaption>Gustav Müller Christoffersen</figcaption>
+                    </figure>
+                    <figure className="m-0 flex items-center gap-[60px]">
+                      <img src={parkedTruck} alt="Jonas Nim Røssum" className="pixelated h-[280px] w-[280px]" />
+                      <figcaption>Jonas Nim Røssum</figcaption>
+                    </figure>
+                    <figure className="m-0 flex items-center gap-[60px]">
+                      <img src={parkedTruck} alt="Mircea Lungu" className="pixelated h-[280px] w-[280px]" />
+                      <figcaption>Mircea Lungu</figcaption>
+                    </figure>
+                  </div>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Results
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    <li>
+                      Uncovered hidden contributor <strong>specialization</strong>, collaboration{" "}
+                      <strong>hotspots</strong>, and temporal <strong>shifts</strong> in prominence
+                    </li>
+                    <li>
+                      Consistently challenged participants&apos; existing <strong>assumptions</strong> about their own
+                      projects
+                    </li>
+                  </ul>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Methods
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    <li>
+                      <strong>Plucking</strong>: a coordinated contributor-centric exploration mechanism that highlights{" "}
+                      <strong>developer footprints</strong> across repository structure and commit history
+                    </li>
+                    <li>
+                      Evaluated via <strong>think-aloud sessions</strong> with five professional OSS collaborators.
+                    </li>
+                  </ul>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Discussion
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    <li>
+                      Surfaced <strong>emerging socio-technical phenomena</strong>
+                    </li>
+                    <li>AI agents appearing as high-churn, first-class contributors</li>
+                  </ul>
+                </section>
+              </footer>
             </div>
           </Providers>
         )}

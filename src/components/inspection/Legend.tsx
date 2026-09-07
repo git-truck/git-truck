@@ -6,10 +6,12 @@ import { useViewAction } from "~/hooks"
 import { Metrics, type MetricPanelActionId, type MetricPanelDropdownButtonConfig } from "~/metrics/metrics"
 import { GroupContributorsModal } from "~/components/modals/GroupContributorsModal"
 import { Icon } from "~/components/Icon"
+import { useData } from "~/contexts/DataContext"
 
-export function Legend() {
+export function Legend({ simplified = false }: { simplified?: boolean }) {
   const submit = useSubmit()
   const { metricType, showTopContributorSlider, setShowTopContributorSlider } = useOptions()
+  const { databaseInfo } = useData()
   const viewAction = useViewAction()
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -33,22 +35,33 @@ export function Legend() {
       <GroupContributorsModal open={modalOpen} onClose={() => setModalOpen(false)} />
       {inspectionPanels
         .filter((p) => !(p.id === "top-contributor-slider" && !showTopContributorSlider))
-        .map((Panel, i) => (
-          <MetricInspectionPanel
-            key={`${metricType}:${Panel.id}`}
-            actions={Panel.actions}
-            metricMenuItems={toPanelMenuItems(Panel.menuItems)}
-            title={
-              <div className="flex items-center gap-2">
+        .map((Panel, i) =>
+          simplified ? (
+            <div key={`${metricType}:${Panel.id}`} className="card poster-legend flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                {i === 0 ? <span>LEGEND:</span> : null}
                 {i === 0 ? <Icon path={icon} /> : null}
-                {Panel.title}
+                {i === 0 ? `Contributors to ${databaseInfo.repo}` : Panel.title}
               </div>
-            }
-            description={Panel.description ?? "Description not provided."}
-          >
-            <Panel.content />
-          </MetricInspectionPanel>
-        ))}
+              <Panel.content />
+            </div>
+          ) : (
+            <MetricInspectionPanel
+              key={`${metricType}:${Panel.id}`}
+              actions={Panel.actions}
+              metricMenuItems={toPanelMenuItems(Panel.menuItems)}
+              title={
+                <div className="flex items-center gap-2">
+                  {i === 0 ? <Icon path={icon} /> : null}
+                  {Panel.title}
+                </div>
+              }
+              description={Panel.description ?? "Description not provided."}
+            >
+              <Panel.content />
+            </MetricInspectionPanel>
+          )
+        )}
     </>
   )
 }

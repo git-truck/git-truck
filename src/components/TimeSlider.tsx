@@ -70,7 +70,7 @@ function sliderUnitsToTimeRange({
   return [Math.max(minSecs, start), Math.min(maxSecs, end)]
 }
 
-export function Timeline({ className }: { className?: string }) {
+export function Timeline({ className, poster = false }: { className?: string; poster?: boolean }) {
   const [includeCoAuthors, setIncludeCoAuthors] = useQueryState(
     "includeCoauthors",
     viewSearchParamsConfig.includeCoauthors
@@ -120,6 +120,16 @@ export function Timeline({ className }: { className?: string }) {
   const domainInUnits = timelineIntervals.length
   const selectedStartInUnit = timeToSliderUnit(low, timelineIntervals, unit, "start")
   const selectedEndInUnit = timeToSliderUnit(high, timelineIntervals, unit, "end")
+
+  if (poster) {
+    return (
+      <BarChart
+        scale={commitCountScale}
+        className={className}
+        intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
+      />
+    )
+  }
 
   return (
     <div className={cn("card group/card flex flex-col px-4 text-center select-none", className)}>

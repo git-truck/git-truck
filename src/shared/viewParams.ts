@@ -14,7 +14,7 @@ export const viewSearchParamsConfig = {
   objectPath: parseAsString,
   zoomPath: parseAsString.withOptions({ shallow: false }),
   branch: parseAsString.withOptions({ shallow: false }),
-  timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues).withOptions({ shallow: false }),
+  timeUnit: parseAsStringLiteral<TimeUnit>(TimeUnitValues).withDefault("month").withOptions({ shallow: false }),
   start: parseAsInteger.withOptions({ shallow: false }),
   end: parseAsInteger.withOptions({ shallow: false }),
   includeCoauthors: parseAsBoolean.withDefault(true).withOptions({ shallow: false })

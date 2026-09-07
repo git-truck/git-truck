@@ -44,12 +44,13 @@ import type { SegmentBucket } from "~/metrics/metrics"
 
 type CircleOrRectHiearchyNode = HierarchyCircularNode<GitObject> | HierarchyRectangularNode<GitObject>
 
-export function Chart() {
+const size = { width: 10_000, height: 10_000 }
+
+export function Chart({ poster = false }: { poster?: boolean }) {
   const hoveredObject = useHoveredObject()
   const setHoveredObject = useSetHoveredObject()
-  const [ref, rawSize] = useComponentSize()
+  // const [ref, rawSize] = useComponentSize()
   const { searchResults, hasSearchResults } = useSearch()
-  const size = useDeferredValue(rawSize)
   const { databaseInfo } = useData()
   const [metricsData] = useMetrics()
   const {
@@ -122,17 +123,18 @@ export function Chart() {
       chartType,
       sizeMetricType: sizeMetric,
       renderCutOff,
-      lastChangedBuckets
+      lastChangedBuckets,
+      paddingScale: poster ? 1.5 : 1
     }).descendants()
     if (process.env["NODE_ENV"] === "development") {
       // console.timeEnd("Create and pack hiearchy")
     }
     return res
-  }, [size.height, size.width, chartType, sizeMetric, renderCutOff, databaseInfo, filetree, lastChangedBuckets])
+  }, [chartType, sizeMetric, renderCutOff, databaseInfo, filetree, lastChangedBuckets, poster])
 
   useEffect(() => {
     setHoveredObject(null)
-  }, [chartType, size, setHoveredObject])
+  }, [chartType, setHoveredObject])
 
   const zoomPathIsRepo = isRepositoryRoot(databaseInfo.fileTree)
 
@@ -182,21 +184,28 @@ export function Chart() {
 
   return (
     <div
-      className={cn("relative grid overflow-hidden", {
+      className={cn("relative", {
         "pb-4": chartType === "BUBBLE_CHART"
       })}
     >
-      <div ref={ref} className="relative">
+      <div
+        className="relative"
+        style={{
+          width: 10_000,
+          height: 10_000
+        }}
+      >
         <svg
-          fontFamily="monospace"
+          // fontFamily="monospace"
           className={clsx(
-            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 text-xs select-none dark:fill-gray-100",
+            "stroke-border dark:stroke-border-dark absolute inset-0 fill-gray-900 select-none dark:fill-gray-100",
+            poster ? "text-[36px]" : "text-xs",
             {
               "cursor-zoom-out": clickedObjectIsZoomPath && !zoomPathIsRepo
             }
           )}
           xmlns="http://www.w3.org/2000/svg"
-          viewBox={`0 0 ${size.width} ${size.height}`}
+          viewBox={`0 0 10000 10000`}
           onClick={(evt) => {
             const path = getPathFromEventTarget(evt.target)
             if (!path) {
@@ -310,7 +319,7 @@ export function Chart() {
                 className={cn("cursor-pointer duration-400", {
                   "hover:opacity-80": isBlob(d.data) && !clickedObjectIsZoomPath,
                   "hover:stroke-border-highlight dark:hover:stroke-border-highlight-dark":
-                    isTree(d.data) && !clickedObjectPath,
+                    isTree(d.data) && !clickedObjectPath
                   // "opacity-10 grayscale hover:opacity-100 hover:grayscale-0": shouldNotColor
                 })}
                 style={
@@ -327,12 +336,14 @@ export function Chart() {
                   isRoot={i === 0}
                   colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
                   clickedObjectPath={clickedObjectPath}
+                  posterScale={poster ? 1.5 : 1}
                 />
-                {labelsVisible ? (
+                {labelsVisible && (!poster || isTree(d.data)) ? (
                   <NodeText
                     isSearchMatch={isSearchMatch}
                     d={d}
                     colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
+                    posterScale={poster ? 1.5 : 1}
                   >
                     {d.data.name}
                     {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
@@ -352,18 +363,18 @@ function Node({
   d,
   isRoot,
   colors,
-  clickedObjectPath
+  clickedObjectPath,
+  posterScale
 }: {
   d: CircleOrRectHiearchyNode
   isRoot: boolean
   colors: HexColor[]
   clickedObjectPath: string | null
+  posterScale: number
 }) {
   const { chartType, transitionsEnabled } = useOptions()
-
   const { linearGradient, fill } = useGradient(colors)
   const multipleColors = colors.length > 1
-
   const isClickedObject = d.data.path === clickedObjectPath
 
   const commonProps = useMemo(() => {
@@ -375,8 +386,6 @@ function Node({
         }
       : {
           strokeWidth: isClickedObject ? "2px" : "1px"
-          // // stroke: isClickedObject? (clickedObjectColor?? undefined
-          // ) : undefined
         }
 
     if (chartType === "BUBBLE_CHART") {
@@ -405,7 +414,7 @@ function Node({
       }
     }
     return props
-  }, [isRoot, d, colors, multipleColors, fill, isClickedObject, chartType])
+  }, [isRoot, d, colors, multipleColors, fill, isClickedObject, chartType, posterScale])
 
   return (
     <>
@@ -432,14 +441,19 @@ function NodeText({
   d,
   isSearchMatch,
   colors,
-  children = null
+  children = null,
+  posterScale
 }: {
   d: CircleOrRectHiearchyNode
   isSearchMatch?: boolean
   colors: HexColor[]
   children?: React.ReactNode
+  posterScale: number
 }) {
   const isBubbleChart = isCircularNode(d)
+  const textScale = posterScale
+  const textHeight = letterHeightText * textScale
+  const treeTextWidth = letterWidthForTreeText * textScale
 
   if (children === null) return null
 
@@ -465,20 +479,17 @@ function NodeText({
       if (textClipPathRadius < letterHeightText) {
         return null
       }
-    } else if (
-      // For blobs with curved text and trees, check if arc length is enough to fit text
-      d.r < (isTree(d.data) ? letterHeightText : letterHeightText) * 2 ||
-      d.r * Math.PI * (2 / 3) < d.data.name.length * letterWidthForTreeText
-    ) {
+    } else if (d.r < textHeight * 4 || d.r * Math.PI * (2 / 3) < d.data.name.length * treeTextWidth * 1.5) {
       return null
     }
   } else {
     const rectNode = d as HierarchyRectangularNode<GitObject>
-    if (isBlob(d.data)) {
-      if (rectNode.y1 - rectNode.y0 - clipPathPadding < letterHeightText) {
-        // textShouldBeCentered = false
-        return null
-      }
+    if (
+      isBlob(d.data) ||
+      rectNode.y1 - rectNode.y0 - clipPathPadding < textHeight * 1.5 ||
+      rectNode.x1 - rectNode.x0 - clipPathPadding < d.data.name.length * treeTextWidth
+    ) {
+      return null
     }
   }
 
@@ -536,8 +547,9 @@ function NodeText({
           className={cn("stroke-primary-bg dark:stroke-primary-bg-dark pointer-events-none fill-none stroke-5")}
           strokeLinecap="round"
           style={{
-            strokeWidth: 5,
-            stroke: "#f9fafb"
+            strokeWidth: posterScale > 1 ? 14 * posterScale : 5,
+            fontSize: posterScale > 1 ? `${posterScale * 1.1}em` : undefined,
+            stroke: "white"
           }}
         >
           <textPath {...textPathProps}>{children}</textPath>
@@ -545,7 +557,7 @@ function NodeText({
       ) : null}
       <text
         textAnchor={textShouldBeCentered ? "middle" : undefined}
-        alignmentBaseline="hanging"
+        alignmentBaseline={textShouldBeCentered ? "middle" : "hanging"}
         {...(!isCircularNode(d) || isBlob(d.data) ? { clipPath: `url(#clip-path-${d.data.hash})` } : {})}
         x={
           isCircularNode(d)
@@ -554,7 +566,15 @@ function NodeText({
               : d.x - (textShouldBeCentered ? 0 : d.r - bubblePadding / 2)
             : d.x0 + clipPathPadding / 2
         }
-        y={isCircularNode(d) ? (isTree(d.data) ? 0 : d.y + letterHeightText / 2) : d.y0 + clipPathPadding / 2}
+        y={
+          isCircularNode(d)
+            ? isTree(d.data)
+              ? 0
+              : textShouldBeCentered
+                ? d.y
+                : d.y + letterHeightText / 2
+            : d.y0 + clipPathPadding / 2
+        }
         className={cn("pointer-events-none stroke-none transition-all", {
           "font-bold underline": isSearchMatch,
           "font-bold": isTree(d.data)
@@ -562,9 +582,13 @@ function NodeText({
         style={
           isBlob(d.data)
             ? {
-                fill: `contrast-color(${colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0]})`
+                fill: `contrast-color(${colors.length > 1 || colors.length === 0 ? "#ffffff" : colors[0]})`,
+                fontSize: `${posterScale}em`,
+                letterSpacing: posterScale > 1 ? "0.04em" : undefined
               }
-            : undefined
+            : posterScale > 1
+              ? { fontSize: `${posterScale}em`, letterSpacing: "0.04em" }
+              : undefined
         }
       >
         {isTree(d.data) && isCircularNode(d) ? <textPath {...textPathProps}>{children}</textPath> : children}
@@ -599,7 +623,8 @@ function createPartitionedHiearchy({
   chartType,
   sizeMetricType,
   renderCutOff,
-  lastChangedBuckets
+  lastChangedBuckets,
+  paddingScale
 }: {
   databaseInfo: DatabaseInfo
   tree: GitTreeObject
@@ -608,6 +633,7 @@ function createPartitionedHiearchy({
   sizeMetricType: SizeMetricType
   renderCutOff: number
   lastChangedBuckets?: readonly SegmentBucket[]
+  paddingScale: number
 }) {
   const bucketsForLastChanged =
     sizeMetricType === "LAST_CHANGED" ? (lastChangedBuckets ?? LastChangedMetric.getBuckets(databaseInfo)) : undefined
@@ -644,9 +670,9 @@ function createPartitionedHiearchy({
             .size([size.width, size.height])
             .round(true)
             .tile(treemapResquarify)
-            .paddingInner(treemapPaddingInner)
-            .paddingOuter(treemapPaddingOuter)
-            .paddingTop(treemapPaddingTop)
+            .paddingInner(treemapPaddingInner * paddingScale)
+            .paddingOuter(treemapPaddingOuter * paddingScale)
+            .paddingTop(treemapPaddingTop * paddingScale)
         : partition<GitObject>().size([size.width, size.height]).padding(0)
 
     const tmPartition = treeMapPartition(hiearchy)
@@ -661,7 +687,7 @@ function createPartitionedHiearchy({
   if (chartType === "BUBBLE_CHART") {
     const bubbleChartPartition = pack<GitObject>()
       .size([size.width, size.height - letterHeightText])
-      .padding(bubblePadding)
+      .padding(bubblePadding * paddingScale)
     const bPartition = bubbleChartPartition(hiearchy)
     filterVisualization(bPartition, (child) => {
       const cast = child as HierarchyCircularNode<GitObject>

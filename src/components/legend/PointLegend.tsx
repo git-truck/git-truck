@@ -29,11 +29,10 @@ import { useMetricSearchContext } from "~/components/inspection/MetricInspection
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
 import { mdiCheckboxIntermediate } from "@mdi/js"
-import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 import { findInTree } from "~/shared/utils/tree"
 
-const ITEMS_PER_PAGE = 20
+const MAX_VISIBLE_LEGEND_ITEMS = 10
 
 export class PointInfo {
   public readonly color: `#${string}`
@@ -119,6 +118,7 @@ export function PointLegend() {
   const matchesSearch = (label: string) => label.toLowerCase().includes(searchValue.toLowerCase())
 
   const filteredItems = searchValue.length > 0 ? items.filter(([label]) => matchesSearch(label)) : items
+  const visibleItems = filteredItems.slice(0, MAX_VISIBLE_LEGEND_ITEMS)
 
   return (
     <div className="flex flex-col gap-2">
@@ -134,20 +134,16 @@ export function PointLegend() {
             ))}
         </div>
       ) : null}
-      <div className="flex flex-col gap-2">
+      <div className="poster-distribution-bar flex flex-col gap-2">
         {/* DISTBAR still uses summed weight of items, as it cannot distribute width when weight > 100% */}
         <PointLegendDistBar items={items} totalWeight={summedWeight} />
       </div>
-      <PaginatedList items={filteredItems} itemsPerPage={ITEMS_PER_PAGE} itemHeight={20} headerHeight={55}>
-        {(shownItems, { totalPages }) => (
-          <PointLegendTable
-            items={shownItems}
-            totalWeight={totalWeight}
-            metricType={metricType}
-            maxTotalPages={totalPages}
-          />
-        )}
-      </PaginatedList>
+      <PointLegendTable items={visibleItems} totalWeight={totalWeight} metricType={metricType} />
+      {filteredItems.length > visibleItems.length ? (
+        <p className="poster-more-contributors m-0 hidden text-right text-xs">
+          + {filteredItems.length - visibleItems.length} more contributors
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -171,7 +167,6 @@ function PointLegendTable({
   items: [string, PointInfo][]
   totalWeight: number
   metricType: MetricType
-  maxTotalPages: number
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -214,7 +209,7 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
   const dotColor = info.color
 
   return (
-    <div className="group/pointentry contents">
+    <div className="point-legend-entry group/pointentry contents">
       <CheckboxWithLabel
         key={String(labelIsSelected)}
         className="contents"
