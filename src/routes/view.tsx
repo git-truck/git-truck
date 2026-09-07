@@ -621,7 +621,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       </div>
 
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[900px] bg-linear-to-t from-white via-white/90 to-transparent" />
-                      <div className="absolute right-[250px] bottom-[1000px] z-30 w-[450px] origin-bottom-right scale-[6]">
+                      <div className="absolute right-[250px] bottom-[1000px] z-30 w-[450px] origin-bottom-right scale-[6] pb-[40px]">
                         <Legend simplified />
                       </div>
                     </div>

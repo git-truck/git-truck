@@ -52,6 +52,7 @@ type BarNode = {
   rootColor: string
   interval: readonly [number, number]
   scale: number
+  baselineGap: number
 }
 
 const BAR_HEIGHT = 70
@@ -128,6 +129,7 @@ export function BarChart({
   const textHeight = TEXT_HEIGHT * renderScale
   const textWidth = TEXT_WIDTH * renderScale
   const barMargin = treemapPaddingInner * renderScale
+  const baselineGap = 4 * renderScale
   const width = size.width
 
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
@@ -164,14 +166,17 @@ export function BarChart({
   }
 
   return (
-    <div ref={ref} className={cn("flex-col justify-center", className)}
-    style={{
-      height: barHeight + tickHeight + textHeight
-    }}>
+    <div
+      ref={ref}
+      className={cn("flex-col justify-center", className)}
+      style={{
+        height: barHeight + baselineGap + tickHeight + textHeight
+      }}
+    >
       <svg
         ref={svgRef}
         width="100%"
-        height={barHeight + tickHeight + textHeight}
+        height={barHeight + baselineGap + tickHeight + textHeight}
         className="fill-transparent"
         style={{
           fill: "transparent"
@@ -192,11 +197,11 @@ export function BarChart({
         onMouseOut={() => setHoveredBarTooltip(null)}
       >
         {data.map((d, i) => {
-          const shouldDrawLabel = i % textInterval === 0
-          const shouldDrawTick = i % tickInterval === 0
+          const shouldDrawLabel = (i + 1) % textInterval === 0
+          const shouldDrawTick = (i + 1) % tickInterval === 0
           const bandX = xScale(d.timestamp.toString()) ?? 0
           const barX = bandX + barMargin
-            const barHeight = BAR_HEIGHT * renderScale - yScale(d.countLogged)
+          const barHeight = BAR_HEIGHT * renderScale - yScale(d.countLogged)
           const barY = yScale(d.countLogged)
           const [intervalStart, intervalEnd] = nodeIntervals[d.timestamp.toString()]
           const isInRange = intervalEnd > start && intervalStart < end
@@ -288,16 +293,17 @@ export function BarChart({
             gradientColors,
             rootColor,
             interval: [intervalStart, intervalEnd],
-            scale: renderScale
+            scale: renderScale,
+            baselineGap
           }
           barTooltips.set(node.id, node.tooltip)
 
           return <Bar key={node.id} node={node} />
         })}
         <path
-          d={`M0,${barHeight + 1} L${width},${barHeight + 1}`}
+          d={`M0,${barHeight + baselineGap} L${width},${barHeight + baselineGap}`}
           className="stroke-gray-500"
-          strokeWidth={1}
+          strokeWidth={renderScale}
           style={{
             stroke: "#6a7282"
           }}
@@ -338,7 +344,7 @@ function Bar({ node }: { node: BarNode }) {
         x={node.hitX}
         y={0}
         width={node.hitWidth}
-        height={(BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT) * node.scale}
+        height={(BAR_HEIGHT + TEXT_HEIGHT) * node.scale + node.baselineGap + TICK_HEIGHT * node.scale}
         rx={Math.min(treemapBlobBorderRadius * node.scale, node.hitWidth / 2)}
         ry={Math.min(treemapBlobBorderRadius * node.scale, node.hitWidth / 2)}
         className="peer cursor-pointer fill-transparent stroke-transparent stroke-1"
@@ -405,7 +411,7 @@ function Bar({ node }: { node: BarNode }) {
       {/* Tick */}
       {node.shouldDrawTick ? (
         <path
-          d={`M${node.x + node.width / 2},${BAR_HEIGHT * node.scale + 1} L${node.x + node.width / 2},${BAR_HEIGHT * node.scale + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) * node.scale - 2}`}
+          d={`M${node.x + node.width / 2},${BAR_HEIGHT * node.scale + node.baselineGap} L${node.x + node.width / 2},${BAR_HEIGHT * node.scale + node.baselineGap + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) * node.scale - 2}`}
           className={cn(
             "peer-hover:stroke-blue-primary pointer-events-none",
             node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"
@@ -422,7 +428,7 @@ function Bar({ node }: { node: BarNode }) {
           textAnchor="middle"
           dominantBaseline="central"
           x={node.x + node.width / 2}
-          y={(BAR_HEIGHT + TICK_HEIGHT) * node.scale + (TEXT_HEIGHT * node.scale) / 2}
+          y={BAR_HEIGHT * node.scale + node.baselineGap + TICK_HEIGHT * node.scale + (TEXT_HEIGHT * node.scale) / 2}
           style={{
             fill: "#101828",
             fontSize: `${12 * node.scale}px`
