@@ -641,34 +641,40 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   className="absolute top-[120px] right-[155px] h-[900px] w-[900px]"
                 />
                 <section className="col-span-4">
-                  <h2 className="montserrat-500 m-0 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
+                  <h2 className="montserrat-500 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
                     Git-Truck@Pluck – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
                     Repository Evolution
                   </h2>
-                  <div className="mt-[70px] flex items-center gap-[140px]" style={{ fontSize: 100 }}>
-                    <figure className="m-0 flex items-center gap-[60px]">
+                  <div className="mt-[150px] flex items-center gap-[200px]" style={{ fontSize: 100 }}>
+                    <figure className="m-0 flex items-center gap-[100px]">
                       <img
                         src={gustavMugshot}
                         alt="Gustav Müller Christoffersen"
-                        className="h-[280px] w-[280px] rounded-full object-cover"
+                        className="h-[500px] w-[500px] rounded-full object-cover"
                       />
-                      <figcaption>Gustav Müller Christoffersen</figcaption>
+                      <figcaption className="montserrat-300" style={{ fontSize: 160 }}>
+                        Gustav Müller Christoffersen
+                      </figcaption>
                     </figure>
-                    <figure className="m-0 flex items-center gap-[60px]">
+                    <figure className="m-0 flex items-center gap-[100px]">
                       <img
                         src={jonasMugshot}
                         alt="Jonas Nim Røssum"
-                        className="h-[280px] w-[280px] rounded-full object-cover"
+                        className="h-[500px] w-[500px] rounded-full object-cover"
                       />
-                      <figcaption>Jonas Nim Røssum</figcaption>
+                      <figcaption className="montserrat-300" style={{ fontSize: 160 }}>
+                        Jonas Nim Røssum
+                      </figcaption>
                     </figure>
-                    <figure className="m-0 flex items-center gap-[60px]">
+                    <figure className="m-0 flex items-center gap-[100px]">
                       <img
                         src={mirceaMugshot}
                         alt="Mircea Lungu"
-                        className="h-[280px] w-[280px] rounded-full object-cover"
+                        className="h-[500px] w-[500px] rounded-full object-cover"
                       />
-                      <figcaption>Mircea Lungu</figcaption>
+                      <figcaption className="montserrat-300" style={{ fontSize: 160 }}>
+                        Mircea Lungu
+                      </figcaption>
                     </figure>
                   </div>
                 </section>
