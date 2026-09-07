@@ -127,6 +127,7 @@ export function Timeline({ className, poster = false }: { className?: string; po
         scale={commitCountScale}
         className={className}
         intervals={data?.commitCountPerTimeIntervalForClickedObject ?? []}
+        poster
       />
     )
   }

@@ -22,8 +22,6 @@ import type { TimeUnit } from "~/shared/utils/time"
 import type { loader } from "~/routes/api.commit-intervals"
 import type { CommitCountInterval } from "~/shared/model"
 
-const barMargin = treemapPaddingInner
-
 type StackedBarSlice = {
   author: string
   y: number
@@ -53,6 +51,7 @@ type BarNode = {
   gradientColors: string[]
   rootColor: string
   interval: readonly [number, number]
+  scale: number
 }
 
 const BAR_HEIGHT = 70
@@ -90,11 +89,13 @@ function getBarTooltipLabel(intervalStart: number, unit: TimeUnit) {
 export function BarChart({
   scale,
   intervals,
-  className
+  className,
+  poster = false
 }: {
   scale: "linear" | "log"
   className?: string
   intervals: Awaited<ReturnType<typeof loader>>["commitCountPerTimeIntervalForClickedObject"]
+  poster?: boolean
 }) {
   const { databaseInfo } = useData()
   const [{ start, end, includeCoauthors }, setQs] = useQueryStates({
@@ -121,6 +122,12 @@ export function BarChart({
     countLogged: scale === "log" ? Math.log10(e.count + 1) : e.count
   }))
 
+  const renderScale = poster ? 8 : 1
+  const barHeight = BAR_HEIGHT * renderScale
+  const tickHeight = TICK_HEIGHT * renderScale
+  const textHeight = TEXT_HEIGHT * renderScale
+  const textWidth = TEXT_WIDTH * renderScale
+  const barMargin = treemapPaddingInner * renderScale
   const width = size.width
 
   const clickedObjectIsRepo = clickedObject.path === databaseInfo.repo
@@ -138,12 +145,11 @@ export function BarChart({
   const yScale = d3
     .scaleLinear()
     .domain([0, d3.max(data, (d) => d.countLogged) || 0])
-    .range([BAR_HEIGHT, 0])
+    .range([barHeight, 0])
 
   const barWidth = Math.max(1, xScale.bandwidth() - barMargin * 2)
-  const textInterval = Math.max(1, Math.ceil(TEXT_WIDTH / 2 / xScale.step())) * 2
+  const textInterval = Math.max(1, Math.ceil(textWidth / 2 / xScale.step())) * 2
   const tickInterval = textInterval / 2
-
   function updateTimeseries(e: readonly number[]) {
     setQs((prev) => ({ ...prev, start: e[0], end: e[1] }))
   }
@@ -158,11 +164,14 @@ export function BarChart({
   }
 
   return (
-    <div ref={ref} className={cn("flex flex-col justify-center", className)}>
+    <div ref={ref} className={cn("flex-col justify-center", className)}
+    style={{
+      height: barHeight + tickHeight + textHeight
+    }}>
       <svg
         ref={svgRef}
         width="100%"
-        height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
+        height={barHeight + tickHeight + textHeight}
         className="fill-transparent"
         style={{
           fill: "transparent"
@@ -187,7 +196,7 @@ export function BarChart({
           const shouldDrawTick = i % tickInterval === 0
           const bandX = xScale(d.timestamp.toString()) ?? 0
           const barX = bandX + barMargin
-          const barHeight = BAR_HEIGHT - yScale(d.countLogged)
+            const barHeight = BAR_HEIGHT * renderScale - yScale(d.countLogged)
           const barY = yScale(d.countLogged)
           const [intervalStart, intervalEnd] = nodeIntervals[d.timestamp.toString()]
           const isInRange = intervalEnd > start && intervalStart < end
@@ -212,7 +221,7 @@ export function BarChart({
           const hasFileActivity = selectedCount > 0
 
           const clickedCountLogged = scale === "log" ? Math.log10(selectedCount + 1) : selectedCount
-          const clickedBarHeight = BAR_HEIGHT - yScale(clickedCountLogged)
+          const clickedBarHeight = BAR_HEIGHT * renderScale - yScale(clickedCountLogged)
           const clickedBarY = yScale(clickedCountLogged)
           const tooltipLabel = getBarTooltipLabel(intervalStart, unit)
 
@@ -278,14 +287,15 @@ export function BarChart({
             stackedSlices,
             gradientColors,
             rootColor,
-            interval: [intervalStart, intervalEnd]
+            interval: [intervalStart, intervalEnd],
+            scale: renderScale
           }
           barTooltips.set(node.id, node.tooltip)
 
           return <Bar key={node.id} node={node} />
         })}
         <path
-          d={`M0,${BAR_HEIGHT + 1} L${width},${BAR_HEIGHT + 1}`}
+          d={`M0,${barHeight + 1} L${width},${barHeight + 1}`}
           className="stroke-gray-500"
           strokeWidth={1}
           style={{
@@ -328,9 +338,9 @@ function Bar({ node }: { node: BarNode }) {
         x={node.hitX}
         y={0}
         width={node.hitWidth}
-        height={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT}
-        rx={Math.min(treemapBlobBorderRadius, node.hitWidth / 2)}
-        ry={Math.min(treemapBlobBorderRadius, node.hitWidth / 2)}
+        height={(BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT) * node.scale}
+        rx={Math.min(treemapBlobBorderRadius * node.scale, node.hitWidth / 2)}
+        ry={Math.min(treemapBlobBorderRadius * node.scale, node.hitWidth / 2)}
         className="peer cursor-pointer fill-transparent stroke-transparent stroke-1"
         data-id={node.id}
         aria-label={getHoveredBarTooltipAriaLabel(node.tooltip)}
@@ -341,8 +351,8 @@ function Bar({ node }: { node: BarNode }) {
         y={node.y}
         width={node.width}
         height={node.height}
-        rx={treemapBlobBorderRadius}
-        ry={treemapBlobBorderRadius}
+        rx={treemapBlobBorderRadius * node.scale}
+        ry={treemapBlobBorderRadius * node.scale}
         fill={node.rootColor}
         className={cn(
           "pointer-events-none stroke-transparent stroke-2 opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out peer-hover:stroke-black",
@@ -380,8 +390,8 @@ function Bar({ node }: { node: BarNode }) {
             y={slice.y}
             width={node.width}
             height={slice.height}
-            rx={isTop || isBottom ? treemapBlobBorderRadius : 0}
-            ry={isTop || isBottom ? treemapBlobBorderRadius : 0}
+            rx={isTop || isBottom ? treemapBlobBorderRadius * node.scale : 0}
+            ry={isTop || isBottom ? treemapBlobBorderRadius * node.scale : 0}
             className={cn(
               "pointer-events-none opacity-100 transition-[height,width,x,y,fill,opacity] duration-300 ease-out",
               {
@@ -395,7 +405,7 @@ function Bar({ node }: { node: BarNode }) {
       {/* Tick */}
       {node.shouldDrawTick ? (
         <path
-          d={`M${node.x + node.width / 2},${BAR_HEIGHT + 1} L${node.x + node.width / 2},${BAR_HEIGHT + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) - 2}`}
+          d={`M${node.x + node.width / 2},${BAR_HEIGHT * node.scale + 1} L${node.x + node.width / 2},${BAR_HEIGHT * node.scale + (node.shouldDrawLabel ? TICK_HEIGHT : SECONDARY_TICK_HEIGHT) * node.scale - 2}`}
           className={cn(
             "peer-hover:stroke-blue-primary pointer-events-none",
             node.isInRange ? "stroke-gray-500" : "stroke-gray-500/30"
@@ -403,7 +413,7 @@ function Bar({ node }: { node: BarNode }) {
           style={{
             stroke: "#6a7282"
           }}
-          strokeWidth={1}
+          strokeWidth={node.scale}
         />
       ) : null}
       {/* Tick Label */}
@@ -412,9 +422,10 @@ function Bar({ node }: { node: BarNode }) {
           textAnchor="middle"
           dominantBaseline="central"
           x={node.x + node.width / 2}
-          y={BAR_HEIGHT + TICK_HEIGHT + TEXT_HEIGHT / 2}
+          y={(BAR_HEIGHT + TICK_HEIGHT) * node.scale + (TEXT_HEIGHT * node.scale) / 2}
           style={{
-            fill: "#101828"
+            fill: "#101828",
+            fontSize: `${12 * node.scale}px`
           }}
           className={cn(
             "peer-hover:fill-blue-primary pointer-events-none text-xs transition-[x]",

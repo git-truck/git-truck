@@ -15,13 +15,16 @@
   }
 
   .poster-timeline {
-    box-sizing: border-box;
-    padding: 0 900px 225px;
+    position: absolute;
+    bottom: 3250px;
+    left: 100px;
+    right: 100px;
+    z-index: 20;
+    /* height: 2000px; */
   }
 
   .poster-timeline > svg {
-    transform: scale(3.2);
-    transform-origin: top center;
+    /* height: 2000px; */
   }
 }
 
