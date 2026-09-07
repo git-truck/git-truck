@@ -622,11 +622,11 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Timeline poster className="poster-timeline" />
 
               <footer
-                className="grid shrink-0 grid-cols-3 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
+                className="grid shrink-0 grid-cols-4 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
                 style={{ height: 3200 }}
               >
-                <section className="col-span-3">
-                  <h2 className="montserrat-500 m-0 max-w-[7600px]" style={{ fontSize: 180, lineHeight: 1.15 }}>
+                <section className="col-span-4">
+                  <h2 className="montserrat-500 m-0 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
                     Git-Truck@Pluck – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
                     Repository Evolution
                   </h2>
@@ -651,42 +651,43 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 </section>
                 <section>
                   <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Problem
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    Understanding <strong>who</strong> contributes, <strong>where</strong> they contribute, and{" "}
+                    <strong>when</strong> they participate in evolving software projects is <strong>difficult</strong>,
+                    and requires disconnected and uncoordinated tools.
+                  </ul>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Approach
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    A new major version of <strong>Git-Truck</strong>, introducing coordinated contributor-centric
+                    exploration mechanisms to highlight <strong>developer footprints</strong> across repository{" "}
+                    <strong>structure</strong>, project <strong>evolution</strong>, and commit <strong>history</strong>.
+                  </ul>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
+                    Evaluation
+                  </h2>
+                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                    Five professional OSS collaborators explored familiar repositories through Git-Truck@Pluck in{" "}
+                    <strong>think-aloud sessions</strong>, allowing for visualizations to challenge existing assumptions
+                    about the software project.
+                  </ul>
+                </section>
+                <section>
+                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
                     Results
                   </h2>
                   <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
-                    <li>
-                      Uncovered hidden contributor <strong>specialization</strong>, collaboration{" "}
-                      <strong>hotspots</strong>, and temporal <strong>shifts</strong> in prominence
-                    </li>
-                    <li>
-                      Consistently challenged participants&apos; existing <strong>assumptions</strong> about their own
-                      projects
-                    </li>
-                  </ul>
-                </section>
-                <section>
-                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
-                    Methods
-                  </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
-                    <li>
-                      <strong>Plucking</strong>: a coordinated contributor-centric exploration mechanism that highlights{" "}
-                      <strong>developer footprints</strong> across repository structure and commit history
-                    </li>
-                    <li>
-                      Evaluated via <strong>think-aloud sessions</strong> with five professional OSS collaborators.
-                    </li>
-                  </ul>
-                </section>
-                <section>
-                  <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
-                    Discussion
-                  </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
-                    <li>
-                      Surfaced <strong>emerging socio-technical phenomena</strong>
-                    </li>
-                    <li>AI agents appearing as high-churn, first-class contributors</li>
+                    Participants surfaced hidden <strong>contributor specializations</strong>,{" "}
+                    <strong>collaboration hotspots</strong>, and temporal shifts in{" "}
+                    <strong>contributor prominence</strong>, while also encountering <strong>AI-agents</strong>{" "}
+                    appearing as high-churn, first class contributors.
                   </ul>
                 </section>
               </footer>
