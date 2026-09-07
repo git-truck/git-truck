@@ -274,24 +274,6 @@ export function Chart({ poster = false }: { poster?: boolean }) {
           onMouseOut={() => {
             return setHoveredObject(null)
           }}
-          onWheel={(evt) => {
-            // Accumulate delta
-            scrollDeltaRef.current += evt.deltaY
-
-            const SCROLL_DELTA_THRESHOLD = 50
-
-            if (scrollDeltaRef.current <= -SCROLL_DELTA_THRESHOLD && hoveredObject) {
-              startTransition(() => {
-                setZoomPath(hoveredObject.path)
-              })
-              scrollDeltaRef.current = 0
-            } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {
-              startTransition(() => {
-                zoomToParent()
-              })
-              scrollDeltaRef.current = 0
-            }
-          }}
         >
           {nodes.map((d, i) => {
             const isSearchMatch = Boolean(searchResults[d.data.path])

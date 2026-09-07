@@ -51,7 +51,10 @@ import { CompactLoadingIndicator } from "~/components/CompactLoadingIndicator"
 import { parseArgsWithDefaults } from "~/shared/utils/args"
 import { Legend } from "~/components/inspection/Legend"
 import parkedTruck from "~/assets/parkedTruck_48x.png"
+import gustavMugshot from "~/assets/gustav_mugshot.jpeg"
 import ituLogo from "~/assets/itu.svg"
+import jonasMugshot from "~/assets/jonas_mugshot.png"
+import mirceaMugshot from "~/assets/mircea_mugshot.jpeg"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -295,6 +298,20 @@ async function analyze(
     }
   }
 
+  const authors =
+    prevRes && !shouldUpdate(reason, "contributors") ? prevRes.contributors : await instance.db.getAuthors()
+  const storedAuthorUnions =
+    prevRes && !shouldUpdate(reason, "groupedContributors")
+      ? prevRes.contributorGroups
+      : await instance.db.getAuthorUnions()
+  const authorUnions = autoGroupRemainingContributors(authors, storedAuthorUnions)
+  const contributorGroupsChanged = JSON.stringify(storedAuthorUnions) !== JSON.stringify(authorUnions)
+
+  if (contributorGroupsChanged) {
+    await instance.db.replaceContributorGroups(authorUnions)
+    instance.invalidateTimeInterval()
+  }
+
   using _timeInterval = await instance.withTimeInterval(params.start, params.end)
   const shouldUpdateHiddenFiles = !prevRes || shouldUpdate(reason, "hiddenFiles")
   const shouldUpdateSourceFileTree = !prevRes || shouldUpdate(reason, "fileTree")
@@ -322,7 +339,7 @@ async function analyze(
   }
 
   log.time("updateCache")
-  if (!prevRes || shouldUpdate(reason, "cache")) await instance.db.updateCachedResult()
+  if (!prevRes || shouldUpdate(reason, "cache") || contributorGroupsChanged) await instance.db.updateCachedResult()
   log.timeEnd("updateCache")
   log.time("dbQueries")
   const topContributors =
@@ -352,13 +369,6 @@ async function analyze(
     prevRes && !shouldUpdate(reason, "maxMinFileSize")
       ? { minFileSize: prevRes.minFileSize, maxFileSize: prevRes.maxFileSize }
       : await instance.db.getMaxAndMinFileSize()
-  const authors =
-    prevRes && !shouldUpdate(reason, "contributors") ? prevRes.contributors : await instance.db.getAuthors()
-  const storedAuthorUnions =
-    prevRes && !shouldUpdate(reason, "groupedContributors")
-      ? prevRes.contributorGroups
-      : await instance.db.getAuthorUnions()
-  const authorUnions = autoGroupRemainingContributors(authors, storedAuthorUnions)
   const lastRunInfo =
     prevRes && !shouldUpdate(reason, "lastRunInfo")
       ? prevRes.lastRunInfo
@@ -557,11 +567,11 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     height: 760
                   }}
                 />
-                <div className="px-[160px] text-[#374151]" style={{ maxWidth: 6500 }}>
+                {/* <div className="px-[160px] text-[#374151]" style={{ maxWidth: 6500 }}>
                   <h1 className="montserrat-500 m-0 leading-[1.37]" style={{ fontSize: 250 }}>
                     Git-Truck@Pluck –
                   </h1>
-                </div>
+                </div> */}
                 <div className="flex w-[3227px] flex-col items-end text-right text-[#7d7d7d]" style={{ fontSize: 200 }}>
                   <img src={ituLogo} alt="IT University of Copenhagen" className="mb-[180px] h-[260px] w-[2371px]" />
                   <img
@@ -583,10 +593,10 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 >
                   Git-Truck@Pluck: Exploring <em>where</em> and <em>when</em> developers collaborate
                 </div>
-                <h2 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
+                <h1 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
                   Git-Truck@Pluck: Exploring <em className="montserrat-500">where</em> and{" "}
                   <em className="montserrat-500">when</em> developers collaborate
-                </h2>
+                </h1>
               </div>
 
               <div className={cn("relative min-h-0 flex-1 overflow-hidden bg-white")}>
@@ -633,18 +643,26 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <div className="mt-[70px] flex items-center gap-[140px]" style={{ fontSize: 100 }}>
                     <figure className="m-0 flex items-center gap-[60px]">
                       <img
-                        src={parkedTruck}
+                        src={gustavMugshot}
                         alt="Gustav Müller Christoffersen"
-                        className="pixelated h-[280px] w-[280px]"
+                        className="h-[280px] w-[280px] rounded-full object-cover"
                       />
                       <figcaption>Gustav Müller Christoffersen</figcaption>
                     </figure>
                     <figure className="m-0 flex items-center gap-[60px]">
-                      <img src={parkedTruck} alt="Jonas Nim Røssum" className="pixelated h-[280px] w-[280px]" />
+                      <img
+                        src={jonasMugshot}
+                        alt="Jonas Nim Røssum"
+                        className="h-[280px] w-[280px] rounded-full object-cover"
+                      />
                       <figcaption>Jonas Nim Røssum</figcaption>
                     </figure>
                     <figure className="m-0 flex items-center gap-[60px]">
-                      <img src={parkedTruck} alt="Mircea Lungu" className="pixelated h-[280px] w-[280px]" />
+                      <img
+                        src={mirceaMugshot}
+                        alt="Mircea Lungu"
+                        className="h-[280px] w-[280px] rounded-full object-cover"
+                      />
                       <figcaption>Mircea Lungu</figcaption>
                     </figure>
                   </div>

@@ -16,7 +16,8 @@
 
   .poster-timeline > svg {
     transform: scale(4);
-    transform-origin: center;
+    transform-origin: top center;
+    margin-bottom: 300px;
   }
 }
 

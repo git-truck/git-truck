@@ -23,13 +23,13 @@ import { categoricalScheme } from "~/const"
  */
 
 export const Metrics = {
+  CONTRIBUTORS: ContributorsMetric,
   LAST_CHANGED: LastChangedMetric,
   FILE_TYPE: TypeMetric,
   FILE_SIZE: FileSizeMetric,
   MOST_COMMITS: CommitsMetric,
   MOST_CONTRIBUTIONS: LinesChangedMetric,
   TOP_CONTRIBUTOR: TopContributorMetric,
-  CONTRIBUTORS: ContributorsMetric
 } as const satisfies Record<string, Metric>
 
 export type CategoricalMetricType = "FILE_TYPE" | "TOP_CONTRIBUTOR" | "CONTRIBUTORS"

@@ -73,25 +73,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getSavedOptions(): Partial<Options> {
-  if (typeof document === "undefined") {
-    return {}
-  }
-
-  const savedOptions = localStorage.getItem(OPTIONS_LOCAL_STORAGE_KEY)
-  if (!savedOptions) {
-    return {}
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(savedOptions)
-    if (!isRecord(parsed)) {
-      return {}
-    }
-
-    return parsed as Partial<Options>
-  } catch {
-    return {}
-  }
+  return {}
 }
 
 function getInitialOptions(): Options {
