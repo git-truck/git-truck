@@ -14,10 +14,14 @@
     zoom: 0.32;
   }
 
+  .poster-timeline {
+    box-sizing: border-box;
+    padding: 0 450px 450px;
+  }
+
   .poster-timeline > svg {
-    transform: scale(4);
+    transform: scale(3.2);
     transform-origin: top center;
-    margin-bottom: 300px;
   }
 }
 

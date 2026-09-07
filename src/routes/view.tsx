@@ -55,6 +55,7 @@ import gustavMugshot from "~/assets/gustav_mugshot.jpeg"
 import ituLogo from "~/assets/itu.svg"
 import jonasMugshot from "~/assets/jonas_mugshot.png"
 import mirceaMugshot from "~/assets/mircea_mugshot.jpeg"
+import qrCode from "~/assets/qr-code.svg"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -555,7 +556,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               }}
             >
               <header
-                className="grid shrink-0 grid-cols-[760px_1fr_3227px] items-start bg-white px-[210px] pt-[220px]"
+                className="relative grid shrink-0 grid-cols-[760px_1fr_3227px] items-start bg-white pt-[220px] pr-0 pl-[210px]"
                 style={{ height: 2264 }}
               >
                 <img
@@ -572,13 +573,11 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     Git-Truck@Pluck –
                   </h1>
                 </div> */}
-                <div className="flex w-[3227px] flex-col items-end text-right text-[#7d7d7d]" style={{ fontSize: 200 }}>
+                <div
+                  className="absolute top-[220px] right-[220px] flex w-[3227px] flex-col items-end text-right text-[#7d7d7d]"
+                  style={{ fontSize: 200 }}
+                >
                   <img src={ituLogo} alt="IT University of Copenhagen" className="mb-[180px] h-[260px] w-[2371px]" />
-                  <img
-                    src={parkedTruck}
-                    alt="QR code placeholder"
-                    className="pixelated mt-[120px] h-[600px] w-[600px]"
-                  />
                 </div>
               </header>
 
