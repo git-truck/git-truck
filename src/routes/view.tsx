@@ -594,8 +594,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   Exploring <em>where</em> and <em>when</em> developers collaborate
                 </div>
                 <h1 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
-                  Exploring <em className="montserrat-500">where</em> and{" "}
-                  <em className="montserrat-500">when</em> developers collaborate
+                  Exploring <em className="montserrat-500">where</em> and <em className="montserrat-500">when</em>{" "}
+                  developers collaborate
                 </h1>
               </div>
 
