@@ -36,6 +36,10 @@
   display: block !important;
 }
 
+.poster-legend .poster-legend-border {
+  height: 1px;
+}
+
 /* @custom-variant dark (&:where(.dark, .dark *)); */
 
 @theme {

@@ -569,8 +569,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   }}
                 />
                 <div
-                  className="absolute top-[430px] left-[1100px] z-10 text-[#374151]"
-                  style={{ fontSize: 250, lineHeight: 1.15 }}
+                  className="absolute top-[430px] left-[1100px] z-10 text-[#6b7280]"
+                  style={{ fontSize: 210, lineHeight: 1.15 }}
                 >
                   <h1 className="montserrat-500 m-0">Git-Truck@Pluck</h1>
                 </div>
@@ -600,32 +600,55 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                         <Chart poster />
                       </div>
                       <div
-                        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[1600px]"
+                        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[2400px]"
                         style={{
                           background:
                             "linear-gradient(to bottom, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
                         }}
                       />
                       <div
-                        className="absolute top-[2100px] left-[7050px] z-20 max-w-[1700px] rounded-lg rounded-t-[200px] rounded-r-[200px] border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
-                        style={{ fontSize: 150 }}
+                        className="absolute right-[2450px] bottom-[3850px] z-20 max-w-[1700px] rounded-b-[200px] rounded-l-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        style={{ fontSize: 75 }}
                       >
                         <strong className="montserrat-500">
-                          Of the two, only Michael worked in the webkit and compiler directory
+                          Of the two, only{" "}
+                          <span className="font-extrabold" style={{ color: "#745C97" }}>
+                            Michael
+                          </span>{" "}
+                          worked in the webkit and (mostly) compiler directory
                         </strong>
                       </div>
 
                       <div
-                        className="absolute right-[3900px] bottom-[900px] z-20 max-w-[1700px] rounded-lg rounded-t-[200px] rounded-l-[200px] border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
-                        style={{ fontSize: 150 }}
+                        className="absolute left-[3300px] bottom-[900px] z-20 max-w-[1700px] rounded-t-[200px] rounded-r-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        style={{ fontSize: 75 }}
                       >
                         <strong className="montserrat-500">
-                          Michael joined the project a few years later than Jakob
+                          <span className="font-extrabold" style={{ color: "#ff7a73" }}>
+                            Jakob
+                          </span>{" "}
+                          joins the project after three years;{" "}
+                          <span className="font-extrabold" style={{ color: "#745C97" }}>
+                            Michael
+                          </span>{" "}
+                          appears roughly two years later
                         </strong>
                       </div>
 
                       <div
-                        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[2400px]"
+                        className="absolute bottom-[3600px] left-[1600px] z-20 max-w-[1700px] rounded-b-[200px] rounded-r-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        style={{ fontSize: 75 }}
+                      >
+                        <strong className="montserrat-500">
+                          Files with overlapping contributions are indicated by{" "}
+                          <span className="bg-linear-to-r from-[#ff7a73] to-[#745C97] bg-clip-text font-extrabold text-transparent">
+                            blended colors
+                          </span>
+                        </strong>
+                      </div>
+
+                      <div
+                        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[3800px]"
                         style={{
                           background: "linear-gradient(to top, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
                         }}
@@ -641,13 +664,13 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <Timeline poster className="poster-timeline" />
 
               <footer
-                className="relative grid shrink-0 grid-cols-4 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] py-[120px] text-white [&_strong]:text-[#ff7a7a]"
+                className="relative grid shrink-0 grid-cols-4 gap-x-[150px] gap-y-[90px] bg-[#374151] px-[155px] pt-[240px] pb-[120px] text-white [&_strong]:text-[#ff7a7a]"
                 style={{ height: 3200 }}
               >
                 <img
                   src={qrCode}
                   alt="Scan to learn more about Git-Truck@Pluck"
-                  className="absolute top-[120px] right-[155px] h-[900px] w-[900px]"
+                  className="absolute top-[155px] right-[155px] h-[900px] w-[900px]"
                 />
                 <section className="col-span-4">
                   <h2 className="montserrat-500 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
@@ -723,8 +746,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   </h2>
                   <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
                     Participants surfaced hidden <strong>contributor specializations</strong>,{" "}
-                    <strong>collaboration hotspots</strong>, and temporal shifts in{" "}
-                    <strong>contributor prominence</strong>, while also encountering <strong>AI-agents</strong>{" "}
+                    <strong>collaboration hotspots</strong>, and <strong>temporal shifts</strong> in contributor prominence,
+                    while also encountering AI-agents{" "}
                     appearing as high-churn, first class contributors.
                   </p>
                 </section>

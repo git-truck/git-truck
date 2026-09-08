@@ -140,7 +140,7 @@ export function PointLegend() {
       </div>
       <PointLegendTable items={visibleItems} totalWeight={totalWeight} metricType={metricType} />
       {filteredItems.length > visibleItems.length ? (
-        <p className="poster-more-contributors m-0 -mt-1 hidden text-left text-xs">
+        <p className="poster-more-contributors text-tertiary-text dark:text-tertiary-text-dark m-0 -mt-1 hidden text-left text-xs">
           + {filteredItems.length - visibleItems.length} more contributors
         </p>
       ) : null}

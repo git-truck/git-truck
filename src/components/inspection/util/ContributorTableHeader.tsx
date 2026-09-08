@@ -12,7 +12,7 @@ export function ContributorTableHeader({ children }: { children: ReactNode }) {
   const isAuthorRelatedLegend = metricType === "TOP_CONTRIBUTOR" || metricType === "CONTRIBUTORS"
   return (
     <>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
+      <span className="poster-legend-border bg-border-secondary dark:bg-border-secondary-dark col-span-full h-0.5 w-full" />
       <div className="text-primary-text dark:text-primary-text-dark contents text-sm font-bold">
         <ShuffleColorsForm>
           <button
@@ -33,7 +33,7 @@ export function ContributorTableHeader({ children }: { children: ReactNode }) {
         </ShuffleColorsForm>
         {children}
       </div>
-      <span className="bg-border-secondary dark:bg-border-secondary-dark col-span-full mb-1 h-0.5 w-full" />
+      <span className="poster-legend-border bg-border-secondary dark:bg-border-secondary-dark col-span-full mb-1 h-0.5 w-full" />
     </>
   )
 }

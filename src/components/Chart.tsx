@@ -320,18 +320,46 @@ export function Chart({ poster = false }: { poster?: boolean }) {
                   clickedObjectPath={clickedObjectPath}
                   posterScale={poster ? 1.5 : 1}
                 />
-                {labelsVisible && (!poster || isTree(d.data)) ? (
-                  <NodeText
-                    isSearchMatch={isSearchMatch}
-                    d={d}
-                    colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
-                    posterScale={poster ? 1.5 : 1}
-                  >
-                    {d.data.name}
-                    {/* TODO: After adding absolutePaths to objects, display the absolute path on the root tree */}
-                    {/* {i === 0 ? d.data.absolutePath : d.data.name} */}
-                  </NodeText>
-                ) : null}
+              </g>
+            )
+          })}
+          {nodes.map((d) => {
+            const isSearchMatch = Boolean(searchResults[d.data.path])
+            const hasSearchMatches = isTree(d.data)
+              ? Object.keys(searchResults).some((resultPath) => {
+                  return resultPath.startsWith(`${d.data.path}/`)
+                })
+              : isSearchMatch
+
+            const isSelected = selectedCategories.length === 0 || matchingPaths.has(d.data.path)
+            const isClickedObject = d.data.path === clickedObjectPath
+            const shouldColor = clickedObjectPath
+              ? isClickedObject || (d.data.path.startsWith(clickedObjectPath + "/") && isSelected)
+              : isSelected
+            const shouldNotColor = (hasSearchResults && !(isSearchMatch || hasSearchMatches)) || !shouldColor
+
+            if (!labelsVisible || (poster && !isTree(d.data))) return null
+
+            return (
+              <g
+                key={`${d.data.path}-label`}
+                style={
+                  shouldNotColor
+                    ? {
+                        opacity: 0.3,
+                        filter: "grayscale(100%)"
+                      }
+                    : undefined
+                }
+              >
+                <NodeText
+                  isSearchMatch={isSearchMatch}
+                  d={d}
+                  colors={colorsByPath.get(d.data.path) ?? [missingInMapColor]}
+                  posterScale={poster ? 1.5 : 1}
+                >
+                  {d.data.name}
+                </NodeText>
               </g>
             )
           })}
@@ -413,7 +441,7 @@ function Node({
             "transition-[x,y,rx,ry,width,height,fill] duration-500 ease-in-out": transitionsEnabled
           }
         )}
-        style={isTree(d.data) ? { fill: "transparent", stroke: "#99a1af" } : undefined}
+        style={isTree(d.data) ? { fill: "transparent", stroke: isRoot ? "#4b5563" : "#99a1af" } : undefined}
       />
     </>
   )
