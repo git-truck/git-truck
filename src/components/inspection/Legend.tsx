@@ -37,7 +37,7 @@ export function Legend({ simplified = false }: { simplified?: boolean }) {
         .filter((p) => !(p.id === "top-contributor-slider" && !showTopContributorSlider))
         .map((Panel, i) =>
           simplified ? (
-            <div key={`${metricType}:${Panel.id}`} className="card poster-legend flex flex-col gap-2">
+            <div key={`${metricType}:${Panel.id}`} className="card poster-legend flex flex-col gap-2 pb-4">
               <div className="flex items-center gap-2 text-sm font-bold">
                 {i === 0 ? <span>LEGEND:</span> : null}
                 {i === 0 ? <Icon path={icon} /> : null}

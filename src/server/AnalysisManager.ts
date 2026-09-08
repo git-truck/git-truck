@@ -244,10 +244,10 @@ export class AnalysisManager {
 
     const db = await new DB({ instance, connection }).init()
 
+    await this.insertCommonIgnoredFiles(db)
     if (isFreshDB) {
       // Database is fresh, insert version and return
       await this.insertGitTruckVersion(connection)
-      await this.insertCommonIgnoredFiles(db)
     }
     return db
   }
@@ -267,6 +267,8 @@ export class AnalysisManager {
 
   private static async insertCommonIgnoredFiles(db: DB) {
     await db.addHiddenFile("package-lock.json")
+    await db.addHiddenFile("*.js")
+    await db.addHiddenFile("v8/test/cctest/*.**")
     await db.addHiddenFile("bun.lock")
     await db.addHiddenFile("bun.lockb")
     await db.addHiddenFile("yarn.lock")

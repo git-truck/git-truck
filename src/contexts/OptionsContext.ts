@@ -73,7 +73,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getSavedOptions(): Partial<Options> {
-  return {}
+  return {
+    sizeMetric: "FILE_SIZE",
+    metricType: "CONTRIBUTORS"
+  }
 }
 
 function getInitialOptions(): Options {

@@ -583,16 +583,9 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               </header>
 
               <div
-                className="absolute top-[1649px] left-[213px] z-10 w-[5544px]"
+                className="absolute top-[1649px] left-[213px] z-40 w-[5544px]"
                 aria-label="Exploring where and when developers collaborate"
               >
-                <div
-                  aria-hidden="true"
-                  className="montserrat-500 absolute inset-0 m-0 text-white"
-                  style={{ fontSize: 390, lineHeight: 1.15, letterSpacing: "-14px" }}
-                >
-                  Exploring <em>where</em> and <em>when</em> developers collaborate
-                </div>
                 <h1 className="montserrat-300 relative m-0 text-[#374151]" style={{ fontSize: 379, lineHeight: 1.15 }}>
                   Exploring <em className="montserrat-500">where</em> and <em className="montserrat-500">when</em>{" "}
                   developers collaborate
@@ -602,25 +595,36 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
               <div className={cn("relative min-h-0 flex-1 overflow-hidden bg-white")}>
                 <ClientOnly>
                   {() => (
-                    <div className="absolute inset-x-[200px] -top-[300px] bottom-0 overflow-hidden">
-                      <div className="origin-top-left scale-[0.95]">
+                    <div className="absolute inset-x-[200px] -top-[900px] bottom-0 overflow-hidden">
+                      <div className="relative -top-[500px] origin-top-left scale-[0.95]">
                         <Chart poster />
                       </div>
-
                       <div
-                        className="absolute top-[1800px] left-[900px] z-10 max-w-[1800px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-[#374151]"
+                        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[1600px]"
+                        style={{
+                          background: "linear-gradient(to bottom, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
+                        }}
+                      />
+                      <div
+                        className="absolute top-[2100px] left-[7050px] z-20 max-w-[1700px] rounded-t-[200px] rounded-r-[200px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 150 }}
                       >
-                        <strong className="montserrat-500">Benedict owns this subsystem alone</strong>
-                      </div>
-                      <div
-                        className="absolute top-[4300px] right-[900px] z-10 max-w-[1800px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-[#374151]"
-                        style={{ fontSize: 150 }}
-                      >
-                        <strong className="montserrat-500">Here, two contributors work together</strong>
+                        <strong className="montserrat-500">Of the two, only Michael worked in the webkit and compiler directory</strong>
                       </div>
 
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[900px] bg-linear-to-t from-white via-white/90 to-transparent" />
+                      <div
+                        className="absolute right-[3900px] bottom-[900px] z-20 max-w-[1700px] rounded-t-[200px] rounded-l-[200px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
+                        style={{ fontSize: 150 }}
+                      >
+                        <strong className="montserrat-500">Michael joined the project a few years later than Jakob</strong>
+                      </div>
+
+                      <div
+                        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[2400px]"
+                        style={{
+                          background: "linear-gradient(to top, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
+                        }}
+                      />
                       <div className="absolute right-[250px] bottom-[1000px] z-30 w-[450px] origin-bottom-right scale-[6] pb-[40px]">
                         <Legend simplified />
                       </div>
@@ -642,7 +646,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 />
                 <section className="col-span-4">
                   <h2 className="montserrat-500 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
-                    Git-Truck@Pluck – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
+                    <strong>Git-Truck@Pluck</strong> – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
                     Repository Evolution
                   </h2>
                   <div className="mt-[150px] flex items-center gap-[200px]" style={{ fontSize: 100 }}>
@@ -682,42 +686,42 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
                     Problem
                   </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                  <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
                     Understanding <strong>who</strong> contributes, <strong>where</strong> they contribute, and{" "}
-                    <strong>when</strong> they participate in evolving software projects is <strong>difficult</strong>,
+                    <strong>when</strong> they participate in evolving software projects is difficult,
                     and requires disconnected and uncoordinated tools.
-                  </ul>
+                  </p>
                 </section>
                 <section>
                   <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
                     Approach
                   </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
-                    A new major version of <strong>Git-Truck</strong>, introducing coordinated contributor-centric
+                  <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
+                    Introducing coordinated contributor-centric
                     exploration mechanisms to highlight <strong>developer footprints</strong> across repository{" "}
-                    <strong>structure</strong>, project <strong>evolution</strong>, and commit <strong>history</strong>.
-                  </ul>
+                    <strong>structure</strong> and commit <strong>history</strong>.
+                  </p>
                 </section>
                 <section>
                   <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
                     Evaluation
                   </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
-                    Five professional OSS collaborators explored familiar repositories through Git-Truck@Pluck in{" "}
+                  <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
+                    Five professional OSS collaborators explored familiar repositories in{" "}
                     <strong>think-aloud sessions</strong>, allowing for visualizations to challenge existing assumptions
                     about the software project.
-                  </ul>
+                  </p>
                 </section>
                 <section>
                   <h2 className="montserrat-500 m-0" style={{ fontSize: 200 }}>
                     Results
                   </h2>
-                  <ul className="montserrat-300 m-0 list-disc pl-[180px]" style={{ fontSize: 110 }}>
+                  <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
                     Participants surfaced hidden <strong>contributor specializations</strong>,{" "}
                     <strong>collaboration hotspots</strong>, and temporal shifts in{" "}
                     <strong>contributor prominence</strong>, while also encountering <strong>AI-agents</strong>{" "}
                     appearing as high-churn, first class contributors.
-                  </ul>
+                  </p>
                 </section>
               </footer>
             </div>

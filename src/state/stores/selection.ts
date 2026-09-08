@@ -1,8 +1,10 @@
 import { useCallback } from "react"
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
-import { useOptions } from "~/contexts/OptionsContext"
 
-const categoriesConfig = parseAsArrayOf(parseAsString).withDefault([])
+const categoriesConfig = parseAsArrayOf(parseAsString).withDefault([
+  "Jakob Kummerow",
+  "Michael Achenbach"
+])
 
 type WriteOnlyQueryParser<T> = {
   parse: (query: string) => T | null
@@ -129,11 +131,9 @@ export const useSelectedCategories = () => {
 export const useSelectedCategory = () => {
   const [categories] = useQueryState("categories", categoriesConfig)
 
-  const { metricType } = useOptions()
-
   const selectCategory = useSelectStoredCategory()
   const deselectCategory = useDeselectStoredCategory()
-  const selectedCategories = categories.filter((c) => c.startsWith(metricType + ":"))
+  const selectedCategories = categories
 
   const isSelected = (category: string) => selectedCategories.includes(category)
   const select = (category: string) => selectCategory(category)

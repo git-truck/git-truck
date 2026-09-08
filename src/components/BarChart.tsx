@@ -197,8 +197,9 @@ export function BarChart({
         onMouseOut={() => setHoveredBarTooltip(null)}
       >
         {data.map((d, i) => {
-          const shouldDrawLabel = (i + 1) % textInterval === 0
-          const shouldDrawTick = (i + 1) % tickInterval === 0
+          const isJanuary = new Date(d.timestamp * 1000).getUTCMonth() === 0
+          const shouldDrawLabel = unit === "month" ? isJanuary : (i + 1) % textInterval === 0
+          const shouldDrawTick = unit === "month" ? isJanuary : (i + 1) % tickInterval === 0
           const bandX = xScale(d.timestamp.toString()) ?? 0
           const barX = bandX + barMargin
           const barHeight = BAR_HEIGHT * renderScale - yScale(d.countLogged)
@@ -281,7 +282,7 @@ export function BarChart({
             height: barHeight,
             clickedY: clickedBarY,
             clickedHeight: clickedBarHeight,
-            date: d.date,
+            date: unit === "month" && isJanuary ? new Date(d.timestamp * 1000).getUTCFullYear().toString() : d.date,
             tooltip,
             shouldDrawLabel,
             shouldDrawTick,
