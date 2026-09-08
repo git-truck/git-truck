@@ -1,10 +1,7 @@
 import { useCallback } from "react"
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs"
 
-const categoriesConfig = parseAsArrayOf(parseAsString).withDefault([
-  "Jakob Kummerow",
-  "Michael Achenbach"
-])
+const categoriesConfig = parseAsArrayOf(parseAsString).withDefault(["Jakob Kummerow", "Michael Achenbach"])
 
 type WriteOnlyQueryParser<T> = {
   parse: (query: string) => T | null

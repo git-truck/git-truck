@@ -602,21 +602,26 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       <div
                         className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[1600px]"
                         style={{
-                          background: "linear-gradient(to bottom, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
+                          background:
+                            "linear-gradient(to bottom, white 0%, rgb(255 255 255 / 0.9) 55%, transparent 100%)"
                         }}
                       />
                       <div
-                        className="absolute top-[2100px] left-[7050px] z-20 max-w-[1700px] rounded-t-[200px] rounded-r-[200px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
+                        className="absolute top-[2100px] left-[7050px] z-20 max-w-[1700px] rounded-lg rounded-t-[200px] rounded-r-[200px] border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 150 }}
                       >
-                        <strong className="montserrat-500">Of the two, only Michael worked in the webkit and compiler directory</strong>
+                        <strong className="montserrat-500">
+                          Of the two, only Michael worked in the webkit and compiler directory
+                        </strong>
                       </div>
 
                       <div
-                        className="absolute right-[3900px] bottom-[900px] z-20 max-w-[1700px] rounded-t-[200px] rounded-l-[200px] rounded-lg border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
+                        className="absolute right-[3900px] bottom-[900px] z-20 max-w-[1700px] rounded-lg rounded-t-[200px] rounded-l-[200px] border-4 border-[#374151] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 150 }}
                       >
-                        <strong className="montserrat-500">Michael joined the project a few years later than Jakob</strong>
+                        <strong className="montserrat-500">
+                          Michael joined the project a few years later than Jakob
+                        </strong>
                       </div>
 
                       <div
@@ -646,8 +651,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 />
                 <section className="col-span-4">
                   <h2 className="montserrat-500 max-w-[7600px]" style={{ fontSize: 250, lineHeight: 1.15 }}>
-                    <strong>Git-Truck@Pluck</strong> – Contributor-Centric Coordinated Views for Hierarchical Visualization of Git
-                    Repository Evolution
+                    <strong>Git-Truck@Pluck</strong> – Contributor-Centric Coordinated Views for Hierarchical
+                    Visualization of Git Repository Evolution
                   </h2>
                   <div className="mt-[150px] flex items-center gap-[200px]" style={{ fontSize: 100 }}>
                     <figure className="m-0 flex items-center gap-[100px]">
@@ -688,8 +693,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   </h2>
                   <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
                     Understanding <strong>who</strong> contributes, <strong>where</strong> they contribute, and{" "}
-                    <strong>when</strong> they participate in evolving software projects is difficult,
-                    and requires disconnected and uncoordinated tools.
+                    <strong>when</strong> they participate in evolving software projects is difficult, and requires
+                    disconnected and uncoordinated tools.
                   </p>
                 </section>
                 <section>
@@ -697,9 +702,9 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                     Approach
                   </h2>
                   <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
-                    Introducing coordinated contributor-centric
-                    exploration mechanisms to highlight <strong>developer footprints</strong> across repository{" "}
-                    <strong>structure</strong> and commit <strong>history</strong>.
+                    Introducing coordinated contributor-centric exploration mechanisms to highlight{" "}
+                    <strong>developer footprints</strong> across repository <strong>structure</strong> and commit{" "}
+                    <strong>history</strong>.
                   </p>
                 </section>
                 <section>
