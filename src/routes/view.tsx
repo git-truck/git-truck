@@ -607,7 +607,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                         }}
                       />
                       <div
-                        className="absolute right-[2450px] bottom-[3850px] z-20 max-w-[1700px] rounded-b-[200px] rounded-l-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        className="absolute right-[2450px] bottom-[3850px] z-20 max-w-[1700px] rounded-lg rounded-l-[200px] rounded-b-[200px] border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 75 }}
                       >
                         <strong className="montserrat-500">
@@ -620,7 +620,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       </div>
 
                       <div
-                        className="absolute left-[3300px] bottom-[900px] z-20 max-w-[1700px] rounded-t-[200px] rounded-r-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        className="absolute bottom-[900px] left-[3300px] z-20 max-w-[1700px] rounded-lg rounded-t-[200px] rounded-r-[200px] border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 75 }}
                       >
                         <strong className="montserrat-500">
@@ -636,7 +636,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                       </div>
 
                       <div
-                        className="absolute bottom-[3600px] left-[1600px] z-20 max-w-[1700px] rounded-b-[200px] rounded-r-[200px] rounded-lg border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
+                        className="absolute bottom-[3600px] left-[1600px] z-20 max-w-[1700px] rounded-lg rounded-r-[200px] rounded-b-[200px] border-4 border-[#37415166] bg-white/95 px-[80px] py-[50px] text-balance"
                         style={{ fontSize: 75 }}
                       >
                         <strong className="montserrat-500">
@@ -746,9 +746,8 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   </h2>
                   <p className="montserrat-300 m-0" style={{ fontSize: 110 }}>
                     Participants surfaced hidden <strong>contributor specializations</strong>,{" "}
-                    <strong>collaboration hotspots</strong>, and <strong>temporal shifts</strong> in contributor prominence,
-                    while also encountering AI-agents{" "}
-                    appearing as high-churn, first class contributors.
+                    <strong>collaboration hotspots</strong>, and <strong>temporal shifts</strong> in contributor
+                    prominence, while also encountering AI-agents appearing as high-churn, first class contributors.
                   </p>
                 </section>
               </footer>
