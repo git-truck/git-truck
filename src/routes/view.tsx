@@ -56,6 +56,7 @@ import ituLogo from "~/assets/itu.svg"
 import jonasMugshot from "~/assets/jonas_mugshot.png"
 import mirceaMugshot from "~/assets/mircea_mugshot.jpeg"
 import qrCode from "~/assets/qr-code.svg"
+import vissoftLogo from "~/assets/vissoft-2026.png"
 import { autoBuildContributorGroups } from "~/components/modals/utils/autoBuildContributorGroups"
 export const meta = ({ loaderData }: Route.MetaArgs) => [
   {
@@ -562,14 +563,14 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                 <img
                   src={parkedTruck}
                   alt=""
-                  className="pixelated shrink-0"
+                  className="pixelated relative -top-[50px] shrink-0"
                   style={{
                     width: 760,
                     height: 760
                   }}
                 />
                 <div
-                  className="absolute top-[430px] left-[1100px] z-10 text-[#6b7280]"
+                  className="absolute top-[430px] left-[970px] z-10 text-[#6b7280]"
                   style={{ fontSize: 210, lineHeight: 1.15 }}
                 >
                   <h1 className="montserrat-500 m-0">Git-Truck@Pluck</h1>
@@ -579,6 +580,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
                   style={{ fontSize: 200 }}
                 >
                   <img src={ituLogo} alt="IT University of Copenhagen" className="mb-[180px] h-[260px] w-[2371px]" />
+                  <img src={vissoftLogo} alt="VISSOFT 2026" className="h-[260px] w-auto object-contain" />
                 </div>
               </header>
 
