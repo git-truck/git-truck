@@ -292,8 +292,18 @@ function Bar({ node }: { node: BarNode }) {
   const metricIsContributorMetric = isContributorMetric(metricType)
   const clickedObject = useClickedObject()
   const colors = useBlobColors(clickedObject)
-  const { fill: clickedFill, linearGradient: clickedGradient } = useGradient(colors)
-  const { fill, linearGradient } = useGradient(node.gradientColors)
+
+  const gradientSpan = Math.max((node.width + node.clickedHeight) / 2, 1)
+  const gradientVector = {
+    gradientUnits: "userSpaceOnUse" as const,
+    x1: `${node.x}`,
+    y1: `${node.clickedY}`,
+    x2: `${node.x + gradientSpan}`,
+    y2: `${node.clickedY + gradientSpan}`
+  }
+
+  const { fill: clickedFill, linearGradient: clickedGradient } = useGradient(colors, gradientVector)
+  const { fill, linearGradient } = useGradient(node.gradientColors, gradientVector)
 
   // Fallback to clickedFill or class if gradient logic doesn't apply
   const hasGradient = node.gradientColors.length > 1

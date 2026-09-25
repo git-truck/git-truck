@@ -352,7 +352,41 @@ function Node({
 }) {
   const { chartType, transitionsEnabled } = useOptions()
 
-  const { linearGradient, fill } = useGradient(colors)
+  const gradientVector = useMemo(() => {
+    if (chartType === "BUBBLE_CHART") {
+      const circleDatum = d as HierarchyCircularNode<GitObject>
+      const x = circleDatum.x - circleDatum.r
+      const y = circleDatum.y - circleDatum.r + letterHeightText - 1
+      const width = circleDatum.r * 2
+      const height = circleDatum.r * 2
+      const span = Math.max(width, height, 1)
+
+      return {
+        gradientUnits: "userSpaceOnUse" as const,
+        x1: `${x}`,
+        y1: `${y}`,
+        x2: `${x + span}`,
+        y2: `${y + span}`
+      }
+    }
+
+    const datum = d as HierarchyRectangularNode<GitObject>
+    const x = datum.x0 + 0.5
+    const y = datum.y0 + 0.5
+    const width = datum.x1 - datum.x0 - 1
+    const height = datum.y1 - datum.y0 - 1
+    const span = Math.max((width + height) / 2, 1)
+
+    return {
+      gradientUnits: "userSpaceOnUse" as const,
+      x1: `${x}`,
+      y1: `${y}`,
+      x2: `${x + span}`,
+      y2: `${y + span}`
+    }
+  }, [chartType, d])
+
+  const { linearGradient, fill } = useGradient(colors, gradientVector)
   const multipleColors = colors.length > 1
 
   const isClickedObject = d.data.path === clickedObjectPath
