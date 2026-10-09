@@ -1,34 +1,38 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import { reactRouterDevTools } from "react-router-devtools"
 import { reactRouter } from "@react-router/dev/vite"
 import { reactCompilerPreset } from "@vitejs/plugin-react"
 // import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
-import pkg from "./package.json"
+import pkg from "./package.json" with { type: "json" }
 import babel from "@rolldown/plugin-babel"
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig({
   build: {
     rollupOptions: {
-      external: ["@duckdb/node-api"],
-      ...(isSsrBuild
-        ? {
-            input: "./src/server/app.ts"
-          }
-        : {})
+      external: ["@duckdb/node-api"]
     }
   },
-  ssr: {
-    noExternal: isSsrBuild ? true : undefined,
-    external: [
-      "@duckdb/node-api",
-      "@duckdb/node-bindings-linux-arm64",
-      "@duckdb/node-bindings-linux-x64",
-      "@duckdb/node-bindings-win32-x64",
-      "@duckdb/node-bindings-darwin-x64",
-      "@duckdb/node-bindings-darwin-arm64"
-    ]
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          input: "./src/server/app.ts"
+        }
+      },
+      resolve: {
+        noExternal: true,
+        external: [
+          "@duckdb/node-api",
+          "@duckdb/node-bindings-linux-arm64",
+          "@duckdb/node-bindings-linux-x64",
+          "@duckdb/node-bindings-win32-x64",
+          "@duckdb/node-bindings-darwin-x64",
+          "@duckdb/node-bindings-darwin-arm64"
+        ]
+      }
+    }
   },
   resolve: {
     tsconfigPaths: true
@@ -54,4 +58,4 @@ export default defineConfig(({ isSsrBuild }) => ({
   ],
   define: { "process.env.PACKAGE_VERSION": JSON.stringify(pkg.version) },
   test: { exclude: ["e2e", "node_modules"] }
-}))
+})
