@@ -55,27 +55,46 @@ if (DEVELOPMENT) {
 const app = express()
 
 if (DEVELOPMENT) {
-  const viteDevServer = await import("vite").then((vite) =>
-    vite.createServer({
-      server: {
-        middlewareMode: true,
-        ...(HMR_PORT
-          ? {
-              hmr: {
-                port: HMR_PORT,
-                clientPort: HMR_PORT
+  const createViteDevServer = () =>
+    import("vite").then((vite) =>
+      vite.createServer({
+        server: {
+          middlewareMode: true,
+          ...(HMR_PORT
+            ? {
+                hmr: {
+                  port: HMR_PORT,
+                  clientPort: HMR_PORT
+                }
               }
-            }
-          : {})
-      }
-    })
-  )
-  app.use(viteDevServer.middlewares)
+            : {})
+        }
+      })
+    )
+
+  let viteDevServer = await createViteDevServer()
+  let restartPromise: Promise<void> | undefined
+
+  app.use((req, res, next) => viteDevServer.middlewares(req, res, next))
   app.use(async (req, res, next) => {
     try {
       const source: { app: typeof app } = (await viteDevServer.ssrLoadModule(SERVER_APP_PATH)) as { app: typeof app }
       return await source.app(req, res, next)
     } catch (error) {
+      if (error instanceof Error && error.message.includes("Vite module runner has been closed")) {
+        restartPromise ??= viteDevServer
+          .restart()
+          .catch(async () => {
+            await viteDevServer.close()
+            viteDevServer = await createViteDevServer()
+          })
+          .finally(() => {
+            restartPromise = undefined
+          })
+        await restartPromise
+        const source: { app: typeof app } = (await viteDevServer.ssrLoadModule(SERVER_APP_PATH)) as { app: typeof app }
+        return await source.app(req, res, next)
+      }
       if (typeof error === "object" && error instanceof Error) {
         viteDevServer.ssrFixStacktrace(error)
       }

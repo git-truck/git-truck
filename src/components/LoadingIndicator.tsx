@@ -1,7 +1,7 @@
-import { href, useFetcher } from "react-router"
+import { href } from "react-router"
 import clsx from "clsx"
 import type React from "react"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { AnalysisStatus } from "~/server/Analysis"
 import drivingTruck from "~/assets/drivingTruck_48x.gif"
 import loadingTruck from "~/assets/loadingTruck_48x.gif"
@@ -19,6 +19,46 @@ export type ProgressData = {
 
 const PROGRESS_POLL_INTERVAL_MS = 1000
 
+export function pollAnalysisProgress(path: string, branch: string, onProgress: (data: ProgressData) => void) {
+  const controller = new AbortController()
+  let timeoutId: number | undefined
+  let lastSeenRevision = -1
+
+  const pollProgress = async () => {
+    let shouldContinue = true
+    try {
+      const response = await fetch(href("/api/progress") + progressSerializer({ path, branch, lastSeenRevision }), {
+        signal: controller.signal
+      })
+      if (!response.ok) throw new Error(`Progress request failed: ${response.status}`)
+
+      if (response.status !== 204) {
+        const nextData: ProgressData | null = await response.json()
+        if (controller.signal.aborted) return
+
+        if (nextData) {
+          onProgress(nextData)
+          lastSeenRevision = nextData.progressRevision ?? -1
+          shouldContinue = nextData.analysisStatus !== "Aborted" && nextData.analysisStatus !== "CommitHistoryProcessed"
+        }
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) console.warn("Could not fetch analysis progress", error)
+    } finally {
+      if (!controller.signal.aborted && shouldContinue) {
+        timeoutId = window.setTimeout(() => void pollProgress(), PROGRESS_POLL_INTERVAL_MS)
+      }
+    }
+  }
+
+  void pollProgress()
+
+  return () => {
+    controller.abort()
+    window.clearTimeout(timeoutId)
+  }
+}
+
 export function LoadingIndicator({
   className = "",
   showProgress = false,
@@ -33,28 +73,14 @@ export function LoadingIndicator({
   const [path] = useQueryState("path")
   const [branch] = useQueryState("branch")
 
-  const { load, data, state } = useFetcher<ProgressData>()
+  const [data, setData] = useState<ProgressData>()
 
   useEffect(() => {
-    if (
-      !showProgress ||
-      !fetchProgress ||
-      !path ||
-      !branch ||
-      state !== "idle" ||
-      data?.analysisStatus === "Aborted" ||
-      data?.analysisStatus === "CommitHistoryProcessed"
-    )
-      return
+    if (!showProgress || !fetchProgress || !path || !branch) return
 
-    const timeoutId = window.setTimeout(() => {
-      load(href("/api/progress") + progressSerializer({ path, branch, lastSeenRevision: data?.progressRevision ?? -1 }))
-    }, PROGRESS_POLL_INTERVAL_MS)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [branch, fetchProgress, state, path, showProgress, data?.progressRevision, load, data?.analysisStatus])
+    setData(undefined)
+    return pollAnalysisProgress(path, branch, setData)
+  }, [branch, fetchProgress, path, showProgress])
 
   const [progressText, progress, gif] = useMemo<[string, number, string]>(() => {
     if (!data) return ["Loading truck...", 0, loadingTruck]

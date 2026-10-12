@@ -535,15 +535,10 @@ function DirectoryEntry({
       <Link
         to={
           entry.type === "directory"
-            ? {
-                pathname: href("/browse"),
-                search: browseSerializer({ ...searchParams, path: entry.path })
-              }
-            : {
-                pathname: href("/view"),
-                search: viewSerializer({ path: entry.path })
-              }
+            ? href("/browse") + browseSerializer({ ...searchParams, path: entry.path })
+            : href("/view") + viewSerializer({ path: entry.path })
         }
+        reloadDocument={entry.type === "repository"}
         prefetch="none"
         aria-disabled={!isFolder && status === "Error"}
         className={cn(
@@ -637,15 +632,15 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
             invisible: offset - count < 0
           })}
           aria-disabled={offset - count < 0}
-          to={{
-            pathname: href("/browse"),
-            search: serialize({
+          to={
+            href("/browse") +
+            serialize({
               ...rest,
               path,
               offset: Math.max(0, offset - count),
               count: count
             })
-          }}
+          }
           title="Previous page"
         >
           <Icon path={mdiArrowLeft} />
@@ -659,15 +654,15 @@ function Pagination({ classNames, totalCount }: { classNames?: [string, string];
             invisible: offset + count >= totalCount
           })}
           aria-disabled={offset + count >= totalCount}
-          to={{
-            pathname: href("/browse"),
-            search: serialize({
+          to={
+            href("/browse") +
+            serialize({
               ...rest,
               path: path,
               offset: offset + count,
               count: count
             })
-          }}
+          }
           title="Next page"
         >
           <Icon path={mdiArrowRight} />

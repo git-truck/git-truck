@@ -74,8 +74,19 @@ export class Analysis {
     this.db = db
   }
 
-  public updateProgress(index: number) {
-    this.progress[index]++
+  /**
+   * Called for every raw stdout chunk emitted by the `git log` child process.
+   * This is purely a liveness signal so `/api/progress` long polling notices
+   * activity: stdout chunk boundaries are unrelated to the number of commits
+   * parsed, so this must never increment the numeric commit progress count
+   * (doing so could make the summed progress exceed `totalCommitCount`).
+   */
+  public updateProgress(_index: number) {
+    this.progressRevision++
+  }
+
+  private setProgress(index: number, value: number) {
+    this.progress[index] = value
     this.progressRevision++
   }
 
@@ -99,7 +110,7 @@ export class Analysis {
   }
 
   private async gathererWorker(sectionStart: number, sectionEnd: number, index: number) {
-    const CHUNK_SIZE = 70_000
+    const CHUNK_SIZE = 5_000
 
     for (let start = sectionStart; start <= sectionEnd; start += CHUNK_SIZE) {
       const end = Math.min(start + CHUNK_SIZE, sectionEnd)
@@ -109,7 +120,7 @@ export class Analysis {
       await this.gatherCommitsInRange(start, end, commits, renamedFiles, index)
       await this.db.addRenames(renamedFiles)
       await this.db.addCommits(commits)
-      this.progress[index] = end - sectionStart
+      this.setProgress(index, end - sectionStart)
     }
   }
 
@@ -335,12 +346,19 @@ export class Analysis {
     commits: Map<string, GitLogEntry>,
     renamedFiles: RenameEntry[]
   ) {
-    const matches = gitLogResult.matchAll(gitLogRegexSimple)
+    // Only match commit headers here (bounded, non-repeated captures). The
+    // numstat/summary lines for each commit are obtained by slicing the raw
+    // text between this header's end and the next header's start, then
+    // parsed with the bounded, per-line `contribRegex`/`modeRegex` below.
+    // See the comment on `gitLogRegexSimple` in constants.ts for why this
+    // avoids `RangeError: Maximum call stack size exceeded` on large repos.
+    const headerMatches = [...gitLogResult.matchAll(gitLogRegexSimple)]
     const FileModifications: FileModification[] = []
 
-    for (const match of matches) {
+    for (let i = 0; i < headerMatches.length; i++) {
       this.throwIfAborted()
 
+      const match = headerMatches[i]
       const groups = match.groups ?? {}
       const parents = groups.parents.split(" ").filter((p) => p !== "")
 
@@ -349,25 +367,30 @@ export class Analysis {
       const committerTime = Number(groups.dateCommitter)
       const authorTime = Number(groups.dateAuthor)
       const hash = groups.hash
-      const contributionsString = groups.contributions
-      const modesString = groups.modes
       const coauthors = getCoAuthors(groups.trailers)
       const fileChanges: FileChange[] = []
 
-      if (modesString) {
-        const modeMatches = modesString.matchAll(modeRegex)
+      const sectionStart = (match.index ?? 0) + match[0].length
+      const sectionEnd = headerMatches[i + 1]?.index ?? gitLogResult.length
+      const section = gitLogResult.slice(sectionStart, sectionEnd)
+
+      if (section) {
+        const modeMatches = section.matchAll(modeRegex)
         for (const modeMatch of modeMatches) {
           const file = modeMatch.groups?.file.trim()
           const mode = modeMatch.groups?.mode.trim()
           if (!file || !mode) continue
           if (mode === "delete" || mode === "create") {
-            FileModifications.push({ path: file, timestamp: committerTime, timestampAuthor: authorTime, type: mode })
+            FileModifications.push({
+              path: file,
+              timestamp: committerTime,
+              timestampAuthor: authorTime,
+              type: mode
+            })
           }
         }
-      }
 
-      if (contributionsString) {
-        const contribMatches = contributionsString.matchAll(contribRegex)
+        const contribMatches = section.matchAll(contribRegex)
         for (const contribMatch of contribMatches) {
           const file = contribMatch.groups?.file.trim()
           const isBinary = contribMatch.groups?.insertions === "-"
@@ -402,32 +425,26 @@ export class Analysis {
       })
     }
 
-    renamedFiles.push(
-      ...FileModifications.map((modification) => {
-        if (modification.type === "delete") {
-          return {
-            fromName: modification.path,
-            toName: null,
-            timestamp: modification.timestamp,
-            timestampAuthor: modification.timestampAuthor
-          }
-        }
-        return {
-          fromName: null,
-          toName: modification.path,
-          timestamp: modification.timestamp,
-          timestampAuthor: modification.timestampAuthor
-        }
+    for (const modification of FileModifications) {
+      renamedFiles.push({
+        fromName: modification.type === "delete" ? modification.path : null,
+        toName: modification.type === "delete" ? null : modification.path,
+        timestamp: modification.timestamp,
+        timestampAuthor: modification.timestampAuthor
       })
-    )
+    }
   }
 
   public async getFullCommits(gitLogResult: string) {
     const commits: FullCommitDTO[] = []
-    const matches = gitLogResult.matchAll(gitLogRegex)
-    for (const match of matches) {
+    // See the comment in gatherCommitsFromGitLog: parse headers only, then
+    // slice each commit's numstat section between headers to keep
+    // contribRegex bounded instead of embedding it in one giant match.
+    const headerMatches = [...gitLogResult.matchAll(gitLogRegex)]
+    for (let i = 0; i < headerMatches.length; i++) {
       this.throwIfAborted()
 
+      const match = headerMatches[i]
       const groups = match.groups ?? {}
       const parents = groups.parents.split(" ").filter((p) => p !== "")
       const name = groups.author
@@ -437,12 +454,15 @@ export class Analysis {
       const committerTime = Number(groups.dateCommitter)
       const authorTime = Number(groups.dateAuthor)
       const hash = groups.hash
-      const contributionsString = groups.contributions
       const coauthors = getCoAuthors(body)
       const fileChanges: FileChange[] = []
 
-      if (contributionsString) {
-        const contribMatches = contributionsString.matchAll(contribRegex)
+      const sectionStart = (match.index ?? 0) + match[0].length
+      const sectionEnd = headerMatches[i + 1]?.index ?? gitLogResult.length
+      const section = gitLogResult.slice(sectionStart, sectionEnd)
+
+      if (section) {
+        const contribMatches = section.matchAll(contribRegex)
         for (const contribMatch of contribMatches) {
           const file = contribMatch.groups?.file.trim()
           const isBinary = contribMatch.groups?.insertions === "-"
@@ -450,7 +470,13 @@ export class Analysis {
 
           const insertions = isBinary ? 1 : Number(contribMatch.groups?.insertions ?? "0")
           const deletions = isBinary ? 0 : Number(contribMatch.groups?.deletions ?? "0")
-          fileChanges.push({ isBinary, insertions, deletions, path: file, mode: "modify" })
+          fileChanges.push({
+            isBinary,
+            insertions,
+            deletions,
+            path: file,
+            mode: "modify"
+          })
         }
       }
       commits.push({
@@ -503,7 +529,14 @@ export class Analysis {
     const finishedChains: RenameInterval[][] = []
 
     for (const file of currentFiles)
-      currentPathToRenameChain.set(file, [{ fromName: file, toName: file, timestamp: 0, timestampEnd: 4_000_000_000 }])
+      currentPathToRenameChain.set(file, [
+        {
+          fromName: file,
+          toName: file,
+          timestamp: 0,
+          timestampEnd: 4_000_000_000
+        }
+      ])
 
     for (const rename of orderedRenames) {
       // if file was deleted, we not care about what it was previously called
