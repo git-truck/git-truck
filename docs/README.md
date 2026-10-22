@@ -6,6 +6,8 @@ Git Truck allows you to get an understanding of how your repository is structure
 
 🔒 Git Truck analyzes your project history using the local `.git` folder. It runs **completely locally**, so your code stays on your machine and is **never uploaded to the cloud**.
 
+Analysis leaves your Git configuration unchanged. Options needed to read Unicode filenames and detect renames apply only to Git Truck's Git commands.
+
 ## How does it work?
 
 For each file in your repository, Git Truck lets you map metrics onto it:
