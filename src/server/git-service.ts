@@ -11,6 +11,9 @@ import { Analysis } from "~/server/Analysis"
 import { inflateSync } from "node:zlib"
 import { readFile } from "node:fs/promises"
 
+// Scope analysis settings to each command instead of changing repository config.
+const logConfigArgs = ["-c", "core.quotepath=false", "-c", "diff.renames=true", "-c", "diff.renameLimit=1000000"]
+
 export class GitService {
   private useCache = true
   private catFileCache: Map<string, string> = new Map()
@@ -79,6 +82,7 @@ export class GitService {
 
   async gitLogSpecificCommits(commits: string[]) {
     const args = [
+      ...logConfigArgs,
       "log",
       "--no-walk",
       "--numstat",
@@ -103,7 +107,7 @@ export class GitService {
   }
 
   static async _lsTree(repo: string, hash: string) {
-    const result = (await runProcess(repo, "git", ["ls-tree", "-rlt", hash])) as string
+    const result = (await runProcess(repo, "git", ["-c", "core.quotepath=false", "ls-tree", "-rlt", hash])) as string
     return result.trim()
   }
 
@@ -257,6 +261,7 @@ export class GitService {
 
   async gitLog(skip: number, count: number) {
     const args = [
+      ...logConfigArgs,
       "log",
       `--skip=${skip}`,
       `--max-count=${count}`,
@@ -273,6 +278,7 @@ export class GitService {
 
   async gitLogSimple(skip: number, count: number, instance: Analysis, index: number) {
     const args = [
+      ...logConfigArgs,
       "log",
       `--skip=${skip}`,
       `--max-count=${count}`,
@@ -326,25 +332,5 @@ export class GitService {
   async getCommitCount(): Promise<number> {
     const result = await runProcess(this.repositoryPath, "git", ["rev-list", "--count", this.branch])
     return Number(result)
-  }
-
-  async getDefaultGitSettingValue(setting: string) {
-    const result = await runProcess(this.repositoryPath, "git", ["config", setting])
-    return result as string
-  }
-
-  async resetGitSetting(settingToReset: string, value: string) {
-    if (!value) {
-      await runProcess(this.repositoryPath, "git", ["config", "--unset", settingToReset])
-      log.debug(`Unset ${settingToReset}`)
-    } else {
-      await runProcess(this.repositoryPath, "git", ["config", settingToReset, value])
-      log.debug(`Reset ${settingToReset} to ${value}`)
-    }
-  }
-
-  async setGitSetting(setting: string, value: string) {
-    await runProcess(this.repositoryPath, "git", ["config", setting, value])
-    log.debug(`Set ${setting} to ${value}`)
   }
 }
