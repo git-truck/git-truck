@@ -8,19 +8,28 @@ import { defineConfig } from "vite"
 import pkg from "./package.json"
 import babel from "@rolldown/plugin-babel"
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig(({ command }) => ({
   build: {
     rollupOptions: {
-      external: ["@duckdb/node-api"],
-      ...(isSsrBuild
-        ? {
-            input: "./src/server/app.ts"
-          }
-        : {})
+      external: ["@duckdb/node-api"]
+    }
+  },
+  environments: {
+    ssr: {
+      build: {
+        rollupOptions: {
+          // React Router 8 only reads the server entry from the ssr environment
+          input: "./src/server/app.ts"
+        }
+      }
     }
   },
   ssr: {
-    noExternal: isSsrBuild ? true : undefined,
+    // Production: bundle everything, the published package only ships the build output.
+    // (`isSsrBuild` is never true with React Router 8, which builds all environments in one pass.)
+    // Dev: nuqs must go through Vite too. Otherwise it imports its own copy of react-router,
+    // which has no router context ("useNavigate() may be used only in the context of a <Router>")
+    noExternal: command === "build" ? true : ["nuqs"],
     external: [
       "@duckdb/node-api",
       "@duckdb/node-bindings-linux-arm64",
