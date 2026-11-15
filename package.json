@@ -158,7 +158,8 @@
       "neverBundle": [
         "vite",
         "lightningcss",
-        "/^@duckdb//"
+        "@duckdb/node-api",
+        "@duckdb/node-bindings"
       ]
     },
     "cjs-interop": true,
