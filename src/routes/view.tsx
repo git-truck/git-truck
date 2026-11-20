@@ -85,8 +85,6 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
       objectPath
     })
 
-    const redirectUrl = new URL(request.url)
-
     path ??= argsRepositoryPath
     branch ??= await GitService._getRepositoryHead(path)
     zoomPath ||= getRepoNameFromPath(path)
@@ -94,17 +92,20 @@ export const loader = async ({ request, context }: Route.LoaderArgs) => {
     start ??= 0
     end ??= nowInSeconds()
 
-    redirectUrl.search = viewSerializer({
-      path,
-      branch,
-      zoomPath,
-      objectPath,
-      start,
-      end,
-      includeCoauthors
-    })
-
-    throw redirect(redirectUrl.toString())
+    // Build the URL from the route, not from request.url. React Router 8 passes the raw request, so for
+    // client-side navigations its pathname is "/view.data", which would redirect to the "$path" route.
+    throw redirect(
+      href("/view") +
+        viewSerializer({
+          path,
+          branch,
+          zoomPath,
+          objectPath,
+          start,
+          end,
+          includeCoauthors
+        })
+    )
   }
 
   const parentDirectoryPath = getBaseDirFromPath(path)
