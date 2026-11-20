@@ -16,7 +16,7 @@ import type {
   DatabaseInfo
 } from "~/shared/model.ts"
 import { log } from "~/server/log"
-import { analyzeRenamedFile, promiseHelper } from "~/shared/util.ts"
+import { analyzeRenamedFile } from "~/shared/util.ts"
 import { contribRegex, gitLogRegex, gitLogRegexSimple, modeRegex, treeRegex } from "~/shared/constants.ts"
 import { cpus, freemem, totalmem } from "node:os"
 import type { InvocationReason } from "~/shared/RefreshPolicy.ts"
@@ -595,12 +595,6 @@ export class Analysis {
     }
 
     if (commitCount < 1) return
-    const [quotePathDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("core.quotepath"))
-    await promiseHelper(this.gitService.setGitSetting("core.quotePath", "off"))
-    const [renamesDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("diff.renames"))
-    await promiseHelper(this.gitService.setGitSetting("diff.renames", "true"))
-    const [renameLimitDefaultValue] = await promiseHelper(this.gitService.getDefaultGitSettingValue("diff.renameLimit"))
-    await promiseHelper(this.gitService.setGitSetting("diff.renameLimit", "1000000"))
 
     this.totalCommitCount = commitCount
     const threadCount = this.getThreadCount(commitCount)
@@ -619,15 +613,6 @@ export class Analysis {
 
     await this.db.createIndexes()
     await this.db.checkpoint()
-    if (quotePathDefaultValue) {
-      await promiseHelper(this.gitService.resetGitSetting("core.quotepath", quotePathDefaultValue))
-    }
-    if (renamesDefaultValue) {
-      await promiseHelper(this.gitService.resetGitSetting("diff.renames", renamesDefaultValue))
-    }
-    if (renameLimitDefaultValue) {
-      await promiseHelper(this.gitService.resetGitSetting("diff.renameLimit", renameLimitDefaultValue))
-    }
 
     await MetadataDB.getInstance().setCompletion(
       { repositoryPath: this.repositoryPath, branch: this.branch },
