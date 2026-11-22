@@ -1,5 +1,13 @@
 # git-truck
 
+## 5.0.1
+
+### Patch Changes
+
+- aca83e5: Fix opening a repository from the repository list. After the React Router 8 upgrade the redirect that completes the `/view` URL kept the internal `.data` suffix, so a click ended on `/browse?path=view.data` ("Path not found").
+- e3ed7ec: Keep analysis settings scoped to individual Git commands so analyzing a repository never changes its Git configuration, even if analysis fails.
+- 7502d05: Fix the production build and the dev server after the React Router 8 upgrade. The server bundle did not export the Express app and did not include its dependencies, so a package built from `main` could not start, and `nuqs` crashed server rendering of `/view` in dev.
+
 ## 5.0.0
 
 ### Major Changes
