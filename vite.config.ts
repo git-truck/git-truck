@@ -5,7 +5,7 @@ import { reactCompilerPreset } from "@vitejs/plugin-react"
 // import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
-import pkg from "./package.json"
+import pkg from "./package.json" with { type: "json" }
 import babel from "@rolldown/plugin-babel"
 
 export default defineConfig(({ command }) => ({
