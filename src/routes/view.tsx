@@ -220,8 +220,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 async function analyze(
   params: Ensure<ViewSearchParams, "path" | "branch" | "zoomPath" | "start" | "end">
 ): Promise<RepoData> {
-  const { path, branch, zoomPath, includeCoauthors, timeUnit } = params
-  let { objectPath } = params
+  const { path, branch, includeCoauthors, timeUnit } = params
 
   const instance = await AnalysisManager.getInstance({ repositoryPath: path, branch: branch })
 
@@ -392,8 +391,6 @@ async function analyze(
       ? prevRes.analyzedRepos
       : await MetadataDB.getInstance().getCompletedRepos()
   log.timeEnd("dbQueries")
-
-  objectPath ??= zoomPath || getRepoNameFromPath(path)
 
   const databaseInfo: DatabaseInfo = {
     topContributors,

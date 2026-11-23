@@ -16,11 +16,9 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
-      eslint:
+      oxlint:
         patterns:
-          - "eslint"
-          - "eslint-*"
-          - "@eslint/*"
+          - "oxlint"
       react-router:
         patterns:
           - "react-router"
