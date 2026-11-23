@@ -48,7 +48,9 @@ export function LoadingIndicator({
       return
 
     const timeoutId = window.setTimeout(() => {
-      load(href("/api/progress") + progressSerializer({ path, branch, lastSeenRevision: data?.progressRevision ?? -1 }))
+      void load(
+        href("/api/progress") + progressSerializer({ path, branch, lastSeenRevision: data?.progressRevision ?? -1 })
+      )
     }, PROGRESS_POLL_INTERVAL_MS)
 
     return () => {

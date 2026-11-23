@@ -28,7 +28,7 @@ export function ContributorsInspection() {
   )
 
   useEffect(() => {
-    load(
+    void load(
       href("/api/contributor-distribution") +
         viewSerializer({
           ...params,
@@ -65,7 +65,7 @@ function ContributorDistribution({
   className = "",
   contributorDistribution,
   lineChangesSum,
-  isLoading = false
+  isLoading
 }: {
   className?: string
   contributorDistribution: { contributor: string; contribs: number }[]

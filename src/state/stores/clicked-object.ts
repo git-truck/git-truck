@@ -49,7 +49,7 @@ export const useSetClickedObjectPath = () => {
   const [, setObjectPath] = useQueryState("objectPath", viewSearchParamsConfig.objectPath)
 
   return (clickedObjecPath: string | null) => {
-    setObjectPath(clickedObjecPath ?? null)
+    void setObjectPath(clickedObjecPath ?? null)
   }
 }
 

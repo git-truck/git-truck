@@ -45,19 +45,19 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
     if (seg.label === "Rest") {
       restLabels.forEach((label) => {
         if (isSel) {
-          deselect(label)
+          void deselect(label)
         } else {
-          select(label)
+          void select(label)
         }
       })
       return
     }
 
     if (isSel) {
-      deselect(seg.label)
+      void deselect(seg.label)
       seg.info.children.forEach((_, childLabel) => deselect(childLabel))
     } else {
-      select(seg.label)
+      void select(seg.label)
       seg.info.children.forEach((_, childLabel) => select(childLabel))
     }
   }
@@ -76,6 +76,7 @@ export function PointLegendDistBar({ items, totalWeight }: { items: [string, Poi
           <div key={seg.label} className="relative" style={{ width: `${seg.percentage}%` }}>
             <button
               tabIndex={0}
+              aria-label={`Toggle ${seg.label}`}
               aria-pressed={isSel}
               className={cn("flex h-full w-full cursor-pointer outline-none hover:opacity-80", {
                 "opacity-15 grayscale-100 hover:grayscale-0": hasSelection && !isSel,

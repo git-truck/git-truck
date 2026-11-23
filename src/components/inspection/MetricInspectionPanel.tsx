@@ -31,8 +31,8 @@ export function MetricInspectionPanel({
   title,
   children,
   actions = { search: false, clear: false },
-  metricMenuItems = [],
-  description = "Description not provided."
+  metricMenuItems,
+  description
 }: {
   className?: string
   title?: ReactNode

@@ -102,7 +102,7 @@ export function Timeline({ className }: { className?: string }) {
   })
 
   useEffect(() => {
-    load(
+    void load(
       href("/api/commit-intervals") +
         viewSerializer({
           objectPath: clickedObjectPath,

@@ -41,7 +41,7 @@ export function MetricsInspection() {
   const [rangeStart, rangeEnd] = databaseInfo.timerange
 
   useEffect(() => {
-    load(
+    void load(
       href("/api/metrics") +
         viewSerializer({
           ...params,
@@ -126,7 +126,7 @@ export function MetricsInspection() {
               icon={icon}
               isCurrentMetric={metric === metricType}
               color={objectColor && metric === metricType ? objectColor : undefined}
-              onClick={() => void setMetricType(metric)}
+              onClick={() => setMetricType(metric)}
             >
               <p className="truncate text-xs font-normal opacity-70">{description}</p>
               <p className="w-full truncate text-sm font-bold" title={data}>

@@ -145,7 +145,7 @@ export function BarChart({
   const tickInterval = textInterval / 2
 
   function updateTimeseries(e: readonly number[]) {
-    setQs((prev) => ({ ...prev, start: e[0], end: e[1] }))
+    void setQs((prev) => ({ ...prev, start: e[0], end: e[1] }))
   }
 
   const nodeIntervals = Object.fromEntries(
