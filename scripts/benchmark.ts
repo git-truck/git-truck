@@ -116,7 +116,7 @@ allMetrics.sort((a, b) => {
 })
 
 allMetrics.forEach(({ version, metrics }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const result: any = { version }
 
   methods.forEach((method, idx) => {

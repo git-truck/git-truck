@@ -57,7 +57,7 @@ Example from [zeeguu/web](https://github.com/zeeguu/web)
 
 The only requirements are:
 
-- [Node.js](https://nodejs.org/en/) version 22 or newer
+- [Node.js](https://nodejs.org/en/) version 22.4 or newer
 - [Git](https://git-scm.com/downloads) version 2.29 or newer
 
 To run Git Truck, navigate to a repository, or a folder containing multiple repositories, and run `npx git-truck`. This will run the latest version of Git Truck without installing it globally.
