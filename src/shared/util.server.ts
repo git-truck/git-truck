@@ -73,10 +73,10 @@ export async function describeAsyncJob<T>({
   /**
    * The job to run
    */
-  job = async () => null as T,
-  beforeMsg = "",
-  afterMsg = "",
-  errorMsg = "",
+  job,
+  beforeMsg,
+  afterMsg,
+  errorMsg,
   ms = null
 }: {
   job: () => Promise<T>

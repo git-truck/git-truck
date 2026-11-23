@@ -478,7 +478,7 @@ export default function Repo({ loaderData: { parentDirectoryPath, versionInfo, d
 
       const abortUrl = href("/api/abort") + abortSerializer({ branch: params.branch, path: params.path })
       await fetcher.submit(null, { action: abortUrl, method: "post" })
-      navigate(browseParent)
+      void navigate(browseParent)
     })
   }, [isAborting, params.branch, params.path, fetcher, navigate, browseParent])
 

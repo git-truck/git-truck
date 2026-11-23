@@ -83,7 +83,7 @@ export function useFullscreen<T extends Element>(getElement: () => T | RefObject
       }
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen()
+        void document.exitFullscreen()
       }
     }
   }
@@ -105,7 +105,7 @@ export function useViewSubmit() {
   type Options = Parameters<typeof submit>[1] & { action?: never }
 
   return (target: Target, options?: Options) => {
-    submit(target, { ...options, action: href("/view") + location.search })
+    void submit(target, { ...options, action: href("/view") + location.search })
   }
 }
 
@@ -132,7 +132,7 @@ export const useZoomToParent = () => {
     if (!sep || !zoomPath) return
     // Move up to parent
     const parentPath = zoomPath.split(sep).slice(0, -1).join(sep)
-    setZoomPath(parentPath)
+    void setZoomPath(parentPath)
   }, [sep, setZoomPath, zoomPath])
 }
 

@@ -11,7 +11,6 @@ import { cn } from "~/styling"
 
 export function Handle({
   domain: [min, max],
-  children,
   disabled,
   handle,
   handleType = "round",
@@ -22,7 +21,6 @@ export function Handle({
 }: {
   domain: number[]
   handleType?: "round" | "square"
-  children?: ReactNode
   handle: SliderItem
   title?: string
   getHandleProps: GetHandleProps
@@ -48,7 +46,6 @@ export function Handle({
       title={title}
       style={{
         left: `${handle.percent}%`
-        // marginTop: "-6px"
       }}
       onClick={onClick}
       {...getHandleProps(handle.id)}
@@ -58,9 +55,7 @@ export function Handle({
           "size-5 rounded-full": handleType === "round",
           "h-5 w-0.5": handleType === "square"
         })}
-      >
-        {children}
-      </div>
+      />
     </button>
   )
 }

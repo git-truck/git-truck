@@ -75,7 +75,7 @@ export function PointLegend() {
   const resetSelection = useResetSelection()
 
   useEffect(() => {
-    resetSelection()
+    void resetSelection()
   }, [path, resetSelection])
 
   const metricCache = useMemo<MetricCache | undefined>(() => {
@@ -225,9 +225,9 @@ function PointLegendEntry({ label, info, totalWeight }: { label: string; info: P
         checked={labelIsSelected}
         onChange={(evt) => {
           if (!hasSelection || evt.target.checked) {
-            selectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
+            void selectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
           } else {
-            deselectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
+            void deselectCategories([label, ...(info.children ? Array.from(info.children.keys()) : [])])
           }
         }}
       >

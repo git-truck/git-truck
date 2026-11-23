@@ -235,7 +235,7 @@ export function Chart() {
               setClickedObjectPath(null)
               return
             }
-            setZoomPath(null)
+            void setZoomPath(null)
 
             evt.stopPropagation()
 
@@ -244,10 +244,10 @@ export function Chart() {
               clickTimer.current = null
 
               if (zoomPath && zoomPath === path) {
-                setZoomPath("")
+                void setZoomPath("")
                 return
               }
-              setZoomPath(path ?? null)
+              void setZoomPath(path ?? null)
             }
           }}
           onMouseOver={(evt) => {
@@ -272,7 +272,7 @@ export function Chart() {
 
             if (scrollDeltaRef.current <= -SCROLL_DELTA_THRESHOLD && hoveredObject) {
               startTransition(() => {
-                setZoomPath(hoveredObject.path)
+                void setZoomPath(hoveredObject.path)
               })
               scrollDeltaRef.current = 0
             } else if (scrollDeltaRef.current >= SCROLL_DELTA_THRESHOLD && hoveredObject) {

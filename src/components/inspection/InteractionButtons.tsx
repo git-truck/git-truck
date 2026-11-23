@@ -45,7 +45,7 @@ export function InteractionButtons() {
         method="post"
         action={viewAction}
         onSubmit={() => {
-          if (!isBlob) setZoomPath(resolveParentFolder(clickedObject.path))
+          if (!isBlob) void setZoomPath(resolveParentFolder(clickedObject.path))
           setClickedObjectPath(null)
         }}
       >

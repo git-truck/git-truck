@@ -211,8 +211,10 @@ export function getTimeIntervals(timeUnit: TimeUnit, minTime: number, maxTime: n
         currentDate.setUTCMonth(currentDate.getUTCMonth() + 1)
         break
       }
-      default:
-        throw new Error(`Unsupported time unit: ${timeUnit}`)
+      default: {
+        const unsupported: never = timeUnit
+        throw new Error(`Unsupported time unit: ${String(unsupported)}`)
+      }
     }
   }
 

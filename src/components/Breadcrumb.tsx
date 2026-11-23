@@ -147,14 +147,14 @@ export function Breadcrumb({ className = "", zoom = false }: { className?: strin
                 }
                 if (zoomPath === fullPath) {
                   if (clickedObjectIsZoomPath) {
-                    setViewParams((prev) => ({ ...prev, zoomPath: parentPath }))
+                    void setViewParams((prev) => ({ ...prev, zoomPath: parentPath }))
                     return
                   } else {
                     setClickedObjectPath(null)
                     return
                   }
                 }
-                setViewParams((prev) => ({ ...prev, zoomPath: fullPath }))
+                void setViewParams((prev) => ({ ...prev, zoomPath: fullPath }))
               }}
             >
               {content}

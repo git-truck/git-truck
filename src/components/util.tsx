@@ -34,7 +34,7 @@ export const LegendDot = ({
   className = "",
   dotColor,
   shape,
-  contributorColorToChange = undefined
+  contributorColorToChange
 }: {
   dotColor: string
   contributorColorToChange?: string

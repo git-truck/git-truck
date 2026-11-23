@@ -263,7 +263,7 @@ export default function Index({
     const normalized = normalizePath(rawValue)
     // If the normalized path is the same as the current path, do nothing to avoid unnecessary reloads
     if (normalized !== parentDirectoryPath) {
-      setSearchParams((prev) => ({ ...prev, path: normalized, offset: 0 }))
+      void setSearchParams((prev) => ({ ...prev, path: normalized, offset: 0 }))
     }
     return normalized
   }
@@ -336,7 +336,7 @@ export default function Index({
                   checked={includeDirs ?? false}
                   onChange={(evt) => {
                     evt.stopPropagation()
-                    setSearchParams((prev) => ({ ...prev, "include-dirs": evt.target.checked, offset: 0 }))
+                    void setSearchParams((prev) => ({ ...prev, "include-dirs": evt.target.checked, offset: 0 }))
                   }}
                 />
                 <Icon path={mdiCheckboxBlank} size={1} className="peer-checked:hidden" />

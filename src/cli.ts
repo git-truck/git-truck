@@ -157,7 +157,7 @@ async function onListen() {
     args.headless = true
   }
 
-  console.log(`Application available at ${publicURL}`)
+  console.log(`Application available at ${publicURL.toString()}`)
 
   if (!args.headless) {
     log.debug(`Opening ${publicURL.toString()}`)
@@ -165,7 +165,7 @@ async function onListen() {
       job: () => open(publicURL.toString()),
       beforeMsg: "Opening Git Truck in your browser",
       afterMsg: "Opened Git Truck in your browser",
-      errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${publicURL}\n`
+      errorMsg: `Failed to open Git Truck in your browser. To continue, open this link manually:\n\n${publicURL.toString()}\n`
     })
   }
 }

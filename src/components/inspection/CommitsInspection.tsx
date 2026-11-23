@@ -46,7 +46,7 @@ export function CommitsInspection({ className = "" }: { className?: string }) {
         })
 
       if (open) {
-        load(url)
+        void load(url)
       }
     },
     [branch, load, open, path, resolvedEnd, resolvedStart]
