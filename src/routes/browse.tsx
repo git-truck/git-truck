@@ -142,16 +142,20 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const filteredEntries = rawEntries
     .map((entry) => {
       const entryDirectoryPath = join(parentDirectory, entry.name)
+      const { kind } = GitService.resolveGitLocation(entryDirectoryPath)
 
       return {
         name: entry.name,
         directoryPath: entryDirectoryPath,
-        hasGitDirectory: GitService.hasGitDirectory(entryDirectoryPath)
+        isRepository: kind === "repository" || kind === "worktree",
+        isWorktree: kind === "worktree",
+        isBare: kind === "bare"
       }
     })
     .filter(
       (directory) =>
-        directory.name.toLowerCase().includes(search.toLowerCase()) && (includeDirs || directory.hasGitDirectory)
+        directory.name.toLowerCase().includes(search.toLowerCase()) &&
+        (includeDirs || directory.isRepository || directory.isBare)
     )
 
   // If the current page offset is beyond the available entries, clamp to the last valid page
@@ -167,7 +171,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
   const entriesWithLastChanged = sortByLastChanged
     ? await Promise.all(
         filteredEntries.map(async (entry) => {
-          const [lastChanged] = entry.hasGitDirectory
+          const [lastChanged] = entry.isRepository
             ? ((await promiseHelper(GitService.getLastChanged(entry.directoryPath))) ?? [0])
             : [null]
 
@@ -194,13 +198,17 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
       status: "Loading" | "Success" | "Error"
       parentDirectoryPath: string
       lastChanged: number | null
-    } & ({ type: "directory" } | { type: "repository"; branch: string | null; hash: string | null })
+    } & (
+      | { type: "directory"; bare: boolean }
+      | { type: "repository"; branch: string | null; hash: string | null; worktree: boolean }
+    )
   > = await Promise.all(
     pagedEntries.map(async (entry) => {
-      if (!entry.hasGitDirectory) {
+      if (!entry.isRepository) {
         return {
           name: entry.name,
           type: "directory",
+          bare: entry.isBare,
           path: entry.directoryPath,
           status: "Success" as const,
           parentDirectoryPath: parentDirectory,
@@ -218,6 +226,7 @@ export const loader = async ({ context, request }: Route.LoaderArgs) => {
       return {
         name: entry.name,
         type: "repository",
+        worktree: entry.isWorktree,
         path: entry.directoryPath,
         status: branch && hash && lastChanged ? "Success" : ("Error" as const),
         parentDirectoryPath: parentDirectory,
@@ -590,6 +599,14 @@ function DirectoryEntry({
             )}
 
             <span className="truncate text-base font-medium">{entry.name}</span>
+            {(entry.type === "directory" && entry.bare) || (entry.type === "repository" && entry.worktree) ? (
+              <span
+                className="border-border dark:border-border-dark text-secondary-text dark:text-secondary-text-dark shrink-0 rounded-full border px-2 py-0.5 text-xs leading-none font-semibold"
+                title={entry.type === "directory" ? "Bare repository: browse it to open its worktrees" : "Git worktree"}
+              >
+                {entry.type === "directory" ? "bare" : "worktree"}
+              </span>
+            ) : null}
           </div>
           <span className="text-secondary-text dark:text-secondary-text-dark text-sm">
             {status === "Error" || !entry.lastChanged ? "-" : new Date(entry.lastChanged * 1000).toLocaleDateString()}
