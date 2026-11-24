@@ -28,10 +28,11 @@ import {
 import { useMetricSearchContext } from "~/components/inspection/MetricInspectionPanel"
 import { useClickedObjectPath } from "~/state/stores/clicked-object"
 import { Icon } from "~/components/Icon"
-import { mdiCheckboxIntermediate } from "@mdi/js"
+import { mdiCheckboxIntermediate, mdiDownload } from "@mdi/js"
 import { PaginatedList } from "~/components/inspection/util/PaginatedList"
 import { ContributorTableHeader } from "~/components/inspection/util/ContributorTableHeader"
 import { findInTree } from "~/shared/utils/tree"
+import { getSelectedFilePaths } from "~/components/legend/exportSelectedFiles"
 
 const ITEMS_PER_PAGE = 7
 
@@ -71,6 +72,7 @@ export function PointLegend() {
   const clickedObjectPath = useClickedObjectPath()
   const hierarchyCache = useMetricsHierarchyCache()
   const isCategorySelected = useIsCategorySelected()
+  const selectedCategories = useSelectedCategories()
   const [path] = useQueryState("path")
   const resetSelection = useResetSelection()
 
@@ -105,6 +107,27 @@ export function PointLegend() {
   if (!metricCache?.legend) return null
 
   const legendData = metricCache.legend as PointLegendData
+  const selectedFiles =
+    metricType === "TOP_CONTRIBUTOR"
+      ? getSelectedFilePaths(
+          metricCache.categoriesMap,
+          selectedCategories,
+          (data.databaseInfo.rootFileTree ?? data.databaseInfo.fileTree).path
+        )
+      : []
+
+  const exportSelectedFiles = () => {
+    if (selectedFiles.length === 0) return
+    const blob = new Blob([selectedFiles.join("\n") + "\n"], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "top-churner-files.txt"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  }
 
   const items = Array.from(legendData.entries).sort(([, info1], [, info2]) => {
     if (info1.weight < info2.weight) return 1
@@ -122,6 +145,20 @@ export function PointLegend() {
 
   return (
     <div className="flex flex-col gap-2">
+      {metricType === "TOP_CONTRIBUTOR" ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="btn btn--text size-11 shrink-0 p-2"
+            disabled={selectedFiles.length === 0}
+            title={`Export selected Top Churner files (${selectedFiles.length})`}
+            aria-label="Export selected Top Churner files"
+            onClick={exportSelectedFiles}
+          >
+            <Icon path={mdiDownload} size="1.25em" />
+          </button>
+        </div>
+      ) : null}
       {feature_flags.show_legend_highlight ? (
         <div className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2")}>
           {items
