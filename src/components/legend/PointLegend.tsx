@@ -71,6 +71,7 @@ export function PointLegend() {
   const clickedObjectPath = useClickedObjectPath()
   const hierarchyCache = useMetricsHierarchyCache()
   const isCategorySelected = useIsCategorySelected()
+  const hasSelection = useHasSelection()
   const [path] = useQueryState("path")
   const resetSelection = useResetSelection()
 
@@ -122,12 +123,16 @@ export function PointLegend() {
 
   return (
     <div className="flex flex-col gap-2">
-      {feature_flags.show_legend_highlight ? (
+      {feature_flags.show_legend_highlight && hasSelection ? (
         <div className={cn("border-border dark:border-border-dark flex flex-wrap gap-0.5 rounded-lg border p-2")}>
           {items
             .filter(([label]) => isCategorySelected(label))
             .map(([label, info]) => (
-              <div key={label} title={label} className="flex items-center truncate text-sm">
+              <div
+                key={label}
+                title={label}
+                className="flex items-center ml-1 text-tertiary-text dark:text-tertiary-text-dark pointer-events-none text-xs font-semibold whitespace-nowrap"
+              >
                 <LegendDot dotColor={info.color} />
                 {label}
               </div>
