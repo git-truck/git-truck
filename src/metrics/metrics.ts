@@ -1,4 +1,4 @@
-import type { DatabaseInfo, GitBlobObject, GitObject, RawGitObject, HexColor, Person, RepoData } from "~/shared/model"
+import type { DatabaseInfo, GitBlobObject, GitObject, RawGitObject, HexColor, RepoData } from "~/shared/model"
 import type { GradLegendData } from "~/components/legend/GradiantLegend"
 import { type PointLegendData } from "~/components/legend/PointLegend"
 import type { SegmentLegendData } from "~/components/legend/SegmentLegend"
@@ -7,14 +7,12 @@ import { TypeMetric } from "~/metrics/fileExtension"
 import { LastChangedMetric } from "~/metrics/lastChanged"
 import { CommitsMetric } from "~/metrics/mostCommits"
 import { LinesChangedMetric } from "~/metrics/linesChanged"
-import { scaleOrdinal } from "d3"
-import sha1 from "sha1"
+import { generateContributorColors } from "~/metrics/metricUtils"
 import type { SizeMetricType } from "~/metrics/sizeMetric"
 import { FileSizeMetric } from "~/metrics/fileSize"
 import { ContributorsMetric } from "./contributors"
 import type { ReactNode } from "react"
 import type { MetricPanelButton } from "~/components/inspection/MetricInspectionPanel"
-import { categoricalScheme } from "~/const"
 
 /**
  * Defines the available metrics in the application
@@ -141,7 +139,8 @@ export function createMetricDataForNode(
   const contributorColors = generateContributorColors(
     data.databaseInfo.contributors,
     colorSeed,
-    predefinedContributorColors
+    predefinedContributorColors,
+    data.databaseInfo.contributorGroups
   )
 
   return {
@@ -162,31 +161,6 @@ export type MetricCache = {
   legend: PointLegendData | GradLegendData | SegmentLegendData | undefined
   buckets?: readonly SegmentBucket[]
   categoriesMap: Map<string, Array<{ category: string; color: HexColor }>>
-}
-
-function generateContributorColors(
-  contributors: Person[],
-  colorSeed: string | null,
-  predefinedContributorColors: Record<string, HexColor>
-): Record<string, HexColor> {
-  const contributorColorMap: Record<string, HexColor> = {}
-  const colors = scaleOrdinal(categoricalScheme).range()
-
-  const sortedContributors = contributors
-    .map((contributor) => contributor.name)
-    .sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
-
-  for (let i = 0; i < sortedContributors.length; i++) {
-    const contributor = sortedContributors[i]
-    const existing = predefinedContributorColors[contributor]
-    if (existing) {
-      contributorColorMap[contributor] = existing
-      continue
-    }
-    const color = colors[i % colors.length] as HexColor
-    contributorColorMap[contributor] = color
-  }
-  return contributorColorMap
 }
 
 function getMetricCalcs(
