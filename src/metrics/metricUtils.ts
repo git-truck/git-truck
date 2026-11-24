@@ -1,7 +1,43 @@
 import languageMap from "language-map/languages.json" with { type: "json" }
-import type { GitObject, HexColor } from "~/shared/model"
+import { scaleOrdinal } from "d3"
+import sha1 from "sha1"
+import type { ContributorGroup, GitObject, HexColor, Person } from "~/shared/model"
+import { categoricalScheme } from "~/const"
 import { isBlob } from "~/shared/util"
 import { reduceTree } from "~/shared/utils/tree"
+
+export function generateContributorColors(
+  contributors: Person[],
+  colorSeed: string | null,
+  predefinedContributorColors: Record<string, HexColor>,
+  contributorGroups: ContributorGroup[]
+): Record<string, HexColor> {
+  const contributorColorMap: Record<string, HexColor> = {}
+  const colors = scaleOrdinal(categoricalScheme).range()
+
+  const sortedContributors = contributors
+    .map((contributor) => contributor.name)
+    .sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
+
+  const contributorNames = new Set(sortedContributors)
+  const customGroupNames = [...new Set(contributorGroups.map((group) => group.displayName))]
+    .filter((name) => !contributorNames.has(name))
+    .sort((a, b) => sha1(a + colorSeed).localeCompare(sha1(b + colorSeed)))
+
+  for (const groupName of customGroupNames) sortedContributors.push(groupName)
+
+  for (let index = 0; index < sortedContributors.length; index++) {
+    const contributor = sortedContributors[index]
+    const existing = predefinedContributorColors[contributor]
+    if (existing) {
+      contributorColorMap[contributor] = existing
+      continue
+    }
+    const color = colors[index % colors.length] as HexColor
+    contributorColorMap[contributor] = color
+  }
+  return contributorColorMap
+}
 
 interface ColorResult {
   lang: string
