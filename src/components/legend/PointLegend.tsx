@@ -131,7 +131,7 @@ export function PointLegend() {
               <div
                 key={label}
                 title={label}
-                className="flex items-center ml-1 text-tertiary-text dark:text-tertiary-text-dark pointer-events-none text-xs font-semibold whitespace-nowrap"
+                className="text-tertiary-text dark:text-tertiary-text-dark pointer-events-none ml-1 flex items-center text-xs font-semibold whitespace-nowrap"
               >
                 <LegendDot dotColor={info.color} />
                 {label}
