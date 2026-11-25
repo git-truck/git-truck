@@ -1,6 +1,6 @@
 import { useFetcher, useNavigation, href } from "react-router"
-import { Fragment, useCallback, useEffect, useState, useTransition } from "react"
-import { Slider, Handles, Tracks } from "react-compound-slider"
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { Slider } from "radix-ui"
 import { useData } from "~/contexts/DataContext"
 import { cn } from "~/styling"
 import { BarChart } from "~/components/BarChart"
@@ -13,6 +13,7 @@ import {
   mdiMathLog
 } from "@mdi/js"
 import { Icon } from "~/components/Icon"
+import { SliderThumb } from "~/components/sliderUtils"
 
 import type { TimeUnit } from "~/shared/utils/time"
 import { useQueryState, useQueryStates } from "nuqs"
@@ -216,77 +217,34 @@ function TimeSlider({
   )
 
   return (
-    <Slider
-      className="grid-full pointer-events-none relative"
-      mode={3}
+    <Slider.Root
+      className="grid-full pointer-events-none relative flex touch-none items-end select-none"
+      min={0}
+      max={domainInUnits}
       step={1}
-      domain={[0, domainInUnits]}
-      values={[startUnits, endUnits]}
+      minStepsBetweenThumbs={1}
+      defaultValue={[startUnits, endUnits]}
       disabled={disabled}
-      onChange={onUpdateSlider}
+      onValueCommit={onUpdateSlider}
     >
-      <Handles>
-        {({ handles, getHandleProps }) => (
-          <Fragment>
-            {handles.map((handle) => {
-              return (
-                <Fragment key={handle.id}>
-                  <button
-                    key={handle.id}
-                    className={cn(
-                      "pointer-events-auto absolute bottom-0 z-10 flex h-6 -translate-x-1/2 place-content-center opacity-0 transition-opacity group-hover/card:opacity-100 disabled:grayscale",
-                      {
-                        "size-5 rounded-full": false
-                      },
-                      disabled ? "cursor-progress" : "cursor-col-resize"
-                    )}
-                    role="slider"
-                    aria-disabled={disabled}
-                    aria-valuemin={0}
-                    aria-valuemax={domainInUnits}
-                    aria-valuenow={handle.value}
-                    title="Drag to adjust interval"
-                    style={{
-                      left: `${handle.percent}%`
-                    }}
-                    {...getHandleProps(handle.id)}
-                  >
-                    <div
-                      className={cn(
-                        "bg-blue-primary text-primary-text-dark flex h-full w-min items-center rounded-full"
-                      )}
-                    >
-                      <Icon path={mdiDotsVertical} size={0.5} />
-                    </div>
-                  </button>
-                </Fragment>
-              )
-            })}
-          </Fragment>
-        )}
-      </Handles>
-      <Tracks left={false} right={false}>
-        {({ tracks, getTrackProps }) => (
-          <div>
-            {tracks.map(({ id, source, target }) => (
-              <div
-                key={id}
-                className={cn(
-                  "bg-blue-primary/20 pointer-events-none absolute right-0 bottom-0 left-0 h-5 cursor-pointer rounded transition-[backdrop-filter]",
-                  {
-                    "backdrop-blur-2xl": isPending
-                  }
-                )}
-                style={{
-                  left: `${source.percent}%`,
-                  width: `${target.percent - source.percent}%`
-                }}
-                {...getTrackProps()}
-              />
-            ))}
-          </div>
-        )}
-      </Tracks>
-    </Slider>
+      <Slider.Track className="relative h-5 grow">
+        <Slider.Range
+          className={cn("bg-blue-primary/20 absolute h-full rounded transition-[backdrop-filter]", {
+            "backdrop-blur-2xl": isPending
+          })}
+        />
+      </Slider.Track>
+      {(["Start", "End"] as const).map((label) => (
+        <SliderThumb
+          key={label}
+          shape="custom"
+          aria-label={`${label} of time range`}
+          title="Drag to adjust interval"
+          className="bg-blue-primary text-primary-text-dark pointer-events-auto flex h-6 w-min items-center rounded-full opacity-0 transition-opacity group-hover/card:opacity-100 group-focus-visible/thumb:opacity-100"
+        >
+          <Icon path={mdiDotsVertical} size={0.5} />
+        </SliderThumb>
+      ))}
+    </Slider.Root>
   )
 }
