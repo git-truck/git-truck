@@ -11,8 +11,8 @@ import { Icon } from "~/components/Icon"
 import { mdiCog, mdiHelpCircle, mdiPlus } from "@mdi/js"
 import { GitTruckInfo } from "~/components/GitTruckInfo"
 import { RevisionSelect } from "~/components/RevisionSelect"
-import { Handle, Track, SliderRail, TicksByCount } from "~/components/sliderUtils"
-import { Slider, Rail, Handles, Tracks } from "react-compound-slider"
+import { SliderThumb, SliderTrack, TicksByCount } from "~/components/sliderUtils"
+import { Slider } from "radix-ui"
 import { categoricalScheme } from "~/const"
 
 // Minimal mock RepoData for context providers
@@ -62,11 +62,10 @@ const mockRepoData: RepoData = {
 }
 
 function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "square" }) {
-  const domain: [number, number] = [0, 100]
   const [range, setRange] = useState<[number, number]>([20, 80])
 
-  const handleRangeChange = (values: readonly number[]) => {
-    setRange([values[0], values[1]] as [number, number])
+  const handleRangeChange = ([start, end]: number[]) => {
+    setRange([start, end])
   }
 
   return (
@@ -77,48 +76,24 @@ function RangeSliderDemo({ handleType = "round" }: { handleType?: "round" | "squ
           {range[0]}% – {range[1]}%
         </p>
       </div>
-      <Slider
-        className="relative"
-        mode={2}
+      <Slider.Root
+        className="relative flex h-5 touch-none items-center select-none"
+        min={0}
+        max={100}
         step={1}
-        domain={domain}
-        values={range}
-        onUpdate={handleRangeChange}
-        onChange={handleRangeChange}
+        value={range}
+        onValueChange={handleRangeChange}
       >
-        <Rail>{(railProps) => <SliderRail {...railProps} />}</Rail>
-        <Handles>
-          {({ handles, getHandleProps }) => (
-            <div>
-              {handles.map((handle, index) => (
-                <Handle
-                  key={handle.id}
-                  handle={handle}
-                  domain={domain}
-                  getHandleProps={getHandleProps}
-                  handleType={handleType}
-                  title={`Drag to adjust the ${index === 0 ? "start" : "end"} threshold`}
-                />
-              ))}
-            </div>
-          )}
-        </Handles>
-        <Tracks left={false} right={false}>
-          {({ tracks, getTrackProps }) => (
-            <div>
-              {tracks.map(({ id, ...trackProps }) => (
-                <Track
-                  key={id}
-                  trackType={handleType}
-                  {...trackProps}
-                  getTrackProps={getTrackProps}
-                  backgroundColor="#7aa0c4"
-                />
-              ))}
-            </div>
-          )}
-        </Tracks>
-      </Slider>
+        <SliderTrack shape={handleType} />
+        {(["start", "end"] as const).map((label) => (
+          <SliderThumb
+            key={label}
+            shape={handleType}
+            aria-label={`${label} threshold`}
+            title={`Drag to adjust the ${label} threshold`}
+          />
+        ))}
+      </Slider.Root>
       <div className="flex justify-between text-sm font-medium">
         <span>Start: {range[0]}%</span>
         <span>End: {range[1]}%</span>

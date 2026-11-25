@@ -1,116 +1,56 @@
-import type { CSSProperties, ReactNode } from "react"
-import {
-  type SliderItem,
-  type GetHandleProps,
-  type GetTrackProps,
-  Ticks,
-  type GetRailProps
-} from "react-compound-slider"
+import type { ComponentProps, CSSProperties, ReactNode } from "react"
+import { Slider } from "radix-ui"
 import { Fragment } from "react/jsx-runtime"
 import { cn } from "~/styling"
 
-export function Handle({
-  domain: [min, max],
-  children,
-  disabled,
-  handle,
-  handleType = "round",
-  title,
-  getHandleProps,
-  className,
-  onClick
-}: {
-  domain: number[]
-  handleType?: "round" | "square"
-  children?: ReactNode
-  handle: SliderItem
-  title?: string
-  getHandleProps: GetHandleProps
-  className?: string
-  disabled?: boolean
-  onClick?: () => void
-}) {
+type SliderShape = "round" | "square"
+
+/** Track and filled range of a Radix slider. Must be rendered inside `Slider.Root`. */
+export function SliderTrack({ shape = "round", className }: { shape?: SliderShape; className?: string }) {
   return (
-    <button
-      className={cn(
-        "absolute z-10 flex size-5 -translate-x-1/2 -translate-y-1.5 place-content-center disabled:grayscale",
-        {
-          "size-5 rounded-full": handleType === "round"
-        },
-        disabled ? "cursor-progress" : "cursor-col-resize",
-        className
-      )}
-      role="slider"
-      aria-disabled={disabled}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      aria-valuenow={handle.value}
-      title={title}
-      style={{
-        left: `${handle.percent}%`
-        // marginTop: "-6px"
-      }}
-      onClick={onClick}
-      {...getHandleProps(handle.id)}
-    >
-      <div
-        className={cn("btn--primary", {
-          "size-5 rounded-full": handleType === "round",
-          "h-5 w-0.5": handleType === "square"
-        })}
+    <Slider.Track className={cn("bg-blue-secondary/20 relative h-2 grow cursor-pointer", className)}>
+      <Slider.Range
+        className={cn(
+          "bg-blue-primary data-disabled:bg-primary-text-dark dark:data-disabled:bg-primary-text absolute h-full",
+          {
+            "rounded-full": shape === "round",
+            "rounded-none": shape === "square"
+          }
+        )}
+      />
+    </Slider.Track>
+  )
+}
+
+/**
+ * Draggable thumb of a Radix slider. Must be rendered inside `Slider.Root`.
+ *
+ * Radix shifts thumbs inwards by up to half their width so they stay inside the track at the edges.
+ * The focusable thumb is zero-width so it sits exactly on its value, and the visible handle is
+ * centered on it instead. Pass `shape="custom"` to style the visible handle entirely through `className`.
+ */
+export function SliderThumb({
+  shape = "round",
+  className,
+  children,
+  ...props
+}: { shape?: SliderShape | "custom" } & ComponentProps<typeof Slider.Thumb>) {
+  return (
+    <Slider.Thumb className="group/thumb flex w-0 justify-center outline-none" {...props}>
+      <span
+        className={cn(
+          "block shrink-0 cursor-col-resize group-focus-visible/thumb:ring-2 group-data-disabled/thumb:cursor-progress group-data-disabled/thumb:grayscale",
+          {
+            "btn--primary": shape !== "custom",
+            "size-5 rounded-full": shape === "round",
+            "h-5 w-0.5": shape === "square"
+          },
+          className
+        )}
       >
         {children}
-      </div>
-    </button>
-  )
-}
-
-export function SliderRail({
-  getRailProps,
-  className = "",
-  children
-}: {
-  getRailProps: GetRailProps
-  className?: string
-  children?: ReactNode
-}) {
-  return (
-    <div className={cn("bg-blue-secondary/20 absolute h-2 w-full cursor-pointer", {}, className)} {...getRailProps()}>
-      {children}
-    </div>
-  )
-}
-
-export function Track({
-  source,
-  target,
-  trackType = "round",
-  getTrackProps,
-  disabled
-}: {
-  source: SliderItem
-  target: SliderItem
-  getTrackProps: GetTrackProps
-  trackType?: "round" | "square"
-  disabled?: boolean
-  backgroundColor: string
-}) {
-  return (
-    <div
-      className={cn(
-        "btn btn--primary absolute h-2 cursor-pointer p-0",
-        disabled ? "bg-primary-text-dark dark:bg-primary-text" : "bg-blue-primary",
-        {
-          "rounded-full": trackType === "round",
-          "rounded-none": trackType === "square"
-        }
-      )}
-      style={{
-        left: `${source.percent}%`,
-        width: `${target.percent - source.percent}%`
-      }}
-      {...getTrackProps()}
-    />
+      </span>
+    </Slider.Thumb>
   )
 }
 
@@ -125,46 +65,39 @@ export function LabeledTicks({
   titleMap = valueMap,
   onTop = false
 }: {
+  /** Labels keyed by their position on the slider, in percent (0-100) */
   valueMap: Record<number, string>
   titleMap?: Record<number, string>
   onTop?: boolean
 }) {
-  const entries = Object.entries(valueMap)
-  const count = entries.length
+  const positions = Object.keys(valueMap)
+    .map(Number)
+    .sort((a, b) => a - b)
   return (
-    <Ticks count={count}>
-      {({ ticks }) => (
-        <div className="grid grid-flow-col grid-cols-3 grid-rows-[1fr_auto] pt-4">
-          {ticks.map((tick) => {
-            const tickLabelInfo = valueMap[tick.value * 100]
-            const align = tick.value === 0 ? "left" : tick.value === 1 ? "right" : "center"
-            const justification = tickLabelInfo ? alignToJustify[align] : "center"
-            const Tick = (
-              <div className={`flex justify-${justification}`}>
-                <div className="h-2 w-px bg-gray-950 dark:bg-gray-50" />
-              </div>
-            )
-            const Label = (
-              <div
-                title={titleMap[tick.value * 100]}
-                className="truncate text-xs"
-                style={{
-                  textAlign: align
-                }}
-              >
-                {tickLabelInfo}
-              </div>
-            )
-            return (
-              <Fragment key={tick.id}>
-                {onTop ? Label : Tick}
-                {onTop ? Tick : Label}
-              </Fragment>
-            )
-          })}
-        </div>
-      )}
-    </Ticks>
+    <div
+      className="grid grid-flow-col grid-cols-(--cols) grid-rows-[1fr_auto] pt-0.5"
+      style={{ "--cols": `repeat(${positions.length}, minmax(0, 1fr))` } as CSSProperties}
+    >
+      {positions.map((position) => {
+        const align = position === 0 ? "left" : position === 100 ? "right" : "center"
+        const Tick = (
+          <div className={`flex justify-${alignToJustify[align]}`}>
+            <div className="h-2 w-px bg-gray-950 dark:bg-gray-50" />
+          </div>
+        )
+        const Label = (
+          <div title={titleMap[position]} className="truncate text-xs" style={{ textAlign: align }}>
+            {valueMap[position]}
+          </div>
+        )
+        return (
+          <Fragment key={position}>
+            {onTop ? Label : Tick}
+            {onTop ? Tick : Label}
+          </Fragment>
+        )
+      })}
+    </div>
   )
 }
 
