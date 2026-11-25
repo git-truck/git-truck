@@ -125,7 +125,7 @@
     "temporal-polyfill": "1.0.8",
     "tsdown": "0.23.7",
     "tsx": "4.23.15",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vite": "8.3.8",
     "vitest": "5.1.1",
     "zustand": "5.1.0"
