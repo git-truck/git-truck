@@ -1,4 +1,14 @@
-import { useMemo, useRef, useState, useTransition, useId, createRef, useEffect, useCallback } from "react"
+import {
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  useId,
+  createRef,
+  useEffect,
+  useCallback,
+  useDeferredValue
+} from "react"
 import type { SearchResults } from "~/contexts/SearchContext"
 import { useSearch } from "~/contexts/SearchContext"
 
@@ -41,9 +51,11 @@ export function SearchCard() {
   const id = useId()
   const { databaseInfo } = useData()
 
+  const deferedSearchText = useDeferredValue(searchText)
+
   useEffect(() => {
-    setSearchResults(searchText.length > 0 ? findSearchResults(databaseInfo.fileTree, searchText) : {})
-  }, [searchText, setSearchResults, databaseInfo.fileTree])
+    setSearchResults(deferedSearchText.length > 0 ? findSearchResults(databaseInfo.fileTree, deferedSearchText) : {})
+  }, [deferedSearchText, setSearchResults, databaseInfo.fileTree])
 
   const options = useOptions()
   const [metrics] = useMetrics()
